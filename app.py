@@ -464,4 +464,124 @@ elif selected_tab == "04 · Pencapaian Pernik":
         
         st.dataframe(table_ranks, use_container_width=True, hide_index=True)
         
-        st.info(f"💡 **Total Penjualan Pernik Gabungan Seluruh
+        st.info(f"💡 **Total Penjualan Pernik Gabungan Seluruh Personil**: **{total_overall_sales:,.0f} Pcs**")
+    else:
+        st.info("Belum ada data penjualan pernik personil.")
+
+
+# --- TAB 05: ANALISIS TREN ---
+elif selected_tab == "05 · Analisis Tren":
+    st.title("📈 Analisis Tren Penjualan & Estimasi Target")
+    st.write("Analisis kecepatan transaksi harian (*Sales Pace*) dan proyeksi penutupan periode.")
+    
+    si_df = st.session_state.sales_item_df.copy()
+    si_df["actual_qty"] = pd.to_numeric(si_df["actual_qty"], errors="coerce").fillna(0)
+    
+    trend_df = si_df.groupby("period_id")["actual_qty"].sum().reset_index()
+    trend_df = pd.merge(trend_df, st.session_state.periods_df[["period_id", "period_name", "target_total"]], on="period_id")
+    
+    fig_trend = px.line(
+        trend_df, 
+        x="period_name", 
+        y="actual_qty", 
+        markers=True, 
+        title="Tren Penjualan Toko Per Periode Promosi",
+        color_discrete_sequence=["#38bdf8"]
+    )
+    fig_trend.update_layout(
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color="#ffffff")
+    )
+    st.plotly_chart(fig_trend, use_container_width=True)
+
+
+# --- TAB 06: INPUT & RESET DATA (ADMIN ONLY) ---
+elif selected_tab == "06 · Input & Reset Data" and st.session_state.logged_in:
+    st.title("✏️ Form Input & Kelola Data Sales (Editor)")
+    
+    tab_in1, tab_in2 = st.tabs(["Input/Hapus Sales Personil", "Update/Hapus Sales Item Toko"])
+    
+    with tab_in1:
+        st.subheader("Kelola Sales Personil")
+        f_period_name = st.selectbox("Periode", list(periods_dict.keys()), key="in_p_per")
+        f_date = st.date_input("Tanggal Transaksi", key="in_p_date")
+        f_person = st.selectbox("Nama Staf", st.session_state.person_df["person_name"].tolist(), key="in_p_pers")
+        
+        p_id_val = periods_dict[f_period_name]
+        filtered_si = st.session_state.sales_item_df[st.session_state.sales_item_df["period_id"] == p_id_val]
+        item_dict = {row["item_name"]: row["item_id"] for _, row in filtered_si.iterrows()}
+        
+        if item_dict:
+            f_item_name = st.selectbox("Pilih Produk", list(item_dict.keys()), key="in_p_item")
+            f_qty = st.number_input("Jumlah Qty (Pcs)", min_value=0, step=1, key="in_p_qty")
+            
+            cb1, cb2 = st.columns(2)
+            with cb1:
+                if st.button("💾 Simpan Data Personil", use_container_width=True):
+                    new_id = f"SP{len(st.session_state.sales_person_df)+1:05d}"
+                    person_row = st.session_state.person_df[st.session_state.person_df["person_name"] == f_person].iloc[0]
+                    
+                    new_row = {
+                        "record_id": new_id,
+                        "period_id": p_id_val,
+                        "item_id": item_dict[f_item_name],
+                        "item_name": f_item_name,
+                        "person_id": person_row["person_id"],
+                        "person_name": f_person,
+                        "actual_qty": f_qty,
+                        "updated_at": str(f_date)
+                    }
+                    st.session_state.sales_person_df = pd.concat([st.session_state.sales_person_df, pd.DataFrame([new_row])], ignore_index=True)
+                    save_database(st.session_state.sales_item_df, st.session_state.sales_person_df)
+                    st.success("Data berhasil disimpan ke Excel!")
+            with cb2:
+                if st.button("🗑️ Hapus Transaksi Staf", use_container_width=True):
+                    st.session_state.sales_person_df = st.session_state.sales_person_df[
+                        ~((st.session_state.sales_person_df["period_id"] == p_id_val) & 
+                          (st.session_state.sales_person_df["person_name"] == f_person) & 
+                          (st.session_state.sales_person_df["item_id"] == item_dict[f_item_name]))
+                    ]
+                    save_database(st.session_state.sales_item_df, st.session_state.sales_person_df)
+                    st.warning("Data berhasil dihapus dari Excel!")
+        else:
+            st.warning("Tidak ada item tersedia di periode ini.")
+
+    with tab_in2:
+        st.subheader("Kelola Total Actual Item Toko")
+        f_period_name_t = st.selectbox("Periode Toko", list(periods_dict.keys()), key="in_t_per")
+        f_date_t = st.date_input("Tanggal Update", key="in_t_date")
+        
+        p_id_val_t = periods_dict[f_period_name_t]
+        filtered_si_t = st.session_state.sales_item_df[st.session_state.sales_item_df["period_id"] == p_id_val_t]
+        item_dict_t = {row["item_name"]: row["item_id"] for _, row in filtered_si_t.iterrows()}
+        
+        if item_dict_t:
+            f_item_name_t = st.selectbox("Pilih Produk Toko", list(item_dict_t.keys()), key="in_t_item")
+            f_actual_t = st.number_input("Actual Qty Toko (Pcs)", min_value=0, step=1, key="in_t_act")
+            
+            ct1, ct2 = st.columns(2)
+            with ct1:
+                if st.button("📦 Update Total Toko", use_container_width=True):
+                    idx = st.session_state.sales_item_df[
+                        (st.session_state.sales_item_df["period_id"] == p_id_val_t) & 
+                        (st.session_state.sales_item_df["item_name"] == f_item_name_t)
+                    ].index
+                    
+                    if not idx.empty:
+                        st.session_state.sales_item_df.loc[idx, "actual_qty"] = f_actual_t
+                        st.session_state.sales_item_df.loc[idx, "updated_at"] = str(f_date_t)
+                    save_database(st.session_state.sales_item_df, st.session_state.sales_person_df)
+                    st.success("Aktual produk toko berhasil diperbarui di Excel!")
+            with ct2:
+                if st.button("🗑️ Hapus Record Produk Toko", use_container_width=True):
+                    st.session_state.sales_item_df = st.session_state.sales_item_df[
+                        ~((st.session_state.sales_item_df["period_id"] == p_id_val_t) & 
+                          (st.session_state.sales_item_df["item_name"] == f_item_name_t))
+                    ]
+                    save_database(st.session_state.sales_item_df, st.session_state.sales_person_df)
+                    st.warning("Record produk toko berhasil dihapus!")
+        else:
+            st.warning("Tidak ada item tersedia di periode ini.")
+
+
