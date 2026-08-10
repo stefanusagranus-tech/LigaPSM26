@@ -27,8 +27,7 @@ USER_CREDENTIALS = {
 "13127006": {"password": "c383kgs", "nama": "Reza Purnama Agustin"},
 "16016359": {"password": "c383kgs", "nama": "Subekti Pandu Yulianto"},
 "19061965": {"password": "c383kgs", "nama": "Kusdewi Tia Ningrum"}
-
-
+    
 }
 
 # --- CUSTOM CSS ---
