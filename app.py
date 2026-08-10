@@ -10,48 +10,50 @@ st.set_page_config(page_title="PSM Toko - Sales Dashboard", layout="wide")
 
 EXCEL_FILE = "Database_Penjualan_PSM_Toko_Clean_GoogleSheets.xlsx"
 
-# --- CUSTOM CSS: EFEK NEON MENYALA & FUTURISTIK ---
+# --- CUSTOM CSS: TEMA NEON TERANG & SIDEBAR PENUH ---
 st.markdown("""
     <style>
-    /* Latar belakang utama */
+    /* Latar belakang utama aplikasi */
     .stApp {
         background-color: #0b0f19;
-        color: #e6edf3;
+        color: #f0f6fc;
     }
     
-    /* Styling Kartu Metrik dengan Efek Neon Glow */
+    /* Styling Kartu Metrik dengan Neon Glow Terang */
     div[data-testid="stMetric"] {
         background: linear-gradient(135deg, #161b22 0%, #1f2937 100%);
         border: 1px solid #00d4ff;
         padding: 18px;
         border-radius: 14px;
-        box-shadow: 0 0 15px rgba(0, 212, 255, 0.25);
+        box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
     }
     
-    /* Warna Label di dalam Metrik */
     div[data-testid="stMetric"] label {
-        color: #8b949e !important;
-        font-weight: 600;
+        color: #ffffff !important;
+        font-weight: 700;
         letter-spacing: 1px;
     }
     
-    /* Warna Angka / Nilai di dalam Metrik agar Menyala */
     div[data-testid="stMetric"] [data-testid="stMetricValue"] {
         color: #00f0ff !important;
-        text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
-        font-weight: 700;
+        text-shadow: 0 0 12px rgba(0, 240, 255, 0.6);
+        font-weight: 800;
     }
     
-    /* Judul dan Subtitle */
+    /* Judul dan Teks Umum */
     h1, h2, h3 {
         color: #ffffff !important;
         text-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
     }
     
-    /* Styling Sidebar */
+    /* Styling Sidebar Agar Jelas & Terang */
     [data-testid="stSidebar"] {
         background-color: #0f172a;
         border-right: 1px solid #1e293b;
+    }
+    
+    [data-testid="stSidebar"] label, [data-testid="stSidebar"] .stMarkdown {
+        color: #ffffff !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -88,11 +90,13 @@ if "data_loaded" not in st.session_state:
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
-# --- SIDEBAR & NAVIGASI ---
+# --- SIDEBAR & NAVIGASI FULL MENU ---
 st.sidebar.image("https://tse3.mm.bing.net/th/id/OIP.mVrKCdnlL5Yc-3wRmzFXOAAAAA?r=0&rs=1&pid=ImgDetMain&o=7&rm=3", width=60)
 st.sidebar.title("PSM TOKO")
-st.sidebar.markdown("<small>Sales Dashboard & Input System</small>", unsafe_allow_html=True)
+st.sidebar.markdown("<p style='color: #cbd5e1; font-size: 13px;'>Sales Dashboard & Input System</p>", unsafe_allow_html=True)
 st.sidebar.markdown("---")
+
+st.sidebar.markdown("<p style='color: #38bdf8; font-weight: bold;'>📌 MENU UTAMA</p>", unsafe_allow_html=True)
 
 menu_options = [
     "01 · Overview", 
@@ -105,14 +109,16 @@ menu_options = [
 if st.session_state.logged_in:
     menu_options.append("06 · Input & Reset Data")
 
-selected_tab = st.sidebar.selectbox("📌 Navigasi Menu", menu_options)
+# Menggunakan st.radio agar seluruh menu tampil penuh dan jelas
+selected_tab = st.sidebar.radio("", menu_options, label_visibility="collapsed")
 
 st.sidebar.markdown("---")
+st.sidebar.markdown("<p style='color: #38bdf8; font-weight: bold;'>🌟 PERIODE LAPORAN</p>", unsafe_allow_html=True)
 periods_dict = {row["period_name"]: row["period_id"] for _, row in st.session_state.periods_df.iterrows()}
-selected_period_name = st.selectbox("🌟 Pilih Periode Laporan", ["Semua Periode (Overall)"] + list(periods_dict.keys()))
+selected_period_name = st.selectbox("", ["Semua Periode (Overall)"] + list(periods_dict.keys()), label_visibility="collapsed")
 selected_period_id = None if selected_period_name == "Semua Periode (Overall)" else periods_dict[selected_period_name]
 
-# Area Login Admin dengan ikon kunci di bawah
+# Area Login Admin dengan ikon kunci di bawah (Teks terang)
 st.sidebar.markdown("---")
 with st.sidebar.expander("🔑 Login Admin / Editor"):
     if not st.session_state.logged_in:
@@ -134,7 +140,7 @@ with st.sidebar.expander("🔑 Login Admin / Editor"):
 # --- TAB 01: OVERVIEW ---
 if selected_tab == "01 · Overview":
     st.title("📊 Overview Penjualan Toko")
-    st.markdown(f"<p style='color: #00f0ff;'>Laporan performa toko harian • {pd.Timestamp.today().strftime('%d %b %Y')}</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='color: #38bdf8; font-size: 15px;'>Laporan performa toko harian • {pd.Timestamp.today().strftime('%d %b %Y')}</p>", unsafe_allow_html=True)
     
     si_df = st.session_state.sales_item_df.copy()
     if selected_period_id:
