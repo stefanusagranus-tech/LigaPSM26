@@ -823,9 +823,209 @@ elif selected_tab == "03 · Penjualan Personil":
     else:
         st.info("Belum ada data transaksi penjualan personil.")
 
-# --- TAB 04: PENCAPAIAN PERNIK ---
+# --- TAB 04: PENCAPAIAN PERNIK PER PERSONIL ---
 elif selected_tab == "04 · Pencapaian Pernik":
-    st.title("🏆 Leaderboard & Pencapaian Pernik Personil")
+    st.title("🏆 Pencapaian Pernik Per Personil")
+    
+    # --- 1. DROPDOWN PILIH PERSONIL TOKO ---
+    person_list = st.session_state.person_df["person_name"].dropna().unique().tolist()
+    if not person_list:
+        person_list = st.session_state.sales_person_df["person_name"].dropna().unique().tolist()
+        
+    c_p1, _ = st.columns([1.5, 1])
+    with c_p1:
+        selected_person = st.selectbox(
+            "👤 PILIH PERSONIL TOKO", 
+            person_list, 
+            key="tab4_person_select",
+            help="Filter laporan item pernik spesifik per staf"
+        )
+    
+    # --- 2. FILTER & OLAH DATA ---
+    sp_df = st.session_state.sales_person_df.copy()
+    si_df = st.session_state.sales_item_df.copy()
+    
+    # Filter sesuai periode sidebar jika dipilih
+    if selected_period_id:
+        sp_df = sp_df[sp_df["period_id"] == selected_period_id]
+        si_df = si_df[si_df["period_id"] == selected_period_id]
+        
+    # Filter khusus personil terpilih
+    sp_df = sp_df[sp_df["person_name"] == selected_person]
+    sp_df["actual_qty"] = pd.to_numeric(sp_df["actual_qty"], errors="coerce").fillna(0)
+    
+    # Deteksi kolom target_kasir / target_qty
+    target_col = "target_kasir" if "target_kasir" in si_df.columns else "target_qty"
+    si_df[target_col] = pd.to_numeric(si_df[target_col], errors="coerce").fillna(0)
+    
+    # Grouping Data
+    sp_grouped = sp_df.groupby(["item_id", "item_name"])["actual_qty"].sum().reset_index()
+    si_grouped = si_df.groupby(["item_id", "item_name"])[target_col].sum().reset_index()
+    
+    # Merge items master dengan sales personil
+    merged_item_df = pd.merge(si_grouped, sp_grouped[["item_id", "actual_qty"]], on="item_id", how="left")
+    merged_item_df["actual_qty"] = merged_item_df["actual_qty"].fillna(0)
+    merged_item_df.rename(columns={target_col: "target_val"}, inplace=True)
+    
+    # Perhitungan Gap & Achievement
+    merged_item_df["gap"] = merged_item_df["target_val"] - merged_item_df["actual_qty"]
+    merged_item_df["ach"] = merged_item_df.apply(
+        lambda r: (r["actual_qty"] / r["target_val"] * 100) if r["target_val"] > 0 else 0, axis=1
+    )
+    
+    # Metrik Agregat Utama
+    tot_target = merged_item_df["target_val"].sum()
+    tot_actual = merged_item_df["actual_qty"].sum()
+    tot_gap = tot_target - tot_actual
+    tot_ach = (tot_actual / tot_target * 100) if tot_target > 0 else 0
+    
+    # --- 3. KARTU METRIK / KPI CARDS ---
+    m1, m2, m3, m4 = st.columns(4)
+    with m1:
+        st.metric("🎯 Target Kasir Item", f"{tot_target:,.0f} Pcs")
+    with m2:
+        st.metric("📦 Actual Penjualan", f"{tot_actual:,.0f} Pcs")
+    with m3:
+        st.metric("📉 Sisa Gap Target", f"{tot_gap:,.0f} Pcs")
+    with m4:
+        st.metric("⚡ % Achievement", f"{tot_ach:.1f}%")
+        
+    st.markdown("---")
+    
+    # --- 4. RINCIAN TABEL & CHART BREAKDOWN ---
+    col_t4_left, col_t4_right = st.columns([1.2, 1])
+    
+    with col_t4_left:
+        st.subheader("📋 Rincian Target Item Pernik")
+        
+        table_rows_html = ""
+        for _, row in merged_item_df.iterrows():
+            gap_color = "#00ff88" if row['gap'] <= 0 else "#ef4444"
+            ach_color = "#00ff88" if row['ach'] >= 100 else "#ffb703"
+            
+            table_rows_html += f"""
+            <tr style="border-bottom: 1px solid #1e293b;">
+                <td style="padding: 10px; color: #ffffff; font-weight: bold; font-size: 13px;">{row['item_name']}</td>
+                <td style="padding: 10px; color: #94a3b8; font-size: 13px;">{row['target_val']:,.0f}</td>
+                <td style="padding: 10px; color: #00ff88; font-weight: bold; font-size: 13px;">{row['actual_qty']:,.0f}</td>
+                <td style="padding: 10px; color: {gap_color}; font-size: 13px;">{row['gap']:,.0f}</td>
+                <td style="padding: 10px; color: {ach_color}; font-weight: bold; font-size: 13px;">{row['ach']:.1f}%</td>
+            </tr>
+            """
+            
+        st.markdown(f"""
+            <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; max-height: 380px; overflow-y: auto; box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);">
+                <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid #334155;">
+                            <th style="padding: 8px 10px; color: #38bdf8; font-size: 11px;">NAMA ITEM</th>
+                            <th style="padding: 8px 10px; color: #38bdf8; font-size: 11px;">TARGET KASIR</th>
+                            <th style="padding: 8px 10px; color: #38bdf8; font-size: 11px;">ACTUAL</th>
+                            <th style="padding: 8px 10px; color: #38bdf8; font-size: 11px;">GAP</th>
+                            <th style="padding: 8px 10px; color: #38bdf8; font-size: 11px;">% ACH</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {table_rows_html}
+                    </tbody>
+                </table>
+            </div>
+        """, unsafe_allow_html=True)
+        
+    with col_t4_right:
+        st.subheader("📊 Visual Breakdown Item")
+        
+        fig_p4 = go.Figure()
+        fig_p4.add_trace(go.Bar(
+            y=merged_item_df["item_name"],
+            x=merged_item_df["actual_qty"],
+            name="Actual",
+            orientation='h',
+            marker_color="#00f2fe",
+            text=merged_item_df["actual_qty"].apply(lambda x: f"{x:,.0f}"),
+            textposition="auto"
+        ))
+        fig_p4.add_trace(go.Bar(
+            y=merged_item_df["item_name"],
+            x=merged_item_df["target_val"],
+            name="Target Kasir",
+            orientation='h',
+            marker_color="#64748b",
+            text=merged_item_df["target_val"].apply(lambda x: f"{x:,.0f}"),
+            textposition="auto"
+        ))
+        fig_p4.update_layout(
+            barmode='group',
+            height=380,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color="#ffffff"),
+            xaxis=dict(showgrid=True, gridcolor="#1e293b"),
+            yaxis=dict(showgrid=False, autorange="reversed"),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            margin=dict(l=10, r=10, t=10, b=10)
+        )
+        st.plotly_chart(fig_p4, use_container_width=True)
+
+
+# --- TAB 05: ANALISIS TREN HARIAN ---
+elif selected_tab == "05 · Analisis Tren":
+    st.title("📈 Analisis Tren Harian & Target")
+    
+    si_df = st.session_state.sales_item_df.copy()
+    periods_df = st.session_state.periods_df.copy()
+    
+    if selected_period_id:
+        sub_periods = periods_df[periods_df["period_id"] == selected_period_id]
+        sub_si = si_df[si_df["period_id"] == selected_period_id]
+    else:
+        sub_periods = periods_df
+        sub_si = si_df
+        
+    sub_si["target_qty"] = pd.to_numeric(sub_si["target_qty"], errors="coerce").fillna(0)
+    sub_si["actual_qty"] = pd.to_numeric(sub_si["actual_qty"], errors="coerce").fillna(0)
+    
+    tot_target = sub_si["target_qty"].sum()
+    tot_actual = sub_si["actual_qty"].sum()
+    
+    # Perhitungan Hari & Pace Penjualan
+    if not sub_periods.empty:
+        p_row = sub_periods.iloc[0]
+        s_date = pd.to_datetime(p_row["start_date"])
+        e_date = pd.to_datetime(p_row["end_date"])
+        total_days = max((e_date - s_date).days + 1, 1)
+        today_date = pd.to_datetime(datetime.now().strftime("%Y-%m-%d"))
+        
+        if today_date < s_date:
+            passed_days = 1
+        elif today_date > e_date:
+            passed_days = total_days
+        else:
+            passed_days = max((today_date - s_date).days + 1, 1)
+    else:
+        total_days = 31
+        passed_days = max(datetime.now().day, 1)
+        
+    remaining_days = max(total_days - passed_days, 1)
+    daily_target_ideal = max(0, int((tot_target - tot_actual) / remaining_days))
+    avg_daily_sales = tot_actual / passed_days
+    best_est = int(tot_actual + (avg_daily_sales * remaining_days))
+    
+    # --- 1. KPI CARDS ---
+    k1, k2, k3, k4 = st.columns(4)
+    with k1:
+        st.metric("🎯 Target Periode", f"{tot_target:,.0f} Pcs")
+    with k2:
+        st.metric("⚡ Target Harian Ideal", f"{daily_target_ideal:,.0f} Pcs/Hari")
+    with k3:
+        st.metric("📦 Pencapaian Actual", f"{tot_actual:,.0f} Pcs")
+    with k4:
+        st.metric("🔮 Best Estimasi Akhir", f"{best_est:,.0f} Pcs")
+        
+    st.markdown("---")
+    
+    # --- 2. GRAFIK FLUKTUASI PENJUALAN HARIAN ---
+    st.subheader("📈 Grafik Fluktuasi Penjualan Harian")
     
     sp_df = st.session_state.sales_person_df.copy()
     if selected_period_id:
@@ -833,90 +1033,70 @@ elif selected_tab == "04 · Pencapaian Pernik":
         
     sp_df["actual_qty"] = pd.to_numeric(sp_df["actual_qty"], errors="coerce").fillna(0)
     
-    if not sp_df.empty:
-        person_ranks = sp_df.groupby("person_name")["actual_qty"].sum().reset_index().sort_values(by="actual_qty", ascending=False)
-        total_overall_sales = person_ranks["actual_qty"].sum()
-        person_ranks["pct_contribution"] = (person_ranks["actual_qty"] / total_overall_sales * 100) if total_overall_sales > 0 else 0
-        
-        st.subheader("🥇 PODIUM JUARA PERNIK PERIODE INI")
-        col_p2, col_p1, col_p3 = st.columns(3)
-        
-        if len(person_ranks) >= 1:
-            r1 = person_ranks.iloc[0]
-            with col_p1:
-                st.markdown(f"""
-                    <div class='podium-box podium-1'>
-                        <h1 style='margin:0; font-size:40px;'>🥇</h1>
-                        <h3 style='color:#f59e0b; margin:4px 0;'>JUARA 1</h3>
-                        <h2 style='color:#ffffff; margin:0;'>{r1['person_name']}</h2>
-                        <h3 style='color:#38bdf8; margin:8px 0;'>{r1['actual_qty']:,.0f} Pcs</h3>
-                        <p style='color:#94a3b8; margin:0; font-weight:bold;'>Kontribusi: {r1['pct_contribution']:.1f}%</p>
-                    </div>
-                """, unsafe_allow_html=True)
-                
-        if len(person_ranks) >= 2:
-            r2 = person_ranks.iloc[1]
-            with col_p2:
-                st.markdown(f"""
-                    <div class='podium-box podium-2' style='margin-top: 25px;'>
-                        <h1 style='margin:0; font-size:36px;'>🥈</h1>
-                        <h3 style='color:#94a3b8; margin:4px 0;'>JUARA 2</h3>
-                        <h2 style='color:#ffffff; margin:0;'>{r2['person_name']}</h2>
-                        <h3 style='color:#38bdf8; margin:8px 0;'>{r2['actual_qty']:,.0f} Pcs</h3>
-                        <p style='color:#94a3b8; margin:0; font-weight:bold;'>Kontribusi: {r2['pct_contribution']:.1f}%</p>
-                    </div>
-                """, unsafe_allow_html=True)
-                
-        if len(person_ranks) >= 3:
-            r3 = person_ranks.iloc[2]
-            with col_p3:
-                st.markdown(f"""
-                    <div class='podium-box podium-3' style='margin-top: 40px;'>
-                        <h1 style='margin:0; font-size:32px;'>🥉</h1>
-                        <h3 style='color:#b45309; margin:4px 0;'>JUARA 3</h3>
-                        <h2 style='color:#ffffff; margin:0;'>{r3['person_name']}</h2>
-                        <h3 style='color:#38bdf8; margin:8px 0;'>{r3['actual_qty']:,.0f} Pcs</h3>
-                        <p style='color:#94a3b8; margin:0; font-weight:bold;'>Kontribusi: {r3['pct_contribution']:.1f}%</p>
-                    </div>
-                """, unsafe_allow_html=True)
-
-        st.markdown("---")
-        st.subheader("📋 Tabel Kontribusi Penjualan Pernik Seluruh Personil")
-        
-        table_ranks = person_ranks.copy()
-        table_ranks.columns = ["Nama Staf / Personil Toko", "Total Penjualan Pernik (Pcs)", "% Kontribusi"]
-        table_ranks["% Kontribusi"] = table_ranks["% Kontribusi"].apply(lambda x: f"{x:.1f}%")
-        
-        st.dataframe(table_ranks, use_container_width=True, hide_index=True)
-        st.info(f"💡 **Total Penjualan Pernik Gabungan Seluruh Personil**: **{total_overall_sales:,.0f} Pcs**")
+    if "updated_at" in sp_df.columns and not sp_df.empty:
+        daily_trend = sp_df.groupby("updated_at")["actual_qty"].sum().reset_index().sort_values(by="updated_at")
     else:
-        st.info("Belum ada data penjualan pernik personil.")
-
-# --- TAB 05: ANALISIS TREN ---
-elif selected_tab == "05 · Analisis Tren":
-    st.title("📈 Analisis Tren Penjualan & Estimasi Target")
-    st.write("Analisis kecepatan transaksi harian (*Sales Pace*) dan proyeksi penutupan periode.")
-    
-    si_df = st.session_state.sales_item_df.copy()
-    si_df["actual_qty"] = pd.to_numeric(si_df["actual_qty"], errors="coerce").fillna(0)
-    
-    trend_df = si_df.groupby("period_id")["actual_qty"].sum().reset_index()
-    trend_df = pd.merge(trend_df, st.session_state.periods_df[["period_id", "period_name", "target_total"]], on="period_id")
-    
-    fig_trend = px.line(
-        trend_df, 
-        x="period_name", 
-        y="actual_qty", 
-        markers=True, 
-        title="Tren Penjualan Toko Per Periode Promosi",
-        color_discrete_sequence=["#38bdf8"]
-    )
+        daily_trend = pd.DataFrame({
+            "updated_at": [f"Hari {i+1}" for i in range(passed_days)],
+            "actual_qty": [tot_actual / passed_days] * passed_days
+        })
+        
+    fig_trend = go.Figure()
+    fig_trend.add_trace(go.Scatter(
+        x=daily_trend["updated_at"],
+        y=daily_trend["actual_qty"],
+        mode='lines+markers',
+        name="Penjualan Harian",
+        line=dict(color="#00f2fe", width=3),
+        marker=dict(size=8)
+    ))
+    fig_trend.add_trace(go.Scatter(
+        x=daily_trend["updated_at"],
+        y=[daily_target_ideal] * len(daily_trend),
+        mode='lines',
+        name="Target Harian Ideal",
+        line=dict(color="#ff2a6d", dash='dash', width=2)
+    ))
     fig_trend.update_layout(
+        height=320,
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(color="#ffffff")
+        font=dict(color="#ffffff"),
+        xaxis=dict(showgrid=True, gridcolor="#1e293b"),
+        yaxis=dict(showgrid=True, gridcolor="#1e293b"),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        margin=dict(l=10, r=10, t=10, b=10)
     )
     st.plotly_chart(fig_trend, use_container_width=True)
+    
+    st.markdown("---")
+    
+    # --- 3. INSIGHT GROWTH & DISGROWTH ---
+    col_g, col_d = st.columns(2)
+    
+    item_perf = sub_si.groupby("item_name")["actual_qty"].sum().reset_index().sort_values(by="actual_qty", ascending=False)
+    top_item_name = item_perf.iloc[0]["item_name"] if not item_perf.empty else "-"
+    
+    with col_g:
+        st.markdown(f"""
+            <div style="background: #080c14; border: 1.5px solid #00ff9d; border-left: 6px solid #00ff9d; border-radius: 10px; padding: 16px; box-shadow: 0 0 12px rgba(0, 255, 157, 0.2);">
+                <h4 style="color: #00ff9d; margin: 0 0 8px 0;">🔥 Insight Growth (Penjualan Melonjak)</h4>
+                <p style="color: #f1f5f9; margin: 0; font-size: 14px;">
+                    Performa terbaik dicapai pada item <b>{top_item_name}</b> dengan kontribusi penjualan tertinggi di periode ini.
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+    with col_d:
+        gap_rem = max(0, tot_target - tot_actual)
+        st.markdown(f"""
+            <div style="background: #080c14; border: 1.5px solid #ff2a6d; border-left: 6px solid #ff2a6d; border-radius: 10px; padding: 16px; box-shadow: 0 0 12px rgba(255, 42, 109, 0.2);">
+                <h4 style="color: #ff2a6d; margin: 0 0 8px 0;">⚠️ Insight Disgrowth (Penjualan Drop)</h4>
+                <p style="color: #f1f5f9; margin: 0; font-size: 14px;">
+                    Sisa target sebesar <b>{gap_rem:,.0f} Pcs</b>. Dibutuhkan rata-rata tambahan <b>~{daily_target_ideal:,.0f} Pcs/hari</b> selama sisa <b>{remaining_days} hari</b> untuk mencapai target toko.
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
 
 # --- TAB 06: INPUT & RESET DATA ---
 elif selected_tab == "06 · Input & Reset Data":
