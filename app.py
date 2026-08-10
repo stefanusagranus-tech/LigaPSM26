@@ -308,13 +308,70 @@ if "data_loaded" not in st.session_state:
     st.session_state.sales_person_df = sp_df
     st.session_state.data_loaded = True
 
-# --- SIDEBAR NAVIGASI ---
-st.sidebar.image("https://tse3.mm.bing.net/th/id/OIP.mVrKCdnlL5Yc-3wRmzFXOAAAAA?r=0&rs=1&pid=ImgDetMain&o=7&rm=3", width=65)
-st.sidebar.markdown("<h2 style='color:#ffffff; margin-bottom:0px;'>TOKO C383</h2>", unsafe_allow_html=True)
-st.sidebar.markdown("<p style='color:#38bdf8; font-size:12px; font-weight:bold; margin-top:-5px;'>Report PSM dan Target PSM</p>", unsafe_allow_html=True)
+# CSS Tambahan untuk Sidebar
+st.sidebar.markdown("""
+    <style>
+        /* Container untuk Logo + Greeting (Satu Baris) */
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .sidebar-logo {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1.5px solid #38bdf8;
+        }
+        .sidebar-greeting {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Teks Toko di Tengah */
+        .store-title {
+            text-align: center;
+            color: #ffffff;
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 2px;
+            letter-spacing: 1px;
+        }
+        .store-subtitle {
+            text-align: center;
+            color: #38bdf8;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 0px;
+            margin-bottom: 10px;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
-st.sidebar.markdown("<p style='color:#38bdf8; font-size:12px; font-weight:bold; margin-top:-5px;'>Selamat Datang Kembali</p>", unsafe_allow_html=True)
-st.sidebar.markdown(f"<p style='color:#00ff88; font-size:12px; font-weight:bold;'>👤 User: {st.session_state.username}</p>", unsafe_allow_html=True)
+# URL Logo
+LOGO_URL = "https://tse3.mm.bing.net/th/id/OIP.mVrKCdnlL5Yc-3wRmzFXOAAAAA?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
+username = st.session_state.get("username", "Admin")
+
+# 1. Logo & Greeting di Samping
+st.sidebar.markdown(f"""
+    <div class='sidebar-header'>
+        <img src='{LOGO_URL}' class='sidebar-logo'>
+        <div class='sidebar-greeting'>
+            <span style='color: #94a3b8; font-size: 11px; font-weight: 500;'>Selamat Datang Kembali,</span>
+            <span style='color: #00ff88; font-size: 13px; font-weight: 700;'>👤 {username}</span>
+        </div>
+    </div>
+""", unsafe_allow_html=True)
+
+# Pembatas halus
+st.sidebar.markdown("<hr style='margin: 10px 0; border-color: #334155;'>", unsafe_allow_html=True)
+
+# 2. Tulisan Toko C383 di Tengah
+st.sidebar.markdown("<div class='store-title'>TOKO C383</div>", unsafe_allow_html=True)
+st.sidebar.markdown("<div class='store-subtitle'>Report PSM dan Target PSM</div>", unsafe_allow_html=True)
+
 st.sidebar.markdown("---")
 
 st.sidebar.markdown("<p style='color:#38bdf8; font-weight:bold; letter-spacing:1px; margin-bottom:6px;'>📌 NAVIGASI MENU</p>", unsafe_allow_html=True)
