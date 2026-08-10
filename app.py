@@ -10,8 +10,6 @@ from datetime import datetime, timezone, timedelta
 wib_tz = timezone(timedelta(hours=7))
 now = datetime.now(wib_tz)
 current_time_str = now.strftime("%A, %d %B %Y | %H:%M WIB")
-    </div>
-""", unsafe_allow_html=True)
 
 # Konfigurasi Halaman Dashboard
 st.set_page_config(page_title="PSM Toko - Sales Dashboard", layout="wide")
