@@ -88,7 +88,9 @@ else:
         </div>
     """, unsafe_allow_html=True)
 
-    # --- SIDEBAR NAVIGASI BARU ---
+      # ==========================================
+    # SIDEBAR NAVIGASI UTAMA (TANPA SUB MENU DI SIDEBAR)
+    # ==========================================
     st.sidebar.markdown(f"### 👤 Karyawan: **{st.session_state.user_fullname}**")
     if st.sidebar.button("🚪 Logout / Keluar"):
         st.session_state.logged_in = False
@@ -97,13 +99,21 @@ else:
     st.sidebar.markdown("---")
     st.sidebar.markdown("### 🗂️ MAIN MENU")
     
-    main_menu = st.sidebar.selectbox(
+    # Hanya Menu Utama di Sidebar
+    main_menu = st.sidebar.radio(
         "Pilih Modul Utama:",
-        ["🏠 Halaman Utama (Landing Page)", "1. Monitoring PSM"],
+        [
+            "🏠 Halaman Utama (Landing Page)", 
+            "1. Monitoring PSM"
+        ],
         key="main_menu_nav"
     )
 
-    # --- JIKA MEMILIH HALAMAN UTAMA ---
+    # ==========================================
+    # LOGIKA HALAMAN UTAMA & SUB MENU DI DALAM
+    # ==========================================
+
+    # --- 1. HALAMAN UTAMA (LANDING PAGE) ---
     if main_menu == "🏠 Halaman Utama (Landing Page)":
         st.title(f"👋 Selamat Datang, {st.session_state.user_fullname}!")
         st.markdown("#### 📌 Executive Summary & Quick Preview Toko")
@@ -119,30 +129,33 @@ else:
         with q4:
             st.metric("🏆 Top Personil", "Siti Nurhaliza", "Contrib: 32.5%")
 
-    # --- JIKA MEMILIH MONITORING PSM ---
+    # --- 2. MODUL MONITORING PSM (SUB MENU LANGSUNG DI DALAM) ---
     elif main_menu == "1. Monitoring PSM":
-        st.sidebar.markdown("---")
-        sub_menu = st.sidebar.radio(
-            "Pilih Sub Menu PSM:",
-            [
-                "1. Dashboard PSM",
-                "2. Detail Item & Daily Monitoring",
-                "3. Performance Personil Toko"
-            ],
-            key="sub_menu_psm"
-        )
+        st.title("📊 Monitoring PSM Toko")
+        st.markdown("Pilih sub menu di bawah untuk melihat detail analisis:")
         
+        # TAB SUB MENU LANGSUNG DI DALAM HALAMAN UTAMA
+        tab_dashboard, tab_detail_item, tab_personil = st.tabs([
+            "📈 1. Dashboard PSM",
+            "📦 2. Detail Item & Daily Monitoring",
+            "👥 3. Performance Personil Toko"
+        ])
+
         # --- SUB MENU 1: DASHBOARD PSM ---
-        if sub_menu == "1. Dashboard PSM":
-            st.title("📈 Dashboard PSM Toko")
-            # [Kodingan Target vs Actual, Time Factor Check, Target Harian, & Bar Chart Weekly di sini]
-            
+        with tab_dashboard:
+            st.subheader("Review & Target Penjualan Toko")
+            # [Isi Kodingan Dashboard PSM: Target vs Actual, Time Factor Check, Target Harian, Weekly Bar Chart]
+            st.info("Halaman Dashboard PSM siap diisi data.")
+
         # --- SUB MENU 2: DETAIL ITEM & DAILY MONITORING ---
-        elif sub_menu == "2. Detail Item & Daily Monitoring":
-            st.title("📦 Detail Item & Daily Monitoring")
-            # [Kodingan Kalender Daily Monitoring, Growth H-1, Sidebox Laku/Tidak Laku di sini]
-            
+        with tab_detail_item:
+            st.subheader("Detail Item & Daily Monitoring Penjualan")
+            # [Isi Kodingan Detail Item: Kalender Harian, Growth H-1, Sidebox Item Laku/Tidak Laku]
+            st.info("Halaman Detail Item & Kalender Monitoring Harian siap diisi data.")
+
         # --- SUB MENU 3: PERFORMANCE PERSONIL TOKO ---
-        elif sub_menu == "3. Performance Personil Toko":
-            st.title("👥 Performance Personil Toko")
-            # [Kodingan Podium Top 3, Ranking, Detail Item per Staf di sini]
+        with tab_personil:
+            st.subheader("Performa & Kontribusi Personil Toko")
+            # [Isi Kodingan Personil: Podium Top 3, Ranking Staf, Chart Trend, Drill-down Detail Item]
+            st.info("Halaman Performa Personil Toko siap diisi data.")
+
