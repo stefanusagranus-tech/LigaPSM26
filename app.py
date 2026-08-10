@@ -380,13 +380,12 @@ elif selected_tab == "03 · Penjualan Personil":
     sp_df["actual_qty"] = pd.to_numeric(sp_df["actual_qty"], errors="coerce").fillna(0)
     
     if not sp_df.empty:
-        # Agregasi data penjualan per personil
+        # Agregasi data
         summary_person = sp_df.groupby("person_name")["actual_qty"].sum().reset_index().sort_values(by="actual_qty", ascending=False)
         tot_actual_personil = summary_person["actual_qty"].sum()
         avg_sales_personil = summary_person["actual_qty"].mean() if len(summary_person) > 0 else 0
         top_performer_name = summary_person.iloc[0]["person_name"] if len(summary_person) > 0 else "-"
         
-        # Hitung Persentase Kontribusi
         summary_person["pct_contrib"] = (summary_person["actual_qty"] / tot_actual_personil * 100) if tot_actual_personil > 0 else 0
         
         # 1. KARTU METRIK UTAMA (KOTAK BIRU NEON + TEKS HIJAU NEON)
@@ -417,34 +416,29 @@ elif selected_tab == "03 · Penjualan Personil":
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # 2. PODIUM RINGKAS MINI TOP 3 (UKURAN COMPACT)
+        # 2. PODIUM RINGKAS MINI TOP 3
         if len(summary_person) >= 1:
             p1_name = summary_person.iloc[0]["person_name"]
             p1_qty = summary_person.iloc[0]["actual_qty"]
-            
             p2_name = summary_person.iloc[1]["person_name"] if len(summary_person) >= 2 else "-"
             p2_qty = summary_person.iloc[1]["actual_qty"] if len(summary_person) >= 2 else 0
-            
             p3_name = summary_person.iloc[2]["person_name"] if len(summary_person) >= 3 else "-"
             p3_qty = summary_person.iloc[2]["actual_qty"] if len(summary_person) >= 3 else 0
 
             st.markdown(f"""
                 <div style="display: flex; gap: 12px; justify-content: center; align-items: flex-end; margin-bottom: 20px;">
-                    <!-- Juara 2 -->
                     <div style="flex: 1; background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; text-align: center; box-shadow: 0 0 10px rgba(0,240,255,0.25);">
                         <span style="font-size: 18px;">🥈</span>
                         <div style="color: #94a3b8; font-size: 10px; font-weight: bold;">JUARA 2</div>
                         <div style="color: #ffffff; font-size: 12px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{p2_name}</div>
                         <div style="color: #00ff88; font-size: 15px; font-weight: 800;">{p2_qty:,.0f} Pcs</div>
                     </div>
-                    <!-- Juara 1 -->
                     <div style="flex: 1; background: #080c14; border: 2px solid #00f0ff; border-radius: 10px; padding: 12px; text-align: center; box-shadow: 0 0 16px rgba(0,240,255,0.5); transform: scale(1.02);">
                         <span style="font-size: 22px;">🥇</span>
                         <div style="color: #f59e0b; font-size: 10px; font-weight: bold;">JUARA 1</div>
                         <div style="color: #ffffff; font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{p1_name}</div>
                         <div style="color: #00ff88; font-size: 17px; font-weight: 800;">{p1_qty:,.0f} Pcs</div>
                     </div>
-                    <!-- Juara 3 -->
                     <div style="flex: 1; background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; text-align: center; box-shadow: 0 0 10px rgba(0,240,255,0.25);">
                         <span style="font-size: 18px;">🥉</span>
                         <div style="color: #b45309; font-size: 10px; font-weight: bold;">JUARA 3</div>
@@ -456,40 +450,59 @@ elif selected_tab == "03 · Penjualan Personil":
 
         st.markdown("---")
 
-        # 3. DUA KOLOM: TABEL & GRAFIK DENGAN TINGGI IDENTIK
+        # 3. DUA KOLOM: TABEL HTML NEON & GRAFIK
         col_table, col_chart = st.columns([1, 1])
 
-        # Ketinggian presisi disamakan (310px)
         COMPONENT_HEIGHT = 310
 
         with col_table:
             st.markdown("<p style='color:#ffffff; font-size:15px; font-weight:bold; margin-bottom:8px;'>📋 Penjualan Personil</p>", unsafe_allow_html=True)
             
-            display_table = summary_person.copy()
-            display_table.columns = ["PERSONIL", "TOTAL SALES (PCS)", "KONTRIBUSI"]
-            display_table["TOTAL SALES (PCS)"] = display_table["TOTAL SALES (PCS)"].apply(lambda x: f"{x:,.0f}")
-            display_table["KONTRIBUSI"] = display_table["KONTRIBUSI"].apply(lambda x: f"{x:.1f}%")
+            # Membuat Baris Tabel Secara Dinamis
+            table_rows_html = ""
+            for _, row in summary_person.iterrows():
+                table_rows_html += f"""
+                <tr style="border-bottom: 1px solid #1e293b;">
+                    <td style="padding: 12px 10px; color: #ffffff; font-weight: bold; font-size: 13px;">{row['person_name']}</td>
+                    <td style="padding: 12px 10px; color: #00ff88; font-weight: bold; font-size: 14px;">{row['actual_qty']:,.0f}</td>
+                    <td style="padding: 12px 10px; color: #00ff88; font-weight: bold; font-size: 14px;">{row['pct_contrib']:.1f}%</td>
+                </tr>
+                """
             
-            # Parameter height disamakan dengan grafik
-            st.dataframe(display_table, use_container_width=True, hide_index=True, height=COMPONENT_HEIGHT)
+            # Render Tabel Kustom HTML Latar Belakang Gelap & Neon Border
+            st.markdown(f"""
+                <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; height: {COMPONENT_HEIGHT}px; box-shadow: 0 0 12px rgba(0, 240, 255, 0.35); overflow-y: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #334155;">
+                                <th style="padding: 8px 10px; color: #94a3b8; font-size: 11px; font-weight: 800; letter-spacing: 0.5px;">PERSONIL</th>
+                                <th style="padding: 8px 10px; color: #94a3b8; font-size: 11px; font-weight: 800; letter-spacing: 0.5px;">TOTAL SALES (PCS)</th>
+                                <th style="padding: 8px 10px; color: #94a3b8; font-size: 11px; font-weight: 800; letter-spacing: 0.5px;">KONTRIBUSI</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {table_rows_html}
+                        </tbody>
+                    </table>
+                </div>
+            """, unsafe_allow_html=True)
 
         with col_chart:
             st.markdown("<p style='color:#ffffff; font-size:15px; font-weight:bold; margin-bottom:8px;'>📊 Grafik Perbandingan Performa Tim</p>", unsafe_allow_html=True)
             
-            # Plotly Bar Chart Hijau Neon Sesuai Gambar Rujukan
             fig_person = go.Figure()
             fig_person.add_trace(go.Bar(
                 x=summary_person["person_name"],
                 y=summary_person["actual_qty"],
                 name="Total Penjualan Pcs",
-                marker_color="#00ff88", # Batang Hijau Neon Menyala
+                marker_color="#00ff88",
                 text=summary_person["actual_qty"].apply(lambda x: f"{x:,.0f}"),
                 textposition="outside",
                 textfont=dict(color="#00ff88", size=11)
             ))
             
             fig_person.update_layout(
-                height=COMPONENT_HEIGHT, # Ketinggian disamakan dengan tabel
+                height=COMPONENT_HEIGHT,
                 paper_bgcolor='rgba(0,0,0,0)',
                 plot_bgcolor='rgba(0,0,0,0)',
                 font=dict(color="#ffffff"),
@@ -503,7 +516,6 @@ elif selected_tab == "03 · Penjualan Personil":
 
     else:
         st.info("Belum ada data transaksi penjualan personil.")
-
 
 # --- TAB 04: PENCAPAIAN PERNIK ---
 elif selected_tab == "04 · Pencapaian Pernik":
