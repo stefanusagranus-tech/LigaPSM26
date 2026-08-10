@@ -16,7 +16,14 @@ st.set_page_config(page_title="PSM Toko - Sales Dashboard", layout="wide")
 
 EXCEL_FILE = "Database_Penjualan_PSM_Toko_Clean_GoogleSheets.xlsx"
 
-# --- CUSTOM CSS: SIDEBAR CERAH, TEKS KONTRASTING, NEON CARD & NO WHITE DOTS ---
+# --- DATABASE PENGGUNA (LOGIN) ---
+USER_CREDENTIALS = {
+    "admin": "admin123",
+    "user1": "password123",
+    "kasir": "kasir123"
+}
+
+# --- CUSTOM CSS ---
 st.markdown("""
     <style>
     /* Latar Belakang Utama Aplikasi */
@@ -123,11 +130,14 @@ st.markdown("""
         box-shadow: 0 0 15px rgba(180, 83, 9, 0.3);
     }
 
-    /* Expander Login Admin */
-    div[data-testid="stExpander"] {
-        background: #1e293b !important;
-        border: 1px solid #38bdf8 !important;
-        border-radius: 10px !important;
+    /* Container Card Login */
+    .login-box {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        padding: 30px;
+        border-radius: 16px;
+        border: 1px solid #38bdf8;
+        box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+        margin-top: 50px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -151,7 +161,43 @@ def save_database(sales_item_df, sales_person_df):
         sales_item_df.to_excel(writer, sheet_name="SALES_ITEM", index=False)
         sales_person_df.to_excel(writer, sheet_name="SALES_PERSONIL", index=False)
 
-# Inisialisasi Data
+# Inisialisasi Session State Login
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+if "username" not in st.session_state:
+    st.session_state.username = ""
+
+# --- HALAMAN LOGIN ---
+def show_login_page():
+    _, col2, _ = st.columns([1, 1.2, 1])
+    with col2:
+        st.markdown("""
+            <div class='login-box'>
+                <h2 style='text-align: center; color: #ffffff; margin-bottom: 5px;'>🔐 PSM TOKO LOGIN</h2>
+                <p style='text-align: center; color: #38bdf8; font-size: 13px; margin-bottom: 25px;'>Sistem Monitoring & Input Sales</p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        with st.form("login_form"):
+            username_input = st.text_input("Username", placeholder="Masukkan username")
+            password_input = st.text_input("Password", type="password", placeholder="Masukkan password")
+            submit_btn = st.form_submit_button("Masuk ke Aplikasi", use_container_width=True)
+            
+            if submit_btn:
+                if username_input in USER_CREDENTIALS and USER_CREDENTIALS[username_input] == password_input:
+                    st.session_state.logged_in = True
+                    st.session_state.username = username_input
+                    st.success("Login Berhasil!")
+                    st.rerun()
+                else:
+                    st.error("Username atau Password salah!")
+
+# Cek Status Autentikasi
+if not st.session_state.logged_in:
+    show_login_page()
+    st.stop()
+
+# --- INISIALISASI DATA DASHBOARD ---
 if "data_loaded" not in st.session_state:
     p_df, i_df, pers_df, si_df, sp_df = load_database()
     st.session_state.periods_df = p_df
@@ -161,13 +207,11 @@ if "data_loaded" not in st.session_state:
     st.session_state.sales_person_df = sp_df
     st.session_state.data_loaded = True
 
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-
 # --- SIDEBAR NAVIGASI ---
 st.sidebar.image("https://tse3.mm.bing.net/th/id/OIP.mVrKCdnlL5Yc-3wRmzFXOAAAAA?r=0&rs=1&pid=ImgDetMain&o=7&rm=3", width=65)
 st.sidebar.markdown("<h2 style='color:#ffffff; margin-bottom:0px;'>PSM TOKO</h2>", unsafe_allow_html=True)
 st.sidebar.markdown("<p style='color:#38bdf8; font-size:12px; font-weight:bold; margin-top:-5px;'>Sales Dashboard & Input System</p>", unsafe_allow_html=True)
+st.sidebar.markdown(f"<p style='color:#00ff88; font-size:12px; font-weight:bold;'>👤 User: {st.session_state.username}</p>", unsafe_allow_html=True)
 st.sidebar.markdown("---")
 
 st.sidebar.markdown("<p style='color:#38bdf8; font-weight:bold; letter-spacing:1px; margin-bottom:6px;'>📌 NAVIGASI MENU</p>", unsafe_allow_html=True)
@@ -177,11 +221,9 @@ menu_options = [
     "02 · Detail Item", 
     "03 · Penjualan Personil", 
     "04 · Pencapaian Pernik", 
-    "05 · Analisis Tren"
+    "05 · Analisis Tren",
+    "06 · Input & Reset Data"
 ]
-
-if st.session_state.logged_in:
-    menu_options.append("06 · Input & Reset Data")
 
 selected_tab = st.sidebar.radio("", menu_options, label_visibility="collapsed")
 
@@ -191,26 +233,14 @@ periods_dict = {row["period_name"]: row["period_id"] for _, row in st.session_st
 selected_period_name = st.sidebar.selectbox("", ["Semua Periode (Overall)"] + list(periods_dict.keys()), label_visibility="collapsed")
 selected_period_id = None if selected_period_name == "Semua Periode (Overall)" else periods_dict[selected_period_name]
 
-# Area Login Admin (Expander)
+# Tombol Logout di Sidebar
 st.sidebar.markdown("---")
-with st.sidebar.expander("🔑 Login Admin / Editor"):
-    if not st.session_state.logged_in:
-        u_input = st.text_input("Username", key="u_login")
-        p_input = st.text_input("Password", type="password", key="p_login")
-        if st.button("Masuk Editor"):
-            if u_input == "admin" and p_input == "admin123":
-                st.session_state.logged_in = True
-                st.success("Login Berhasil!")
-                st.rerun()
-            else:
-                st.error("Username/Password Salah!")
-    else:
-        st.success("Status: Login Editor Active")
-        if st.button("Logout"):
-            st.session_state.logged_in = False
-            st.rerun()
+if st.sidebar.button("🚪 Keluar / Logout", use_container_width=True):
+    st.session_state.logged_in = False
+    st.session_state.username = ""
+    st.rerun()
 
-# --- HEADER UTAMA: REALTIME TIME & DATE ---
+# --- HEADER UTAMA ---
 now = datetime.now()
 current_time_str = now.strftime("%A, %d %B %Y | %H:%M WIB")
 
@@ -226,7 +256,6 @@ st.markdown(f"""
         </div>
     </div>
 """, unsafe_allow_html=True)
-
 
 # --- TAB 01: OVERVIEW ---
 if selected_tab == "01 · Overview":
@@ -244,14 +273,11 @@ if selected_tab == "01 · Overview":
     ach = (tot_actual / tot_target * 100) if tot_target > 0 else 0
     gap = tot_actual - tot_target
 
-    # Kalkulasi Best Estimasi Penjualan (Pacing Realtime)
-    # Menghitung durasi hari berdasarkan periode yang dipilih
     if selected_period_id:
         p_info = st.session_state.periods_df[st.session_state.periods_df["period_id"] == selected_period_id].iloc[0]
         s_date = pd.to_datetime(p_info["start_date"])
         e_date = pd.to_datetime(p_info["end_date"])
         total_days = max((e_date - s_date).days + 1, 1)
-        # Hari yang berjalan (asumsi simulasi tanggal aktif saat ini di rentang promosi)
         today_date = pd.to_datetime(now.strftime("%Y-%m-%d"))
         if today_date < s_date:
             elapsed_days = 1
@@ -281,7 +307,6 @@ if selected_tab == "01 · Overview":
 
     st.markdown("---")
     
-    # Visualisasi Grafik Batang (Bar Chart)
     col_chart1, col_chart2 = st.columns([2, 1])
     
     with col_chart1:
@@ -289,7 +314,6 @@ if selected_tab == "01 · Overview":
         chart_df = st.session_state.sales_item_df.groupby("period_id")[["target_qty", "actual_qty"]].sum().reset_index()
         chart_df = pd.merge(chart_df, st.session_state.periods_df[["period_id", "period_name"]], on="period_id", how="left")
         
-        # Plotly Bar Chart dengan warna lembut/harmonis
         fig = go.Figure()
         fig.add_trace(go.Bar(
             x=chart_df["period_name"], 
@@ -349,14 +373,12 @@ if selected_tab == "01 · Overview":
         })
     st.dataframe(pd.DataFrame(summary_data), use_container_width=True, hide_index=True)
 
-
 # --- TAB 02: DETAIL ITEM ---
 elif selected_tab == "02 · Detail Item":
     st.title("📦 Detail Item & Performa Produk")
     
     si_df = st.session_state.sales_item_df.copy()
     
-    # 1. BARIS FILTER PERIODE, SEARCH, & SORTING ITEM
     st.markdown("<p style='color:#38bdf8; font-weight:bold; font-size:13px;'>🔍 FILTER & PENGURUTAN DATA PRODUK</p>", unsafe_allow_html=True)
     f_col1, f_col2, f_col3 = st.columns([1.5, 1, 1.2])
     
@@ -379,16 +401,13 @@ elif selected_tab == "02 · Detail Item":
             key="sort_tab2"
         )
 
-    # Filter Periode
     if selected_p_tab2 != "Semua Periode Promosi":
         p_id_filter = periods_dict[selected_p_tab2]
         si_df = si_df[si_df["period_id"] == p_id_filter]
 
-    # Bersihkan Data Angka
     si_df["target_qty"] = pd.to_numeric(si_df["target_qty"], errors="coerce").fillna(0)
     si_df["actual_qty"] = pd.to_numeric(si_df["actual_qty"], errors="coerce").fillna(0)
     
-    # Agregasi Data per Nama Item
     item_grouped = si_df.groupby("item_name").agg({
         "target_qty": "sum",
         "actual_qty": "sum"
@@ -399,16 +418,13 @@ elif selected_tab == "02 · Detail Item":
     )
     item_grouped["gap"] = item_grouped["actual_qty"] - item_grouped["target_qty"]
 
-    # Filter Pencarian Kata Kunci
     if search_query:
         item_grouped = item_grouped[item_grouped["item_name"].str.contains(search_query, case=False, na=False)]
 
     if not item_grouped.empty:
-        # Menentukan Item Terlaris & Terendah
         top_item = item_grouped.sort_values(by="actual_qty", ascending=False).iloc[0]
         low_item = item_grouped.sort_values(by="actual_qty", ascending=True).iloc[0]
         
-        # Pengurutan Data (Sorting)
         if sort_option == "Penjualan Terbanyak (Terlaris)":
             item_grouped = item_grouped.sort_values(by="actual_qty", ascending=False)
         elif sort_option == "Penjualan Tersedikit":
@@ -420,7 +436,6 @@ elif selected_tab == "02 · Detail Item":
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # 2. KARTU REPORT ITEM TERLARIS & TERENDAH
         r_col1, r_col2, r_col3 = st.columns(3)
         with r_col1:
             st.markdown(f"""
@@ -450,8 +465,6 @@ elif selected_tab == "02 · Detail Item":
             """, unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
-
-        # 3. TABEL HTML NEON IDENTIK TAB 03
         st.markdown("<p style='color:#ffffff; font-size:15px; font-weight:bold; margin-bottom:8px;'>📋 Tabel Performa Penjualan Produk</p>", unsafe_allow_html=True)
         
         table_rows_html = ""
@@ -481,6 +494,8 @@ elif selected_tab == "02 · Detail Item":
                     </thead>
                     <tbody>
                         {table_rows_html}
+                    </tbody>
+                </table>
             </div>
         """, unsafe_allow_html=True)
 
@@ -498,7 +513,6 @@ elif selected_tab == "03 · Penjualan Personil":
     sp_df["actual_qty"] = pd.to_numeric(sp_df["actual_qty"], errors="coerce").fillna(0)
     
     if not sp_df.empty:
-        # Agregasi data
         summary_person = sp_df.groupby("person_name")["actual_qty"].sum().reset_index().sort_values(by="actual_qty", ascending=False)
         tot_actual_personil = summary_person["actual_qty"].sum()
         avg_sales_personil = summary_person["actual_qty"].mean() if len(summary_person) > 0 else 0
@@ -506,7 +520,6 @@ elif selected_tab == "03 · Penjualan Personil":
         
         summary_person["pct_contrib"] = (summary_person["actual_qty"] / tot_actual_personil * 100) if tot_actual_personil > 0 else 0
         
-        # 1. KARTU METRIK UTAMA (KOTAK BIRU NEON + TEKS HIJAU NEON)
         m1, m2, m3 = st.columns(3)
         with m1:
             st.markdown(f"""
@@ -534,7 +547,6 @@ elif selected_tab == "03 · Penjualan Personil":
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # 2. PODIUM RINGKAS MINI TOP 3
         if len(summary_person) >= 1:
             p1_name = summary_person.iloc[0]["person_name"]
             p1_qty = summary_person.iloc[0]["actual_qty"]
@@ -568,15 +580,12 @@ elif selected_tab == "03 · Penjualan Personil":
 
         st.markdown("---")
 
-        # 3. DUA KOLOM: TABEL HTML NEON & GRAFIK
         col_table, col_chart = st.columns([1, 1])
-
         COMPONENT_HEIGHT = 310
 
         with col_table:
             st.markdown("<p style='color:#ffffff; font-size:15px; font-weight:bold; margin-bottom:8px;'>📋 Penjualan Personil</p>", unsafe_allow_html=True)
             
-            # Membuat Baris Tabel Secara Dinamis
             table_rows_html = ""
             for _, row in summary_person.iterrows():
                 table_rows_html += f"""
@@ -587,7 +596,6 @@ elif selected_tab == "03 · Penjualan Personil":
                 </tr>
                 """
             
-            # Render Tabel Kustom HTML Latar Belakang Gelap & Neon Border
             st.markdown(f"""
                 <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; height: {COMPONENT_HEIGHT}px; box-shadow: 0 0 12px rgba(0, 240, 255, 0.35); overflow-y: auto;">
                     <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
@@ -599,7 +607,9 @@ elif selected_tab == "03 · Penjualan Personil":
                             </tr>
                         </thead>
                         <tbody>
-                        {table_rows_html}
+                            {table_rows_html}
+                        </tbody>
+                    </table>
                 </div>
             """, unsafe_allow_html=True)
 
@@ -633,7 +643,6 @@ elif selected_tab == "03 · Penjualan Personil":
     else:
         st.info("Belum ada data transaksi penjualan personil.")
 
-
 # --- TAB 04: PENCAPAIAN PERNIK ---
 elif selected_tab == "04 · Pencapaian Pernik":
     st.title("🏆 Leaderboard & Pencapaian Pernik Personil")
@@ -649,11 +658,9 @@ elif selected_tab == "04 · Pencapaian Pernik":
         total_overall_sales = person_ranks["actual_qty"].sum()
         person_ranks["pct_contribution"] = (person_ranks["actual_qty"] / total_overall_sales * 100) if total_overall_sales > 0 else 0
         
-        # --- PODIUM JUARA TOP 3 STAF ---
         st.subheader("🥇 PODIUM JUARA PERNIK PERIODE INI")
         col_p2, col_p1, col_p3 = st.columns(3)
         
-        # Juara 1
         if len(person_ranks) >= 1:
             r1 = person_ranks.iloc[0]
             with col_p1:
@@ -667,7 +674,6 @@ elif selected_tab == "04 · Pencapaian Pernik":
                     </div>
                 """, unsafe_allow_html=True)
                 
-        # Juara 2
         if len(person_ranks) >= 2:
             r2 = person_ranks.iloc[1]
             with col_p2:
@@ -681,7 +687,6 @@ elif selected_tab == "04 · Pencapaian Pernik":
                     </div>
                 """, unsafe_allow_html=True)
                 
-        # Juara 3
         if len(person_ranks) >= 3:
             r3 = person_ranks.iloc[2]
             with col_p3:
@@ -698,17 +703,14 @@ elif selected_tab == "04 · Pencapaian Pernik":
         st.markdown("---")
         st.subheader("📋 Tabel Kontribusi Penjualan Pernik Seluruh Personil")
         
-        # Format Tampilan Tabel Lengkap (Tanpa Kolom ID / Update)
         table_ranks = person_ranks.copy()
         table_ranks.columns = ["Nama Staf / Personil Toko", "Total Penjualan Pernik (Pcs)", "% Kontribusi"]
         table_ranks["% Kontribusi"] = table_ranks["% Kontribusi"].apply(lambda x: f"{x:.1f}%")
         
         st.dataframe(table_ranks, use_container_width=True, hide_index=True)
-        
         st.info(f"💡 **Total Penjualan Pernik Gabungan Seluruh Personil**: **{total_overall_sales:,.0f} Pcs**")
     else:
         st.info("Belum ada data penjualan pernik personil.")
-
 
 # --- TAB 05: ANALISIS TREN ---
 elif selected_tab == "05 · Analisis Tren":
@@ -736,9 +738,8 @@ elif selected_tab == "05 · Analisis Tren":
     )
     st.plotly_chart(fig_trend, use_container_width=True)
 
-
-# --- TAB 06: INPUT & RESET DATA (ADMIN ONLY) ---
-elif selected_tab == "06 · Input & Reset Data" and st.session_state.logged_in:
+# --- TAB 06: INPUT & RESET DATA ---
+elif selected_tab == "06 · Input & Reset Data":
     st.title("✏️ Form Input & Kelola Data Sales (Editor)")
     
     tab_in1, tab_in2 = st.tabs(["Input/Hapus Sales Personil", "Update/Hapus Sales Item Toko"])
@@ -824,5 +825,4 @@ elif selected_tab == "06 · Input & Reset Data" and st.session_state.logged_in:
                     st.warning("Record produk toko berhasil dihapus!")
         else:
             st.warning("Tidak ada item tersedia di periode ini.")
-
-
+            
