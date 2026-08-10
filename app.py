@@ -927,8 +927,6 @@ elif selected_tab == "04 · Pencapaian Pernik":
                     </thead>
                     <tbody>
                         {table_rows_html}
-                    </tbody>
-                </table>
             </div>
         """, unsafe_allow_html=True)
         
