@@ -171,7 +171,7 @@ if "username" not in st.session_state:
 # --- HALAMAN LOGIN ---
 def show_login_page():
     # URL Direct Image / File Gambar Resmi Logo KGS Group Belgium (.png)
-    LOGO_URL = "https://media.licdn.com/dms/image/v2/D4E0BAQG56I816f_sWA/company-logo_200_200/company-logo_200_200/0/1710323382438?e=2147483647&v=beta&t=A2N4440C0b7gL4JInq2qG2sKq1q5I2x3g"
+    LOGO_URL = "https://github.com/stefanusagranus-tech/LigaPSM26/blob/main/kgs_group_belgium_logo.jpg"
 
     st.markdown("""
         <style>
