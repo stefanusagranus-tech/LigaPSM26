@@ -310,8 +310,10 @@ if "data_loaded" not in st.session_state:
 
 # --- SIDEBAR NAVIGASI ---
 st.sidebar.image("https://tse3.mm.bing.net/th/id/OIP.mVrKCdnlL5Yc-3wRmzFXOAAAAA?r=0&rs=1&pid=ImgDetMain&o=7&rm=3", width=65)
-st.sidebar.markdown("<h2 style='color:#ffffff; margin-bottom:0px;'>PSM TOKO</h2>", unsafe_allow_html=True)
-st.sidebar.markdown("<p style='color:#38bdf8; font-size:12px; font-weight:bold; margin-top:-5px;'>Sales Dashboard & Input System</p>", unsafe_allow_html=True)
+st.sidebar.markdown("<h2 style='color:#ffffff; margin-bottom:0px;'>TOKO C383</h2>", unsafe_allow_html=True)
+st.sidebar.markdown("<p style='color:#38bdf8; font-size:12px; font-weight:bold; margin-top:-5px;'>Report PSM dan Target PSM</p>", unsafe_allow_html=True)
+
+st.sidebar.markdown("<p style='color:#38bdf8; font-size:12px; font-weight:bold; margin-top:-5px;'>Selamat Datang Kembali</p>", unsafe_allow_html=True)
 st.sidebar.markdown(f"<p style='color:#00ff88; font-size:12px; font-weight:bold;'>👤 User: {st.session_state.username}</p>", unsafe_allow_html=True)
 st.sidebar.markdown("---")
 
