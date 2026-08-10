@@ -10,7 +10,7 @@ st.set_page_config(page_title="PSM Toko - Sales Dashboard", layout="wide")
 
 EXCEL_FILE = "Database_Penjualan_PSM_Toko_Clean_GoogleSheets.xlsx"
 
-# --- CUSTOM CSS: TEMA NEON TERANG & SIDEBAR PENUH ---
+# --- CUSTOM CSS: NEON BOX, MENU KARTU, & WARNA TERANG ---
 st.markdown("""
     <style>
     /* Latar belakang utama aplikasi */
@@ -19,7 +19,7 @@ st.markdown("""
         color: #f0f6fc;
     }
     
-    /* Styling Kartu Metrik dengan Neon Glow Terang */
+    /* Styling Kartu Metrik Utama dengan Neon Glow */
     div[data-testid="stMetric"] {
         background: linear-gradient(135deg, #161b22 0%, #1f2937 100%);
         border: 1px solid #00d4ff;
@@ -46,7 +46,7 @@ st.markdown("""
         text-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
     }
     
-    /* Styling Sidebar Agar Jelas & Terang */
+    /* Styling Sidebar */
     [data-testid="stSidebar"] {
         background-color: #0f172a;
         border-right: 1px solid #1e293b;
@@ -54,6 +54,44 @@ st.markdown("""
     
     [data-testid="stSidebar"] label, [data-testid="stSidebar"] .stMarkdown {
         color: #ffffff !important;
+    }
+
+    /* Menghilangkan titik/lingkaran putih default pada st.radio dan mengubahnya menjadi Box Neon */
+    div[data-testid="stRadio"] div[role="radiogroup"] > label {
+        background: #161b22;
+        border: 1px solid #30363d;
+        padding: 10px 14px;
+        border-radius: 10px;
+        margin-bottom: 8px;
+        color: #ffffff !important;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+
+    /* Sembunyikan lingkaran/titik bawaan radio button */
+    div[data-testid="stRadio"] input[type="radio"] {
+        display: none;
+    }
+    
+    /* Sembunyikan elemen kotak kecil bawaan streamlit di dalam radio */
+    div[data-testid="stRadio"] div[role="radiogroup"] div:has(> input[type="radio"]) {
+        display: none;
+    }
+
+    /* Efek Hover & Aktif pada Menu Box Sidebar */
+    div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
+        border-color: #00d4ff;
+        background: #1f2937;
+        box-shadow: 0 0 10px rgba(0, 212, 255, 0.4);
+    }
+
+    /* Styling Expander / Kotak Login Admin di bawah */
+    div[data-testid="stExpander"] {
+        background: #161b22 !important;
+        border: 1px solid #00d4ff !important;
+        border-radius: 12px !important;
+        box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
     }
     </style>
 """, unsafe_allow_html=True)
@@ -96,7 +134,7 @@ st.sidebar.title("PSM TOKO")
 st.sidebar.markdown("<p style='color: #cbd5e1; font-size: 13px;'>Sales Dashboard & Input System</p>", unsafe_allow_html=True)
 st.sidebar.markdown("---")
 
-st.sidebar.markdown("<p style='color: #38bdf8; font-weight: bold;'>📌 MENU UTAMA</p>", unsafe_allow_html=True)
+st.sidebar.markdown("<p style='color: #00f0ff; font-weight: bold; letter-spacing: 1px;'>📌 MENU UTAMA</p>", unsafe_allow_html=True)
 
 menu_options = [
     "01 · Overview", 
@@ -109,16 +147,15 @@ menu_options = [
 if st.session_state.logged_in:
     menu_options.append("06 · Input & Reset Data")
 
-# Menggunakan st.radio agar seluruh menu tampil penuh dan jelas
 selected_tab = st.sidebar.radio("", menu_options, label_visibility="collapsed")
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("<p style='color: #38bdf8; font-weight: bold;'>🌟 PERIODE LAPORAN</p>", unsafe_allow_html=True)
+st.sidebar.markdown("<p style='color: #00f0ff; font-weight: bold; letter-spacing: 1px;'>🌟 PERIODE LAPORAN</p>", unsafe_allow_html=True)
 periods_dict = {row["period_name"]: row["period_id"] for _, row in st.session_state.periods_df.iterrows()}
 selected_period_name = st.selectbox("", ["Semua Periode (Overall)"] + list(periods_dict.keys()), label_visibility="collapsed")
 selected_period_id = None if selected_period_name == "Semua Periode (Overall)" else periods_dict[selected_period_name]
 
-# Area Login Admin dengan ikon kunci di bawah (Teks terang)
+# Area Login Admin dengan Box Neon di bawah
 st.sidebar.markdown("---")
 with st.sidebar.expander("🔑 Login Admin / Editor"):
     if not st.session_state.logged_in:
@@ -154,7 +191,6 @@ if selected_tab == "01 · Overview":
     ach = (tot_actual / tot_target * 100) if tot_target > 0 else 0
     gap = tot_actual - tot_target
 
-    # Baris 1: Kartu Metrik Neon
     c1, c2, c3, c4 = st.columns(4)
     with c1:
         st.metric("🎯 TARGET", f"{tot_target:,.0f}")
@@ -167,9 +203,7 @@ if selected_tab == "01 · Overview":
 
     st.markdown("---")
     
-    # Baris 2: Grafik
     col_chart1, col_chart2 = st.columns([2, 1])
-    
     with col_chart1:
         st.subheader("📈 Target vs Achievement per Periode")
         chart_data = st.session_state.sales_item_df.groupby("period_id")[["target_qty", "actual_qty"]].sum().reset_index()
