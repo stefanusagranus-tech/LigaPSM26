@@ -8,8 +8,8 @@ st.set_page_config(page_title="PSM Toko - Sales Dashboard", layout="wide")
 # --- SIMULASI DATABASE / DATA DUMMY (Bisa diubah/koneksi ke Google Sheets nantinya) ---
 if "periods" not in st.session_state:
     st.session_state.periods = [
-        {"period_id": "P01", "period_name": "Periode 1 (Januari)", "start_date": "2026-01-01", "end_date": "2026-01-15"},
-        {"period_id": "P02", "period_name": "Periode 2 (Februari)", "start_date": "2026-02-01", "end_date": "2026-02-15"}
+        {"period_id": "P01", "period_name": "Periode 1 ", "start_date": "2026-08-01", "end_date": "2026-08-07"},
+        {"period_id": "P02", "period_name": "Periode 2 ", "start_date": "2026-08-08", "end_date": "2026-08-15"}
     ]
 
 if "master_items" not in st.session_state:
