@@ -476,8 +476,6 @@ elif selected_tab == "02 · Detail Item":
                     </thead>
                     <tbody>
                         {table_rows_html}
-                    </tbody>
-                </table>
             </div>
         """, unsafe_allow_html=True)
 
