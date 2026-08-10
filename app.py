@@ -792,8 +792,6 @@ elif selected_tab == "03 · Penjualan Personil":
                         </thead>
                         <tbody>
                             {table_rows_html}
-                        </tbody>
-                    </table>
                 </div>
             """, unsafe_allow_html=True)
 
