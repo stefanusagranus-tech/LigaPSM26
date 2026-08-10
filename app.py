@@ -393,8 +393,32 @@ periods_dict = {row["period_name"]: row["period_id"] for _, row in st.session_st
 selected_period_name = st.sidebar.selectbox("", ["Semua Periode (Overall)"] + list(periods_dict.keys()), label_visibility="collapsed")
 selected_period_id = None if selected_period_name == "Semua Periode (Overall)" else periods_dict[selected_period_name]
 
-# Tombol Logout di Sidebar
-st.sidebar.markdown("---")
+# --- CSS UNTUK MERUBAH TOMBOL LOGOUT DALAM SIDEBAR ---
+st.markdown("""
+    <style>
+        /* Target khusus untuk semua st.button di dalam sidebar */
+        [data-testid="stSidebar"] div[data-testid="stButton"] > button {
+            background-color: #0f172a !important; /* Warna Gelap / Hitam */
+            color: #ef4444 !important;            /* Teks Warna Merah */
+            border: 1px solid #ef4444 !important;  /* Border Merah */
+            border-radius: 8px !important;
+            font-weight: 600 !important;
+            transition: all 0.3s ease-in-out !important;
+        }
+
+        /* Efek Hover (Saat kursor berada di atas tombol Logout) */
+        [data-testid="stSidebar"] div[data-testid="stButton"] > button:hover {
+            background-color: #ef4444 !important; /* Latar berubah merah */
+            color: #ffffff !important;            /* Teks berubah putih */
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.5) !important; /* Efek Glow Red */
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+# --- BAGIAN KODE LOGOUT ANDA ---
+st.sidebar.markdown("<hr style='margin: 15px 0; border-color: #334155;'>", unsafe_allow_html=True)
+
 if st.sidebar.button("🚪 Keluar / Logout", use_container_width=True):
     st.session_state.logged_in = False
     st.session_state.username = ""
