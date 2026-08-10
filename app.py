@@ -18,15 +18,15 @@ EXCEL_FILE = "Database_Penjualan_PSM_Toko_Clean_GoogleSheets.xlsx"
 
 # --- DATABASE PENGGUNA (LOGIN) ---
 USER_CREDENTIALS = { 
-"admin": {"password": "c383kgs", "nama": "Kuro Lucifer"}, 
-"23044862": {"password": "c383kgs", "nama": "Aris Aprilianto"}, 
-"24091737": {"password": "c383kgs", "nama": "Tika"}, 
-"24096619": {"password": "c383kgs", "nama": "Rizki Gunawan"}, 
-"25037119": {"password": "c383kgs", "nama": "Adelia Pratiwi"}, 
-"26065884": {"password": "c383kgs", "nama": "Ilham Priandika"},
-"13127006": {"password": "c383kgs", "nama": "Reza Purnama Agustin"},
-"16016359": {"password": "c383kgs", "nama": "Subekti Pandu Yulianto"},
-"19061965": {"password": "c383kgs", "nama": "Kusdewi Tia Ningrum"}
+"admin":"password": "c383kgs", "nama": "Kuro Lucifer", 
+"23044862":"password": "c383kgs", "nama": "Aris Aprilianto", 
+"24091737":"password": "c383kgs", "nama": "Tika", 
+"24096619":"password": "c383kgs", "nama": "Rizki Gunawan", 
+"25037119":"password": "c383kgs", "nama": "Adelia Pratiwi", 
+"26065884":"password": "c383kgs", "nama": "Ilham Priandika",
+"13127006":"password": "c383kgs", "nama": "Reza Purnama Agustin",
+"16016359":"password": "c383kgs", "nama": "Subekti Pandu Yulianto",
+"19061965":"password": "c383kgs", "nama": "Kusdewi Tia Ningrum"
     
 }
 
