@@ -8,7 +8,7 @@ from datetime import datetime, timezone, timedelta
 
 # GMT+7 / WIB Timezone Adjustment
 wib_tz = timezone(timedelta(hours=7))
-now_wib = datetime.now(timezone.utc).astimezone(wib.tz)
+now_wib = datetime.now(timezone.utc).astimezone(wib_tz)
 current_time_str = now.strftime("%A, %d %B %Y | %H:%M WIB")
 
 # Konfigurasi Halaman Dashboard
