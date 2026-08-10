@@ -350,23 +350,139 @@ elif selected_tab == "02 · Detail Item":
     st.title("📦 Detail Item & Performa Produk")
     
     si_df = st.session_state.sales_item_df.copy()
-    if selected_period_id:
-        si_df = si_df[si_df["period_id"] == selected_period_id]
+    
+    # 1. BARIS FILTER PERIODE, SEARCH, & SORTING ITEM
+    st.markdown("<p style='color:#38bdf8; font-weight:bold; font-size:13px;'>🔍 FILTER & PENGURUTAN DATA PRODUK</p>", unsafe_allow_html=True)
+    f_col1, f_col2, f_col3 = st.columns([1.5, 1, 1.2])
+    
+    with f_col1:
+        search_query = st.text_input("Cari Nama Produk / Item", placeholder="Ketik nama item...", key="search_item_tab2")
         
+    with f_col2:
+        period_options_tab2 = ["Semua Periode Promosi"] + list(periods_dict.keys())
+        selected_p_tab2 = st.selectbox("Periode Promosi", period_options_tab2, key="period_tab2")
+        
+    with f_col3:
+        sort_option = st.selectbox(
+            "Urutkan Berdasarkan", 
+            [
+                "Penjualan Terbanyak (Terlaris)", 
+                "Penjualan Tersedikit", 
+                "Achievement Tertinggi (% Ach)", 
+                "Nama Produk (A - Z)"
+            ],
+            key="sort_tab2"
+        )
+
+    # Filter Periode
+    if selected_p_tab2 != "Semua Periode Promosi":
+        p_id_filter = periods_dict[selected_p_tab2]
+        si_df = si_df[si_df["period_id"] == p_id_filter]
+
+    # Bersihkan Data Angka
     si_df["target_qty"] = pd.to_numeric(si_df["target_qty"], errors="coerce").fillna(0)
     si_df["actual_qty"] = pd.to_numeric(si_df["actual_qty"], errors="coerce").fillna(0)
-    si_df["ach"] = si_df.apply(lambda r: (r["actual_qty"] / r["target_qty"] * 100) if r["target_qty"] > 0 else 0, axis=1)
     
-    search_query = st.text_input("🔍 Cari Nama Produk / Item")
+    # Agregasi Data per Nama Item
+    item_grouped = si_df.groupby("item_name").agg({
+        "target_qty": "sum",
+        "actual_qty": "sum"
+    }).reset_index()
+    
+    item_grouped["ach"] = item_grouped.apply(
+        lambda r: (r["actual_qty"] / r["target_qty"] * 100) if r["target_qty"] > 0 else 0, axis=1
+    )
+    item_grouped["gap"] = item_grouped["actual_qty"] - item_grouped["target_qty"]
+
+    # Filter Pencarian Kata Kunci
     if search_query:
-        si_df = si_df[si_df["item_name"].str.contains(search_query, case=False, na=False)]
+        item_grouped = item_grouped[item_grouped["item_name"].str.contains(search_query, case=False, na=False)]
+
+    if not item_grouped.empty:
+        # Menentukan Item Terlaris & Terendah
+        top_item = item_grouped.sort_values(by="actual_qty", ascending=False).iloc[0]
+        low_item = item_grouped.sort_values(by="actual_qty", ascending=True).iloc[0]
         
-    # Bersihkan tabel: Buang item_id, record_id, updated_at
-    display_items = si_df[["item_name", "target_qty", "actual_qty", "ach"]].copy()
-    display_items.columns = ["Nama Produk / Item", "Target (Pcs)", "Actual Penjualan (Pcs)", "% Achievement"]
-    display_items["% Achievement"] = display_items["% Achievement"].apply(lambda x: f"{x:.1f}%")
-    
-    st.dataframe(display_items, use_container_width=True, hide_index=True)
+        # Pengurutan Data (Sorting)
+        if sort_option == "Penjualan Terbanyak (Terlaris)":
+            item_grouped = item_grouped.sort_values(by="actual_qty", ascending=False)
+        elif sort_option == "Penjualan Tersedikit":
+            item_grouped = item_grouped.sort_values(by="actual_qty", ascending=True)
+        elif sort_option == "Achievement Tertinggi (% Ach)":
+            item_grouped = item_grouped.sort_values(by="ach", ascending=False)
+        elif sort_option == "Nama Produk (A - Z)":
+            item_grouped = item_grouped.sort_values(by="item_name", ascending=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # 2. KARTU REPORT ITEM TERLARIS & TERENDAH
+        r_col1, r_col2, r_col3 = st.columns(3)
+        with r_col1:
+            st.markdown(f"""
+                <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 14px; text-align: left; box-shadow: 0 0 12px rgba(0, 240, 255, 0.35);">
+                    <div style="color: #f59e0b; font-size: 11px; font-weight: bold; letter-spacing: 0.8px;">🔥 ITEM TERLARIS (TOP SELLER)</div>
+                    <div style="color: #ffffff; font-size: 16px; font-weight: 800; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{top_item['item_name']}</div>
+                    <div style="color: #00ff88; font-size: 20px; font-weight: 800;">{top_item['actual_qty']:,.0f} Pcs</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+        with r_col2:
+            st.markdown(f"""
+                <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 14px; text-align: left; box-shadow: 0 0 12px rgba(0, 240, 255, 0.35);">
+                    <div style="color: #ef4444; font-size: 11px; font-weight: bold; letter-spacing: 0.8px;">📉 ITEM PENJUALAN TERENDAH</div>
+                    <div style="color: #ffffff; font-size: 16px; font-weight: 800; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{low_item['item_name']}</div>
+                    <div style="color: #00ff88; font-size: 20px; font-weight: 800;">{low_item['actual_qty']:,.0f} Pcs</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+        with r_col3:
+            st.markdown(f"""
+                <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 14px; text-align: left; box-shadow: 0 0 12px rgba(0, 240, 255, 0.35);">
+                    <div style="color: #38bdf8; font-size: 11px; font-weight: bold; letter-spacing: 0.8px;">📦 TOTAL VARIASI ITEM DIPANTAU</div>
+                    <div style="color: #ffffff; font-size: 16px; font-weight: 800; margin-top: 4px;">{len(item_grouped)} Jenis Produk</div>
+                    <div style="color: #00ff88; font-size: 20px; font-weight: 800;">{item_grouped['actual_qty'].sum():,.0f} Pcs Total</div>
+                </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # 3. TABEL HTML NEON IDENTIK TAB 03
+        st.markdown("<p style='color:#ffffff; font-size:15px; font-weight:bold; margin-bottom:8px;'>📋 Tabel Performa Penjualan Produk</p>", unsafe_allow_html=True)
+        
+        table_rows_html = ""
+        for _, row in item_grouped.iterrows():
+            gap_color = "#00ff88" if row['gap'] >= 0 else "#ef4444"
+            table_rows_html += f"""
+            <tr style="border-bottom: 1px solid #1e293b;">
+                <td style="padding: 12px 14px; color: #ffffff; font-weight: bold; font-size: 13px;">{row['item_name']}</td>
+                <td style="padding: 12px 14px; color: #94a3b8; font-weight: bold; font-size: 14px;">{row['target_qty']:,.0f}</td>
+                <td style="padding: 12px 14px; color: #00ff88; font-weight: bold; font-size: 14px;">{row['actual_qty']:,.0f}</td>
+                <td style="padding: 12px 14px; color: #00ff88; font-weight: bold; font-size: 14px;">{row['ach']:.1f}%</td>
+                <td style="padding: 12px 14px; color: {gap_color}; font-weight: bold; font-size: 14px;">{row['gap']:,.0f}</td>
+            </tr>
+            """
+            
+        st.markdown(f"""
+            <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 12px; box-shadow: 0 0 14px rgba(0, 240, 255, 0.35); max-height: 520px; overflow-y: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid #334155;">
+                            <th style="padding: 10px 14px; color: #38bdf8; font-size: 11px; font-weight: 800; letter-spacing: 0.5px;">NAMA PRODUK / ITEM</th>
+                            <th style="padding: 10px 14px; color: #38bdf8; font-size: 11px; font-weight: 800; letter-spacing: 0.5px;">TARGET (PCS)</th>
+                            <th style="padding: 10px 14px; color: #38bdf8; font-size: 11px; font-weight: 800; letter-spacing: 0.5px;">ACTUAL SALES (PCS)</th>
+                            <th style="padding: 10px 14px; color: #38bdf8; font-size: 11px; font-weight: 800; letter-spacing: 0.5px;">% ACHIEVEMENT</th>
+                            <th style="padding: 10px 14px; color: #38bdf8; font-size: 11px; font-weight: 800; letter-spacing: 0.5px;">GAP / SELISIH</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {table_rows_html}
+                    </tbody>
+                </table>
+            </div>
+        """, unsafe_allow_html=True)
+
+    else:
+        st.warning("Tidak ada produk yang cocok dengan kriteria pencarian.")
 
 # --- TAB 03: PENJUALAN PERSONIL ---
 elif selected_tab == "03 · Penjualan Personil":
