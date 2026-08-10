@@ -169,34 +169,122 @@ if "username" not in st.session_state:
 
 # --- HALAMAN LOGIN ---
 def show_login_page():
-    _, col2, _ = st.columns([1, 1.2, 1])
+    # URL Logo KGS Group Belgium
+    LOGO_URL = "https://media.licdn.com/dms/image/v2/D4E0BAQG56I816f_sWA/company-logo_200_200/company-logo_200_200/0/1710323382438?e=1740000000&v=beta&t=example" 
+
+    st.markdown("""
+        <style>
+            /* Container utama login card */
+            .login-card {
+                background-color: #1e293b;
+                padding: 35px 30px;
+                border-radius: 16px;
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+                border: none !important;
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            
+            /* Logo Perusahaan */
+            .login-logo {
+                width: 90px;
+                height: 90px;
+                object-fit: contain;
+                border-radius: 12px;
+                background-color: #ffffff;
+                padding: 6px;
+                margin-bottom: 15px;
+                border: none !important;
+            }
+            .login-header {
+                color: #ffffff;
+                font-size: 22px;
+                font-weight: 700;
+                margin-bottom: 6px;
+            }
+            .login-subtitle {
+                color: #38bdf8;
+                font-size: 13px;
+                margin-bottom: 0px;
+            }
+
+            /* 1. MENGUBAH TULISAN LABEL "USERNAME" & "PASSWORD" MENJADI WARNA BIRU */
+            div[data-testid="stWidgetLabel"] label, 
+            div[data-testid="stWidgetLabel"] p {
+                color: #38bdf8 !important; /* Biru neon / sky blue */
+                font-weight: 600 !important;
+                font-size: 14px !important;
+            }
+
+            /* Styling input fields */
+            div[data-baseweb="input"] {
+                border: none !important;
+                background-color: #0f172a !important;
+                border-radius: 8px !important;
+            }
+            div[data-baseweb="input"] input {
+                color: #ffffff !important;
+            }
+
+            /* 2. MENGUBAH TOMBOL "MASUK KE APLIKASI" MENJADI HITAM NEON */
+            div[data-testid="stFormSubmitButton"] > button {
+                background-color: #090d16 !important; /* Warna Hitam Pekat */
+                color: #38bdf8 !important; /* Teks Biru Neon */
+                font-weight: 700 !important;
+                border: 1.5px solid #38bdf8 !important; /* Border Neon Biru */
+                border-radius: 8px !important;
+                box-shadow: 0 0 12px rgba(56, 189, 248, 0.4) !important; /* Efek Glow Neon */
+                transition: all 0.3s ease-in-out !important;
+            }
+            
+            /* Efek Hover saat tombol diarah mouse */
+            div[data-testid="stFormSubmitButton"] > button:hover {
+                background-color: #38bdf8 !important;
+                color: #090d16 !important; /* Teks berubah hitam saat diklik/hover */
+                box-shadow: 0 0 20px rgba(56, 189, 248, 0.8) !important; /* Glow makin terang */
+                border-color: #38bdf8 !important;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # Layout tengah
+    _, col2, _ = st.columns([1, 1.4, 1])
+    
     with col2:
-        st.markdown("""
-            <div class='login-box'>
-                <h2 style='text-align: center; color: #ffffff; margin-bottom: 5px;'>🔐 PSM TOKO LOGIN</h2>
-                <p style='text-align: center; color: #38bdf8; font-size: 13px; margin-bottom: 25px;'>Sistem Monitoring & Input Sales</p>
+        # Header Box
+        st.markdown(f"""
+            <div class='login-card'>
+                <img src='{LOGO_URL}' class='login-logo' alt='KGS Group Logo'>
+                <div class='login-header'>🔐 PSM TOKO LOGIN</div>
+                <p class='login-subtitle'>Sistem Monitoring & Input Sales</p>
             </div>
         """, unsafe_allow_html=True)
         
-        with st.form("login_form"):
-            username_input = st.text_input("Username", placeholder="Masukkan username")
+        # Form Login
+        with st.form("login_form", clear_on_submit=False):
+            username_input = st.text_input("Username", placeholder="Masukkan username").strip()
             password_input = st.text_input("Password", type="password", placeholder="Masukkan password")
+            
             submit_btn = st.form_submit_button("Masuk ke Aplikasi", use_container_width=True)
             
             if submit_btn:
-                if username_input in USER_CREDENTIALS and USER_CREDENTIALS[username_input] == password_input:
+                if not username_input or not password_input:
+                    st.warning("Username dan Password wajib diisi!")
+                elif username_input in USER_CREDENTIALS and USER_CREDENTIALS[username_input] == password_input:
                     st.session_state.logged_in = True
                     st.session_state.username = username_input
-                    st.success("Login Berhasil!")
+                    st.toast("Login Berhasil!", icon="✅")
                     st.rerun()
                 else:
                     st.error("Username atau Password salah!")
 
 # Cek Status Autentikasi
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+
 if not st.session_state.logged_in:
     show_login_page()
     st.stop()
-
 # --- INISIALISASI DATA DASHBOARD ---
 if "data_loaded" not in st.session_state:
     p_df, i_df, pers_df, si_df, sp_df = load_database()
