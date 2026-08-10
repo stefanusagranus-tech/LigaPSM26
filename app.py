@@ -371,7 +371,7 @@ elif selected_tab == "02 · Detail Item":
 
 # --- TAB 03: PENJUALAN PERSONIL ---
 elif selected_tab == "03 · Penjualan Personil":
-    st.title("👥 Total Penjualan Personil Toko")
+    st.title("👥 Penjualan Personil Toko")
     
     sp_df = st.session_state.sales_person_df.copy()
     if selected_period_id:
@@ -380,18 +380,107 @@ elif selected_tab == "03 · Penjualan Personil":
     sp_df["actual_qty"] = pd.to_numeric(sp_df["actual_qty"], errors="coerce").fillna(0)
     
     if not sp_df.empty:
+        # Agregasi data penjualan per personil
         summary_person = sp_df.groupby("person_name")["actual_qty"].sum().reset_index().sort_values(by="actual_qty", ascending=False)
-        total_all_person = summary_person["actual_qty"].sum()
-        summary_person["pct_contrib"] = (summary_person["actual_qty"] / total_all_person * 100) if total_all_person > 0 else 0
+        tot_actual_personil = summary_person["actual_qty"].sum()
+        avg_sales_personil = summary_person["actual_qty"].mean() if len(summary_person) > 0 else 0
+        top_performer_name = summary_person.iloc[0]["person_name"] if len(summary_person) > 0 else "-"
         
-        # Format Tampilan Tabel Tanpa ID & Tanpa Tanggal Update
-        summary_person.columns = ["Nama Staf / Personil", "Total Penjualan (Pcs)", "% Kontribusi Total"]
-        summary_person["% Kontribusi Total"] = summary_person["% Kontribusi Total"].apply(lambda x: f"{x:.1f}%")
+        # Hitung Persentase Kontribusi
+        summary_person["pct_contrib"] = (summary_person["actual_qty"] / tot_actual_personil * 100) if tot_actual_personil > 0 else 0
         
-        st.dataframe(summary_person, use_container_width=True, hide_index=True)
+        # 1. KARTU METRIK UTAMA (3 KOLOM ATAS)
+        m1, m2, m3 = st.columns(3)
+        with m1:
+            st.metric("TOTAL ACTUAL PERSONIL", f"{tot_actual_personil:,.0f} Pcs")
+        with m2:
+            st.metric("RATA-RATA PENJUALAN/STAF", f"{avg_sales_personil:,.0f} Pcs")
+        with m3:
+            st.metric("TOP PERFORMER", top_performer_name)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # 2. PODIUM RINGKAS / MINI TOP 3 PERFORMER
+        if len(summary_person) >= 1:
+            p1_name = summary_person.iloc[0]["person_name"]
+            p1_qty = summary_person.iloc[0]["actual_qty"]
+            
+            p2_name = summary_person.iloc[1]["person_name"] if len(summary_person) >= 2 else "-"
+            p2_qty = summary_person.iloc[1]["actual_qty"] if len(summary_person) >= 2 else 0
+            
+            p3_name = summary_person.iloc[2]["person_name"] if len(summary_person) >= 3 else "-"
+            p3_qty = summary_person.iloc[2]["actual_qty"] if len(summary_person) >= 3 else 0
+
+            st.markdown(f"""
+                <div style="display: flex; gap: 12px; justify-content: center; align-items: flex-end; margin-bottom: 25px;">
+                    <!-- Juara 2 -->
+                    <div style="flex: 1; background: #161b22; border: 1px solid #94a3b8; border-radius: 10px; padding: 10px; text-align: center; box-shadow: 0 0 10px rgba(148,163,184,0.2);">
+                        <span style="font-size: 20px;">🥈</span>
+                        <div style="color: #94a3b8; font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">JUARA 2</div>
+                        <div style="color: #ffffff; font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{p2_name}</div>
+                        <div style="color: #00f0ff; font-size: 15px; font-weight: 800;">{p2_qty:,.0f} Pcs</div>
+                    </div>
+                    <!-- Juara 1 -->
+                    <div style="flex: 1; background: #161b22; border: 1.5px solid #f59e0b; border-radius: 10px; padding: 12px; text-align: center; box-shadow: 0 0 15px rgba(245,158,11,0.35); transform: scale(1.03);">
+                        <span style="font-size: 24px;">🥇</span>
+                        <div style="color: #f59e0b; font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">JUARA 1</div>
+                        <div style="color: #ffffff; font-size: 14px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{p1_name}</div>
+                        <div style="color: #00ff88; font-size: 17px; font-weight: 800;">{p1_qty:,.0f} Pcs</div>
+                    </div>
+                    <!-- Juara 3 -->
+                    <div style="flex: 1; background: #161b22; border: 1px solid #b45309; border-radius: 10px; padding: 10px; text-align: center; box-shadow: 0 0 10px rgba(180,83,9,0.2);">
+                        <span style="font-size: 20px;">🥉</span>
+                        <div style="color: #b45309; font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">JUARA 3</div>
+                        <div style="color: #ffffff; font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{p3_name}</div>
+                        <div style="color: #00f0ff; font-size: 15px; font-weight: 800;">{p3_qty:,.0f} Pcs</div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("---")
+
+        # 3. TAMPILAN DUA KOLOM: TABEL KIRI & GRAFIK KANAN
+        col_table, col_chart = st.columns([1, 1])
+
+        with col_table:
+            st.subheader("📋 Penjualan Personil")
+            
+            display_table = summary_person.copy()
+            display_table.columns = ["PERSONIL", "TOTAL SALES (PCS)", "KONTRIBUSI"]
+            display_table["TOTAL SALES (PCS)"] = display_table["TOTAL SALES (PCS)"].apply(lambda x: f"{x:,.0f}")
+            display_table["KONTRIBUSI"] = display_table["KONTRIBUSI"].apply(lambda x: f"{x:.1f}%")
+            
+            st.dataframe(display_table, use_container_width=True, hide_index=True)
+
+        with col_chart:
+            st.subheader("📊 Grafik Perbandingan Performa Tim")
+            
+            # Plotly Bar Chart Hijau Neon Sesuai Gambar Rujukan
+            fig_person = go.Figure()
+            fig_person.add_trace(go.Bar(
+                x=summary_person["person_name"],
+                y=summary_person["actual_qty"],
+                name="Total Penjualan Pcs",
+                marker_color="#00ff88", # Warna Hijau Cerah Neon
+                text=summary_person["actual_qty"].apply(lambda x: f"{x:,.0f}"),
+                textposition="outside",
+                textfont=dict(color="#ffffff", size=12)
+            ))
+            
+            fig_person.update_layout(
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font=dict(color="#ffffff"),
+                xaxis=dict(showgrid=False, tickfont=dict(color="#ffffff")),
+                yaxis=dict(showgrid=True, gridcolor="#1e293b", tickfont=dict(color="#ffffff")),
+                margin=dict(l=10, r=10, t=30, b=10),
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            )
+            
+            st.plotly_chart(fig_person, use_container_width=True)
+
     else:
         st.info("Belum ada data transaksi penjualan personil.")
-
 
 # --- TAB 04: PENCAPAIAN PERNIK ---
 elif selected_tab == "04 · Pencapaian Pernik":
