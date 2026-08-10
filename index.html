@@ -1,0 +1,820 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PSM Toko - Sales Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --bg-main: #0b0f19;          
+      --bg-card: #131b2e;          
+      --bg-sidebar: #0e1626;       
+      --border-color: rgba(255, 255, 255, 0.08);
+      --text-main: #f1f5f9;        
+      --text-muted: #64748b;       
+      --neon-cyan: #00f2fe;
+      --neon-purple: #9d4edd;
+      --neon-green: #00ff9d;
+      --neon-red: #ff2a6d;
+      --neon-amber: #ffb703;
+      --glow-cyan: 0 0 15px rgba(0, 242, 254, 0.35);
+      --glow-card: 0 8px 25px rgba(0, 0, 0, 0.45);
+    }
+
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body { margin: 0; background: var(--bg-main); color: var(--text-main); font-size: 14px; }
+
+    /* Sidebar Navigasi */
+    .side {
+      position: fixed; inset: 0 auto 0 0; width: 240px;
+      background: var(--bg-sidebar); border-right: 1px solid var(--border-color);
+      padding: 22px 16px; display: flex; flex-direction: column; justify-content: space-between; z-index: 100;
+    }
+    .brand-box { display: flex; align-items: center; gap: 12px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
+    .brand-icon-img { width: 38px; height: 38px; border-radius: 10px; object-fit: cover; border: 1px solid var(--border-color); box-shadow: var(--glow-cyan); }
+    .brand-text b { display: block; font-size: 15px; color: #fff; }
+    .brand-text small { color: var(--text-muted); font-size: 10px; }
+
+    .nav-section { margin-top: 18px; }
+    .nav-title { font-size: 10px; font-weight: 800; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 8px; padding-left: 10px; }
+    .nav button {
+      display: flex; align-items: center; gap: 10px; width: 100%; border: 0; background: none;
+      color: #94a3b8; padding: 10px 12px; border-radius: 10px; text-align: left; cursor: pointer;
+      font-size: 13px; font-weight: 600; transition: all 0.2s; margin-bottom: 4px;
+    }
+    .nav button:hover { background: rgba(255, 255, 255, 0.04); color: #fff; }
+    .nav button.active {
+      background: linear-gradient(90deg, rgba(0, 242, 254, 0.15), transparent);
+      color: var(--neon-cyan); border-left: 3px solid var(--neon-cyan); box-shadow: var(--glow-cyan);
+    }
+
+    /* Area Utama */
+    .main { margin-left: 240px; padding: 26px; max-width: 1600px; }
+    .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
+    .top-title h1 { margin: 0; font-size: 24px; font-weight: 800; color: #fff; }
+    .top-title p { margin: 4px 0 0; color: var(--text-muted); font-size: 12px; }
+
+    .select, .search, input {
+      border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 14px;
+      background: var(--bg-card); color: #fff; width: 100%;
+    }
+    .btn { border: 0; border-radius: 10px; padding: 10px 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+    .primary { background: linear-gradient(135deg, var(--neon-cyan), #0077ff); color: #000; box-shadow: var(--glow-cyan); }
+    .danger { background: rgba(255, 42, 109, 0.2); color: var(--neon-red); border: 1px solid var(--neon-red); }
+    .ghost { background: rgba(255, 255, 255, 0.05); color: var(--text-main); border: 1px solid var(--border-color); }
+
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px; }
+    .card {
+      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px;
+      padding: 20px; box-shadow: var(--glow-card); position: relative; overflow: hidden;
+    }
+    .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple)); }
+    .label { color: var(--text-muted); font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .kpi { font-size: 26px; font-weight: 900; margin-top: 6px; }
+    .title { font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 12px; }
+
+    .green { color: var(--neon-green); }
+    .red   { color: var(--neon-red); }
+    .amber { color: var(--neon-amber); }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .table th, .table td { padding: 12px 10px; border-bottom: 1px solid var(--border-color); text-align: left; }
+    .table th { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
+
+    .shortcut-card {
+      background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color);
+      border-radius: 12px; padding: 16px; display: flex; justify-content: space-between; align-items: center;
+    }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(5px);
+      display: none; justify-content: center; align-items: center; z-index: 1000;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-box {
+      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px;
+      padding: 26px; width: 380px; box-shadow: var(--glow-card); position: relative;
+    }
+
+    @media (max-width: 850px) {
+      .side { width: 70px; padding: 15px 8px; }
+      .brand-text, .nav-title { display: none; }
+      .main { margin-left: 70px; padding: 16px; }
+      .grid, .two { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="side">
+    <div>
+      <div class="brand-box">
+        <img src="https://tse3.mm.bing.net/th/id/OIP.mVrKCdnlL5Yc-3wRmzFXOAAAAA?r=0&rs=1&pid=ImgDetMain&o=7&rm=3" alt="Logo" class="brand-icon-img">
+        <div class="brand-text">
+          <b>PSM TOKO</b>
+          <small>Sales Dashboard</small>
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-title">MENU UTAMA</div>
+        <nav class="nav">
+          <button class="active" data-p="overview">📊 01 · Overview</button>
+          <button data-p="items">📦 02 · Detail Item</button>
+          <button data-p="personil">👥 03 · Penjualan Personil</button>
+          <button data-p="pernik">🏆 04 · Pencapaian Pernik</button>
+          <button data-p="analysis">📈 05 · Analisis Tren Harian</button>
+          <button data-p="input-data" id="navInputBtn" style="display:none; color:var(--neon-green);">✏️ 06 · Input Data Sales</button>
+        </nav>
+      </div>
+    </div>
+
+    <!-- User Auth Status di Sidebar -->
+    <div style="padding-top:15px; border-top:1px solid var(--border-color);">
+      <div id="userInfo" style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">Mode: <b>Viewer</b></div>
+      <button id="loginToggleBtn" class="btn primary" style="width:100%; font-size:12px; padding:8px;">🔒 Login Editor</button>
+    </div>
+  </aside>
+
+  <!-- MAIN KONTEN -->
+  <main class="main">
+    <div class="top-header">
+      <div class="top-title">
+        <h1 id="head">Overview Penjualan Toko</h1>
+        <p>Laporan performa toko · <span id="clock" class="amber" style="font-weight: bold;"></span></p>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <select id="period" class="select" style="width: 240px;"></select>
+        <button class="btn ghost" id="refresh">↻ Refresh</button>
+      </div>
+    </div>
+
+    <!-- TAB 01: OVERVIEW TOKO -->
+    <section id="overview" class="page active">
+      <div id="kpi" class="grid" style="margin-bottom: 20px;"></div>
+
+      <div class="card" style="margin-bottom: 20px;">
+        <div class="title">📅 Ringkasan Periode Penjualan Toko</div>
+        <div id="overviewPeriodsTable"></div>
+      </div>
+
+      <div class="two">
+        <div class="card">
+          <div class="title">Ringkasan Performa Item (Top Sales)</div>
+          <div id="overviewItemTable"></div>
+        </div>
+        <div class="card">
+          <div class="title">Visualisasi Penjualan vs Target</div>
+          <div style="height: 300px;"><canvas id="overviewChart"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 02: DETAIL ITEM -->
+    <section id="items" class="page">
+      <div id="itemShortcuts" class="two" style="margin-top:0; margin-bottom:16px;"></div>
+      <div class="card">
+        <div style="margin-bottom: 15px;">
+          <input id="search" class="search" placeholder="🔍 Cari nama item..." onkeyup="renderTab02()">
+        </div>
+        <div id="itemsTable"></div>
+      </div>
+    </section>
+
+    <!-- TAB 03: PENJUALAN PERSONIL -->
+    <section id="personil" class="page">
+      <div class="grid" style="margin-bottom: 20px;">
+        <div class="card"><div class="label">Total Personil Aktif</div><div id="t3-person-count" class="kpi">0 Orang</div></div>
+        <div class="card"><div class="label">Total Actual Personil</div><div id="t3-actual-total" class="kpi green">0 Pcs</div></div>
+        <div class="card"><div class="label">Rata-rata Penjualan/Staf</div><div id="t3-avg-person" class="kpi amber">0 Pcs</div></div>
+        <div class="card"><div class="label">Top Performer</div><div id="t3-top-person" class="kpi green">-</div></div>
+      </div>
+      <div class="two">
+        <div class="card">
+          <div class="title">Peringkat Penjualan Personil</div>
+          <div id="peopleTable"></div>
+        </div>
+        <div class="card">
+          <div class="title">Grafik Perbandingan Performa Tim</div>
+          <div style="height: 300px;"><canvas id="personilSummaryChart"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 04: PENCAPAIAN PERNIK PER PERSONIL -->
+    <section id="pernik" class="page">
+      <div class="card" style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; gap: 15px;">
+        <div>
+          <b class="green">PILIH PERSONIL TOKO</b>
+          <p style="margin:2px 0 0; color:var(--text-muted); font-size:12px;">Filter laporan item pernik spesifik per staf</p>
+        </div>
+        <div style="width: 260px;">
+          <select id="personilSelect" class="select" onchange="renderTab04()"></select>
+        </div>
+      </div>
+
+      <div class="grid" style="margin-bottom: 16px;">
+        <div class="card"><div class="label">Target Kasir Item</div><div id="p-total-target" class="kpi">0 Pcs</div></div>
+        <div class="card"><div class="label">Actual Penjualan</div><div id="p-total-actual" class="kpi green">0 Pcs</div></div>
+        <div class="card"><div class="label">Sisa Gap Target</div><div id="p-total-gap" class="kpi amber">0 Pcs</div></div>
+        <div class="card"><div class="label">% Achievement</div><div id="p-total-ach" class="kpi green">0%</div></div>
+      </div>
+
+      <div class="two">
+        <div class="card">
+          <div class="title">Rincian Target Item Pernik</div>
+          <div id="personilTableBody"></div>
+        </div>
+        <div class="card">
+          <div class="title">Visual Breakdown Item</div>
+          <div style="height: 280px;"><canvas id="personilChart"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 05: ANALISIS TREN HARIAN -->
+    <section id="analysis" class="page">
+      <div class="grid" style="margin-bottom: 16px;">
+        <div class="card"><div class="label">Target Periode</div><div id="t5-target" class="kpi">0 Pcs</div></div>
+        <div class="card"><div class="label">Target Harian Ideal</div><div id="t5-daily-target" class="kpi amber">0 Pcs/Hari</div></div>
+        <div class="card"><div class="label">Pencapaian Actual</div><div id="t5-actual" class="kpi green">0 Pcs</div></div>
+        <div class="card"><div class="label">Best Estimasi Akhir</div><div id="t5-best-est" class="kpi green">0 Pcs</div></div>
+      </div>
+
+      <div class="card" style="margin-bottom: 16px;">
+        <div class="title">📈 Grafik Fluktuasi Penjualan Harian</div>
+        <div style="height: 280px;"><canvas id="trendChart"></canvas></div>
+      </div>
+
+      <div class="two">
+        <div class="card" style="border-left: 4px solid var(--neon-green);">
+          <div class="title green">🔥 Insight Growth (Penjualan Melonjak)</div>
+          <div id="growthInsight"></div>
+        </div>
+        <div class="card" style="border-left: 4px solid var(--neon-red);">
+          <div class="title red">⚠️ Insight Disgrowth (Penjualan Drop)</div>
+          <div id="disgrowthInsight"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bagian Tab 06 diperbarui di bawah ini -->
+<section id="input-data" class="page">
+  <div class="two" style="margin-top:0;">
+    <!-- Form Penjualan Personil/Staf -->
+    <div class="card">
+      <div class="title green">📝 Input Penjualan Pernik Staf</div>
+      
+      <label class="label">Pilih Periode</label>
+      <select id="form_p_period" class="select" onchange="filterItemsForForm('form_p_period', 'form_p_item')" style="margin: 4px 0 12px;"></select>
+
+      <label class="label">Tanggal Penjualan</label>
+      <input type="date" id="form_p_date" class="select" style="margin: 4px 0 12px;">
+
+      <label class="label">Pilih Staf / Personil</label>
+      <select id="form_p_person" class="select" style="margin: 4px 0 12px;"></select>
+
+      <label class="label">Pilih Item (Periode Terpilih)</label>
+      <select id="form_p_item" class="select" style="margin: 4px 0 12px;"></select>
+
+      <label class="label">Actual Qty Penjualan (Pcs)</label>
+      <input type="number" id="form_p_qty" class="select" placeholder="Masukkan jumlah Pcs" style="margin: 4px 0 18px;">
+
+      <div style="display:flex; gap:10px;">
+        <button onclick="resetForm('personil')" class="btn ghost" style="flex:1;">Reset</button>
+        <button onclick="submitPersonilData()" class="btn primary" style="flex:2;">SIMPAN PENJUALAN STAF</button>
+      </div>
+    </div>
+
+    <!-- Form Penjualan Total Toko -->
+    <div class="card">
+      <div class="title cyan">📦 Update Total Item Toko</div>
+      
+      <label class="label">Pilih Periode</label>
+      <select id="form_i_period" class="select" onchange="filterItemsForForm('form_i_period', 'form_i_item')" style="margin: 4px 0 12px;"></select>
+
+      <label class="label">Tanggal Penjualan</label>
+      <input type="date" id="form_i_date" class="select" style="margin: 4px 0 12px;">
+
+      <label class="label">Pilih Item (Periode Terpilih)</label>
+      <select id="form_i_item" class="select" style="margin: 4px 0 12px;"></select>
+
+      <label class="label">Actual Total Toko (Pcs)</label>
+      <input type="number" id="form_i_qty" class="select" placeholder="Masukkan jumlah Pcs" style="margin: 4px 0 18px;">
+
+      <div style="display:flex; gap:10px;">
+        <button onclick="resetForm('toko')" class="btn ghost" style="flex:1;">Reset</button>
+        <button onclick="submitItemData()" class="btn ghost" style="flex:2; border-color:var(--neon-cyan); color:var(--neon-cyan);">UPDATE PENJUALAN TOKO</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Fungsi filter item berdasarkan periode
+  function filterItemsForForm(periodSelectId, itemSelectId) {
+    let pId = $('#' + periodSelectId).value;
+    let itemSelect = $('#' + itemSelectId);
+    
+    // Filter item yang memiliki period_id sesuai
+    let filteredItems = D.items.filter(i => String(i.period_id) === String(pId));
+    
+    itemSelect.innerHTML = filteredItems.map(i => 
+      `<option value="${i.item_id}">${i.item_name}</option>`
+    ).join('');
+  }
+
+  // Fungsi Reset Form
+  function resetForm(type) {
+    if(type === 'personil') {
+      $('#form_p_date').value = '';
+      $('#form_p_qty').value = '';
+    } else {
+      $('#form_i_date').value = '';
+      $('#form_i_qty').value = '';
+    }
+  }
+
+  // Update fungsi submit untuk menyertakan tanggal
+  async function submitPersonilData() {
+    if (!auth) return alert('Silakan login!');
+    let payload = {
+      period_id: $('#form_p_period').value,
+      date: $('#form_p_date').value,
+      person_id: $('#form_p_person').value,
+      item_id: $('#form_p_item').value,
+      actual_qty: $('#form_p_qty').value
+    };
+    // Panggil backend Anda di sini...
+    console.log("Submitting:", payload);
+  }
+</script>
+
+
+  <!-- MODAL POPUP LOGIN -->
+  <div id="loginModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="title" style="text-align:center; margin-bottom:18px;">🔐 Login Editor Toko</div>
+      
+      <label class="label">Username</label>
+      <input type="text" id="loginUser" class="select" placeholder="Masukkan username" style="margin: 4px 0 12px;">
+
+      <label class="label">Password</label>
+      <input type="password" id="loginPass" class="select" placeholder="Masukkan password" style="margin: 4px 0 18px;">
+
+      <div style="display:flex; gap:10px;">
+        <button onclick="closeLoginModal()" class="btn ghost" style="flex:1;">Batal</button>
+        <button onclick="doLogin()" class="btn primary" style="flex:1;">LOGIN</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let D = { periods: [], items: [], personil: [], masterItems: [], masterPersons: [] };
+    let auth = null;
+    let overviewChartInst = null, personilChartInst = null, personilSummaryChartInst = null, trendChartInst = null;
+
+    const $ = x => document.querySelector(x);
+    const num = x => Number(x) || 0;
+    const money = x => new Intl.NumberFormat('id-ID').format(Math.round(num(x)));
+    const pct = (a, b) => b ? (num(a) / num(b)) * 100 : 0;
+
+    function call(fungsi, param1, param2) {
+      return new Promise((resolve, reject) => {
+        if (param2 !== undefined) {
+          google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[fungsi](param1, param2);
+        } else {
+          google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[fungsi](param1);
+        }
+      });
+    }
+
+    function currentItems() {
+      let p = $('#period').value;
+      let raw = D.items.filter(x => !p || String(x.period_id) === String(p));
+      if (!p) {
+        let agg = {};
+        raw.forEach(x => {
+          let id = x.item_id;
+          if (!agg[id]) {
+            agg[id] = { ...x, target_qty: 0, actual_qty: 0, target_kasir: 0 };
+          }
+          agg[id].target_qty += num(x.target_qty);
+          agg[id].actual_qty += num(x.actual_qty);
+          agg[id].target_kasir += num(x.target_kasir !== undefined ? x.target_kasir : x.target_qty);
+        });
+        return Object.values(agg);
+      }
+      return raw;
+    }
+
+    /* ================= TAB 01: OVERVIEW (DENGAN % ACH TOKO) ================= */
+    function renderTab01() {
+      let a = currentItems();
+      let t = a.reduce((s, x) => s + num(x.target_qty), 0);
+      let v = a.reduce((s, x) => s + num(x.actual_qty), 0);
+
+      $('#kpi').innerHTML = [
+        ['Target Toko', money(t) + ' Pcs', ''],
+        ['Actual Sales', money(v) + ' Pcs', 'green'],
+        ['Achievement', pct(v, t).toFixed(1) + '%', pct(v, t) >= 100 ? 'green' : 'amber'],
+        ['Gap Target', money(v - t) + ' Pcs', v - t >= 0 ? 'green' : 'red']
+      ].map(x => `<div class="card"><div class="label">${x[0]}</div><div class="kpi ${x[2]}">${x[1]}</div></div>`).join('');
+
+      // TABEL PERIODE: DIGANTI DARI STATUS MENJADI % ACH TOKO
+      let periodsHtml = `<table class="table">
+        <tr><th>ID Periode</th><th>Nama Periode</th><th>Rentang Tanggal</th><th>Target Total</th><th>Actual Total</th><th>% Ach Toko</th></tr>` +
+        D.periods.map(p => {
+          let pItems = D.items.filter(x => String(x.period_id) === String(p.period_id));
+          let pTarget = num(p.target_total) || pItems.reduce((s, x) => s + num(x.target_qty), 0);
+          let pActual = pItems.reduce((s, x) => s + num(x.actual_qty), 0);
+          let pAch = pct(pActual, pTarget);
+
+          return `<tr>
+            <td><b>${p.period_id}</b></td>
+            <td><b>${p.period_name}</b></td>
+            <td>${p.start_date ? String(p.start_date).substring(0, 10) : '-'} s/d ${p.end_date ? String(p.end_date).substring(0, 10) : '-'}</td>
+            <td>${money(pTarget)} Pcs</td>
+            <td class="green"><b>${money(pActual)} Pcs</b></td>
+            <td class="${pAch >= 100 ? 'green' : 'amber'}"><b>${pAch.toFixed(1)}%</b></td>
+          </tr>`;
+        }).join('') + `</table>`;
+
+      $('#overviewPeriodsTable').innerHTML = periodsHtml;
+
+      let sorted = [...a].sort((x, y) => num(y.actual_qty) - num(x.actual_qty)).slice(0, 5);
+      let tableHtml = `<table class="table">
+        <tr><th>Item</th><th>Target</th><th>Actual</th><th>% Ach</th></tr>` +
+        sorted.map(x => `<tr>
+          <td><b>${x.item_name}</b></td>
+          <td>${money(x.target_qty)}</td>
+          <td class="green"><b>${money(x.actual_qty)}</b></td>
+          <td class="${pct(x.actual_qty, x.target_qty) >= 100 ? 'green' : 'amber'}">${pct(x.actual_qty, x.target_qty).toFixed(1)}%</td>
+        </tr>`).join('') + `</table>`;
+      
+      $('#overviewItemTable').innerHTML = tableHtml;
+
+      if (overviewChartInst) overviewChartInst.destroy();
+      const ctx = $('#overviewChart').getContext('2d');
+      overviewChartInst = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: sorted.map(x => x.item_name),
+          datasets: [
+            { label: 'Actual', data: sorted.map(x => num(x.actual_qty)), backgroundColor: '#00f2fe' },
+            { label: 'Target', data: sorted.map(x => num(x.target_qty)), backgroundColor: '#64748b' }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    }
+
+    /* ================= TAB 02: DETAIL ITEM ================= */
+    function renderTab02() {
+      let q = $('#search').value.toLowerCase();
+      let filtered = currentItems().filter(x => x.item_name.toLowerCase().includes(q));
+
+      let sortedByAch = [...filtered].sort((x, y) => pct(y.actual_qty, y.target_qty) - pct(x.actual_qty, x.target_qty));
+      let topItem = sortedByAch[0];
+      let badItem = sortedByAch[sortedByAch.length - 1];
+
+      let shortcutsHtml = '';
+      if (topItem) {
+        shortcutsHtml += `
+          <div class="shortcut-card" style="border-left: 4px solid var(--neon-green);">
+            <div>
+              <span class="label green">🔥 Top Performance</span>
+              <div style="font-size:16px; font-weight:800; color:#fff; margin-top:2px;">${topItem.item_name}</div>
+              <small class="green">Actual: ${money(topItem.actual_qty)} Pcs / Target: ${money(topItem.target_qty)} Pcs</small>
+            </div>
+            <div class="kpi green" style="font-size:22px;">${pct(topItem.actual_qty, topItem.target_qty).toFixed(1)}%</div>
+          </div>`;
+      }
+      if (badItem && badItem !== topItem) {
+        shortcutsHtml += `
+          <div class="shortcut-card" style="border-left: 4px solid var(--neon-red);">
+            <div>
+              <span class="label red">⚠️ Bad Performance</span>
+              <div style="font-size:16px; font-weight:800; color:#fff; margin-top:2px;">${badItem.item_name}</div>
+              <small class="red">Actual: ${money(badItem.actual_qty)} Pcs / Target: ${money(badItem.target_qty)} Pcs</small>
+            </div>
+            <div class="kpi red" style="font-size:22px;">${pct(badItem.actual_qty, badItem.target_qty).toFixed(1)}%</div>
+          </div>`;
+      }
+
+      $('#itemShortcuts').innerHTML = shortcutsHtml;
+
+      let html = `<table class="table">
+        <tr><th>ID Item</th><th>Nama Item</th><th>Target Qty</th><th>Actual Qty</th><th>Gap</th><th>% Ach</th></tr>` +
+        filtered.map(x => {
+          let gap = num(x.actual_qty) - num(x.target_qty);
+          let ach = pct(x.actual_qty, x.target_qty);
+          return `<tr>
+            <td>${x.item_id}</td>
+            <td><b>${x.item_name}</b></td>
+            <td>${money(x.target_qty)}</td>
+            <td class="green"><b>${money(x.actual_qty)}</b></td>
+            <td class="${gap >= 0 ? 'green' : 'red'}">${money(gap)}</td>
+            <td class="${ach >= 100 ? 'green' : 'amber'}"><b>${ach.toFixed(1)}%</b></td>
+          </tr>`;
+        }).join('') + `</table>`;
+
+      $('#itemsTable').innerHTML = html;
+    }
+
+    /* ================= TAB 03: PENJUALAN PERSONIL ================= */
+    function renderTab03() {
+      let p = $('#period').value;
+      let pSales = D.personil.filter(x => !p || String(x.period_id) === String(p));
+
+      let aggregated = {};
+      pSales.forEach(x => {
+        let name = x.person_name || 'Unassigned';
+        if (!aggregated[name]) aggregated[name] = 0;
+        aggregated[name] += num(x.actual_qty);
+      });
+
+      let list = Object.keys(aggregated).map(k => ({ name: k, total: aggregated[k] }))
+        .sort((a, b) => b.total - a.total);
+
+      let totPersonilActual = list.reduce((s, x) => s + x.total, 0);
+      let avgPerson = list.length > 0 ? totPersonilActual / list.length : 0;
+
+      $('#t3-person-count').textContent = list.length + ' Orang';
+      $('#t3-actual-total').textContent = money(totPersonilActual) + ' Pcs';
+      $('#t3-avg-person').textContent = money(avgPerson) + ' Pcs';
+      $('#t3-top-person').textContent = list[0] ? list[0].name : '-';
+
+      let tableHtml = `<table class="table">
+        <tr><th>Rank</th><th>Nama Personil</th><th>Total Sales (Pcs)</th><th>Kontribusi</th></tr>` +
+        list.map((x, i) => `<tr>
+          <td><b>#${i + 1}</b></td>
+          <td><b>${x.name}</b></td>
+          <td class="green"><b>${money(x.total)}</b></td>
+          <td>${pct(x.total, totPersonilActual).toFixed(1)}%</td>
+        </tr>`).join('') + `</table>`;
+
+      $('#peopleTable').innerHTML = tableHtml;
+
+      if (personilSummaryChartInst) personilSummaryChartInst.destroy();
+      const ctx = $('#personilSummaryChart').getContext('2d');
+      personilSummaryChartInst = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: list.map(x => x.name),
+          datasets: [{ label: 'Total Penjualan Pcs', data: list.map(x => x.total), backgroundColor: '#00ff9d' }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    }
+
+    /* ================= TAB 04: PENCAPAIAN PERNIK PER PERSONIL ================= */
+    function renderTab04() {
+      let selectedPerson = $('#personilSelect').value;
+      let selectedPeriod = $('#period').value;
+
+      let periodItems = currentItems();
+      let personilSales = D.personil.filter(x => 
+        (!selectedPeriod || String(x.period_id) === String(selectedPeriod)) &&
+        (String(x.person_name) === selectedPerson || String(x.person_id) === selectedPerson)
+      );
+
+      let totalTarget = 0, totalActual = 0;
+      let labels = [], actuals = [], targets = [];
+
+      let tableBodyHtml = `<table class="table">
+        <tr><th>Nama Item</th><th>Target Kasir</th><th>Actual</th><th>Gap</th><th>% Ach</th></tr>` +
+        periodItems.map(item => {
+          let pRecs = personilSales.filter(sp => String(sp.item_id) === String(item.item_id));
+          let actual = pRecs.reduce((s, sp) => s + num(sp.actual_qty), 0);
+          let target = num(item.target_kasir !== undefined ? item.target_kasir : item.target_qty);
+          let gap = target - actual;
+          let ach = target > 0 ? (actual / target) * 100 : 0;
+
+          totalTarget += target;
+          totalActual += actual;
+          labels.push(item.item_name);
+          actuals.push(actual);
+          targets.push(target);
+
+          return `<tr>
+            <td><b>${item.item_name}</b></td>
+            <td>${money(target)}</td>
+            <td class="green"><b>${money(actual)}</b></td>
+            <td class="${gap <= 0 ? 'green' : 'red'}">${money(gap)}</td>
+            <td class="${ach >= 100 ? 'green' : 'amber'}"><b>${ach.toFixed(1)}%</b></td>
+          </tr>`;
+        }).join('') + `</table>`;
+
+      $('#personilTableBody').innerHTML = tableBodyHtml;
+      $('#p-total-target').textContent = money(totalTarget) + ' Pcs';
+      $('#p-total-actual').textContent = money(totalActual) + ' Pcs';
+      $('#p-total-gap').textContent = money(totalTarget - totalActual) + ' Pcs';
+      $('#p-total-ach').textContent = pct(totalActual, totalTarget).toFixed(1) + '%';
+
+      if (personilChartInst) personilChartInst.destroy();
+      const ctx = $('#personilChart').getContext('2d');
+      personilChartInst = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Actual', data: actuals, backgroundColor: '#00f2fe' },
+            { label: 'Target Kasir', data: targets, backgroundColor: '#64748b' }
+          ]
+        },
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
+      });
+    }
+
+    /* ================= TAB 05: ANALISIS TREN HARIAN ================= */
+    function renderTab05() {
+      let selP = $('#period').value;
+      let pObj = selP ? D.periods.find(x => String(x.period_id) === String(selP)) : null;
+      let pItems = currentItems();
+      let totTarget = pItems.reduce((s, x) => s + num(x.target_qty), 0);
+      let totActual = pItems.reduce((s, x) => s + num(x.actual_qty), 0);
+
+      let now = new Date();
+      let stDate = pObj ? new Date(pObj.start_date) : (D.periods.length > 0 ? new Date(D.periods[0].start_date) : now);
+      let enDate = pObj ? new Date(pObj.end_date) : (D.periods.length > 0 ? new Date(D.periods[D.periods.length - 1].end_date) : now);
+
+      let totalDays = Math.max(1, Math.ceil((enDate - stDate) / (1000 * 60 * 60 * 24)));
+      let passedDays = Math.max(1, Math.min(totalDays, Math.ceil((now - stDate) / (1000 * 60 * 60 * 24))));
+      let remainingDays = Math.max(1, totalDays - passedDays);
+
+      let dailyTargetIdeal = Math.max(0, Math.ceil((totTarget - totActual) / remainingDays));
+      let avgDailySales = totActual / passedDays;
+      let bestEst = Math.round(totActual + (avgDailySales * remainingDays));
+
+      $('#t5-target').textContent = money(totTarget) + ' Pcs';
+      $('#t5-daily-target').textContent = money(dailyTargetIdeal) + ' Pcs/Hari';
+      $('#t5-actual').textContent = money(totActual) + ' Pcs';
+      $('#t5-best-est').textContent = money(bestEst) + ' Pcs';
+
+      $('#growthInsight').innerHTML = `<p style="margin:0; font-size:13px;">Pencapaian ritme harian toko berada di rata-rata <b>${money(avgDailySales)} Pcs/hari</b>. Produk paling laris saat ini adalah <b>${pItems[0]?.item_name || '-'}</b>.</p>`;
+      $('#disgrowthInsight').innerHTML = `<p style="margin:0; font-size:13px;">Untuk mencapai target total, tim toko wajib mempertahankan minimal penjualan <b>${money(dailyTargetIdeal)} Pcs/hari</b> dalam sisa ${remainingDays} hari ke depan.</p>`;
+
+      if (trendChartInst) trendChartInst.destroy();
+      const ctx = $('#trendChart').getContext('2d');
+      trendChartInst = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['Hari 1', 'Hari 2', 'Hari 3', 'Hari 4', 'Hari 5'],
+          datasets: [
+            { label: 'Penjualan Harian', data: [totActual * 0.1, totActual * 0.2, totActual * 0.15, totActual * 0.3, totActual * 0.25], borderColor: '#00f2fe', fill: false, tension:0.3 },
+            { label: 'Target Harian Ideal', data: Array(5).fill(dailyTargetIdeal), borderColor: '#ff2a6d', borderDash: [5, 5], fill: false }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    }
+
+    /* Populate Form Input Selects */
+    function populateForms() {
+      let periodOpts = D.periods.map(p => `<option value="${p.period_id}">${p.period_name}</option>`).join('');
+      $('#form_p_period').innerHTML = periodOpts;
+      $('#form_i_period').innerHTML = periodOpts;
+
+      let personOpts = (D.masterPersons && D.masterPersons.length > 0) ?
+        D.masterPersons.map(p => `<option value="${p.person_id}">${p.person_name}</option>`).join('') :
+        [...new Set(D.personil.map(x => x.person_name))].map(name => `<option value="${name}">${name}</option>`).join('');
+      $('#form_p_person').innerHTML = personOpts;
+
+      let itemOpts = (D.masterItems && D.masterItems.length > 0) ?
+        D.masterItems.map(i => `<option value="${i.item_id}">${i.item_name}</option>`).join('') :
+        D.items.map(i => `<option value="${i.item_id}">${i.item_name}</option>`).join('');
+      $('#form_p_item').innerHTML = itemOpts;
+      $('#form_i_item').innerHTML = itemOpts;
+    }
+
+    /* Submit Functions */
+    async function submitPersonilData() {
+      if (!auth) return alert('Silakan login sebagai editor terlebih dahulu!');
+      let payload = {
+        period_id: $('#form_p_period').value,
+        person_id: $('#form_p_person').value,
+        item_id: $('#form_p_item').value,
+        actual_qty: $('#form_p_qty').value
+      };
+      try {
+        D = await call('saveSalesPersonilWithAuth', auth, payload);
+        alert('✅ Penjualan Staf Berhasil Disimpan!');
+        $('#form_p_qty').value = '';
+        renderAll();
+      } catch (e) { alert('❌ Gagal: ' + e.message); }
+    }
+
+    async function submitItemData() {
+      if (!auth) return alert('Silakan login sebagai editor terlebih dahulu!');
+      let payload = {
+        period_id: $('#form_i_period').value,
+        item_id: $('#form_i_item').value,
+        actual_qty: $('#form_i_qty').value
+      };
+      try {
+        D = await call('saveSalesItemWithAuth', auth, payload);
+        alert('✅ Penjualan Toko Berhasil Disimpan!');
+        $('#form_i_qty').value = '';
+        renderAll();
+      } catch (e) { alert('❌ Gagal: ' + e.message); }
+    }
+
+    /* Auth Handlers */
+    function openLoginModal() { $('#loginModal').classList.add('active'); }
+    function closeLoginModal() { $('#loginModal').classList.remove('active'); }
+
+    async function doLogin() {
+      let u = $('#loginUser').value.trim();
+      let p = $('#loginPass').value.trim();
+      if (!u || !p) return alert('Username dan password wajib diisi!');
+
+      try {
+        let res = await call('checkLogin', u, p);
+        if (res.success) {
+          auth = { username: u, password: p };
+          $('#userInfo').innerHTML = `Mode: <b class="green">Editor (${u})</b>`;
+          $('#loginToggleBtn').textContent = '🔓 Logout';
+          $('#loginToggleBtn').className = 'btn danger';
+          $('#navInputBtn').style.display = 'flex';
+          closeLoginModal();
+          populateForms();
+          alert('Login Berhasil! Tab Input Data telah dibuka.');
+        }
+      } catch (e) { alert(e.message); }
+    }
+
+    $('#loginToggleBtn').onclick = () => {
+      if (auth) {
+        auth = null;
+        $('#userInfo').innerHTML = 'Mode: <b>Viewer</b>';
+        $('#loginToggleBtn').textContent = '🔒 Login Editor';
+        $('#loginToggleBtn').className = 'btn primary';
+        $('#navInputBtn').style.display = 'none';
+        alert('Anda telah Logout.');
+      } else {
+        openLoginModal();
+      }
+    };
+
+    /* Master Render */
+    function renderAll() {
+      let pSelect = $('#personilSelect');
+      if (D.masterPersons && D.masterPersons.length > 0) {
+        pSelect.innerHTML = D.masterPersons.map(x => `<option value="${x.person_name}">${x.person_name}</option>`).join('');
+      } else {
+        let uniquePersons = [...new Set(D.personil.map(x => x.person_name))];
+        pSelect.innerHTML = uniquePersons.map(x => `<option value="${x}">${x}</option>`).join('');
+      }
+
+      renderTab01();
+      renderTab02();
+      renderTab03();
+      renderTab04();
+      renderTab05();
+      if (auth) populateForms();
+    }
+
+    async function loadData() {
+      try {
+        D = await call('getData');
+        $('#period').innerHTML = `<option value="">🌟 Semua Periode (Overall)</option>` + 
+          D.periods.map(p => `<option value="${p.period_id}">${p.period_name}</option>`).join('');
+        renderAll();
+      } catch (e) { console.error(e); }
+    }
+
+    // Live Realtime Clock
+    setInterval(() => {
+      $('#clock').textContent = new Intl.DateTimeFormat('id-ID', {
+        dateStyle: 'medium', timeStyle: 'medium', timeZone: 'Asia/Jakarta'
+      }).format(new Date());
+    }, 1000);
+
+    // Tab Switcher
+    document.querySelectorAll('.nav button').forEach(btn => {
+      btn.addEventListener('click', e => {
+        let b = e.target.closest('button');
+        document.querySelectorAll('.nav button').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+        $('#' + b.dataset.p).classList.add('active');
+      });
+    });
+
+    $('#period').onchange = renderAll;
+    $('#refresh').onclick = loadData;
+
+    loadData();
+  </script>
+</body>
+</html>
