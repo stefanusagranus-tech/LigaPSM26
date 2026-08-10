@@ -8,7 +8,7 @@ from datetime import datetime, timezone, timedelta
 
 # Ambil waktu UTC lalu konversi secara presisi ke WIB (GMT+7)
 now_utc = datetime.utcnow()
-now_wib = now_utc + 7 hours
+now_wib = now_utc + (hours=7)
 current_time_str = now_wib.strftime("%A, %d %B %Y | %H:%M WIB")
 
 # Konfigurasi Halaman Dashboard
