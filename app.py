@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import os
+import matplotlib
+matplotlib.use('Agg') # Forces matplotlib to use a non-GUI backend
 import matplotlib.pyplot as plt
 
 # Konfigurasi Halaman Dashboard (Lebar penuh)
