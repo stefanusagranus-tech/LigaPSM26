@@ -206,7 +206,7 @@ else:
         </div>
     """, unsafe_allow_html=True)
 
-    # --- SECTION 1: RINGKASAN UTAMA ---
+    # --- SECTION 1: Review PSM ---
     st.markdown("<p style='color: #0f172a; font-weight: bold; font-size: 15px;'>🔵 Ringkasan Utama</p>", unsafe_allow_html=True)
     
     m1, m2, m3, m4 = st.columns(4)
@@ -215,9 +215,8 @@ else:
         st.markdown("""
             <div class="white-card">
                 <span style="font-size: 20px;">📋</span>
-                <div class="card-label" style="margin-top: 8px;">TOTAL LAPORAN</div>
-                <div class="card-value">7</div>
-                <div class="card-subtext">shift tercatat</div>
+                <div class="card-label" style="margin-top: 8px;">TOTAL PENJUALAN</div>
+                <div class="card-value">SEDANG PENGERJAAN</div>
             </div>
         """, unsafe_allow_html=True)
         
@@ -226,8 +225,8 @@ else:
             <div class="white-card">
                 <span style="font-size: 20px;">🎯</span>
                 <div class="card-label" style="margin-top: 8px;">RATA-RATA ACV TOKO</div>
-                <div class="card-value" style="color: #0f172a;">101%</div>
-                <div class="card-subtext">gabungan 6 KPI</div>
+                <div class="card-value" style="color: #0f172a;">MASIH PENGERJAAN</div>
+                <div class="card-subtext">SELURUH PENJUALAN PSM</div>
             </div>
         """, unsafe_allow_html=True)
 
@@ -236,8 +235,8 @@ else:
             <div class="white-card">
                 <span style="font-size: 20px;">🏆</span>
                 <div class="card-label" style="margin-top: 8px;">KASIR TERBAIK</div>
-                <div class="card-value" style="color: #6366f1;">mia</div>
-                <div class="card-subtext">skor: 129%</div>
+                <div class="card-value" style="color: #6366f1;">MASIH PENGERJAAN</div>
+                <div class="card-subtext">total penjualan : masih pengerjaan </div>
             </div>
         """, unsafe_allow_html=True)
 
@@ -245,13 +244,13 @@ else:
         st.markdown("""
             <div class="white-card">
                 <span style="font-size: 20px;">⚠️</span>
-                <div class="card-label" style="margin-top: 8px;">KPI TERLEMAH</div>
-                <div class="card-value" style="color: #ef4444;">SUEGER</div>
-                <div class="card-subtext">ACV: 36%</div>
+                <div class="card-label" style="margin-top: 8px;">GAP TARGET</div>
+                <div class="card-value" style="color: #ef4444;">Masih Pengerjaan</div>
+                <div class="card-subtext">Time Factor : masih pengerjaan</div>
             </div>
         """, unsafe_allow_html=True)
 
-    # --- SECTION 2: DETAIL PER INDIKATOR KPI ---
+    # --- SECTION 2: MONITORING IKT ---
     st.markdown("<p style='color: #0f172a; font-weight: bold; font-size: 15px; margin-top: 10px;'>🔵 Detail Per Indikator KPI</p>", unsafe_allow_html=True)
     
     k1, k2, k3 = st.columns(3)
@@ -261,7 +260,7 @@ else:
             <div class="white-card">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <span style="font-size: 18px;">🛒</span> <b>PSM</b>
+                        <span style="font-size: 18px;">🛒</span> <b>Sales</b>
                         <p style="color: #94a3b8; font-size: 10px; margin:0; font-weight:bold;">UP-SELLING</p>
                     </div>
                     <span class="badge-success">TERCAPAI</span>
