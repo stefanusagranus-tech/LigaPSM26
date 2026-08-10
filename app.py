@@ -6,10 +6,18 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timezone, timedelta
 
-# GMT+7 / WIB Timezone Adjustment
-wib_tz = timezone(timedelta(hours=7))
-now = datetime.now(wib_tz)
-current_time_str = now.strftime("%A, %d %B %Y | %H:%M WIB")
+st.markdown(f"""
+    <div style='background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%); padding: 16px 24px; border-radius: 12px; border: 1px solid #38bdf8; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;'>
+        <div>
+            <h2 style='margin:0; color:#ffffff; font-size: 24px;'>📊 PSM TOKO SALES MONITORING</h2>
+            <p style='margin:0; color:#38bdf8; font-size: 13px;'>Sistem Analisis & Optimasi Pencapaian Target Toko</p>
+        </div>
+        <div style='text-align: right;'>
+            <p style='margin:0; color:#94a3b8; font-size: 11px; font-weight:bold;'>WAKTU REALTIME SISTEM (WIB)</p>
+            <p style='margin:0; color:#38bdf8; font-size: 15px; font-weight:bold;'>⏰ {current_time_str}</p>
+        </div>
+    </div>
+""", unsafe_allow_html=True)
 
 # Konfigurasi Halaman Dashboard
 st.set_page_config(page_title="PSM Toko - Sales Dashboard", layout="wide")
