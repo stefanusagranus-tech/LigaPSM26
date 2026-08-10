@@ -19,7 +19,7 @@ USER_DATABASE = {
     "admin": {"password": "123", "nama": "Staff Toko"},
     "23044862": {"password": "123", "nama": "Aris Aprilianto"},
     "24091737": {"password": "123", "nama": "Tika"},
-    "24096619": {"password": "123", "nama": "Rizki Gunawan"}
+    "24096619": {"password": "123", "nama": "Rizki Gunawan"},
     "25037119": {"password": "123", "nama": "Adelia Pratiwi"},
     "26065884": {"password": "123", "nama": "Ilham Priandika"}
 }
