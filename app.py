@@ -7,8 +7,8 @@ import plotly.graph_objects as go
 from datetime import datetime, timezone, timedelta
 
 # Ambil waktu UTC lalu konversi secara presisi ke WIB (GMT+7)
-wib_tz = timezone(timedelta(hours=7))
-now_wib = datetime.now(timezone.utc).astimezone(wib_tz)
+now_utc = datetime.utcnow()
+now_wib = now_utc + timedelta(hours=7)
 current_time_str = now_wib.strftime("%A, %d %B %Y | %H:%M WIB")
 
 # Konfigurasi Halaman Dashboard
