@@ -167,11 +167,12 @@ if "logged_in" not in st.session_state:
 if "username" not in st.session_state:
     st.session_state.username = ""
 
+import streamlit as st
+
 # --- HALAMAN LOGIN ---
 def show_login_page():
     # URL Logo KGS Group Belgium
-    LOGO_URL = "https://media.licdn.com/dms/image/v2/D4E0BAQG56I816f_sWA/company-logo_200_200/company-logo_200_200/0/1710323382438?e=1740000000&v=beta&t=example" 
-
+    LOGO_URL = "https://be.linkedin.com/company/kgs-group-belgium"
     st.markdown("""
         <style>
             /* Container utama login card */
@@ -208,15 +209,18 @@ def show_login_page():
                 margin-bottom: 0px;
             }
 
-            /* 1. MENGUBAH TULISAN LABEL "USERNAME" & "PASSWORD" MENJADI WARNA BIRU */
-            div[data-testid="stWidgetLabel"] label, 
-            div[data-testid="stWidgetLabel"] p {
-                color: #38bdf8 !important; /* Biru neon / sky blue */
+            /* 1. MENGUBAH TULISAN LABEL "USERNAME" & "PASSWORD" MENJADI BIRU NEON */
+            div[data-testid="stWidgetLabel"] *, 
+            label[data-testid="stWidgetLabel"],
+            div[aria-label="Username"],
+            div[aria-label="Password"],
+            .stTextInput > label {
+                color: #38bdf8 !important; /* Biru Neon / Sky Blue */
                 font-weight: 600 !important;
                 font-size: 14px !important;
             }
 
-            /* Styling input fields */
+            /* Styling Kotak Isian (Input) */
             div[data-baseweb="input"] {
                 border: none !important;
                 background-color: #0f172a !important;
@@ -226,7 +230,7 @@ def show_login_page():
                 color: #ffffff !important;
             }
 
-            /* 2. MENGUBAH TOMBOL "MASUK KE APLIKASI" MENJADI HITAM NEON */
+            /* 2. TOMBOL MASUK KE APLIKASI (HITAM NEON) */
             div[data-testid="stFormSubmitButton"] > button {
                 background-color: #090d16 !important; /* Warna Hitam Pekat */
                 color: #38bdf8 !important; /* Teks Biru Neon */
@@ -237,11 +241,11 @@ def show_login_page():
                 transition: all 0.3s ease-in-out !important;
             }
             
-            /* Efek Hover saat tombol diarah mouse */
+            /* Hover Tombol Submit */
             div[data-testid="stFormSubmitButton"] > button:hover {
                 background-color: #38bdf8 !important;
-                color: #090d16 !important; /* Teks berubah hitam saat diklik/hover */
-                box-shadow: 0 0 20px rgba(56, 189, 248, 0.8) !important; /* Glow makin terang */
+                color: #090d16 !important;
+                box-shadow: 0 0 20px rgba(56, 189, 248, 0.8) !important;
                 border-color: #38bdf8 !important;
             }
         </style>
@@ -255,8 +259,7 @@ def show_login_page():
         st.markdown(f"""
             <div class='login-card'>
                 <img src='{LOGO_URL}' class='login-logo' alt='KGS Group Logo'>
-                <div class='login-header'>🔐 PSM TOKO LOGIN</div>
-                <p class='login-subtitle'>Sistem Monitoring & Input Sales</p>
+                <p class='login-subtitle'>Monitoring Toko Karang Satria</p>
             </div>
         """, unsafe_allow_html=True)
         
@@ -285,6 +288,7 @@ if "logged_in" not in st.session_state:
 if not st.session_state.logged_in:
     show_login_page()
     st.stop()
+    
 # --- INISIALISASI DATA DASHBOARD ---
 if "data_loaded" not in st.session_state:
     p_df, i_df, pers_df, si_df, sp_df = load_database()
