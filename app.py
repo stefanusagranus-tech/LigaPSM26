@@ -268,8 +268,7 @@ def show_login_page():
         st.markdown(f"""
             <div class='login-card'>
                 <img src='{LOGO_URL}' class='login-logo' alt='KGS Group Logo'>
-                <div class='login-header'>🔐 PSM TOKO LOGIN</div>
-                <p class='login-subtitle'>Sistem Monitoring & Input Sales</p>
+                <p class='login-subtitle'>Sistem Monitoring PSM Toko</p>
             </div>
         """, unsafe_allow_html=True)
         
