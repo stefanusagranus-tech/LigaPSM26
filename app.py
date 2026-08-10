@@ -167,12 +167,12 @@ if "logged_in" not in st.session_state:
 if "username" not in st.session_state:
     st.session_state.username = ""
 
-import streamlit as st
 
 # --- HALAMAN LOGIN ---
 def show_login_page():
-    # URL Logo KGS Group Belgium
-    LOGO_URL = "https://be.linkedin.com/company/kgs-group-belgium"
+    # URL Direct Image / File Gambar Resmi Logo KGS Group Belgium (.png)
+    LOGO_URL = "https://media.licdn.com/dms/image/v2/D4E0BAQG56I816f_sWA/company-logo_200_200/company-logo_200_200/0/1710323382438?e=2147483647&v=beta&t=A2N4440C0b7gL4JInq2qG2sKq1q5I2x3g"
+
     st.markdown("""
         <style>
             /* Container utama login card */
@@ -188,14 +188,17 @@ def show_login_page():
             
             /* Logo Perusahaan */
             .login-logo {
-                width: 90px;
-                height: 90px;
+                width: 100px;
+                height: 100px;
                 object-fit: contain;
                 border-radius: 12px;
                 background-color: #ffffff;
-                padding: 6px;
+                padding: 8px;
                 margin-bottom: 15px;
                 border: none !important;
+                display: block;
+                margin-left: auto;
+                margin-right: auto;
             }
             .login-header {
                 color: #ffffff;
@@ -209,13 +212,19 @@ def show_login_page():
                 margin-bottom: 0px;
             }
 
-            /* 1. MENGUBAH TULISAN LABEL "USERNAME" & "PASSWORD" MENJADI BIRU NEON */
+            /* MENGHAPUS PESAN/TOOLTIP "Please enter and submit form" */
+            div[data-testid="stForm"] [data-baseweb="popover"],
+            div[data-testid="stForm"] div[role="tooltip"],
+            .stFormHelp, 
+            div[data-testid="stForm"] iframe {
+                display: none !important;
+            }
+
+            /* MENGUBAH TULISAN LABEL "USERNAME" & "PASSWORD" MENJADI BIRU NEON */
             div[data-testid="stWidgetLabel"] *, 
             label[data-testid="stWidgetLabel"],
-            div[aria-label="Username"],
-            div[aria-label="Password"],
             .stTextInput > label {
-                color: #38bdf8 !important; /* Biru Neon / Sky Blue */
+                color: #38bdf8 !important;
                 font-weight: 600 !important;
                 font-size: 14px !important;
             }
@@ -230,14 +239,14 @@ def show_login_page():
                 color: #ffffff !important;
             }
 
-            /* 2. TOMBOL MASUK KE APLIKASI (HITAM NEON) */
+            /* TOMBOL MASUK KE APLIKASI (HITAM NEON) */
             div[data-testid="stFormSubmitButton"] > button {
-                background-color: #090d16 !important; /* Warna Hitam Pekat */
-                color: #38bdf8 !important; /* Teks Biru Neon */
+                background-color: #090d16 !important;
+                color: #38bdf8 !important;
                 font-weight: 700 !important;
-                border: 1.5px solid #38bdf8 !important; /* Border Neon Biru */
+                border: 1.5px solid #38bdf8 !important;
                 border-radius: 8px !important;
-                box-shadow: 0 0 12px rgba(56, 189, 248, 0.4) !important; /* Efek Glow Neon */
+                box-shadow: 0 0 12px rgba(56, 189, 248, 0.4) !important;
                 transition: all 0.3s ease-in-out !important;
             }
             
@@ -259,7 +268,8 @@ def show_login_page():
         st.markdown(f"""
             <div class='login-card'>
                 <img src='{LOGO_URL}' class='login-logo' alt='KGS Group Logo'>
-                <p class='login-subtitle'>Monitoring Toko Karang Satria</p>
+                <div class='login-header'>🔐 PSM TOKO LOGIN</div>
+                <p class='login-subtitle'>Sistem Monitoring & Input Sales</p>
             </div>
         """, unsafe_allow_html=True)
         
