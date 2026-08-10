@@ -234,7 +234,7 @@ selected_period_name = st.sidebar.selectbox("", ["Semua Periode (Overall)"] + li
 selected_period_id = None if selected_period_name == "Semua Periode (Overall)" else periods_dict[selected_period_name]
 
 # Tombol Logout di Sidebar
-st.sidebar.markdown("<p style='color:#38bdf8; font-weight:bold; letter-spacing:1px; margin-bottom:6px;'>🚪 Keluar / Logout</p>", unsafe_allow_html=True)
+st.sidebar.markdown("---")
 if st.sidebar.button("🚪 Keluar / Logout", use_container_width=True):
     st.session_state.logged_in = False
     st.session_state.username = ""
