@@ -389,18 +389,35 @@ elif selected_tab == "03 · Penjualan Personil":
         # Hitung Persentase Kontribusi
         summary_person["pct_contrib"] = (summary_person["actual_qty"] / tot_actual_personil * 100) if tot_actual_personil > 0 else 0
         
-        # 1. KARTU METRIK UTAMA (3 KOLOM ATAS)
+        # 1. KARTU METRIK UTAMA (KOTAK BIRU NEON + TEKS HIJAU NEON)
         m1, m2, m3 = st.columns(3)
         with m1:
-            st.metric("TOTAL ACTUAL PERSONIL", f"{tot_actual_personil:,.0f} Pcs")
+            st.markdown(f"""
+                <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 16px; text-align: left; box-shadow: 0 0 12px rgba(0, 240, 255, 0.35);">
+                    <div style="color: #ffffff; font-size: 11px; font-weight: bold; letter-spacing: 0.8px;">TOTAL ACTUAL PERSONIL</div>
+                    <div style="color: #00ff88; font-size: 28px; font-weight: 800; margin-top: 4px;">{tot_actual_personil:,.0f} Pcs</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
         with m2:
-            st.metric("RATA-RATA PENJUALAN/STAF", f"{avg_sales_personil:,.0f} Pcs")
+            st.markdown(f"""
+                <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 16px; text-align: left; box-shadow: 0 0 12px rgba(0, 240, 255, 0.35);">
+                    <div style="color: #ffffff; font-size: 11px; font-weight: bold; letter-spacing: 0.8px;">RATA-RATA PENJUALAN/STAF</div>
+                    <div style="color: #00ff88; font-size: 28px; font-weight: 800; margin-top: 4px;">{avg_sales_personil:,.0f} Pcs</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
         with m3:
-            st.metric("TOP PERFORMER", top_performer_name)
+            st.markdown(f"""
+                <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 16px; text-align: left; box-shadow: 0 0 12px rgba(0, 240, 255, 0.35);">
+                    <div style="color: #ffffff; font-size: 11px; font-weight: bold; letter-spacing: 0.8px;">TOP PERFORMER</div>
+                    <div style="color: #00ff88; font-size: 26px; font-weight: 800; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{top_performer_name}</div>
+                </div>
+            """, unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # 2. PODIUM RINGKAS / MINI TOP 3 PERFORMER
+        # 2. PODIUM RINGKAS MINI TOP 3 (UKURAN COMPACT)
         if len(summary_person) >= 1:
             p1_name = summary_person.iloc[0]["person_name"]
             p1_qty = summary_person.iloc[0]["actual_qty"]
@@ -412,48 +429,52 @@ elif selected_tab == "03 · Penjualan Personil":
             p3_qty = summary_person.iloc[2]["actual_qty"] if len(summary_person) >= 3 else 0
 
             st.markdown(f"""
-                <div style="display: flex; gap: 12px; justify-content: center; align-items: flex-end; margin-bottom: 25px;">
+                <div style="display: flex; gap: 12px; justify-content: center; align-items: flex-end; margin-bottom: 20px;">
                     <!-- Juara 2 -->
-                    <div style="flex: 1; background: #161b22; border: 1px solid #94a3b8; border-radius: 10px; padding: 10px; text-align: center; box-shadow: 0 0 10px rgba(148,163,184,0.2);">
-                        <span style="font-size: 20px;">🥈</span>
-                        <div style="color: #94a3b8; font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">JUARA 2</div>
-                        <div style="color: #ffffff; font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{p2_name}</div>
-                        <div style="color: #00f0ff; font-size: 15px; font-weight: 800;">{p2_qty:,.0f} Pcs</div>
+                    <div style="flex: 1; background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; text-align: center; box-shadow: 0 0 10px rgba(0,240,255,0.25);">
+                        <span style="font-size: 18px;">🥈</span>
+                        <div style="color: #94a3b8; font-size: 10px; font-weight: bold;">JUARA 2</div>
+                        <div style="color: #ffffff; font-size: 12px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{p2_name}</div>
+                        <div style="color: #00ff88; font-size: 15px; font-weight: 800;">{p2_qty:,.0f} Pcs</div>
                     </div>
                     <!-- Juara 1 -->
-                    <div style="flex: 1; background: #161b22; border: 1.5px solid #f59e0b; border-radius: 10px; padding: 12px; text-align: center; box-shadow: 0 0 15px rgba(245,158,11,0.35); transform: scale(1.03);">
-                        <span style="font-size: 24px;">🥇</span>
-                        <div style="color: #f59e0b; font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">JUARA 1</div>
-                        <div style="color: #ffffff; font-size: 14px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{p1_name}</div>
+                    <div style="flex: 1; background: #080c14; border: 2px solid #00f0ff; border-radius: 10px; padding: 12px; text-align: center; box-shadow: 0 0 16px rgba(0,240,255,0.5); transform: scale(1.02);">
+                        <span style="font-size: 22px;">🥇</span>
+                        <div style="color: #f59e0b; font-size: 10px; font-weight: bold;">JUARA 1</div>
+                        <div style="color: #ffffff; font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{p1_name}</div>
                         <div style="color: #00ff88; font-size: 17px; font-weight: 800;">{p1_qty:,.0f} Pcs</div>
                     </div>
                     <!-- Juara 3 -->
-                    <div style="flex: 1; background: #161b22; border: 1px solid #b45309; border-radius: 10px; padding: 10px; text-align: center; box-shadow: 0 0 10px rgba(180,83,9,0.2);">
-                        <span style="font-size: 20px;">🥉</span>
-                        <div style="color: #b45309; font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">JUARA 3</div>
-                        <div style="color: #ffffff; font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{p3_name}</div>
-                        <div style="color: #00f0ff; font-size: 15px; font-weight: 800;">{p3_qty:,.0f} Pcs</div>
+                    <div style="flex: 1; background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; text-align: center; box-shadow: 0 0 10px rgba(0,240,255,0.25);">
+                        <span style="font-size: 18px;">🥉</span>
+                        <div style="color: #b45309; font-size: 10px; font-weight: bold;">JUARA 3</div>
+                        <div style="color: #ffffff; font-size: 12px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{p3_name}</div>
+                        <div style="color: #00ff88; font-size: 15px; font-weight: 800;">{p3_qty:,.0f} Pcs</div>
                     </div>
                 </div>
             """, unsafe_allow_html=True)
 
         st.markdown("---")
 
-        # 3. TAMPILAN DUA KOLOM: TABEL KIRI & GRAFIK KANAN
+        # 3. DUA KOLOM: TABEL & GRAFIK DENGAN TINGGI IDENTIK
         col_table, col_chart = st.columns([1, 1])
 
+        # Ketinggian presisi disamakan (310px)
+        COMPONENT_HEIGHT = 310
+
         with col_table:
-            st.subheader("📋 Penjualan Personil")
+            st.markdown("<p style='color:#ffffff; font-size:15px; font-weight:bold; margin-bottom:8px;'>📋 Penjualan Personil</p>", unsafe_allow_html=True)
             
             display_table = summary_person.copy()
             display_table.columns = ["PERSONIL", "TOTAL SALES (PCS)", "KONTRIBUSI"]
             display_table["TOTAL SALES (PCS)"] = display_table["TOTAL SALES (PCS)"].apply(lambda x: f"{x:,.0f}")
             display_table["KONTRIBUSI"] = display_table["KONTRIBUSI"].apply(lambda x: f"{x:.1f}%")
             
-            st.dataframe(display_table, use_container_width=True, hide_index=True)
+            # Parameter height disamakan dengan grafik
+            st.dataframe(display_table, use_container_width=True, hide_index=True, height=COMPONENT_HEIGHT)
 
         with col_chart:
-            st.subheader("📊 Grafik Perbandingan Performa Tim")
+            st.markdown("<p style='color:#ffffff; font-size:15px; font-weight:bold; margin-bottom:8px;'>📊 Grafik Perbandingan Performa Tim</p>", unsafe_allow_html=True)
             
             # Plotly Bar Chart Hijau Neon Sesuai Gambar Rujukan
             fig_person = go.Figure()
@@ -461,26 +482,28 @@ elif selected_tab == "03 · Penjualan Personil":
                 x=summary_person["person_name"],
                 y=summary_person["actual_qty"],
                 name="Total Penjualan Pcs",
-                marker_color="#00ff88", # Warna Hijau Cerah Neon
+                marker_color="#00ff88", # Batang Hijau Neon Menyala
                 text=summary_person["actual_qty"].apply(lambda x: f"{x:,.0f}"),
                 textposition="outside",
-                textfont=dict(color="#ffffff", size=12)
+                textfont=dict(color="#00ff88", size=11)
             ))
             
             fig_person.update_layout(
+                height=COMPONENT_HEIGHT, # Ketinggian disamakan dengan tabel
                 paper_bgcolor='rgba(0,0,0,0)',
                 plot_bgcolor='rgba(0,0,0,0)',
                 font=dict(color="#ffffff"),
-                xaxis=dict(showgrid=False, tickfont=dict(color="#ffffff")),
-                yaxis=dict(showgrid=True, gridcolor="#1e293b", tickfont=dict(color="#ffffff")),
-                margin=dict(l=10, r=10, t=30, b=10),
-                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                xaxis=dict(showgrid=False, tickfont=dict(color="#ffffff", size=10)),
+                yaxis=dict(showgrid=True, gridcolor="#1e293b", tickfont=dict(color="#ffffff", size=10)),
+                margin=dict(l=10, r=10, t=10, b=10),
+                showlegend=False
             )
             
             st.plotly_chart(fig_person, use_container_width=True)
 
     else:
         st.info("Belum ada data transaksi penjualan personil.")
+
 
 # --- TAB 04: PENCAPAIAN PERNIK ---
 elif selected_tab == "04 · Pencapaian Pernik":
