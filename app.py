@@ -17,9 +17,6 @@ st.markdown(f"""
             <h2 style='margin:0; color:#ffffff; font-size: 24px;'>📊 PSM TOKO SALES MONITORING</h2>
             <p style='margin:0; color:#38bdf8; font-size: 13px;'>Sistem Analisis & Optimasi Pencapaian Target Toko</p>
         </div>
-        <div style='text-align: right;'>
-            <p style='margin:0; color:#94a3b8; font-size: 11px; font-weight:bold;'>WAKTU REALTIME SISTEM (WIB)</p>
-        </div>
     </div>
 """, unsafe_allow_html=True)
 
