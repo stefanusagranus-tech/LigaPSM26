@@ -368,7 +368,6 @@ elif selected_tab == "02 · Detail Item":
     
     st.dataframe(display_items, use_container_width=True, hide_index=True)
 
-
 # --- TAB 03: PENJUALAN PERSONIL ---
 elif selected_tab == "03 · Penjualan Personil":
     st.title("👥 Penjualan Personil Toko")
@@ -516,6 +515,7 @@ elif selected_tab == "03 · Penjualan Personil":
 
     else:
         st.info("Belum ada data transaksi penjualan personil.")
+
 
 # --- TAB 04: PENCAPAIAN PERNIK ---
 elif selected_tab == "04 · Pencapaian Pernik":
