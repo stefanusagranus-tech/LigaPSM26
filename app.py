@@ -7,6 +7,37 @@ import plotly.graph_objects as go
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+# --- CUSTOM CSS: TOMBOL NEON & KONTRAS TEKS DARK MODE ---
+st.markdown("""
+<style>
+    /* Styling Tombol Standar -> Box Hitam, Border Neon, Teks Biru */
+    div.stButton > button {
+        background-color: #0d1117 !important;
+        color: #38bdf8 !important;
+        border: 2px solid #00f0ff !important;
+        border-radius: 8px !important;
+        font-weight: bold !important;
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.2) !important;
+        transition: all 0.3s ease !important;
+    }
+    div.stButton > button:hover {
+        background-color: #00f0ff !important;
+        color: #0d1117 !important;
+        box-shadow: 0 0 18px rgba(0, 240, 255, 0.7) !important;
+    }
+    
+    /* Styling Memperjelas Teks Input & Label agar Tidak Menyatu Background */
+    label, p, span, div {
+        color: #f1f5f9 !important;
+    }
+    .stTextInput input, .stNumberInput input, .stSelectbox div {
+        background-color: #161b22 !important;
+        color: #00f0ff !important;
+        border: 1px solid #30363d !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 
 def sync_store_sales_from_personnel():
     """
@@ -1379,28 +1410,33 @@ elif selected_tab == "06 · Input & Reset Data":
             else:
                 st.warning("Tidak ada item tersedia di periode ini.")
 
-# --- TAB/MENU: PENGATURAN & MASTER DATA (PLUS RESIGN & KELOLA AKUN) ---
+# --- TAB/MENU: PENGATURAN & MASTER DATA ---
 elif selected_tab == "⚙️ Master Data & Pengaturan":
+    
+    ALLOWED_USERNAMES = ["admin", "chief", "assistant_cos"]
+    current_user = st.session_state.get("username", "").lower()
+    
+    if current_user not in ALLOWED_USERNAMES:
+        st.error("🔒 **Akses Ditolak!** Menu ini hanya dapat diakses oleh akun Admin / Pengelola Toko.")
+        st.stop()
+        
     st.title("⚙️ Pengaturan Master Data & Akun Toko")
-    st.caption("Kelola personil, akun login, item produk, target, dan nama periode secara mandiri.")
+    st.caption(f"Akses Khusus Admin: **{current_user}**")
 
-    # Ambil data dari Session State
     p_df = st.session_state.periods_df.copy()
     i_df = st.session_state.items_df.copy()
     pers_df = st.session_state.person_df.copy()
     si_df = st.session_state.sales_item_df.copy()
     sp_df = st.session_state.sales_person_df.copy()
 
-    # Inisialisasi DataFrame Akun Login di Session State jika belum ada
     if "users_df" not in st.session_state:
         st.session_state.users_df = pd.DataFrame([
-            {"username": "admin", "password": "123", "role": "Admin", "name": "Chief Of Store"},
-            {"username": "kasir1", "password": "123", "role": "Kasir", "name": "Kasir Utama"}
+            {"username": "admin", "password": "123", "role": "Admin / COS", "name": "Chief Of Store"},
+            {"username": "kasir1", "password": "123", "role": "Kasir / Staf Toko", "name": "Kasir Utama"}
         ])
     
     users_df = st.session_state.users_df.copy()
 
-    # Buat Sub-Tab/Menu Pilihan Internal
     sub_tab1, sub_tab2, sub_tab3, sub_tab4 = st.tabs([
         "👥 Personil & Resign", 
         "🔑 Kelola Akun & Password",
@@ -1408,84 +1444,63 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
         "📅 Kelola Periode"
     ])
 
-    # -------------------------------------------------------------
-    # 1. TAMBAH & HAPUS PERSONIL (RESIGN)
-    # -------------------------------------------------------------
+    # 1. KELOLA PERSONIL & RESIGN
     with sub_tab1:
         st.subheader("👥 Kelola Personil Toko")
-        
         col_p1, col_p2 = st.columns(2)
         with col_p1:
-            st.markdown("##### ➕ Tambah Personil Baru")
+            st.markdown("<h5 style='color:#38bdf8;'>➕ Tambah Personil Baru</h5>", unsafe_allow_html=True)
             new_person_name = st.text_input("Nama Personil/Kasir Baru", key="new_p_name")
             new_person_role = st.selectbox("Jabatan / Role", ["Kasir", "Pramuniaga", "Chief Of Store", "Assistant COS"], key="new_p_role")
             
-            if st.button("➕ Simpan Personil Baru", use_container_width=True):
+            if st.button("💾 Simpan Personil Baru", use_container_width=True):
                 if new_person_name.strip() != "":
                     new_p_id = f"P{len(pers_df)+1:03d}"
-                    new_p_row = pd.DataFrame([{
-                        "person_id": new_p_id,
-                        "person_name": new_person_name.strip(),
-                        "role": new_person_role
-                    }])
+                    new_p_row = pd.DataFrame([{"person_id": new_p_id, "person_name": new_person_name.strip(), "role": new_person_role}])
                     pers_df = pd.concat([pers_df, new_p_row], ignore_index=True)
                     st.session_state.person_df = pers_df
-                    
-                    if "save_database" in globals():
-                        save_database(si_df, sp_df)
+                    if "save_database" in globals(): save_database(si_df, sp_df)
                     st.success(f"✅ Personil '{new_person_name}' berhasil ditambahkan!")
                     st.rerun()
                 else:
                     st.warning("Nama personil tidak boleh kosong!")
 
         with col_p2:
-            st.markdown("##### 🗑️ Hapus Personil (Resign)")
+            st.markdown("<h5 style='color:#ff2a6d;'>🗑️ Hapus Personil (Resign)</h5>", unsafe_allow_html=True)
             if not pers_df.empty and "person_name" in pers_df.columns:
                 person_to_delete = st.selectbox("Pilih Personil yang Resign", pers_df["person_name"].unique(), key="del_p_name")
-                
-                if st.button("🗑️ Hapus Personil Ini", type="primary", use_container_width=True):
-                    # Hapus dari Master Personil
+                if st.button("🗑️ Hapus Personil Ini", use_container_width=True):
                     pers_df = pers_df[pers_df["person_name"] != person_to_delete]
                     st.session_state.person_df = pers_df
-                    
-                    if "save_database" in globals():
-                        save_database(si_df, sp_df)
+                    if "save_database" in globals(): save_database(si_df, sp_df)
                     st.success(f"🗑️ Personil '{person_to_delete}' telah dihapus dari sistem!")
                     st.rerun()
             else:
                 st.info("Belum ada data personil.")
 
         st.markdown("---")
-        st.markdown("##### 📋 Daftar Personil Aktif Saat Ini")
+        st.markdown("<h5 style='color:#38bdf8;'>📋 Daftar Personil Aktif</h5>", unsafe_allow_html=True)
         st.dataframe(pers_df, use_container_width=True, hide_index=True)
 
-    # -------------------------------------------------------------
-    # 2. KELOLA AKUN LOGIN (USERNAME & PASSWORD)
-    # -------------------------------------------------------------
+    # 2. KELOLA AKUN LOGIN
     with sub_tab2:
         st.subheader("🔑 Kelola Username & Password Akses Web")
-        
         col_u1, col_u2 = st.columns(2)
-        
-        # --- BUAT USERNAME & PASSWORD BARU ---
         with col_u1:
-            st.markdown("##### ➕ Buat Akun User Baru")
+            st.markdown("<h5 style='color:#38bdf8;'>➕ Buat Akun User Baru</h5>", unsafe_allow_html=True)
             new_user = st.text_input("Username Baru", key="new_user_input")
             new_pass = st.text_input("Password Baru", type="password", key="new_pass_input")
             user_fullname = st.text_input("Nama Lengkap Karyawan", key="fullname_input")
             user_role = st.selectbox("Akses Role", ["Kasir / Staf Toko", "Admin / COS"], key="role_input")
             
-            if st.button("🔑 Buat Akun Baru", use_container_width=True):
+            if st.button("💾 Buat Akun Baru", use_container_width=True):
                 if new_user.strip() != "" and new_pass.strip() != "":
-                    # Cek apakah username sudah ada
                     if new_user.strip() in users_df["username"].values:
-                        st.error("⚠️ Username tersebut sudah digunakan! Silakan pilih username lain.")
+                        st.error("⚠️ Username tersebut sudah digunakan!")
                     else:
                         new_u_row = pd.DataFrame([{
-                            "username": new_user.strip(),
-                            "password": new_pass.strip(),
-                            "role": user_role,
-                            "name": user_fullname.strip() if user_fullname.strip() != "" else new_user.strip()
+                            "username": new_user.strip(), "password": new_pass.strip(),
+                            "role": user_role, "name": user_fullname.strip() if user_fullname.strip() != "" else new_user.strip()
                         }])
                         users_df = pd.concat([users_df, new_u_row], ignore_index=True)
                         st.session_state.users_df = users_df
@@ -1494,9 +1509,8 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
                 else:
                     st.warning("Username dan Password tidak boleh kosong!")
 
-        # --- UBAH / RESET PASSWORD ---
         with col_u2:
-            st.markdown("##### ✏️ Reset / Ubah Password Akun")
+            st.markdown("<h5 style='color:#38bdf8;'>✏️ Reset / Ubah Password Akun</h5>", unsafe_allow_html=True)
             if not users_df.empty:
                 selected_u = st.selectbox("Pilih Username yang Ingin Diubah Passwordnya", users_df["username"].unique(), key="edit_u_select")
                 updated_pass = st.text_input("Password Baru untuk User Ini", type="password", key="edit_pass_input")
@@ -1509,28 +1523,27 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
                         st.rerun()
                     else:
                         st.warning("Password baru tidak boleh kosong!")
-            else:
-                st.info("Belum ada data user.")
 
         st.markdown("---")
-        st.markdown("##### 📋 Daftar Akun Login Web Saat Ini")
+        st.markdown("<h5 style='color:#38bdf8;'>📋 Daftar Akun Login Web</h5>", unsafe_allow_html=True)
         st.dataframe(users_df[["username", "name", "role"]], use_container_width=True, hide_index=True)
 
-    # -------------------------------------------------------------
-    # 3. TAMBAH & HAPUS ITEM PRODUK + TARGET
-    # -------------------------------------------------------------
+    # 3. KELOLA MASTER ITEM PRODUK (Target Toko & Target Kasir)
     with sub_tab3:
-        st.subheader("📦 Kelola Master Item & Target Toko")
-        
+        st.subheader("📦 Kelola Master Item & Target")
         c_i1, c_i2 = st.columns(2)
-        
         with c_i1:
-            st.markdown("##### ➕ Tambah Item Produk Baru")
-            select_p_id = st.selectbox("Pilih Periode", p_df["period_id"].unique() if not p_df.empty else ["P01"], key="item_p_id")
+            st.markdown("<h5 style='color:#38bdf8;'>➕ Tambah Item Produk Baru</h5>", unsafe_allow_html=True)
+            select_p_id = st.selectbox("Pilih Periode Target", p_df["period_id"].unique() if not p_df.empty else ["P01"], key="item_p_id")
             new_item_name = st.text_input("Nama Item Produk Baru", key="new_i_name")
-            new_item_target = st.number_input("Target Qty Toko (Pcs)", min_value=0, value=100, step=10, key="new_i_target")
             
-            if st.button("➕ Tambah Item Ke Periode Ini", use_container_width=True):
+            c_t1, c_t2 = st.columns(2)
+            with c_t1:
+                new_item_target = st.number_input("Target Qty Toko (Pcs)", min_value=0, value=100, step=10, key="new_i_target")
+            with c_t2:
+                new_item_target_kasir = st.number_input("Target Qty Kasir (Pcs)", min_value=0, value=20, step=5, key="new_i_target_kasir")
+            
+            if st.button("💾 Simpan Item Ke Periode Ini", use_container_width=True):
                 if new_item_name.strip() != "":
                     new_i_id = f"ITM{len(i_df)+1:03d}"
                     new_item_row = pd.DataFrame([{"item_id": new_i_id, "item_name": new_item_name.strip()}])
@@ -1542,59 +1555,46 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
                         "item_id": new_i_id,
                         "item_name": new_item_name.strip(),
                         "target_qty": new_item_target,
+                        "target_qty_kasir": new_item_target_kasir,
                         "actual_qty": 0
                     }])
                     si_df = pd.concat([si_df, new_si_row], ignore_index=True)
                     st.session_state.sales_item_df = si_df
-                    
-                    if "save_database" in globals():
-                        save_database(si_df, sp_df)
-                    st.success(f"✅ Item '{new_item_name}' berhasil ditambahkan!")
+                    if "save_database" in globals(): save_database(si_df, sp_df)
+                    st.success(f"✅ Item '{new_item_name}' dengan Target Toko ({new_item_target} Pcs) & Target Kasir ({new_item_target_kasir} Pcs) berhasil disimpan!")
                     st.rerun()
                 else:
                     st.warning("Nama item tidak boleh kosong!")
 
         with c_i2:
-            st.markdown("##### 🗑️ Hapus / Ganti Item Produk")
+            st.markdown("<h5 style='color:#ff2a6d;'>🗑️ Hapus / Ganti Item Produk</h5>", unsafe_allow_html=True)
             if not si_df.empty:
                 item_to_delete = st.selectbox("Pilih Item yang Ingin Dihapus", si_df["item_name"].unique(), key="del_i_name")
-                
-                if st.button("🗑️ Hapus Item Ini Dari System", type="primary", use_container_width=True):
+                if st.button("🗑️ Hapus Item Ini", use_container_width=True):
                     si_df = si_df[si_df["item_name"] != item_to_delete]
                     st.session_state.sales_item_df = si_df
-                    
                     sp_df = sp_df[sp_df["item_name"] != item_to_delete]
                     st.session_state.sales_person_df = sp_df
-                    
-                    if "sync_store_sales_from_personnel" in globals():
-                        sync_store_sales_from_personnel()
-                        
-                    if "save_database" in globals():
-                        save_database(si_df, sp_df)
+                    if "sync_store_sales_from_personnel" in globals(): sync_store_sales_from_personnel()
+                    if "save_database" in globals(): save_database(si_df, sp_df)
                     st.success(f"🗑️ Item '{item_to_delete}' berhasil dihapus!")
                     st.rerun()
             else:
                 st.info("Belum ada data item produk.")
 
-    # -------------------------------------------------------------
-    # 4. KELOLA NAMA PERIODE (MISAL: 1-15 -> PERIODE PERTAMA)
-    # -------------------------------------------------------------
+    # 4. KELOLA PERIODE
     with sub_tab4:
         st.subheader("📅 Ubah Nama & Label Periode")
-        
         if not p_df.empty:
             p_to_edit = st.selectbox("Pilih ID Periode yang Ingin Diubah", p_df["period_id"].unique(), key="edit_p_id")
             current_name = p_df.loc[p_df["period_id"] == p_to_edit, "period_name"].values[0] if "period_name" in p_df.columns else f"Periode {p_to_edit}"
-            new_period_label = st.text_input("Label / Nama Periode Baru", value=current_name, help="Contoh: Periode Pertama, Periode Kedua, dsb.")
+            new_period_label = st.text_input("Label / Nama Periode Baru", value=current_name)
             
-            if st.button("✏️ Update Nama Periode", use_container_width=True):
+            if st.button("💾 Update Nama Periode", use_container_width=True):
                 p_df.loc[p_df["period_id"] == p_to_edit, "period_name"] = new_period_label
                 st.session_state.periods_df = p_df
-                
-                if "save_database" in globals():
-                    save_database(si_df, sp_df)
+                if "save_database" in globals(): save_database(si_df, sp_df)
                 st.success(f"✅ Nama Periode berhasil diubah menjadi: '{new_period_label}'")
                 st.rerun()
         else:
             st.info("Data periode belum ada.")
-
