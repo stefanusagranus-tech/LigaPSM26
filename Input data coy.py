@@ -430,4 +430,9 @@ else:
                             st.error(f"Gagal menghapus: {e}")
                 st.divider()
         else:
-            disp_cols = [c for c in ["period_id", "item_name", "actual_qty", "
+            disp_cols = [c for c in ["period_id", "item_name", "actual_qty", "updated_at", "catatan"] if c in user_sales_period.columns]
+            disp_df = user_sales_period[disp_cols].copy()
+            disp_df.columns = ["Periode", "Nama Item", "Qty (Pcs)", "Tanggal", "Catatan Staf"][:len(disp_cols)]
+            st.dataframe(disp_df, use_container_width=True, hide_index=True)
+    else:
+        st.info("Belum ada riwayat input penjualan pada periode terpilih.")
