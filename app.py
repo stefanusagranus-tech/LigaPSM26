@@ -9,7 +9,7 @@ from zoneinfo import ZoneInfo
 
 
 # Mengambil waktu WIB (Asia/Jakarta) secara presisi
-waktu_wib = datetime.now(ZoneInfo('Asia/Jakarta"))
+waktu_wib = datetime.now(ZoneInfo("Asia/Jakarta"))
 current_time_str = now_wib.strftime("%A, %d %B %Y | %H:%M WIB")
 
 # Konfigurasi Halaman Dashboard
