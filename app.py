@@ -7,6 +7,30 @@ import plotly.graph_objects as go
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+# --- CSS UNTUK MENGHAPUS / MENYEMBUNYIKAN 'MANAGE APP' & FOOTER ---
+st.markdown("""
+<style>
+    /* 1. Menyembunyikan Tombol 'Manage app' & Status Widget */
+    .stAppDeployButton, 
+    [data-testid="stStatusWidget"],
+    div[data-testid="stDecoration"] {
+        display: none !important;
+    }
+
+    /* 2. Menyembunyikan Footer Bawaan Streamlit ("Made with Streamlit") */
+    footer {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    /* 3. Menyembunyikan Menu Tiga Titik (Hamburger Menu) di Pojok Kanan Atas */
+    #MainMenu {
+        visibility: hidden !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+
 # --- CUSTOM CSS NEON FIX: LABEL CERAH & TEKS INPUT CLEAR ---
 st.markdown("""
 <style>
