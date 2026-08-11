@@ -8,9 +8,8 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 
-# Ambil waktu UTC lalu konversi secara presisi ke WIB (GMT+7)
-now_utc = datetime.utcnow()
-now_wib = now_utc + timedelta(hours=7)
+# Mengambil waktu WIB (Asia/Jakarta) secara presisi
+waktu_wib = datetime.now(ZoneInfo('Asia/Jakarta"))
 current_time_str = now_wib.strftime("%A, %d %B %Y | %H:%M WIB")
 
 # Konfigurasi Halaman Dashboard
