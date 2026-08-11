@@ -99,11 +99,12 @@ css_code = """
 """
 st.markdown(css_code, unsafe_allow_html=True)
 
-# --- DATABASE CONNECTION FUNCTION ---
-SPREADSHEET_URL = "[https://docs.google.com/spreadsheets/d/1kJ-OsjLEsFuNyyBg2TwxlWz8Ape4lwF9h0t66q3ldQk/edit?usp=drivesdk](https://docs.google.com/spreadsheets/d/1kJ-OsjLEsFuNyyBg2TwxlWz8Ape4lwF9h0t66q3ldQk/edit?usp=drivesdk)"
+# --- DATABASE CONNECTION FUNCTION (ANTI-ERROR) ---
+SPREADSHEET_ID = "1kJ-OsjLEsFuNyyBg2TwxlWz8Ape4lwF9h0t66q3ldQk"
 
 @st.cache_data(ttl=15)
 def load_data():
+    # 1. Coba koneksi resmi via Streamlit GSheets Secrets
     try:
         from streamlit_gsheets import GSheetsConnection
         conn = st.connection("gsheets", type=GSheetsConnection)
@@ -114,13 +115,23 @@ def load_data():
         df_sales_p = conn.read(worksheet="SALES_PERSONIL")
         return conn, df_personil, df_item, df_periode, df_sales_i, df_sales_p
     except Exception:
-        excel_url = SPREADSHEET_URL.replace('/edit?usp=drivesdk', '/export?format=xlsx')
-        df_personil = pd.read_excel(excel_url, sheet_name="MASTER_PERSONIL")
-        df_item = pd.read_excel(excel_url, sheet_name="MASTER_ITEM")
-        df_periode = pd.read_excel(excel_url, sheet_name="PERIODE")
-        df_sales_i = pd.read_excel(excel_url, sheet_name="SALES_ITEM")
-        df_sales_p = pd.read_excel(excel_url, sheet_name="SALES_PERSONIL")
+        pass
+
+    # 2. Fallback: Baca langsung via Live CSV Engine Google Sheets (Kebal FileNotFoundError)
+    try:
+        def read_sheet_csv(sheet_name):
+            url = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet={sheet_name}"
+            return pd.read_csv(url)
+
+        df_personil = read_sheet_csv("MASTER_PERSONIL")
+        df_item = read_sheet_csv("MASTER_ITEM")
+        df_periode = read_sheet_csv("PERIODE")
+        df_sales_i = read_sheet_csv("SALES_ITEM")
+        df_sales_p = read_sheet_csv("SALES_PERSONIL")
         return None, df_personil, df_item, df_periode, df_sales_i, df_sales_p
+    except Exception as e:
+        st.error(f"❌ Gagal membaca database Google Sheets: {e}")
+        st.stop()
 
 conn, df_personil, df_item, df_periode, df_sales_i, df_sales_p = load_data()
 
@@ -354,3 +365,4 @@ else:
         st.dataframe(disp_df, use_container_width=True, hide_index=True)
     else:
         st.info("Belum ada riwayat input penjualan pada periode terpilih.")
+        
