@@ -379,8 +379,7 @@ else:
         disp_df.columns = ["Periode", "Nama Item", "Qty (Pcs)", "Tanggal", "Catatan Staf"][:len(disp_cols)]
         st.dataframe(disp_df, use_container_width=True, hide_index=True)
     else:
-        st.info("Belum ada riwayat input penjualan pada periode terpilih.")
-='text-align: center;'>
+        st.info("Belum ada riwayat input penjualan pada periode terpilih.")='text-align: center;'>
             <div class='metric-lbl'>Jumlah Input</div>
             <div class='metric-val'>{total_transaksi} <span style='font-size:14px;'>Kali</span></div>
         </div>
