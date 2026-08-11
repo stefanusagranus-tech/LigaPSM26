@@ -7,23 +7,30 @@ import plotly.graph_objects as go
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-# --- CSS UNTUK MENGHAPUS TOOLBAR ATAS (SHARE, EDIT, GITHUB) ---
+# --- CSS FIX: TAMPILKAN TOMBOL SIDEBAR, SEMBUNYIKAN TOOLBAR LAIN ---
 st.markdown("""
 <style>
-    /* Menyembunyikan Toolbar Atas (Share, Star, Edit, GitHub) */
-    [data-testid="stToolbar"],
-    div.stToolbarActions,
-    div[class*="stToolbarActions"] {
+    /* 1. Wajibkan Tombol Sidebar (Buka/Tutup Navigation) Tetap Tampil & Menyala */
+    [data-testid="stSidebarCollapsedControl"],
+    button[aria-label*="sidebar"],
+    button[data-testid="baseButton-header"] {
+        display: flex !important;
+        visibility: visible !important;
+        color: #00f0ff !important; /* Warna Cyan Neon agar terlihat jelas */
+        background-color: #0d1117 !important;
+        border: 1px solid #00f0ff !important;
+        border-radius: 6px !important;
+        z-index: 999999 !important;
+    }
+
+    /* 2. Sembunyikan HANYA Tombol Share, Star, Edit, GitHub di Header */
+    div[data-testid="stToolbarActions"],
+    div.stToolbarActions {
         display: none !important;
         visibility: hidden !important;
     }
-</style>
-""", unsafe_allow_html=True)
 
-# --- CSS UNTUK MENGHAPUS TOMBOL 'MANAGE APP' & TERMINAL DI POJOK KANAN BAWAH ---
-st.markdown("""
-<style>
-    /* Menyembunyikan Tombol Manage App & Terminal Button */
+    /* 3. Sembunyikan Tombol 'Manage app' & Terminal di Pojok Kanan Bawah */
     [data-testid="stAppDeployButton"],
     button[title="Manage app"],
     div[class*="terminalButton"],
@@ -31,27 +38,10 @@ st.markdown("""
         display: none !important;
         visibility: hidden !important;
     }
-</style>
-""", unsafe_allow_html=True)
 
-# --- CSS UNTUK MENGHAPUS / MENYEMBUNYIKAN 'MANAGE APP' & FOOTER ---
-st.markdown("""
-<style>
-    /* 1. Menyembunyikan Tombol 'Manage app' & Status Widget */
-    .stAppDeployButton, 
-    [data-testid="stStatusWidget"],
-    div[data-testid="stDecoration"] {
+    /* 4. Sembunyikan Footer Bawaan & Hamburger Menu */
+    footer, #MainMenu {
         display: none !important;
-    }
-
-    /* 2. Menyembunyikan Footer Bawaan Streamlit ("Made with Streamlit") */
-    footer {
-        display: none !important;
-        visibility: hidden !important;
-    }
-
-    /* 3. Menyembunyikan Menu Tiga Titik (Hamburger Menu) di Pojok Kanan Atas */
-    #MainMenu {
         visibility: hidden !important;
     }
 </style>
