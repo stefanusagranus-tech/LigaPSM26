@@ -1314,7 +1314,7 @@ elif selected_tab == "06 · Input & Reset Data":
     
     # Cek status role pengguna yang sedang login
     current_user = st.session_state.get("username", "")
-    is_admin = (current_user == "Staff Toko") or (current_user == "Admin")
+    is_admin = (current_user == "admin") or (current_user == "Admin")
     
     tab_in1, tab_in2 = st.tabs(["Input/Hapus Sales Personil", "Update/Hapus Sales Item Toko (Admin)"])
     
