@@ -7,10 +7,48 @@ import plotly.graph_objects as go
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-# --- CUSTOM CSS NEON FIX: HANYA UNTUK TOMBOL, INPUT, DAN TABEL CLEAN ---
+# --- CUSTOM CSS NEON FIX: LABEL CERAH & TEKS INPUT CLEAR ---
 st.markdown("""
 <style>
-    /* 1. STYLING TOMBOL NEON CYAN (Sama Persis Seperti 'Hapus Transaksi Staf') */
+    /* 1. TEKS LABEL WIDGET (Judul Input "Tanggal Awal", "Tanggal Akhir", dsb.) */
+    label, p[data-testid="stWidgetLabel"], div[data-testid="stWidgetLabel"] label, label p {
+        color: #38bdf8 !important; /* Warna Biru Cyan Cerah */
+        font-weight: 600 !important;
+        font-size: 14px !important;
+    }
+
+    /* 2. TEKS DI DALAM KOTAK INPUT (Date Input, Text Input, Selectbox) */
+    div[data-baseweb="input"] input, 
+    div[data-baseweb="select"] input,
+    div[data-baseweb="select"] span {
+        color: #ffffff !important; /* Teks Putih Terang */
+        background-color: transparent !important;
+        font-weight: bold !important;
+    }
+
+    /* 3. WADAH BINGKAI KOTAK INPUT (NEON DARK BOX) */
+    div[data-baseweb="input"] > div, 
+    div[data-baseweb="select"] > div {
+        background-color: #0d1117 !important;
+        border: 1.5px solid #00f0ff !important;
+        border-radius: 8px !important;
+    }
+
+    /* 4. WARNA IKON KALENDER */
+    div[data-baseweb="input"] svg {
+        fill: #00f0ff !important;
+    }
+
+    /* 5. METRIC CARDS (Target, Actual, Gap) */
+    [data-testid="stMetricValue"] {
+        color: #00f0ff !important;
+        font-weight: bold !important;
+    }
+    [data-testid="stMetricLabel"] {
+        color: #f1f5f9 !important;
+    }
+
+    /* 6. TOMBOL NEON CYAN */
     div.stButton > button, div.stFormSubmitButton > button {
         background-color: #080c14 !important;
         color: #ffffff !important;
@@ -25,40 +63,9 @@ st.markdown("""
         color: #080c14 !important;
         box-shadow: 0 0 20px rgba(0, 240, 255, 0.8) !important;
     }
-
-    /* 2. STYLING KOTAK INPUT & SELECTBOX (NEON DARK BOX) */
-    div[data-baseweb="select"] > div, 
-    div[data-baseweb="input"] > div {
-        background-color: #080c14 !important;
-        color: #ffffff !important;
-        border: 1.5px solid #00f0ff !important;
-        border-radius: 8px !important;
-    }
-    
-    /* 3. PERBAIKAN DROPDOWN LIST (MENCEGAH OPSI JADI BAR PUTIH) */
-    div[data-baseweb="popover"], ul[role="listbox"] {
-        background-color: #0d1117 !important;
-        border: 1px solid #00f0ff !important;
-        border-radius: 8px !important;
-    }
-    li[role="option"] {
-        color: #ffffff !important;
-        background-color: #0d1117 !important;
-    }
-    li[role="option"]:hover {
-        background-color: #1e293b !important;
-        color: #00f0ff !important;
-    }
-
-    /* 4. PERBAIKAN TABEL / DATAFRAME AGAR RAPI & BERSIH */
-    [data-testid="stDataFrame"] {
-        background-color: #080c14 !important;
-        border: 1px solid #1e293b !important;
-        border-radius: 8px !important;
-        padding: 5px;
-    }
 </style>
 """, unsafe_allow_html=True)
+
 
 
 def sync_store_sales_from_personnel():
