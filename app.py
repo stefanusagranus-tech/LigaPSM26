@@ -10,7 +10,7 @@ from zoneinfo import ZoneInfo
 
 # Mengambil waktu WIB (Asia/Jakarta) secara presisi
 waktu_wib = datetime.now(ZoneInfo("Asia/Jakarta"))
-current_time_str = now_wib.strftime("%A, %d %B %Y | %H:%M WIB")
+current_time_str = waktu_wib.strftime("%A, %d %B %Y | %H:%M WIB")
 
 # Konfigurasi Halaman Dashboard
 st.set_page_config(page_title="PSM Toko - Sales Dashboard", layout="wide")
