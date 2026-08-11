@@ -287,17 +287,17 @@ def show_login_page():
             submit_btn = st.form_submit_button("Masuk ke Aplikasi", use_container_width=True)
             
             if submit_btn:
-    if not username_input or not password_input:
-        st.warning("Username dan Password wajib diisi!")
-    elif username_input in USER_DATABASE and USER_DATABASE[username_input]["password"] == password_input:
-        user_info = USER_DATABASE[username_input]
-        st.session_state.logged_in = True
-        # Menyimpan Nama Asli Karyawan ke Session State
-        st.session_state.username = user_info["nama"] 
-        st.toast(f"Selamat Datang, {user_info['nama']}!", icon="✅")
-        st.rerun()
-    else:
-        st.error("Username atau Password salah!")
+                if not username_input or not password_input:
+                    st.warning("Username dan Password wajib diisi!")
+                elif username_input in USER_DATABASE and USER_DATABASE[username_input]["password"] == password_input:
+                    user_info = USER_DATABASE[username_input]
+                    st.session_state.logged_in = True
+                    # Menyimpan Nama Asli Karyawan ke Session State
+                    st.session_state.username = user_info["nama"] 
+                    st.toast(f"Selamat Datang, {user_info['nama']}!", icon="✅")
+                    st.rerun()
+                else:
+                    st.error("Username atau Password salah!")
 
 
 # Cek Status Autentikasi
