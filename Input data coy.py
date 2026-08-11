@@ -112,6 +112,14 @@ css_code = """
 """
 st.markdown(css_code, unsafe_allow_html=True)
 
+# --- SESSION STATE MANAGEMENT ---
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+if "user_info" not in st.session_state:
+    st.session_state.user_info = None
+if "deleted_records" not in st.session_state:
+    st.session_state.deleted_records = set()
+
 # --- BACA DATA REALTIME GOOGLE SHEETS ---
 @st.cache_data(ttl=2)
 def load_data():
@@ -134,7 +142,13 @@ def load_data():
         st.error(f"❌ Gagal membaca database Google Sheets: {e}")
         st.stop()
 
-df_personil, df_item, df_periode, df_sales_i, df_sales_p = load_data()
+df_personil, df_item, df_periode, df_sales_i, df_sales_p_raw = load_data()
+
+# Filter out locally deleted records to handle Google delay instantly
+if not df_sales_p_raw.empty and "record_id" in df_sales_p_raw.columns:
+    df_sales_p = df_sales_p_raw[~df_sales_p_raw["record_id"].astype(str).str.strip().str.upper().isin(st.session_state.deleted_records)].copy()
+else:
+    df_sales_p = df_sales_p_raw.copy()
 
 # --- MOTIVATIONAL QUOTES ENGINE ---
 def get_motivational_quote(qty_achieved):
@@ -164,12 +178,6 @@ def get_motivational_quote(qty_achieved):
     else:
         return random.choice(low_quotes)
 
-# --- SESSION STATE INITIALIZATION ---
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-if "user_info" not in st.session_state:
-    st.session_state.user_info = None
-
 # ==========================================
 # 1. HALAMAN LOGIN
 # ==========================================
@@ -193,7 +201,6 @@ if not st.session_state.logged_in:
         if login_btn:
             if not username_input or not password_input:
                 st.warning("⚠️ Silakan isi Username dan Password terlebih dahulu.")
-            # --- CEK HAK AKSES DEVELOPER / ADMIN ---
             elif username_input.lower() == "admin" and password_input == "lavitality":
                 st.session_state.logged_in = True
                 st.session_state.user_info = {
@@ -242,9 +249,8 @@ else:
     if not active_periods:
         active_periods = df_periode["period_name"].tolist()
 
-    # BANNER DASHBOARD (ADMIN VS PERSONIL)
     if is_admin:
-        st.markdown(f"""
+        st.markdown("""
         <div class='card-admin'>
             <div>
                 <span style='background-color: #f43f5e; color: white; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold;'>DEVELOPER ACCESS</span>
@@ -275,14 +281,13 @@ else:
     period_row = df_periode[df_periode["period_name"] == selected_period_name]
     period_id = str(period_row.iloc[0]["period_id"]) if not period_row.empty else "P01"
     
-    # JIKA ADMIN: BISA PILIH PERSONIL YANG INGIN DI-INPUTKAN
     target_person_name = user["person_name"]
     target_person_id = user["person_id"]
     
     if is_admin:
-        st.markdown("<h4 style='color: #f43f5e; margin-top: 10px;'>⚙️ Pengaturan Admin</h4>", unsafe_allow_html=True)
+        st.markdown("<h4 style='color: #f43f5e; margin-top: 10px;'>⚙️ Filter Tampilan Admin</h4>", unsafe_allow_html=True)
         all_personil_list = df_personil["person_name"].tolist() if not df_personil.empty else []
-        selected_admin_target = st.selectbox("👤 Pilih Personil (Untuk Input / Lihat Data)", ["-- SEMUA PERSONIL (Toko) --"] + all_personil_list)
+        selected_admin_target = st.selectbox("👤 Pilih Personil (Untuk Input / Kelola Data)", ["-- SEMUA PERSONIL (Toko) --"] + all_personil_list)
         
         if selected_admin_target != "-- SEMUA PERSONIL (Toko) --":
             target_person_name = selected_admin_target
@@ -293,7 +298,6 @@ else:
     active_personil_count = len(df_personil[df_personil["active"] == True]) if "active" in df_personil.columns else len(df_personil)
     target_personil = target_toko / active_personil_count if active_personil_count > 0 else 0.0
     
-    # Filter Penjualan Spesifik Personil / Semua
     if is_admin and selected_admin_target == "-- SEMUA PERSONIL (Toko) --":
         user_sales_period = df_sales_p[df_sales_p["period_id"].astype(str).str.strip() == period_id] if not df_sales_p.empty else pd.DataFrame()
     else:
@@ -305,10 +309,7 @@ else:
     total_qty_personil = int(user_sales_period["actual_qty"].sum()) if not user_sales_period.empty else 0
     pct_ach_personil = (total_qty_personil / (target_toko if (is_admin and selected_admin_target == "-- SEMUA PERSONIL (Toko) --") else target_personil) * 100) if target_personil > 0 else 0.0
     
-    top_item_name = "-"
-    top_item_qty = 0
-    top_item_pct = 0.0
-    
+    top_item_name, top_item_qty, top_item_pct = "-", 0, 0.0
     if not user_sales_period.empty and user_sales_period["actual_qty"].sum() > 0:
         top_group = user_sales_period.groupby("item_name")["actual_qty"].sum().reset_index().sort_values(by="actual_qty", ascending=False)
         top_item_name = top_group.iloc[0]["item_name"]
@@ -370,12 +371,12 @@ else:
         with c_date:
             input_date = st.date_input("📅 Tanggal Penjualan", value=datetime.now())
             
-        input_catatan = st.text_area("💬 Catatan Harian / Kendala Penjualan Personil", placeholder="Contoh: Menawarkan ke 15 konsumen, stokdisplay rapi...")
+        input_catatan = st.text_area("💬 Catatan Harian / Kendala Penjualan Personil", placeholder="Contoh: Menawarkan ke 15 konsumen...")
         
         submit_report = st.form_submit_button("🚀 SIMPAN LAPORAN PENJUALAN")
         
         if submit_report:
-            new_record_id = f"SP{len(df_sales_p) + 1:05d}"
+            new_record_id = f"SP{len(df_sales_p_raw) + 1:05d}"
             today_str = str(datetime.now().strftime("%Y-%m-%d"))
             
             payload = {
@@ -398,7 +399,7 @@ else:
                     st.cache_data.clear()
                     st.rerun()
                 else:
-                    st.error("⚠️ Gagal menyimpan ke Google Sheets, pastikan Apps Script Deploy diset 'Anyone'.")
+                    st.error("⚠️ Respon server gagal, pastikan Apps Script Deploy diset 'Anyone'.")
             except Exception as ex:
                 st.error(f"❌ Terjadi kesalahan saat mengirim data: {ex}")
 
@@ -407,9 +408,9 @@ else:
     
     if not user_sales_period.empty:
         if is_admin:
-            st.info("💡 **Fitur Admin**: Anda dapat menghapus baris laporan yang salah langsung dari tabel di bawah.")
+            st.info("💡 **Kelola Admin**: Klik tombol **Hapus** untuk menghapus record secara permanen.")
             for idx, row in user_sales_period.iterrows():
-                r_id = str(row.get("record_id", f"SP{idx:05d}"))
+                r_id = str(row.get("record_id", "")).strip()
                 p_name = str(row.get("person_name", "-"))
                 i_name = str(row.get("item_name", "-"))
                 qty = int(row.get("actual_qty", 0))
@@ -417,13 +418,17 @@ else:
                 
                 col1, col2 = st.columns([4, 1])
                 with col1:
-                    st.write(f"🔹 **[{tgl}]** {p_name} - **{i_name}** ({qty} Pcs)")
+                    st.write(f"🔹 **[{tgl}]** {p_name} - **{i_name}** ({qty} Pcs) - `ID: {r_id}`")
                 with col2:
                     if st.button("🗑️ Hapus", key=f"del_{r_id}_{idx}"):
                         delete_payload = {"action": "delete", "record_id": r_id}
                         try:
+                            # 1. Masukkan ke local blacklist agar hilang seketika di UI
+                            st.session_state.deleted_records.add(r_id.upper())
+                            
+                            # 2. Kirim perintah hapus ke Google Sheets
                             del_res = requests.post(APPS_SCRIPT_URL, json=delete_payload, timeout=8)
-                            st.success(f"🗑️ Laporan {r_id} berhasil dihapus!")
+                            st.success(f"🗑️ Record {r_id} berhasil dihapus permanen!")
                             st.cache_data.clear()
                             st.rerun()
                         except Exception as e:
