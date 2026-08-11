@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 import random
+import requests
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -11,7 +12,11 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- CSS STYLING (SAFE MOBILE FORMAT) ---
+# --- URL GOOGLE APPS SCRIPT & SPREADSHEET ID ---
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzPHZQug5zuiTmt3C4YlbHqLj5avf7HYK8YqYw-n2v-TavnlgsdRwuUn9r_qR8i-7lshQ/exec"
+SPREADSHEET_ID = "1kJ-OsjLEsFuNyyBg2TwxlWz8Ape4lwF9h0t66q3ldQk"
+
+# --- CSS STYLING (DARK NEON MOBILE VERSION) ---
 css_code = """
 <style>
     .stApp {
@@ -99,26 +104,9 @@ css_code = """
 """
 st.markdown(css_code, unsafe_allow_html=True)
 
-# --- DATABASE CONNECTION FUNCTION (ANTI-ERROR) ---
-SPREADSHEET_ID = "1kJ-OsjLEsFuNyyBg2TwxlWz8Ape4lwF9h0t66q3ldQk"
-
-@st.cache_data(ttl=5)
+# --- BACA DATA REALTIME GOOGLE SHEETS ---
+@st.cache_data(ttl=2)
 def load_data():
-    conn = None
-    # 1. Coba koneksi resmi via Streamlit GSheets Secrets
-    try:
-        from streamlit_gsheets import GSheetsConnection
-        conn = st.connection("gsheets", type=GSheetsConnection)
-        df_personil = conn.read(worksheet="MASTER_PERSONIL")
-        df_item = conn.read(worksheet="MASTER_ITEM")
-        df_periode = conn.read(worksheet="PERIODE")
-        df_sales_i = conn.read(worksheet="SALES_ITEM")
-        df_sales_p = conn.read(worksheet="SALES_PERSONIL")
-        return conn, df_personil, df_item, df_periode, df_sales_i, df_sales_p
-    except Exception:
-        pass
-
-    # 2. Fallback: Baca langsung via Live CSV Engine Google Sheets
     try:
         def read_sheet_csv(sheet_name):
             url = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet={sheet_name}"
@@ -129,26 +117,16 @@ def load_data():
         df_periode = read_sheet_csv("PERIODE")
         df_sales_i = read_sheet_csv("SALES_ITEM")
         df_sales_p = read_sheet_csv("SALES_PERSONIL")
-        return None, df_personil, df_item, df_periode, df_sales_i, df_sales_p
+        
+        if "actual_qty" in df_sales_p.columns:
+            df_sales_p["actual_qty"] = pd.to_numeric(df_sales_p["actual_qty"], errors="coerce").fillna(0).astype(int)
+            
+        return df_personil, df_item, df_periode, df_sales_i, df_sales_p
     except Exception as e:
         st.error(f"❌ Gagal membaca database Google Sheets: {e}")
         st.stop()
 
-conn, df_personil, df_item, df_periode, df_sales_i, df_sales_p_raw = load_data()
-
-# Initialize session state for real-time memory update
-if "local_input_data" not in st.session_state:
-    st.session_state.local_input_data = pd.DataFrame()
-
-# Merge Google Sheets data with local session data
-if not st.session_state.local_input_data.empty:
-    df_sales_p = pd.concat([df_sales_p_raw, st.session_state.local_input_data], ignore_index=True)
-else:
-    df_sales_p = df_sales_p_raw.copy()
-
-# Ensure actual_qty numeric clean
-if "actual_qty" in df_sales_p.columns:
-    df_sales_p["actual_qty"] = pd.to_numeric(df_sales_p["actual_qty"], errors="coerce").fillna(0).astype(int)
+df_personil, df_item, df_periode, df_sales_i, df_sales_p = load_data()
 
 # --- MOTIVATIONAL QUOTES ENGINE ---
 def get_motivational_quote(qty_achieved):
@@ -209,8 +187,8 @@ if not st.session_state.logged_in:
                 st.warning("⚠️ Silakan isi Username dan Password terlebih dahulu.")
             else:
                 user_match = df_personil[
-                    (df_personil['person_name'].str.upper() == username_input.upper()) |
-                    (df_personil['nik'].astype(str) == username_input)
+                    (df_personil['person_name'].astype(str).str.strip().str.upper() == username_input.upper()) |
+                    (df_personil['nik'].astype(str).str.strip() == username_input)
                 ]
                 
                 if not user_match.empty:
@@ -220,9 +198,9 @@ if not st.session_state.logged_in:
                     if password_input in [expected_pass, "12345", str(person_row['person_name']).lower()]:
                         st.session_state.logged_in = True
                         st.session_state.user_info = {
-                            "person_id": person_row.get("person_id", f"PRS{person_row.name:03d}"),
+                            "person_id": str(person_row.get("person_id", f"PRS{person_row.name:03d}")),
                             "person_name": str(person_row["person_name"]).strip(),
-                            "nik": person_row["nik"]
+                            "nik": str(person_row["nik"])
                         }
                         st.success(f"✅ Login Berhasil! Selamat datang {person_row['person_name']}")
                         st.rerun()
@@ -264,16 +242,16 @@ else:
 
     selected_period_name = st.selectbox("📌 Pilih Periode Promosi", active_periods)
     period_row = df_periode[df_periode["period_name"] == selected_period_name]
-    period_id = period_row.iloc[0]["period_id"] if not period_row.empty else "P01"
+    period_id = str(period_row.iloc[0]["period_id"]) if not period_row.empty else "P01"
     
     target_toko = float(period_row.iloc[0]["target_total"]) if not period_row.empty and pd.notnull(period_row.iloc[0]["target_total"]) else 0.0
     active_personil_count = len(df_personil[df_personil["active"] == True]) if "active" in df_personil.columns else len(df_personil)
     target_personil = target_toko / active_personil_count if active_personil_count > 0 else 0.0
     
-    # Filter Data Sales Personil
+    # Filter Penjualan Spesifik Personil dan Periode Terpilih
     user_sales_period = df_sales_p[
         (df_sales_p["person_name"].astype(str).str.strip().str.upper() == person_name.upper()) & 
-        (df_sales_p["period_id"].astype(str).str.strip() == str(period_id).strip())
+        (df_sales_p["period_id"].astype(str).str.strip() == period_id)
     ] if not df_sales_p.empty else pd.DataFrame()
     
     total_qty_personil = int(user_sales_period["actual_qty"].sum()) if not user_sales_period.empty else 0
@@ -323,6 +301,7 @@ else:
 
     st.markdown("<h3 style='color: #38bdf8; font-size: 18px; margin-top: 10px;'>📝 Form Laporan & Catatan Sales</h3>", unsafe_allow_html=True)
     
+    # Filter Item Promosi Khusus Periode Ini
     items_in_period = df_sales_i[(df_sales_i["period_id"] == period_id) & (df_sales_i["item_name"] != "NAMA ITEM")]["item_name"].tolist() if not df_sales_i.empty else []
     if not items_in_period:
         items_in_period = df_item[df_item["active"] == True]["item_name"].tolist() if "active" in df_item.columns else df_item["item_name"].tolist()
@@ -331,7 +310,7 @@ else:
         selected_item_name = st.selectbox("📦 Pilih Item PSM (Promosi Periode Ini)", items_in_period)
         
         item_row = df_item[df_item["item_name"] == selected_item_name]
-        item_id = item_row.iloc[0]["item_id"] if not item_row.empty else "ITM0001"
+        item_id = str(item_row.iloc[0]["item_id"]) if not item_row.empty else "ITM0001"
         
         c_qty, c_date = st.columns(2)
         with c_qty:
@@ -347,7 +326,7 @@ else:
             new_record_id = f"SP{len(df_sales_p) + 1:05d}"
             today_str = str(datetime.now().strftime("%Y-%m-%d"))
             
-            new_row = {
+            payload = {
                 "record_id": new_record_id,
                 "period_id": period_id,
                 "item_id": item_id,
@@ -360,25 +339,17 @@ else:
                 "catatan": input_catatan
             }
             
-            # 1. Simpan ke Session Memory agar indikator & riwayat langsung terupdate saat itu juga
-            st.session_state.local_input_data = pd.concat(
-                [st.session_state.local_input_data, pd.DataFrame([new_row])], 
-                ignore_index=True
-            )
-            
-            # 2. Jika koneksi GSheets aktif, simpan juga ke Google Sheets
-            if conn is not None:
-                try:
-                    updated_df = pd.concat([df_sales_p_raw, st.session_state.local_input_data], ignore_index=True)
-                    conn.update(worksheet="SALES_PERSONIL", data=updated_df)
-                    st.success(f"✅ Laporan {selected_item_name} ({int(input_qty)} Pcs) tersimpan ke Database Cloud!")
-                except Exception as ex:
-                    st.success(f"✅ Laporan {selected_item_name} ({int(input_qty)} Pcs) tersimpan di sesi aplikasi!")
-            else:
-                st.success(f"✅ Laporan {selected_item_name} ({int(input_qty)} Pcs) tersimpan!")
-                
-            st.cache_data.clear()
-            st.rerun()
+            # Kirim data ke Google Sheets via Apps Script Webhook
+            try:
+                res = requests.post(APPS_SCRIPT_URL, json=payload, timeout=8)
+                if res.status_code == 200:
+                    st.success(f"✅ Laporan {selected_item_name} ({int(input_qty)} Pcs) Berhasil Tersimpan Permanen!")
+                    st.cache_data.clear()
+                    st.rerun()
+                else:
+                    st.error("⚠️ Respon server gagal, pastikan Apps Script Deploy diset 'Anyone'.")
+            except Exception as ex:
+                st.error(f"❌ Terjadi kesalahan saat mengirim data: {ex}")
 
     st.markdown("<h3 style='color: #38bdf8; font-size: 18px; margin-top: 20px;'>📋 Riwayat Input Periode Ini</h3>", unsafe_allow_html=True)
     
@@ -389,4 +360,4 @@ else:
         st.dataframe(disp_df, use_container_width=True, hide_index=True)
     else:
         st.info("Belum ada riwayat input penjualan pada periode terpilih.")
-    
+        
