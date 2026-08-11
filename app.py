@@ -20,6 +20,19 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# --- CSS UNTUK MENGHAPUS TOMBOL 'MANAGE APP' & TERMINAL DI POJOK KANAN BAWAH ---
+st.markdown("""
+<style>
+    /* Menyembunyikan Tombol Manage App & Terminal Button */
+    [data-testid="stAppDeployButton"],
+    button[title="Manage app"],
+    div[class*="terminalButton"],
+    div[class*="stAppDeployButton"] {
+        display: none !important;
+        visibility: hidden !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # --- CSS UNTUK MENGHAPUS / MENYEMBUNYIKAN 'MANAGE APP' & FOOTER ---
 st.markdown("""
