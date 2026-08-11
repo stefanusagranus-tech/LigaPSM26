@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import time
 import random
 import requests
 from concurrent.futures import ThreadPoolExecutor
@@ -17,7 +18,7 @@ st.set_page_config(
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzPHZQug5zuiTmt3C4YlbHqLj5avf7HYK8YqYw-n2v-TavnlgsdRwuUn9r_qR8i-7lshQ/exec"
 SPREADSHEET_ID = "1kJ-OsjLEsFuNyyBg2TwxlWz8Ape4lwF9h0t66q3ldQk"
 
-# --- CSS STYLING (DARK NEON MOBILE VERSION & UNIFORM MENU BUTTONS) ---
+# --- CSS STYLING (DARK NEON MOBILE VERSION & COMPACT 2x2 GRID) ---
 css_code = """
 <style>
     .stApp {
@@ -69,40 +70,54 @@ css_code = """
         font-size: 13px;
     }
     
-    /* Tombol Utama (Submit / Logout / Back) */
-    .stButton > button {
-        width: 100%;
-        background: linear-gradient(90deg, #0284c7 0%, #2563eb 100%);
-        color: white;
-        font-weight: 700;
-        border: none;
-        padding: 12px 20px;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
-    }
-    .stButton > button:hover {
-        background: linear-gradient(90deg, #0369a1 0%, #1d4ed8 100%);
-        box-shadow: 0 0 18px rgba(56, 189, 248, 0.5);
-    }
-
-    /* Kartu Menu Grid Bersampingan */
-    div[data-testid="stHorizontalBlock"] .stButton > button {
+    /* STYLING KHUSUS UNTUK KAPSUL MENU GRID (BISA DIKLIK & UKURAN PRESISI SAMA) */
+    div[data-testid="column"] button {
+        width: 100% !important;
+        height: 90px !important;
+        min-height: 90px !important;
+        max-height: 90px !important;
         background-color: #161e2e !important;
         background: #161e2e !important;
         border: 1px solid #1f293d !important;
-        border-radius: 12px !important;
-        padding: 16px 10px !important;
-        height: auto !important;
-        min-height: 80px !important;
+        border-radius: 14px !important;
+        padding: 8px 6px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-        font-size: 13px !important;
-        line-height: 1.4 !important;
+        transition: all 0.2s ease-in-out !important;
+        margin-bottom: 0px !important;
     }
-    div[data-testid="stHorizontalBlock"] .stButton > button:hover {
+    
+    div[data-testid="column"] button p {
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        line-height: 1.3 !important;
+        text-align: center !important;
+        margin: 0 !important;
+        white-space: pre-line !important;
+    }
+
+    div[data-testid="column"] button:hover {
         border-color: #38bdf8 !important;
-        box-shadow: 0 0 12px rgba(56, 189, 248, 0.4) !important;
+        background-color: #1e293b !important;
+        box-shadow: 0 0 14px rgba(56, 189, 248, 0.4) !important;
         transform: translateY(-2px);
+    }
+
+    /* Paksa Kolom Agar Tetap Bersampingan di HP (2 Kiri, 2 Kanan) */
+    div[data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 10px !important;
+        flex-wrap: nowrap !important;
+    }
+    
+    div[data-testid="column"] {
+        flex: 1 1 50% !important;
+        width: 50% !important;
+        min-width: 0 !important;
     }
 
     div[data-baseweb="input"] {
@@ -125,14 +140,15 @@ if "deleted_records" not in st.session_state:
 if "current_page" not in st.session_state:
     st.session_state.current_page = "main"
 
-# --- BACA DATA REALTIME GOOGLE SHEETS (OPTIMASI PARALEL FAST LOADING) ---
-@st.cache_data(ttl=60)
-def load_data():
+# --- BACA DATA REALTIME GOOGLE SHEETS (ANTI-CACHE UNTUK CEGAH BUG HAPUS) ---
+@st.cache_data(ttl=10)
+def load_data(cb_timestamp):
     try:
         sheets = ["MASTER_PERSONIL", "MASTER_ITEM", "PERIODE", "SALES_ITEM", "SALES_PERSONIL"]
         
         def read_sheet(sheet_name):
-            url = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet={sheet_name}"
+            # Menggunakan _cb={cb_timestamp} untuk memaksa Google Sheets memberikan CSV paling baru tanpa cache lama
+            url = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet={sheet_name}&_cb={cb_timestamp}"
             return sheet_name, pd.read_csv(url)
 
         results = {}
@@ -156,7 +172,9 @@ def load_data():
         st.error(f"❌ Gagal membaca database Google Sheets: {e}")
         st.stop()
 
-df_personil, df_item, df_periode, df_sales_i, df_sales_p_raw = load_data()
+# Menghasilkan timestamp cache-buster unik per muat data
+current_cb = int(time.time())
+df_personil, df_item, df_periode, df_sales_i, df_sales_p_raw = load_data(current_cb)
 
 # Filter record yang dihapus secara lokal
 if not df_sales_p_raw.empty and "record_id" in df_sales_p_raw.columns:
@@ -164,7 +182,6 @@ if not df_sales_p_raw.empty and "record_id" in df_sales_p_raw.columns:
 else:
     df_sales_p = df_sales_p_raw.copy()
 
-# --- MOTIVATIONAL QUOTES ENGINE ---
 def get_motivational_quote(qty_achieved):
     high_quotes = [
         "🔥 Performa luar biasa! Pertahankan ritme penjualan terbaikmu hari ini!",
@@ -215,6 +232,7 @@ if not st.session_state.logged_in:
                     "nik": "ADMINISTRATOR",
                     "is_admin": True
                 }
+                st.cache_data.clear()
                 st.success("⚡ Login Admin/Developer Berhasil!")
                 st.rerun()
             else:
@@ -235,6 +253,7 @@ if not st.session_state.logged_in:
                             "nik": str(person_row["nik"]),
                             "is_admin": False
                         }
+                        st.cache_data.clear()
                         st.success(f"✅ Login Berhasil! Selamat datang {person_row['person_name']}")
                         st.rerun()
                     else:
@@ -347,6 +366,7 @@ else:
                     if res.status_code == 200:
                         st.success(f"✅ Laporan {selected_item_name} ({int(input_qty)} Pcs) Tersimpan!")
                         st.cache_data.clear()
+                        st.rerun()
                     else:
                         st.error("⚠️ Respon server gagal.")
                 except Exception as ex:
@@ -389,10 +409,11 @@ else:
                         if st.button("🗑️ Hapus", key=f"del_p_{r_id}_{idx}"):
                             delete_payload = {"action": "delete", "record_id": r_id}
                             try:
+                                # Simpan ID yang dihapus ke memori sesi
                                 st.session_state.deleted_records.add(r_id.upper())
                                 del_res = requests.post(APPS_SCRIPT_URL, json=delete_payload, timeout=8)
-                                st.success(f"🗑️ Record {r_id} berhasil dihapus permanen!")
-                                st.cache_data.clear()
+                                st.cache_data.clear() # Bersihkan cache data
+                                st.success(f"🗑️ Record {r_id} berhasil dihapus!")
                                 st.rerun()
                             except Exception as e:
                                 st.error(f"Gagal menghapus: {e}")
@@ -406,7 +427,7 @@ else:
             st.info("Belum ada riwayat input penjualan pada periode terpilih.")
 
     # ==========================================
-    # HALAMAN UTAMA (DASBOR MENU UTAMA)
+    # HALAMAN UTAMA (GRID MENU UTAMA 2x2 SIMETRIS)
     # ==========================================
     else:
         if is_admin:
@@ -414,8 +435,8 @@ else:
             <div class='card-admin'>
                 <div>
                     <span style='background-color: #f43f5e; color: white; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold;'>DEVELOPER ACCESS</span>
-                    <h2 style='color: #ffffff; margin: 8px 0 2px 0; font-size: 22px;'>Mode Admin / Developer 🛠️</h2>
-                    <p style='color: #fda4af; font-size: 12px; margin: 0;'>Akses Penuh: Input, Edit & Hapus Data Laporan Semua Personil</p>
+                    <h2 style='color: #ffffff; margin: 8px 0 2px 0; font-size: 20px;'>Mode Admin / Developer 🛠️</h2>
+                    <p style='color: #fda4af; font-size: 11px; margin: 0;'>Akses Penuh: Input & Kelola Data Laporan</p>
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -424,8 +445,8 @@ else:
             <div class='card-neon'>
                 <div>
                     <span style='background-color: #0284c7; color: white; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold;'>PERSONIL TOKO</span>
-                    <h2 style='color: #ffffff; margin: 8px 0 2px 0; font-size: 22px;'>Selamat Datang, {user['person_name']}! 👋</h2>
-                    <p style='color: #94a3b8; font-size: 12px; margin: 0;'>NIK: {user["nik"]}</p>
+                    <h2 style='color: #ffffff; margin: 8px 0 2px 0; font-size: 20px;'>Selamat Datang, {user['person_name']}! 👋</h2>
+                    <p style='color: #94a3b8; font-size: 11px; margin: 0;'>NIK: {user["nik"]}</p>
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -436,6 +457,7 @@ else:
                 st.session_state.logged_in = False
                 st.session_state.user_info = None
                 st.session_state.current_page = "main"
+                st.cache_data.clear() # Bersihkan cache saat logout
                 st.rerun()
 
         selected_period_name = st.selectbox("📌 Pilih Periode Promosi", active_periods)
@@ -448,7 +470,7 @@ else:
         selected_admin_target = "-- SEMUA PERSONIL (Toko) --"
         
         if is_admin:
-            st.markdown("<h4 style='color: #f43f5e; margin-top: 10px;'>⚙️ Filter Tampilan Admin</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='color: #f43f5e; margin-top: 10px; font-size: 15px;'>⚙️ Filter Tampilan Admin</h4>", unsafe_allow_html=True)
             all_personil_list = df_personil["person_name"].tolist() if not df_personil.empty else []
             selected_admin_target = st.selectbox("👤 Pilih Personil (Untuk Input / Kelola Data)", ["-- SEMUA PERSONIL (Toko) --"] + all_personil_list)
             st.session_state["selected_admin_target"] = selected_admin_target
@@ -474,33 +496,30 @@ else:
         if not is_admin:
             st.markdown(f"<div class='quote-box'>\"{get_motivational_quote(total_qty_personil)}\"</div><br>", unsafe_allow_html=True)
 
-        st.markdown(f"<h3 style='color: #38bdf8; font-size: 18px;'>📊 Navigasi Menu {'Toko' if (is_admin and selected_admin_target == '-- SEMUA PERSONIL (Toko) --') else target_person_name}</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h3 style='color: #38bdf8; font-size: 16px; margin-bottom: 12px;'>📊 Navigasi Menu {'Toko' if (is_admin and selected_admin_target == '-- SEMUA PERSONIL (Toko) --') else target_person_name}</h3>", unsafe_allow_html=True)
         
-        # --- GRID 4 MENU UTAMA (2x2 BERSAMPINGAN) ---
-        row1_col1, row1_col2 = st.columns(2)
-        with row1_col1:
-            btn_total = st.button("📊 TOTAL TERJUAL\n\n🔍 Klik Detail", key="btn_metric_total")
-            if btn_total:
+        # --- BARIS 1 (GRID 2 KAPSUL BERSAMPINGAN) ---
+        r1_c1, r1_c2 = st.columns(2)
+        with r1_c1:
+            if st.button("📊 TOTAL TERJUAL\n🔍 Klik Detail", key="btn_metric_total"):
                 st.session_state.current_page = "detail_total"
                 st.rerun()
 
-        with row1_col2:
-            btn_item = st.button("🏆 ITEM TERBANYAK\n\n🔍 Klik Detail", key="btn_metric_item")
-            if btn_item:
+        with r1_c2:
+            if st.button("🏆 ITEM TERBANYAK\n🔍 Klik Detail", key="btn_metric_item"):
                 st.session_state.current_page = "detail_item"
                 st.rerun()
 
         st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
-        row2_col1, row2_col2 = st.columns(2)
-        with row2_col1:
-            btn_form = st.button("📝 INPUT LAPORAN\n\n➕ Tambah Data", key="btn_menu_form")
-            if btn_form:
+        # --- BARIS 2 (GRID 2 KAPSUL BERSAMPINGAN) ---
+        r2_c1, r2_c2 = st.columns(2)
+        with r2_c1:
+            if st.button("📝 INPUT LAPORAN\n➕ Tambah Data", key="btn_menu_form"):
                 st.session_state.current_page = "form_input"
                 st.rerun()
 
-        with row2_col2:
-            btn_riwayat = st.button("📋 RIWAYAT LAPORAN\n\n📜 Liha/Kelola", key="btn_menu_riwayat")
-            if btn_riwayat:
+        with r2_c2:
+            if st.button("📋 RIWAYAT LAPORAN\n📜 Lihat/Kelola", key="btn_menu_riwayat"):
                 st.session_state.current_page = "riwayat"
                 st.rerun()
