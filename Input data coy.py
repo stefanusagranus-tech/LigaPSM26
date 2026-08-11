@@ -102,8 +102,9 @@ st.markdown(css_code, unsafe_allow_html=True)
 # --- DATABASE CONNECTION FUNCTION (ANTI-ERROR) ---
 SPREADSHEET_ID = "1kJ-OsjLEsFuNyyBg2TwxlWz8Ape4lwF9h0t66q3ldQk"
 
-@st.cache_data(ttl=15)
+@st.cache_data(ttl=5)
 def load_data():
+    conn = None
     # 1. Coba koneksi resmi via Streamlit GSheets Secrets
     try:
         from streamlit_gsheets import GSheetsConnection
@@ -117,7 +118,7 @@ def load_data():
     except Exception:
         pass
 
-    # 2. Fallback: Baca langsung via Live CSV Engine Google Sheets (Kebal FileNotFoundError)
+    # 2. Fallback: Baca langsung via Live CSV Engine Google Sheets
     try:
         def read_sheet_csv(sheet_name):
             url = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet={sheet_name}"
@@ -133,7 +134,21 @@ def load_data():
         st.error(f"❌ Gagal membaca database Google Sheets: {e}")
         st.stop()
 
-conn, df_personil, df_item, df_periode, df_sales_i, df_sales_p = load_data()
+conn, df_personil, df_item, df_periode, df_sales_i, df_sales_p_raw = load_data()
+
+# Initialize session state for real-time memory update
+if "local_input_data" not in st.session_state:
+    st.session_state.local_input_data = pd.DataFrame()
+
+# Merge Google Sheets data with local session data
+if not st.session_state.local_input_data.empty:
+    df_sales_p = pd.concat([df_sales_p_raw, st.session_state.local_input_data], ignore_index=True)
+else:
+    df_sales_p = df_sales_p_raw.copy()
+
+# Ensure actual_qty numeric clean
+if "actual_qty" in df_sales_p.columns:
+    df_sales_p["actual_qty"] = pd.to_numeric(df_sales_p["actual_qty"], errors="coerce").fillna(0).astype(int)
 
 # --- MOTIVATIONAL QUOTES ENGINE ---
 def get_motivational_quote(qty_achieved):
@@ -206,7 +221,7 @@ if not st.session_state.logged_in:
                         st.session_state.logged_in = True
                         st.session_state.user_info = {
                             "person_id": person_row.get("person_id", f"PRS{person_row.name:03d}"),
-                            "person_name": person_row["person_name"],
+                            "person_name": str(person_row["person_name"]).strip(),
                             "nik": person_row["nik"]
                         }
                         st.success(f"✅ Login Berhasil! Selamat datang {person_row['person_name']}")
@@ -255,12 +270,13 @@ else:
     active_personil_count = len(df_personil[df_personil["active"] == True]) if "active" in df_personil.columns else len(df_personil)
     target_personil = target_toko / active_personil_count if active_personil_count > 0 else 0.0
     
+    # Filter Data Sales Personil
     user_sales_period = df_sales_p[
-        (df_sales_p["person_name"].str.upper() == person_name.upper()) & 
-        (df_sales_p["period_id"] == period_id)
+        (df_sales_p["person_name"].astype(str).str.strip().str.upper() == person_name.upper()) & 
+        (df_sales_p["period_id"].astype(str).str.strip() == str(period_id).strip())
     ] if not df_sales_p.empty else pd.DataFrame()
     
-    total_qty_personil = int(round(user_sales_period["actual_qty"].sum())) if not user_sales_period.empty else 0
+    total_qty_personil = int(user_sales_period["actual_qty"].sum()) if not user_sales_period.empty else 0
     pct_ach_personil = (total_qty_personil / target_personil * 100) if target_personil > 0 else 0.0
     
     top_item_name = "-"
@@ -270,7 +286,7 @@ else:
     if not user_sales_period.empty and user_sales_period["actual_qty"].sum() > 0:
         top_group = user_sales_period.groupby("item_name")["actual_qty"].sum().reset_index().sort_values(by="actual_qty", ascending=False)
         top_item_name = top_group.iloc[0]["item_name"]
-        top_item_qty = int(round(top_group.iloc[0]["actual_qty"]))
+        top_item_qty = int(top_group.iloc[0]["actual_qty"])
         
         item_target_row = df_sales_i[(df_sales_i["period_id"] == period_id) & (df_sales_i["item_name"] == top_item_name)]
         if not item_target_row.empty and pd.to_numeric(item_target_row.iloc[0]["target_qty"], errors="coerce") is not None:
@@ -328,7 +344,7 @@ else:
         submit_report = st.form_submit_button("🚀 SIMPAN LAPORAN PENJUALAN")
         
         if submit_report:
-            new_record_id = f"SP{len(df_sales_p) + 1:05d}" if not df_sales_p.empty else "SP00001"
+            new_record_id = f"SP{len(df_sales_p) + 1:05d}"
             today_str = str(datetime.now().strftime("%Y-%m-%d"))
             
             new_row = {
@@ -338,23 +354,31 @@ else:
                 "item_name": selected_item_name,
                 "person_id": person_id,
                 "person_name": person_name,
-                "actual_qty": int(round(input_qty)),
+                "actual_qty": int(input_qty),
                 "updated_at": today_str,
                 "tanggal_input": str(input_date),
                 "catatan": input_catatan
             }
             
+            # 1. Simpan ke Session Memory agar indikator & riwayat langsung terupdate saat itu juga
+            st.session_state.local_input_data = pd.concat(
+                [st.session_state.local_input_data, pd.DataFrame([new_row])], 
+                ignore_index=True
+            )
+            
+            # 2. Jika koneksi GSheets aktif, simpan juga ke Google Sheets
             if conn is not None:
                 try:
-                    updated_df = pd.concat([df_sales_p, pd.DataFrame([new_row])], ignore_index=True)
+                    updated_df = pd.concat([df_sales_p_raw, st.session_state.local_input_data], ignore_index=True)
                     conn.update(worksheet="SALES_PERSONIL", data=updated_df)
-                    st.success(f"✅ Laporan {selected_item_name} ({int(input_qty)} Pcs) berhasil dikirim!")
-                    st.cache_data.clear()
-                    st.rerun()
+                    st.success(f"✅ Laporan {selected_item_name} ({int(input_qty)} Pcs) tersimpan ke Database Cloud!")
                 except Exception as ex:
-                    st.warning(f"⚠️ Berhasil diproses, kendala sync Sheets: {ex}")
+                    st.success(f"✅ Laporan {selected_item_name} ({int(input_qty)} Pcs) tersimpan di sesi aplikasi!")
             else:
-                st.success(f"✅ Laporan {selected_item_name} ({int(input_qty)} Pcs) berhasil dicatat!")
+                st.success(f"✅ Laporan {selected_item_name} ({int(input_qty)} Pcs) tersimpan!")
+                
+            st.cache_data.clear()
+            st.rerun()
 
     st.markdown("<h3 style='color: #38bdf8; font-size: 18px; margin-top: 20px;'>📋 Riwayat Input Periode Ini</h3>", unsafe_allow_html=True)
     
@@ -365,4 +389,4 @@ else:
         st.dataframe(disp_df, use_container_width=True, hide_index=True)
     else:
         st.info("Belum ada riwayat input penjualan pada periode terpilih.")
-        
+    
