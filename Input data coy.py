@@ -49,6 +49,14 @@ css_code = """
         margin-bottom: 20px;
         box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
     }
+    .card-admin {
+        background: linear-gradient(135deg, #311021 0%, #4c0519 100%);
+        border: 1px solid #f43f5e;
+        border-radius: 14px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 0 15px rgba(244, 63, 94, 0.3);
+    }
     .metric-val {
         font-size: 22px;
         font-weight: 800;
@@ -185,6 +193,17 @@ if not st.session_state.logged_in:
         if login_btn:
             if not username_input or not password_input:
                 st.warning("⚠️ Silakan isi Username dan Password terlebih dahulu.")
+            # --- CEK HAK AKSES DEVELOPER / ADMIN ---
+            elif username_input.lower() == "admin" and password_input == "lavitality":
+                st.session_state.logged_in = True
+                st.session_state.user_info = {
+                    "person_id": "ADM001",
+                    "person_name": "DEVELOPER / ADMIN",
+                    "nik": "ADMINISTRATOR",
+                    "is_admin": True
+                }
+                st.success("⚡ Login Admin/Developer Berhasil!")
+                st.rerun()
             else:
                 user_match = df_personil[
                     (df_personil['person_name'].astype(str).str.strip().str.upper() == username_input.upper()) |
@@ -200,7 +219,8 @@ if not st.session_state.logged_in:
                         st.session_state.user_info = {
                             "person_id": str(person_row.get("person_id", f"PRS{person_row.name:03d}")),
                             "person_name": str(person_row["person_name"]).strip(),
-                            "nik": str(person_row["nik"])
+                            "nik": str(person_row["nik"]),
+                            "is_admin": False
                         }
                         st.success(f"✅ Login Berhasil! Selamat datang {person_row['person_name']}")
                         st.rerun()
@@ -216,22 +236,33 @@ if not st.session_state.logged_in:
 # ==========================================
 else:
     user = st.session_state.user_info
-    person_name = user["person_name"]
-    person_id = user["person_id"]
+    is_admin = user.get("is_admin", False)
     
     active_periods = df_periode[df_periode["status"] == "OPEN"]["period_name"].tolist() if "status" in df_periode.columns else df_periode["period_name"].tolist()
     if not active_periods:
         active_periods = df_periode["period_name"].tolist()
 
-    st.markdown(f"""
-    <div class='card-neon'>
-        <div>
-            <span style='background-color: #0284c7; color: white; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold;'>PERSONIL TOKO</span>
-            <h2 style='color: #ffffff; margin: 8px 0 2px 0; font-size: 22px;'>Selamat Datang, {person_name}! 👋</h2>
-            <p style='color: #94a3b8; font-size: 12px; margin: 0;'>NIK: {user["nik"]}</p>
+    # BANNER DASHBOARD (ADMIN VS PERSONIL)
+    if is_admin:
+        st.markdown(f"""
+        <div class='card-admin'>
+            <div>
+                <span style='background-color: #f43f5e; color: white; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold;'>DEVELOPER ACCESS</span>
+                <h2 style='color: #ffffff; margin: 8px 0 2px 0; font-size: 22px;'>Mode Admin / Developer 🛠️</h2>
+                <p style='color: #fda4af; font-size: 12px; margin: 0;'>Akses Penuh: Input, Edit & Hapus Data Laporan Semua Personil</p>
+            </div>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown(f"""
+        <div class='card-neon'>
+            <div>
+                <span style='background-color: #0284c7; color: white; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold;'>PERSONIL TOKO</span>
+                <h2 style='color: #ffffff; margin: 8px 0 2px 0; font-size: 22px;'>Selamat Datang, {user['person_name']}! 👋</h2>
+                <p style='color: #94a3b8; font-size: 12px; margin: 0;'>NIK: {user["nik"]}</p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     
     col_a, col_b = st.columns([3, 1])
     with col_b:
@@ -244,18 +275,35 @@ else:
     period_row = df_periode[df_periode["period_name"] == selected_period_name]
     period_id = str(period_row.iloc[0]["period_id"]) if not period_row.empty else "P01"
     
+    # JIKA ADMIN: BISA PILIH PERSONIL YANG INGIN DI-INPUTKAN
+    target_person_name = user["person_name"]
+    target_person_id = user["person_id"]
+    
+    if is_admin:
+        st.markdown("<h4 style='color: #f43f5e; margin-top: 10px;'>⚙️ Pengaturan Admin</h4>", unsafe_allow_html=True)
+        all_personil_list = df_personil["person_name"].tolist() if not df_personil.empty else []
+        selected_admin_target = st.selectbox("👤 Pilih Personil (Untuk Input / Lihat Data)", ["-- SEMUA PERSONIL (Toko) --"] + all_personil_list)
+        
+        if selected_admin_target != "-- SEMUA PERSONIL (Toko) --":
+            target_person_name = selected_admin_target
+            p_match = df_personil[df_personil["person_name"] == target_person_name]
+            target_person_id = str(p_match.iloc[0]["person_id"]) if not p_match.empty and "person_id" in p_match.columns else "PRS001"
+
     target_toko = float(period_row.iloc[0]["target_total"]) if not period_row.empty and pd.notnull(period_row.iloc[0]["target_total"]) else 0.0
     active_personil_count = len(df_personil[df_personil["active"] == True]) if "active" in df_personil.columns else len(df_personil)
     target_personil = target_toko / active_personil_count if active_personil_count > 0 else 0.0
     
-    # Filter Penjualan Spesifik Personil dan Periode Terpilih
-    user_sales_period = df_sales_p[
-        (df_sales_p["person_name"].astype(str).str.strip().str.upper() == person_name.upper()) & 
-        (df_sales_p["period_id"].astype(str).str.strip() == period_id)
-    ] if not df_sales_p.empty else pd.DataFrame()
+    # Filter Penjualan Spesifik Personil / Semua
+    if is_admin and selected_admin_target == "-- SEMUA PERSONIL (Toko) --":
+        user_sales_period = df_sales_p[df_sales_p["period_id"].astype(str).str.strip() == period_id] if not df_sales_p.empty else pd.DataFrame()
+    else:
+        user_sales_period = df_sales_p[
+            (df_sales_p["person_name"].astype(str).str.strip().str.upper() == target_person_name.upper()) & 
+            (df_sales_p["period_id"].astype(str).str.strip() == period_id)
+        ] if not df_sales_p.empty else pd.DataFrame()
     
     total_qty_personil = int(user_sales_period["actual_qty"].sum()) if not user_sales_period.empty else 0
-    pct_ach_personil = (total_qty_personil / target_personil * 100) if target_personil > 0 else 0.0
+    pct_ach_personil = (total_qty_personil / (target_toko if (is_admin and selected_admin_target == "-- SEMUA PERSONIL (Toko) --") else target_personil) * 100) if target_personil > 0 else 0.0
     
     top_item_name = "-"
     top_item_qty = 0
@@ -272,14 +320,10 @@ else:
             item_target_person = item_target_store / active_personil_count if active_personil_count > 0 else 0.0
             top_item_pct = (top_item_qty / item_target_person * 100) if item_target_person > 0 else 0.0
 
-    st.markdown(f"""
-    <div class='quote-box'>
-        "{get_motivational_quote(total_qty_personil)}"
-    </div>
-    <br>
-    """, unsafe_allow_html=True)
+    if not is_admin:
+        st.markdown(f"<div class='quote-box'>\"{get_motivational_quote(total_qty_personil)}\"</div><br>", unsafe_allow_html=True)
 
-    st.markdown("<h3 style='color: #38bdf8; font-size: 18px;'>📊 Performa Penjualan Anda</h3>", unsafe_allow_html=True)
+    st.markdown(f"<h3 style='color: #38bdf8; font-size: 18px;'>📊 Performa Penjualan {'Toko' if (is_admin and selected_admin_target == '-- SEMUA PERSONIL (Toko) --') else target_person_name}</h3>", unsafe_allow_html=True)
     
     m1, m2 = st.columns(2)
     with m1:
@@ -299,14 +343,22 @@ else:
         </div>
         """, unsafe_allow_html=True)
 
-    st.markdown("<h3 style='color: #38bdf8; font-size: 18px; margin-top: 10px;'>📝 Form Laporan & Catatan Sales</h3>", unsafe_allow_html=True)
+    # FORM INPUT PENJUALAN
+    st.markdown(f"<h3 style='color: #38bdf8; font-size: 18px; margin-top: 10px;'>📝 Form Input Laporan {'(Mode Admin)' if is_admin else ''}</h3>", unsafe_allow_html=True)
     
-    # Filter Item Promosi Khusus Periode Ini
     items_in_period = df_sales_i[(df_sales_i["period_id"] == period_id) & (df_sales_i["item_name"] != "NAMA ITEM")]["item_name"].tolist() if not df_sales_i.empty else []
     if not items_in_period:
         items_in_period = df_item[df_item["active"] == True]["item_name"].tolist() if "active" in df_item.columns else df_item["item_name"].tolist()
     
     with st.form("form_report_personil", clear_on_submit=True):
+        if is_admin and selected_admin_target == "-- SEMUA PERSONIL (Toko) --":
+            target_person_name_input = st.selectbox("👤 Inputkan Atas Nama Personil:", df_personil["person_name"].tolist())
+            p_match2 = df_personil[df_personil["person_name"] == target_person_name_input]
+            target_person_id_input = str(p_match2.iloc[0]["person_id"]) if not p_match2.empty and "person_id" in p_match2.columns else "PRS001"
+        else:
+            target_person_name_input = target_person_name
+            target_person_id_input = target_person_id
+
         selected_item_name = st.selectbox("📦 Pilih Item PSM (Promosi Periode Ini)", items_in_period)
         
         item_row = df_item[df_item["item_name"] == selected_item_name]
@@ -331,33 +383,51 @@ else:
                 "period_id": period_id,
                 "item_id": item_id,
                 "item_name": selected_item_name,
-                "person_id": person_id,
-                "person_name": person_name,
+                "person_id": target_person_id_input,
+                "person_name": target_person_name_input,
                 "actual_qty": int(input_qty),
                 "updated_at": today_str,
                 "tanggal_input": str(input_date),
                 "catatan": input_catatan
             }
             
-            # Kirim data ke Google Sheets via Apps Script Webhook
             try:
                 res = requests.post(APPS_SCRIPT_URL, json=payload, timeout=8)
                 if res.status_code == 200:
-                    st.success(f"✅ Laporan {selected_item_name} ({int(input_qty)} Pcs) Berhasil Tersimpan Permanen!")
+                    st.success(f"✅ Laporan {selected_item_name} ({int(input_qty)} Pcs) Atas Nama {target_person_name_input} Tersimpan!")
                     st.cache_data.clear()
                     st.rerun()
                 else:
-                    st.error("⚠️ Respon server gagal, pastikan Apps Script Deploy diset 'Anyone'.")
+                    st.error("⚠️ Gagal menyimpan ke Google Sheets, pastikan Apps Script Deploy diset 'Anyone'.")
             except Exception as ex:
                 st.error(f"❌ Terjadi kesalahan saat mengirim data: {ex}")
 
-    st.markdown("<h3 style='color: #38bdf8; font-size: 18px; margin-top: 20px;'>📋 Riwayat Input Periode Ini</h3>", unsafe_allow_html=True)
+    # RIWAYAT & MANAGEMENT HAPUS OLEH ADMIN
+    st.markdown("<h3 style='color: #38bdf8; font-size: 18px; margin-top: 20px;'>📋 Riwayat Input Penjualan</h3>", unsafe_allow_html=True)
     
     if not user_sales_period.empty:
-        disp_cols = [c for c in ["period_id", "item_name", "actual_qty", "updated_at", "catatan"] if c in user_sales_period.columns]
-        disp_df = user_sales_period[disp_cols].copy()
-        disp_df.columns = ["Periode", "Nama Item", "Qty (Pcs)", "Tanggal", "Catatan Staf"][:len(disp_cols)]
-        st.dataframe(disp_df, use_container_width=True, hide_index=True)
-    else:
-        st.info("Belum ada riwayat input penjualan pada periode terpilih.")
-        
+        if is_admin:
+            st.info("💡 **Fitur Admin**: Anda dapat menghapus baris laporan yang salah langsung dari tabel di bawah.")
+            for idx, row in user_sales_period.iterrows():
+                r_id = str(row.get("record_id", f"SP{idx:05d}"))
+                p_name = str(row.get("person_name", "-"))
+                i_name = str(row.get("item_name", "-"))
+                qty = int(row.get("actual_qty", 0))
+                tgl = str(row.get("updated_at", "-"))
+                
+                col1, col2 = st.columns([4, 1])
+                with col1:
+                    st.write(f"🔹 **[{tgl}]** {p_name} - **{i_name}** ({qty} Pcs)")
+                with col2:
+                    if st.button("🗑️ Hapus", key=f"del_{r_id}_{idx}"):
+                        delete_payload = {"action": "delete", "record_id": r_id}
+                        try:
+                            del_res = requests.post(APPS_SCRIPT_URL, json=delete_payload, timeout=8)
+                            st.success(f"🗑️ Laporan {r_id} berhasil dihapus!")
+                            st.cache_data.clear()
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Gagal menghapus: {e}")
+                st.divider()
+        else:
+            disp_cols = [c for c in ["period_id", "item_name", "actual_qty", "
