@@ -1027,135 +1027,161 @@ elif selected_tab == "04 · Pencapaian Pernik":
         st.plotly_chart(fig_p4, use_container_width=True)
 
 
-# --- TAB 05: ANALISIS TREN HARIAN ---
+# --- TAB 05: ANALISIS TREN HARIAN, GROWTH & DISGROWTH ---
 elif selected_tab == "05 · Analisis Tren":
-    st.title("📈 Analisis Tren Harian & Target")
+    st.title("📈 Analisis Tren Harian, Growth & Disgrowth")
     
     si_df = st.session_state.sales_item_df.copy()
+    sp_df = st.session_state.sales_person_df.copy()
     periods_df = st.session_state.periods_df.copy()
     
+    # 1. FILTER PERIODE DARI SIDEBAR
     if selected_period_id:
         sub_periods = periods_df[periods_df["period_id"] == selected_period_id]
         sub_si = si_df[si_df["period_id"] == selected_period_id]
+        sub_sp = sp_df[sp_df["period_id"] == selected_period_id]
     else:
         sub_periods = periods_df
         sub_si = si_df
-        
+        sub_sp = sp_df
+
+    # 2. NAVIGASI TANGGAL (TANGGAL AWAL & TANGGAL AKHIR)
+    if not sub_periods.empty:
+        default_start = pd.to_datetime(sub_periods.iloc[0]["start_date"]).date()
+        default_end = pd.to_datetime(sub_periods.iloc[0]["end_date"]).date()
+    else:
+        default_start = waktu_wib.date().replace(day=1)
+        default_end = waktu_wib.date()
+
+    st.markdown("### 📅 Navigasi Filter Rentang Tanggal")
+    c_d1, c_d2 = st.columns(2)
+    with c_d1:
+        start_date = st.date_input("Tanggal Awal", value=default_start, key="t5_start_date")
+    with c_d2:
+        end_date = st.date_input("Tanggal Akhir", value=default_end, key="t5_end_date")
+
+    if start_date > end_date:
+        st.error("⚠️ Tanggal Awal tidak boleh lebih besar dari Tanggal Akhir!")
+        st.stop()
+
+    # Filter data penjualan staf berdasarkan tanggal
+    if "updated_at" in sub_sp.columns and not sub_sp.empty:
+        sub_sp["updated_at_dt"] = pd.to_datetime(sub_sp["updated_at"]).dt.date
+        filtered_sp = sub_sp[(sub_sp["updated_at_dt"] >= start_date) & (sub_sp["updated_at_dt"] <= end_date)].copy()
+    else:
+        filtered_sp = sub_sp.copy()
+
+    # 3. METRIK & KALKULASI HARI
     sub_si["target_qty"] = pd.to_numeric(sub_si["target_qty"], errors="coerce").fillna(0)
-    sub_si["actual_qty"] = pd.to_numeric(sub_si["actual_qty"], errors="coerce").fillna(0)
+    filtered_sp["actual_qty"] = pd.to_numeric(filtered_sp["actual_qty"], errors="coerce").fillna(0)
     
     tot_target = sub_si["target_qty"].sum()
-    tot_actual = sub_si["actual_qty"].sum()
+    tot_actual = filtered_sp["actual_qty"].sum()
     
-    # Perhitungan Hari & Pace Penjualan
-    if not sub_periods.empty:
-        p_row = sub_periods.iloc[0]
-        s_date = pd.to_datetime(p_row["start_date"])
-        e_date = pd.to_datetime(p_row["end_date"])
-        total_days = max((e_date - s_date).days + 1, 1)
-        today_date = pd.to_datetime(datetime.now().strftime("%Y-%m-%d"))
-        
-        if today_date < s_date:
-            passed_days = 1
-        elif today_date > e_date:
-            passed_days = total_days
-        else:
-            passed_days = max((today_date - s_date).days + 1, 1)
+    total_range_days = max((end_date - start_date).days + 1, 1)
+    today_date = waktu_wib.date()
+    
+    if today_date < start_date:
+        passed_days = 1
+    elif today_date > end_date:
+        passed_days = total_range_days
     else:
-        total_days = 31
-        passed_days = max(datetime.now().day, 1)
+        passed_days = max((today_date - start_date).days + 1, 1)
         
-    remaining_days = max(total_days - passed_days, 1)
-    daily_target_ideal = max(0, int((tot_target - tot_actual) / remaining_days))
-    avg_daily_sales = tot_actual / passed_days
+    remaining_days = max(total_range_days - passed_days, 1)
+    daily_target_ideal = max(0, int((tot_target - tot_actual) / remaining_days)) if remaining_days > 0 else 0
+    avg_daily_sales = tot_actual / passed_days if passed_days > 0 else 0
     best_est = int(tot_actual + (avg_daily_sales * remaining_days))
-    
-    # --- 1. KPI CARDS ---
+
+    # 4. KPI CARDS
     k1, k2, k3, k4 = st.columns(4)
     with k1:
         st.metric("🎯 Target Periode", f"{tot_target:,.0f} Pcs")
     with k2:
         st.metric("⚡ Target Harian Ideal", f"{daily_target_ideal:,.0f} Pcs/Hari")
     with k3:
-        st.metric("📦 Pencapaian Actual", f"{tot_actual:,.0f} Pcs")
+        st.metric("📦 Actual (Filter Tanggal)", f"{tot_actual:,.0f} Pcs")
     with k4:
         st.metric("🔮 Best Estimasi Akhir", f"{best_est:,.0f} Pcs")
-        
+
     st.markdown("---")
-    
-    # --- 2. GRAFIK FLUKTUASI PENJUALAN HARIAN ---
+
+    # 5. GRAFIK FLUKTUASI PENJUALAN HARIAN
     st.subheader("📈 Grafik Fluktuasi Penjualan Harian")
     
-    sp_df = st.session_state.sales_person_df.copy()
-    if selected_period_id:
-        sp_df = sp_df[sp_df["period_id"] == selected_period_id]
-        
-    sp_df["actual_qty"] = pd.to_numeric(sp_df["actual_qty"], errors="coerce").fillna(0)
-    
-    if "updated_at" in sp_df.columns and not sp_df.empty:
-        daily_trend = sp_df.groupby("updated_at")["actual_qty"].sum().reset_index().sort_values(by="updated_at")
+    if "updated_at_dt" in filtered_sp.columns and not filtered_sp.empty:
+        daily_trend = filtered_sp.groupby("updated_at_dt")["actual_qty"].sum().reset_index().sort_values(by="updated_at_dt")
+        daily_trend["updated_at_str"] = daily_trend["updated_at_dt"].astype(str)
     else:
         daily_trend = pd.DataFrame({
-            "updated_at": [f"Hari {i+1}" for i in range(passed_days)],
-            "actual_qty": [tot_actual / passed_days] * passed_days
+            "updated_at_str": [f"Hari {i+1}" for i in range(total_range_days)],
+            "actual_qty": [0] * total_range_days
         })
-        
+
     fig_trend = go.Figure()
     fig_trend.add_trace(go.Scatter(
-        x=daily_trend["updated_at"],
-        y=daily_trend["actual_qty"],
-        mode='lines+markers',
-        name="Penjualan Harian",
-        line=dict(color="#00f2fe", width=3),
-        marker=dict(size=8)
+        x=daily_trend["updated_at_str"], y=daily_trend["actual_qty"],
+        mode='lines+markers', name="Penjualan Harian",
+        line=dict(color="#00f2fe", width=3), marker=dict(size=8)
     ))
     fig_trend.add_trace(go.Scatter(
-        x=daily_trend["updated_at"],
-        y=[daily_target_ideal] * len(daily_trend),
-        mode='lines',
-        name="Target Harian Ideal",
+        x=daily_trend["updated_at_str"], y=[daily_target_ideal] * len(daily_trend),
+        mode='lines', name="Target Harian Ideal",
         line=dict(color="#ff2a6d", dash='dash', width=2)
     ))
     fig_trend.update_layout(
-        height=320,
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(color="#ffffff"),
-        xaxis=dict(showgrid=True, gridcolor="#1e293b"),
-        yaxis=dict(showgrid=True, gridcolor="#1e293b"),
+        height=340, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color="#ffffff"), 
+        xaxis=dict(showgrid=True, gridcolor="#1e293b", title="Tanggal"),
+        yaxis=dict(showgrid=True, gridcolor="#1e293b", title="Qty (Pcs)"),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         margin=dict(l=10, r=10, t=10, b=10)
     )
     st.plotly_chart(fig_trend, use_container_width=True)
-    
+
     st.markdown("---")
+
+    # 6. ANALISIS DETIL GROWTH & DISGROWTH PER ITEM
+    st.subheader("📊 Analisis Detil Growth & Disgrowth Produk")
     
-    # --- 3. INSIGHT GROWTH & DISGROWTH ---
+    # Agregasi Penjualan per Item
+    item_sales = filtered_sp.groupby(["item_id", "item_name"])["actual_qty"].sum().reset_index() if not filtered_sp.empty else pd.DataFrame(columns=["item_id", "item_name", "actual_qty"])
+    
+    merged_item_analysis = pd.merge(sub_si[["item_id", "item_name", "target_qty"]], item_sales[["item_id", "actual_qty"]], on="item_id", how="left")
+    merged_item_analysis["actual_qty"] = merged_item_analysis["actual_qty"].fillna(0)
+    merged_item_analysis["gap"] = merged_item_analysis["target_qty"] - merged_item_analysis["actual_qty"]
+    merged_item_analysis["ach"] = merged_item_analysis.apply(
+        lambda r: (r["actual_qty"] / r["target_qty"] * 100) if r["target_qty"] > 0 else 0, axis=1
+    )
+
     col_g, col_d = st.columns(2)
     
-    item_perf = sub_si.groupby("item_name")["actual_qty"].sum().reset_index().sort_values(by="actual_qty", ascending=False)
-    top_item_name = item_perf.iloc[0]["item_name"] if not item_perf.empty else "-"
+    # GROWTH: Item dengan penjualan & Achievement tertinggi
+    top_growth = merged_item_analysis.sort_values(by="actual_qty", ascending=False).head(3)
     
+    # DISGROWTH: Item dengan sisa gap terbesar
+    top_disgrowth = merged_item_analysis.sort_values(by="gap", ascending=False).head(3)
+
     with col_g:
-        st.markdown(f"""
-            <div style="background: #080c14; border: 1.5px solid #00ff9d; border-left: 6px solid #00ff9d; border-radius: 10px; padding: 16px; box-shadow: 0 0 12px rgba(0, 255, 157, 0.2);">
-                <h4 style="color: #00ff9d; margin: 0 0 8px 0;">🔥 Insight Growth (Penjualan Melonjak)</h4>
-                <p style="color: #f1f5f9; margin: 0; font-size: 14px;">
-                    Performa terbaik dicapai pada item <b>{top_item_name}</b> dengan kontribusi penjualan tertinggi di periode ini.
-                </p>
+        st.markdown("""
+            <div style="background: #080c14; border: 1.5px solid #00ff9d; border-left: 6px solid #00ff9d; border-radius: 10px; padding: 16px; margin-bottom: 12px;">
+                <h4 style="color: #00ff9d; margin: 0;">🔥 TOP 3 ITEM GROWTH (Penjualan Tertinggi)</h4>
             </div>
         """, unsafe_allow_html=True)
         
+        for _, r in top_growth.iterrows():
+            st.success(f"**{r['item_name']}** — Terjual: **{r['actual_qty']:,.0f} Pcs** (Ach: **{r['ach']:.1f}%**)")
+
     with col_d:
-        gap_rem = max(0, tot_target - tot_actual)
-        st.markdown(f"""
-            <div style="background: #080c14; border: 1.5px solid #ff2a6d; border-left: 6px solid #ff2a6d; border-radius: 10px; padding: 16px; box-shadow: 0 0 12px rgba(255, 42, 109, 0.2);">
-                <h4 style="color: #ff2a6d; margin: 0 0 8px 0;">⚠️ Insight Disgrowth (Penjualan Drop)</h4>
-                <p style="color: #f1f5f9; margin: 0; font-size: 14px;">
-                    Sisa target sebesar <b>{gap_rem:,.0f} Pcs</b>. Dibutuhkan rata-rata tambahan <b>~{daily_target_ideal:,.0f} Pcs/hari</b> selama sisa <b>{remaining_days} hari</b> untuk mencapai target toko.
-                </p>
+        st.markdown("""
+            <div style="background: #080c14; border: 1.5px solid #ff2a6d; border-left: 6px solid #ff2a6d; border-radius: 10px; padding: 16px; margin-bottom: 12px;">
+                <h4 style="color: #ff2a6d; margin: 0;">⚠️ TOP 3 ITEM DISGROWTH (Gap Terbesar)</h4>
             </div>
         """, unsafe_allow_html=True)
+        
+        for _, r in top_disgrowth.iterrows():
+            gap_val = max(0, r['gap'])
+            st.error(f"**{r['item_name']}** — Sisa Gap: **{gap_val:,.0f} Pcs** (Ach: **{r['ach']:.1f}%**)")
 
 # --- TAB 06: INPUT & RESET DATA ---
 elif selected_tab == "06 · Input & Reset Data":
