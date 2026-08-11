@@ -17,18 +17,18 @@ st.set_page_config(page_title="PSM Toko - Sales Dashboard", layout="wide")
 EXCEL_FILE = "Database_Penjualan_PSM_Toko_Clean_GoogleSheets.xlsx"
 
 # --- DATABASE PENGGUNA (LOGIN) ---
-USER_CREDENTIALS = { 
-"admin":"password": "c383kgs", "nama": "Kuro Lucifer", 
-"23044862":"password": "c383kgs", "nama": "Aris Aprilianto", 
-"24091737":"password": "c383kgs", "nama": "Tika", 
-"24096619":"password": "c383kgs", "nama": "Rizki Gunawan", 
-"25037119":"password": "c383kgs", "nama": "Adelia Pratiwi", 
-"26065884":"password": "c383kgs", "nama": "Ilham Priandika",
-"13127006":"password": "c383kgs", "nama": "Reza Purnama Agustin",
-"16016359":"password": "c383kgs", "nama": "Subekti Pandu Yulianto",
-"19061965":"password": "c383kgs", "nama": "Kusdewi Tia Ningrum"
-    
+USER_DATABASE = {
+    "admin": {"password": "c383kgs", "nama": "Staff Toko"},
+    "20220002": {"password": "c383kgs", "nama": "Aris Aprilianto"},
+    "20220007": {"password": "c383kgs", "nama": "Tika"},
+    "20220009": {"password": "c383kgs", "nama": "Rizki Gunawan"},
+    "20220019": {"password": "c383kgs", "nama": "Adelia Pratiwi"},
+    "20220034": {"password": "c383kgs", "nama": "Ilham Priandika"},
+    "20220096": {"password": "c383kgs", "nama": "Reza Purnama Agustin"},
+    "20220059": {"password": "c383kgs", "nama": "Subekti Pandu Yulianto"},
+    "20220055": {"password": "c383kgs", "nama": "Kusdewi Tia Ningrum"}
 }
+
 
 # --- CUSTOM CSS ---
 st.markdown("""
@@ -287,15 +287,18 @@ def show_login_page():
             submit_btn = st.form_submit_button("Masuk ke Aplikasi", use_container_width=True)
             
             if submit_btn:
-                if not username_input or not password_input:
-                    st.warning("Username dan Password wajib diisi!")
-                elif username_input in USER_CREDENTIALS and USER_CREDENTIALS[username_input] == password_input:
-                    st.session_state.logged_in = True
-                    st.session_state.username = username_input
-                    st.toast("Login Berhasil!", icon="✅")
-                    st.rerun()
-                else:
-                    st.error("Username atau Password salah!")
+    if not username_input or not password_input:
+        st.warning("Username dan Password wajib diisi!")
+    elif username_input in USER_DATABASE and USER_DATABASE[username_input]["password"] == password_input:
+        user_info = USER_DATABASE[username_input]
+        st.session_state.logged_in = True
+        # Menyimpan Nama Asli Karyawan ke Session State
+        st.session_state.username = user_info["nama"] 
+        st.toast(f"Selamat Datang, {user_info['nama']}!", icon="✅")
+        st.rerun()
+    else:
+        st.error("Username atau Password salah!")
+
 
 # Cek Status Autentikasi
 if "logged_in" not in st.session_state:
