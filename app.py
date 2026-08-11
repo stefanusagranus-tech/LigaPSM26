@@ -7,33 +7,55 @@ import plotly.graph_objects as go
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-# --- CUSTOM CSS: TOMBOL NEON & KONTRAS TEKS DARK MODE ---
+# --- CUSTOM CSS NEON FIX: HANYA UNTUK TOMBOL, INPUT, DAN TABEL CLEAN ---
 st.markdown("""
 <style>
-    /* Styling Tombol Standar -> Box Hitam, Border Neon, Teks Biru */
-    div.stButton > button {
-        background-color: #0d1117 !important;
-        color: #38bdf8 !important;
+    /* 1. STYLING TOMBOL NEON CYAN (Sama Persis Seperti 'Hapus Transaksi Staf') */
+    div.stButton > button, div.stFormSubmitButton > button {
+        background-color: #080c14 !important;
+        color: #ffffff !important;
         border: 2px solid #00f0ff !important;
         border-radius: 8px !important;
         font-weight: bold !important;
-        box-shadow: 0 0 10px rgba(0, 240, 255, 0.2) !important;
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.3) !important;
         transition: all 0.3s ease !important;
     }
-    div.stButton > button:hover {
+    div.stButton > button:hover, div.stFormSubmitButton > button:hover {
         background-color: #00f0ff !important;
-        color: #0d1117 !important;
-        box-shadow: 0 0 18px rgba(0, 240, 255, 0.7) !important;
+        color: #080c14 !important;
+        box-shadow: 0 0 20px rgba(0, 240, 255, 0.8) !important;
+    }
+
+    /* 2. STYLING KOTAK INPUT & SELECTBOX (NEON DARK BOX) */
+    div[data-baseweb="select"] > div, 
+    div[data-baseweb="input"] > div {
+        background-color: #080c14 !important;
+        color: #ffffff !important;
+        border: 1.5px solid #00f0ff !important;
+        border-radius: 8px !important;
     }
     
-    /* Styling Memperjelas Teks Input & Label agar Tidak Menyatu Background */
-    label, p, span, div {
-        color: #f1f5f9 !important;
+    /* 3. PERBAIKAN DROPDOWN LIST (MENCEGAH OPSI JADI BAR PUTIH) */
+    div[data-baseweb="popover"], ul[role="listbox"] {
+        background-color: #0d1117 !important;
+        border: 1px solid #00f0ff !important;
+        border-radius: 8px !important;
     }
-    .stTextInput input, .stNumberInput input, .stSelectbox div {
-        background-color: #161b22 !important;
+    li[role="option"] {
+        color: #ffffff !important;
+        background-color: #0d1117 !important;
+    }
+    li[role="option"]:hover {
+        background-color: #1e293b !important;
         color: #00f0ff !important;
-        border: 1px solid #30363d !important;
+    }
+
+    /* 4. PERBAIKAN TABEL / DATAFRAME AGAR RAPI & BERSIH */
+    [data-testid="stDataFrame"] {
+        background-color: #080c14 !important;
+        border: 1px solid #1e293b !important;
+        border-radius: 8px !important;
+        padding: 5px;
     }
 </style>
 """, unsafe_allow_html=True)
