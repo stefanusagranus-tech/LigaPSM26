@@ -7,6 +7,20 @@ import plotly.graph_objects as go
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+# --- CSS UNTUK MENGHAPUS TOOLBAR ATAS (SHARE, EDIT, GITHUB) ---
+st.markdown("""
+<style>
+    /* Menyembunyikan Toolbar Atas (Share, Star, Edit, GitHub) */
+    [data-testid="stToolbar"],
+    div.stToolbarActions,
+    div[class*="stToolbarActions"] {
+        display: none !important;
+        visibility: hidden !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+
 # --- CSS UNTUK MENGHAPUS / MENYEMBUNYIKAN 'MANAGE APP' & FOOTER ---
 st.markdown("""
 <style>
