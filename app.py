@@ -535,7 +535,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # --- TAB 01: OVERVIEW PENJUALAN (TIME FACTOR & FILTER TANGGAL) ---
-if selected_tab == "01 · Overview Penjualan":
+elif selected_tab == "01 · Overview Penjualan":
     st.title("📊 Overview Penjualan Toko")
     
     si_df = st.session_state.sales_item_df.copy()
