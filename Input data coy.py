@@ -144,7 +144,7 @@ def load_data():
 
 df_personil, df_item, df_periode, df_sales_i, df_sales_p_raw = load_data()
 
-# Filter out locally deleted records to handle Google delay instantly
+# Filter record yang baru dihapus secara lokal
 if not df_sales_p_raw.empty and "record_id" in df_sales_p_raw.columns:
     df_sales_p = df_sales_p_raw[~df_sales_p_raw["record_id"].astype(str).str.strip().str.upper().isin(st.session_state.deleted_records)].copy()
 else:
@@ -344,100 +344,97 @@ else:
         </div>
         """, unsafe_allow_html=True)
 
-    # FORM INPUT PENJUALAN
-    st.markdown(f"<h3 style='color: #38bdf8; font-size: 18px; margin-top: 10px;'>📝 Form Input Laporan {'(Mode Admin)' if is_admin else ''}</h3>", unsafe_allow_html=True)
-    
-    items_in_period = df_sales_i[(df_sales_i["period_id"] == period_id) & (df_sales_i["item_name"] != "NAMA ITEM")]["item_name"].tolist() if not df_sales_i.empty else []
-    if not items_in_period:
-        items_in_period = df_item[df_item["active"] == True]["item_name"].tolist() if "active" in df_item.columns else df_item["item_name"].tolist()
-    
-    with st.form("form_report_personil", clear_on_submit=True):
-        if is_admin and selected_admin_target == "-- SEMUA PERSONIL (Toko) --":
-            target_person_name_input = st.selectbox("👤 Inputkan Atas Nama Personil:", df_personil["person_name"].tolist())
-            p_match2 = df_personil[df_personil["person_name"] == target_person_name_input]
-            target_person_id_input = str(p_match2.iloc[0]["person_id"]) if not p_match2.empty and "person_id" in p_match2.columns else "PRS001"
-        else:
-            target_person_name_input = target_person_name
-            target_person_id_input = target_person_id
+    st.markdown("<br>", unsafe_allow_html=True)
 
-        selected_item_name = st.selectbox("📦 Pilih Item PSM (Promosi Periode Ini)", items_in_period)
+    # --- FORM INPUT LAPORAN (ACCORDION / MENU LIPAT) ---
+    with st.expander(f"📝 Form Input Laporan {'(Mode Admin)' if is_admin else ''}", expanded=False):
+        items_in_period = df_sales_i[(df_sales_i["period_id"] == period_id) & (df_sales_i["item_name"] != "NAMA ITEM")]["item_name"].tolist() if not df_sales_i.empty else []
+        if not items_in_period:
+            items_in_period = df_item[df_item["active"] == True]["item_name"].tolist() if "active" in df_item.columns else df_item["item_name"].tolist()
         
-        item_row = df_item[df_item["item_name"] == selected_item_name]
-        item_id = str(item_row.iloc[0]["item_id"]) if not item_row.empty else "ITM0001"
-        
-        c_qty, c_date = st.columns(2)
-        with c_qty:
-            input_qty = st.number_input("🔢 Qty Terjual (Pcs)", min_value=1, value=1, step=1)
-        with c_date:
-            input_date = st.date_input("📅 Tanggal Penjualan", value=datetime.now())
-            
-        input_catatan = st.text_area("💬 Catatan Harian / Kendala Penjualan Personil", placeholder="Contoh: Menawarkan ke 15 konsumen...")
-        
-        submit_report = st.form_submit_button("🚀 SIMPAN LAPORAN PENJUALAN")
-        
-        if submit_report:
-            new_record_id = f"SP{len(df_sales_p_raw) + 1:05d}"
-            today_str = str(datetime.now().strftime("%Y-%m-%d"))
-            
-            payload = {
-                "record_id": new_record_id,
-                "period_id": period_id,
-                "item_id": item_id,
-                "item_name": selected_item_name,
-                "person_id": target_person_id_input,
-                "person_name": target_person_name_input,
-                "actual_qty": int(input_qty),
-                "updated_at": today_str,
-                "tanggal_input": str(input_date),
-                "catatan": input_catatan
-            }
-            
-            try:
-                res = requests.post(APPS_SCRIPT_URL, json=payload, timeout=8)
-                if res.status_code == 200:
-                    st.success(f"✅ Laporan {selected_item_name} ({int(input_qty)} Pcs) Atas Nama {target_person_name_input} Tersimpan!")
-                    st.cache_data.clear()
-                    st.rerun()
-                else:
-                    st.error("⚠️ Respon server gagal, pastikan Apps Script Deploy diset 'Anyone'.")
-            except Exception as ex:
-                st.error(f"❌ Terjadi kesalahan saat mengirim data: {ex}")
+        with st.form("form_report_personil", clear_on_submit=True):
+            if is_admin and selected_admin_target == "-- SEMUA PERSONIL (Toko) --":
+                target_person_name_input = st.selectbox("👤 Inputkan Atas Nama Personil:", df_personil["person_name"].tolist())
+                p_match2 = df_personil[df_personil["person_name"] == target_person_name_input]
+                target_person_id_input = str(p_match2.iloc[0]["person_id"]) if not p_match2.empty and "person_id" in p_match2.columns else "PRS001"
+            else:
+                target_person_name_input = target_person_name
+                target_person_id_input = target_person_id
 
-    # RIWAYAT & MANAGEMENT HAPUS OLEH ADMIN
-    st.markdown("<h3 style='color: #38bdf8; font-size: 18px; margin-top: 20px;'>📋 Riwayat Input Penjualan</h3>", unsafe_allow_html=True)
-    
-    if not user_sales_period.empty:
-        if is_admin:
-            st.info("💡 **Kelola Admin**: Klik tombol **Hapus** untuk menghapus record secara permanen.")
-            for idx, row in user_sales_period.iterrows():
-                r_id = str(row.get("record_id", "")).strip()
-                p_name = str(row.get("person_name", "-"))
-                i_name = str(row.get("item_name", "-"))
-                qty = int(row.get("actual_qty", 0))
-                tgl = str(row.get("updated_at", "-"))
+            selected_item_name = st.selectbox("📦 Pilih Item PSM (Promosi Periode Ini)", items_in_period)
+            
+            item_row = df_item[df_item["item_name"] == selected_item_name]
+            item_id = str(item_row.iloc[0]["item_id"]) if not item_row.empty else "ITM0001"
+            
+            c_qty, c_date = st.columns(2)
+            with c_qty:
+                input_qty = st.number_input("🔢 Qty Terjual (Pcs)", min_value=1, value=1, step=1)
+            with c_date:
+                input_date = st.date_input("📅 Tanggal Penjualan", value=datetime.now())
                 
-                col1, col2 = st.columns([4, 1])
-                with col1:
-                    st.write(f"🔹 **[{tgl}]** {p_name} - **{i_name}** ({qty} Pcs) - `ID: {r_id}`")
-                with col2:
-                    if st.button("🗑️ Hapus", key=f"del_{r_id}_{idx}"):
-                        delete_payload = {"action": "delete", "record_id": r_id}
-                        try:
-                            # 1. Masukkan ke local blacklist agar hilang seketika di UI
-                            st.session_state.deleted_records.add(r_id.upper())
-                            
-                            # 2. Kirim perintah hapus ke Google Sheets
-                            del_res = requests.post(APPS_SCRIPT_URL, json=delete_payload, timeout=8)
-                            st.success(f"🗑️ Record {r_id} berhasil dihapus permanen!")
-                            st.cache_data.clear()
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Gagal menghapus: {e}")
-                st.divider()
+            input_catatan = st.text_area("💬 Catatan Harian / Kendala Penjualan Personil", placeholder="Contoh: Menawarkan ke 15 konsumen...")
+            
+            submit_report = st.form_submit_button("🚀 SIMPAN LAPORAN PENJUALAN")
+            
+            if submit_report:
+                new_record_id = f"SP{len(df_sales_p_raw) + 1:05d}"
+                today_str = str(datetime.now().strftime("%Y-%m-%d"))
+                
+                payload = {
+                    "record_id": new_record_id,
+                    "period_id": period_id,
+                    "item_id": item_id,
+                    "item_name": selected_item_name,
+                    "person_id": target_person_id_input,
+                    "person_name": target_person_name_input,
+                    "actual_qty": int(input_qty),
+                    "updated_at": today_str,
+                    "tanggal_input": str(input_date),
+                    "catatan": input_catatan
+                }
+                
+                try:
+                    res = requests.post(APPS_SCRIPT_URL, json=payload, timeout=8)
+                    if res.status_code == 200:
+                        st.success(f"✅ Laporan {selected_item_name} ({int(input_qty)} Pcs) Atas Nama {target_person_name_input} Tersimpan!")
+                        st.cache_data.clear()
+                        st.rerun()
+                    else:
+                        st.error("⚠️ Respon server gagal, pastikan Apps Script Deploy diset 'Anyone'.")
+                except Exception as ex:
+                    st.error(f"❌ Terjadi kesalahan saat mengirim data: {ex}")
+
+    # --- RIWAYAT INPUT PENJUALAN (ACCORDION / MENU LIPAT) ---
+    with st.expander("📋 Riwayat Input Penjualan", expanded=False):
+        if not user_sales_period.empty:
+            if is_admin:
+                st.info("💡 **Kelola Admin**: Klik tombol **Hapus** untuk menghapus record secara permanen.")
+                for idx, row in user_sales_period.iterrows():
+                    r_id = str(row.get("record_id", "")).strip()
+                    p_name = str(row.get("person_name", "-"))
+                    i_name = str(row.get("item_name", "-"))
+                    qty = int(row.get("actual_qty", 0))
+                    tgl = str(row.get("updated_at", "-"))
+                    
+                    col1, col2 = st.columns([4, 1])
+                    with col1:
+                        st.write(f"🔹 **[{tgl}]** {p_name} - **{i_name}** ({qty} Pcs) - `ID: {r_id}`")
+                    with col2:
+                        if st.button("🗑️ Hapus", key=f"del_{r_id}_{idx}"):
+                            delete_payload = {"action": "delete", "record_id": r_id}
+                            try:
+                                st.session_state.deleted_records.add(r_id.upper())
+                                del_res = requests.post(APPS_SCRIPT_URL, json=delete_payload, timeout=8)
+                                st.success(f"🗑️ Record {r_id} berhasil dihapus permanen!")
+                                st.cache_data.clear()
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"Gagal menghapus: {e}")
+                    st.divider()
+            else:
+                disp_cols = [c for c in ["period_id", "item_name", "actual_qty", "updated_at", "catatan"] if c in user_sales_period.columns]
+                disp_df = user_sales_period[disp_cols].copy()
+                disp_df.columns = ["Periode", "Nama Item", "Qty (Pcs)", "Tanggal", "Catatan Staf"][:len(disp_cols)]
+                st.dataframe(disp_df, use_container_width=True, hide_index=True)
         else:
-            disp_cols = [c for c in ["period_id", "item_name", "actual_qty", "updated_at", "catatan"] if c in user_sales_period.columns]
-            disp_df = user_sales_period[disp_cols].copy()
-            disp_df.columns = ["Periode", "Nama Item", "Qty (Pcs)", "Tanggal", "Catatan Staf"][:len(disp_cols)]
-            st.dataframe(disp_df, use_container_width=True, hide_index=True)
-    else:
-        st.info("Belum ada riwayat input penjualan pada periode terpilih.")
+            st.info("Belum ada riwayat input penjualan pada periode terpilih.")
