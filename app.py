@@ -1112,13 +1112,31 @@ elif selected_tab == "05 · Analisis Tren":
 elif selected_tab == "06 · Input & Reset Data":
     st.title("✏️ Form Input & Kelola Data Sales (Editor)")
     
-    tab_in1, tab_in2 = st.tabs(["Input/Hapus Sales Personil", "Update/Hapus Sales Item Toko"])
+    # Cek status role pengguna yang sedang login
+    current_user = st.session_state.get("username", "")
+    is_admin = (current_user == "Staff Toko") or (current_user == "Admin")
+    
+    tab_in1, tab_in2 = st.tabs(["Input/Hapus Sales Personil", "Update/Hapus Sales Item Toko (Admin)"])
     
     with tab_in1:
         st.subheader("Kelola Sales Personil")
+        
         f_period_name = st.selectbox("Periode", list(periods_dict.keys()), key="in_p_per")
         f_date = st.date_input("Tanggal Transaksi", key="in_p_date")
-        f_person = st.selectbox("Nama Staf", st.session_state.person_df["person_name"].tolist(), key="in_p_pers")
+        
+        # --- 1. PEMBATASAN USERNAME BERDASARKAN AKUN LOGIN ---
+        all_personnel = st.session_state.person_df["person_name"].dropna().unique().tolist()
+        
+        if is_admin:
+            f_person = st.selectbox("Nama Staf", all_personnel, key="in_p_pers")
+        else:
+            # Mengunci nama staf ke akun kasir yang login
+            if current_user in all_personnel:
+                f_person = current_user
+                st.info(f"👤 Menginput atas nama akun: **{current_user}**")
+            else:
+                f_person = current_user
+                st.warning(f"⚠️ Akun **{current_user}** belum terdaftar di Master Personil.")
         
         p_id_val = periods_dict[f_period_name]
         filtered_si = st.session_state.sales_item_df[st.session_state.sales_item_df["period_id"] == p_id_val]
@@ -1132,21 +1150,34 @@ elif selected_tab == "06 · Input & Reset Data":
             with cb1:
                 if st.button("💾 Simpan Data Personil", use_container_width=True):
                     new_id = f"SP{len(st.session_state.sales_person_df)+1:05d}"
-                    person_row = st.session_state.person_df[st.session_state.person_df["person_name"] == f_person].iloc[0]
+                    
+                    p_match = st.session_state.person_df[st.session_state.person_df["person_name"] == f_person]
+                    person_id_val = p_match.iloc[0]["person_id"] if not p_match.empty and "person_id" in p_match.columns else "P999"
                     
                     new_row = {
                         "record_id": new_id,
                         "period_id": p_id_val,
                         "item_id": item_dict[f_item_name],
                         "item_name": f_item_name,
-                        "person_id": person_row["person_id"],
+                        "person_id": person_id_val,
                         "person_name": f_person,
                         "actual_qty": f_qty,
                         "updated_at": str(f_date)
                     }
-                    st.session_state.sales_person_df = pd.concat([st.session_state.sales_person_df, pd.DataFrame([new_row])], ignore_index=True)
+                    
+                    # Tambah data ke sales_person_df
+                    st.session_state.sales_person_df = pd.concat(
+                        [st.session_state.sales_person_df, pd.DataFrame([new_row])], 
+                        ignore_index=True
+                    )
+                    
+                    # --- 2. AUTO-SYNC SINKRONISASI OTOMATIS KE PENJUALAN TOKO ---
+                    sync_store_sales_from_personnel()
+                    
                     save_database(st.session_state.sales_item_df, st.session_state.sales_person_df)
-                    st.success("Data berhasil disimpan ke Excel!")
+                    st.success("✅ Data berhasil disimpan & otomatis memperbarui Penjualan Toko!")
+                    st.rerun()
+
             with cb2:
                 if st.button("🗑️ Hapus Transaksi Staf", use_container_width=True):
                     st.session_state.sales_person_df = st.session_state.sales_person_df[
@@ -1154,48 +1185,57 @@ elif selected_tab == "06 · Input & Reset Data":
                           (st.session_state.sales_person_df["person_name"] == f_person) & 
                           (st.session_state.sales_person_df["item_id"] == item_dict[f_item_name]))
                     ]
+                    
+                    # --- AUTO-SYNC SETELAH PENGHAPUSAN ---
+                    sync_store_sales_from_personnel()
+                    
                     save_database(st.session_state.sales_item_df, st.session_state.sales_person_df)
-                    st.warning("Data berhasil dihapus dari Excel!")
+                    st.warning("⚠️ Data berhasil dihapus & Penjualan Toko telah diperbarui!")
+                    st.rerun()
         else:
             st.warning("Tidak ada item tersedia di periode ini.")
 
     with tab_in2:
-        st.subheader("Kelola Total Actual Item Toko")
-        f_period_name_t = st.selectbox("Periode Toko", list(periods_dict.keys()), key="in_t_per")
-        f_date_t = st.date_input("Tanggal Update", key="in_t_date")
+        st.subheader("Kelola Total Actual Item Toko (Manual Override)")
         
-        p_id_val_t = periods_dict[f_period_name_t]
-        filtered_si_t = st.session_state.sales_item_df[st.session_state.sales_item_df["period_id"] == p_id_val_t]
-        item_dict_t = {row["item_name"]: row["item_id"] for _, row in filtered_si_t.iterrows()}
-        
-        if item_dict_t:
-            f_item_name_t = st.selectbox("Pilih Produk Toko", list(item_dict_t.keys()), key="in_t_item")
-            f_actual_t = st.number_input("Actual Qty Toko (Pcs)", min_value=0, step=1, key="in_t_act")
-            
-            ct1, ct2 = st.columns(2)
-            with ct1:
-                if st.button("📦 Update Total Toko", use_container_width=True):
-                    idx = st.session_state.sales_item_df[
-                        (st.session_state.sales_item_df["period_id"] == p_id_val_t) & 
-                        (st.session_state.sales_item_df["item_name"] == f_item_name_t)
-                    ].index
-                    
-                    if not idx.empty:
-                        st.session_state.sales_item_df.loc[idx, "actual_qty"] = f_actual_t
-                        st.session_state.sales_item_df.loc[idx, "updated_at"] = str(f_date_t)
-                    save_database(st.session_state.sales_item_df, st.session_state.sales_person_df)
-                    st.success("Aktual produk toko berhasil diperbarui di Excel!")
-            with ct2:
-                if st.button("🗑️ Hapus Record Produk Toko", use_container_width=True):
-                    st.session_state.sales_item_df = st.session_state.sales_item_df[
-                        ~((st.session_state.sales_item_df["period_id"] == p_id_val_t) & 
-                          (st.session_state.sales_item_df["item_name"] == f_item_name_t))
-                    ]
-                    save_database(st.session_state.sales_item_df, st.session_state.sales_person_df)
-                    st.warning("Record produk toko berhasil dihapus!")
+        # Pembatasan sub-tab 2 khusus Admin
+        if not is_admin:
+            st.warning("🔒 Sub-menu ini khusus untuk Admin. Penjualan toko Anda sudah terisi otomatis dari hasil rekapitulasi transaksi kasir.")
         else:
-            st.warning("Tidak ada item tersedia di periode ini.")
+            f_period_name_t = st.selectbox("Periode Toko", list(periods_dict.keys()), key="in_t_per")
+            f_date_t = st.date_input("Tanggal Update", key="in_t_date")
             
-
-
+            p_id_val_t = periods_dict[f_period_name_t]
+            filtered_si_t = st.session_state.sales_item_df[st.session_state.sales_item_df["period_id"] == p_id_val_t]
+            item_dict_t = {row["item_name"]: row["item_id"] for _, row in filtered_si_t.iterrows()}
+            
+            if item_dict_t:
+                f_item_name_t = st.selectbox("Pilih Produk Toko", list(item_dict_t.keys()), key="in_t_item")
+                f_actual_t = st.number_input("Actual Qty Toko (Pcs)", min_value=0, step=1, key="in_t_act")
+                
+                ct1, ct2 = st.columns(2)
+                with ct1:
+                    if st.button("📦 Update Total Toko Manual", use_container_width=True):
+                        idx = st.session_state.sales_item_df[
+                            (st.session_state.sales_item_df["period_id"] == p_id_val_t) & 
+                            (st.session_state.sales_item_df["item_name"] == f_item_name_t)
+                        ].index
+                        
+                        if not idx.empty:
+                            st.session_state.sales_item_df.loc[idx, "actual_qty"] = f_actual_t
+                            st.session_state.sales_item_df.loc[idx, "updated_at"] = str(f_date_t)
+                        save_database(st.session_state.sales_item_df, st.session_state.sales_person_df)
+                        st.success("Aktual produk toko berhasil diperbarui secara manual!")
+                        st.rerun()
+                with ct2:
+                    if st.button("🗑️ Hapus Record Produk Toko", use_container_width=True):
+                        st.session_state.sales_item_df = st.session_state.sales_item_df[
+                            ~((st.session_state.sales_item_df["period_id"] == p_id_val_t) & 
+                              (st.session_state.sales_item_df["item_name"] == f_item_name_t))
+                        ]
+                        save_database(st.session_state.sales_item_df, st.session_state.sales_person_df)
+                        st.warning("Record produk toko berhasil dihapus!")
+                        st.rerun()
+            else:
+                st.warning("Tidak ada item tersedia di periode ini.")
 
