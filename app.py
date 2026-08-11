@@ -144,7 +144,7 @@ EXCEL_FILE = "Database_Penjualan_PSM_Toko_Clean_GoogleSheets.xlsx"
 
 # --- DATABASE PENGGUNA (LOGIN) ---
 USER_DATABASE = {
-    "admin": {"password": "lavitality", "nama": "Staff Toko"}, 
+    "admin": {"password": "lavitality", "nama": "admin"}, 
     "23044862": {"password": "c383kgs", "nama": "ARIS APRILIANTO"}, 
     "24091737": {"password": "c383kgs", "nama": "TIKA"}, 
     "24096619": {"password": "c383kgs", "nama": "RIZKI GUNAWAN"}, 
