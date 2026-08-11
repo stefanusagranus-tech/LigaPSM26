@@ -7,6 +7,44 @@ import plotly.graph_objects as go
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+def sync_store_sales_from_personnel():
+    """
+    Fungsi aman untuk merekap total penjualan dari seluruh personil toko 
+    dan secara otomatis memperbarui nilai actual_qty pada Penjualan Toko (sales_item_df).
+    """
+    # Pastikan data sudah terinisialisasi di session state
+    if "sales_person_df" in st.session_state and "sales_item_df" in st.session_state:
+        sp_df = st.session_state.sales_person_df.copy()
+        si_df = st.session_state.sales_item_df.copy()
+        
+        # Cek jika dataframe kosong atau kolom belum lengkap
+        req_cols_sp = ["period_id", "item_id", "actual_qty"]
+        req_cols_si = ["period_id", "item_id"]
+        
+        if sp_df.empty or not all(col in sp_df.columns for col in req_cols_sp):
+            return
+        if si_df.empty or not all(col in si_df.columns for col in req_cols_si):
+            return
+            
+        sp_df["actual_qty"] = pd.to_numeric(sp_df["actual_qty"], errors="coerce").fillna(0)
+        
+        # Grouping total penjualan per (period_id, item_id)
+        tot_per_item = sp_df.groupby(["period_id", "item_id"])["actual_qty"].sum().reset_index()
+        tot_per_item.rename(columns={"actual_qty": "calc_actual_qty"}, inplace=True)
+        
+        if "calc_actual_qty" in si_df.columns:
+            si_df.drop(columns=["calc_actual_qty"], inplace=True)
+            
+        merged = pd.merge(si_df, tot_per_item, on=["period_id", "item_id"], how="left")
+        merged["calc_actual_qty"] = merged["calc_actual_qty"].fillna(0)
+        
+        # Update nilai actual_qty pada toko dengan hasil penjumlahan personil
+        merged["actual_qty"] = merged["calc_actual_qty"]
+        merged.drop(columns=["calc_actual_qty"], inplace=True)
+        
+        # Simpan kembali ke Session State
+        st.session_state.sales_item_df = merged
+
 
 # Mengambil waktu WIB (Asia/Jakarta) secara presisi
 waktu_wib = datetime.now(ZoneInfo("Asia/Jakarta"))
@@ -150,6 +188,17 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
+
+# Dipanggil HANYA setelah data berhasil di-load
+if "data_loaded" not in st.session_state:
+    p_df, i_df, pers_df, si_df, sp_df = load_database()
+    st.session_state.periods_df = p_df
+    st.session_state.items_df = i_df
+    st.session_state.person_df = pers_df
+    st.session_state.sales_item_df = si_df
+    st.session_state.sales_person_df = sp_df
+    st.session_state.data_loaded = True
+
 
 # --- FUNGSI LOAD & SAVE DATABASE EXCEL ---
 def load_database():
