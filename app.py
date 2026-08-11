@@ -1442,7 +1442,7 @@ elif selected_tab == "06 · Input & Reset Data":
 # --- TAB/MENU: PENGATURAN & MASTER DATA ---
 elif selected_tab == "⚙️ Master Data & Pengaturan":
     
-    ALLOWED_USERNAMES = ["admin", "chief", "assistant_cos"]
+    ALLOWED_USERNAMES = ["admin", "Staff Toko"]
     current_user = st.session_state.get("username", "").lower()
     
     if current_user not in ALLOWED_USERNAMES:
