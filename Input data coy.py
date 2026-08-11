@@ -3,6 +3,7 @@ import pandas as pd
 from datetime import datetime
 import random
 import requests
+from concurrent.futures import ThreadPoolExecutor
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -16,7 +17,7 @@ st.set_page_config(
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzPHZQug5zuiTmt3C4YlbHqLj5avf7HYK8YqYw-n2v-TavnlgsdRwuUn9r_qR8i-7lshQ/exec"
 SPREADSHEET_ID = "1kJ-OsjLEsFuNyyBg2TwxlWz8Ape4lwF9h0t66q3ldQk"
 
-# --- CSS STYLING (DARK NEON MOBILE VERSION & CLICKABLE METRIC BUTTONS) ---
+# --- CSS STYLING (DARK NEON MOBILE VERSION & UNIFORM MENU BUTTONS) ---
 css_code = """
 <style>
     .stApp {
@@ -57,26 +58,6 @@ css_code = """
         margin-bottom: 20px;
         box-shadow: 0 0 15px rgba(244, 63, 94, 0.3);
     }
-    .metric-val {
-        font-size: 20px;
-        font-weight: 800;
-        color: #38bdf8;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    .metric-sub {
-        font-size: 12px;
-        color: #10b981;
-        font-weight: 600;
-        margin-top: 4px;
-    }
-    .metric-lbl {
-        font-size: 11px;
-        color: #94a3b8;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
     .quote-box {
         background-color: rgba(56, 189, 248, 0.08);
         border-left: 4px solid #38bdf8;
@@ -88,7 +69,7 @@ css_code = """
         font-size: 13px;
     }
     
-    /* Tombol Biasa */
+    /* Tombol Utama (Submit / Logout / Back) */
     .stButton > button {
         width: 100%;
         background: linear-gradient(90deg, #0284c7 0%, #2563eb 100%);
@@ -105,16 +86,18 @@ css_code = """
         box-shadow: 0 0 18px rgba(56, 189, 248, 0.5);
     }
 
-    /* Kustomisasi Kartu Metrik Agar Bisa Diklik */
+    /* Kartu Menu Grid Bersampingan */
     div[data-testid="stHorizontalBlock"] .stButton > button {
         background-color: #161e2e !important;
         background: #161e2e !important;
         border: 1px solid #1f293d !important;
         border-radius: 12px !important;
-        padding: 14px 10px !important;
+        padding: 16px 10px !important;
         height: auto !important;
-        min-height: 100px !important;
+        min-height: 80px !important;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+        font-size: 13px !important;
+        line-height: 1.4 !important;
     }
     div[data-testid="stHorizontalBlock"] .stButton > button:hover {
         border-color: #38bdf8 !important;
@@ -142,19 +125,28 @@ if "deleted_records" not in st.session_state:
 if "current_page" not in st.session_state:
     st.session_state.current_page = "main"
 
-# --- BACA DATA REALTIME GOOGLE SHEETS ---
-@st.cache_data(ttl=2)
+# --- BACA DATA REALTIME GOOGLE SHEETS (OPTIMASI PARALEL FAST LOADING) ---
+@st.cache_data(ttl=60)
 def load_data():
     try:
-        def read_sheet_csv(sheet_name):
+        sheets = ["MASTER_PERSONIL", "MASTER_ITEM", "PERIODE", "SALES_ITEM", "SALES_PERSONIL"]
+        
+        def read_sheet(sheet_name):
             url = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet={sheet_name}"
-            return pd.read_csv(url)
+            return sheet_name, pd.read_csv(url)
 
-        df_personil = read_sheet_csv("MASTER_PERSONIL")
-        df_item = read_sheet_csv("MASTER_ITEM")
-        df_periode = read_sheet_csv("PERIODE")
-        df_sales_i = read_sheet_csv("SALES_ITEM")
-        df_sales_p = read_sheet_csv("SALES_PERSONIL")
+        results = {}
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            futures = [executor.submit(read_sheet, s) for s in sheets]
+            for future in futures:
+                s_name, df = future.result()
+                results[s_name] = df
+
+        df_personil = results["MASTER_PERSONIL"]
+        df_item = results["MASTER_ITEM"]
+        df_periode = results["PERIODE"]
+        df_sales_i = results["SALES_ITEM"]
+        df_sales_p = results["SALES_PERSONIL"]
         
         if "actual_qty" in df_sales_p.columns:
             df_sales_p["actual_qty"] = pd.to_numeric(df_sales_p["actual_qty"], errors="coerce").fillna(0).astype(int)
@@ -253,7 +245,7 @@ if not st.session_state.logged_in:
         st.markdown("</div>", unsafe_allow_html=True)
 
 # ==========================================
-# 2. HALAMAN UTAMA ATAU DETAIL HALAMAN
+# 2. HALAMAN UTAMA ATAU SUB-HALAMAN MENU
 # ==========================================
 else:
     user = st.session_state.user_info
@@ -263,13 +255,13 @@ else:
     if not active_periods:
         active_periods = df_periode["period_name"].tolist()
 
-    # --- HALAMAN DETAIL 1: DETAIL TOTAL TERJUAL ---
+    # --- SUB HALAMAN 1: DETAIL TOTAL TERJUAL ---
     if st.session_state.current_page == "detail_total":
         if st.button("⬅️ Kembali ke Menu Utama"):
             st.session_state.current_page = "main"
             st.rerun()
             
-        st.markdown("<h2 style='color: #38bdf8;'>📈 Detail Transaksi Penjualan</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='color: #38bdf8;'>📊 Detail Transaksi Penjualan</h2>", unsafe_allow_html=True)
         st.caption("Rincian seluruh laporan transaksi yang masuk pada periode ini.")
         
         if not df_sales_p.empty:
@@ -280,7 +272,7 @@ else:
         else:
             st.info("Belum ada data transaksi.")
 
-    # --- HALAMAN DETAIL 2: DETAIL ITEM TERBANYAK ---
+    # --- SUB HALAMAN 2: DETAIL ITEM TERBANYAK ---
     elif st.session_state.current_page == "detail_item":
         if st.button("⬅️ Kembali ke Menu Utama"):
             st.session_state.current_page = "main"
@@ -296,7 +288,126 @@ else:
         else:
             st.info("Belum ada data item terjual.")
 
-    # --- HALAMAN UTAMA ---
+    # --- SUB HALAMAN 3: FORM INPUT LAPORAN ---
+    elif st.session_state.current_page == "form_input":
+        if st.button("⬅️ Kembali ke Menu Utama"):
+            st.session_state.current_page = "main"
+            st.rerun()
+
+        st.markdown(f"<h2 style='color: #38bdf8;'>📝 Form Input Laporan {'(Mode Admin)' if is_admin else ''}</h2>", unsafe_allow_html=True)
+        
+        period_id = st.session_state.get("selected_period_id", "P01")
+        target_person_name = st.session_state.get("target_person_name", user["person_name"])
+        target_person_id = st.session_state.get("target_person_id", user["person_id"])
+        selected_admin_target = st.session_state.get("selected_admin_target", "-- SEMUA PERSONIL (Toko) --")
+
+        items_in_period = df_sales_i[(df_sales_i["period_id"] == period_id) & (df_sales_i["item_name"] != "NAMA ITEM")]["item_name"].tolist() if not df_sales_i.empty else []
+        if not items_in_period:
+            items_in_period = df_item[df_item["active"] == True]["item_name"].tolist() if "active" in df_item.columns else df_item["item_name"].tolist()
+        
+        with st.form("form_report_personil_page", clear_on_submit=True):
+            if is_admin and selected_admin_target == "-- SEMUA PERSONIL (Toko) --":
+                target_person_name_input = st.selectbox("👤 Inputkan Atas Nama Personil:", df_personil["person_name"].tolist())
+                p_match2 = df_personil[df_personil["person_name"] == target_person_name_input]
+                target_person_id_input = str(p_match2.iloc[0]["person_id"]) if not p_match2.empty and "person_id" in p_match2.columns else "PRS001"
+            else:
+                target_person_name_input = target_person_name
+                target_person_id_input = target_person_id
+
+            selected_item_name = st.selectbox("📦 Pilih Item PSM (Promosi Periode Ini)", items_in_period)
+            item_row = df_item[df_item["item_name"] == selected_item_name]
+            item_id = str(item_row.iloc[0]["item_id"]) if not item_row.empty else "ITM0001"
+            
+            c_qty, c_date = st.columns(2)
+            with c_qty:
+                input_qty = st.number_input("🔢 Qty Terjual (Pcs)", min_value=1, value=1, step=1)
+            with c_date:
+                input_date = st.date_input("📅 Tanggal Penjualan", value=datetime.now())
+                
+            input_catatan = st.text_area("💬 Catatan Harian / Kendala Penjualan Personil", placeholder="Contoh: Menawarkan ke 15 konsumen...")
+            submit_report = st.form_submit_button("🚀 SIMPAN LAPORAN PENJUALAN")
+            
+            if submit_report:
+                new_record_id = f"SP{len(df_sales_p_raw) + 1:05d}"
+                today_str = str(datetime.now().strftime("%Y-%m-%d"))
+                payload = {
+                    "record_id": new_record_id,
+                    "period_id": period_id,
+                    "item_id": item_id,
+                    "item_name": selected_item_name,
+                    "person_id": target_person_id_input,
+                    "person_name": target_person_name_input,
+                    "actual_qty": int(input_qty),
+                    "updated_at": today_str,
+                    "tanggal_input": str(input_date),
+                    "catatan": input_catatan
+                }
+                try:
+                    res = requests.post(APPS_SCRIPT_URL, json=payload, timeout=8)
+                    if res.status_code == 200:
+                        st.success(f"✅ Laporan {selected_item_name} ({int(input_qty)} Pcs) Tersimpan!")
+                        st.cache_data.clear()
+                    else:
+                        st.error("⚠️ Respon server gagal.")
+                except Exception as ex:
+                    st.error(f"❌ Terjadi kesalahan: {ex}")
+
+    # --- SUB HALAMAN 4: RIWAYAT LAPORAN PENJUALAN ---
+    elif st.session_state.current_page == "riwayat":
+        if st.button("⬅️ Kembali ke Menu Utama"):
+            st.session_state.current_page = "main"
+            st.rerun()
+
+        st.markdown("<h2 style='color: #38bdf8;'>📋 Riwayat Input Penjualan</h2>", unsafe_allow_html=True)
+        
+        period_id = st.session_state.get("selected_period_id", "P01")
+        target_person_name = st.session_state.get("target_person_name", user["person_name"])
+        selected_admin_target = st.session_state.get("selected_admin_target", "-- SEMUA PERSONIL (Toko) --")
+
+        if is_admin and selected_admin_target == "-- SEMUA PERSONIL (Toko) --":
+            user_sales_period = df_sales_p[df_sales_p["period_id"].astype(str).str.strip() == period_id] if not df_sales_p.empty else pd.DataFrame()
+        else:
+            user_sales_period = df_sales_p[
+                (df_sales_p["person_name"].astype(str).str.strip().str.upper() == target_person_name.upper()) & 
+                (df_sales_p["period_id"].astype(str).str.strip() == period_id)
+            ] if not df_sales_p.empty else pd.DataFrame()
+
+        if not user_sales_period.empty:
+            if is_admin:
+                st.info("💡 **Kelola Admin**: Klik tombol **Hapus** untuk menghapus record secara permanen.")
+                for idx, row in user_sales_period.iterrows():
+                    r_id = str(row.get("record_id", "")).strip()
+                    p_name = str(row.get("person_name", "-"))
+                    i_name = str(row.get("item_name", "-"))
+                    qty = int(row.get("actual_qty", 0))
+                    tgl = str(row.get("updated_at", "-"))
+                    
+                    col1, col2 = st.columns([4, 1])
+                    with col1:
+                        st.write(f"🔹 **[{tgl}]** {p_name} - **{i_name}** ({qty} Pcs) - `ID: {r_id}`")
+                    with col2:
+                        if st.button("🗑️ Hapus", key=f"del_p_{r_id}_{idx}"):
+                            delete_payload = {"action": "delete", "record_id": r_id}
+                            try:
+                                st.session_state.deleted_records.add(r_id.upper())
+                                del_res = requests.post(APPS_SCRIPT_URL, json=delete_payload, timeout=8)
+                                st.success(f"🗑️ Record {r_id} berhasil dihapus permanen!")
+                                st.cache_data.clear()
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"Gagal menghapus: {e}")
+                    st.divider()
+            else:
+                disp_cols = [c for c in ["period_id", "item_name", "actual_qty", "updated_at", "catatan"] if c in user_sales_period.columns]
+                disp_df = user_sales_period[disp_cols].copy()
+                disp_df.columns = ["Periode", "Nama Item", "Qty (Pcs)", "Tanggal", "Catatan Staf"][:len(disp_cols)]
+                st.dataframe(disp_df, use_container_width=True, hide_index=True)
+        else:
+            st.info("Belum ada riwayat input penjualan pada periode terpilih.")
+
+    # ==========================================
+    # HALAMAN UTAMA (DASBOR MENU UTAMA)
+    # ==========================================
     else:
         if is_admin:
             st.markdown("""
@@ -330,24 +441,26 @@ else:
         selected_period_name = st.selectbox("📌 Pilih Periode Promosi", active_periods)
         period_row = df_periode[df_periode["period_name"] == selected_period_name]
         period_id = str(period_row.iloc[0]["period_id"]) if not period_row.empty else "P01"
+        st.session_state["selected_period_id"] = period_id
         
         target_person_name = user["person_name"]
         target_person_id = user["person_id"]
+        selected_admin_target = "-- SEMUA PERSONIL (Toko) --"
         
         if is_admin:
             st.markdown("<h4 style='color: #f43f5e; margin-top: 10px;'>⚙️ Filter Tampilan Admin</h4>", unsafe_allow_html=True)
             all_personil_list = df_personil["person_name"].tolist() if not df_personil.empty else []
             selected_admin_target = st.selectbox("👤 Pilih Personil (Untuk Input / Kelola Data)", ["-- SEMUA PERSONIL (Toko) --"] + all_personil_list)
+            st.session_state["selected_admin_target"] = selected_admin_target
             
             if selected_admin_target != "-- SEMUA PERSONIL (Toko) --":
                 target_person_name = selected_admin_target
                 p_match = df_personil[df_personil["person_name"] == target_person_name]
                 target_person_id = str(p_match.iloc[0]["person_id"]) if not p_match.empty and "person_id" in p_match.columns else "PRS001"
 
-        target_toko = float(period_row.iloc[0]["target_total"]) if not period_row.empty and pd.notnull(period_row.iloc[0]["target_total"]) else 0.0
-        active_personil_count = len(df_personil[df_personil["active"] == True]) if "active" in df_personil.columns else len(df_personil)
-        target_personil = target_toko / active_personil_count if active_personil_count > 0 else 0.0
-        
+        st.session_state["target_person_name"] = target_person_name
+        st.session_state["target_person_id"] = target_person_id
+
         if is_admin and selected_admin_target == "-- SEMUA PERSONIL (Toko) --":
             user_sales_period = df_sales_p[df_sales_p["period_id"].astype(str).str.strip() == period_id] if not df_sales_p.empty else pd.DataFrame()
         else:
@@ -357,132 +470,37 @@ else:
             ] if not df_sales_p.empty else pd.DataFrame()
         
         total_qty_personil = int(user_sales_period["actual_qty"].sum()) if not user_sales_period.empty else 0
-        pct_ach_personil = (total_qty_personil / (target_toko if (is_admin and selected_admin_target == "-- SEMUA PERSONIL (Toko) --") else target_personil) * 100) if target_personil > 0 else 0.0
-        
-        top_item_name, top_item_qty, top_item_pct = "-", 0, 0.0
-        if not user_sales_period.empty and user_sales_period["actual_qty"].sum() > 0:
-            top_group = user_sales_period.groupby("item_name")["actual_qty"].sum().reset_index().sort_values(by="actual_qty", ascending=False)
-            top_item_name = top_group.iloc[0]["item_name"]
-            top_item_qty = int(top_group.iloc[0]["actual_qty"])
-            
-            item_target_row = df_sales_i[(df_sales_i["period_id"] == period_id) & (df_sales_i["item_name"] == top_item_name)]
-            if not item_target_row.empty and pd.to_numeric(item_target_row.iloc[0]["target_qty"], errors="coerce") is not None:
-                item_target_store = float(item_target_row.iloc[0]["target_qty"])
-                item_target_person = item_target_store / active_personil_count if active_personil_count > 0 else 0.0
-                top_item_pct = (top_item_qty / item_target_person * 100) if item_target_person > 0 else 0.0
 
         if not is_admin:
             st.markdown(f"<div class='quote-box'>\"{get_motivational_quote(total_qty_personil)}\"</div><br>", unsafe_allow_html=True)
 
-        st.markdown(f"<h3 style='color: #38bdf8; font-size: 18px;'>📊 Performa Penjualan {'Toko' if (is_admin and selected_admin_target == '-- SEMUA PERSONIL (Toko) --') else target_person_name}</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h3 style='color: #38bdf8; font-size: 18px;'>📊 Navigasi Menu {'Toko' if (is_admin and selected_admin_target == '-- SEMUA PERSONIL (Toko) --') else target_person_name}</h3>", unsafe_allow_html=True)
         
-        # --- KARTU METRIK INTERAKTIF / BISA DIKLIK ---
-        m1, m2 = st.columns(2)
-        with m1:
-            btn_total = st.button(
-                f"TOTAL TERJUAL\n\n{total_qty_personil:,} Pcs\n🎯 {pct_ach_personil:.1f}% Target\n🔍 Klik Detail",
-                key="btn_metric_total"
-            )
+        # --- GRID 4 MENU UTAMA (2x2 BERSAMPINGAN) ---
+        row1_col1, row1_col2 = st.columns(2)
+        with row1_col1:
+            btn_total = st.button("📊 TOTAL TERJUAL\n\n🔍 Klik Detail", key="btn_metric_total")
             if btn_total:
                 st.session_state.current_page = "detail_total"
                 st.rerun()
 
-        with m2:
-            btn_item = st.button(
-                f"ITEM TERBANYAK\n\n{top_item_name}\n📦 {top_item_qty} Pcs ({top_item_pct:.1f}%)\n🔍 Klik Detail",
-                key="btn_metric_item"
-            )
+        with row1_col2:
+            btn_item = st.button("🏆 ITEM TERBANYAK\n\n🔍 Klik Detail", key="btn_metric_item")
             if btn_item:
                 st.session_state.current_page = "detail_item"
                 st.rerun()
 
-        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
-        # --- FORM INPUT LAPORAN (ACCORDION / MENU LIPAT) ---
-        with st.expander(f"📝 Form Input Laporan {'(Mode Admin)' if is_admin else ''}", expanded=False):
-            items_in_period = df_sales_i[(df_sales_i["period_id"] == period_id) & (df_sales_i["item_name"] != "NAMA ITEM")]["item_name"].tolist() if not df_sales_i.empty else []
-            if not items_in_period:
-                items_in_period = df_item[df_item["active"] == True]["item_name"].tolist() if "active" in df_item.columns else df_item["item_name"].tolist()
-            
-            with st.form("form_report_personil", clear_on_submit=True):
-                if is_admin and selected_admin_target == "-- SEMUA PERSONIL (Toko) --":
-                    target_person_name_input = st.selectbox("👤 Inputkan Atas Nama Personil:", df_personil["person_name"].tolist())
-                    p_match2 = df_personil[df_personil["person_name"] == target_person_name_input]
-                    target_person_id_input = str(p_match2.iloc[0]["person_id"]) if not p_match2.empty and "person_id" in p_match2.columns else "PRS001"
-                else:
-                    target_person_name_input = target_person_name
-                    target_person_id_input = target_person_id
+        row2_col1, row2_col2 = st.columns(2)
+        with row2_col1:
+            btn_form = st.button("📝 INPUT LAPORAN\n\n➕ Tambah Data", key="btn_menu_form")
+            if btn_form:
+                st.session_state.current_page = "form_input"
+                st.rerun()
 
-                selected_item_name = st.selectbox("📦 Pilih Item PSM (Promosi Periode Ini)", items_in_period)
-                item_row = df_item[df_item["item_name"] == selected_item_name]
-                item_id = str(item_row.iloc[0]["item_id"]) if not item_row.empty else "ITM0001"
-                
-                c_qty, c_date = st.columns(2)
-                with c_qty:
-                    input_qty = st.number_input("🔢 Qty Terjual (Pcs)", min_value=1, value=1, step=1)
-                with c_date:
-                    input_date = st.date_input("📅 Tanggal Penjualan", value=datetime.now())
-                    
-                input_catatan = st.text_area("💬 Catatan Harian / Kendala Penjualan Personil", placeholder="Contoh: Menawarkan ke 15 konsumen...")
-                submit_report = st.form_submit_button("🚀 SIMPAN LAPORAN PENJUALAN")
-                
-                if submit_report:
-                    new_record_id = f"SP{len(df_sales_p_raw) + 1:05d}"
-                    today_str = str(datetime.now().strftime("%Y-%m-%d"))
-                    payload = {
-                        "record_id": new_record_id,
-                        "period_id": period_id,
-                        "item_id": item_id,
-                        "item_name": selected_item_name,
-                        "person_id": target_person_id_input,
-                        "person_name": target_person_name_input,
-                        "actual_qty": int(input_qty),
-                        "updated_at": today_str,
-                        "tanggal_input": str(input_date),
-                        "catatan": input_catatan
-                    }
-                    try:
-                        res = requests.post(APPS_SCRIPT_URL, json=payload, timeout=8)
-                        if res.status_code == 200:
-                            st.success(f"✅ Laporan {selected_item_name} ({int(input_qty)} Pcs) Tersimpan!")
-                            st.cache_data.clear()
-                            st.rerun()
-                        else:
-                            st.error("⚠️ Respon server gagal.")
-                    except Exception as ex:
-                        st.error(f"❌ Terjadi kesalahan: {ex}")
-
-        # --- RIWAYAT INPUT PENJUALAN (ACCORDION / MENU LIPAT) ---
-        with st.expander("📋 Riwayat Input Penjualan", expanded=False):
-            if not user_sales_period.empty:
-                if is_admin:
-                    st.info("💡 **Kelola Admin**: Klik tombol **Hapus** untuk menghapus record secara permanen.")
-                    for idx, row in user_sales_period.iterrows():
-                        r_id = str(row.get("record_id", "")).strip()
-                        p_name = str(row.get("person_name", "-"))
-                        i_name = str(row.get("item_name", "-"))
-                        qty = int(row.get("actual_qty", 0))
-                        tgl = str(row.get("updated_at", "-"))
-                        
-                        col1, col2 = st.columns([4, 1])
-                        with col1:
-                            st.write(f"🔹 **[{tgl}]** {p_name} - **{i_name}** ({qty} Pcs) - `ID: {r_id}`")
-                        with col2:
-                            if st.button("🗑️ Hapus", key=f"del_{r_id}_{idx}"):
-                                delete_payload = {"action": "delete", "record_id": r_id}
-                                try:
-                                    st.session_state.deleted_records.add(r_id.upper())
-                                    del_res = requests.post(APPS_SCRIPT_URL, json=delete_payload, timeout=8)
-                                    st.success(f"🗑️ Record {r_id} berhasil dihapus permanen!")
-                                    st.cache_data.clear()
-                                    st.rerun()
-                                except Exception as e:
-                                    st.error(f"Gagal menghapus: {e}")
-                        st.divider()
-                else:
-                    disp_cols = [c for c in ["period_id", "item_name", "actual_qty", "updated_at", "catatan"] if c in user_sales_period.columns]
-                    disp_df = user_sales_period[disp_cols].copy()
-                    disp_df.columns = ["Periode", "Nama Item", "Qty (Pcs)", "Tanggal", "Catatan Staf"][:len(disp_cols)]
-                    st.dataframe(disp_df, use_container_width=True, hide_index=True)
-            else:
-                st.info("Belum ada riwayat input penjualan pada periode terpilih.")
+        with row2_col2:
+            btn_riwayat = st.button("📋 RIWAYAT LAPORAN\n\n📜 Liha/Kelola", key="btn_menu_riwayat")
+            if btn_riwayat:
+                st.session_state.current_page = "riwayat"
+                st.rerun()
