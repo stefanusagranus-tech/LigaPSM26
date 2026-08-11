@@ -383,7 +383,7 @@ else:
             <div class='metric-lbl'>Jumlah Input</div>
             <div class='metric-val'>{total_transaksi} <span style='font-size:14px;'>Kali</span></div>
         </div>
-        """, unsafe_allow_html=True)
+        (""", unsafe_allow_html=True)
 
     # --- FORM INPUT PENJUALAN & CATATAN ---
     st.markdown("<h3 style='color: #38bdf8; font-size: 18px; margin-top: 10px;'>📝 Form Laporan & Catatan Sales</h3>", unsafe_allow_html=True)
