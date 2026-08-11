@@ -44,7 +44,33 @@ def sync_store_sales_from_personnel():
         
         # Simpan kembali ke Session State
         st.session_state.sales_item_df = merged
+def load_database():
+    """
+    Fungsi membaca data dari file Excel / Database.
+    Selalu mengembalikan 5 DataFrame (periods_df, items_df, person_df, sales_item_df, sales_person_df).
+    """
+    try:
+        # Jika Anda membaca dari file Excel lokal/online:
+        # excel_file = "database_toko.xlsx"
+        # p_df = pd.read_excel(excel_file, sheet_name="Periods")
+        # i_df = pd.read_excel(excel_file, sheet_name="Items")
+        # pers_df = pd.read_excel(excel_file, sheet_name="Persons")
+        # si_df = pd.read_excel(excel_file, sheet_name="SalesItem")
+        # sp_df = pd.read_excel(excel_file, sheet_name="SalesPerson")
+        
+        # Contoh fallback/default jika menggunakan session state atau data internal:
+        p_df = st.session_state.get("periods_df", pd.DataFrame([{"period_id": "P01", "start_date": "2026-08-01", "end_date": "2026-08-31"}]))
+        i_df = st.session_state.get("items_df", pd.DataFrame())
+        pers_df = st.session_state.get("person_df", pd.DataFrame())
+        si_df = st.session_state.get("sales_item_df", pd.DataFrame())
+        sp_df = st.session_state.get("sales_person_df", pd.DataFrame())
+        
+        return p_df, i_df, pers_df, si_df, sp_df
 
+    except Exception as e:
+        st.warning(f"⚠️ Gagal membaca database: {e}. Menggunakan data standar.")
+        # Kembalikan 5 DataFrame kosong jika error agar baris 194 tidak crash
+        return pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
 
 # Mengambil waktu WIB (Asia/Jakarta) secara presisi
 waktu_wib = datetime.now(ZoneInfo("Asia/Jakarta"))
@@ -191,14 +217,19 @@ st.markdown("""
 
 # Dipanggil HANYA setelah data berhasil di-load
 if "data_loaded" not in st.session_state:
-    p_df, i_df, pers_df, si_df, sp_df = load_database()
+    loaded_data = load_database()
+    
+    # Memastikan hasil return persis 5 elemen
+    if isinstance(loaded_data, tuple) and len(loaded_data) == 5:
+        p_df, i_df, pers_df, si_df, sp_df = loaded_data
+    else:
+        # Fallback jika jumlah return tidak sesuai
+        p_df, i_df, pers_df, si_df, sp_df = pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
+    
     st.session_state.periods_df = p_df
     st.session_state.items_df = i_df
     st.session_state.person_df = pers_df
     st.session_state.sales_item_df = si_df
-    st.session_state.sales_person_df = sp_df
-    st.session_state.data_loaded = True
-
 
 # --- FUNGSI LOAD & SAVE DATABASE EXCEL ---
 def load_database():
