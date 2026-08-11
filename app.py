@@ -57,7 +57,7 @@ EXCEL_FILE = "Database_Penjualan_PSM_Toko_Clean_GoogleSheets.xlsx"
 
 # --- DATABASE PENGGUNA (LOGIN) ---
 USER_DATABASE = {
-    "admin": {"password": "c383kgs", "nama": "Staff Toko"}, 
+    "admin": {"password": "lavitality", "nama": "Staff Toko"}, 
     "23044862": {"password": "c383kgs", "nama": "ARIS APRILIANTO"}, 
     "24091737": {"password": "c383kgs", "nama": "TIKA"}, 
     "24096619": {"password": "c383kgs", "nama": "RIZKI GUNAWAN"}, 
@@ -502,121 +502,156 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# --- TAB 01: OVERVIEW ---
-if selected_tab == "01 · Overview":
+# --- TAB 01: OVERVIEW PENJUALAN (TIME FACTOR & FILTER TANGGAL) ---
+elif selected_tab == "01 · Overview Penjualan":
     st.title("📊 Overview Penjualan Toko")
     
     si_df = st.session_state.sales_item_df.copy()
-    if selected_period_id:
-        si_df = si_df[si_df["period_id"] == selected_period_id]
-        
-    si_df["target_qty"] = pd.to_numeric(si_df["target_qty"], errors="coerce").fillna(0)
-    si_df["actual_qty"] = pd.to_numeric(si_df["actual_qty"], errors="coerce").fillna(0)
+    sp_df = st.session_state.sales_person_df.copy()
+    periods_df = st.session_state.periods_df.copy()
     
-    tot_target = si_df["target_qty"].sum()
-    tot_actual = si_df["actual_qty"].sum()
-    ach = (tot_actual / tot_target * 100) if tot_target > 0 else 0
-    gap = tot_actual - tot_target
-
+    # 1. FILTER PERIODE UTAMA
     if selected_period_id:
-        p_info = st.session_state.periods_df[st.session_state.periods_df["period_id"] == selected_period_id].iloc[0]
-        s_date = pd.to_datetime(p_info["start_date"])
-        e_date = pd.to_datetime(p_info["end_date"])
-        total_days = max((e_date - s_date).days + 1, 1)
-        today_date = pd.to_datetime(now.strftime("%Y-%m-%d"))
-        if today_date < s_date:
-            elapsed_days = 1
-        elif today_date > e_date:
-            elapsed_days = total_days
-        else:
-            elapsed_days = max((today_date - s_date).days + 1, 1)
+        sub_periods = periods_df[periods_df["period_id"] == selected_period_id]
+        sub_si = si_df[si_df["period_id"] == selected_period_id]
+        sub_sp = sp_df[sp_df["period_id"] == selected_period_id]
     else:
-        total_days = 31
-        elapsed_days = max(now.day, 1)
+        sub_periods = periods_df
+        sub_si = si_df
+        sub_sp = sp_df
 
-    daily_pace = tot_actual / elapsed_days
-    best_estimate_sales = int(daily_pace * total_days)
-    est_achievement = (best_estimate_sales / tot_target * 100) if tot_target > 0 else 0
+    # 2. NAVIGASI TANGGAL AWAL & TANGGAL AKHIR
+    if not sub_periods.empty:
+        default_start = pd.to_datetime(sub_periods.iloc[0]["start_date"]).date()
+        default_end = pd.to_datetime(sub_periods.iloc[0]["end_date"]).date()
+    else:
+        default_start = waktu_wib.date().replace(day=1)
+        default_end = waktu_wib.date()
 
-    c1, c2, c3, c4, c5 = st.columns(5)
-    with c1:
-        st.metric("🎯 TARGET TOKO", f"{tot_target:,.0f} Pcs")
-    with c2:
-        st.metric("📦 ACTUAL SALES", f"{tot_actual:,.0f} Pcs")
-    with c3:
-        st.metric("⚡ ACHIEVEMENT", f"{ach:.1f}%")
-    with c4:
-        st.metric("📉 GAP TARGET", f"{gap:,.0f} Pcs")
-    with c5:
-        st.metric("🔮 BEST ESTIMASI", f"{best_estimate_sales:,.0f} Pcs", delta=f"{est_achievement:.1f}% Projected")
+    st.markdown("### 📅 Filter Rentang Tanggal Overview")
+    col_date1, col_date2 = st.columns(2)
+    with col_date1:
+        start_date = st.date_input("Tanggal Awal Overview", value=default_start, key="t1_start_date")
+    with col_date2:
+        end_date = st.date_input("Tanggal Akhir Overview", value=default_end, key="t1_end_date")
+
+    if start_date > end_date:
+        st.error("⚠️ Tanggal Awal tidak boleh melebihi Tanggal Akhir!")
+        st.stop()
+
+    # Filter data penjualan staf sesuai rentang tanggal
+    if "updated_at" in sub_sp.columns and not sub_sp.empty:
+        sub_sp["updated_at_dt"] = pd.to_datetime(sub_sp["updated_at"]).dt.date
+        filtered_sp = sub_sp[(sub_sp["updated_at_dt"] >= start_date) & (sub_sp["updated_at_dt"] <= end_date)].copy()
+    else:
+        filtered_sp = sub_sp.copy()
+
+    # 3. KALKULASI TIME FACTOR & METRIK UTAMA
+    total_days = max((end_date - start_date).days + 1, 1)
+    today_date = waktu_wib.date()
+
+    if today_date < start_date:
+        passed_days = 0
+    elif today_date > end_date:
+        passed_days = total_days
+    else:
+        passed_days = max((today_date - start_date).days + 1, 1)
+
+    # Menghitung Persentase Time Factor
+    time_factor = (passed_days / total_days) * 100 if total_days > 0 else 0
+
+    sub_si["target_qty"] = pd.to_numeric(sub_si["target_qty"], errors="coerce").fillna(0)
+    filtered_sp["actual_qty"] = pd.to_numeric(filtered_sp["actual_qty"], errors="coerce").fillna(0)
+
+    tot_target = sub_si["target_qty"].sum()
+    tot_actual = filtered_sp["actual_qty"].sum()
+    tot_gap = tot_target - tot_actual
+    tot_ach = (tot_actual / tot_target * 100) if tot_target > 0 else 0
+
+    # 4. TAMPILAN KPI CARDS & TIME FACTOR
+    m1, m2, m3, m4, m5 = st.columns(5)
+    with m1:
+        st.metric("🎯 Total Target", f"{tot_target:,.0f} Pcs")
+    with m2:
+        st.metric("📦 Actual Penjualan", f"{tot_actual:,.0f} Pcs")
+    with m3:
+        st.metric("📉 Sisa Gap Target", f"{tot_gap:,.0f} Pcs")
+    with m4:
+        st.metric("⚡ % Achievement", f"{tot_ach:.1f}%")
+    with m5:
+        st.metric("⏳ Time Factor (Waktu)", f"{time_factor:.1f}%", help=f"Hari berjalan: {passed_days}/{total_days} hari")
 
     st.markdown("---")
-    
-    col_chart1, col_chart2 = st.columns([2, 1])
-    
-    with col_chart1:
-        st.subheader("📈 Target vs Actual Sales per Periode Promosi")
-        chart_df = st.session_state.sales_item_df.groupby("period_id")[["target_qty", "actual_qty"]].sum().reset_index()
-        chart_df = pd.merge(chart_df, st.session_state.periods_df[["period_id", "period_name"]], on="period_id", how="left")
-        
-        fig = go.Figure()
-        fig.add_trace(go.Bar(
-            x=chart_df["period_name"], 
-            y=chart_df["target_qty"], 
-            name="Target (Pcs)", 
-            marker_color="#38bdf8"
-        ))
-        fig.add_trace(go.Bar(
-            x=chart_df["period_name"], 
-            y=chart_df["actual_qty"], 
-            name="Actual (Pcs)", 
-            marker_color="#0284c7"
-        ))
-        fig.update_layout(
-            barmode='group',
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color="#ffffff"),
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-            margin=dict(l=20, r=20, t=30, b=20)
-        )
-        st.plotly_chart(fig, use_container_width=True)
 
-    with col_chart2:
-        st.subheader("🍩 Top 5 Kontribusi Produk")
-        if not si_df.empty:
-            top_items = si_df.groupby("item_name")["actual_qty"].sum().reset_index().sort_values(by="actual_qty", ascending=False).head(5)
-            for _, row in top_items.iterrows():
-                pct = (row["actual_qty"] / tot_actual * 100) if tot_actual > 0 else 0
-                st.markdown(f"**{row['item_name']}** — {row['actual_qty']:,.0f} Pcs ({pct:.1f}%)")
-                st.progress(min(int(pct), 100))
-        else:
-            st.info("Belum ada data.")
+    # 5. INDIKATOR STATUS PACE PENJUALAN (TIME FACTOR VS ACHIEVEMENT)
+    pace_gap = tot_ach - time_factor
+    if pace_gap >= 0:
+        status_color = "#00ff9d"
+        status_bg = "rgba(0, 255, 157, 0.1)"
+        status_icon = "🚀"
+        status_title = "PACE PENJUALAN ON TRACK"
+        status_desc = f"Pencapaian penjualan (**{tot_ach:.1f}%**) melampaui laju waktu berjalan (**{time_factor:.1f}%**). Pertahankan performa toko!"
+    else:
+        status_color = "#ff2a6d"
+        status_bg = "rgba(255, 42, 109, 0.1)"
+        status_icon = "⚠️"
+        status_title = "PACE PENJUALAN BEHIND TARGET"
+        status_desc = f"Pencapaian penjualan (**{tot_ach:.1f}%**) masih di bawah laju waktu berjalan (**{time_factor:.1f}%**). Tertinggal sebesar **{abs(pace_gap):.1f}%**."
 
-    st.markdown("---")
-    st.subheader("📅 Ringkasan Performa Seluruh Periode Promosi")
-    summary_data = []
-    for _, p in st.session_state.periods_df.iterrows():
-        p_id = p["period_id"]
-        p_name = p["period_name"]
-        p_target_total = p["target_total"]
+    st.markdown(f"""
+        <div style="background: {status_bg}; border: 1.5px solid {status_color}; border-left: 6px solid {status_color}; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+            <h4 style="color: {status_color}; margin: 0 0 6px 0;">{status_icon} {status_title}</h4>
+            <p style="color: #f1f5f9; margin: 0; font-size: 14px;">{status_desc}</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # 6. RINGKASAN PENJUALAN PER PRODUK
+    st.subheader("📋 Ringkasan Penjualan Per Item Produk")
+    
+    item_sp = filtered_sp.groupby(["item_id", "item_name"])["actual_qty"].sum().reset_index() if not filtered_sp.empty else pd.DataFrame(columns=["item_id", "item_name", "actual_qty"])
+    overview_table = pd.merge(sub_si[["item_id", "item_name", "target_qty"]], item_sp[["item_id", "actual_qty"]], on="item_id", how="left")
+    overview_table["actual_qty"] = overview_table["actual_qty"].fillna(0)
+    overview_table["gap"] = overview_table["target_qty"] - overview_table["actual_qty"]
+    overview_table["ach"] = overview_table.apply(
+        lambda r: (r["actual_qty"] / r["target_qty"] * 100) if r["target_qty"] > 0 else 0, axis=1
+    )
+
+    # Visualisai Ringkasan Tabel Neon
+    table_rows_html = ""
+    for _, row in overview_table.iterrows():
+        gap_color = "#00ff88" if row['gap'] <= 0 else "#ef4444"
+        ach_color = "#00ff88" if row['ach'] >= time_factor else "#ffb703"
         
-        sub_si = st.session_state.sales_item_df[st.session_state.sales_item_df["period_id"] == p_id]
-        p_actual = pd.to_numeric(sub_si["actual_qty"], errors="coerce").fillna(0).sum()
-        p_target = pd.to_numeric(sub_si["target_qty"], errors="coerce").fillna(0).sum()
-        if pd.isna(p_target_total) or p_target_total == 0:
-            p_target_total = p_target
-            
-        p_ach = (p_actual / p_target_total * 100) if p_target_total > 0 else 0
-        summary_data.append({
-            "Nama Periode Promosi": p_name,
-            "Rentang Tanggal": f"{str(p['start_date'])[:10]} s/d {str(p['end_date'])[:10]}",
-            "Target (Pcs)": f"{p_target_total:,.0f}",
-            "Actual (Pcs)": f"{p_actual:,.0f}",
-            "% Achievement": f"{p_ach:.1f}%",
-            "Status Periode": p["status"]
-        })
-    st.dataframe(pd.DataFrame(summary_data), use_container_width=True, hide_index=True)
+        table_rows_html += f"""
+        <tr style="border-bottom: 1px solid #1e293b;">
+            <td style="padding: 10px; color: #ffffff; font-weight: bold; font-size: 13px;">{row['item_name']}</td>
+            <td style="padding: 10px; color: #94a3b8; font-size: 13px;">{row['target_qty']:,.0f} Pcs</td>
+            <td style="padding: 10px; color: #00ff88; font-weight: bold; font-size: 13px;">{row['actual_qty']:,.0f} Pcs</td>
+            <td style="padding: 10px; color: {gap_color}; font-size: 13px;">{row['gap']:,.0f} Pcs</td>
+            <td style="padding: 10px; color: {ach_color}; font-weight: bold; font-size: 13px;">{row['ach']:.1f}%</td>
+        </tr>
+        """
+        
+    st.markdown(f"""
+        <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; max-height: 400px; overflow-y: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #334155;">
+                        <th style="padding: 8px 10px; color: #38bdf8; font-size: 11px;">NAMA PRODUK</th>
+                        <th style="padding: 8px 10px; color: #38bdf8; font-size: 11px;">TARGET TOKO</th>
+                        <th style="padding: 8px 10px; color: #38bdf8; font-size: 11px;">ACTUAL PENJUALAN</th>
+                        <th style="padding: 8px 10px; color: #38bdf8; font-size: 11px;">SISA GAP</th>
+                        <th style="padding: 8px 10px; color: #38bdf8; font-size: 11px;">% ACHIEVEMENT</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {table_rows_html}
+                </tbody>
+            </table>
+        </div>
+    """, unsafe_allow_html=True)
+
+
 
 # --- TAB 02: DETAIL ITEM ---
 elif selected_tab == "02 · Detail Item":
