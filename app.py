@@ -9,8 +9,8 @@ from zoneinfo import ZoneInfo
 
 
 def sync_store_sales_from_personnel():
-    Fungsi aman untuk merekap total penjualan dari seluruh personil toko 
-    dan secara otomatis memperbarui nilai actual_qty pada Penjualan Toko (sales_item_df).
+    "Fungsi aman untuk merekap total penjualan dari seluruh personil toko 
+    dan secara otomatis memperbarui nilai actual_qty pada Penjualan Toko (sales_item_df)".
     # Pastikan data sudah terinisialisasi di session state
     if "sales_person_df" in st.session_state and "sales_item_df" in st.session_state:
         sp_df = st.session_state.sales_person_df.copy()
