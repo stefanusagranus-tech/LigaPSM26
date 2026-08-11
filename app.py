@@ -152,7 +152,9 @@ USER_DATABASE = {
     "26065884": {"password": "c383kgs", "nama": "ILHAM PRIANDIKA"},
     "13127006": {"password": "c383kgs", "nama": "REZA PURNAMA AGUSTIN"},
     "16016359": {"password": "c383kgs", "nama": "SUBEKTI PANDU YULIANTO"},
-    "19061965": {"password": "c383kgs", "nama": "KUSDEWI TIA NINGRUM"}
+    "19061965": {"password": "c383kgs", "nama": "KUSDEWI TIA NINGRUM"},
+    "21046101": {"password": "c383kgs", "nama": "AHMAD ZAKI SYABANI ZEN"},
+    "visitor": {"password": "visitor", "nama": "Pengunjung"}
 
 }
 
