@@ -475,7 +475,7 @@ menu_options = [
     "03 · Penjualan Personil", 
     "04 · Pencapaian Pernik", 
     "05 · Analisis Tren",
-    "06 · Input & Reset Data"
+    "06 · Input & Reset Data",
     "⚙️ Master Data & Pengaturan"
 ]
 
