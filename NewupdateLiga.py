@@ -981,6 +981,7 @@ elif selected_tab == "05 · Analisis Tren":
         for _, r in top_disgrowth.iterrows():
             st.error(f"**{r['item_name']}** — Sisa Gap: **{max(0, r['gap']):,.0f} Pcs** (Ach: **{r['ach']:.1f}%**)")
 
+
 # --- TAB 06: INPUT & RESET DATA ---
 elif selected_tab == "06 · Input & Reset Data":
     st.title("✏️ Kelola & Input Data Penjualan")
@@ -994,90 +995,6 @@ elif selected_tab == "06 · Input & Reset Data":
     person_df = st.session_state.person_df.copy()
 
     # ---------------------------------------------------------
-    # PEMBAGIAN 4 SUB MENU BARU
-    # ---------------------------------------------------------
-    tab_in1, tab_in2, tab_in3, tab_in4 = st.tabs([
-        "➕ Input Sales Personil",
-        "✏️ Edit Sales Personil",
-        "🗑️ Hapus & Reset Sales",
-        "⚡ Multi Input Sales"
-    ])
-
-    # Helper function untuk mendapatkan batasan tanggal periode
-    def get_period_date_bounds(p_id):
-        p_match = periods_df[periods_df["period_id"] == p_id]
-        if not p_match.empty and "start_date" in p_match.columns and "end_date" in p_match.columns:
-            try:
-                p_start = pd.to_datetime(p_match.iloc[0]["start_date"]).date()
-                p_end = pd.to_datetime(p_match.iloc[0]["end_date"]).date()
-                return p_start, p_end
-            except:
-                pass
-        return waktu_wib.date().replace(day=1), waktu_wib.date()
-
-    # =========================================================
-    # SUB MENU 1: INPUT SALES PERSONIL (SINGLE ITEM)
-    # =========================================================
-    with tab_in1:
-        st.subheader("➕ Input Penjualan Personil (Satuan)")
-        
-        f_period_name = st.selectbox("Pilih Periode Transaksi", list(periods_dict.keys()), key="in1_period")
-        p_id_val = periods_dict[f_period_name]
-        
-        # Req 1: Tanggal terkunci sesuai rentang periode
-        p_start, p_end = get_period_date_bounds(p_id_val)
-        default_val = min(max(waktu_wib.date(), p_start), p_end)
-        
-        f_date = st.date_input(
-            f"Tanggal Transaksi (Batas Periode: {p_start.strftime('%d/%m/%Y')} s/d {p_end.strftime('%d/%m/%Y')})",
-            value=default_val,
-            min_value=p_start,
-            max_value=p_end,
-            key="in1_date"
-        )
-
-        # Req 8: Admin bebas pilih staf, user toko terkunci ke username-nya
-        all_personnel = person_df["person_name"].dropna().unique().tolist() if not person_df.empty else []
-        if is_admin:
-            f_person = st.selectbox("Nama Staf / Personil", all_personnel, key="in1_person")
-        else:
-            f_person = current_user
-            st.info(f"👤 Penginputan dikunci untuk akun: **{current_user}**")
-
-        filtered_si = si_df[si_df["period_id"] == p_id_val]
-        item_dict = {row["item_name"]: row["item_id"] for _, row in filtered_si.iterrows()} if not filtered_si.empty else {}
-
-        if item_dict:
-            f_item_name = st.selectbox("Pilih Produk", list(item_dict.keys()), key="in1_item")
-            f_qty = st.number_input("Jumlah Penjualan Qty (Pcs)", min_value=0, step=1, value=0, key="in1_qty")
-
-            if st.button("💾 Simpan Data Personil", use_container_width=True, key="btn_save_in1"):
-                if f_qty <= 0:
-                    st.warning("⚠️ Qty penjualan harus lebih dari 0!")
-                else:
-                    new_id = f"SP{len(st.session_state.sales_person_df) + 1:05d}"
-                    p_match = person_df[person_df["person_name"] == f_person]
-                    person_id_val = p_match.iloc[0]["person_id"] if not p_match.empty and "person_id" in p_match.columns else "P999"
-
-                    new_row = {
-                        "record_id": new_id,
-                        "period_id": p_id_val,
-                        "item_id": item_dict[f_item_name],
-                        "item_name": f_item_name,
-                        "person_id": person_id_val,
-                        "person_name": f_person,
-                        "actual_qty": f_qty,
-                        "updated_at": str(f_date)
-                    }
-
-                    # Req 5: Langsung tambahkan, sinkronkan ke total toko, dan simpan permanen ke Google Sheets
-                    st.session_state.sales_person_df = pd.concat([st.session_state.sales_person_df, pd.DataFrame([new_row])], ignore_index=True)
-                    sync_store_sales_from_personnel()
-                    save_database(st.session_state.sales_item_df, st.session_state.sales_person_df)
-                    st.success(f"✅ Penjualan {f_item_name} ({f_qty} Pcs) tersimpan & tersinkron permanen!")
-                    st.rerun()
-        else:
-            st.warning("Tidak ada item produk tersedia di periode ini.")
 
  --- TAB 06: INPUT & RESET DATA ---
 elif selected_tab == "06 · Input & Reset Data":
