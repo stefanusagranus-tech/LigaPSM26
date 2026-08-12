@@ -737,8 +737,8 @@ elif selected_tab == "03 · Penjualan Personil":
                             {table_rows_html}
                 </div>
             """, unsafe_allow_html=True)
-            
-         with col_chart:
+
+        with col_chart:
             st.markdown("<p style='color:#ffffff; font-size:15px; font-weight:bold;'>📊 Grafik Perbandingan Personil</p>", unsafe_allow_html=True)
             fig_person = go.Figure()
             fig_person.add_trace(go.Bar(
