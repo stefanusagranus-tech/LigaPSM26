@@ -256,7 +256,7 @@ if "username" not in st.session_state:
 # 6. HALAMAN LOGIN
 # ==========================================
 def show_login_page():
-    LOGO_URL = "https://github.com/stefanusagranus-tech/LigaPSM26/blob/main/kgs_group_belgium_logo.jpg?raw=true"
+    LOGO_URL = "https://raw.githubusercontent.com/stefanusagranus-tech/LigaPSM26/main/kgs_group_belgium_logo.jpg"
     
     st.markdown("""
         <style>
