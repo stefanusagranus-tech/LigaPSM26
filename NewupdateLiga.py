@@ -1436,8 +1436,9 @@ elif selected_tab == "06 · Input & Reset Data":
             p_start, p_end = get_period_date_bounds(m_p_id)
             default_val_m = min(max(waktu_wib.date(), p_start), p_end)
             
+            date_label = f"Tanggal Transaksi (Batas Periode: {p_start.strftime('%d/%m/%Y')} s/d {p_end.strftime('%d/%m/%Y')})"
             m_date = st.date_input(
-                f"Tanggal Transaksi (Batas Periode: {p_start.strftime('%d/%m/%Y')} s/d {p_end.strftime('%d/%m/%Y')})",
+                date_label,
                 value=default_val_m,
                 min_value=p_start,
                 max_value=p_end,
@@ -1462,16 +1463,19 @@ elif selected_tab == "06 · Input & Reset Data":
                 
                 for idx, item in enumerate(items_list):
                     target_col = col_m1 if idx % 2 == 0 else col_m2
+                    item_id_str = str(item['item_id'])
+                    item_name_str = str(item['item_name'])
+                    
                     with target_col:
                         qty_val = st.number_input(
-                            f"📌 {item['item_name']}",
+                            f"📌 {item_name_str}",
                             min_value=0,
                             step=1,
                             value=0,
-                            key=f"multi_qty_{item['item_id']}"
+                            key=f"multi_qty_{item_id_str}"
                         )
-                        multi_input_values[item['item_id']] = {
-                            "item_name": item['item_name'],
+                        multi_input_values[item_id_str] = {
+                            "item_name": item_name_str,
                             "qty": qty_val
                         }
 
@@ -1506,7 +1510,7 @@ elif selected_tab == "06 · Input & Reset Data":
                         st.rerun()
                     else:
                         st.warning("⚠️ Tidak ada Qty produk yang diisi (semua bernilai 0).")
-
+                        
 
 # --- TAB 07: MASTER DATA & PENGATURAN ---
 elif selected_tab == "⚙️ Master Data & Pengaturan":
