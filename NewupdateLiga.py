@@ -981,22 +981,7 @@ elif selected_tab == "05 · Analisis Tren":
         for _, r in top_disgrowth.iterrows():
             st.error(f"**{r['item_name']}** — Sisa Gap: **{max(0, r['gap']):,.0f} Pcs** (Ach: **{r['ach']:.1f}%**)")
 
-
-# --- TAB 06: INPUT & RESET DATA ---
-elif selected_tab == "06 · Input & Reset Data":
-    st.title("✏️ Kelola & Input Data Penjualan")
-    
-    current_user = st.session_state.get("username", "")
-    is_admin = (str(current_user).lower() == "admin")
-    
-    periods_df = st.session_state.periods_df.copy()
-    si_df = st.session_state.sales_item_df.copy()
-    sp_df = st.session_state.sales_person_df.copy()
-    person_df = st.session_state.person_df.copy()
-
-    # ---------------------------------------------------------
-
- --- TAB 06: INPUT & RESET DATA ---
+#--- TAB 06: INPUT & RESET DATA ---
 elif selected_tab == "06 · Input & Reset Data":
     st.title("✏️ Kelola & Input Data Penjualan")
     
