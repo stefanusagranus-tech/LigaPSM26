@@ -17,31 +17,35 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. KONFIGURASI GOOGLE SHEETS LIVE
+# ID SPREADSHEET GOOGLE SHEETS ANDA
 # ==========================================
-SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1kJ-OsjLEsFuNyyBg2TwxlWz8Ape4lwF9h0t66q3ldQk/edit"
-
-conn = st.connection("gsheets", type=GSheetsConnection)
+SPREADSHEET_ID = "1kJ-OsjLEsFuNyyBg2TwxlWz8Ape4lwF9h0t66q3ldQk"
 
 def load_database():
-    """Membaca data realtime dari Google Sheets Cloud dan merapikan nama kolom secara otomatis."""
+    """
+    Membaca data realtime secara langsung dari Google Sheets via GViz CSV Endpoint.
+    Bebas error 400 Bad Request & tidak membutuhkan Service Account untuk membaca data.
+    """
     try:
-        periods_df = conn.read(spreadsheet=SPREADSHEET_URL, worksheet="PERIODE", ttl=0)
-        items_df = conn.read(spreadsheet=SPREADSHEET_URL, worksheet="MASTER_ITEM", ttl=0)
-        person_df = conn.read(spreadsheet=SPREADSHEET_URL, worksheet="MASTER_PERSONIL", ttl=0)
-        sales_item_df = conn.read(spreadsheet=SPREADSHEET_URL, worksheet="SALES_ITEM", ttl=0)
-        sales_person_df = conn.read(spreadsheet=SPREADSHEET_URL, worksheet="SALES_PERSONIL", ttl=0)
-        
-        # 🛠️ Otomatis merapikan nama kolom (hapus spasi & ubah ke huruf kecil)
-        for df in [periods_df, items_df, person_df, sales_item_df, sales_person_df]:
+        def read_sheet(sheet_name):
+            # Endpoint publik CSV resmi dari Google
+            url = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet={sheet_name}"
+            df = pd.read_csv(url)
             if not df.empty:
+                # Otomatis rapikan nama kolom (huruf kecil & hapus spasi)
                 df.columns = df.columns.astype(str).str.strip().str.lower()
-        
+            return df
+
+        periods_df = read_sheet("PERIODE")
+        items_df = read_sheet("MASTER_ITEM")
+        person_df = read_sheet("MASTER_PERSONIL")
+        sales_item_df = read_sheet("SALES_ITEM")
+        sales_person_df = read_sheet("SALES_PERSONIL")
+
         return periods_df, items_df, person_df, sales_item_df, sales_person_df
     except Exception as e:
         st.error(f"⚠️ Gagal membaca Google Sheets: {e}")
         return pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
-
 
 def save_database(sales_item_df, sales_person_df):
     """Menyimpan data transaksi harian ke Google Sheets secara permanen."""
