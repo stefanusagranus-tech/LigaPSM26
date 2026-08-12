@@ -738,7 +738,7 @@ elif selected_tab == "03 · Penjualan Personil":
                 </div>
             """, unsafe_allow_html=True)
             
-            with col_chart:
+     with col_chart:
             st.markdown("<p style='color:#ffffff; font-size:15px; font-weight:bold;'>📊 Grafik Perbandingan Personil</p>", unsafe_allow_html=True)
             fig_person = go.Figure()
             fig_person.add_trace(go.Bar(
@@ -753,6 +753,7 @@ elif selected_tab == "03 · Penjualan Personil":
                 font=dict(color="#ffffff"), margin=dict(l=10, r=10, t=10, b=10)
             )
             st.plotly_chart(fig_person, use_container_width=True)
+
 
 # --- TAB 04: PENCAPAIAN PERNIK PER PERSONIL ---
 elif selected_tab == "04 · Pencapaian Pernik":
