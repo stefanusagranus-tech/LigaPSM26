@@ -1034,7 +1034,7 @@ elif selected_tab == "06 · Input & Reset Data":
     ])
 
     # Helper function aman untuk mengambil rentang tanggal periode
-    def get_period_date_bounds(p_id):
+        def get_period_date_bounds(p_id):
         p_match = periods_df[periods_df["period_id"] == p_id] if not periods_df.empty and "period_id" in periods_df.columns else pd.DataFrame()
         if not p_match.empty and "start_date" in p_match.columns and "end_date" in p_match.columns:
             try:
@@ -1047,6 +1047,7 @@ elif selected_tab == "06 · Input & Reset Data":
                 pass
         today = waktu_wib.date()
         return today.replace(day=1), today
+            
 
     # =========================================================
     # SUB MENU 1: INPUT SALES PERSONIL (SINGLE ITEM)
@@ -1237,26 +1238,22 @@ elif selected_tab == "06 · Input & Reset Data":
                         st.warning(f"⚠️ Seluruh transaksi {d_person} pada periode ini berhasil di-reset!")
                         st.rerun()
 
-        # =========================================================
+    # =========================================================
     # SUB MENU 4: MULTI INPUT SALES PERSONIL (KHUSUS ADMIN)
     # =========================================================
     with tab_in4:
-        st.markdown("<h4 style='color: #00ff88; text-shadow: 0 0 8px rgba(0,255,136,0.4);'>⚡ Multi Input Sales Personil (Penginputan Cepat)</h4>", unsafe_allow_html=True)
+        st.markdown("<h4 style='color: #00ff88;'>⚡ Multi Input Sales Personil (Penginputan Cepat)</h4>", unsafe_allow_html=True)
         
         if not is_admin:
-            st.markdown("""
-                <div style="background: rgba(239, 68, 68, 0.15); border: 1.5px solid #ef4444; border-radius: 10px; padding: 16px; margin: 10px 0;">
-                    <h4 style="color: #ef4444; margin: 0;">🔒 Akses Ditolak</h4>
-                    <p style="color: #ffffff; margin: 5px 0 0 0;">Fitur Multi Input Penginputan Cepat hanya dapat diakses oleh akun Admin / COS.</p>
-                </div>
-            """, unsafe_allow_html=True)
+            st.error("🔒 Akses Ditolak! Fitur Multi Input Penginputan Cepat hanya dapat diakses oleh Admin.")
         else:
-            m_period_name = st.selectbox("Pilih Periode Transaksi Multi Input", list(periods_dict.keys()), key="multi_period")
+            period_keys = list(periods_dict.keys())
+            m_period_name = st.selectbox("Pilih Periode Transaksi Multi Input", period_keys, key="multi_period")
             m_p_id = periods_dict[m_period_name]
             
             p_start, p_end = get_period_date_bounds(m_p_id)
             
-            # Hitung tanggal default secara aman
+            # Hitung tanggal default secara bertahap
             today_val = waktu_wib.date()
             if today_val < p_start:
                 default_val_m = p_start
@@ -1265,7 +1262,6 @@ elif selected_tab == "06 · Input & Reset Data":
             else:
                 default_val_m = today_val
 
-            # Format teks label dipisah agar tidak memicu SyntaxError
             str_start = p_start.strftime("%d/%m/%Y")
             str_end = p_end.strftime("%d/%m/%Y")
             label_tgl = f"Tanggal Transaksi (Batas Periode: {str_start} s/d {str_end})"
@@ -1278,12 +1274,19 @@ elif selected_tab == "06 · Input & Reset Data":
                 key="multi_date"
             )
 
-            all_personnel = person_df["person_name"].dropna().unique().tolist() if not person_df.empty and "person_name" in person_df.columns else [current_user]
+            if not person_df.empty and "person_name" in person_df.columns:
+                all_personnel = person_df["person_name"].dropna().unique().tolist()
+            else:
+                all_personnel = [current_user]
+
             m_person = st.selectbox("Pilih Nama Personil Staf Multi Input", all_personnel, key="multi_person")
 
-            filtered_si_m = si_df[si_df["period_id"] == m_p_id] if not si_df.empty and "period_id" in si_df.columns else pd.DataFrame()
+            if not si_df.empty and "period_id" in si_df.columns:
+                filtered_si_m = si_df[si_df["period_id"] == m_p_id]
+            else:
+                filtered_si_m = pd.DataFrame()
             
-            if filtered_si_m.empty and not st.session_state.items_df.empty:
+            if filtered_si_m.empty and ("items_df" in st.session_state) and (not st.session_state.items_df.empty):
                 items_list = st.session_state.items_df[["item_id", "item_name"]].drop_duplicates().to_dict('records')
             elif not filtered_si_m.empty:
                 items_list = filtered_si_m[["item_id", "item_name"]].drop_duplicates().to_dict('records')
@@ -1294,23 +1297,25 @@ elif selected_tab == "06 · Input & Reset Data":
                 st.warning("⚠️ Tidak ada daftar item produk ditemukan di database. Silakan isi Master Item terlebih dahulu.")
             else:
                 st.markdown("---")
-                st.markdown("<p style='color: #38bdf8; font-weight: bold;'>📦 Masukkan Jumlah Qty Penjualan Masing-Masing Produk:</p>", unsafe_allow_html=True)
+                st.markdown("##### 📦 Masukkan Jumlah Qty Penjualan Masing-Masing Produk:")
                 
                 multi_input_values = {}
                 col_m1, col_m2 = st.columns(2)
                 
                 for idx, item in enumerate(items_list):
-                    target_col = col_m1 if idx % 2 == 0 else col_m2
+                    target_col = col_m1 if (idx % 2 == 0) else col_m2
                     item_id_str = str(item['item_id'])
                     item_name_str = str(item['item_name'])
                     
                     with target_col:
+                        label_item = f"📌 {item_name_str}"
+                        key_item = f"multi_qty_{item_id_str}"
                         qty_val = st.number_input(
-                            f"📌 {item_name_str}",
+                            label_item,
                             min_value=0,
                             step=1,
                             value=0,
-                            key=f"multi_qty_{item_id_str}"
+                            key=key_item
                         )
                         multi_input_values[item_id_str] = {
                             "item_name": item_name_str,
@@ -1319,8 +1324,15 @@ elif selected_tab == "06 · Input & Reset Data":
 
                 st.markdown("---")
                 if st.button("💾 Simpan Semua Data Penjualan Multi-Input", use_container_width=True, key="btn_save_multi"):
-                    p_match = person_df[person_df["person_name"] == m_person] if not person_df.empty and "person_name" in person_df.columns else pd.DataFrame()
-                    person_id_val = p_match.iloc[0]["person_id"] if not p_match.empty and "person_id" in p_match.columns else "P999"
+                    if not person_df.empty and "person_name" in person_df.columns:
+                        p_match = person_df[person_df["person_name"] == m_person]
+                    else:
+                        p_match = pd.DataFrame()
+
+                    if not p_match.empty and "person_id" in p_match.columns:
+                        person_id_val = p_match.iloc[0]["person_id"]
+                    else:
+                        person_id_val = "P999"
 
                     new_rows = []
                     inserted_count = 0
@@ -1349,6 +1361,7 @@ elif selected_tab == "06 · Input & Reset Data":
                     else:
                         st.warning("⚠️ Tidak ada Qty produk yang diisi (semua bernilai 0).")
                         
+
 
 # --- TAB 07: MASTER DATA & PENGATURAN ---
 elif selected_tab == "⚙️ Master Data & Pengaturan":
