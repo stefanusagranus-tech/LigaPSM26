@@ -1079,123 +1079,7 @@ elif selected_tab == "06 · Input & Reset Data":
         else:
             st.warning("Tidak ada item produk tersedia di periode ini.")
 
-    # =========================================================
-    # SUB MENU 2: EDIT SALES PERSONIL (KHUSUS ADMIN)
-    # =========================================================
-    with tab_in2:
-        st.subheader("✏️ Edit Transaksi Sales (Koreksi Input)")
-        
-        # Req 4 & 8: Khusus Admin
-        if not is_admin:
-            st.error("🔒 **Akses Ditolak!** Fitur edit transaksi ini hanya dapat diakses oleh Admin.")
-        else:
-            e_period_name = st.selectbox("Pilih Periode", list(periods_dict.keys()), key="edit_period")
-            e_p_id = periods_dict[e_period_name]
-            p_start, p_end = get_period_date_bounds(e_p_id)
-
-            # Filter data transaksi yang ada
-            sp_sub = sp_df[sp_df["period_id"] == e_p_id].copy()
-            
-            if sp_sub.empty:
-                st.info("Belum ada data transaksi di periode ini untuk diedit.")
-            else:
-                e_person = st.selectbox("Pilih Personil", sp_sub["person_name"].unique(), key="edit_person")
-                sp_person_sub = sp_sub[sp_sub["person_name"] == e_person]
-
-                if sp_person_sub.empty:
-                    st.info("Tidak ada transaksi untuk personil ini.")
-                else:
-                    # Pilih baris transaksi yang ingin diedit
-                    sp_person_sub["label_trx"] = sp_person_sub.apply(
-                        lambda r: f"[{r.get('updated_at', '-')}] {r['item_name']} - {r['actual_qty']} Pcs", axis=1
-                    )
-                    selected_label = st.selectbox("Pilih Transaksi yang Akan Diedit", sp_person_sub["label_trx"].tolist(), key="edit_trx_select")
-                    
-                    selected_row = sp_person_sub[sp_person_sub["label_trx"] == selected_label].iloc[0]
-                    
-                    st.markdown("---")
-                    st.markdown("##### Form Perubahan Data")
-                    col_e1, col_e2 = st.columns(2)
-                    with col_e1:
-                        new_e_date = st.date_input(
-                            "Ubah Tanggal Transaksi",
-                            value=pd.to_datetime(selected_row.get("updated_at", p_start)).date(),
-                            min_value=p_start,
-                            max_value=p_end,
-                            key="edit_date_val"
-                        )
-                    with col_e2:
-                        new_e_qty = st.number_input(
-                            "Ubah Jumlah Qty (Pcs)",
-                            min_value=0,
-                            step=1,
-                            value=int(selected_row["actual_qty"]),
-                            key="edit_qty_val"
-                        )
-
-                    if st.button("💾 Simpan Perubahan Edit", use_container_width=True, key="btn_save_edit"):
-                        idx = selected_row.name
-                        st.session_state.sales_person_df.loc[idx, "actual_qty"] = new_e_qty
-                        st.session_state.sales_person_df.loc[idx, "updated_at"] = str(new_e_date)
-                        
-                        # Sync total & simpan ke GS
-                        sync_store_sales_from_personnel()
-                        save_database(st.session_state.sales_item_df, st.session_state.sales_person_df)
-                        st.success("✅ Perubahan transaksi berhasil disimpan permanen!")
-                        st.rerun()
-
-    # =========================================================
-    # SUB MENU 3: HAPUS & RESET SALES PERSONIL (KHUSUS ADMIN)
-    # =========================================================
-    with tab_in3:
-        st.subheader("🗑️ Hapus Transaksi / Reset Sales Personil")
-        
-        # Req 2 & 8: Khusus Admin
-        if not is_admin:
-            st.error("🔒 **Akses Ditolak!** Fitur hapus/reset transaksi hanya dapat dilakukan oleh Admin.")
-        else:
-            d_period_name = st.selectbox("Pilih Periode", list(periods_dict.keys()), key="del_period")
-            d_p_id = periods_dict[d_period_name]
-            
-            sp_del_sub = sp_df[sp_df["period_id"] == d_p_id].copy()
-
-            if sp_del_sub.empty:
-                st.info("Tidak ada transaksi untuk dihapus pada periode ini.")
-            else:
-                d_person = st.selectbox("Pilih Personil", sp_del_sub["person_name"].unique(), key="del_person")
-                sp_del_person = sp_del_sub[sp_del_sub["person_name"] == d_person]
-
-                # Req 2: Pilih Hapus Item Tertentu ATAU Reset Seluruh Transaksi Staf
-                mode_hapus = st.radio("Pilih Opsi Penghapusan:", ["Hapus Item Tertentu Saja", "Reset Seluruh Penjualan Personil Ini"], key="del_mode")
-
-                if mode_hapus == "Hapus Item Tertentu Saja":
-                    d_item_name = st.selectbox("Pilih Produk yang Ingin Dihapus", sp_del_person["item_name"].unique(), key="del_item_select")
-                    
-                    if st.button(f"🗑️ Hapus Transaksi Produk '{d_item_name}'", use_container_width=True, key="btn_del_single"):
-                        # Req 2 & 3: Hanya hapus item spesifik pada personil & periode tersebut
-                        st.session_state.sales_person_df = st.session_state.sales_person_df[
-                            ~((st.session_state.sales_person_df["period_id"] == d_p_id) & 
-                              (st.session_state.sales_person_df["person_name"] == d_person) & 
-                              (st.session_state.sales_person_df["item_name"] == d_item_name))
-                        ]
-                        
-                        # Req 3: Langsung sinkron ke Google Sheets agar permanen
-                        sync_store_sales_from_personnel()
-                        save_database(st.session_state.sales_item_df, st.session_state.sales_person_df)
-                        st.warning(f"⚠️ Transaksi '{d_item_name}' untuk {d_person} berhasil dihapus permanen!")
-                        st.rerun()
-
-                else:
-                    st.error(f"⚠️ Perhatian: Aksi ini akan menghapus SELURUH catatan penjualan {d_person} pada periode ini.")
-                    if st.button(f"🚨 Reset Total Sales {d_person} di Periode Ini", use_container_width=True, key="btn_reset_all"):
-                        st.session_state.sales_person_df = st.session_state.sales_person_df[
-                            ~((st.session_state.sales_person_df["period_id"] == d_p_id) & 
-                              (st.session_state.sales_person_df["person_name"] == d_person))
-                        ]
-                        
-                        sync_store_sales_from_personnel()
-                        save_database(st.session_state.sales_item_df, st.session_state.sales_person_df)
-# --- TAB 06: INPUT & RESET DATA ---
+ --- TAB 06: INPUT & RESET DATA ---
 elif selected_tab == "06 · Input & Reset Data":
     st.title("✏️ Kelola & Input Data Penjualan")
     
@@ -1415,51 +1299,6 @@ elif selected_tab == "06 · Input & Reset Data":
                         st.warning(f"⚠️ Seluruh transaksi {d_person} pada periode ini berhasil di-reset!")
                         st.rerun()
 
-    # =========================================================
-    # SUB MENU 4: MULTI INPUT SALES PERSONIL (KHUSUS ADMIN)
-    # =========================================================
-    with tab_in4:
-        st.subheader("⚡ Multi Input Sales Personil (Penginputan Cepat)")
-        
-        if not is_admin:
-            st.error("🔒 **Akses Ditolak!** Fitur Multi Input Penginputan Cepat hanya dapat diakses oleh Admin.")
-        else:
-            m_period_name = st.selectbox("Pilih Periode", list(periods_dict.keys()), key="multi_period")
-            m_p_id = periods_dict[m_period_name]
-            
-            p_start, p_end = get_period_date_bounds(m_p_id)
-            default_val_m = min(max(waktu_wib.date(), p_start), p_end)
-            
-            m_date = st.date_input(
-                f"Tanggal Transaksi (Batas Periode: {p_start.strftime('%d/%m/%Y')} s/d {p_end.strftime('%d/%m/%Y')})",
-                value=default_val_m,
-                min_value=p_start,
-                max_value=p_end,
-                key="multi_date"
-            )
-
-            all_personnel = person_df["person_name"].dropna().unique().tolist() if not person_df.empty else []
-            m_person = st.selectbox("Pilih Nama Personil Staf", all_personnel, key="multi_person")
-
-            filtered_si_m = si_df[si_df["period_id"] == m_p_id]
-            
-            if filtered_si_m.empty:
-                st.warning("Tidak ada item produk tersedia di periode ini.")
-            else:
-                st.markdown("---")
-                st.markdown("##### 📦 Masukkan Jumlah Qty Penjualan Masing-Masing Produk:")
-                
-                multi_input_values = {}
-                col_m1, col_m2 = st.columns(2)
-                
-                items_list = filtered_si_m[["item_id", "item_name"]].drop_duplicates().to_dict('records')
-                
-                for idx, item in enumerate(items_list):
-                    target_col = col_m1 if idx % 2 == 0 else col_m2
-                    with target_col:
-                        qty_val = st.number_input(
-                            f"📌 {item['item_name']}",
-                            min_value=0,
 # --- TAB 06: INPUT & RESET DATA ---
 elif selected_tab == "06 · Input & Reset Data":
     st.title("✏️ Kelola & Input Data Penjualan")
@@ -1765,6 +1604,7 @@ elif selected_tab == "06 · Input & Reset Data":
                         st.rerun()
                     else:
                         st.warning("⚠️ Tidak ada Qty produk yang diisi (semua bernilai 0).")
+
 
 # --- TAB 07: MASTER DATA & PENGATURAN ---
 elif selected_tab == "⚙️ Master Data & Pengaturan":
