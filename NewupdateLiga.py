@@ -1237,7 +1237,7 @@ elif selected_tab == "06 · Input & Reset Data":
                         st.warning(f"⚠️ Seluruh transaksi {d_person} pada periode ini berhasil di-reset!")
                         st.rerun()
 
-    # =========================================================
+        # =========================================================
     # SUB MENU 4: MULTI INPUT SALES PERSONIL (KHUSUS ADMIN)
     # =========================================================
     with tab_in4:
@@ -1255,10 +1255,23 @@ elif selected_tab == "06 · Input & Reset Data":
             m_p_id = periods_dict[m_period_name]
             
             p_start, p_end = get_period_date_bounds(m_p_id)
-            default_val_m = min(max(waktu_wib.date(), p_start), p_end)
             
+            # Hitung tanggal default secara aman
+            today_val = waktu_wib.date()
+            if today_val < p_start:
+                default_val_m = p_start
+            elif today_val > p_end:
+                default_val_m = p_end
+            else:
+                default_val_m = today_val
+
+            # Format teks label dipisah agar tidak memicu SyntaxError
+            str_start = p_start.strftime("%d/%m/%Y")
+            str_end = p_end.strftime("%d/%m/%Y")
+            label_tgl = f"Tanggal Transaksi (Batas Periode: {str_start} s/d {str_end})"
+
             m_date = st.date_input(
-                f"Tanggal Transaksi (Batas Periode: {p_start.strftime('%d/%m/%Y')} s/d {p_end.strftime('%d/%m/%Y')})",
+                label_tgl,
                 value=default_val_m,
                 min_value=p_start,
                 max_value=p_end,
@@ -1270,7 +1283,6 @@ elif selected_tab == "06 · Input & Reset Data":
 
             filtered_si_m = si_df[si_df["period_id"] == m_p_id] if not si_df.empty and "period_id" in si_df.columns else pd.DataFrame()
             
-            # Jika sales_item_df kosong, ambil dari master items_df sebagai cadangan
             if filtered_si_m.empty and not st.session_state.items_df.empty:
                 items_list = st.session_state.items_df[["item_id", "item_name"]].drop_duplicates().to_dict('records')
             elif not filtered_si_m.empty:
@@ -1336,7 +1348,7 @@ elif selected_tab == "06 · Input & Reset Data":
                         st.rerun()
                     else:
                         st.warning("⚠️ Tidak ada Qty produk yang diisi (semua bernilai 0).")
-                            
+                        
 
 # --- TAB 07: MASTER DATA & PENGATURAN ---
 elif selected_tab == "⚙️ Master Data & Pengaturan":
