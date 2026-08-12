@@ -981,34 +981,11 @@ elif selected_tab == "05 · Analisis Tren":
         for _, r in top_disgrowth.iterrows():
             st.error(f"**{r['item_name']}** — Sisa Gap: **{max(0, r['gap']):,.0f} Pcs** (Ach: **{r['ach']:.1f}%**)")
 
-    
-    # =========================================================
-    # SUB MENU 4: MULTI INPUT SALES PERSONIL (KHUSUS ADMIN)
-    # =========================================================
-    with tab_in4:
-        st.subheader("⚡ Multi Input Sales Personil (Penginputan Cepat)")
-        
-        if not is_admin:
-            st.error("🔒 **Akses Ditolak!** Fitur Multi Input Penginputan Cepat hanya dapat diakses oleh Admin.")
-        else:
-            m_period_name = st.selectbox("Pilih Periode", list(periods_dict.keys()), key="multi_period")
-            m_p_id = periods_dict[m_period_name]
-            
-            p_start, p_end = get_period_date_bounds(m_p_id)
-            default_val_m = min(max(waktu_wib.date(), p_start), p_end)
-            
-            date_label = f"Tanggal Transaksi (Batas Periode: {p_start.strftime('%d/%m/%Y')} s/d {p_end.strftime('%d/%m/%Y')})"
-            m_date = st.date_input(
-                date_label,
-                value=default_val_m,
-                min_value=p_start,
-
 # --- TAB 06: INPUT & RESET DATA ---
 elif selected_tab == "06 · Input & Reset Data":
     st.markdown("<h2 style='color: #00f0ff; text-shadow: 0 0 10px rgba(0,240,255,0.5);'>✏️ Kelola & Input Data Penjualan</h2>", unsafe_allow_html=True)
     
     current_user = st.session_state.get("username", "admin")
-    # Pengecekan admin yang lebih fleksibel
     is_admin = any(x in str(current_user).lower() for x in ["admin", "chief", "cos", "lavitality"])
     
     periods_df = st.session_state.periods_df.copy() if "periods_df" in st.session_state else pd.DataFrame()
@@ -1016,16 +993,12 @@ elif selected_tab == "06 · Input & Reset Data":
     sp_df = st.session_state.sales_person_df.copy() if "sales_person_df" in st.session_state else pd.DataFrame()
     person_df = st.session_state.person_df.copy() if "person_df" in st.session_state else pd.DataFrame()
 
-    # Pastikan dict periode tersedia
     if 'periods_dict' not in locals() or not periods_dict:
         if not periods_df.empty and "period_name" in periods_df.columns and "period_id" in periods_df.columns:
             periods_dict = {str(row["period_name"]): str(row["period_id"]) for _, row in periods_df.iterrows()}
         else:
             periods_dict = {"Periode Utama": "P01"}
 
-    # ---------------------------------------------------------
-    # PEMBAGIAN 4 SUB MENU BARU
-    # ---------------------------------------------------------
     tab_in1, tab_in2, tab_in3, tab_in4 = st.tabs([
         "➕ Input Sales Personil",
         "✏️ Edit Sales Personil",
@@ -1033,21 +1006,20 @@ elif selected_tab == "06 · Input & Reset Data":
         "⚡ Multi Input Sales"
     ])
 
-    # Helper function aman untuk mengambil rentang tanggal periode
-        def get_period_date_bounds(p_id):
-        p_match = periods_df[periods_df["period_id"] == p_id] if not periods_df.empty and "period_id" in periods_df.columns else pd.DataFrame()
-        if not p_match.empty and "start_date" in p_match.columns and "end_date" in p_match.columns:
-            try:
-                p_start = pd.to_datetime(p_match.iloc[0]["start_date"]).date()
-                p_end = pd.to_datetime(p_match.iloc[0]["end_date"]).date()
-                if p_start > p_end:
-                    p_start, p_end = p_end, p_start
-                return p_start, p_end
-            except Exception:
-                pass
+    def get_period_date_bounds(p_id):
+        if not periods_df.empty and "period_id" in periods_df.columns:
+            p_match = periods_df[periods_df["period_id"] == p_id]
+            if not p_match.empty and "start_date" in p_match.columns and "end_date" in p_match.columns:
+                try:
+                    p_start = pd.to_datetime(p_match.iloc[0]["start_date"]).date()
+                    p_end = pd.to_datetime(p_match.iloc[0]["end_date"]).date()
+                    if p_start > p_end:
+                        p_start, p_end = p_end, p_start
+                    return p_start, p_end
+                except Exception:
+                    pass
         today = waktu_wib.date()
         return today.replace(day=1), today
-            
 
     # =========================================================
     # SUB MENU 1: INPUT SALES PERSONIL (SINGLE ITEM)
@@ -1059,25 +1031,46 @@ elif selected_tab == "06 · Input & Reset Data":
         p_id_val = periods_dict[f_period_name]
         
         p_start, p_end = get_period_date_bounds(p_id_val)
-        default_val = min(max(waktu_wib.date(), p_start), p_end)
+        today_val = waktu_wib.date()
+        if today_val < p_start:
+            default_val = p_start
+        elif today_val > p_end:
+            default_val = p_end
+        else:
+            default_val = today_val
+
+        str_start1 = p_start.strftime("%d/%m/%Y")
+        str_end1 = p_end.strftime("%d/%m/%Y")
+        label_tgl1 = f"Tanggal Transaksi (Batas Periode: {str_start1} s/d {str_end1})"
         
         f_date = st.date_input(
-            f"Tanggal Transaksi (Batas Periode: {p_start.strftime('%d/%m/%Y')} s/d {p_end.strftime('%d/%m/%Y')})",
+            label_tgl1,
             value=default_val,
             min_value=p_start,
             max_value=p_end,
             key="in1_date"
         )
 
-        all_personnel = person_df["person_name"].dropna().unique().tolist() if not person_df.empty and "person_name" in person_df.columns else [current_user]
+        if not person_df.empty and "person_name" in person_df.columns:
+            all_personnel = person_df["person_name"].dropna().unique().tolist()
+        else:
+            all_personnel = [current_user]
+
         if is_admin:
             f_person = st.selectbox("Nama Staf / Personil", all_personnel, key="in1_person")
         else:
             f_person = current_user
             st.info(f"👤 Penginputan dikunci untuk akun: **{current_user}**")
 
-        filtered_si = si_df[si_df["period_id"] == p_id_val] if not si_df.empty and "period_id" in si_df.columns else pd.DataFrame()
-        item_dict = {str(row["item_name"]): str(row["item_id"]) for _, row in filtered_si.iterrows()} if not filtered_si.empty and "item_name" in filtered_si.columns else {}
+        if not si_df.empty and "period_id" in si_df.columns:
+            filtered_si = si_df[si_df["period_id"] == p_id_val]
+        else:
+            filtered_si = pd.DataFrame()
+
+        if not filtered_si.empty and "item_name" in filtered_si.columns:
+            item_dict = {str(row["item_name"]): str(row["item_id"]) for _, row in filtered_si.iterrows()}
+        else:
+            item_dict = {}
 
         if item_dict:
             f_item_name = st.selectbox("Pilih Produk", list(item_dict.keys()), key="in1_item")
@@ -1088,8 +1081,15 @@ elif selected_tab == "06 · Input & Reset Data":
                     st.warning("⚠️ Qty penjualan harus lebih dari 0!")
                 else:
                     new_id = f"SP{len(st.session_state.sales_person_df) + 1:05d}"
-                    p_match = person_df[person_df["person_name"] == f_person] if not person_df.empty and "person_name" in person_df.columns else pd.DataFrame()
-                    person_id_val = p_match.iloc[0]["person_id"] if not p_match.empty and "person_id" in p_match.columns else "P999"
+                    if not person_df.empty and "person_name" in person_df.columns:
+                        p_match = person_df[person_df["person_name"] == f_person]
+                    else:
+                        p_match = pd.DataFrame()
+                    
+                    if not p_match.empty and "person_id" in p_match.columns:
+                        person_id_val = p_match.iloc[0]["person_id"]
+                    else:
+                        person_id_val = "P999"
 
                     new_row = {
                         "record_id": new_id,
@@ -1117,18 +1117,16 @@ elif selected_tab == "06 · Input & Reset Data":
         st.markdown("<h4 style='color: #38bdf8;'>✏️ Edit Transaksi Sales (Koreksi Input)</h4>", unsafe_allow_html=True)
         
         if not is_admin:
-            st.markdown("""
-                <div style="background: rgba(239, 68, 68, 0.15); border: 1.5px solid #ef4444; border-radius: 10px; padding: 16px; margin: 10px 0;">
-                    <h4 style="color: #ef4444; margin: 0;">🔒 Akses Ditolak</h4>
-                    <p style="color: #ffffff; margin: 5px 0 0 0;">Fitur edit transaksi ini hanya dapat diakses oleh akun Admin / COS.</p>
-                </div>
-            """, unsafe_allow_html=True)
+            st.error("🔒 Akses Ditolak! Fitur edit transaksi ini hanya dapat diakses oleh akun Admin / COS.")
         else:
             e_period_name = st.selectbox("Pilih Periode", list(periods_dict.keys()), key="edit_period")
             e_p_id = periods_dict[e_period_name]
             p_start, p_end = get_period_date_bounds(e_p_id)
 
-            sp_sub = sp_df[sp_df["period_id"] == e_p_id].copy() if not sp_df.empty and "period_id" in sp_df.columns else pd.DataFrame()
+            if not sp_df.empty and "period_id" in sp_df.columns:
+                sp_sub = sp_df[sp_df["period_id"] == e_p_id].copy()
+            else:
+                sp_sub = pd.DataFrame()
             
             if sp_sub.empty:
                 st.info("Belum ada data transaksi di periode ini untuk diedit.")
@@ -1154,7 +1152,12 @@ elif selected_tab == "06 · Input & Reset Data":
                     except Exception:
                         raw_date = p_start
 
-                    safe_e_date = min(max(raw_date, p_start), p_end)
+                    if raw_date < p_start:
+                        safe_e_date = p_start
+                    elif raw_date > p_end:
+                        safe_e_date = p_end
+                    else:
+                        safe_e_date = raw_date
 
                     with col_e1:
                         new_e_date = st.date_input(
@@ -1190,17 +1193,15 @@ elif selected_tab == "06 · Input & Reset Data":
         st.markdown("<h4 style='color: #38bdf8;'>🗑️ Hapus Transaksi / Reset Sales Personil</h4>", unsafe_allow_html=True)
         
         if not is_admin:
-            st.markdown("""
-                <div style="background: rgba(239, 68, 68, 0.15); border: 1.5px solid #ef4444; border-radius: 10px; padding: 16px; margin: 10px 0;">
-                    <h4 style="color: #ef4444; margin: 0;">🔒 Akses Ditolak</h4>
-                    <p style="color: #ffffff; margin: 5px 0 0 0;">Fitur hapus/reset transaksi hanya dapat dilakukan oleh akun Admin / COS.</p>
-                </div>
-            """, unsafe_allow_html=True)
+            st.error("🔒 Akses Ditolak! Fitur hapus/reset transaksi hanya dapat dilakukan oleh akun Admin / COS.")
         else:
             d_period_name = st.selectbox("Pilih Periode", list(periods_dict.keys()), key="del_period")
             d_p_id = periods_dict[d_period_name]
             
-            sp_del_sub = sp_df[sp_df["period_id"] == d_p_id].copy() if not sp_df.empty and "period_id" in sp_df.columns else pd.DataFrame()
+            if not sp_df.empty and "period_id" in sp_df.columns:
+                sp_del_sub = sp_df[sp_df["period_id"] == d_p_id].copy()
+            else:
+                sp_del_sub = pd.DataFrame()
 
             if sp_del_sub.empty:
                 st.info("Tidak ada transaksi untuk dihapus pada periode ini.")
@@ -1247,13 +1248,11 @@ elif selected_tab == "06 · Input & Reset Data":
         if not is_admin:
             st.error("🔒 Akses Ditolak! Fitur Multi Input Penginputan Cepat hanya dapat diakses oleh Admin.")
         else:
-            period_keys = list(periods_dict.keys())
-            m_period_name = st.selectbox("Pilih Periode Transaksi Multi Input", period_keys, key="multi_period")
+            m_period_name = st.selectbox("Pilih Periode Transaksi Multi Input", list(periods_dict.keys()), key="multi_period")
             m_p_id = periods_dict[m_period_name]
             
             p_start, p_end = get_period_date_bounds(m_p_id)
             
-            # Hitung tanggal default secara bertahap
             today_val = waktu_wib.date()
             if today_val < p_start:
                 default_val_m = p_start
@@ -1262,12 +1261,12 @@ elif selected_tab == "06 · Input & Reset Data":
             else:
                 default_val_m = today_val
 
-            str_start = p_start.strftime("%d/%m/%Y")
-            str_end = p_end.strftime("%d/%m/%Y")
-            label_tgl = f"Tanggal Transaksi (Batas Periode: {str_start} s/d {str_end})"
+            str_start4 = p_start.strftime("%d/%m/%Y")
+            str_end4 = p_end.strftime("%d/%m/%Y")
+            label_tgl4 = f"Tanggal Transaksi (Batas Periode: {str_start4} s/d {str_end4})"
 
             m_date = st.date_input(
-                label_tgl,
+                label_tgl4,
                 value=default_val_m,
                 min_value=p_start,
                 max_value=p_end,
@@ -1360,8 +1359,6 @@ elif selected_tab == "06 · Input & Reset Data":
                         st.rerun()
                     else:
                         st.warning("⚠️ Tidak ada Qty produk yang diisi (semua bernilai 0).")
-                        
-
 
 # --- TAB 07: MASTER DATA & PENGATURAN ---
 elif selected_tab == "⚙️ Master Data & Pengaturan":
