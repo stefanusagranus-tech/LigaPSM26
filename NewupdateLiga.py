@@ -24,7 +24,7 @@ SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1kJ-OsjLEsFuNyyBg2Twxl
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 def load_database():
-    """Membaca data realtime dari Google Sheets Cloud secara konsisten."""
+    """Membaca data realtime dari Google Sheets Cloud dan merapikan nama kolom secara otomatis."""
     try:
         periods_df = conn.read(spreadsheet=SPREADSHEET_URL, worksheet="PERIODE", ttl=0)
         items_df = conn.read(spreadsheet=SPREADSHEET_URL, worksheet="MASTER_ITEM", ttl=0)
@@ -32,10 +32,16 @@ def load_database():
         sales_item_df = conn.read(spreadsheet=SPREADSHEET_URL, worksheet="SALES_ITEM", ttl=0)
         sales_person_df = conn.read(spreadsheet=SPREADSHEET_URL, worksheet="SALES_PERSONIL", ttl=0)
         
+        # 🛠️ Otomatis merapikan nama kolom (hapus spasi & ubah ke huruf kecil)
+        for df in [periods_df, items_df, person_df, sales_item_df, sales_person_df]:
+            if not df.empty:
+                df.columns = df.columns.astype(str).str.strip().str.lower()
+        
         return periods_df, items_df, person_df, sales_item_df, sales_person_df
     except Exception as e:
         st.error(f"⚠️ Gagal membaca Google Sheets: {e}")
         return pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
+
 
 def save_database(sales_item_df, sales_person_df):
     """Menyimpan data transaksi harian ke Google Sheets secara permanen."""
@@ -460,6 +466,7 @@ if selected_tab == "01 · Overview":
     else:
         filtered_sp = sub_sp.copy()
 
+        # --- Kode perhitungan hari (biarkan tetap seperti ini) ---
     total_days = max((end_date - start_date).days + 1, 1)
     today_date = waktu_wib.date()
     if today_date < start_date:
@@ -468,6 +475,20 @@ if selected_tab == "01 · Overview":
         passed_days = total_days
     else:
         passed_days = max((today_date - start_date).days + 1, 1)
+
+    # Menghitung Persentase Time Factor
+    time_factor = (passed_days / total_days) * 100 if total_days > 0 else 0
+
+    # 🛠️ KODE PENGAMAN TAMBAHAN (Disisipkan di sini):
+    if "target_qty" not in sub_si.columns:
+        sub_si["target_qty"] = 0
+
+    sub_si["target_qty"] = pd.to_numeric(sub_si["target_qty"], errors="coerce").fillna(0)
+    
+    if "actual_qty" in filtered_sp.columns:
+        filtered_sp["actual_qty"] = pd.to_numeric(filtered_sp["actual_qty"], errors="coerce").fillna(0)
+    else:
+        filtered_sp["actual_qty"] = 0
 
     time_factor = (passed_days / total_days) * 100 if total_days > 0 else 0
     sub_si["target_qty"] = pd.to_numeric(sub_si["target_qty"], errors="coerce").fillna(0)
