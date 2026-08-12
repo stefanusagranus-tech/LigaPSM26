@@ -19,7 +19,7 @@ st.set_page_config(
 # ==========================================
 # 2. KONFIGURASI GOOGLE SHEETS LIVE
 # ==========================================
-SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1kJ-OsjLEsFuNyyBg2TwxlWz8Ape4lwF9h0t66q3ldQk/edit?usp=drivesdk"
+SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1kJ-OsjLEsFuNyyBg2TwxlWz8Ape4lwF9h0t66q3ldQk/edit"
 
 conn = st.connection("gsheets", type=GSheetsConnection)
 
