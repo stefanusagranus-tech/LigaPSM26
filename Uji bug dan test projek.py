@@ -495,8 +495,8 @@ if selected_tab == "01 Overview":
                     <th style="padding: 8px 10px; color: #38bdf8; font-size: 11px;">% ACHIEVEMENT</th>
                 </tr>
             </thead>
-            <tbody>{table_rows_html}</tbody>
-        </table>
+            <tbody>
+            {table_rows_html}
     </div>
     """, unsafe_allow_html=True)
 
