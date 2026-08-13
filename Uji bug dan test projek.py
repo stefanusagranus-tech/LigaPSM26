@@ -470,7 +470,7 @@ if selected_tab == "01 Overview":
     overview_table["gap"] = overview_table["target_qty"] - overview_table["actual_qty"]
     overview_table["ach"] = overview_table.apply(lambda r: (r["actual_qty"] / r["target_qty"] * 100) if r["target_qty"] > 0 else 0, axis=1)
 
-    table_rows_html = ""
+      table_rows_html = ""
     for _, row in overview_table.iterrows():
         gap_color = "#00ff88" if row['gap'] <= 0 else "#ef4444"
         ach_color = "#00ff88" if row['ach'] >= time_factor else "#ffb703"
@@ -484,28 +484,25 @@ if selected_tab == "01 Overview":
         </tr>
         """
 
-    st.markdown(
-        textwrap.dedent (f"""
-    <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; max-height: 400px; overflow-y: auto;">
-        <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
-            <thead>
-                <tr style="border-bottom: 2px solid #334155;">
-                    <th style="padding: 8px 10px; color: #38bdf8; font-size: 11px;">NAMA PRODUK</th>
-                    <th style="padding: 8px 10px; color: #38bdf8; font-size: 11px;">TARGET TOKO</th>
-                    <th style="padding: 8px 10px; color: #38bdf8; font-size: 11px;">ACTUAL PENJUALAN</th>
-                    <th style="padding: 8px 10px; color: #38bdf8; font-size: 11px;">SISA GAP</th>
-                    <th style="padding: 8px 10px; color: #38bdf8; font-size: 11px;">% ACHIEVEMENT</th>
-                </tr>
-            </thead>
-            <tbody>
-             {table_rows_html}
-           </tbody>
-        </thead>  
-    </div>
-    """),
-         unsafe_allow_html=True,
-    )
-
+    st.markdown(f"""
+        <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; max-height: 400px; overflow-y: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #334155;">
+                        <th style="padding: 8px 10px; color: #38bdf8; font-size: 11px;">NAMA PRODUK</th>
+                        <th style="padding: 8px 10px; color: #38bdf8; font-size: 11px;">TARGET TOKO</th>
+                        <th style="padding: 8px 10px; color: #38bdf8; font-size: 11px;">ACTUAL PENJUALAN</th>
+                        <th style="padding: 8px 10px; color: #38bdf8; font-size: 11px;">SISA GAP</th>
+                        <th style="padding: 8px 10px; color: #38bdf8; font-size: 11px;">% ACHIEVEMENT</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {table_rows_html}
+                </tbody>
+            </table>
+        </div>
+    """, unsafe_allow_html=True)
+    
 # --- TAB 02: DETAIL ITEM ---
 elif selected_tab == "02 Detail Item":
     st.title("📦 Detail Item & Performa Produk")
