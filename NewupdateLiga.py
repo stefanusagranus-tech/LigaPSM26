@@ -1105,7 +1105,12 @@ elif selected_tab == "06 · Input & Reset Data":
                     st.session_state.sales_person_df = pd.concat([st.session_state.sales_person_df, pd.DataFrame([new_row])], ignore_index=True)
                     sync_store_sales_from_personnel()
                     save_database(st.session_state.sales_item_df, st.session_state.sales_person_df)
+                    
+                    # 🔔 Notifikasi Pop-up Melayang + Pesan Bawah Tombol
+                    st.toast("🎉 Data sukses diinputkan!", icon="✅")
                     st.success(f"✅ Penjualan {f_item_name} ({f_qty} Pcs) tersimpan & tersinkron permanen!")
+                    
+                    time.sleep(1.5)  # Jeda 1.5 detik agar notifikasi terbaca
                     st.rerun()
         else:
             st.warning("⚠️ Belum ada item produk terdaftar di periode ini. Silakan atur di Master Data.")
@@ -1183,7 +1188,12 @@ elif selected_tab == "06 · Input & Reset Data":
                         
                         sync_store_sales_from_personnel()
                         save_database(st.session_state.sales_item_df, st.session_state.sales_person_df)
+                        
+                        # 🔔 Notifikasi Pop-up Edit
+                        st.toast("🎉 Perubahan data sukses disimpan!", icon="✅")
                         st.success("✅ Perubahan transaksi berhasil disimpan permanen!")
+                        
+                        time.sleep(1.5)
                         st.rerun()
 
     # =========================================================
@@ -1223,7 +1233,11 @@ elif selected_tab == "06 · Input & Reset Data":
                         
                         sync_store_sales_from_personnel()
                         save_database(st.session_state.sales_item_df, st.session_state.sales_person_df)
+                        
+                        st.toast("🗑️ Transaksi sukses dihapus!", icon="⚠️")
                         st.warning(f"⚠️ Transaksi '{d_item_name}' untuk {d_person} berhasil dihapus permanen!")
+                        
+                        time.sleep(1.5)
                         st.rerun()
 
                 else:
@@ -1236,7 +1250,11 @@ elif selected_tab == "06 · Input & Reset Data":
                         
                         sync_store_sales_from_personnel()
                         save_database(st.session_state.sales_item_df, st.session_state.sales_person_df)
+                        
+                        st.toast("🚨 Seluruh data transaksi di-reset!", icon="⚠️")
                         st.warning(f"⚠️ Seluruh transaksi {d_person} pada periode ini berhasil di-reset!")
+                        
+                        time.sleep(1.5)
                         st.rerun()
 
     # =========================================================
@@ -1355,11 +1373,12 @@ elif selected_tab == "06 · Input & Reset Data":
                         st.session_state.sales_person_df = pd.concat([st.session_state.sales_person_df, pd.DataFrame(new_rows)], ignore_index=True)
                         sync_store_sales_from_personnel()
                         save_database(st.session_state.sales_item_df, st.session_state.sales_person_df)
+                        
+                        # 🔔 Notifikasi Pop-up Multi Input
+                        st.toast(f"🎉 {inserted_count} Data sukses diinputkan!", icon="✅")
                         st.success(f"✅ Berhasil menyimpan {inserted_count} item penjualan untuk {m_person} secara permanen!")
-                        st.rerun()
-                    else:
-                        st.warning("⚠️ Tidak ada Qty produk yang diisi (semua bernilai 0).")
-
+                        
+                    
 # --- TAB 07: MASTER DATA & PENGATURAN ---
 elif selected_tab == "⚙️ Master Data & Pengaturan":
     ALLOWED_USERNAMES = ["admin", "Staff Toko"]
