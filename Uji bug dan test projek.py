@@ -39,6 +39,15 @@ def load_database():
             if not df.empty:
                 df.columns = df.columns.astype(str).str.strip().str.lower()
                 
+        # Normalisasi tipe ID ke string agar merging aman
+        for df in [periods_df, sales_item_df, sales_person_df]:
+            if not df.empty and "period_id" in df.columns:
+                df["period_id"] = df["period_id"].astype(str).str.strip()
+                
+        for df in [items_df, sales_item_df, sales_person_df]:
+            if not df.empty and "item_id" in df.columns:
+                df["item_id"] = df["item_id"].astype(str).str.strip()
+
         return periods_df, items_df, person_df, sales_item_df, sales_person_df
     except Exception as e:
         st.error(f"Gagal membaca Google Sheets: {e}")
@@ -78,7 +87,12 @@ def sync_store_sales_from_personnel():
             return
         if si_df.empty or not all(col in si_df.columns for col in req_cols_si):
             return
-            
+
+        sp_df["period_id"] = sp_df["period_id"].astype(str)
+        sp_df["item_id"] = sp_df["item_id"].astype(str)
+        si_df["period_id"] = si_df["period_id"].astype(str)
+        si_df["item_id"] = si_df["item_id"].astype(str)
+
         sp_df["actual_qty"] = pd.to_numeric(sp_df["actual_qty"], errors="coerce").fillna(0)
         tot_per_item = sp_df.groupby(["period_id", "item_id"])["actual_qty"].sum().reset_index()
         tot_per_item.rename(columns={"actual_qty": "calc_actual_qty"}, inplace=True)
@@ -323,6 +337,7 @@ selected_period_name = st.sidebar.selectbox("", ["Semua Periode (Overall)"] + li
 selected_period_id = None if selected_period_name == "Semua Periode (Overall)" else periods_dict[selected_period_name]
 
 st.sidebar.markdown("<hr style='margin: 15px 0; border-color: #334155;'>", unsafe_allow_html=True)
+
 if st.sidebar.button("🚪 Keluar / Logout", use_container_width=True):
     st.session_state.logged_in = False
     st.session_state.username = ""
@@ -390,6 +405,7 @@ if selected_tab == "01 Overview":
 
     total_days = max((end_date - start_date).days + 1, 1)
     today_date = waktu_wib.date()
+    
     if today_date < start_date:
         passed_days = 0
     elif today_date > end_date:
@@ -420,6 +436,7 @@ if selected_tab == "01 Overview":
     with m5: st.metric("⏳ Time Factor (Waktu)", f"{time_factor:.1f}%", help=f"Hari berjalan: {passed_days}/{total_days} hari")
 
     st.markdown("---")
+
     pace_gap = tot_ach - time_factor
     if pace_gap >= 0:
         status_color = "#00ff9d"
@@ -442,8 +459,12 @@ if selected_tab == "01 Overview":
     """, unsafe_allow_html=True)
 
     st.subheader("📊 Ringkasan Penjualan Per Item Produk")
+    
+    # Aggregasi sub_si agar item_id tidak terduplikasi jika "Semua Periode" dipilih
+    si_grouped = sub_si.groupby(["item_id", "item_name"])["target_qty"].sum().reset_index() if not sub_si.empty else pd.DataFrame(columns=["item_id", "item_name", "target_qty"])
     item_sp = filtered_sp.groupby(["item_id", "item_name"])["actual_qty"].sum().reset_index() if not filtered_sp.empty else pd.DataFrame(columns=["item_id", "item_name", "actual_qty"])
-    overview_table = pd.merge(sub_si[["item_id", "item_name", "target_qty"]], item_sp[["item_id", "actual_qty"]], on="item_id", how="left")
+
+    overview_table = pd.merge(si_grouped, item_sp[["item_id", "actual_qty"]], on="item_id", how="left")
     overview_table["actual_qty"] = overview_table["actual_qty"].fillna(0)
     overview_table["gap"] = overview_table["target_qty"] - overview_table["actual_qty"]
     overview_table["ach"] = overview_table.apply(lambda r: (r["actual_qty"] / r["target_qty"] * 100) if r["target_qty"] > 0 else 0, axis=1)
@@ -461,6 +482,7 @@ if selected_tab == "01 Overview":
             <td style="padding: 10px; color: {ach_color}; font-weight: bold; font-size: 13px;">{row['ach']:.1f}%</td>
         </tr>
         """
+
     st.markdown(f"""
     <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; max-height: 400px; overflow-y: auto;">
         <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
@@ -556,6 +578,7 @@ elif selected_tab == "02 Detail Item":
                 <td style="padding: 12px; color: {gap_color}; font-weight: bold;">{row['gap']:,.0f}</td>
             </tr>
             """
+
         st.markdown(f"""
         <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 12px; max-height: 520px; overflow-y: auto;">
             <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
@@ -588,6 +611,7 @@ elif selected_tab == "03 Penjualan Personil":
         tot_actual_personil = summary_person["actual_qty"].sum()
         avg_sales_personil = summary_person["actual_qty"].mean() if len(summary_person) > 0 else 0
         top_performer_name = summary_person.iloc[0]["person_name"] if len(summary_person) > 0 else "-"
+
         summary_person["pct_contrib"] = (summary_person["actual_qty"] / tot_actual_personil * 100) if tot_actual_personil > 0 else 0
 
         m1, m2, m3 = st.columns(3)
@@ -599,6 +623,7 @@ elif selected_tab == "03 Penjualan Personil":
             st.markdown(f'<div style="background:#080c14; border: 1.5px solid #00f0ff; border-radius:10px; padding: 16px;"><div style="color:#ffffff; font-size:11px; font-weight:bold;">TOP PERFORMER</div><div style="color:#00ff88; font-size:26px; font-weight:800;">{top_performer_name}</div></div>', unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
+
         if len(summary_person) >= 1:
             p1_name = summary_person.iloc[0]["person_name"]
             p1_qty = summary_person.iloc[0]["actual_qty"]
@@ -645,6 +670,7 @@ elif selected_tab == "03 Penjualan Personil":
                     <td style="padding: 12px; color: #00ff88; font-weight: bold;">{row['pct_contrib']:.1f}%</td>
                 </tr>
                 """
+
             st.markdown(f"""
             <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; height: {COMPONENT_HEIGHT}px; overflow-y: auto;">
                 <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
@@ -705,9 +731,14 @@ elif selected_tab == "04 Pencapaian Pernik":
     sp_grouped = sp_df.groupby(["item_id", "item_name"])["actual_qty"].sum().reset_index() if not sp_df.empty else pd.DataFrame(columns=["item_id", "item_name", "actual_qty"])
     si_grouped = si_df.groupby(["item_id", "item_name"])[target_col].sum().reset_index() if not si_df.empty else pd.DataFrame(columns=["item_id", "item_name", target_col])
 
+    # Konversi ID ke string agar merging konsisten
+    si_grouped["item_id"] = si_grouped["item_id"].astype(str)
+    sp_grouped["item_id"] = sp_grouped["item_id"].astype(str)
+
     merged_item_df = pd.merge(si_grouped, sp_grouped[["item_id", "actual_qty"]], on="item_id", how="left")
     merged_item_df["actual_qty"] = merged_item_df["actual_qty"].fillna(0)
     merged_item_df.rename(columns={target_col: "target_val"}, inplace=True)
+
     merged_item_df["gap"] = merged_item_df["target_val"] - merged_item_df["actual_qty"]
     merged_item_df["ach"] = merged_item_df.apply(lambda r: (r["actual_qty"] / r["target_val"] * 100) if r["target_val"] > 0 else 0, axis=1)
 
@@ -724,6 +755,7 @@ elif selected_tab == "04 Pencapaian Pernik":
 
     st.markdown("---")
     col_t4_left, col_t4_right = st.columns([1.2, 1])
+
     with col_t4_left:
         st.subheader("📋 Rincian Target Item Pernik")
         table_rows_html = ""
@@ -739,6 +771,7 @@ elif selected_tab == "04 Pencapaian Pernik":
                 <td style="padding: 10px; color: {ach_color}; font-weight: bold;">{row['ach']:.1f}%</td>
             </tr>
             """
+
         st.markdown(f"""
         <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; max-height: 380px; overflow-y: auto;">
             <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
@@ -812,12 +845,13 @@ elif selected_tab == "05 Analisis Tren":
 
     total_range_days = max((end_date - start_date).days + 1, 1)
     today_date = waktu_wib.date()
-    
-    if today_date < start_date: passed_days = 1
+
+    if today_date < start_date: passed_days = 0
     elif today_date > end_date: passed_days = total_range_days
     else: passed_days = max((today_date - start_date).days + 1, 1)
 
-    remaining_days = max(total_range_days - passed_days, 1)
+    # Perbaikan bug: remaining_days bernilai 0 jika hari sudah melewati end_date
+    remaining_days = max(total_range_days - passed_days, 0)
     daily_target_ideal = max(0, int((tot_target - tot_actual) / remaining_days)) if remaining_days > 0 else 0
     avg_daily_sales = tot_actual / passed_days if passed_days > 0 else 0
     best_est = int(tot_actual + (avg_daily_sales * remaining_days))
@@ -830,6 +864,7 @@ elif selected_tab == "05 Analisis Tren":
 
     st.markdown("---")
     st.subheader("📈 Grafik Fluktuasi Penjualan Harian")
+
     if "updated_at_dt" in filtered_sp.columns and not filtered_sp.empty:
         daily_trend = filtered_sp.groupby("updated_at_dt")["actual_qty"].sum().reset_index().sort_values(by="updated_at_dt")
         daily_trend["updated_at_str"] = daily_trend["updated_at_dt"].astype(str)
@@ -844,8 +879,15 @@ elif selected_tab == "05 Analisis Tren":
 
     st.markdown("---")
     st.subheader("📊 Analisis Detil Growth & Disgrowth Produk")
+
     item_sales = filtered_sp.groupby(["item_id", "item_name"])["actual_qty"].sum().reset_index() if not filtered_sp.empty else pd.DataFrame(columns=["item_id", "item_name", "actual_qty"])
-    merged_item_analysis = pd.merge(sub_si[["item_id", "item_name", "target_qty"]], item_sales[["item_id", "actual_qty"]], on="item_id", how="left")
+    si_grouped = sub_si.groupby(["item_id", "item_name"])["target_qty"].sum().reset_index() if not sub_si.empty else pd.DataFrame(columns=["item_id", "item_name", "target_qty"])
+
+    # Cast item_id ke string
+    si_grouped["item_id"] = si_grouped["item_id"].astype(str)
+    item_sales["item_id"] = item_sales["item_id"].astype(str)
+
+    merged_item_analysis = pd.merge(si_grouped, item_sales[["item_id", "actual_qty"]], on="item_id", how="left")
     merged_item_analysis["actual_qty"] = merged_item_analysis["actual_qty"].fillna(0)
     merged_item_analysis["gap"] = merged_item_analysis["target_qty"] - merged_item_analysis["actual_qty"]
     merged_item_analysis["ach"] = merged_item_analysis.apply(lambda r: (r["actual_qty"] / r["target_qty"] * 100) if r["target_qty"] > 0 else 0, axis=1)
@@ -867,10 +909,10 @@ elif selected_tab == "05 Analisis Tren":
 # --- TAB 06: INPUT & RESET DATA ---
 elif selected_tab == "06 Input & Reset Data":
     st.markdown("<h2 style='color: #00f0ff; text-shadow: 0 0 10px rgba(0,240,255,0.5);'>🛠️ Kelola & Input Data Penjualan</h2>", unsafe_allow_html=True)
-    
+
     current_user = st.session_state.get("username", "visitor")
     user_role_str = str(st.session_state.get("user_role", "visitor")).lower()
-    
+
     is_admin = "admin" in user_role_str
     is_visitor = "visitor" in user_role_str
 
@@ -883,7 +925,7 @@ elif selected_tab == "06 Input & Reset Data":
 
     def get_period_date_bounds(p_id):
         if not periods_df.empty and "period_id" in periods_df.columns:
-            p_match = periods_df[periods_df["period_id"] == p_id]
+            p_match = periods_df[periods_df["period_id"].astype(str) == str(p_id)]
             if not p_match.empty and "start_date" in p_match.columns and "end_date" in p_match.columns:
                 try:
                     p_start = pd.to_datetime(p_match.iloc[0]["start_date"]).date()
@@ -912,7 +954,6 @@ elif selected_tab == "06 Input & Reset Data":
             str_start = p_start.strftime("%d/%m/%Y")
             str_end = p_end.strftime("%d/%m/%Y")
             label_tgl = f"Tanggal Transaksi (Batas Periode: {str_start} s/d {str_end})"
-
             m_date = st.date_input(label_tgl, value=default_val_m, min_value=p_start, max_value=p_end, key="multi_date")
 
             if not person_df.empty and "person_name" in person_df.columns:
@@ -926,7 +967,7 @@ elif selected_tab == "06 Input & Reset Data":
                 m_person = st.session_state.get("person_name", current_user)
                 st.info(f"👤 Penginputan dikunci untuk akun pengguna aktif: **{m_person}**")
 
-            filtered_si_m = si_df[si_df["period_id"] == m_p_id] if not si_df.empty and "period_id" in si_df.columns else pd.DataFrame()
+            filtered_si_m = si_df[si_df["period_id"].astype(str) == str(m_p_id)] if not si_df.empty and "period_id" in si_df.columns else pd.DataFrame()
             items_list = filtered_si_m[["item_id", "item_name"]].drop_duplicates().to_dict('records') if not filtered_si_m.empty and "item_name" in filtered_si_m.columns else []
 
             if not items_list:
@@ -936,7 +977,6 @@ elif selected_tab == "06 Input & Reset Data":
                 st.markdown("##### 📦 Masukkan Jumlah Qty Penjualan Masing-Masing Produk:")
                 multi_input_values = {}
                 col_m1, col_m2 = st.columns(2)
-
                 for idx, item in enumerate(items_list):
                     target_col = col_m1 if idx % 2 == 0 else col_m2
                     item_id_str = str(item['item_id'])
@@ -957,10 +997,10 @@ elif selected_tab == "06 Input & Reset Data":
                             new_id = f"SP{len(st.session_state.sales_person_df) + len(new_rows) + 1:05d}"
                             new_rows.append({
                                 "record_id": new_id,
-                                "period_id": m_p_id,
-                                "item_id": item_id,
+                                "period_id": str(m_p_id),
+                                "item_id": str(item_id),
                                 "item_name": item_data["item_name"],
-                                "person_id": person_id_val,
+                                "person_id": str(person_id_val),
                                 "person_name": m_person,
                                 "actual_qty": item_data["qty"],
                                 "updated_at": str(m_date)
@@ -987,7 +1027,7 @@ elif selected_tab == "06 Input & Reset Data":
             e_p_id = periods_dict[e_period_name]
             p_start, p_end = get_period_date_bounds(e_p_id)
 
-            sp_sub = sp_df[sp_df["period_id"] == e_p_id].copy() if not sp_df.empty and "period_id" in sp_df.columns else pd.DataFrame()
+            sp_sub = sp_df[sp_df["period_id"].astype(str) == str(e_p_id)].copy() if not sp_df.empty and "period_id" in sp_df.columns else pd.DataFrame()
 
             if sp_sub.empty:
                 st.info("Belum ada data transaksi di periode ini untuk diedit.")
@@ -1004,6 +1044,7 @@ elif selected_tab == "06 Input & Reset Data":
 
                     st.markdown("---")
                     col_e1, col_e2 = st.columns(2)
+
                     try: raw_date = pd.to_datetime(selected_row.get("updated_at")).date()
                     except Exception: raw_date = p_start
 
@@ -1033,7 +1074,7 @@ elif selected_tab == "06 Input & Reset Data":
             d_period_name = st.selectbox("Pilih Periode", list(periods_dict.keys()), key="del_period")
             d_p_id = periods_dict[d_period_name]
 
-            sp_del_sub = sp_df[sp_df["period_id"] == d_p_id].copy() if not sp_df.empty and "period_id" in sp_df.columns else pd.DataFrame()
+            sp_del_sub = sp_df[sp_df["period_id"].astype(str) == str(d_p_id)].copy() if not sp_df.empty and "period_id" in sp_df.columns else pd.DataFrame()
 
             if sp_del_sub.empty:
                 st.info("Tidak ada transaksi untuk dihapus pada periode ini.")
@@ -1047,7 +1088,7 @@ elif selected_tab == "06 Input & Reset Data":
                     d_item_name = st.selectbox("Pilih Produk yang Ingin Dihapus", sp_del_person["item_name"].unique(), key="del_item_select")
                     if st.button(f"🗑️ Hapus Transaksi Produk '{d_item_name}'", use_container_width=True, key="btn_del_single"):
                         st.session_state.sales_person_df = st.session_state.sales_person_df[
-                            ~((st.session_state.sales_person_df["period_id"] == d_p_id) &
+                            ~((st.session_state.sales_person_df["period_id"].astype(str) == str(d_p_id)) &
                               (st.session_state.sales_person_df["person_name"] == d_person) &
                               (st.session_state.sales_person_df["item_name"] == d_item_name))
                         ]
@@ -1060,7 +1101,7 @@ elif selected_tab == "06 Input & Reset Data":
                     st.error(f"⚠️ Perhatian: Aksi ini akan menghapus SELURUH catatan penjualan {d_person} pada periode ini.")
                     if st.button(f"🚨 Reset Total Sales {d_person} di Periode Ini", use_container_width=True, key="btn_reset_all"):
                         st.session_state.sales_person_df = st.session_state.sales_person_df[
-                            ~((st.session_state.sales_person_df["period_id"] == d_p_id) &
+                            ~((st.session_state.sales_person_df["period_id"].astype(str) == str(d_p_id)) &
                               (st.session_state.sales_person_df["person_name"] == d_person))
                         ]
                         sync_store_sales_from_personnel()
@@ -1073,7 +1114,7 @@ elif selected_tab == "06 Input & Reset Data":
 elif selected_tab == "07 Master Data & Pengaturan":
     current_user = st.session_state.get("username", "visitor")
     raw_role = st.session_state.get("user_role", st.session_state.get("role", "visitor"))
-    
+
     user_role = str(raw_role).lower()
     user_lower = str(current_user).lower()
 
@@ -1119,7 +1160,7 @@ elif selected_tab == "07 Master Data & Pengaturan":
         if aksi_personil == "✏️ Edit User Terdaftar":
             if not person_df.empty and "username" in person_df.columns:
                 user_list = person_df["username"].dropna().unique().tolist()
-                
+
                 if is_admin:
                     selected_user = st.selectbox("Pilih Akun User yang Ingin Diubah", user_list, key="sel_user_edit")
                 else:
@@ -1142,10 +1183,11 @@ elif selected_tab == "07 Master Data & Pengaturan":
                             edit_role = st.selectbox("Role Akun", roles_options, index=role_idx, disabled=not is_admin)
 
                         btn_simpan_p = st.form_submit_button("💾 Simpan Perubahan Profil & Password", use_container_width=True)
+
                         if btn_simpan_p:
                             st.session_state.person_df = st.session_state.person_df.astype(str)
                             mask = st.session_state.person_df["username"] == selected_user
-                            
+
                             st.session_state.person_df.loc[mask, "nik"] = str(edit_nik)
                             st.session_state.person_df.loc[mask, "person_name"] = str(edit_nama)
                             st.session_state.person_df.loc[mask, "username"] = str(edit_username).strip()
@@ -1169,9 +1211,11 @@ elif selected_tab == "07 Master Data & Pengaturan":
                     new_role = st.selectbox("Role Akun", ["Admin", "Staff Toko", "Kasir Toko"])
 
                 btn_create_p = st.form_submit_button("➕ Tambahkan User Baru", use_container_width=True)
+
                 if btn_create_p:
                     clean_username = new_user.strip()
                     clean_password = new_pass.strip()
+
                     if not clean_username or not clean_password:
                         st.error("⚠️ Username dan Password wajib diisi!")
                     else:
@@ -1205,6 +1249,7 @@ elif selected_tab == "07 Master Data & Pengaturan":
             if sub_m2 == "➕ Tambah / Edit Produk":
                 if not items_df.empty:
                     st.dataframe(items_df, use_container_width=True)
+
                 with st.form("form_item_master"):
                     col_i1, col_i2 = st.columns(2)
                     with col_i1:
@@ -1214,8 +1259,9 @@ elif selected_tab == "07 Master Data & Pengaturan":
                         item_cat_in = st.text_input("Kategori Produk")
 
                     btn_save_item = st.form_submit_button("💾 Simpan Produk ke Master")
+
                     if btn_save_item:
-                        new_item = {"item_id": item_id_in, "item_name": item_name_in, "category": item_cat_in}
+                        new_item = {"item_id": str(item_id_in), "item_name": item_name_in, "category": item_cat_in}
                         st.session_state.items_df = pd.concat([st.session_state.items_df, pd.DataFrame([new_item])], ignore_index=True)
                         save_master_table("MASTER_ITEM", st.session_state.items_df)
                         st.success("✅ Produk baru berhasil ditambahkan!")
@@ -1225,13 +1271,13 @@ elif selected_tab == "07 Master Data & Pengaturan":
             elif sub_m2 == "🎯 Set Target Toko & Kasir Per Periode":
                 st.info("ℹ️ Target yang dibuat akan langsung ditambahkan ke Google Sheets tanpa merubah rekap target periode terdahulu.")
                 if not periods_df.empty and "period_name" in periods_df.columns:
-                    p_opt = {row["period_name"]: row["period_id"] for _, row in periods_df.iterrows()}
+                    p_opt = {row["period_name"]: str(row["period_id"]) for _, row in periods_df.iterrows()}
                     selected_p_name = st.selectbox("Pilih Periode Target", list(p_opt.keys()), key="target_p_sel")
-                    target_p_id = p_opt[selected_p_name]
+                    target_p_id = str(p_opt[selected_p_name])
 
                     if not items_df.empty and "item_name" in items_df.columns:
                         selected_item_target = st.selectbox("Pilih Produk", items_df["item_name"].unique(), key="target_i_sel")
-                        item_id_target = items_df[items_df["item_name"] == selected_item_target].iloc[0]["item_id"]
+                        item_id_target = str(items_df[items_df["item_name"] == selected_item_target].iloc[0]["item_id"])
 
                         with st.form("form_target_period"):
                             col_t1, col_t2 = st.columns(2)
@@ -1239,8 +1285,10 @@ elif selected_tab == "07 Master Data & Pengaturan":
                             with col_t2: target_kasir_val = st.number_input("Target Penjualan Kasir (Qty Pcs)", min_value=0, step=1)
 
                             btn_save_target = st.form_submit_button("💾 Simpan / Update Target Ke Google Sheets")
+
                             if btn_save_target:
-                                mask = (st.session_state.sales_item_df["period_id"] == target_p_id) & (st.session_state.sales_item_df["item_id"] == item_id_target)
+                                mask = (st.session_state.sales_item_df["period_id"].astype(str) == target_p_id) & (st.session_state.sales_item_df["item_id"].astype(str) == item_id_target)
+
                                 if mask.any():
                                     st.session_state.sales_item_df.loc[mask, "target_qty"] = target_toko_val
                                     st.session_state.sales_item_df.loc[mask, "target_kasir"] = target_kasir_val
@@ -1278,8 +1326,9 @@ elif selected_tab == "07 Master Data & Pengaturan":
                     p_status_new = st.selectbox("Status Periode", ["Aktif", "Tutup Buku"])
 
                 btn_save_period = st.form_submit_button("💾 Simpan Periode")
+
                 if btn_save_period:
-                    mask_p = st.session_state.periods_df["period_id"] == p_id_new
+                    mask_p = st.session_state.periods_df["period_id"].astype(str) == str(p_id_new)
                     if mask_p.any():
                         st.session_state.periods_df.loc[mask_p, "period_name"] = p_name_new
                         st.session_state.periods_df.loc[mask_p, "start_date"] = str(p_start_new)
@@ -1287,7 +1336,7 @@ elif selected_tab == "07 Master Data & Pengaturan":
                         st.session_state.periods_df.loc[mask_p, "status"] = p_status_new
                     else:
                         new_p_data = {
-                            "period_id": p_id_new,
+                            "period_id": str(p_id_new),
                             "period_name": p_name_new,
                             "start_date": str(p_start_new),
                             "end_date": str(p_end_new),
