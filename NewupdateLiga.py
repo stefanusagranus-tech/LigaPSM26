@@ -151,7 +151,28 @@ USER_DATABASE = {
     "21046101": {"password": "c383kgs", "nama": "AHMAD ZAKI SYABANI ZEN"},
     "visitor": {"password": "visitor", "nama": "Pengunjung"}
 }
-
+def check_login(input_username, input_password):
+    # Ambil data personil terbaru
+    if "person_df" in st.session_state and not st.session_state.person_df.empty:
+        df_users = st.session_state.person_df
+    else:
+        # Cadangan membaca langsung dari Sheet
+        df_users = conn.read(worksheet="MASTER_PERSONIL", ttl=0)
+    
+    # Pencocokan Username & Password
+    user_match = df_users[
+        (df_users["username"].astype(str).str.strip().str.lower() == str(input_username).strip().lower()) &
+        (df_users["password"].astype(str).str.strip() == str(input_password).strip())
+    ]
+    
+    if not user_match.empty:
+        matched_user = user_match.iloc[0]
+        st.session_state["username"] = matched_user["username"]
+        st.session_state["user_role"] = matched_user.get("role", "Staff Toko")
+        st.session_state["role"] = matched_user.get("role", "Staff Toko")
+        return True
+    return False
+    
 # ==========================================
 # 5. CUSTOM CSS (NEON DARK THEME)
 # ==========================================
@@ -1389,90 +1410,129 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
         st.info(f"ℹ️ Anda login sebagai **{current_user}** ({user_role.title()}). Anda hanya diizinkan mengelola profil & password akun milik Anda sendiri.")
         m_tab1, = st.tabs(["👥 Profil & Password Saya"])
 
-    # =========================================================
+       # =========================================================
     # SUBTAB 1: MASTER PERSONIL & ROLE
     # =========================================================
     with m_tab1:
         st.markdown("<h4 style='color: #00ff88;'>👥 Kelola Profil, Username, & Password</h4>", unsafe_allow_html=True)
         
+        # 🔔 TAMPILKAN NOTIFIKASI SUKSES (Jika ada notif tertunda setelah rerun)
+        if "personil_success_msg" in st.session_state and st.session_state.personil_success_msg:
+            st.success(st.session_state.personil_success_msg)
+            st.toast(st.session_state.personil_success_msg, icon="✅")
+            # Hapus notif agar tidak muncul terus-menerus
+            del st.session_state["personil_success_msg"]
+
+        # Ambil daftar personil terbaru dari session state
+        if "person_df" in st.session_state and not st.session_state.person_df.empty:
+            person_df = st.session_state.person_df.copy()
+        else:
+            person_df = pd.DataFrame()
+
         if is_admin:
             aksi_personil = st.radio("Pilih Tindakan:", ["✏️ Edit User Terdaftar", "➕ Buat Username Baru"], horizontal=True, key="p_action")
         else:
             aksi_personil = "✏️ Edit User Terdaftar"
 
+        # ---------------------------------------------------------
+        # 1. EDIT USER TERDAFTAR
+        # ---------------------------------------------------------
         if aksi_personil == "✏️ Edit User Terdaftar":
             if not person_df.empty and "username" in person_df.columns:
-                user_list = person_df["username"].dropna().tolist()
+                user_list = person_df["username"].dropna().unique().tolist()
                 
-                # Admin bisa pilih semua user, Staff/Kasir hanya bisa memilih dirinya sendiri
-                selected_user = st.selectbox("Pilih Akun User", user_list, index=user_list.index(current_user) if current_user in user_list else 0, disabled=not is_admin, key="sel_user_edit")
-                
-                user_row = person_df[person_df["username"] == selected_user].iloc[0]
-                
-                with st.form("form_edit_personil"):
-                    col_p1, col_p2 = st.columns(2)
-                    with col_p1:
-                        edit_nik = st.text_input("NIK", value=str(user_row.get("nik", "")))
-                        edit_nama = st.text_input("Nama Lengkap", value=str(user_row.get("person_name", selected_user)))
-                        edit_username = st.text_input("Username", value=str(user_row.get("username", selected_user)), disabled=not is_admin)
-                    
-                    with col_p2:
-                        edit_password = st.text_input("Password Baru", value=str(user_row.get("password", "")), type="password")
-                        roles_options = ["Admin", "Staff Toko", "Kasir Toko"]
-                        curr_role = str(user_row.get("role", "Staff Toko"))
-                        role_idx = roles_options.index(curr_role) if curr_role in roles_options else 1
-                        
-                        edit_role = st.selectbox("Role Akun", roles_options, index=role_idx, disabled=not is_admin)
+                if is_admin:
+                    selected_user = st.selectbox("Pilih Akun User yang Ingin Diubah", user_list, key="sel_user_edit")
+                else:
+                    selected_user = current_user
+                    st.info(f"👤 Pengeditan dikunci untuk akun Anda: **{current_user}**")
 
-                    btn_simpan_p = st.form_submit_button("💾 Simpan Perubahan Profil & Password")
+                if selected_user in user_list:
+                    user_row = person_df[person_df["username"] == selected_user].iloc[0]
                     
-                    if btn_simpan_p:
-                        idx_p = user_row.name
-                        st.session_state.person_df.loc[idx_p, "nik"] = edit_nik
-                        st.session_state.person_df.loc[idx_p, "person_name"] = edit_nama
-                        st.session_state.person_df.loc[idx_p, "username"] = edit_username
-                        st.session_state.person_df.loc[idx_p, "password"] = edit_password
-                        st.session_state.person_df.loc[idx_p, "role"] = edit_role
+                    with st.form("form_edit_personil"):
+                        col_p1, col_p2 = st.columns(2)
+                        with col_p1:
+                            edit_nik = st.text_input("NIK", value=str(user_row.get("nik", "")))
+                            edit_nama = st.text_input("Nama Lengkap", value=str(user_row.get("person_name", selected_user)))
+                            edit_username = st.text_input("Username", value=str(user_row.get("username", selected_user)), disabled=not is_admin)
                         
-                        save_master_table("MASTER_PERSONIL", st.session_state.person_df)
-                        st.toast("✅ Data Profil/Password berhasil diperbarui!", icon="✅")
-                        time.sleep(1.5)
-                        st.rerun()
+                        with col_p2:
+                            edit_password = st.text_input("Password Baru", value=str(user_row.get("password", "")))
+                            roles_options = ["Admin", "Staff Toko", "Kasir Toko"]
+                            curr_role = str(user_row.get("role", "Staff Toko"))
+                            role_idx = roles_options.index(curr_role) if curr_role in roles_options else 1
+                            
+                            edit_role = st.selectbox("Role Akun", roles_options, index=role_idx, disabled=not is_admin)
 
+                        btn_simpan_p = st.form_submit_button("💾 Simpan Perubahan Profil & Password", use_container_width=True)
+                        
+                        if btn_simpan_p:
+                            idx_p = user_row.name
+                            st.session_state.person_df.loc[idx_p, "nik"] = edit_nik
+                            st.session_state.person_df.loc[idx_p, "person_name"] = edit_nama
+                            st.session_state.person_df.loc[idx_p, "username"] = edit_username.strip()
+                            st.session_state.person_df.loc[idx_p, "password"] = edit_password.strip()
+                            st.session_state.person_df.loc[idx_p, "role"] = edit_role
+                            
+                            # Simpan ke Google Sheets & bersihkan cache
+                            save_master_table("MASTER_PERSONIL", st.session_state.person_df)
+                            st.cache_data.clear()
+                            
+                            # Titip pesan sukses di session state
+                            st.session_state["personil_success_msg"] = f"✅ Perubahan akun '{edit_username.strip()}' berhasil disimpan permanen!"
+                            
+                            st.rerun()
+
+        # ---------------------------------------------------------
+        # 2. BUAT USERNAME BARU
+        # ---------------------------------------------------------
         elif aksi_personil == "➕ Buat Username Baru" and is_admin:
             with st.form("form_add_personil"):
                 col_n1, col_n2 = st.columns(2)
                 with col_n1:
                     new_nik = st.text_input("NIK")
                     new_nama = st.text_input("Nama Lengkap")
-                    new_user = st.text_input("Username Baru")
+                    new_user = st.text_input("Username Baru (Tanpa Spasi)")
                 with col_n2:
-                    new_pass = st.text_input("Password", type="password")
+                    new_pass = st.text_input("Password")
                     new_role = st.selectbox("Role Akun", ["Admin", "Staff Toko", "Kasir Toko"])
                 
-                btn_create_p = st.form_submit_button("➕ Tambahkan User Baru")
+                btn_create_p = st.form_submit_button("➕ Tambahkan User Baru", use_container_width=True)
                 
                 if btn_create_p:
-                    if not new_user or not new_pass:
+                    clean_username = new_user.strip()
+                    clean_password = new_pass.strip()
+                    
+                    if not clean_username or not clean_password:
                         st.error("⚠️ Username dan Password wajib diisi!")
                     else:
-                        new_p_id = f"P{len(st.session_state.person_df) + 1:03d}"
-                        new_person_row = {
-                            "person_id": new_p_id,
-                            "person_name": new_nama,
-                            "username": new_user,
-                            "password": new_pass,
-                            "nik": new_nik,
-                            "role": new_role,
-                            "last_login": "-",
-                            "last_logout": "-"
-                        }
-                        st.session_state.person_df = pd.concat([st.session_state.person_df, pd.DataFrame([new_person_row])], ignore_index=True)
-                        save_master_table("MASTER_PERSONIL", st.session_state.person_df)
-                        st.toast(f"✅ Akun {new_user} berhasil dibuat!", icon="🎉")
-                        time.sleep(1.5)
-                        st.rerun()
-
+                        existing_users = person_df["username"].dropna().str.lower().tolist() if not person_df.empty else []
+                        if clean_username.lower() in existing_users:
+                            st.error(f"⚠️ Username **'{clean_username}'** sudah terdaftar! Gunakan username lain.")
+                        else:
+                            new_p_id = f"P{len(st.session_state.person_df) + 1:03d}"
+                            new_person_row = {
+                                "person_id": new_p_id,
+                                "person_name": new_nama if new_nama else clean_username,
+                                "username": clean_username,
+                                "password": clean_password,
+                                "nik": new_nik,
+                                "role": new_role,
+                                "last_login": "-",
+                                "last_logout": "-"
+                            }
+                            
+                            st.session_state.person_df = pd.concat([st.session_state.person_df, pd.DataFrame([new_person_row])], ignore_index=True)
+                            
+                            save_master_table("MASTER_PERSONIL", st.session_state.person_df)
+                            st.cache_data.clear()
+                            
+                            # Titip pesan sukses di session state
+                            st.session_state["personil_success_msg"] = f"🎉 Username baru '{clean_username}' berhasil dibuat dan siap digunakan!"
+                            
+                            st.rerun()
+                            
     # =========================================================
     # SUBTAB 2: MASTER ITEM & TARGET (KHUSUS ADMIN)
     # =========================================================
