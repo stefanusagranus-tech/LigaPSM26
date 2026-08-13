@@ -1410,7 +1410,7 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
         st.info(f"ℹ️ Anda login sebagai **{current_user}** ({user_role.title()}). Anda hanya diizinkan mengelola profil & password akun milik Anda sendiri.")
         m_tab1, = st.tabs(["👥 Profil & Password Saya"])
 
-       # =========================================================
+    # =========================================================
     # SUBTAB 1: MASTER PERSONIL & ROLE
     # =========================================================
     with m_tab1:
@@ -1481,6 +1481,55 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
                             
                             # Titip pesan sukses di session state
                             st.session_state["personil_success_msg"] = f"✅ Perubahan akun '{edit_username.strip()}' berhasil disimpan permanen!"
+                            
+                            st.rerun()
+
+        # ---------------------------------------------------------
+        # 2. BUAT USERNAME BARU
+        # ---------------------------------------------------------
+        elif aksi_personil == "➕ Buat Username Baru" and is_admin:
+            with st.form("form_add_personil"):
+                col_n1, col_n2 = st.columns(2)
+                with col_n1:
+                    new_nik = st.text_input("NIK")
+                    new_nama = st.text_input("Nama Lengkap")
+                    new_user = st.text_input("Username Baru (Tanpa Spasi)")
+                with col_n2:
+                    new_pass = st.text_input("Password")
+                    new_role = st.selectbox("Role Akun", ["Admin", "Staff Toko", "Kasir Toko"])
+                
+                btn_create_p = st.form_submit_button("➕ Tambahkan User Baru", use_container_width=True)
+                
+                if btn_create_p:
+                    clean_username = new_user.strip()
+                    clean_password = new_pass.strip()
+                    
+                    if not clean_username or not clean_password:
+                        st.error("⚠️ Username dan Password wajib diisi!")
+                    else:
+                        existing_users = person_df["username"].dropna().str.lower().tolist() if not person_df.empty else []
+                        if clean_username.lower() in existing_users:
+                            st.error(f"⚠️ Username **'{clean_username}'** sudah terdaftar! Gunakan username lain.")
+                        else:
+                            new_p_id = f"P{len(st.session_state.person_df) + 1:03d}"
+                            new_person_row = {
+                                "person_id": new_p_id,
+                                "person_name": new_nama if new_nama else clean_username,
+                                "username": clean_username,
+                                "password": clean_password,
+                                "nik": new_nik,
+                                "role": new_role,
+                                "last_login": "-",
+                                "last_logout": "-"
+                            }
+                            
+                            st.session_state.person_df = pd.concat([st.session_state.person_df, pd.DataFrame([new_person_row])], ignore_index=True)
+                            
+                            save_master_table("MASTER_PERSONIL", st.session_state.person_df)
+                            st.cache_data.clear()
+                            
+                            # Titip pesan sukses di session state
+                            st.session_state["personil_success_msg"] = f"🎉 Username baru '{clean_username}' berhasil dibuat dan siap digunakan!"
                             
                             st.rerun()
 
