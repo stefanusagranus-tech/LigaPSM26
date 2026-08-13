@@ -470,7 +470,7 @@ if selected_tab == "01 Overview":
     overview_table["gap"] = overview_table["target_qty"] - overview_table["actual_qty"]
     overview_table["ach"] = overview_table.apply(lambda r: (r["actual_qty"] / r["target_qty"] * 100) if r["target_qty"] > 0 else 0, axis=1)
 
-      table_rows_html = ""
+    table_rows_html = ""
     for _, row in overview_table.iterrows():
         gap_color = "#00ff88" if row['gap'] <= 0 else "#ef4444"
         ach_color = "#00ff88" if row['ach'] >= time_factor else "#ffb703"
