@@ -591,8 +591,8 @@ elif selected_tab == "02 Detail Item":
                         <th style="padding: 10px; color: #38bdf8; font-size: 11px;">GAP / SELISIH</th>
                     </tr>
                 </thead>
-                <tbody>{table_rows_html}</tbody>
-            </table>
+                <tbody>
+                {table_rows_html}
         </div>
         """, unsafe_allow_html=True)
 
