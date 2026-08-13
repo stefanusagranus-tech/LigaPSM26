@@ -1322,17 +1322,22 @@ elif selected_tab == "06 · Input & Reset Data":
                         st.rerun()
                         
                     
-# --- 07 TAB MASTER DATA & PENGATURAN ---
+# ---TAB 07 MASTER DATA & PENGATURAN ---
 elif selected_tab == "⚙️ Master Data & Pengaturan":
+    # Ambil username & role dari session state (mendukung 'user_role' maupun 'role')
     current_user = st.session_state.get("username", "visitor")
-    user_role = str(st.session_state.get("user_role", "visitor")).lower()
+    raw_role = st.session_state.get("user_role", st.session_state.get("role", "visitor"))
+    
+    user_role = str(raw_role).lower()
     user_lower = str(current_user).lower()
     
-    # Penentuan Hak Akses Akses
+    # 1. Cek Admin dulu (Prioritas Utama)
     is_admin = any(x in user_role or x in user_lower for x in ["admin", "chief", "cos", "lavitality"])
-    is_visitor = "visitor" in user_role or "visitor" in user_lower
+    
+    # 2. Cek Visitor (HANYA jika BUKAN Admin)
+    is_visitor = (not is_admin) and ("visitor" in user_role or "visitor" in user_lower)
 
-    # 🛑 1. PROTEKSI UTAMA: Visitor dilarang masuk sama sekali
+    # 🛑 PROTEKSI: Hanya memblokir jika BENAR-BENAR Visitor
     if is_visitor:
         st.error("🔒 **Akses Ditolak!** Pengguna dengan status **Visitor** tidak diizinkan masuk ke menu Master Data & Pengaturan.")
         st.stop()
