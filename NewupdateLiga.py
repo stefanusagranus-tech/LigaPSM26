@@ -1467,28 +1467,28 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
 
                         btn_simpan_p = st.form_submit_button("💾 Simpan Perubahan Profil & Password", use_container_width=True)
                         
-                        if btn_simpan_p:
-    # 1. Pastikan seluruh kolom di DataFrame diubah ke String agar tidak bentrok tipe data
-    st.session_state.person_df = st.session_state.person_df.astype(str)
+                if btn_simpan_p:
+                     # 1. Pastikan seluruh kolom di DataFrame diubah ke String agar tidak bentrok tipe data
+                     st.session_state.person_df = st.session_state.person_df.astype(str)
     
-    # 2. Cari baris user berdasarkan username (Metode Masking jauh lebih aman dari index)
-    mask = st.session_state.person_df["username"] == selected_user
+                     # 2. Cari baris user berdasarkan username (Metode Masking jauh lebih aman dari index)
+                     mask = st.session_state.person_df["username"] == selected_user
     
-    # 3. Update data satu per satu
-    st.session_state.person_df.loc[mask, "nik"] = str(edit_nik)
-    st.session_state.person_df.loc[mask, "person_name"] = str(edit_nama)
-    st.session_state.person_df.loc[mask, "username"] = str(edit_username).strip()
-    st.session_state.person_df.loc[mask, "password"] = str(edit_password).strip()
-    st.session_state.person_df.loc[mask, "role"] = str(edit_role)
+                     # 3. Update data satu per satu
+                     st.session_state.person_df.loc[mask, "nik"] = str(edit_nik)
+                     st.session_state.person_df.loc[mask, "person_name"] = str(edit_nama)
+                     st.session_state.person_df.loc[mask, "username"] = str(edit_username).strip()
+                     st.session_state.person_df.loc[mask, "password"] = str(edit_password).strip()
+                     st.session_state.person_df.loc[mask, "role"] = str(edit_role)
     
-    # 4. Simpan ke Google Sheets & bersihkan cache
-    save_master_table("MASTER_PERSONIL", st.session_state.person_df)
-    st.cache_data.clear()
+                     # 4. Simpan ke Google Sheets & bersihkan cache
+                     save_master_table("MASTER_PERSONIL", st.session_state.person_df)
+                     st.cache_data.clear()
     
-    # 5. Titip pesan sukses di session state
-    st.session_state["personil_success_msg"] = f"✅ Perubahan akun '{edit_username.strip()}' berhasil disimpan permanen!"
+                     # 5. Titip pesan sukses di session state
+                     st.session_state["personil_success_msg"] = f"✅ Perubahan akun '{edit_username.strip()}' berhasil disimpan permanen!"
     
-    st.rerun()
+                     st.rerun()
 
         # ---------------------------------------------------------
         # 2. BUAT USERNAME BARU
