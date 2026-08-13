@@ -1219,7 +1219,7 @@ elif selected_tab == "07 Master Data & Pengaturan":
                     if not clean_username or not clean_password:
                         st.error("⚠️ Username dan Password wajib diisi!")
                     else:
-                        existing_users = person_df["username"].dropna().str.lower().tolist() if not person_df.empty else []
+                        existing_users = person_df["username"].dropna().astype(str).str.lower().tolist() if not person_df.empty else []
                         if clean_username.lower() in existing_users:
                             st.error(f"⚠️ Username **'{clean_username}'** sudah terdaftar! Gunakan username lain.")
                         else:
