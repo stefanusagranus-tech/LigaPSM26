@@ -16,6 +16,33 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# =========================================================
+# SIDEBAR UTAMA & FITUR TESTING ROLE
+# =========================================================
+with st.sidebar:
+    st.image("https://via.placeholder.com/150", width=100) # (Jika ada logo toko)
+    
+    # 🧪 --- KODE ROLE SWITCHER MANUAL (TAMBAHKAN DI SINI) ---
+    st.markdown("---")
+    st.markdown("### 🧪 Testing Role Switcher")
+    
+    selected_manual_role = st.selectbox(
+        "Pilih Role (Mode Testing):",
+        ["Admin", "Staff Toko", "Kasir Toko", "Visitor"],
+        index=0,  # Default langsung 'Admin'
+        key="manual_role_selector"
+    )
+    
+    # Langsung inject ke session state
+    st.session_state["user_role"] = selected_manual_role
+    st.session_state["role"] = selected_manual_role
+    
+    # Tampilkan info user aktif saat ini
+    st.info(f"👤 Active Role: **{st.session_state['user_role']}**")
+    st.markdown("---")
+    
+    # (Di bawah ini kode sidebar menu / navigasi lama Anda…)
+
 # ==========================================
 # ID SPREADSHEET GOOGLE SHEETS ANDA
 # ==========================================
