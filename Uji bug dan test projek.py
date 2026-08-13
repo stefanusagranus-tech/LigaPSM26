@@ -7,6 +7,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from streamlit_gsheets import GSheetsConnection
 import time
+import textwrap 
 
 # =========================================================
 # 1. KONFIGURASI HALAMAN STREAMLIT
@@ -483,7 +484,8 @@ if selected_tab == "01 Overview":
         </tr>
         """
 
-    st.markdown(f"""
+    st.markdown(
+        textwrap.dedent (f"""
     <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; max-height: 400px; overflow-y: auto;">
         <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
             <thead>
@@ -496,9 +498,13 @@ if selected_tab == "01 Overview":
                 </tr>
             </thead>
             <tbody>
-            {table_rows_html}
+             {table_rows_html}
+           </tbody>
+        </thead>  
     </div>
-    """, unsafe_allow_html=True)
+    """),
+         unsafe_allow_html=True,
+    )
 
 # --- TAB 02: DETAIL ITEM ---
 elif selected_tab == "02 Detail Item":
