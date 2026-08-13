@@ -21,26 +21,27 @@ st.set_page_config(
 # ==========================================
 SPREADSHEET_ID = "1kJ-OsjLEsFuNyyBg2TwxlWz8Ape4lwF9h0t66q3ldQk"
 
-def load_database():
-    """
-    Membaca data realtime secara langsung dari Google Sheets via GViz CSV Endpoint.
-    Bebas error 400 Bad Request & tidak membutuhkan Service Account untuk membaca data.
-    """
-    try:
-        def read_sheet(sheet_name):
-            # Endpoint publik CSV resmi dari Google
-            url = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet={sheet_name}"
-            df = pd.read_csv(url)
-            if not df.empty:
-                # Otomatis rapikan nama kolom (huruf kecil & hapus spasi)
-                df.columns = df.columns.astype(str).str.strip().str.lower()
-            return df
+# =========================================================
+# INISIALISASI KONEKSI GOOGLE SHEETS & FUNGSI DATABASE
+# =========================================================
+from streamlit_gsheets import GSheetsConnection
 
-        periods_df = read_sheet("PERIODE")
-        items_df = read_sheet("MASTER_ITEM")
-        person_df = read_sheet("MASTER_PERSONIL")
-        sales_item_df = read_sheet("SALES_ITEM")
-        sales_person_df = read_sheet("SALES_PERSONIL")
+# 1. Deklarasi koneksi resmi (mencegah error 'conn is not defined')
+conn = st.connection("gsheets", type=GSheetsConnection)
+
+def load_database():
+    """Membaca data realtime secara langsung dari Google Sheets."""
+    try:
+        periods_df = conn.read(worksheet="PERIODE", ttl=0)
+        items_df = conn.read(worksheet="MASTER_ITEM", ttl=0)
+        person_df = conn.read(worksheet="MASTER_PERSONIL", ttl=0)
+        sales_item_df = conn.read(worksheet="SALES_ITEM", ttl=0)
+        sales_person_df = conn.read(worksheet="SALES_PERSONIL", ttl=0)
+
+        # Otomatis rapikan nama kolom (huruf kecil & hapus spasi)
+        for df in [periods_df, items_df, person_df, sales_item_df, sales_person_df]:
+            if not df.empty:
+                df.columns = df.columns.astype(str).str.strip().str.lower()
 
         return periods_df, items_df, person_df, sales_item_df, sales_person_df
     except Exception as e:
@@ -50,19 +51,23 @@ def load_database():
 def save_database(sales_item_df, sales_person_df):
     """Menyimpan data transaksi harian ke Google Sheets secara permanen."""
     try:
-        conn.update(spreadsheet=SPREADSHEET_URL, worksheet="SALES_ITEM", data=sales_item_df)
-        conn.update(spreadsheet=SPREADSHEET_URL, worksheet="SALES_PERSONIL", data=sales_person_df)
-        st.toast("✅ Perubahan transaksi tersimpan permanen di Google Sheets!", icon="💾")
+        conn.update(worksheet="SALES_ITEM", data=sales_item_df)
+        conn.update(worksheet="SALES_PERSONIL", data=sales_person_df)
+        st.toast("✅ Perubahan transaksi tersimpan permanen di Google Sheets!", icon="✅")
+        return True
     except Exception as e:
-        st.error(f"❌ Gagal menyimpan transaksi ke Google Sheets: {e}")
+        st.error(f"🚨 Gagal menyimpan transaksi ke Google Sheets: {e}")
+        return False
 
 def save_master_table(sheet_name, df_data):
     """Menyimpan perubahan master data (Personil/Item/Periode) ke Google Sheets."""
     try:
-        conn.update(spreadsheet=SPREADSHEET_URL, worksheet=sheet_name, data=df_data)
-        st.toast(f"✅ Master {sheet_name} berhasil diperbarui di Google Sheets!", icon="💾")
+        conn.update(worksheet=sheet_name, data=df_data)
+        st.toast(f"✅ Master {sheet_name} berhasil diperbarui di Google Sheets!", icon="✅")
+        return True
     except Exception as e:
-        st.error(f"❌ Gagal update master {sheet_name}: {e}")
+        st.error(f"🚨 Gagal update master {sheet_name}: {e}")
+        return False
 
 def sync_store_sales_from_personnel():
     """
