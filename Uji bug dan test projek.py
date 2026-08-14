@@ -566,7 +566,7 @@ elif selected_tab == "02 Detail Item":
                 <div style="color: #00ff88; font-size: 20px; font-weight: 800;">{item_grouped['actual_qty'].sum():,.0f} Pcs Total</div>
             </div>""", unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
         table_rows_html = ""
         for _, row in item_grouped.iterrows():
             gap_color = "#00ff88" if row['gap'] >= 0 else "#ef4444"
