@@ -323,8 +323,7 @@ with st.sidebar.expander("🧪 Mode Testing Role Switcher", expanded=False):
 
 st.sidebar.markdown("<p style='color:#38bdf8; font-weight:bold; letter-spacing:1px; margin-bottom:6px;'>📌 NAVIGASI MENU</p>", unsafe_allow_html=True)
 menu_options = [
-    "01 Overview",
-    "02 Detail Item",
+    "01 Dashboard Toko",
     "03 Raport Personil Toko",
     "05 Analisis Tren",
     "06 Input & Reset Data",
@@ -371,13 +370,38 @@ st.markdown(f"""
 # 9. MODUL TAB / SUB MENU
 # =========================================================
 
-# --- TAB 01: OVERVIEW PENJUALAN ---
-if selected_tab == "01 Overview":
-    st.title("Overview Penjualan Toko")
+# =========================================================
+# --- TAB 01: OVERVIEW & DETAIL ITEM PRODUK (GABUNGAN) ---
+# =========================================================
+if selected_tab == "01 Dashboard Toko":
+    # -----------------------------------------------------
+    # 🎨 PREMIS & HEADER DASHBOARD
+    # -----------------------------------------------------
+    st.markdown(
+        """
+        <div style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); border: 1.5px solid #6366f1; border-radius: 12px; padding: 20px; margin-bottom: 25px; box-shadow: 0 4px 20px rgba(99, 102, 241, 0.2);">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 28px;">📊</span>
+                <div>
+                    <h2 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 0.5px;">
+                        EXECUTIVE OVERVIEW & DETAIL PERFORMA PRODUK
+                    </h2>
+                    <p style="color: #a5f3fc; margin: 4px 0 0 0; font-size: 13px;">
+                        Pantau pencapaian target penjualan toko, laju waktu (pace factor), serta analisis komprehensif performa per item produk secara real-time.
+                    </p>
+                </div>
+            </div>
+        </div>
+    """,
+        unsafe_allow_html=True,
+    )
+
+    # 1. AMBIL DAN PREPARASI DATASET
     si_df = st.session_state.sales_item_df.copy()
     sp_df = st.session_state.sales_person_df.copy()
     periods_df = st.session_state.periods_df.copy()
-    
+
+    # Filter dasar berdasarkan Periode Aktif Sidebar
     if selected_period_id:
         sub_periods = periods_df[periods_df["period_id"] == selected_period_id]
         sub_si = si_df[si_df["period_id"] == selected_period_id]
@@ -386,7 +410,8 @@ if selected_tab == "01 Overview":
         sub_periods = periods_df
         sub_si = si_df
         sub_sp = sp_df
-        
+
+    # Penentuan Default Tanggal Filter
     if not sub_periods.empty and "start_date" in sub_periods.columns:
         default_start = pd.to_datetime(sub_periods.iloc[0]["start_date"]).date()
         default_end = pd.to_datetime(sub_periods.iloc[0]["end_date"]).date()
@@ -394,26 +419,38 @@ if selected_tab == "01 Overview":
         default_start = waktu_wib.date().replace(day=1)
         default_end = waktu_wib.date()
 
+    # -----------------------------------------------------
+    # SECTION 1: OVERVIEW METRIK & PACE PENJUALAN TOKO
+    # -----------------------------------------------------
     st.markdown("### 🗓️ Filter Rentang Tanggal Overview")
     col_date1, col_date2 = st.columns(2)
     with col_date1:
-        start_date = st.date_input("Tanggal Awal Overview", value=default_start, key="t1_start_date")
+        start_date = st.date_input(
+            "Tanggal Awal Overview", value=default_start, key="t1_start_date"
+        )
     with col_date2:
-        end_date = st.date_input("Tanggal Akhir Overview", value=default_end, key="t1_end_date")
+        end_date = st.date_input(
+            "Tanggal Akhir Overview", value=default_end, key="t1_end_date"
+        )
 
     if start_date > end_date:
         st.error("⚠️ Tanggal Awal tidak boleh melebihi Tanggal Akhir!")
         st.stop()
 
+    # Filter data personil berdasarkan kolom updated_at
     if "updated_at" in sub_sp.columns and not sub_sp.empty:
         sub_sp["updated_at_dt"] = pd.to_datetime(sub_sp["updated_at"]).dt.date
-        filtered_sp = sub_sp[(sub_sp["updated_at_dt"] >= start_date) & (sub_sp["updated_at_dt"] <= end_date)].copy()
+        filtered_sp = sub_sp[
+            (sub_sp["updated_at_dt"] >= start_date)
+            & (sub_sp["updated_at_dt"] <= end_date)
+        ].copy()
     else:
         filtered_sp = sub_sp.copy()
 
+    # Kalkulasi Time Factor (Laju Waktu Berjalan)
     total_days = max((end_date - start_date).days + 1, 1)
     today_date = waktu_wib.date()
-    
+
     if today_date < start_date:
         passed_days = 0
     elif today_date > end_date:
@@ -423,11 +460,17 @@ if selected_tab == "01 Overview":
 
     time_factor = (passed_days / total_days) * 100 if total_days > 0 else 0
 
-    if "target_qty" not in sub_si.columns: sub_si["target_qty"] = 0
-    sub_si["target_qty"] = pd.to_numeric(sub_si["target_qty"], errors="coerce").fillna(0)
-    
+    # Normalisasi Angka
+    if "target_qty" not in sub_si.columns:
+        sub_si["target_qty"] = 0
+    sub_si["target_qty"] = (
+        pd.to_numeric(sub_si["target_qty"], errors="coerce").fillna(0)
+    )
+
     if "actual_qty" in filtered_sp.columns:
-        filtered_sp["actual_qty"] = pd.to_numeric(filtered_sp["actual_qty"], errors="coerce").fillna(0)
+        filtered_sp["actual_qty"] = (
+            pd.to_numeric(filtered_sp["actual_qty"], errors="coerce").fillna(0)
+        )
     else:
         filtered_sp["actual_qty"] = 0
 
@@ -436,51 +479,86 @@ if selected_tab == "01 Overview":
     tot_gap = tot_target - tot_actual
     tot_ach = (tot_actual / tot_target * 100) if tot_target > 0 else 0
 
+    # Tampilan Card Metrik Utama
     m1, m2, m3, m4, m5 = st.columns(5)
-    with m1: st.metric("🎯 Total Target", f"{tot_target:,.0f} Pcs")
-    with m2: st.metric("📦 Actual Penjualan", f"{tot_actual:,.0f} Pcs")
-    with m3: st.metric("📉 Sisa Gap Target", f"{tot_gap:,.0f} Pcs")
-    with m4: st.metric("⚡ % Achievement", f"{tot_ach:.1f}%")
-    with m5: st.metric("⏳ Time Factor (Waktu)", f"{time_factor:.1f}%", help=f"Hari berjalan: {passed_days}/{total_days} hari")
+    with m1:
+        st.metric("🎯 Total Target", f"{tot_target:,.0f} Pcs")
+    with m2:
+        st.metric("📦 Actual Penjualan", f"{tot_actual:,.0f} Pcs")
+    with m3:
+        st.metric("📉 Sisa Gap Target", f"{tot_gap:,.0f} Pcs")
+    with m4:
+        st.metric("⚡ % Achievement", f"{tot_ach:.1f}%")
+    with m5:
+        st.metric(
+            "⏳ Time Factor (Waktu)",
+            f"{time_factor:.1f}%",
+            help=f"Hari berjalan: {passed_days}/{total_days} hari",
+        )
 
-    st.markdown("---")
+    st.markdown("<br>", unsafe_allow_html=True)
 
+    # Status Card Pace Penjualan
     pace_gap = tot_ach - time_factor
     if pace_gap >= 0:
         status_color = "#00ff9d"
-        status_bg = "rgba(0, 255, 157, 0.1)"
+        status_bg = "rgba(0, 255, 157, 0.08)"
         status_icon = "🚀"
         status_title = "PACE PENJUALAN ON TRACK"
         status_desc = f"Pencapaian penjualan (**{tot_ach:.1f}%**) melampaui laju waktu berjalan (**{time_factor:.1f}%**). Pertahankan performa toko!"
     else:
         status_color = "#ff2a6d"
-        status_bg = "rgba(255, 42, 109, 0.1)"
+        status_bg = "rgba(255, 42, 109, 0.08)"
         status_icon = "⚠️"
         status_title = "PACE PENJUALAN BEHIND TARGET"
         status_desc = f"Pencapaian penjualan (**{tot_ach:.1f}%**) masih di bawah laju waktu berjalan (**{time_factor:.1f}%**). Tertinggal sebesar **{abs(pace_gap):.1f}%**."
 
-    st.markdown(f"""
-    <div style="background: {status_bg}; border: 1.5px solid {status_color}; border-left: 6px solid {status_color}; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
-        <h4 style="color: {status_color}; margin: 0 0 6px 0;">{status_icon} {status_title}</h4>
-        <p style="color: #f1f5f9; margin: 0; font-size: 14px;">{status_desc}</p>
+    st.markdown(
+        f"""
+    <div style="background: {status_bg}; border: 1.5px solid {status_color}; border-left: 6px solid {status_color}; border-radius: 10px; padding: 16px; margin-bottom: 25px;">
+        <h4 style="color: {status_color}; margin: 0 0 6px 0; font-size: 16px;">{status_icon} {status_title}</h4>
+        <p style="color: #f1f5f9; margin: 0; font-size: 13.5px;">{status_desc}</p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
+    # TABEL RINGKASAN PENJUALAN PER ITEM (OVERVIEW)
     st.subheader("📊 Ringkasan Penjualan Per Item Produk")
-    
-    # Aggregasi sub_si agar item_id tidak terduplikasi jika "Semua Periode" dipilih
-    si_grouped = sub_si.groupby(["item_id", "item_name"])["target_qty"].sum().reset_index() if not sub_si.empty else pd.DataFrame(columns=["item_id", "item_name", "target_qty"])
-    item_sp = filtered_sp.groupby(["item_id", "item_name"])["actual_qty"].sum().reset_index() if not filtered_sp.empty else pd.DataFrame(columns=["item_id", "item_name", "actual_qty"])
 
-    overview_table = pd.merge(si_grouped, item_sp[["item_id", "actual_qty"]], on="item_id", how="left")
+    si_grouped = (
+        sub_si.groupby(["item_id", "item_name"])["target_qty"]
+        .sum()
+        .reset_index()
+        if not sub_si.empty
+        else pd.DataFrame(columns=["item_id", "item_name", "target_qty"])
+    )
+    item_sp = (
+        filtered_sp.groupby(["item_id", "item_name"])["actual_qty"]
+        .sum()
+        .reset_index()
+        if not filtered_sp.empty
+        else pd.DataFrame(columns=["item_id", "item_name", "actual_qty"])
+    )
+
+    overview_table = pd.merge(
+        si_grouped, item_sp[["item_id", "actual_qty"]], on="item_id", how="left"
+    )
     overview_table["actual_qty"] = overview_table["actual_qty"].fillna(0)
-    overview_table["gap"] = overview_table["target_qty"] - overview_table["actual_qty"]
-    overview_table["ach"] = overview_table.apply(lambda r: (r["actual_qty"] / r["target_qty"] * 100) if r["target_qty"] > 0 else 0, axis=1)
+    overview_table["gap"] = (
+        overview_table["target_qty"] - overview_table["actual_qty"]
+    )
+    overview_table["ach"] = overview_table.apply(
+        lambda r: (r["actual_qty"] / r["target_qty"] * 100)
+        if r["target_qty"] > 0
+        else 0,
+        axis=1,
+    )
 
     table_rows_html = ""
     for _, row in overview_table.iterrows():
-        gap_color = "#00ff88" if row['gap'] <= 0 else "#ef4444"
-        ach_color = "#00ff88" if row['ach'] >= time_factor else "#ffb703"
+        gap_color = "#00ff88" if row["gap"] <= 0 else "#ef4444"
+        ach_color = "#00ff88" if row["ach"] >= time_factor else "#ffb703"
         table_rows_html += f"""
         <tr style="border-bottom: 1px solid #1e293b;">
             <td style="padding: 10px; color: #ffffff; font-weight: bold; font-size: 13px;">{row['item_name']}</td>
@@ -491,8 +569,9 @@ if selected_tab == "01 Overview":
         </tr>
         """
 
-    st.markdown(f"""
-        <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; max-height: 400px; overflow-y: auto;">
+    st.markdown(
+        f"""
+        <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; max-height: 380px; overflow-y: auto;">
             <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
                 <thead>
                     <tr style="border-bottom: 2px solid #334155;">
@@ -504,80 +583,150 @@ if selected_tab == "01 Overview":
                     </tr>
                 </thead>
                 <tbody>
-                    {table_rows_html}
+                    {table_rows_html if table_rows_html else '<tr><td colspan="5" style="padding:10px; color:#94a3b8; text-align:center;">Data tidak ditemukan</td></tr>'}
         </div>
-    """, unsafe_allow_html=True)
-    
-# --- TAB 02: DETAIL ITEM ---
-elif selected_tab == "02 Detail Item":
-    st.title("📦 Detail Item & Performa Produk")
-    si_df = st.session_state.sales_item_df.copy()
-    
-    st.markdown("<p style='color:#38bdf8; font-weight:bold; font-size:13px;'>🔍 FILTER & PENGURUTAN DATA PRODUK</p>", unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
+
+    # -----------------------------------------------------
+    # PEMISAH VISUAL ANTAR SECTION
+    # -----------------------------------------------------
+    st.markdown("<br><hr style='border: 1px solid #334155;'><br>", unsafe_allow_html=True)
+
+    # -----------------------------------------------------
+    # SECTION 2: DETAIL ITEM & ANALISIS PERFORMA PRODUK
+    # -----------------------------------------------------
+    st.subheader("📦 Detail Item & Performa Produk")
+
+    si_detail_df = st.session_state.sales_item_df.copy()
+
+    st.markdown(
+        "<p style='color:#38bdf8; font-weight:bold; font-size:13px;'>🔍 FILTER & PENGURUTAN DATA PRODUK</p>",
+        unsafe_allow_html=True,
+    )
     f_col1, f_col2, f_col3 = st.columns([1.5, 1, 1.2])
     with f_col1:
-        search_query = st.text_input("Cari Nama Produk / Item", placeholder="Ketik nama item...", key="search_item_tab2")
+        search_query = st.text_input(
+            "Cari Nama Produk / Item",
+            placeholder="Ketik nama item...",
+            key="search_item_tab2",
+        )
     with f_col2:
-        selected_p_tab2 = st.selectbox("Periode Promosi", ["Semua Periode Promosi"] + list(periods_dict.keys()), key="period_tab2")
+        selected_p_tab2 = st.selectbox(
+            "Periode Promosi",
+            ["Semua Periode Promosi"] + list(periods_dict.keys()),
+            key="period_tab2",
+        )
     with f_col3:
-        sort_option = st.selectbox("Urutkan Berdasarkan", ["Penjualan Terbanyak (Terlaris)", "Penjualan Tersedikit", "Achievement Tertinggi (% Ach)", "Nama Produk (A - Z)"], key="sort_tab2")
+        sort_option = st.selectbox(
+            "Urutkan Berdasarkan",
+            [
+                "Penjualan Terbanyak (Terlaris)",
+                "Penjualan Tersedikit",
+                "Achievement Tertinggi (% Ach)",
+                "Nama Produk (A - Z)",
+            ],
+            key="sort_tab2",
+        )
 
+    # Filter spesifik jika user memilih periode tertentu di dropdown detail
     if selected_p_tab2 != "Semua Periode Promosi":
         p_id_filter = periods_dict[selected_p_tab2]
-        si_df = si_df[si_df["period_id"] == p_id_filter]
+        si_detail_df = si_detail_df[si_detail_df["period_id"] == p_id_filter]
 
-    si_df["target_qty"] = pd.to_numeric(si_df["target_qty"], errors="coerce").fillna(0)
-    si_df["actual_qty"] = pd.to_numeric(si_df["actual_qty"], errors="coerce").fillna(0)
+    si_detail_df["target_qty"] = (
+        pd.to_numeric(si_detail_df["target_qty"], errors="coerce").fillna(0)
+    )
+    si_detail_df["actual_qty"] = (
+        pd.to_numeric(si_detail_df["actual_qty"], errors="coerce").fillna(0)
+    )
 
-    item_grouped = si_df.groupby("item_name").agg({"target_qty": "sum", "actual_qty": "sum"}).reset_index()
-    item_grouped["ach"] = item_grouped.apply(lambda r: (r["actual_qty"] / r["target_qty"] * 100) if r["target_qty"] > 0 else 0, axis=1)
+    item_grouped = (
+        si_detail_df.groupby("item_name")
+        .agg({"target_qty": "sum", "actual_qty": "sum"})
+        .reset_index()
+    )
+    item_grouped["ach"] = item_grouped.apply(
+        lambda r: (r["actual_qty"] / r["target_qty"] * 100)
+        if r["target_qty"] > 0
+        else 0,
+        axis=1,
+    )
     item_grouped["gap"] = item_grouped["actual_qty"] - item_grouped["target_qty"]
 
+    # Filter berdasar teks pencarian
     if search_query:
-        item_grouped = item_grouped[item_grouped["item_name"].str.contains(search_query, case=False, na=False)]
+        item_grouped = item_grouped[
+            item_grouped["item_name"].str.contains(
+                search_query, case=False, na=False
+            )
+        ]
 
     if not item_grouped.empty:
-        top_item = item_grouped.sort_values(by="actual_qty", ascending=False).iloc[0]
-        low_item = item_grouped.sort_values(by="actual_qty", ascending=True).iloc[0]
+        top_item = item_grouped.sort_values(
+            by="actual_qty", ascending=False
+        ).iloc[0]
+        low_item = item_grouped.sort_values(
+            by="actual_qty", ascending=True
+        ).iloc[0]
 
+        # Pengurutan Data
         if sort_option == "Penjualan Terbanyak (Terlaris)":
-            item_grouped = item_grouped.sort_values(by="actual_qty", ascending=False)
+            item_grouped = item_grouped.sort_values(
+                by="actual_qty", ascending=False
+            )
         elif sort_option == "Penjualan Tersedikit":
-            item_grouped = item_grouped.sort_values(by="actual_qty", ascending=True)
+            item_grouped = item_grouped.sort_values(
+                by="actual_qty", ascending=True
+            )
         elif sort_option == "Achievement Tertinggi (% Ach)":
-            item_grouped = item_grouped.sort_values(by="ach", ascending=False)
+            item_grouped = item_grouped.sort_values(
+                by="ach", ascending=False
+            )
         elif sort_option == "Nama Produk (A - Z)":
-            item_grouped = item_grouped.sort_values(by="item_name", ascending=True)
+            item_grouped = item_grouped.sort_values(
+                by="item_name", ascending=True
+            )
 
         st.markdown("<br>", unsafe_allow_html=True)
         r_col1, r_col2, r_col3 = st.columns(3)
         with r_col1:
-            st.markdown(f"""
-            <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 14px; box-shadow: 0 0 12px rgba(0, 240, 255, 0.35);">
+            st.markdown(
+                f"""
+            <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 14px; box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);">
                 <div style="color: #f59e0b; font-size: 11px; font-weight: bold;">🔥 ITEM TERLARIS</div>
-                <div style="color: #ffffff; font-size: 16px; font-weight: 800;">{top_item['item_name']}</div>
+                <div style="color: #ffffff; font-size: 16px; font-weight: 800; margin: 2px 0;">{top_item['item_name']}</div>
                 <div style="color: #00ff88; font-size: 20px; font-weight: 800;">{top_item['actual_qty']:,.0f} Pcs</div>
-            </div>""", unsafe_allow_html=True)
+            </div>""",
+                unsafe_allow_html=True,
+            )
         with r_col2:
-            st.markdown(f"""
-            <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 14px; box-shadow: 0 0 12px rgba(0, 240, 255, 0.35);">
+            st.markdown(
+                f"""
+            <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 14px; box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);">
                 <div style="color: #ef4444; font-size: 11px; font-weight: bold;">📉 ITEM TERENDAH</div>
-                <div style="color: #ffffff; font-size: 16px; font-weight: 800;">{low_item['item_name']}</div>
+                <div style="color: #ffffff; font-size: 16px; font-weight: 800; margin: 2px 0;">{low_item['item_name']}</div>
                 <div style="color: #00ff88; font-size: 20px; font-weight: 800;">{low_item['actual_qty']:,.0f} Pcs</div>
-            </div>""", unsafe_allow_html=True)
+            </div>""",
+                unsafe_allow_html=True,
+            )
         with r_col3:
-            st.markdown(f"""
-            <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 14px; box-shadow: 0 0 12px rgba(0, 240, 255, 0.35);">
+            st.markdown(
+                f"""
+            <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 14px; box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);">
                 <div style="color: #38bdf8; font-size: 11px; font-weight: bold;">📦 VARIASI ITEM</div>
-                <div style="color: #ffffff; font-size: 16px; font-weight: 800;">{len(item_grouped)} Jenis</div>
+                <div style="color: #ffffff; font-size: 16px; font-weight: 800; margin: 2px 0;">{len(item_grouped)} Jenis</div>
                 <div style="color: #00ff88; font-size: 20px; font-weight: 800;">{item_grouped['actual_qty'].sum():,.0f} Pcs Total</div>
-            </div>""", unsafe_allow_html=True)
+            </div>""",
+                unsafe_allow_html=True,
+            )
 
         st.markdown("<br>", unsafe_allow_html=True)
-        table_rows_html = ""
+        detail_rows_html = ""
         for _, row in item_grouped.iterrows():
-            gap_color = "#00ff88" if row['gap'] >= 0 else "#ef4444"
-            table_rows_html += f"""
+            gap_color = "#00ff88" if row["gap"] >= 0 else "#ef4444"
+            detail_rows_html += f"""
             <tr style="border-bottom: 1px solid #1e293b;">
                 <td style="padding: 12px; color: #ffffff; font-weight: bold;">{row['item_name']}</td>
                 <td style="padding: 12px; color: #94a3b8;">{row['target_qty']:,.0f}</td>
@@ -587,7 +736,8 @@ elif selected_tab == "02 Detail Item":
             </tr>
             """
 
-    st.markdown(f"""
+        st.markdown(
+            f"""
             <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 12px; max-height: 520px; overflow-y: auto;">
                 <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
                     <thead>
@@ -600,9 +750,13 @@ elif selected_tab == "02 Detail Item":
                         </tr>
                     </thead>
                     <tbody>
-                        {table_rows_html}
+                        {detail_rows_html}
             </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
+    else:
+        st.info("💡 Tidak ada produk/item yang sesuai dengan filter pencarian.")
 
 # =========================================================
 # --- TAB COMBINED: PERFORMA PERSONIL, PERNIK & DYNAMIC TARGET ---
