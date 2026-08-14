@@ -542,7 +542,7 @@ elif selected_tab == "02 Detail Item":
         elif sort_option == "Nama Produk (A - Z)":
             item_grouped = item_grouped.sort_values(by="item_name", ascending=True)
 
-        st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
         r_col1, r_col2, r_col3 = st.columns(3)
         with r_col1:
             st.markdown(f"""
@@ -566,7 +566,7 @@ elif selected_tab == "02 Detail Item":
                 <div style="color: #00ff88; font-size: 20px; font-weight: 800;">{item_grouped['actual_qty'].sum():,.0f} Pcs Total</div>
             </div>""", unsafe_allow_html=True)
 
-        st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
         table_rows_html = ""
         for _, row in item_grouped.iterrows():
             gap_color = "#00ff88" if row['gap'] >= 0 else "#ef4444"
@@ -593,7 +593,7 @@ elif selected_tab == "02 Detail Item":
                     </tr>
                 </thead>
                 <tbody>
-                {table_rows_html}
+                    {table_rows_html}
         </div>
         """, unsafe_allow_html=True)
 
@@ -633,7 +633,7 @@ elif selected_tab == "03 Penjualan Personil":
             p3_name = summary_person.iloc[2]["person_name"] if len(summary_person) >= 3 else "-"
             p3_qty = summary_person.iloc[2]["actual_qty"] if len(summary_person) >= 3 else 0
 
-            st.markdown(f"""
+    st.markdown(f"""
             <div style="display: flex; gap: 12px; justify-content: center; align-items: flex-end; margin-bottom: 20px;">
                 <div style="flex: 1; background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; text-align: center;">
                     <span style="font-size: 18px;">🥈</span>
@@ -656,7 +656,7 @@ elif selected_tab == "03 Penjualan Personil":
             </div>
             """, unsafe_allow_html=True)
 
-        st.markdown("---")
+    st.markdown("---")
         col_table, col_chart = st.columns([1, 1])
         COMPONENT_HEIGHT = 310
         
@@ -672,7 +672,7 @@ elif selected_tab == "03 Penjualan Personil":
                 </tr>
                 """
 
-            st.markdown(f"""
+    st.markdown(f"""
             <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; height: {COMPONENT_HEIGHT}px; overflow-y: auto;">
                 <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
                     <thead>
@@ -682,8 +682,8 @@ elif selected_tab == "03 Penjualan Personil":
                             <th style="padding: 8px; color: #94a3b8; font-size: 11px;">KONTRIBUSI</th>
                         </tr>
                     </thead>
-                    <tbody>{table_rows_html}</tbody>
-                </table>
+                    <tbody>
+                        {table_rows_html}
             </div>
             """, unsafe_allow_html=True)
 
@@ -773,7 +773,7 @@ elif selected_tab == "04 Pencapaian Pernik":
             </tr>
             """
 
-        st.markdown(f"""
+    st.markdown(f"""
         <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; max-height: 380px; overflow-y: auto;">
             <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
                 <thead>
@@ -785,8 +785,8 @@ elif selected_tab == "04 Pencapaian Pernik":
                         <th style="padding: 8px; color: #38bdf8; font-size: 11px;">% ACH</th>
                     </tr>
                 </thead>
-                <tbody>{table_rows_html}</tbody>
-            </table>
+                <tbody>
+                    {table_rows_html}
         </div>
         """, unsafe_allow_html=True)
 
