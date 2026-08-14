@@ -600,191 +600,105 @@ elif selected_tab == "02 Detail Item":
 # --- TAB 03: PENJUALAN PERSONIL ---
 elif selected_tab == "03 · Penjualan Personil":
     st.title("👥 Penjualan Personil Toko")
+    sp_df = st.session_state.sales_person_df.copy()
+    if selected_period_id:
+        sp_df = sp_df[sp_df["period_id"] == selected_period_id]
+        
+    sp_df["actual_qty"] = pd.to_numeric(sp_df["actual_qty"], errors="coerce").fillna(0)
 
-    # 1. AMBIL DATA DARI GOOGLE SHEETS (si_df)
-    if "si_df" in st.session_state and not st.session_state.si_df.empty:
-        sp_df = st.session_state.si_df.copy()
+    if not sp_df.empty:
+        summary_person = sp_df.groupby("person_name")["actual_qty"].sum().reset_index().sort_values(by="actual_qty", ascending=False)
+        tot_actual_personil = summary_person["actual_qty"].sum()
+        avg_sales_personil = summary_person["actual_qty"].mean() if len(summary_person) > 0 else 0
+        top_performer_name = summary_person.iloc[0]["person_name"] if len(summary_person) > 0 else "-"
+        summary_person["pct_contrib"] = (summary_person["actual_qty"] / tot_actual_personil * 100) if tot_actual_personil > 0 else 0
 
-        # Filter berdasarkan periode jika ada
-        if selected_period_id and "period_id" in sp_df.columns:
-            sp_df = sp_df[sp_df["period_id"] == selected_period_id]
+        m1, m2, m3 = st.columns(3)
+        with m1:
+            st.markdown(f'<div style="background:#080c14; border:1.5px solid #00f0ff; border-radius:10px; padding:16px;"><div style="color:#ffffff; font-size:11px; font-weight:bold;">TOTAL ACTUAL PERSONIL</div><div style="color:#00ff88; font-size:28px; font-weight:800;">{tot_actual_personil:,.0f} Pcs</div></div>', unsafe_allow_html=True)
+        with m2:
+            st.markdown(f'<div style="background:#080c14; border:1.5px solid #00f0ff; border-radius:10px; padding:16px;"><div style="color:#ffffff; font-size:11px; font-weight:bold;">RATA-RATA PENJUALAN/STAF</div><div style="color:#00ff88; font-size:28px; font-weight:800;">{avg_sales_personil:,.0f} Pcs</div></div>', unsafe_allow_html=True)
+        with m3:
+            st.markdown(f'<div style="background:#080c14; border:1.5px solid #00f0ff; border-radius:10px; padding:16px;"><div style="color:#ffffff; font-size:11px; font-weight:bold;">TOP PERFORMER</div><div style="color:#00ff88; font-size:26px; font-weight:800;">{top_performer_name}</div></div>', unsafe_allow_html=True)
 
-        # Pastikan kolom actual_qty bertipe numerik
-        if "actual_qty" in sp_df.columns:
-            sp_df["actual_qty"] = pd.to_numeric(
-                sp_df["actual_qty"], errors="coerce"
-            ).fillna(0)
+        st.markdown("<br>", unsafe_allow_html=True)
+        if len(summary_person) >= 1:
+            p1_name = summary_person.iloc[0]["person_name"]
+            p1_qty = summary_person.iloc[0]["actual_qty"]
+            p2_name = summary_person.iloc[1]["person_name"] if len(summary_person) >= 2 else "-"
+            p2_qty = summary_person.iloc[1]["actual_qty"] if len(summary_person) >= 2 else 0
+            p3_name = summary_person.iloc[2]["person_name"] if len(summary_person) >= 3 else "-"
+            p3_qty = summary_person.iloc[2]["actual_qty"] if len(summary_person) >= 3 else 0
 
-        # Cek apakah kolom person_name ada di dalam data
-        if "person_name" in sp_df.columns and not sp_df.empty:
-
-            # 2. AGRAGASI DATA PER PERSONIL
-            summary_person = (
-                sp_df.groupby("person_name")["actual_qty"]
-                .sum()
-                .reset_index()
-                .sort_values(by="actual_qty", ascending=False)
-            )
-
-            tot_actual_personil = summary_person["actual_qty"].sum()
-            avg_sales_personil = (
-                summary_person["actual_qty"].mean()
-                if len(summary_person) > 0
-                else 0
-            )
-            top_performer_name = (
-                summary_person.iloc[0]["person_name"]
-                if len(summary_person) > 0
-                else "-"
-            )
-
-            summary_person["pct_contrib"] = (
-                (summary_person["actual_qty"] / tot_actual_personil * 100)
-                if tot_actual_personil > 0
-                else 0
-            )
-
-            # 3. METRIC CARDS
-            m1, m2, m3 = st.columns(3)
-            with m1:
-                st.markdown(
-                    f'<div style="background:#080c14; border:1.5px solid #00f0ff; border-radius:10px; padding:16px;"><div style="color:#ffffff; font-size:11px; font-weight:bold;">TOTAL ACTUAL PERSONIL</div><div style="color:#00ff88; font-size:28px; font-weight:800;">{tot_actual_personil:,.0f} Pcs</div></div>',
-                    unsafe_allow_html=True,
-                )
-            with m2:
-                st.markdown(
-                    f'<div style="background:#080c14; border:1.5px solid #00f0ff; border-radius:10px; padding:16px;"><div style="color:#ffffff; font-size:11px; font-weight:bold;">RATA-RATA PENJUALAN/STAF</div><div style="color:#00ff88; font-size:28px; font-weight:800;">{avg_sales_personil:,.0f} Pcs</div></div>',
-                    unsafe_allow_html=True,
-                )
-            with m3:
-                st.markdown(
-                    f'<div style="background:#080c14; border:1.5px solid #00f0ff; border-radius:10px; padding:16px;"><div style="color:#ffffff; font-size:11px; font-weight:bold;">TOP PERFORMER</div><div style="color:#00ff88; font-size:26px; font-weight:800;">{top_performer_name}</div></div>',
-                    unsafe_allow_html=True,
-                )
-
-            st.markdown("<br>", unsafe_allow_html=True)
-
-            # 4. PODIUM JUARA (1, 2, 3)
-            if len(summary_person) >= 1:
-                p1_name = summary_person.iloc[0]["person_name"]
-                p1_qty = summary_person.iloc[0]["actual_qty"]
-                p2_name = (
-                    summary_person.iloc[1]["person_name"]
-                    if len(summary_person) >= 2
-                    else "-"
-                )
-                p2_qty = (
-                    summary_person.iloc[1]["actual_qty"]
-                    if len(summary_person) >= 2
-                    else 0
-                )
-                p3_name = (
-                    summary_person.iloc[2]["person_name"]
-                    if len(summary_person) >= 3
-                    else "-"
-                )
-                p3_qty = (
-                    summary_person.iloc[2]["actual_qty"]
-                    if len(summary_person) >= 3
-                    else 0
-                )
-
-                podium_html = textwrap.dedent(f"""
-                    <div style="display: flex; gap: 12px; justify-content: center; align-items: flex-end; margin-bottom: 20px;">
-                        <div style="flex: 1; background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; text-align: center;">
-                            <span style="font-size: 18px;">🥈</span>
-                            <div style="color: #94a3b8; font-size: 10px; font-weight: bold;">JUARA 2</div>
-                            <div style="color: #ffffff; font-size: 12px; font-weight: bold;">{p2_name}</div>
-                            <div style="color: #00ff88; font-size: 15px; font-weight: 800;">{p2_qty:,.0f} Pcs</div>
-                        </div>
-                        <div style="flex: 1; background: #080c14; border: 2px solid #00f0ff; border-radius: 10px; padding: 12px; text-align: center; transform: scale(1.02);">
-                            <span style="font-size: 22px;">🥇</span>
-                            <div style="color: #f59e0b; font-size: 10px; font-weight: bold;">JUARA 1</div>
-                            <div style="color: #ffffff; font-size: 13px; font-weight: bold;">{p1_name}</div>
-                            <div style="color: #00ff88; font-size: 17px; font-weight: 800;">{p1_qty:,.0f} Pcs</div>
-                        </div>
-                        <div style="flex: 1; background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; text-align: center;">
-                            <span style="font-size: 18px;">🥉</span>
-                            <div style="color: #b45309; font-size: 10px; font-weight: bold;">JUARA 3</div>
-                            <div style="color: #ffffff; font-size: 12px; font-weight: bold;">{p3_name}</div>
-                            <div style="color: #00ff88; font-size: 15px; font-weight: 800;">{p3_qty:,.0f} Pcs</div>
-                        </div>
+            st.markdown(f"""
+                <div style="display: flex; gap: 12px; justify-content: center; align-items: flex-end; margin-bottom: 20px;">
+                    <div style="flex: 1; background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; text-align: center;">
+                        <span style="font-size: 18px;">🥈</span>
+                        <div style="color: #94a3b8; font-size: 10px; font-weight: bold;">JUARA 2</div>
+                        <div style="color: #ffffff; font-size: 12px; font-weight: bold;">{p2_name}</div>
+                        <div style="color: #00ff88; font-size: 15px; font-weight: 800;">{p2_qty:,.0f} Pcs</div>
                     </div>
-                """)
-                st.markdown(podium_html, unsafe_allow_html=True)
-
-            st.markdown("---")
-            col_table, col_chart = st.columns([1, 1])
-            COMPONENT_HEIGHT = 310
-
-            # 5. TABEL RANKING PERSONIL
-            with col_table:
-                st.markdown(
-                    "<p style='color:#ffffff; font-size:15px; font-weight:bold;'>📋 Tabel Ranking Personil</p>",
-                    unsafe_allow_html=True,
-                )
-                table_rows_html = ""
-                for _, row in summary_person.iterrows():
-                    table_rows_html += f"""
-                    <tr style="border-bottom: 1px solid #1e293b;">
-                        <td style="padding: 12px; color: #ffffff; font-weight: bold;">{row['person_name']}</td>
-                        <td style="padding: 12px; color: #00ff88; font-weight: bold;">{row['actual_qty']:,.0f} Pcs</td>
-                        <td style="padding: 12px; color: #00ff88; font-weight: bold;">{row['pct_contrib']:.1f}%</td>
-                    </tr>
-                    """
-
-                table_full_html = textwrap.dedent(f"""
-                    <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; height: {COMPONENT_HEIGHT}px; overflow-y: auto;">
-                        <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
-                            <thead>
-                                <tr style="border-bottom: 2px solid #334155;">
-                                    <th style="padding: 8px; color: #94a3b8; font-size: 11px;">PERSONIL</th>
-                                    <th style="padding: 8px; color: #94a3b8; font-size: 11px;">TOTAL SALES</th>
-                                    <th style="padding: 8px; color: #94a3b8; font-size: 11px;">KONTRIBUSI</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {table_rows_html}
-                            </tbody>
-                        </table>
+                    <div style="flex: 1; background: #080c14; border: 2px solid #00f0ff; border-radius: 10px; padding: 12px; text-align: center; transform: scale(1.02);">
+                        <span style="font-size: 22px;">🥇</span>
+                        <div style="color: #f59e0b; font-size: 10px; font-weight: bold;">JUARA 1</div>
+                        <div style="color: #ffffff; font-size: 13px; font-weight: bold;">{p1_name}</div>
+                        <div style="color: #00ff88; font-size: 17px; font-weight: 800;">{p1_qty:,.0f} Pcs</div>
                     </div>
-                """)
-                st.markdown(table_full_html, unsafe_allow_html=True)
+                    <div style="flex: 1; background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; text-align: center;">
+                        <span style="font-size: 18px;">🥉</span>
+                        <div style="color: #b45309; font-size: 10px; font-weight: bold;">JUARA 3</div>
+                        <div style="color: #ffffff; font-size: 12px; font-weight: bold;">{p3_name}</div>
+                        <div style="color: #00ff88; font-size: 15px; font-weight: 800;">{p3_qty:,.0f} Pcs</div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
 
-            # 6. GRAFIK PERBANDINGAN
-            with col_chart:
-                st.markdown(
-                    "<p style='color:#ffffff; font-size:15px; font-weight:bold;'>📊 Grafik Perbandingan Personil</p>",
-                    unsafe_allow_html=True,
-                )
-                fig_person = go.Figure()
-                fig_person.add_trace(
-                    go.Bar(
-                        x=summary_person["person_name"],
-                        y=summary_person["actual_qty"],
-                        marker_color="#00ff88",
-                        text=summary_person["actual_qty"].apply(
-                            lambda x: f"{x:,.0f}"
-                        ),
-                        textposition="outside",
-                    )
-                )
-                fig_person.update_layout(
-                    height=COMPONENT_HEIGHT,
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    font=dict(color="#ffffff"),
-                    margin=dict(l=10, r=10, t=10, b=10),
-                )
-                st.plotly_chart(fig_person, use_container_width=True)
-        else:
-            st.warning(
-                "⚠️ Kolom 'person_name' tidak ditemukan atau data personil kosong."
+        st.markdown("---")
+        col_table, col_chart = st.columns([1, 1])
+        COMPONENT_HEIGHT = 310
+
+        with col_table:
+            st.markdown("<p style='color:#ffffff; font-size:15px; font-weight:bold;'>📋 Tabel Ranking Personil</p>", unsafe_allow_html=True)
+            table_rows_html = ""
+            for _, row in summary_person.iterrows():
+                table_rows_html += f"""
+                <tr style="border-bottom: 1px solid #1e293b;">
+                    <td style="padding: 12px; color: #ffffff; font-weight: bold;">{row['person_name']}</td>
+                    <td style="padding: 12px; color: #00ff88; font-weight: bold;">{row['actual_qty']:,.0f}</td>
+                    <td style="padding: 12px; color: #00ff88; font-weight: bold;">{row['pct_contrib']:.1f}%</td>
+                </tr>
+                """
+            st.markdown(f"""
+                <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; height: {COMPONENT_HEIGHT}px; overflow-y: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #334155;">
+                                <th style="padding: 8px; color: #94a3b8; font-size: 11px;">PERSONIL</th>
+                                <th style="padding: 8px; color: #94a3b8; font-size: 11px;">TOTAL SALES</th>
+                                <th style="padding: 8px; color: #94a3b8; font-size: 11px;">KONTRIBUSI</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {table_rows_html}
+                </div>
+            """, unsafe_allow_html=True)
+
+        with col_chart:
+            st.markdown("<p style='color:#ffffff; font-size:15px; font-weight:bold;'>📊 Grafik Perbandingan Personil</p>", unsafe_allow_html=True)
+            fig_person = go.Figure()
+            fig_person.add_trace(go.Bar(
+                x=summary_person["person_name"],
+                y=summary_person["actual_qty"],
+                marker_color="#00ff88",
+                text=summary_person["actual_qty"].apply(lambda x: f"{x:,.0f}"),
+                textposition="outside"
+            ))
+            fig_person.update_layout(
+                height=COMPONENT_HEIGHT, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+                font=dict(color="#ffffff"), margin=dict(l=10, r=10, t=10, b=10)
             )
-    else:
-        st.warning("⚠️ Data Google Sheets (`si_df`) belum terload.")
-
-
+            st.plotly_chart(fig_person, use_container_width=True)
+            
 # --- TAB 04: PENCAPAIAN PERNIK PER PERSONIL ---
 elif selected_tab == "04 Pencapaian Pernik":
     st.title("🏆 Pencapaian Pernik Per Personil")
