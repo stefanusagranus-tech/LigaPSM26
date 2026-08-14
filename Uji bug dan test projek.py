@@ -49,6 +49,12 @@ def load_database():
             if not df.empty and "item_id" in df.columns:
                 df["item_id"] = df["item_id"].astype(str).str.strip()
 
+        # Normalisasi nama personil (Hapus spasi ganda/awal/akhir & Kapitalisasi)
+        for df in [person_df, sales_person_df]:
+            if not df.empty and "person_name" in df.columns:
+                df["person_name"] = df["person_name"].astype(str).str.strip().str.upper()
+                df["person_name"] = df["person_name"].str.replace(r"\s+", " ", regex=True)
+
         return periods_df, items_df, person_df, sales_item_df, sales_person_df
     except Exception as e:
         st.error(f"Gagal membaca Google Sheets: {e}")
@@ -116,6 +122,8 @@ if "data_loaded" not in st.session_state:
     st.session_state.sales_item_df = si_df
     st.session_state.sales_person_df = sp_df
     st.session_state.data_loaded = True
+
+
 
 # =========================================================
 # 3. WAKTU REALTIME GMT+7 (WIB)
