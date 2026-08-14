@@ -849,7 +849,7 @@ elif selected_tab in [
 # =========================================================
 # SUB-TAB 1: RANKING & SUMMARY TIM (IKUT PERIODE AKTIF)
 # =========================================================
-if sub_view == "🏆 Ranking & Summary Tim":
+    if sub_view == "🏆 Ranking & Summary Tim":
     # 1. Otomatis deteksi date_col (mendukung 'updated_at')
     if "date_col" not in locals() or not date_col:
         date_col = next(
