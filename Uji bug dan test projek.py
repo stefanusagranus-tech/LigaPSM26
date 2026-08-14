@@ -702,14 +702,28 @@ elif selected_tab == "03 Penjualan Personil":
 # --- TAB 04: PENCAPAIAN PERNIK PER PERSONIL ---
 elif selected_tab == "04 Pencapaian Pernik":
     st.title("🏆 Pencapaian Pernik Per Personil")
-    
-    person_list = st.session_state.person_df["person_name"].dropna().unique().tolist() if "person_df" in st.session_state and not st.session_state.person_df.empty else []
+
+    person_list = (
+        st.session_state.person_df["person_name"].dropna().unique().tolist()
+        if "person_df" in st.session_state
+        and not st.session_state.person_df.empty
+        else []
+    )
     if not person_list and "sales_person_df" in st.session_state:
-        person_list = st.session_state.sales_person_df["person_name"].dropna().unique().tolist()
-        
+        person_list = (
+            st.session_state.sales_person_df["person_name"]
+            .dropna()
+            .unique()
+            .tolist()
+        )
+
     c_p1, _ = st.columns([1.5, 1])
     with c_p1:
-        selected_person = st.selectbox("👤 PILIH PERSONIL TOKO", person_list if person_list else ["Belum Ada Data"], key="tab4_person_select")
+        selected_person = st.selectbox(
+            "👤 PILIH PERSONIL TOKO",
+            person_list if person_list else ["Belum Ada Data"],
+            key="tab4_person_select",
+        )
 
     sp_df = st.session_state.sales_person_df.copy()
     si_df = st.session_state.sales_item_df.copy()
@@ -719,24 +733,52 @@ elif selected_tab == "04 Pencapaian Pernik":
         si_df = si_df[si_df["period_id"] == selected_period_id]
 
     sp_df = sp_df[sp_df["person_name"] == selected_person]
-    sp_df["actual_qty"] = pd.to_numeric(sp_df["actual_qty"], errors="coerce").fillna(0)
+    sp_df["actual_qty"] = pd.to_numeric(
+        sp_df["actual_qty"], errors="coerce"
+    ).fillna(0)
 
-    target_col = "target_kasir" if "target_kasir" in si_df.columns else "target_qty"
-    si_df[target_col] = pd.to_numeric(si_df[target_col], errors="coerce").fillna(0)
+    target_col = (
+        "target_kasir" if "target_kasir" in si_df.columns else "target_qty"
+    )
+    si_df[target_col] = pd.to_numeric(si_df[target_col], errors="coerce").fillna(
+        0
+    )
 
-    sp_grouped = sp_df.groupby(["item_id", "item_name"])["actual_qty"].sum().reset_index() if not sp_df.empty else pd.DataFrame(columns=["item_id", "item_name", "actual_qty"])
-    si_grouped = si_df.groupby(["item_id", "item_name"])[target_col].sum().reset_index() if not si_df.empty else pd.DataFrame(columns=["item_id", "item_name", target_col])
+    sp_grouped = (
+        sp_df.groupby(["item_id", "item_name"])["actual_qty"].sum().reset_index()
+        if not sp_df.empty
+        else pd.DataFrame(columns=["item_id", "item_name", "actual_qty"])
+    )
+    si_grouped = (
+        si_df.groupby(["item_id", "item_name"])[target_col].sum().reset_index()
+        if not si_df.empty
+        else pd.DataFrame(columns=["item_id", "item_name", target_col])
+    )
 
     # Konversi ID ke string agar merging konsisten
     si_grouped["item_id"] = si_grouped["item_id"].astype(str)
     sp_grouped["item_id"] = sp_grouped["item_id"].astype(str)
 
-    merged_item_df = pd.merge(si_grouped, sp_grouped[["item_id", "actual_qty"]], on="item_id", how="left")
+    merged_item_df = pd.merge(
+        si_grouped,
+        sp_grouped[["item_id", "actual_qty"]],
+        on="item_id",
+        how="left",
+    )
     merged_item_df["actual_qty"] = merged_item_df["actual_qty"].fillna(0)
     merged_item_df.rename(columns={target_col: "target_val"}, inplace=True)
 
-    merged_item_df["gap"] = merged_item_df["target_val"] - merged_item_df["actual_qty"]
-    merged_item_df["ach"] = merged_item_df.apply(lambda r: (r["actual_qty"] / r["target_val"] * 100) if r["target_val"] > 0 else 0, axis=1)
+    merged_item_df["gap"] = (
+        merged_item_df["target_val"] - merged_item_df["actual_qty"]
+    )
+    merged_item_df["ach"] = merged_item_df.apply(
+        lambda r: (
+            (r["actual_qty"] / r["target_val"] * 100)
+            if r["target_val"] > 0
+            else 0
+        ),
+        axis=1,
+    )
 
     tot_target = merged_item_df["target_val"].sum()
     tot_actual = merged_item_df["actual_qty"].sum()
@@ -744,20 +786,25 @@ elif selected_tab == "04 Pencapaian Pernik":
     tot_ach = (tot_actual / tot_target * 100) if tot_target > 0 else 0
 
     m1, m2, m3, m4 = st.columns(4)
-    with m1: st.metric("🎯 Target Kasir Item", f"{tot_target:,.0f} Pcs")
-    with m2: st.metric("📦 Actual Penjualan", f"{tot_actual:,.0f} Pcs")
-    with m3: st.metric("📉 Sisa Gap Target", f"{tot_gap:,.0f} Pcs")
-    with m4: st.metric("⚡ % Achievement", f"{tot_ach:.1f}%")
+    with m1:
+        st.metric("🎯 Target Kasir Item", f"{tot_target:,.0f} Pcs")
+    with m2:
+        st.metric("📦 Actual Penjualan", f"{tot_actual:,.0f} Pcs")
+    with m3:
+        st.metric("📉 Sisa Gap Target", f"{tot_gap:,.0f} Pcs")
+    with m4:
+        st.metric("⚡ % Achievement", f"{tot_ach:.1f}%")
 
     st.markdown("---")
     col_t4_left, col_t4_right = st.columns([1.2, 1])
 
+    # === KOLOM KIRI: TABEL ===
     with col_t4_left:
         st.subheader("📋 Rincian Target Item Pernik")
         table_rows_html = ""
         for _, row in merged_item_df.iterrows():
-            gap_color = "#00ff88" if row['gap'] <= 0 else "#ef4444"
-            ach_color = "#00ff88" if row['ach'] >= 100 else "#ffb703"
+            gap_color = "#00ff88" if row["gap"] <= 0 else "#ef4444"
+            ach_color = "#00ff88" if row["ach"] >= 100 else "#ffb703"
             table_rows_html += f"""
             <tr style="border-bottom: 1px solid #1e293b;">
                 <td style="padding: 10px; color: #ffffff; font-weight: bold;">{row['item_name']}</td>
@@ -768,7 +815,9 @@ elif selected_tab == "04 Pencapaian Pernik":
             </tr>
             """
 
-    st.markdown(f"""
+        # PERBAIKAN: st.markdown() dimasukkan ke dalam with col_t4_left
+        # dan ditambahkan tag penutup </tbody></table>
+        table_full_html = textwrap.dedent(f"""
             <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; max-height: 380px; overflow-y: auto;">
                 <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
                     <thead>
@@ -782,17 +831,45 @@ elif selected_tab == "04 Pencapaian Pernik":
                     </thead>
                     <tbody>
                         {table_rows_html}
+                    </tbody>
+                </table>
             </div>
-        """, unsafe_allow_html=True)
+        """)
+        st.markdown(table_full_html, unsafe_allow_html=True)
 
-
+    # === KOLOM KANAN: GRAFIK ===
     with col_t4_right:
         st.subheader("📊 Visual Breakdown Item")
         fig_p4 = go.Figure()
-        fig_p4.add_trace(go.Bar(y=merged_item_df["item_name"], x=merged_item_df["actual_qty"], name="Actual", orientation='h', marker_color="#00f2fe"))
-        fig_p4.add_trace(go.Bar(y=merged_item_df["item_name"], x=merged_item_df["target_val"], name="Target Kasir", orientation='h', marker_color="#64748b"))
-        fig_p4.update_layout(barmode='group', height=380, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color="#ffffff"), margin=dict(l=10, r=10, t=10, b=10))
+        fig_p4.add_trace(
+            go.Bar(
+                y=merged_item_df["item_name"],
+                x=merged_item_df["actual_qty"],
+                name="Actual",
+                orientation="h",
+                marker_color="#00f2fe",
+            )
+        )
+        fig_p4.add_trace(
+            go.Bar(
+                y=merged_item_df["item_name"],
+                x=merged_item_df["target_val"],
+                name="Target Kasir",
+                orientation="h",
+                marker_color="#64748b",
+            )
+        )
+        fig_p4.update_layout(
+            barmode="group",
+            height=380,
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font=dict(color="#ffffff"),
+            margin=dict(l=10, r=10, t=10, b=10),
+        )
         st.plotly_chart(fig_p4, use_container_width=True)
+
+
 
 # --- TAB 05: ANALISIS TREN HARIAN ---
 elif selected_tab == "05 Analisis Tren":
