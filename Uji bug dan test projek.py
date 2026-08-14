@@ -851,7 +851,6 @@ elif selected_tab in ["03 Raport Personil Toko"]:
     # SUB-TAB 1: RANKING & SUMMARY TIM (IKUT PERIODE AKTIF)
     # =========================================================
     if sub_view == "🏆 Ranking & Summary Tim":
-        # 1. Otomatis deteksi date_col (mendukung 'updated_at')
         if "date_col" not in locals() or not date_col:
             date_col = next(
                 (
@@ -872,7 +871,6 @@ elif selected_tab in ["03 Raport Personil Toko"]:
         if date_col and date_col in sp_df.columns:
             sp_df[date_col] = pd.to_datetime(sp_df[date_col], errors="coerce")
 
-        # 2. DETEKSI OTOMATIS RENTANG TANGGAL PERIODE
         start_date_period = None
         end_date_period = None
         if not p_df.empty and selected_period_id:
@@ -912,7 +910,6 @@ elif selected_tab in ["03 Raport Personil Toko"]:
                         p_curr[e_col].values[0]
                     ).date()
 
-        # Fallback: Ambil min & max dari dataset jika tanggal periode tidak di-set
         if (
             (not start_date_period or not end_date_period)
             and date_col
@@ -923,7 +920,6 @@ elif selected_tab in ["03 Raport Personil Toko"]:
                 start_date_period = valid_dates.min().date()
                 end_date_period = valid_dates.max().date()
 
-        # 3. FILTER KALENDER BERDASARKAN PERIODE AKTIF
         sp_df_filtered = sp_df.copy()
         if start_date_period and end_date_period and date_col:
             col_mode, col_cal = st.columns([1, 1.5])
@@ -942,7 +938,6 @@ elif selected_tab in ["03 Raport Personil Toko"]:
                         max_value=end_date_period,
                         help="Pilih 1 tanggal atau rentang tanggal dalam periode aktif ini",
                     )
-                # Filter data berdasarkan tanggal kalender
                 if isinstance(selected_dates, (tuple, list)):
                     if len(selected_dates) == 2:
                         s_d, e_d = selected_dates
@@ -959,7 +954,6 @@ elif selected_tab in ["03 Raport Personil Toko"]:
                         sp_df[date_col].dt.date == selected_dates
                     ]
             else:
-                # Filter otomatis seluruh tanggal di dalam Periode Aktif
                 sp_df_filtered = sp_df[
                     (sp_df[date_col].dt.date >= start_date_period)
                     & (sp_df[date_col].dt.date <= end_date_period)
@@ -967,7 +961,6 @@ elif selected_tab in ["03 Raport Personil Toko"]:
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # 4. EKSEKUSI TAMPILAN RANKING & SUMMARY
         if not sp_df_filtered.empty:
             summary_person = (
                 sp_df_filtered.groupby("person_name")["actual_qty"]
@@ -994,27 +987,25 @@ elif selected_tab in ["03 Raport Personil Toko"]:
                 else 0
             )
 
-            # Metric Cards
             m1, m2, m3 = st.columns(3)
             with m1:
                 st.markdown(
-                    f"""<div class="neon-card"><div class="neon-title">TOTAL ACTUAL PERSONIL</div><div class="neon-value">{tot_actual_personil:,.0f} <span style="font-size:14px; color:#38bdf8;">Pcs</span></div></div>""",
+                    f'<div class="neon-card"><div class="neon-title">TOTAL ACTUAL PERSONIL</div><div class="neon-value">{tot_actual_personil:,.0f} <span style="font-size:14px; color:#38bdf8;">Pcs</span></div></div>',
                     unsafe_allow_html=True,
                 )
             with m2:
                 st.markdown(
-                    f"""<div class="neon-card"><div class="neon-title">RATA-RATA / STAF</div><div class="neon-value">{avg_sales_personil:,.0f} <span style="font-size:14px; color:#38bdf8;">Pcs</span></div></div>""",
+                    f'<div class="neon-card"><div class="neon-title">RATA-RATA / STAF</div><div class="neon-value">{avg_sales_personil:,.0f} <span style="font-size:14px; color:#38bdf8;">Pcs</span></div></div>',
                     unsafe_allow_html=True,
                 )
             with m3:
                 st.markdown(
-                    f"""<div class="neon-card" style="border-color:#f59e0b;"><div class="neon-title" style="color:#f59e0b;">👑 TOP PERFORMER</div><div class="neon-value" style="color:#ffffff; font-size:18px;">{top_performer_name}</div></div>""",
+                    f'<div class="neon-card" style="border-color:#f59e0b;"><div class="neon-title" style="color:#f59e0b;">👑 TOP PERFORMER</div><div class="neon-value" style="color:#ffffff; font-size:18px;">{top_performer_name}</div></div>',
                     unsafe_allow_html=True,
                 )
 
             st.markdown("<br>", unsafe_allow_html=True)
 
-            # PODIUM JUARA (1, 2, 3)
             if len(summary_person) >= 1:
                 p1_name = summary_person.iloc[0]["person_name"]
                 p1_qty = summary_person.iloc[0]["actual_qty"]
@@ -1040,28 +1031,11 @@ elif selected_tab in ["03 Raport Personil Toko"]:
                 )
 
                 st.markdown(
-                    f"""
-                <div style="display: flex; gap: 14px; justify-content: center; align-items: flex-end; margin-bottom: 25px;">
-                    <div style="flex: 1;" class="podium-23">
-                        <span style="font-size: 24px;">🥈</span>
-                        <div style="color: #94a3b8; font-size: 11px; font-weight: bold;">JUARA 2</div>
-                        <div style="color: #ffffff; font-size: 13px; font-weight: bold; margin: 4px 0;">{p2_name}</div>
-                        <div style="color: #00ff88; font-size: 16px; font-weight: 800;">{p2_qty:,.0f} Pcs</div>
-                    </div>
-                    <div style="flex: 1.1;" class="podium-1">
-                        <span style="font-size: 30px;">🥇</span>
-                        <div style="color: #f59e0b; font-size: 11px; font-weight: bold;">JUARA 1</div>
-                        <div style="color: #ffffff; font-size: 15px; font-weight: bold; margin: 4px 0;">{p1_name}</div>
-                        <div style="color: #00ff88; font-size: 20px; font-weight: 800;">{p1_qty:,.0f} Pcs</div>
-                    </div>
-                    <div style="flex: 1;" class="podium-23">
-                        <span style="font-size: 24px;">🥉</span>
-                        <div style="color: #b45309; font-size: 11px; font-weight: bold;">JUARA 3</div>
-                        <div style="color: #ffffff; font-size: 13px; font-weight: bold; margin: 4px 0;">{p3_name}</div>
-                        <div style="color: #00ff88; font-size: 16px; font-weight: 800;">{p3_qty:,.0f} Pcs</div>
-                    </div>
-                </div>
-                """,
+                    f"""<div style="display: flex; gap: 14px; justify-content: center; align-items: flex-end; margin-bottom: 25px;">
+<div style="flex: 1;" class="podium-23"><span style="font-size: 24px;">🥈</span><div style="color: #94a3b8; font-size: 11px; font-weight: bold;">JUARA 2</div><div style="color: #ffffff; font-size: 13px; font-weight: bold; margin: 4px 0;">{p2_name}</div><div style="color: #00ff88; font-size: 16px; font-weight: 800;">{p2_qty:,.0f} Pcs</div></div>
+<div style="flex: 1.1;" class="podium-1"><span style="font-size: 30px;">🥇</span><div style="color: #f59e0b; font-size: 11px; font-weight: bold;">JUARA 1</div><div style="color: #ffffff; font-size: 15px; font-weight: bold; margin: 4px 0;">{p1_name}</div><div style="color: #00ff88; font-size: 20px; font-weight: 800;">{p1_qty:,.0f} Pcs</div></div>
+<div style="flex: 1;" class="podium-23"><span style="font-size: 24px;">🥉</span><div style="color: #b45309; font-size: 11px; font-weight: bold;">JUARA 3</div><div style="color: #ffffff; font-size: 13px; font-weight: bold; margin: 4px 0;">{p3_name}</div><div style="color: #00ff88; font-size: 16px; font-weight: 800;">{p3_qty:,.0f} Pcs</div></div>
+</div>""",
                     unsafe_allow_html=True,
                 )
 
@@ -1085,33 +1059,10 @@ elif selected_tab in ["03 Raport Personil Toko"]:
                             else ("🥉" if rank == 2 else "👤")
                         )
                     )
-                    table_rows_html += f"""
-                    <tr style="border-bottom: 1px solid #1e293b;">
-                        <td style="padding: 10px; color: #ffffff; font-weight: bold;">{badge} {row['person_name']}</td>
-                        <td style="padding: 10px; color: #00ff88; font-weight: bold; text-align:right;">{row['actual_qty']:,.0f}</td>
-                        <td style="padding: 10px; color: #00f0ff; font-weight: bold; text-align:right;">{row['pct_contrib']:.1f}%</td>
-                    </tr>
-                    """
+                    table_rows_html += f'<tr style="border-bottom: 1px solid #1e293b;"><td style="padding: 10px; color: #ffffff; font-weight: bold;">{badge} {row["person_name"]}</td><td style="padding: 10px; color: #00ff88; font-weight: bold; text-align:right;">{row["actual_qty"]:,.0f}</td><td style="padding: 10px; color: #00f0ff; font-weight: bold; text-align:right;">{row["pct_contrib"]:.1f}%</td></tr>'
 
-                st.markdown(
-                    f"""
-                <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; height: {COMPONENT_HEIGHT}px; overflow-y: auto;">
-                    <table style="width: 100%; border-collapse: collapse; font-family: sans-serif;">
-                        <thead>
-                            <tr style="border-bottom: 2px solid #334155; text-align: left;">
-                                <th style="padding: 8px; color: #94a3b8; font-size: 11px;">PERSONIL</th>
-                                <th style="padding: 8px; color: #94a3b8; font-size: 11px; text-align:right;">TOTAL SALES</th>
-                                <th style="padding: 8px; color: #94a3b8; font-size: 11px; text-align:right;">KONTRIBUSI</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {table_rows_html}
-                        </tbody>
-                    </table>
-                </div>
-                """,
-                    unsafe_allow_html=True,
-                )
+                table_full_html = f'<div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; height: {COMPONENT_HEIGHT}px; overflow-y: auto;"><table style="width: 100%; border-collapse: collapse; font-family: sans-serif;"><thead><tr style="border-bottom: 2px solid #334155; text-align: left;"><th style="padding: 8px; color: #94a3b8; font-size: 11px;">PERSONIL</th><th style="padding: 8px; color: #94a3b8; font-size: 11px; text-align:right;">TOTAL SALES</th><th style="padding: 8px; color: #94a3b8; font-size: 11px; text-align:right;">KONTRIBUSI</th></tr></thead><tbody>{table_rows_html}</tbody></table></div>'
+                st.markdown(table_full_html, unsafe_allow_html=True)
 
             with col_chart:
                 st.markdown(
@@ -1152,7 +1103,6 @@ elif selected_tab in ["03 Raport Personil Toko"]:
     # SUB-TAB 2: EVALUASI HARIAN & TREN PENJUALAN
     # =========================================================
     elif sub_view == "📅 Evaluasi Harian & Tren":
-        # 1. Otomatis deteksi date_col jika belum terdefinisi
         if "date_col" not in locals() or not date_col:
             date_col = next(
                 (
@@ -1170,11 +1120,9 @@ elif selected_tab in ["03 Raport Personil Toko"]:
                 None,
             )
 
-        # 2. Konversi kolom menjadi Datetime jika ada
         if date_col and date_col in sp_df.columns:
             sp_df[date_col] = pd.to_datetime(sp_df[date_col], errors="coerce")
 
-        # 3. Eksekusi Tampilan Jika Data Tanggal Valid
         if (
             date_col
             and not sp_df.empty
@@ -1190,7 +1138,6 @@ elif selected_tab in ["03 Raport Personil Toko"]:
                         "📆 PILIH TANGGAL EVALUASI", available_dates
                     )
 
-                # Filter data berdasarkan tanggal terpilih
                 sp_daily = sp_df[
                     sp_df[date_col].dt.date == selected_date
                 ]
@@ -1198,7 +1145,6 @@ elif selected_tab in ["03 Raport Personil Toko"]:
                     f"### 📊 Evaluasi Penjualan Tanggal: **{selected_date.strftime('%d %B %Y')}**"
                 )
 
-                # Metric Cards Harian
                 tot_daily_qty = (
                     sp_daily["actual_qty"].sum()
                     if not sp_daily.empty
@@ -1234,7 +1180,6 @@ elif selected_tab in ["03 Raport Personil Toko"]:
                 col_t_daily, col_c_daily = st.columns([1.1, 1])
                 COMPONENT_HEIGHT = 350
 
-                # Tabel Rincian Sales Per-Personil
                 with col_t_daily:
                     st.markdown(
                         "<p style='color:#38bdf8; font-size:15px; font-weight:bold;'>📋 Rincian Sales Per-Personil (Hari Ini)</p>",
@@ -1263,33 +1208,11 @@ elif selected_tab in ["03 Raport Personil Toko"]:
                                 else ("🥉" if rank == 2 else "👤")
                             )
                         )
-                        daily_rows += f"""
-                        <tr style="border-bottom: 1px solid #1e293b;">
-                            <td style="padding: 10px; color: #ffffff; font-weight: bold;">{badge} {r['person_name']}</td>
-                            <td style="padding: 10px; color: #00ff88; font-weight: bold; text-align:right;">{r['actual_qty']:,.0f} Pcs</td>
-                        </tr>
-                        """
+                        daily_rows += f'<tr style="border-bottom: 1px solid #1e293b;"><td style="padding: 10px; color: #ffffff; font-weight: bold;">{badge} {r["person_name"]}</td><td style="padding: 10px; color: #00ff88; font-weight: bold; text-align:right;">{r["actual_qty"]:,.0f} Pcs</td></tr>'
 
-                    st.markdown(
-                        f"""
-                    <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; height: {COMPONENT_HEIGHT}px; overflow-y: auto;">
-                        <table style="width: 100%; border-collapse: collapse; font-family: sans-serif;">
-                            <thead>
-                                <tr style="border-bottom: 2px solid #334155; text-align: left;">
-                                    <th style="padding: 8px; color: #94a3b8; font-size: 11px;">PERSONIL</th>
-                                    <th style="padding: 8px; color: #94a3b8; font-size: 11px; text-align:right;">ACTUAL SALES</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {daily_rows if daily_rows else '<tr><td colspan="2" style="padding:10px; color:#94a3b8; text-align:center;">Tidak ada transaksi di tanggal ini</td></tr>'}
-                            </tbody>
-                        </table>
-                    </div>
-                    """,
-                        unsafe_allow_html=True,
-                    )
+                    daily_full_html = f'<div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; height: {COMPONENT_HEIGHT}px; overflow-y: auto;"><table style="width: 100%; border-collapse: collapse; font-family: sans-serif;"><thead><tr style="border-bottom: 2px solid #334155; text-align: left;"><th style="padding: 8px; color: #94a3b8; font-size: 11px;">PERSONIL</th><th style="padding: 8px; color: #94a3b8; font-size: 11px; text-align:right;">ACTUAL SALES</th></tr></thead><tbody>{daily_rows if daily_rows else "<tr><td colspan=\'2\' style=\'padding:10px; color:#94a3b8; text-align:center;\'>Tidak ada transaksi di tanggal ini</td></tr>"}</tbody></table></div>'
+                    st.markdown(daily_full_html, unsafe_allow_html=True)
 
-                # Grafik Tren Penjualan Harian
                 with col_c_daily:
                     st.markdown(
                         "<p style='color:#38bdf8; font-size:15px; font-weight:bold;'>📈 Tren Penjualan Harian (Periode Ini)</p>",
@@ -1329,7 +1252,7 @@ elif selected_tab in ["03 Raport Personil Toko"]:
                     st.plotly_chart(fig_trend, use_container_width=True)
         else:
             st.warning(
-                "⚠️ Kolom tanggal transaksi (`updated_at`) tidak ditemukan atau bernilai kosong pada dataset SALES_PERSONIL."
+                "⚠️ Kolom tanggal transaksi tidak ditemukan atau bernilai kosong pada dataset SALES_PERSONIL."
             )
 
     # =========================================================
@@ -1406,7 +1329,6 @@ elif selected_tab in ["03 Raport Personil Toko"]:
         tot_gap = tot_target - tot_actual
         tot_ach = (tot_actual / tot_target * 100) if tot_target > 0 else 0
 
-        # KPI Metrics
         m1, m2, m3, m4 = st.columns(4)
         with m1:
             st.metric("🎯 Target Kasir Item", f"{tot_target:,.0f} Pcs")
@@ -1429,34 +1351,9 @@ elif selected_tab in ["03 Raport Personil Toko"]:
             for _, row in merged_item_df.iterrows():
                 gap_color = "#00ff88" if row["gap"] <= 0 else "#ef4444"
                 ach_color = "#00ff88" if row["ach"] >= 100 else "#ffb703"
-                table_rows_html += f"""
-                <tr style="border-bottom: 1px solid #1e293b;">
-                    <td style="padding: 10px; color: #ffffff; font-weight: bold;">{row['item_name']}</td>
-                    <td style="padding: 10px; color: #94a3b8;">{row['target_val']:,.0f}</td>
-                    <td style="padding: 10px; color: #00ff88; font-weight: bold;">{row['actual_qty']:,.0f}</td>
-                    <td style="padding: 10px; color: {gap_color};">{row['gap']:,.0f}</td>
-                    <td style="padding: 10px; color: {ach_color}; font-weight: bold;">{row['ach']:.1f}%</td>
-                </tr>
-                """
+                table_rows_html += f'<tr style="border-bottom: 1px solid #1e293b;"><td style="padding: 10px; color: #ffffff; font-weight: bold;">{row["item_name"]}</td><td style="padding: 10px; color: #94a3b8;">{row["target_val"]:,.0f}</td><td style="padding: 10px; color: #00ff88; font-weight: bold;">{row["actual_qty"]:,.0f}</td><td style="padding: 10px; color: {gap_color};">{row["gap"]:,.0f}</td><td style="padding: 10px; color: {ach_color}; font-weight: bold;">{row["ach"]:.1f}%</td></tr>'
 
-            table_full_html = textwrap.dedent(
-                f"""
-            <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; max-height: 380px; overflow-y: auto;">
-                <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
-                    <thead>
-                        <tr style="border-bottom: 2px solid #334155;">
-                            <th style="padding: 8px; color: #38bdf8; font-size: 11px;">NAMA ITEM</th>
-                            <th style="padding: 8px; color: #38bdf8; font-size: 11px;">TARGET KASIR</th>
-                            <th style="padding: 8px; color: #38bdf8; font-size: 11px;">ACTUAL</th>
-                            <th style="padding: 8px; color: #38bdf8; font-size: 11px;">GAP</th>
-                            <th style="padding: 8px; color: #38bdf8; font-size: 11px;">% ACH</th>
-                        </tr>
-                    </thead>
-                    <tbody>{table_rows_html}</tbody>
-                </table>
-            </div>
-            """
-            )
+            table_full_html = f'<div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; max-height: 380px; overflow-y: auto;"><table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;"><thead><tr style="border-bottom: 2px solid #334155;"><th style="padding: 8px; color: #38bdf8; font-size: 11px;">NAMA ITEM</th><th style="padding: 8px; color: #38bdf8; font-size: 11px;">TARGET KASIR</th><th style="padding: 8px; color: #38bdf8; font-size: 11px;">ACTUAL</th><th style="padding: 8px; color: #38bdf8; font-size: 11px;">GAP</th><th style="padding: 8px; color: #38bdf8; font-size: 11px;">% ACH</th></tr></thead><tbody>{table_rows_html}</tbody></table></div>'
             st.markdown(table_full_html, unsafe_allow_html=True)
 
         with col_t4_right:
@@ -1502,7 +1399,6 @@ elif selected_tab in ["03 Raport Personil Toko"]:
     elif sub_view == "⏳ Dynamic Target (Sisa Hari)":
         st.subheader("⏳ Kalkulator Timefactor & Target Harian Terupdate")
 
-        # --- 1. DETEKSI OTOMATIS RENTANG TANGGAL PERIODE ---
         start_date_period = None
         end_date_period = None
 
@@ -1553,7 +1449,6 @@ elif selected_tab in ["03 Raport Personil Toko"]:
                 start_date_period = valid_dates.min().date()
                 end_date_period = valid_dates.max().date()
 
-        # --- 2. HITUNG TOTAL HARI & HARI BERJALAN ---
         today = datetime.now().date()
         if start_date_period and end_date_period:
             calc_total_days = max(
@@ -1576,7 +1471,6 @@ elif selected_tab in ["03 Raport Personil Toko"]:
 
         st.caption(info_periode_str)
 
-        # --- 3. DISPLAY INPUT WIDGET ---
         c_tf1, c_tf2, c_tf3 = st.columns(3)
         with c_tf1:
             total_days = st.number_input(
@@ -1600,19 +1494,12 @@ elif selected_tab in ["03 Raport Personil Toko"]:
 
         with c_tf3:
             st.markdown(
-                f"""
-            <div class="neon-card" style="border-color:#38bdf8;">
-                <div class="neon-title">TIMEFACTOR PERIODE</div>
-                <div class="neon-value" style="color:#00f0ff;">{timefactor_pct:.1f}%</div>
-                <div style="font-size:11px; color:#94a3b8;">Sisa Hari Kerja: <b style="color:#ffffff;">{remaining_days} Hari</b></div>
-            </div>
-            """,
+                f'<div class="neon-card" style="border-color:#38bdf8;"><div class="neon-title">TIMEFACTOR PERIODE</div><div class="neon-value" style="color:#00f0ff;">{timefactor_pct:.1f}%</div><div style="font-size:11px; color:#94a3b8;">Sisa Hari Kerja: <b style="color:#ffffff;">{remaining_days} Hari</b></div></div>',
                 unsafe_allow_html=True,
             )
 
         st.markdown("---")
 
-        # --- 4. PENJUALAN & TARGET HARIAN PER-PERSONIL ---
         person_list_dyn = (
             sp_df["person_name"].dropna().unique().tolist()
             if not sp_df.empty
@@ -1667,7 +1554,6 @@ elif selected_tab in ["03 Raport Personil Toko"]:
         dyn_df["sisa_gap"] = dyn_df["target_val"] - dyn_df["actual_qty"]
         dyn_df["sisa_gap"] = dyn_df["sisa_gap"].apply(lambda x: max(x, 0))
 
-        # Target Harian Baru = Sisa Gap / Sisa Hari Kerja
         dyn_df["req_daily_qty"] = dyn_df["sisa_gap"].apply(
             lambda x: (x / remaining_days) if remaining_days > 0 else x
         )
@@ -1701,7 +1587,6 @@ elif selected_tab in ["03 Raport Personil Toko"]:
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # Tabel Breakdown Target Harian Per-Item
         dyn_rows = ""
         for _, r in dyn_df.iterrows():
             status_txt = (
@@ -1710,37 +1595,10 @@ elif selected_tab in ["03 Raport Personil Toko"]:
                 else f"⚡ {r['req_daily_qty']:.1f} Pcs/Hari"
             )
             status_color = "#00ff88" if r["sisa_gap"] <= 0 else "#ffb703"
-            dyn_rows += f"""
-            <tr style="border-bottom: 1px solid #1e293b;">
-                <td style="padding: 10px; color: #ffffff; font-weight: bold;">{r['item_name']}</td>
-                <td style="padding: 10px; color: #94a3b8; text-align:right;">{r['target_val']:,.0f}</td>
-                <td style="padding: 10px; color: #00ff88; font-weight: bold; text-align:right;">{r['actual_qty']:,.0f}</td>
-                <td style="padding: 10px; color: #ef4444; text-align:right;">{r['sisa_gap']:,.0f}</td>
-                <td style="padding: 10px; color: {status_color}; font-weight: bold; text-align:right;">{status_txt}</td>
-            </tr>
-            """
+            dyn_rows += f'<tr style="border-bottom: 1px solid #1e293b;"><td style="padding: 10px; color: #ffffff; font-weight: bold;">{r["item_name"]}</td><td style="padding: 10px; color: #94a3b8; text-align:right;">{r["target_val"]:,.0f}</td><td style="padding: 10px; color: #00ff88; font-weight: bold; text-align:right;">{r["actual_qty"]:,.0f}</td><td style="padding: 10px; color: #ef4444; text-align:right;">{r["sisa_gap"]:,.0f}</td><td style="padding: 10px; color: {status_color}; font-weight: bold; text-align:right;">{status_txt}</td></tr>'
 
-        st.markdown(
-            f"""
-        <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 12px; overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse; font-family: sans-serif;">
-                <thead>
-                    <tr style="border-bottom: 2px solid #334155; text-align: left;">
-                        <th style="padding: 10px; color: #38bdf8; font-size: 11px;">ITEM PERNIK</th>
-                        <th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">TARGET PERIODE</th>
-                        <th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">ACTUAL</th>
-                        <th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">SISA GAP</th>
-                        <th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">TARGET/HARI SISA HARI</th>
-                    </tr>
-                </thead>
-                <tbody>{dyn_rows}</tbody>
-            </table>
-        </div>
-        """,
-            unsafe_allow_html=True,
-        )
-
-
+        dyn_full_html = f'<div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 12px; overflow-x: auto;"><table style="width: 100%; border-collapse: collapse; font-family: sans-serif;"><thead><tr style="border-bottom: 2px solid #334155; text-align: left;"><th style="padding: 10px; color: #38bdf8; font-size: 11px;">ITEM PERNIK</th><th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">TARGET PERIODE</th><th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">ACTUAL</th><th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">SISA GAP</th><th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">TARGET/HARI SISA HARI</th></tr></thead><tbody>{dyn_rows}</tbody></table></div>'
+        st.markdown(dyn_full_html, unsafe_allow_html=True)
 
 
 # --- TAB 05: ANALISIS TREN HARIAN ---
