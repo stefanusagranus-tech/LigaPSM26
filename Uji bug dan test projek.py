@@ -756,96 +756,97 @@ if selected_tab == "01 Dashboard Toko":
 # =========================================================
 # --- TAB COMBINED: PERFORMA PERSONIL, PERNIK & DYNAMIC TARGET ---
 # =========================================================
-elif selected_tab in [
-    "03 Raport Personil Toko",
-]:
+elif selected_tab in ["03 Raport Personil Toko"]:
     st.title("👥 Raport Personil Toko")
 
     # Custom CSS Style
     st.markdown(
         """
-        <style>
-        .neon-card {
-            background: linear-gradient(135deg, #080c14 0%, #0f172a 100%);
-            border: 1.5px solid #00f0ff;
-            box-shadow: 0 0 10px rgba(0, 240, 255, 0.15);
-            border-radius: 12px;
-            padding: 16px;
-            text-align: center;
-        }
-        .neon-title { color: #94a3b8; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
-        .neon-value { color: #00ff88; font-size: 24px; font-weight: 800; text-shadow: 0 0 8px rgba(0,255,136,0.3); }
-        .podium-1 {
-            background: linear-gradient(180deg, #1e1b4b 0%, #080c14 100%);
-            border: 2px solid #f59e0b;
-            box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
-            border-radius: 12px; padding: 14px; text-align: center;
-        }
-        .podium-23 {
-            background: #080c14;
-            border: 1.5px solid #00f0ff;
-            border-radius: 12px; padding: 12px; text-align: center;
-        }
-        .status-growth { color: #00ff88; font-weight: bold; }
-        .status-disgrowth { color: #ef4444; font-weight: bold; }
-        </style>
+    <style>
+    .neon-card {
+        background: linear-gradient(135deg, #080c14 0%, #0f172a 100%);
+        border: 1.5px solid #00f0ff;
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.15);
+        border-radius: 12px;
+        padding: 16px;
+        text-align: center;
+    }
+    .neon-title { color: #94a3b8; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+    .neon-value { color: #00ff88; font-size: 24px; font-weight: 800; text-shadow: 0 0 8px rgba(0,255,136,0.3); }
+    .podium-1 {
+        background: linear-gradient(180deg, #1e1b4b 0%, #080c14 100%);
+        border: 2px solid #f59e0b;
+        box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+        border-radius: 12px; padding: 14px; text-align: center;
+    }
+    .podium-23 {
+        background: #080c14;
+        border: 1.5px solid #00f0ff;
+        border-radius: 12px; padding: 12px; text-align: center;
+    }
+    .status-growth { color: #00ff88; font-weight: bold; }
+    .status-disgrowth { color: #ef4444; font-weight: bold; }
+    </style>
     """,
         unsafe_allow_html=True,
     )
 
-        # Sub-menu Navigasi 4 Sub-Tab
+    # Sub-menu Navigasi 4 Sub-Tab
     sub_view = st.radio(
-            "Pilih Modul Analisis:",
-            [
-                "🏆 Ranking & Summary Tim",
-                "📅 Evaluasi Harian & Tren",
-                "🎯 Detail Pernik Per-Personil",
-                "⏳ Dynamic Target (Sisa Hari)",
-            ],
-            horizontal=True,
-            key="personnel_sub_view_4tab",
-        )
-    
+        "Pilih Modul Analisis:",
+        [
+            "🏆 Ranking & Summary Tim",
+            "📅 Evaluasi Harian & Tren",
+            "🎯 Detail Pernik Per-Personil",
+            "⏳ Dynamic Target (Sisa Hari)",
+        ],
+        horizontal=True,
+        key="personnel_sub_view_4tab",
+    )
     st.markdown("<br>", unsafe_allow_html=True)
-    
-        # Load Data
+
+    # Load Data
     sp_df = st.session_state.sales_person_df.copy()
-        si_df = st.session_state.sales_item_df.copy()
-        p_df = st.session_state.get("periods_df", pd.DataFrame()).copy()
-    
-        # Clean Person Name
-        for df_temp in [sp_df, st.session_state.get("person_df", pd.DataFrame())]:
-            if not df_temp.empty and "person_name" in df_temp.columns:
-                df_temp["person_name"] = (
-                    df_temp["person_name"]
-                    .astype(str)
-                    .str.replace("\xa0", " ", regex=False)
-                    .str.strip()
-                    .str.upper()
-                )
-                df_temp["person_name"] = df_temp["person_name"].str.replace(
-                    r"\s+", " ", regex=True
-                )
-    
-        # Filter Periode
-        if selected_period_id:
-            sp_df = sp_df[sp_df["period_id"] == selected_period_id]
-            si_df = si_df[si_df["period_id"] == selected_period_id]
-            if not p_df.empty and "period_id" in p_df.columns:
-                p_df = p_df[p_df["period_id"] == selected_period_id]
-    
-        sp_df["actual_qty"] = pd.to_numeric(
-            sp_df["actual_qty"], errors="coerce"
-        ).fillna(0)
-    
-        # Normalisasi Kolom Tanggal jika ada
-        date_col = next(
-            (c for c in ["date", "transaction_date", "tanggal"] if c in sp_df.columns),
-            None,
-        )
-        if date_col:
-            sp_df[date_col] = pd.to_datetime(sp_df[date_col], errors="coerce")
-    
+    si_df = st.session_state.sales_item_df.copy()
+    p_df = st.session_state.get("periods_df", pd.DataFrame()).copy()
+
+    # Clean Person Name
+    for df_temp in [sp_df, st.session_state.get("person_df", pd.DataFrame())]:
+        if not df_temp.empty and "person_name" in df_temp.columns:
+            df_temp["person_name"] = (
+                df_temp["person_name"]
+                .astype(str)
+                .str.replace("\xa0", " ", regex=False)
+                .str.strip()
+                .str.upper()
+            )
+            df_temp["person_name"] = df_temp["person_name"].str.replace(
+                r"\s+", " ", regex=True
+            )
+
+    # Filter Periode
+    if selected_period_id:
+        sp_df = sp_df[sp_df["period_id"] == selected_period_id]
+        si_df = si_df[si_df["period_id"] == selected_period_id]
+        if not p_df.empty and "period_id" in p_df.columns:
+            p_df = p_df[p_df["period_id"] == selected_period_id]
+
+    sp_df["actual_qty"] = pd.to_numeric(
+        sp_df["actual_qty"], errors="coerce"
+    ).fillna(0)
+
+    # Normalisasi Kolom Tanggal jika ada
+    date_col = next(
+        (
+            c
+            for c in ["date", "transaction_date", "tanggal"]
+            if c in sp_df.columns
+        ),
+        None,
+    )
+    if date_col:
+        sp_df[date_col] = pd.to_datetime(sp_df[date_col], errors="coerce")
+
     # =========================================================
     # SUB-TAB 1: RANKING & SUMMARY TIM (IKUT PERIODE AKTIF)
     # =========================================================
@@ -867,14 +868,13 @@ elif selected_tab in [
                 ),
                 None,
             )
-    
+
         if date_col and date_col in sp_df.columns:
             sp_df[date_col] = pd.to_datetime(sp_df[date_col], errors="coerce")
-    
-        # 2. DETEKSI OTOMATIS RENTANG TANGGAL PERIODE (LOGIKA SAMA KAYA TAB 04)
+
+        # 2. DETEKSI OTOMATIS RENTANG TANGGAL PERIODE
         start_date_period = None
         end_date_period = None
-    
         if not p_df.empty and selected_period_id:
             p_curr = p_df[p_df["period_id"] == selected_period_id]
             if not p_curr.empty:
@@ -904,7 +904,6 @@ elif selected_tab in [
                     ),
                     None,
                 )
-    
                 if s_col and e_col:
                     start_date_period = pd.to_datetime(
                         p_curr[s_col].values[0]
@@ -912,7 +911,7 @@ elif selected_tab in [
                     end_date_period = pd.to_datetime(
                         p_curr[e_col].values[0]
                     ).date()
-    
+
         # Fallback: Ambil min & max dari dataset jika tanggal periode tidak di-set
         if (
             (not start_date_period or not end_date_period)
@@ -923,10 +922,9 @@ elif selected_tab in [
             if not valid_dates.empty:
                 start_date_period = valid_dates.min().date()
                 end_date_period = valid_dates.max().date()
-    
+
         # 3. FILTER KALENDER BERDASARKAN PERIODE AKTIF
         sp_df_filtered = sp_df.copy()
-    
         if start_date_period and end_date_period and date_col:
             col_mode, col_cal = st.columns([1, 1.5])
             with col_mode:
@@ -935,7 +933,6 @@ elif selected_tab in [
                     ["Full Periode Ini", "Filter Tanggal Spesifik"],
                     horizontal=True,
                 )
-    
             if filter_mode == "Filter Tanggal Spesifik":
                 with col_cal:
                     selected_dates = st.date_input(
@@ -945,7 +942,6 @@ elif selected_tab in [
                         max_value=end_date_period,
                         help="Pilih 1 tanggal atau rentang tanggal dalam periode aktif ini",
                     )
-    
                 # Filter data berdasarkan tanggal kalender
                 if isinstance(selected_dates, (tuple, list)):
                     if len(selected_dates) == 2:
@@ -968,9 +964,9 @@ elif selected_tab in [
                     (sp_df[date_col].dt.date >= start_date_period)
                     & (sp_df[date_col].dt.date <= end_date_period)
                 ]
-    
+
         st.markdown("<br>", unsafe_allow_html=True)
-    
+
         # 4. EKSEKUSI TAMPILAN RANKING & SUMMARY
         if not sp_df_filtered.empty:
             summary_person = (
@@ -980,7 +976,6 @@ elif selected_tab in [
                 .sort_values(by="actual_qty", ascending=False)
                 .reset_index(drop=True)
             )
-    
             tot_actual_personil = summary_person["actual_qty"].sum()
             avg_sales_personil = (
                 summary_person["actual_qty"].mean()
@@ -992,12 +987,13 @@ elif selected_tab in [
                 if len(summary_person) > 0
                 else "-"
             )
+
             summary_person["pct_contrib"] = (
                 (summary_person["actual_qty"] / tot_actual_personil * 100)
                 if tot_actual_personil > 0
                 else 0
             )
-    
+
             # Metric Cards
             m1, m2, m3 = st.columns(3)
             with m1:
@@ -1015,9 +1011,9 @@ elif selected_tab in [
                     f"""<div class="neon-card" style="border-color:#f59e0b;"><div class="neon-title" style="color:#f59e0b;">👑 TOP PERFORMER</div><div class="neon-value" style="color:#ffffff; font-size:18px;">{top_performer_name}</div></div>""",
                     unsafe_allow_html=True,
                 )
-    
+
             st.markdown("<br>", unsafe_allow_html=True)
-    
+
             # PODIUM JUARA (1, 2, 3)
             if len(summary_person) >= 1:
                 p1_name = summary_person.iloc[0]["person_name"]
@@ -1042,37 +1038,37 @@ elif selected_tab in [
                     if len(summary_person) >= 3
                     else 0
                 )
-    
+
                 st.markdown(
                     f"""
-                    <div style="display: flex; gap: 14px; justify-content: center; align-items: flex-end; margin-bottom: 25px;">
-                        <div style="flex: 1;" class="podium-23">
-                            <span style="font-size: 24px;">🥈</span>
-                            <div style="color: #94a3b8; font-size: 11px; font-weight: bold;">JUARA 2</div>
-                            <div style="color: #ffffff; font-size: 13px; font-weight: bold; margin: 4px 0;">{p2_name}</div>
-                            <div style="color: #00ff88; font-size: 16px; font-weight: 800;">{p2_qty:,.0f} Pcs</div>
-                        </div>
-                        <div style="flex: 1.1;" class="podium-1">
-                            <span style="font-size: 30px;">🥇</span>
-                            <div style="color: #f59e0b; font-size: 11px; font-weight: bold;">JUARA 1</div>
-                            <div style="color: #ffffff; font-size: 15px; font-weight: bold; margin: 4px 0;">{p1_name}</div>
-                            <div style="color: #00ff88; font-size: 20px; font-weight: 800;">{p1_qty:,.0f} Pcs</div>
-                        </div>
-                        <div style="flex: 1;" class="podium-23">
-                            <span style="font-size: 24px;">🥉</span>
-                            <div style="color: #b45309; font-size: 11px; font-weight: bold;">JUARA 3</div>
-                            <div style="color: #ffffff; font-size: 13px; font-weight: bold; margin: 4px 0;">{p3_name}</div>
-                            <div style="color: #00ff88; font-size: 16px; font-weight: 800;">{p3_qty:,.0f} Pcs</div>
-                        </div>
+                <div style="display: flex; gap: 14px; justify-content: center; align-items: flex-end; margin-bottom: 25px;">
+                    <div style="flex: 1;" class="podium-23">
+                        <span style="font-size: 24px;">🥈</span>
+                        <div style="color: #94a3b8; font-size: 11px; font-weight: bold;">JUARA 2</div>
+                        <div style="color: #ffffff; font-size: 13px; font-weight: bold; margin: 4px 0;">{p2_name}</div>
+                        <div style="color: #00ff88; font-size: 16px; font-weight: 800;">{p2_qty:,.0f} Pcs</div>
                     </div>
+                    <div style="flex: 1.1;" class="podium-1">
+                        <span style="font-size: 30px;">🥇</span>
+                        <div style="color: #f59e0b; font-size: 11px; font-weight: bold;">JUARA 1</div>
+                        <div style="color: #ffffff; font-size: 15px; font-weight: bold; margin: 4px 0;">{p1_name}</div>
+                        <div style="color: #00ff88; font-size: 20px; font-weight: 800;">{p1_qty:,.0f} Pcs</div>
+                    </div>
+                    <div style="flex: 1;" class="podium-23">
+                        <span style="font-size: 24px;">🥉</span>
+                        <div style="color: #b45309; font-size: 11px; font-weight: bold;">JUARA 3</div>
+                        <div style="color: #ffffff; font-size: 13px; font-weight: bold; margin: 4px 0;">{p3_name}</div>
+                        <div style="color: #00ff88; font-size: 16px; font-weight: 800;">{p3_qty:,.0f} Pcs</div>
+                    </div>
+                </div>
                 """,
                     unsafe_allow_html=True,
                 )
-    
+
             st.markdown("---")
             col_table, col_chart = st.columns([1.1, 1])
             COMPONENT_HEIGHT = 330
-    
+
             with col_table:
                 st.markdown(
                     "<p style='color:#38bdf8; font-size:15px; font-weight:bold;'>📋 Tabel Ranking Akumulasi</p>",
@@ -1083,7 +1079,11 @@ elif selected_tab in [
                     badge = (
                         "🥇"
                         if rank == 0
-                        else ("🥈" if rank == 1 else ("🥉" if rank == 2 else "👤"))
+                        else (
+                            "🥈"
+                            if rank == 1
+                            else ("🥉" if rank == 2 else "👤")
+                        )
                     )
                     table_rows_html += f"""
                     <tr style="border-bottom: 1px solid #1e293b;">
@@ -1092,24 +1092,27 @@ elif selected_tab in [
                         <td style="padding: 10px; color: #00f0ff; font-weight: bold; text-align:right;">{row['pct_contrib']:.1f}%</td>
                     </tr>
                     """
+
                 st.markdown(
                     f"""
-                    <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; height: {COMPONENT_HEIGHT}px; overflow-y: auto;">
-                        <table style="width: 100%; border-collapse: collapse; font-family: sans-serif;">
-                            <thead>
-                                <tr style="border-bottom: 2px solid #334155; text-align: left;">
-                                    <th style="padding: 8px; color: #94a3b8; font-size: 11px;">PERSONIL</th>
-                                    <th style="padding: 8px; color: #94a3b8; font-size: 11px; text-align:right;">TOTAL SALES</th>
-                                    <th style="padding: 8px; color: #94a3b8; font-size: 11px; text-align:right;">KONTRIBUSI</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {table_rows_html}
-                    </div>
+                <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; height: {COMPONENT_HEIGHT}px; overflow-y: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-family: sans-serif;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #334155; text-align: left;">
+                                <th style="padding: 8px; color: #94a3b8; font-size: 11px;">PERSONIL</th>
+                                <th style="padding: 8px; color: #94a3b8; font-size: 11px; text-align:right;">TOTAL SALES</th>
+                                <th style="padding: 8px; color: #94a3b8; font-size: 11px; text-align:right;">KONTRIBUSI</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {table_rows_html}
+                        </tbody>
+                    </table>
+                </div>
                 """,
                     unsafe_allow_html=True,
                 )
-    
+
             with col_chart:
                 st.markdown(
                     "<p style='color:#38bdf8; font-size:15px; font-weight:bold;'>📊 Grafik Perbandingan Akumulasi</p>",
@@ -1145,11 +1148,11 @@ elif selected_tab in [
                 "💡 Belum ada data penjualan personil untuk rentang tanggal/periode yang dipilih."
             )
 
-# =========================================================
-# SUB-TAB 2: EVALUASI HARIAN & TREN PENJUALAN
-# =========================================================
-elif sub_view == "📅 Evaluasi Harian & Tren":
-        # 1. Otomatis deteksi date_col jika belum terdefinisi (mendukung 'updated_at')
+    # =========================================================
+    # SUB-TAB 2: EVALUASI HARIAN & TREN PENJUALAN
+    # =========================================================
+    elif sub_view == "📅 Evaluasi Harian & Tren":
+        # 1. Otomatis deteksi date_col jika belum terdefinisi
         if "date_col" not in locals() or not date_col:
             date_col = next(
                 (
@@ -1172,11 +1175,14 @@ elif sub_view == "📅 Evaluasi Harian & Tren":
             sp_df[date_col] = pd.to_datetime(sp_df[date_col], errors="coerce")
 
         # 3. Eksekusi Tampilan Jika Data Tanggal Valid
-        if date_col and not sp_df.empty and not sp_df[date_col].isna().all():
+        if (
+            date_col
+            and not sp_df.empty
+            and not sp_df[date_col].isna().all()
+        ):
             available_dates = sorted(
                 sp_df[date_col].dt.date.dropna().unique(), reverse=True
             )
-
             if available_dates:
                 c_date, _ = st.columns([1.5, 1])
                 with c_date:
@@ -1185,15 +1191,18 @@ elif sub_view == "📅 Evaluasi Harian & Tren":
                     )
 
                 # Filter data berdasarkan tanggal terpilih
-                sp_daily = sp_df[sp_df[date_col].dt.date == selected_date]
-
+                sp_daily = sp_df[
+                    sp_df[date_col].dt.date == selected_date
+                ]
                 st.markdown(
                     f"### 📊 Evaluasi Penjualan Tanggal: **{selected_date.strftime('%d %B %Y')}**"
                 )
 
                 # Metric Cards Harian
                 tot_daily_qty = (
-                    sp_daily["actual_qty"].sum() if not sp_daily.empty else 0
+                    sp_daily["actual_qty"].sum()
+                    if not sp_daily.empty
+                    else 0
                 )
                 active_person = (
                     sp_daily["person_name"].nunique()
@@ -1201,13 +1210,16 @@ elif sub_view == "📅 Evaluasi Harian & Tren":
                     else 0
                 )
                 total_items = (
-                    sp_daily["item_id"].nunique() if not sp_daily.empty else 0
+                    sp_daily["item_id"].nunique()
+                    if not sp_daily.empty
+                    else 0
                 )
 
                 m_h1, m_h2, m_h3 = st.columns(3)
                 with m_h1:
                     st.metric(
-                        "📦 Total Penjualan Hari Ini", f"{tot_daily_qty:,.0f} Pcs"
+                        "📦 Total Penjualan Hari Ini",
+                        f"{tot_daily_qty:,.0f} Pcs",
                     )
                 with m_h2:
                     st.metric(
@@ -1215,14 +1227,14 @@ elif sub_view == "📅 Evaluasi Harian & Tren":
                     )
                 with m_h3:
                     st.metric(
-                        "🛍️ Varian Item Terjual", f"{total_items} Item"
+                        "🏷️ Varian Item Terjual", f"{total_items} Item"
                     )
 
                 st.markdown("---")
                 col_t_daily, col_c_daily = st.columns([1.1, 1])
                 COMPONENT_HEIGHT = 350
 
-                # Tabel Rincian Sales Per-Personil Pada Tanggal Terpilih
+                # Tabel Rincian Sales Per-Personil
                 with col_t_daily:
                     st.markdown(
                         "<p style='color:#38bdf8; font-size:15px; font-weight:bold;'>📋 Rincian Sales Per-Personil (Hari Ini)</p>",
@@ -1237,9 +1249,7 @@ elif sub_view == "📅 Evaluasi Harian & Tren":
                             .reset_index(drop=True)
                         )
                         if not sp_daily.empty
-                        else pd.DataFrame(
-                            columns=["person_name", "actual_qty"]
-                        )
+                        else pd.DataFrame(columns=["person_name", "actual_qty"])
                     )
 
                     daily_rows = ""
@@ -1262,22 +1272,24 @@ elif sub_view == "📅 Evaluasi Harian & Tren":
 
                     st.markdown(
                         f"""
-                        <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; height: {COMPONENT_HEIGHT}px; overflow-y: auto;">
-                            <table style="width: 100%; border-collapse: collapse; font-family: sans-serif;">
-                                <thead>
-                                    <tr style="border-bottom: 2px solid #334155; text-align: left;">
-                                        <th style="padding: 8px; color: #94a3b8; font-size: 11px;">PERSONIL</th>
-                                        <th style="padding: 8px; color: #94a3b8; font-size: 11px; text-align:right;">ACTUAL SALES</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {daily_rows if daily_rows else '<tr><td colspan="2" style="padding:10px; color:#94a3b8; text-align:center;">Tidak ada transaksi di tanggal ini</td></tr>'}
-                        </div>
+                    <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; height: {COMPONENT_HEIGHT}px; overflow-y: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-family: sans-serif;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid #334155; text-align: left;">
+                                    <th style="padding: 8px; color: #94a3b8; font-size: 11px;">PERSONIL</th>
+                                    <th style="padding: 8px; color: #94a3b8; font-size: 11px; text-align:right;">ACTUAL SALES</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {daily_rows if daily_rows else '<tr><td colspan="2" style="padding:10px; color:#94a3b8; text-align:center;">Tidak ada transaksi di tanggal ini</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
                     """,
                         unsafe_allow_html=True,
                     )
 
-                # Grafik Tren Penjualan Harian Selama Periode Active
+                # Grafik Tren Penjualan Harian
                 with col_c_daily:
                     st.markdown(
                         "<p style='color:#38bdf8; font-size:15px; font-weight:bold;'>📈 Tren Penjualan Harian (Periode Ini)</p>",
@@ -1320,16 +1332,15 @@ elif sub_view == "📅 Evaluasi Harian & Tren":
                 "⚠️ Kolom tanggal transaksi (`updated_at`) tidak ditemukan atau bernilai kosong pada dataset SALES_PERSONIL."
             )
 
-# =========================================================
-# SUB-TAB 3: DETAIL PERNIK PER-PERSONIL
-# =========================================================
-elif sub_view == "🎯 Detail Pernik Per-Personil":
+    # =========================================================
+    # SUB-TAB 3: DETAIL PERNIK PER-PERSONIL
+    # =========================================================
+    elif sub_view == "🎯 Detail Pernik Per-Personil":
         person_list = (
             sp_df["person_name"].dropna().unique().tolist()
             if not sp_df.empty
             else []
         )
-
         c_p1, _ = st.columns([1.5, 1])
         with c_p1:
             selected_person = st.selectbox(
@@ -1339,9 +1350,10 @@ elif sub_view == "🎯 Detail Pernik Per-Personil":
             )
 
         sp_person_df = sp_df[sp_df["person_name"] == selected_person]
-
         target_col = (
-            "target_kasir" if "target_kasir" in si_df.columns else "target_qty"
+            "target_kasir"
+            if "target_kasir" in si_df.columns
+            else "target_qty"
         )
         si_df[target_col] = pd.to_numeric(
             si_df[target_col], errors="coerce"
@@ -1352,7 +1364,9 @@ elif sub_view == "🎯 Detail Pernik Per-Personil":
             .sum()
             .reset_index()
             if not sp_person_df.empty
-            else pd.DataFrame(columns=["item_id", "item_name", "actual_qty"])
+            else pd.DataFrame(
+                columns=["item_id", "item_name", "actual_qty"]
+            )
         )
         si_grouped = (
             si_df.groupby(["item_id", "item_name"])[target_col]
@@ -1372,8 +1386,9 @@ elif sub_view == "🎯 Detail Pernik Per-Personil":
             how="left",
         )
         merged_item_df["actual_qty"] = merged_item_df["actual_qty"].fillna(0)
-        merged_item_df.rename(columns={target_col: "target_val"}, inplace=True)
-
+        merged_item_df.rename(
+            columns={target_col: "target_val"}, inplace=True
+        )
         merged_item_df["gap"] = (
             merged_item_df["target_val"] - merged_item_df["actual_qty"]
         )
@@ -1424,22 +1439,24 @@ elif sub_view == "🎯 Detail Pernik Per-Personil":
                 </tr>
                 """
 
-            table_full_html = textwrap.dedent(f"""
-                <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; max-height: 380px; overflow-y: auto;">
-                    <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
-                        <thead>
-                            <tr style="border-bottom: 2px solid #334155;">
-                                <th style="padding: 8px; color: #38bdf8; font-size: 11px;">NAMA ITEM</th>
-                                <th style="padding: 8px; color: #38bdf8; font-size: 11px;">TARGET KASIR</th>
-                                <th style="padding: 8px; color: #38bdf8; font-size: 11px;">ACTUAL</th>
-                                <th style="padding: 8px; color: #38bdf8; font-size: 11px;">GAP</th>
-                                <th style="padding: 8px; color: #38bdf8; font-size: 11px;">% ACH</th>
-                            </tr>
-                        </thead>
-                        <tbody>{table_rows_html}</tbody>
-                    </table>
-                </div>
-            """)
+            table_full_html = textwrap.dedent(
+                f"""
+            <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; max-height: 380px; overflow-y: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid #334155;">
+                            <th style="padding: 8px; color: #38bdf8; font-size: 11px;">NAMA ITEM</th>
+                            <th style="padding: 8px; color: #38bdf8; font-size: 11px;">TARGET KASIR</th>
+                            <th style="padding: 8px; color: #38bdf8; font-size: 11px;">ACTUAL</th>
+                            <th style="padding: 8px; color: #38bdf8; font-size: 11px;">GAP</th>
+                            <th style="padding: 8px; color: #38bdf8; font-size: 11px;">% ACH</th>
+                        </tr>
+                    </thead>
+                    <tbody>{table_rows_html}</tbody>
+                </table>
+            </div>
+            """
+            )
             st.markdown(table_full_html, unsafe_allow_html=True)
 
         with col_t4_right:
@@ -1473,21 +1490,22 @@ elif sub_view == "🎯 Detail Pernik Per-Personil":
                 plot_bgcolor="rgba(0,0,0,0)",
                 font=dict(color="#ffffff"),
                 margin=dict(l=10, r=10, t=10, b=10),
-                legend=dict(orientation="h", yanchor="bottom", y=1.02),
+                legend=dict(
+                    orientation="h", yanchor="bottom", y=1.02
+                ),
             )
             st.plotly_chart(fig_p4, use_container_width=True)
 
-# =========================================================
-# SUB-TAB 4: DYNAMIC TARGET (TIMEFACTOR & SISA HARI KERJA PERIODE)
-# =========================================================
-elif sub_view == "⏳ Dynamic Target (Sisa Hari)":
+    # =========================================================
+    # SUB-TAB 4: DYNAMIC TARGET (TIMEFACTOR & SISA HARI KERJA PERIODE)
+    # =========================================================
+    elif sub_view == "⏳ Dynamic Target (Sisa Hari)":
         st.subheader("⏳ Kalkulator Timefactor & Target Harian Terupdate")
 
         # --- 1. DETEKSI OTOMATIS RENTANG TANGGAL PERIODE ---
         start_date_period = None
         end_date_period = None
 
-        # Cek dari periods_df jika ada
         if not p_df.empty and selected_period_id:
             p_curr = p_df[p_df["period_id"] == selected_period_id]
             if not p_curr.empty:
@@ -1517,7 +1535,6 @@ elif sub_view == "⏳ Dynamic Target (Sisa Hari)":
                     ),
                     None,
                 )
-
                 if s_col and e_col:
                     start_date_period = pd.to_datetime(
                         p_curr[s_col].values[0]
@@ -1526,7 +1543,6 @@ elif sub_view == "⏳ Dynamic Target (Sisa Hari)":
                         p_curr[e_col].values[0]
                     ).date()
 
-        # Fallback: Ambil min & max tanggal dari dataset sales_person_df jika tanggal periode tidak ditemukan
         if (
             (not start_date_period or not end_date_period)
             and date_col
@@ -1539,13 +1555,10 @@ elif sub_view == "⏳ Dynamic Target (Sisa Hari)":
 
         # --- 2. HITUNG TOTAL HARI & HARI BERJALAN ---
         today = datetime.now().date()
-
         if start_date_period and end_date_period:
-            # Total Hari = (End - Start) + 1
             calc_total_days = max(
                 (end_date_period - start_date_period).days + 1, 1
             )
-
             if today < start_date_period:
                 calc_passed_days = 0
             elif today > end_date_period:
@@ -1565,7 +1578,6 @@ elif sub_view == "⏳ Dynamic Target (Sisa Hari)":
 
         # --- 3. DISPLAY INPUT WIDGET ---
         c_tf1, c_tf2, c_tf3 = st.columns(3)
-
         with c_tf1:
             total_days = st.number_input(
                 "📅 Total Hari Kerja Periode",
@@ -1589,11 +1601,11 @@ elif sub_view == "⏳ Dynamic Target (Sisa Hari)":
         with c_tf3:
             st.markdown(
                 f"""
-                <div class="neon-card" style="border-color:#38bdf8;">
-                    <div class="neon-title">TIMEFACTOR PERIODE</div>
-                    <div class="neon-value" style="color:#00f0ff;">{timefactor_pct:.1f}%</div>
-                    <div style="font-size:11px; color:#94a3b8;">Sisa Hari Kerja: <b style="color:#ffffff;">{remaining_days} Hari</b></div>
-                </div>
+            <div class="neon-card" style="border-color:#38bdf8;">
+                <div class="neon-title">TIMEFACTOR PERIODE</div>
+                <div class="neon-value" style="color:#00f0ff;">{timefactor_pct:.1f}%</div>
+                <div style="font-size:11px; color:#94a3b8;">Sisa Hari Kerja: <b style="color:#ffffff;">{remaining_days} Hari</b></div>
+            </div>
             """,
                 unsafe_allow_html=True,
             )
@@ -1615,9 +1627,10 @@ elif sub_view == "⏳ Dynamic Target (Sisa Hari)":
             )
 
         sp_person_dyn = sp_df[sp_df["person_name"] == sel_person_dyn]
-
         target_col = (
-            "target_kasir" if "target_kasir" in si_df.columns else "target_qty"
+            "target_kasir"
+            if "target_kasir" in si_df.columns
+            else "target_qty"
         )
         si_df[target_col] = pd.to_numeric(
             si_df[target_col], errors="coerce"
@@ -1628,7 +1641,9 @@ elif sub_view == "⏳ Dynamic Target (Sisa Hari)":
             .sum()
             .reset_index()
             if not sp_person_dyn.empty
-            else pd.DataFrame(columns=["item_id", "item_name", "actual_qty"])
+            else pd.DataFrame(
+                columns=["item_id", "item_name", "actual_qty"]
+            )
         )
         si_grouped_dyn = (
             si_df.groupby(["item_id", "item_name"])[target_col]
@@ -1647,8 +1662,8 @@ elif sub_view == "⏳ Dynamic Target (Sisa Hari)":
             on="item_id",
             how="left",
         ).fillna(0)
-        dyn_df.rename(columns={target_col: "target_val"}, inplace=True)
 
+        dyn_df.rename(columns={target_col: "target_val"}, inplace=True)
         dyn_df["sisa_gap"] = dyn_df["target_val"] - dyn_df["actual_qty"]
         dyn_df["sisa_gap"] = dyn_df["sisa_gap"].apply(lambda x: max(x, 0))
 
@@ -1661,7 +1676,9 @@ elif sub_view == "⏳ Dynamic Target (Sisa Hari)":
         tot_actual_dyn = dyn_df["actual_qty"].sum()
         tot_gap_dyn = max(tot_target_dyn - tot_actual_dyn, 0)
         tot_req_daily = (
-            (tot_gap_dyn / remaining_days) if remaining_days > 0 else tot_gap_dyn
+            (tot_gap_dyn / remaining_days)
+            if remaining_days > 0
+            else tot_gap_dyn
         )
 
         st.markdown(
@@ -1705,23 +1722,26 @@ elif sub_view == "⏳ Dynamic Target (Sisa Hari)":
 
         st.markdown(
             f"""
-            <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 12px; overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; font-family: sans-serif;">
-                    <thead>
-                        <tr style="border-bottom: 2px solid #334155; text-align: left;">
-                            <th style="padding: 10px; color: #38bdf8; font-size: 11px;">ITEM PERNIK</th>
-                            <th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">TARGET PERIODE</th>
-                            <th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">ACTUAL</th>
-                            <th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">SISA GAP</th>
-                            <th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">TARGET/HARI SISA HARI</th>
-                        </tr>
-                    </thead>
-                    <tbody>{dyn_rows}</tbody>
-                </table>
-            </div>
+        <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 12px; overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-family: sans-serif;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #334155; text-align: left;">
+                        <th style="padding: 10px; color: #38bdf8; font-size: 11px;">ITEM PERNIK</th>
+                        <th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">TARGET PERIODE</th>
+                        <th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">ACTUAL</th>
+                        <th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">SISA GAP</th>
+                        <th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">TARGET/HARI SISA HARI</th>
+                    </tr>
+                </thead>
+                <tbody>{dyn_rows}</tbody>
+            </table>
+        </div>
         """,
             unsafe_allow_html=True,
         )
+
+
+
 
 # --- TAB 05: ANALISIS TREN HARIAN ---
 elif selected_tab == "05 Analisis Tren":
