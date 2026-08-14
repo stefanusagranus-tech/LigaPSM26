@@ -806,7 +806,7 @@ elif selected_tab in [
             key="personnel_sub_view_4tab",
         )
     
-        st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
     
         # Load Data
         sp_df = st.session_state.sales_person_df.copy()
