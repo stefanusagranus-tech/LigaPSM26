@@ -580,7 +580,7 @@ elif selected_tab == "02 Detail Item":
             </tr>
             """
 
-        st.markdown(f"""
+    st.markdown(f"""
         <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 12px; max-height: 520px; overflow-y: auto;">
             <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
                 <thead>
