@@ -835,8 +835,6 @@ if sub_view == "🏆 Ranking & Summary Tim":
                         </thead>
                         <tbody>
                             {table_rows_html}
-                        </tbody>
-                    </table>
                 </div>
             """,
                 unsafe_allow_html=True,
