@@ -656,7 +656,7 @@ elif selected_tab == "03 Penjualan Personil":
             </div>
             """, unsafe_allow_html=True)
 
-            st.markdown("---")
+        st.markdown("---")
         col_table, col_chart = st.columns([1, 1])
         COMPONENT_HEIGHT = 310
         
