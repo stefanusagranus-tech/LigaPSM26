@@ -809,7 +809,7 @@ elif selected_tab in [
     st.markdown("<br>", unsafe_allow_html=True)
     
         # Load Data
-        sp_df = st.session_state.sales_person_df.copy()
+    sp_df = st.session_state.sales_person_df.copy()
         si_df = st.session_state.sales_item_df.copy()
         p_df = st.session_state.get("periods_df", pd.DataFrame()).copy()
     
