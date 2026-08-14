@@ -697,19 +697,141 @@ elif selected_tab in [
     if date_col:
         sp_df[date_col] = pd.to_datetime(sp_df[date_col], errors="coerce")
 
-   # =========================================================
-# SUB-TAB 1: RANKING & SUMMARY TIM (TOTAL AKUMULASI)
+# =========================================================
+# SUB-TAB 1: RANKING & SUMMARY TIM (IKUT PERIODE AKTIF)
 # =========================================================
 if sub_view == "🏆 Ranking & Summary Tim":
-    if not sp_df.empty:
-        # PERBAIKAN 1: Added .reset_index(drop=True) agar urutan index ter-reset murni (0, 1, 2, dst)
+    # 1. Otomatis deteksi date_col (mendukung 'updated_at')
+    if "date_col" not in locals() or not date_col:
+        date_col = next(
+            (
+                c
+                for c in [
+                    "updated_at",
+                    "created_at",
+                    "tanggal",
+                    "tgl",
+                    "date",
+                    "trans_date",
+                ]
+                if c in sp_df.columns
+            ),
+            None,
+        )
+
+    if date_col and date_col in sp_df.columns:
+        sp_df[date_col] = pd.to_datetime(sp_df[date_col], errors="coerce")
+
+    # 2. DETEKSI OTOMATIS RENTANG TANGGAL PERIODE (LOGIKA SAMA KAYA TAB 04)
+    start_date_period = None
+    end_date_period = None
+
+    if not p_df.empty and selected_period_id:
+        p_curr = p_df[p_df["period_id"] == selected_period_id]
+        if not p_curr.empty:
+            s_col = next(
+                (
+                    c
+                    for c in [
+                        "start_date",
+                        "tgl_mulai",
+                        "start",
+                        "periode_awal",
+                    ]
+                    if c in p_curr.columns
+                ),
+                None,
+            )
+            e_col = next(
+                (
+                    c
+                    for c in [
+                        "end_date",
+                        "tgl_selesai",
+                        "end",
+                        "periode_akhir",
+                    ]
+                    if c in p_curr.columns
+                ),
+                None,
+            )
+
+            if s_col and e_col:
+                start_date_period = pd.to_datetime(
+                    p_curr[s_col].values[0]
+                ).date()
+                end_date_period = pd.to_datetime(
+                    p_curr[e_col].values[0]
+                ).date()
+
+    # Fallback: Ambil min & max dari dataset jika tanggal periode tidak di-set
+    if (
+        (not start_date_period or not end_date_period)
+        and date_col
+        and not sp_df.empty
+    ):
+        valid_dates = sp_df[date_col].dropna()
+        if not valid_dates.empty:
+            start_date_period = valid_dates.min().date()
+            end_date_period = valid_dates.max().date()
+
+    # 3. FILTER KALENDER BERDASARKAN PERIODE AKTIF
+    sp_df_filtered = sp_df.copy()
+
+    if start_date_period and end_date_period and date_col:
+        col_mode, col_cal = st.columns([1, 1.5])
+        with col_mode:
+            filter_mode = st.radio(
+                "📅 Tampilan Ranking:",
+                ["Full Periode Ini", "Filter Tanggal Spesifik"],
+                horizontal=True,
+            )
+
+        if filter_mode == "Filter Tanggal Spesifik":
+            with col_cal:
+                selected_dates = st.date_input(
+                    "📆 Pilih Tanggal Dalam Periode:",
+                    value=(start_date_period, end_date_period),
+                    min_value=start_date_period,
+                    max_value=end_date_period,
+                    help="Pilih 1 tanggal atau rentang tanggal dalam periode aktif ini",
+                )
+
+            # Filter data berdasarkan tanggal kalender
+            if isinstance(selected_dates, (tuple, list)):
+                if len(selected_dates) == 2:
+                    s_d, e_d = selected_dates
+                    sp_df_filtered = sp_df[
+                        (sp_df[date_col].dt.date >= s_d)
+                        & (sp_df[date_col].dt.date <= e_d)
+                    ]
+                elif len(selected_dates) == 1:
+                    sp_df_filtered = sp_df[
+                        sp_df[date_col].dt.date == selected_dates[0]
+                    ]
+            else:
+                sp_df_filtered = sp_df[
+                    sp_df[date_col].dt.date == selected_dates
+                ]
+        else:
+            # Filter otomatis seluruh tanggal di dalam Periode Aktif
+            sp_df_filtered = sp_df[
+                (sp_df[date_col].dt.date >= start_date_period)
+                & (sp_df[date_col].dt.date <= end_date_period)
+            ]
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # 4. EKSEKUSI TAMPILAN RANKING & SUMMARY
+    if not sp_df_filtered.empty:
         summary_person = (
-            sp_df.groupby("person_name")["actual_qty"]
+            sp_df_filtered.groupby("person_name")["actual_qty"]
             .sum()
             .reset_index()
             .sort_values(by="actual_qty", ascending=False)
             .reset_index(drop=True)
         )
+
         tot_actual_personil = summary_person["actual_qty"].sum()
         avg_sales_personil = (
             summary_person["actual_qty"].mean()
@@ -727,7 +849,7 @@ if sub_view == "🏆 Ranking & Summary Tim":
             else 0
         )
 
-        # Metric Cards Top
+        # Metric Cards
         m1, m2, m3 = st.columns(3)
         with m1:
             st.markdown(
@@ -808,7 +930,6 @@ if sub_view == "🏆 Ranking & Summary Tim":
                 unsafe_allow_html=True,
             )
             table_rows_html = ""
-            # PERBAIKAN 2: Gunakan enumerate(..., start=0) untuk menjamin nomor peringkat badge selalu urut
             for rank, (_, row) in enumerate(summary_person.iterrows()):
                 badge = (
                     "🥇"
@@ -835,6 +956,8 @@ if sub_view == "🏆 Ranking & Summary Tim":
                         </thead>
                         <tbody>
                             {table_rows_html}
+                        </tbody>
+                    </table>
                 </div>
             """,
                 unsafe_allow_html=True,
@@ -871,170 +994,185 @@ if sub_view == "🏆 Ranking & Summary Tim":
             )
             st.plotly_chart(fig_person, use_container_width=True)
     else:
-        st.info("💡 Belum ada data penjualan personil untuk periode ini.")
+        st.info(
+            "💡 Belum ada data penjualan personil untuk rentang tanggal/periode yang dipilih."
+        )
 
 # =========================================================
 # SUB-TAB 2: EVALUASI HARIAN & TREN PENJUALAN
 # =========================================================
 elif sub_view == "📅 Evaluasi Harian & Tren":
-        if date_col and not sp_df[date_col].isna().all():
+        # 1. Otomatis deteksi date_col jika belum terdefinisi (mendukung 'updated_at')
+        if "date_col" not in locals() or not date_col:
+            date_col = next(
+                (
+                    c
+                    for c in [
+                        "updated_at",
+                        "created_at",
+                        "tanggal",
+                        "tgl",
+                        "date",
+                        "trans_date",
+                    ]
+                    if c in sp_df.columns
+                ),
+                None,
+            )
+
+        # 2. Konversi kolom menjadi Datetime jika ada
+        if date_col and date_col in sp_df.columns:
+            sp_df[date_col] = pd.to_datetime(sp_df[date_col], errors="coerce")
+
+        # 3. Eksekusi Tampilan Jika Data Tanggal Valid
+        if date_col and not sp_df.empty and not sp_df[date_col].isna().all():
             available_dates = sorted(
                 sp_df[date_col].dt.date.dropna().unique(), reverse=True
             )
 
-            c_date, _ = st.columns([1.5, 1])
-            with c_date:
-                selected_date = st.selectbox(
-                    "📅 PILIH TANGGAL TRANSAKSI",
-                    available_dates,
-                    key="select_daily_date",
-                )
-
-            # Daily data & Prev day data for Growth
-            prev_date = selected_date - pd.Timedelta(days=1)
-
-            daily_df = sp_df[sp_df[date_col].dt.date == selected_date]
-            prev_df = sp_df[sp_df[date_col].dt.date == prev_date]
-
-            daily_grouped = (
-                daily_df.groupby("person_name")["actual_qty"]
-                .sum()
-                .reset_index()
-            )
-            prev_grouped = (
-                prev_df.groupby("person_name")["actual_qty"]
-                .sum()
-                .reset_index()
-                .rename(columns={"actual_qty": "prev_qty"})
-            )
-
-            # Master Personil List untuk kelengkapan
-            all_persons = pd.DataFrame(
-                {
-                    "person_name": sp_df["person_name"]
-                    .dropna()
-                    .unique()
-                    .tolist()
-                }
-            )
-            daily_merged = pd.merge(
-                all_persons, daily_grouped, on="person_name", how="left"
-            ).fillna(0)
-            daily_merged = pd.merge(
-                daily_merged, prev_grouped, on="person_name", how="left"
-            ).fillna(0)
-
-            daily_merged["diff"] = (
-                daily_merged["actual_qty"] - daily_merged["prev_qty"]
-            )
-            daily_merged["growth_pct"] = daily_merged.apply(
-                lambda r: (
-                    (r["diff"] / r["prev_qty"] * 100)
-                    if r["prev_qty"] > 0
-                    else (100 if r["actual_qty"] > 0 else 0)
-                ),
-                axis=1,
-            )
-            daily_merged = daily_merged.sort_values(
-                by="actual_qty", ascending=False
-            )
-
-            st.subheader(
-                f"📊 Performa Harian ({selected_date.strftime('%d %b %Y')})"
-            )
-
-            col_d_table, col_d_chart = st.columns([1.3, 1])
-            with col_d_table:
-                d_rows = ""
-                for _, r in daily_merged.iterrows():
-                    g_cls = (
-                        "status-growth"
-                        if r["diff"] >= 0
-                        else "status-disgrowth"
+            if available_dates:
+                c_date, _ = st.columns([1.5, 1])
+                with c_date:
+                    selected_date = st.selectbox(
+                        "📆 PILIH TANGGAL EVALUASI", available_dates
                     )
-                    g_sign = "+" if r["diff"] > 0 else ""
-                    d_rows += f"""
-                    <tr style="border-bottom: 1px solid #1e293b;">
-                        <td style="padding: 10px; color: #ffffff; font-weight: bold;">{r['person_name']}</td>
-                        <td style="padding: 10px; color: #00ff88; font-weight: bold; text-align:right;">{r['actual_qty']:,.0f}</td>
-                        <td style="padding: 10px; color: #94a3b8; text-align:right;">{r['prev_qty']:,.0f}</td>
-                        <td style="padding: 10px; text-align:right;" class="{g_cls}">{g_sign}{r['diff']:,.0f} ({g_sign}{r['growth_pct']:.1f}%)</td>
-                    </tr>
-                    """
+
+                # Filter data berdasarkan tanggal terpilih
+                sp_daily = sp_df[sp_df[date_col].dt.date == selected_date]
+
                 st.markdown(
-                    f"""
-                    <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; max-height: 320px; overflow-y: auto;">
-                        <table style="width: 100%; border-collapse: collapse; font-family: sans-serif;">
-                            <thead>
-                                <tr style="border-bottom: 2px solid #334155; text-align: left;">
-                                    <th style="padding: 8px; color: #38bdf8; font-size: 11px;">PERSONIL</th>
-                                    <th style="padding: 8px; color: #38bdf8; font-size: 11px; text-align:right;">HARI INI</th>
-                                    <th style="padding: 8px; color: #38bdf8; font-size: 11px; text-align:right;">H-1</th>
-                                    <th style="padding: 8px; color: #38bdf8; font-size: 11px; text-align:right;">GROWTH</th>
-                                </tr>
-                            </thead>
-                            <tbody>{d_rows}</tbody>
-                        </table>
-                    </div>
-                """,
-                    unsafe_allow_html=True,
+                    f"### 📊 Evaluasi Penjualan Tanggal: **{selected_date.strftime('%d %B %Y')}**"
                 )
 
-            with col_d_chart:
-                fig_daily = px.bar(
-                    daily_merged,
-                    x="person_name",
-                    y="actual_qty",
-                    text="actual_qty",
-                    title=f"Sales Per-Personil ({selected_date.strftime('%d/%m')})",
-                    color="actual_qty",
-                    color_continuous_scale="Blues",
+                # Metric Cards Harian
+                tot_daily_qty = (
+                    sp_daily["actual_qty"].sum() if not sp_daily.empty else 0
                 )
-                fig_daily.update_layout(
-                    height=320,
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    font=dict(color="#ffffff"),
-                    margin=dict(l=10, r=10, t=30, b=10),
-                    coloraxis_showscale=False,
+                active_person = (
+                    sp_daily["person_name"].nunique()
+                    if not sp_daily.empty
+                    else 0
                 )
-                st.plotly_chart(fig_daily, use_container_width=True)
+                total_items = (
+                    sp_daily["item_id"].nunique() if not sp_daily.empty else 0
+                )
 
-            st.markdown("---")
-            st.subheader("📈 Grafis Konsistensi Tren Penjualan Harian")
+                m_h1, m_h2, m_h3 = st.columns(3)
+                with m_h1:
+                    st.metric(
+                        "📦 Total Penjualan Hari Ini", f"{tot_daily_qty:,.0f} Pcs"
+                    )
+                with m_h2:
+                    st.metric(
+                        "👥 Personil Aktif Transaksi", f"{active_person} Orang"
+                    )
+                with m_h3:
+                    st.metric(
+                        "🛍️ Varian Item Terjual", f"{total_items} Item"
+                    )
 
-            # Pivot Tren Harian
-            trend_df = (
-                sp_df.groupby([sp_df[date_col].dt.date, "person_name"])[
-                    "actual_qty"
-                ]
-                .sum()
-                .reset_index()
-            )
-            fig_trend = px.line(
-                trend_df,
-                x=date_col,
-                y="actual_qty",
-                color="person_name",
-                markers=True,
-                labels={
-                    date_col: "Tanggal",
-                    "actual_qty": "Sales (Pcs)",
-                    "person_name": "Personil",
-                },
-            )
-            fig_trend.update_layout(
-                height=380,
-                paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="#ffffff"),
-                xaxis=dict(showgrid=False),
-                yaxis=dict(showgrid=True, gridcolor="#1e293b"),
-            )
-            st.plotly_chart(fig_trend, use_container_width=True)
+                st.markdown("---")
+                col_t_daily, col_c_daily = st.columns([1.1, 1])
+                COMPONENT_HEIGHT = 350
+
+                # Tabel Rincian Sales Per-Personil Pada Tanggal Terpilih
+                with col_t_daily:
+                    st.markdown(
+                        "<p style='color:#38bdf8; font-size:15px; font-weight:bold;'>📋 Rincian Sales Per-Personil (Hari Ini)</p>",
+                        unsafe_allow_html=True,
+                    )
+                    daily_person = (
+                        (
+                            sp_daily.groupby("person_name")["actual_qty"]
+                            .sum()
+                            .reset_index()
+                            .sort_values(by="actual_qty", ascending=False)
+                            .reset_index(drop=True)
+                        )
+                        if not sp_daily.empty
+                        else pd.DataFrame(
+                            columns=["person_name", "actual_qty"]
+                        )
+                    )
+
+                    daily_rows = ""
+                    for rank, (_, r) in enumerate(daily_person.iterrows()):
+                        badge = (
+                            "🥇"
+                            if rank == 0
+                            else (
+                                "🥈"
+                                if rank == 1
+                                else ("🥉" if rank == 2 else "👤")
+                            )
+                        )
+                        daily_rows += f"""
+                        <tr style="border-bottom: 1px solid #1e293b;">
+                            <td style="padding: 10px; color: #ffffff; font-weight: bold;">{badge} {r['person_name']}</td>
+                            <td style="padding: 10px; color: #00ff88; font-weight: bold; text-align:right;">{r['actual_qty']:,.0f} Pcs</td>
+                        </tr>
+                        """
+
+                    st.markdown(
+                        f"""
+                        <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; height: {COMPONENT_HEIGHT}px; overflow-y: auto;">
+                            <table style="width: 100%; border-collapse: collapse; font-family: sans-serif;">
+                                <thead>
+                                    <tr style="border-bottom: 2px solid #334155; text-align: left;">
+                                        <th style="padding: 8px; color: #94a3b8; font-size: 11px;">PERSONIL</th>
+                                        <th style="padding: 8px; color: #94a3b8; font-size: 11px; text-align:right;">ACTUAL SALES</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {daily_rows if daily_rows else '<tr><td colspan="2" style="padding:10px; color:#94a3b8; text-align:center;">Tidak ada transaksi di tanggal ini</td></tr>'}
+                                </tbody>
+                            </table>
+                        </div>
+                    """,
+                        unsafe_allow_html=True,
+                    )
+
+                # Grafik Tren Penjualan Harian Selama Periode Active
+                with col_c_daily:
+                    st.markdown(
+                        "<p style='color:#38bdf8; font-size:15px; font-weight:bold;'>📈 Tren Penjualan Harian (Periode Ini)</p>",
+                        unsafe_allow_html=True,
+                    )
+                    trend_df = (
+                        sp_df.groupby(sp_df[date_col].dt.date)["actual_qty"]
+                        .sum()
+                        .reset_index()
+                    )
+                    trend_df.columns = ["tanggal", "total_qty"]
+                    trend_df = trend_df.sort_values(by="tanggal")
+
+                    fig_trend = go.Figure()
+                    fig_trend.add_trace(
+                        go.Scatter(
+                            x=trend_df["tanggal"],
+                            y=trend_df["total_qty"],
+                            mode="lines+markers+text",
+                            line=dict(color="#00f0ff", width=3),
+                            marker=dict(size=8, color="#00ff88"),
+                            text=trend_df["total_qty"].apply(
+                                lambda x: f"{x:,.0f}"
+                            ),
+                            textposition="top center",
+                        )
+                    )
+                    fig_trend.update_layout(
+                        height=COMPONENT_HEIGHT,
+                        paper_bgcolor="rgba(0,0,0,0)",
+                        plot_bgcolor="rgba(0,0,0,0)",
+                        font=dict(color="#ffffff"),
+                        margin=dict(l=10, r=10, t=30, b=10),
+                        yaxis=dict(showgrid=False),
+                        xaxis=dict(showgrid=False),
+                    )
+                    st.plotly_chart(fig_trend, use_container_width=True)
         else:
             st.warning(
-                "⚠️ Kolom tanggal transaksi tidak ditemukan atau bernilai kosong pada dataset `SALES_PERSONIL`."
+                "⚠️ Kolom tanggal transaksi (`updated_at`) tidak ditemukan atau bernilai kosong pada dataset SALES_PERSONIL."
             )
 
 # =========================================================
