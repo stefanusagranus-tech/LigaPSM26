@@ -832,8 +832,6 @@ elif selected_tab in [
                             </thead>
                             <tbody>
                                 {table_rows_html}
-                            </tbody>
-                        </table>
                     </div>
                 """,
                     unsafe_allow_html=True,
