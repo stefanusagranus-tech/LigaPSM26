@@ -498,8 +498,6 @@ if selected_tab == "01 Overview":
                 </thead>
                 <tbody>
                     {table_rows_html}
-                </tbody>
-            </table>
         </div>
     """, unsafe_allow_html=True)
     
