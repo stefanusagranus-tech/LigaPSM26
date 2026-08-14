@@ -325,8 +325,7 @@ st.sidebar.markdown("<p style='color:#38bdf8; font-weight:bold; letter-spacing:1
 menu_options = [
     "01 Overview",
     "02 Detail Item",
-    "03 Penjualan Personil",
-    "04 Pencapaian Pernik",
+    "03 Raport Personil Toko",
     "05 Analisis Tren",
     "06 Input & Reset Data",
     "07 Master Data & Pengaturan"
@@ -609,9 +608,7 @@ elif selected_tab == "02 Detail Item":
 # --- TAB COMBINED: PERFORMA PERSONIL, PERNIK & DYNAMIC TARGET ---
 # =========================================================
 elif selected_tab in [
-    "03 Penjualan Personil",
-    "04 Pencapaian Pernik",
-    "03 Performa Personil & Pernik",
+    "03 Raport Personil Toko",
 ]:
     st.title("👥 Raport Personil Toko")
 
