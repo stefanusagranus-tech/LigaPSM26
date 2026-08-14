@@ -22,11 +22,8 @@ st.set_page_config(
 SPREADSHEET_ID = "1kJ-OsjLEsFuNyyBg2TwxlWz8Ape4lwF9h0t66q3ldQk"
 
 # =========================================================
-# INISIALISASI KONEKSI GOOGLE SHEETS & FUNGSI DATABASE
+# 2. INISIALISASI KONEKSI GOOGLE SHEETS & FUNGSI DATABASE
 # =========================================================
-from streamlit_gsheets import GSheetsConnection
-
-# 1. Deklarasi koneksi resmi (mencegah error 'conn is not defined')
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 def load_database():
@@ -37,15 +34,30 @@ def load_database():
         person_df = conn.read(worksheet="MASTER_PERSONIL", ttl=0)
         sales_item_df = conn.read(worksheet="SALES_ITEM", ttl=0)
         sales_person_df = conn.read(worksheet="SALES_PERSONIL", ttl=0)
-
+        
         # Otomatis rapikan nama kolom (huruf kecil & hapus spasi)
         for df in [periods_df, items_df, person_df, sales_item_df, sales_person_df]:
             if not df.empty:
                 df.columns = df.columns.astype(str).str.strip().str.lower()
+                
+        # Normalisasi tipe ID ke string agar merging aman
+        for df in [periods_df, sales_item_df, sales_person_df]:
+            if not df.empty and "period_id" in df.columns:
+                df["period_id"] = df["period_id"].astype(str).str.strip()
+                
+        for df in [items_df, sales_item_df, sales_person_df]:
+            if not df.empty and "item_id" in df.columns:
+                df["item_id"] = df["item_id"].astype(str).str.strip()
+
+        # Normalisasi nama personil (Hapus spasi ganda/awal/akhir & Kapitalisasi)
+        for df in [person_df, sales_person_df]:
+            if not df.empty and "person_name" in df.columns:
+                df["person_name"] = df["person_name"].astype(str).str.strip().str.upper()
+                df["person_name"] = df["person_name"].str.replace(r"\s+", " ", regex=True)
 
         return periods_df, items_df, person_df, sales_item_df, sales_person_df
     except Exception as e:
-        st.error(f"⚠️ Gagal membaca Google Sheets: {e}")
+        st.error(f"Gagal membaca Google Sheets: {e}")
         return pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
 
 def save_database(sales_item_df, sales_person_df):
@@ -53,27 +65,24 @@ def save_database(sales_item_df, sales_person_df):
     try:
         conn.update(worksheet="SALES_ITEM", data=sales_item_df)
         conn.update(worksheet="SALES_PERSONIL", data=sales_person_df)
-        st.toast("✅ Perubahan transaksi tersimpan permanen di Google Sheets!", icon="✅")
+        st.toast("Perubahan transaksi tersimpan permanen di Google Sheets!", icon="✅")
         return True
     except Exception as e:
-        st.error(f"🚨 Gagal menyimpan transaksi ke Google Sheets: {e}")
+        st.error(f"Gagal menyimpan transaksi ke Google Sheets: {e}")
         return False
 
 def save_master_table(sheet_name, df_data):
     """Menyimpan perubahan master data (Personil/Item/Periode) ke Google Sheets."""
     try:
         conn.update(worksheet=sheet_name, data=df_data)
-        st.toast(f"✅ Master {sheet_name} berhasil diperbarui di Google Sheets!", icon="✅")
+        st.toast(f"Master {sheet_name} berhasil diperbarui di Google Sheets!", icon="✅")
         return True
     except Exception as e:
-        st.error(f"🚨 Gagal update master {sheet_name}: {e}")
+        st.error(f"Gagal update master {sheet_name}: {e}")
         return False
 
 def sync_store_sales_from_personnel():
-    """
-    Merekap total penjualan seluruh personil toko dan memperbarui 
-    actual_qty pada Penjualan Toko (sales_item_df).
-    """
+    """Merekap total penjualan seluruh personil toko dan memperbarui actual_qty pada Penjualan Toko."""
     if "sales_person_df" in st.session_state and "sales_item_df" in st.session_state:
         sp_df = st.session_state.sales_person_df.copy()
         si_df = st.session_state.sales_item_df.copy()
@@ -85,9 +94,13 @@ def sync_store_sales_from_personnel():
             return
         if si_df.empty or not all(col in si_df.columns for col in req_cols_si):
             return
-            
+
+        sp_df["period_id"] = sp_df["period_id"].astype(str)
+        sp_df["item_id"] = sp_df["item_id"].astype(str)
+        si_df["period_id"] = si_df["period_id"].astype(str)
+        si_df["item_id"] = si_df["item_id"].astype(str)
+
         sp_df["actual_qty"] = pd.to_numeric(sp_df["actual_qty"], errors="coerce").fillna(0)
-        
         tot_per_item = sp_df.groupby(["period_id", "item_id"])["actual_qty"].sum().reset_index()
         tot_per_item.rename(columns={"actual_qty": "calc_actual_qty"}, inplace=True)
         
@@ -96,11 +109,19 @@ def sync_store_sales_from_personnel():
             
         merged = pd.merge(si_df, tot_per_item, on=["period_id", "item_id"], how="left")
         merged["calc_actual_qty"] = merged["calc_actual_qty"].fillna(0)
-        
         merged["actual_qty"] = merged["calc_actual_qty"]
         merged.drop(columns=["calc_actual_qty"], inplace=True)
-        
         st.session_state.sales_item_df = merged
+
+# Load database awal ke session state jika belum ada
+if "data_loaded" not in st.session_state:
+    p_df, i_df, pers_df, si_df, sp_df = load_database()
+    st.session_state.periods_df = p_df
+    st.session_state.items_df = i_df
+    st.session_state.person_df = pers_df
+    st.session_state.sales_item_df = si_df
+    st.session_state.sales_person_df = sp_df
+    st.session_state.data_loaded = True
 
 # ==========================================
 # 3. WAKTU REALTIME GMT+7 (WIB)
