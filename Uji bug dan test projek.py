@@ -697,178 +697,183 @@ elif selected_tab in [
     if date_col:
         sp_df[date_col] = pd.to_datetime(sp_df[date_col], errors="coerce")
 
-    # =========================================================
-    # SUB-TAB 1: RANKING & SUMMARY TIM (TOTAL AKUMULASI)
-    # =========================================================
-    if sub_view == "🏆 Ranking & Summary Tim":
-        if not sp_df.empty:
-            summary_person = (
-                sp_df.groupby("person_name")["actual_qty"]
-                .sum()
-                .reset_index()
-                .sort_values(by="actual_qty", ascending=False)
+   # =========================================================
+# SUB-TAB 1: RANKING & SUMMARY TIM (TOTAL AKUMULASI)
+# =========================================================
+if sub_view == "🏆 Ranking & Summary Tim":
+    if not sp_df.empty:
+        # PERBAIKAN 1: Added .reset_index(drop=True) agar urutan index ter-reset murni (0, 1, 2, dst)
+        summary_person = (
+            sp_df.groupby("person_name")["actual_qty"]
+            .sum()
+            .reset_index()
+            .sort_values(by="actual_qty", ascending=False)
+            .reset_index(drop=True)
+        )
+        tot_actual_personil = summary_person["actual_qty"].sum()
+        avg_sales_personil = (
+            summary_person["actual_qty"].mean()
+            if len(summary_person) > 0
+            else 0
+        )
+        top_performer_name = (
+            summary_person.iloc[0]["person_name"]
+            if len(summary_person) > 0
+            else "-"
+        )
+        summary_person["pct_contrib"] = (
+            (summary_person["actual_qty"] / tot_actual_personil * 100)
+            if tot_actual_personil > 0
+            else 0
+        )
+
+        # Metric Cards Top
+        m1, m2, m3 = st.columns(3)
+        with m1:
+            st.markdown(
+                f"""<div class="neon-card"><div class="neon-title">TOTAL ACTUAL PERSONIL</div><div class="neon-value">{tot_actual_personil:,.0f} <span style="font-size:14px; color:#38bdf8;">Pcs</span></div></div>""",
+                unsafe_allow_html=True,
             )
-            tot_actual_personil = summary_person["actual_qty"].sum()
-            avg_sales_personil = (
-                summary_person["actual_qty"].mean()
-                if len(summary_person) > 0
-                else 0
+        with m2:
+            st.markdown(
+                f"""<div class="neon-card"><div class="neon-title">RATA-RATA / STAF</div><div class="neon-value">{avg_sales_personil:,.0f} <span style="font-size:14px; color:#38bdf8;">Pcs</span></div></div>""",
+                unsafe_allow_html=True,
             )
-            top_performer_name = (
-                summary_person.iloc[0]["person_name"]
-                if len(summary_person) > 0
+        with m3:
+            st.markdown(
+                f"""<div class="neon-card" style="border-color:#f59e0b;"><div class="neon-title" style="color:#f59e0b;">👑 TOP PERFORMER</div><div class="neon-value" style="color:#ffffff; font-size:18px;">{top_performer_name}</div></div>""",
+                unsafe_allow_html=True,
+            )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # PODIUM JUARA (1, 2, 3)
+        if len(summary_person) >= 1:
+            p1_name = summary_person.iloc[0]["person_name"]
+            p1_qty = summary_person.iloc[0]["actual_qty"]
+            p2_name = (
+                summary_person.iloc[1]["person_name"]
+                if len(summary_person) >= 2
                 else "-"
             )
-            summary_person["pct_contrib"] = (
-                (summary_person["actual_qty"] / tot_actual_personil * 100)
-                if tot_actual_personil > 0
+            p2_qty = (
+                summary_person.iloc[1]["actual_qty"]
+                if len(summary_person) >= 2
+                else 0
+            )
+            p3_name = (
+                summary_person.iloc[2]["person_name"]
+                if len(summary_person) >= 3
+                else "-"
+            )
+            p3_qty = (
+                summary_person.iloc[2]["actual_qty"]
+                if len(summary_person) >= 3
                 else 0
             )
 
-            # Cards
-            m1, m2, m3 = st.columns(3)
-            with m1:
-                st.markdown(
-                    f"""<div class="neon-card"><div class="neon-title">TOTAL ACTUAL PERSONIL</div><div class="neon-value">{tot_actual_personil:,.0f} <span style="font-size:14px; color:#38bdf8;">Pcs</span></div></div>""",
-                    unsafe_allow_html=True,
-                )
-            with m2:
-                st.markdown(
-                    f"""<div class="neon-card"><div class="neon-title">RATA-RATA / STAF</div><div class="neon-value">{avg_sales_personil:,.0f} <span style="font-size:14px; color:#38bdf8;">Pcs</span></div></div>""",
-                    unsafe_allow_html=True,
-                )
-            with m3:
-                st.markdown(
-                    f"""<div class="neon-card" style="border-color:#f59e0b;"><div class="neon-title" style="color:#f59e0b;">👑 TOP PERFORMER</div><div class="neon-value" style="color:#ffffff; font-size:18px;">{top_performer_name}</div></div>""",
-                    unsafe_allow_html=True,
-                )
-
-            st.markdown("<br>", unsafe_allow_html=True)
-
-            # Podium
-            if len(summary_person) >= 1:
-                p1_name = summary_person.iloc[0]["person_name"]
-                p1_qty = summary_person.iloc[0]["actual_qty"]
-                p2_name = (
-                    summary_person.iloc[1]["person_name"]
-                    if len(summary_person) >= 2
-                    else "-"
-                )
-                p2_qty = (
-                    summary_person.iloc[1]["actual_qty"]
-                    if len(summary_person) >= 2
-                    else 0
-                )
-                p3_name = (
-                    summary_person.iloc[2]["person_name"]
-                    if len(summary_person) >= 3
-                    else "-"
-                )
-                p3_qty = (
-                    summary_person.iloc[2]["actual_qty"]
-                    if len(summary_person) >= 3
-                    else 0
-                )
-
-                st.markdown(
-                    f"""
-                    <div style="display: flex; gap: 14px; justify-content: center; align-items: flex-end; margin-bottom: 25px;">
-                        <div style="flex: 1;" class="podium-23">
-                            <span style="font-size: 24px;">🥈</span>
-                            <div style="color: #94a3b8; font-size: 11px; font-weight: bold;">JUARA 2</div>
-                            <div style="color: #ffffff; font-size: 13px; font-weight: bold; margin: 4px 0;">{p2_name}</div>
-                            <div style="color: #00ff88; font-size: 16px; font-weight: 800;">{p2_qty:,.0f} Pcs</div>
-                        </div>
-                        <div style="flex: 1.1;" class="podium-1">
-                            <span style="font-size: 30px;">🥇</span>
-                            <div style="color: #f59e0b; font-size: 11px; font-weight: bold;">JUARA 1</div>
-                            <div style="color: #ffffff; font-size: 15px; font-weight: bold; margin: 4px 0;">{p1_name}</div>
-                            <div style="color: #00ff88; font-size: 20px; font-weight: 800;">{p1_qty:,.0f} Pcs</div>
-                        </div>
-                        <div style="flex: 1;" class="podium-23">
-                            <span style="font-size: 24px;">🥉</span>
-                            <div style="color: #b45309; font-size: 11px; font-weight: bold;">JUARA 3</div>
-                            <div style="color: #ffffff; font-size: 13px; font-weight: bold; margin: 4px 0;">{p3_name}</div>
-                            <div style="color: #00ff88; font-size: 16px; font-weight: 800;">{p3_qty:,.0f} Pcs</div>
-                        </div>
+            st.markdown(
+                f"""
+                <div style="display: flex; gap: 14px; justify-content: center; align-items: flex-end; margin-bottom: 25px;">
+                    <div style="flex: 1;" class="podium-23">
+                        <span style="font-size: 24px;">🥈</span>
+                        <div style="color: #94a3b8; font-size: 11px; font-weight: bold;">JUARA 2</div>
+                        <div style="color: #ffffff; font-size: 13px; font-weight: bold; margin: 4px 0;">{p2_name}</div>
+                        <div style="color: #00ff88; font-size: 16px; font-weight: 800;">{p2_qty:,.0f} Pcs</div>
                     </div>
-                """,
-                    unsafe_allow_html=True,
-                )
-
-            st.markdown("---")
-            col_table, col_chart = st.columns([1.1, 1])
-            COMPONENT_HEIGHT = 330
-
-            with col_table:
-                st.markdown(
-                    "<p style='color:#38bdf8; font-size:15px; font-weight:bold;'>📋 Tabel Ranking Akumulasi</p>",
-                    unsafe_allow_html=True,
-                )
-                table_rows_html = ""
-                for idx, row in summary_person.iterrows():
-                    badge = (
-                        "🥇"
-                        if idx == 0
-                        else ("🥈" if idx == 1 else ("🥉" if idx == 2 else "👤"))
-                    )
-                    table_rows_html += f"""
-                    <tr style="border-bottom: 1px solid #1e293b;">
-                        <td style="padding: 10px; color: #ffffff; font-weight: bold;">{badge} {row['person_name']}</td>
-                        <td style="padding: 10px; color: #00ff88; font-weight: bold; text-align:right;">{row['actual_qty']:,.0f}</td>
-                        <td style="padding: 10px; color: #00f0ff; font-weight: bold; text-align:right;">{row['pct_contrib']:.1f}%</td>
-                    </tr>
-                    """
-                st.markdown(
-                    f"""
-                    <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; height: {COMPONENT_HEIGHT}px; overflow-y: auto;">
-                        <table style="width: 100%; border-collapse: collapse; font-family: sans-serif;">
-                            <thead>
-                                <tr style="border-bottom: 2px solid #334155; text-align: left;">
-                                    <th style="padding: 8px; color: #94a3b8; font-size: 11px;">PERSONIL</th>
-                                    <th style="padding: 8px; color: #94a3b8; font-size: 11px; text-align:right;">TOTAL SALES</th>
-                                    <th style="padding: 8px; color: #94a3b8; font-size: 11px; text-align:right;">KONTRIBUSI</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {table_rows_html}
+                    <div style="flex: 1.1;" class="podium-1">
+                        <span style="font-size: 30px;">🥇</span>
+                        <div style="color: #f59e0b; font-size: 11px; font-weight: bold;">JUARA 1</div>
+                        <div style="color: #ffffff; font-size: 15px; font-weight: bold; margin: 4px 0;">{p1_name}</div>
+                        <div style="color: #00ff88; font-size: 20px; font-weight: 800;">{p1_qty:,.0f} Pcs</div>
                     </div>
-                """,
-                    unsafe_allow_html=True,
-                )
+                    <div style="flex: 1;" class="podium-23">
+                        <span style="font-size: 24px;">🥉</span>
+                        <div style="color: #b45309; font-size: 11px; font-weight: bold;">JUARA 3</div>
+                        <div style="color: #ffffff; font-size: 13px; font-weight: bold; margin: 4px 0;">{p3_name}</div>
+                        <div style="color: #00ff88; font-size: 16px; font-weight: 800;">{p3_qty:,.0f} Pcs</div>
+                    </div>
+                </div>
+            """,
+                unsafe_allow_html=True,
+            )
 
-            with col_chart:
-                st.markdown(
-                    "<p style='color:#38bdf8; font-size:15px; font-weight:bold;'>📊 Grafik Perbandingan Akumulasi</p>",
-                    unsafe_allow_html=True,
+        st.markdown("---")
+        col_table, col_chart = st.columns([1.1, 1])
+        COMPONENT_HEIGHT = 330
+
+        with col_table:
+            st.markdown(
+                "<p style='color:#38bdf8; font-size:15px; font-weight:bold;'>📋 Tabel Ranking Akumulasi</p>",
+                unsafe_allow_html=True,
+            )
+            table_rows_html = ""
+            # PERBAIKAN 2: Gunakan enumerate(..., start=0) untuk menjamin nomor peringkat badge selalu urut
+            for rank, (_, row) in enumerate(summary_person.iterrows()):
+                badge = (
+                    "🥇"
+                    if rank == 0
+                    else ("🥈" if rank == 1 else ("🥉" if rank == 2 else "👤"))
                 )
-                fig_person = go.Figure()
-                fig_person.add_trace(
-                    go.Bar(
-                        x=summary_person["person_name"],
-                        y=summary_person["actual_qty"],
-                        marker=dict(
-                            color=summary_person["actual_qty"],
-                            colorscale="Viridis",
-                        ),
-                        text=summary_person["actual_qty"].apply(
-                            lambda x: f"{x:,.0f}"
-                        ),
-                        textposition="outside",
-                    )
+                table_rows_html += f"""
+                <tr style="border-bottom: 1px solid #1e293b;">
+                    <td style="padding: 10px; color: #ffffff; font-weight: bold;">{badge} {row['person_name']}</td>
+                    <td style="padding: 10px; color: #00ff88; font-weight: bold; text-align:right;">{row['actual_qty']:,.0f}</td>
+                    <td style="padding: 10px; color: #00f0ff; font-weight: bold; text-align:right;">{row['pct_contrib']:.1f}%</td>
+                </tr>
+                """
+            st.markdown(
+                f"""
+                <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; height: {COMPONENT_HEIGHT}px; overflow-y: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-family: sans-serif;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #334155; text-align: left;">
+                                <th style="padding: 8px; color: #94a3b8; font-size: 11px;">PERSONIL</th>
+                                <th style="padding: 8px; color: #94a3b8; font-size: 11px; text-align:right;">TOTAL SALES</th>
+                                <th style="padding: 8px; color: #94a3b8; font-size: 11px; text-align:right;">KONTRIBUSI</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {table_rows_html}
+                        </tbody>
+                    </table>
+                </div>
+            """,
+                unsafe_allow_html=True,
+            )
+
+        with col_chart:
+            st.markdown(
+                "<p style='color:#38bdf8; font-size:15px; font-weight:bold;'>📊 Grafik Perbandingan Akumulasi</p>",
+                unsafe_allow_html=True,
+            )
+            fig_person = go.Figure()
+            fig_person.add_trace(
+                go.Bar(
+                    x=summary_person["person_name"],
+                    y=summary_person["actual_qty"],
+                    marker=dict(
+                        color=summary_person["actual_qty"],
+                        colorscale="Viridis",
+                    ),
+                    text=summary_person["actual_qty"].apply(
+                        lambda x: f"{x:,.0f}"
+                    ),
+                    textposition="outside",
                 )
-                fig_person.update_layout(
-                    height=COMPONENT_HEIGHT,
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    font=dict(color="#ffffff"),
-                    margin=dict(l=10, r=10, t=25, b=10),
-                    yaxis=dict(showgrid=False),
-                    xaxis=dict(showgrid=False),
-                )
-                st.plotly_chart(fig_person, use_container_width=True)
-        else:
-            st.info("💡 Belum ada data penjualan personil untuk periode ini.")
+            )
+            fig_person.update_layout(
+                height=COMPONENT_HEIGHT,
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#ffffff"),
+                margin=dict(l=10, r=10, t=25, b=10),
+                yaxis=dict(showgrid=False),
+                xaxis=dict(showgrid=False),
+            )
+            st.plotly_chart(fig_person, use_container_width=True)
+    else:
+        st.info("💡 Belum ada data penjualan personil untuk periode ini.")
 
     # =========================================================
     # SUB-TAB 2: EVALUASI HARIAN & TREN PENJUALAN
@@ -1192,35 +1197,110 @@ elif selected_tab in [
             st.plotly_chart(fig_p4, use_container_width=True)
 
     # =========================================================
-    # SUB-TAB 4: DYNAMIC TARGET (TIMEFACTOR & SISA HARI KERJA)
+    # SUB-TAB 4: DYNAMIC TARGET (TIMEFACTOR & SISA HARI KERJA PERIODE)
     # =========================================================
     elif sub_view == "⏳ Dynamic Target (Sisa Hari)":
         st.subheader("⏳ Kalkulator Timefactor & Target Harian Terupdate")
 
-        # Input Jumlah Hari Kerja / Timefactor
-        c_tf1, c_tf2, c_tf3 = st.columns(3)
+        # --- 1. DETEKSI OTOMATIS RENTANG TANGGAL PERIODE ---
+        start_date_period = None
+        end_date_period = None
 
-        default_total_days = 30
-        default_passed_days = (
-            datetime.now().day if datetime.now().day <= 30 else 30
-        )
+        # Cek dari periods_df jika ada
+        if not p_df.empty and selected_period_id:
+            p_curr = p_df[p_df["period_id"] == selected_period_id]
+            if not p_curr.empty:
+                s_col = next(
+                    (
+                        c
+                        for c in [
+                            "start_date",
+                            "tgl_mulai",
+                            "start",
+                            "periode_awal",
+                        ]
+                        if c in p_curr.columns
+                    ),
+                    None,
+                )
+                e_col = next(
+                    (
+                        c
+                        for c in [
+                            "end_date",
+                            "tgl_selesai",
+                            "end",
+                            "periode_akhir",
+                        ]
+                        if c in p_curr.columns
+                    ),
+                    None,
+                )
+
+                if s_col and e_col:
+                    start_date_period = pd.to_datetime(
+                        p_curr[s_col].values[0]
+                    ).date()
+                    end_date_period = pd.to_datetime(
+                        p_curr[e_col].values[0]
+                    ).date()
+
+        # Fallback: Ambil min & max tanggal dari dataset sales_person_df jika tanggal periode tidak ditemukan
+        if (
+            (not start_date_period or not end_date_period)
+            and date_col
+            and not sp_df.empty
+        ):
+            valid_dates = sp_df[date_col].dropna()
+            if not valid_dates.empty:
+                start_date_period = valid_dates.min().date()
+                end_date_period = valid_dates.max().date()
+
+        # --- 2. HITUNG TOTAL HARI & HARI BERJALAN ---
+        today = datetime.now().date()
+
+        if start_date_period and end_date_period:
+            # Total Hari = (End - Start) + 1
+            calc_total_days = max(
+                (end_date_period - start_date_period).days + 1, 1
+            )
+
+            if today < start_date_period:
+                calc_passed_days = 0
+            elif today > end_date_period:
+                calc_passed_days = calc_total_days
+            else:
+                calc_passed_days = (today - start_date_period).days + 1
+
+            info_periode_str = f"📅 Periode Aktif: **{start_date_period.strftime('%d %b %Y')}** s/d **{end_date_period.strftime('%d %b %Y')}**"
+        else:
+            calc_total_days = 30
+            calc_passed_days = min(today.day, 30)
+            info_periode_str = (
+                "ℹ️ Menggunakan default estimasi 30 hari kalender."
+            )
+
+        st.caption(info_periode_str)
+
+        # --- 3. DISPLAY INPUT WIDGET ---
+        c_tf1, c_tf2, c_tf3 = st.columns(3)
 
         with c_tf1:
             total_days = st.number_input(
                 "📅 Total Hari Kerja Periode",
                 min_value=1,
-                max_value=31,
-                value=default_total_days,
+                max_value=60,
+                value=int(calc_total_days),
             )
         with c_tf2:
             passed_days = st.number_input(
                 "⏱️ Hari Kerja Berjalan",
                 min_value=0,
                 max_value=total_days,
-                value=min(default_passed_days, total_days),
+                value=min(int(calc_passed_days), total_days),
             )
 
-        remaining_days = total_days - passed_days
+        remaining_days = max(total_days - passed_days, 0)
         timefactor_pct = (
             (passed_days / total_days * 100) if total_days > 0 else 0
         )
@@ -1231,7 +1311,7 @@ elif selected_tab in [
                 <div class="neon-card" style="border-color:#38bdf8;">
                     <div class="neon-title">TIMEFACTOR PERIODE</div>
                     <div class="neon-value" style="color:#00f0ff;">{timefactor_pct:.1f}%</div>
-                    <div style="font-size:11px; color:#94a3b8;">Sisa Hari: <b style="color:#ffffff;">{remaining_days} Hari</b></div>
+                    <div style="font-size:11px; color:#94a3b8;">Sisa Hari Kerja: <b style="color:#ffffff;">{remaining_days} Hari</b></div>
                 </div>
             """,
                 unsafe_allow_html=True,
@@ -1239,6 +1319,7 @@ elif selected_tab in [
 
         st.markdown("---")
 
+        # --- 4. PENJUALAN & TARGET HARIAN PER-PERSONIL ---
         person_list_dyn = (
             sp_df["person_name"].dropna().unique().tolist()
             if not sp_df.empty
@@ -1290,7 +1371,7 @@ elif selected_tab in [
         dyn_df["sisa_gap"] = dyn_df["target_val"] - dyn_df["actual_qty"]
         dyn_df["sisa_gap"] = dyn_df["sisa_gap"].apply(lambda x: max(x, 0))
 
-        # Target Harian Baru = Sisa Gap / Sisa Hari
+        # Target Harian Baru = Sisa Gap / Sisa Hari Kerja
         dyn_df["req_daily_qty"] = dyn_df["sisa_gap"].apply(
             lambda x: (x / remaining_days) if remaining_days > 0 else x
         )
@@ -1317,7 +1398,7 @@ elif selected_tab in [
             st.metric(
                 "⚡ Wajib Target / Hari",
                 f"{tot_req_daily:.1f} Pcs/Hari",
-                help="Beban target per hari agar target periode tercapai 100%",
+                help="Beban target per hari agar target periode ini tercapai 100%",
             )
 
         st.markdown("<br>", unsafe_allow_html=True)
@@ -1360,7 +1441,6 @@ elif selected_tab in [
         """,
             unsafe_allow_html=True,
         )
-
 
 # --- TAB 05: ANALISIS TREN HARIAN ---
 elif selected_tab == "05 Analisis Tren":
