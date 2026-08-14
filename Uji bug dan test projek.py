@@ -831,8 +831,6 @@ elif selected_tab == "04 Pencapaian Pernik":
                     </thead>
                     <tbody>
                         {table_rows_html}
-                    </tbody>
-                </table>
             </div>
         """)
         st.markdown(table_full_html, unsafe_allow_html=True)
