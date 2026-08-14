@@ -1123,8 +1123,6 @@ elif sub_view == "📅 Evaluasi Harian & Tren":
                                 </thead>
                                 <tbody>
                                     {daily_rows if daily_rows else '<tr><td colspan="2" style="padding:10px; color:#94a3b8; text-align:center;">Tidak ada transaksi di tanggal ini</td></tr>'}
-                                </tbody>
-                            </table>
                         </div>
                     """,
                         unsafe_allow_html=True,
