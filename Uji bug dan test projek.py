@@ -659,6 +659,7 @@ elif selected_tab == "03 Penjualan Personil":
         st.markdown("---")
         col_table, col_chart = st.columns([1, 1])
         COMPONENT_HEIGHT = 310
+
         
         with col_table:
             st.markdown("<p style='color:#ffffff; font-size:15px; font-weight:bold;'>📋 Tabel Ranking Personil</p>", unsafe_allow_html=True)
