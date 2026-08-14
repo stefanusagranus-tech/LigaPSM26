@@ -600,7 +600,7 @@ elif selected_tab == "02 Detail Item":
 # --- TAB 03: PENJUALAN PERSONIL ---
 elif selected_tab == "03 · Penjualan Personil":
     st.title("👥 Penjualan Personil Toko")
-    sp_df = st.session_state.sales_person_df.copy()
+    sp_df = st.session_state.si_df.copy()
     if selected_period_id:
         sp_df = sp_df[sp_df["period_id"] == selected_period_id]
 
