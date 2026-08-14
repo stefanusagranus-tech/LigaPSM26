@@ -374,28 +374,6 @@ st.markdown(f"""
 # --- TAB 01: OVERVIEW & DETAIL ITEM (SUB-TAB DESIGN) ---
 # =========================================================
 if selected_tab == "01 Dashboard Toko":
-    # -----------------------------------------------------
-    # 🎨 HEADER DASHBOARD
-    # -----------------------------------------------------
-    st.markdown(
-        """
-        <div style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); border: 1.5px solid #6366f1; border-radius: 12px; padding: 18px 20px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(99, 102, 241, 0.2);">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <span style="font-size: 28px;">📊</span>
-                <div>
-                    <h2 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 0.5px;">
-                        EXECUTIVE OVERVIEW & DETAIL PERFORMA PRODUK
-                    </h2>
-                    <p style="color: #a5f3fc; margin: 4px 0 0 0; font-size: 13px;">
-                        Pilih sub-tab di bawah untuk memantau ringkasan performa toko beserta bobot kontribusi atau melihat rincian target harian per item produk.
-                    </p>
-                </div>
-            </div>
-        </div>
-    """,
-        unsafe_allow_html=True,
-    )
-
     # SUB-TAB NAVIGATION
     sub_tab01 = st.radio(
         "Pilih Tampilan Sub-Tab:",
@@ -741,8 +719,7 @@ if selected_tab == "01 Dashboard Toko":
                                 <th style="padding: 10px 12px; color: #f59e0b; font-size: 11px;">TARGET / HARI (DYNAMIC)</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            {detail_rows_html}
+                        <tbody>{detail_rows_html}
                         </tbody>
                     </table>
                 </div>
