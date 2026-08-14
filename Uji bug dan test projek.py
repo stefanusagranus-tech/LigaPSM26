@@ -597,40 +597,89 @@ elif selected_tab == "02 Detail Item":
             </div>
         """, unsafe_allow_html=True)
 
+import textwrap
+
 # --- TAB 03: PENJUALAN PERSONIL ---
 elif selected_tab == "03 · Penjualan Personil":
     st.title("👥 Penjualan Personil Toko")
     sp_df = st.session_state.sales_person_df.copy()
     if selected_period_id:
         sp_df = sp_df[sp_df["period_id"] == selected_period_id]
-        
-    sp_df["actual_qty"] = pd.to_numeric(sp_df["actual_qty"], errors="coerce").fillna(0)
+
+    sp_df["actual_qty"] = pd.to_numeric(
+        sp_df["actual_qty"], errors="coerce"
+    ).fillna(0)
 
     if not sp_df.empty:
-        summary_person = sp_df.groupby("person_name")["actual_qty"].sum().reset_index().sort_values(by="actual_qty", ascending=False)
+        summary_person = (
+            sp_df.groupby("person_name")["actual_qty"]
+            .sum()
+            .reset_index()
+            .sort_values(by="actual_qty", ascending=False)
+        )
         tot_actual_personil = summary_person["actual_qty"].sum()
-        avg_sales_personil = summary_person["actual_qty"].mean() if len(summary_person) > 0 else 0
-        top_performer_name = summary_person.iloc[0]["person_name"] if len(summary_person) > 0 else "-"
-        summary_person["pct_contrib"] = (summary_person["actual_qty"] / tot_actual_personil * 100) if tot_actual_personil > 0 else 0
+        avg_sales_personil = (
+            summary_person["actual_qty"].mean()
+            if len(summary_person) > 0
+            else 0
+        )
+        top_performer_name = (
+            summary_person.iloc[0]["person_name"]
+            if len(summary_person) > 0
+            else "-"
+        )
+        summary_person["pct_contrib"] = (
+            (summary_person["actual_qty"] / tot_actual_personil * 100)
+            if tot_actual_personil > 0
+            else 0
+        )
 
+        # 1. METRIC CARDS
         m1, m2, m3 = st.columns(3)
         with m1:
-            st.markdown(f'<div style="background:#080c14; border:1.5px solid #00f0ff; border-radius:10px; padding:16px;"><div style="color:#ffffff; font-size:11px; font-weight:bold;">TOTAL ACTUAL PERSONIL</div><div style="color:#00ff88; font-size:28px; font-weight:800;">{tot_actual_personil:,.0f} Pcs</div></div>', unsafe_allow_html=True)
+            st.markdown(
+                f'<div style="background:#080c14; border:1.5px solid #00f0ff; border-radius:10px; padding:16px;"><div style="color:#ffffff; font-size:11px; font-weight:bold;">TOTAL ACTUAL PERSONIL</div><div style="color:#00ff88; font-size:28px; font-weight:800;">{tot_actual_personil:,.0f} Pcs</div></div>',
+                unsafe_allow_html=True,
+            )
         with m2:
-            st.markdown(f'<div style="background:#080c14; border:1.5px solid #00f0ff; border-radius:10px; padding:16px;"><div style="color:#ffffff; font-size:11px; font-weight:bold;">RATA-RATA PENJUALAN/STAF</div><div style="color:#00ff88; font-size:28px; font-weight:800;">{avg_sales_personil:,.0f} Pcs</div></div>', unsafe_allow_html=True)
+            st.markdown(
+                f'<div style="background:#080c14; border:1.5px solid #00f0ff; border-radius:10px; padding:16px;"><div style="color:#ffffff; font-size:11px; font-weight:bold;">RATA-RATA PENJUALAN/STAF</div><div style="color:#00ff88; font-size:28px; font-weight:800;">{avg_sales_personil:,.0f} Pcs</div></div>',
+                unsafe_allow_html=True,
+            )
         with m3:
-            st.markdown(f'<div style="background:#080c14; border:1.5px solid #00f0ff; border-radius:10px; padding:16px;"><div style="color:#ffffff; font-size:11px; font-weight:bold;">TOP PERFORMER</div><div style="color:#00ff88; font-size:26px; font-weight:800;">{top_performer_name}</div></div>', unsafe_allow_html=True)
+            st.markdown(
+                f'<div style="background:#080c14; border:1.5px solid #00f0ff; border-radius:10px; padding:16px;"><div style="color:#ffffff; font-size:11px; font-weight:bold;">TOP PERFORMER</div><div style="color:#00ff88; font-size:26px; font-weight:800;">{top_performer_name}</div></div>',
+                unsafe_allow_html=True,
+            )
 
         st.markdown("<br>", unsafe_allow_html=True)
+
+        # 2. PODIUM JUARA (Menggunakan textwrap.dedent agar tidak jebakan spasi)
         if len(summary_person) >= 1:
             p1_name = summary_person.iloc[0]["person_name"]
             p1_qty = summary_person.iloc[0]["actual_qty"]
-            p2_name = summary_person.iloc[1]["person_name"] if len(summary_person) >= 2 else "-"
-            p2_qty = summary_person.iloc[1]["actual_qty"] if len(summary_person) >= 2 else 0
-            p3_name = summary_person.iloc[2]["person_name"] if len(summary_person) >= 3 else "-"
-            p3_qty = summary_person.iloc[2]["actual_qty"] if len(summary_person) >= 3 else 0
+            p2_name = (
+                summary_person.iloc[1]["person_name"]
+                if len(summary_person) >= 2
+                else "-"
+            )
+            p2_qty = (
+                summary_person.iloc[1]["actual_qty"]
+                if len(summary_person) >= 2
+                else 0
+            )
+            p3_name = (
+                summary_person.iloc[2]["person_name"]
+                if len(summary_person) >= 3
+                else "-"
+            )
+            p3_qty = (
+                summary_person.iloc[2]["actual_qty"]
+                if len(summary_person) >= 3
+                else 0
+            )
 
-            st.markdown(f"""
+            podium_html = textwrap.dedent(f"""
                 <div style="display: flex; gap: 12px; justify-content: center; align-items: flex-end; margin-bottom: 20px;">
                     <div style="flex: 1; background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; text-align: center;">
                         <span style="font-size: 18px;">🥈</span>
@@ -651,14 +700,19 @@ elif selected_tab == "03 · Penjualan Personil":
                         <div style="color: #00ff88; font-size: 15px; font-weight: 800;">{p3_qty:,.0f} Pcs</div>
                     </div>
                 </div>
-            """, unsafe_allow_html=True)
+            """)
+            st.markdown(podium_html, unsafe_allow_html=True)
 
         st.markdown("---")
         col_table, col_chart = st.columns([1, 1])
         COMPONENT_HEIGHT = 310
 
+        # 3. TABEL RANKING
         with col_table:
-            st.markdown("<p style='color:#ffffff; font-size:15px; font-weight:bold;'>📋 Tabel Ranking Personil</p>", unsafe_allow_html=True)
+            st.markdown(
+                "<p style='color:#ffffff; font-size:15px; font-weight:bold;'>📋 Tabel Ranking Personil</p>",
+                unsafe_allow_html=True,
+            )
             table_rows_html = ""
             for _, row in summary_person.iterrows():
                 table_rows_html += f"""
@@ -668,7 +722,9 @@ elif selected_tab == "03 · Penjualan Personil":
                     <td style="padding: 12px; color: #00ff88; font-weight: bold;">{row['pct_contrib']:.1f}%</td>
                 </tr>
                 """
-            st.markdown(f"""
+
+            # Memperbaiki tag penutup </tbody> dan </table>
+            table_full_html = textwrap.dedent(f"""
                 <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; height: {COMPONENT_HEIGHT}px; overflow-y: auto;">
                     <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
                         <thead>
@@ -680,24 +736,42 @@ elif selected_tab == "03 · Penjualan Personil":
                         </thead>
                         <tbody>
                             {table_rows_html}
+                        </tbody>
+                    </table>
                 </div>
-            """, unsafe_allow_html=True)
+            """)
+            st.markdown(table_full_html, unsafe_allow_html=True)
 
+        # 4. GRAFIK PLOTLY
         with col_chart:
-            st.markdown("<p style='color:#ffffff; font-size:15px; font-weight:bold;'>📊 Grafik Perbandingan Personil</p>", unsafe_allow_html=True)
+            st.markdown(
+                "<p style='color:#ffffff; font-size:15px; font-weight:bold;'>📊 Grafik Perbandingan Personil</p>",
+                unsafe_allow_html=True,
+            )
             fig_person = go.Figure()
-            fig_person.add_trace(go.Bar(
-                x=summary_person["person_name"],
-                y=summary_person["actual_qty"],
-                marker_color="#00ff88",
-                text=summary_person["actual_qty"].apply(lambda x: f"{x:,.0f}"),
-                textposition="outside"
-            ))
+            fig_person.add_trace(
+                go.Bar(
+                    x=summary_person["person_name"],
+                    y=summary_person["actual_qty"],
+                    marker_color="#00ff88",
+                    text=summary_person["actual_qty"].apply(
+                        lambda x: f"{x:,.0f}"
+                    ),
+                    textposition="outside",
+                )
+            )
             fig_person.update_layout(
-                height=COMPONENT_HEIGHT, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                font=dict(color="#ffffff"), margin=dict(l=10, r=10, t=10, b=10)
+                height=COMPONENT_HEIGHT,
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#ffffff"),
+                margin=dict(l=10, r=10, t=10, b=10),
             )
             st.plotly_chart(fig_person, use_container_width=True)
+    else:
+        st.warning(
+            "⚠️ Tidak ada data penjualan personil untuk periode yang dipilih."
+        )
 
 # --- TAB 04: PENCAPAIAN PERNIK PER PERSONIL ---
 elif selected_tab == "04 Pencapaian Pernik":
