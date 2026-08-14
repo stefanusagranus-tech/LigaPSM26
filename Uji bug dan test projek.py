@@ -872,7 +872,7 @@ if sub_view == "🏆 Ranking & Summary Tim":
                 xaxis=dict(showgrid=False),
             )
             st.plotly_chart(fig_person, use_container_width=True)
-    else:
+      else:
         st.info("💡 Belum ada data penjualan personil untuk periode ini.")
 
     # =========================================================
