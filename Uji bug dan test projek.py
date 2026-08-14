@@ -872,13 +872,13 @@ if sub_view == "🏆 Ranking & Summary Tim":
                 xaxis=dict(showgrid=False),
             )
             st.plotly_chart(fig_person, use_container_width=True)
-      else:
+    else:
         st.info("💡 Belum ada data penjualan personil untuk periode ini.")
 
-    # =========================================================
-    # SUB-TAB 2: EVALUASI HARIAN & TREN PENJUALAN
-    # =========================================================
-    elif sub_view == "📅 Evaluasi Harian & Tren":
+# =========================================================
+# SUB-TAB 2: EVALUASI HARIAN & TREN PENJUALAN
+# =========================================================
+elif sub_view == "📅 Evaluasi Harian & Tren":
         if date_col and not sp_df[date_col].isna().all():
             available_dates = sorted(
                 sp_df[date_col].dt.date.dropna().unique(), reverse=True
