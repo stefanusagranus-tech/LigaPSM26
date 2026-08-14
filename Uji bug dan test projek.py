@@ -597,8 +597,6 @@ elif selected_tab == "02 Detail Item":
             </div>
         """, unsafe_allow_html=True)
 
-import textwrap
-
 # --- TAB 03: PENJUALAN PERSONIL ---
 elif selected_tab == "03 · Penjualan Personil":
     st.title("👥 Penjualan Personil Toko")
