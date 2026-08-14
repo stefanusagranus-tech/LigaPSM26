@@ -720,8 +720,6 @@ if selected_tab == "01 Dashboard Toko":
                             </tr>
                         </thead>
                         <tbody>{detail_rows_html}
-                        </tbody>
-                    </table>
                 </div>
             """,
                 unsafe_allow_html=True,
