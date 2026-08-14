@@ -581,20 +581,20 @@ elif selected_tab == "02 Detail Item":
             """
 
     st.markdown(f"""
-        <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 12px; max-height: 520px; overflow-y: auto;">
-            <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
-                <thead>
-                    <tr style="border-bottom: 2px solid #334155;">
-                        <th style="padding: 10px; color: #38bdf8; font-size: 11px;">NAMA PRODUK</th>
-                        <th style="padding: 10px; color: #38bdf8; font-size: 11px;">TARGET (PCS)</th>
-                        <th style="padding: 10px; color: #38bdf8; font-size: 11px;">ACTUAL SALES</th>
-                        <th style="padding: 10px; color: #38bdf8; font-size: 11px;">% ACH</th>
-                        <th style="padding: 10px; color: #38bdf8; font-size: 11px;">GAP / SELISIH</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {table_rows_html}
-        </div>
+            <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 12px; max-height: 520px; overflow-y: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid #334155;">
+                            <th style="padding: 10px; color: #38bdf8; font-size: 11px;">NAMA PRODUK</th>
+                            <th style="padding: 10px; color: #38bdf8; font-size: 11px;">TARGET (PCS)</th>
+                            <th style="padding: 10px; color: #38bdf8; font-size: 11px;">ACTUAL SALES</th>
+                            <th style="padding: 10px; color: #38bdf8; font-size: 11px;">% ACH</th>
+                            <th style="padding: 10px; color: #38bdf8; font-size: 11px;">GAP / SELISIH</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {table_rows_html}
+            </div>
         """, unsafe_allow_html=True)
 
 # --- TAB 03: PENJUALAN PERSONIL ---
@@ -769,21 +769,22 @@ elif selected_tab == "04 Pencapaian Pernik":
             """
 
     st.markdown(f"""
-        <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; max-height: 380px; overflow-y: auto;">
-            <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
-                <thead>
-                    <tr style="border-bottom: 2px solid #334155;">
-                        <th style="padding: 8px; color: #38bdf8; font-size: 11px;">NAMA ITEM</th>
-                        <th style="padding: 8px; color: #38bdf8; font-size: 11px;">TARGET KASIR</th>
-                        <th style="padding: 8px; color: #38bdf8; font-size: 11px;">ACTUAL</th>
-                        <th style="padding: 8px; color: #38bdf8; font-size: 11px;">GAP</th>
-                        <th style="padding: 8px; color: #38bdf8; font-size: 11px;">% ACH</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {table_rows_html}
-        </div>
+            <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; max-height: 380px; overflow-y: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid #334155;">
+                            <th style="padding: 8px; color: #38bdf8; font-size: 11px;">NAMA ITEM</th>
+                            <th style="padding: 8px; color: #38bdf8; font-size: 11px;">TARGET KASIR</th>
+                            <th style="padding: 8px; color: #38bdf8; font-size: 11px;">ACTUAL</th>
+                            <th style="padding: 8px; color: #38bdf8; font-size: 11px;">GAP</th>
+                            <th style="padding: 8px; color: #38bdf8; font-size: 11px;">% ACH</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {table_rows_html}
+            </div>
         """, unsafe_allow_html=True)
+
 
     with col_t4_right:
         st.subheader("📊 Visual Breakdown Item")
