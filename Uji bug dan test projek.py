@@ -605,276 +605,766 @@ elif selected_tab == "02 Detail Item":
             </div>
         """, unsafe_allow_html=True)
 
-# --- TAB 03: PENJUALAN PERSONIL ---
-elif selected_tab == "03 Penjualan Personil":
-    st.title("👥 Penjualan Personil Toko")
-    sp_df = st.session_state.sales_person_df.copy()
-    if selected_period_id:
-        sp_df = sp_df[sp_df["period_id"] == selected_period_id]
-        
-    sp_df["actual_qty"] = pd.to_numeric(sp_df["actual_qty"], errors="coerce").fillna(0)
+# =========================================================
+# --- TAB COMBINED: PERFORMA PERSONIL, PERNIK & DYNAMIC TARGET ---
+# =========================================================
+elif selected_tab in [
+    "03 Penjualan Personil",
+    "04 Pencapaian Pernik",
+    "03 Performa Personil & Pernik",
+]:
+    st.title("👥 Raport Personil Toko")
 
-    if not sp_df.empty:
-        summary_person = sp_df.groupby("person_name")["actual_qty"].sum().reset_index().sort_values(by="actual_qty", ascending=False)
-        tot_actual_personil = summary_person["actual_qty"].sum()
-        avg_sales_personil = summary_person["actual_qty"].mean() if len(summary_person) > 0 else 0
-        top_performer_name = summary_person.iloc[0]["person_name"] if len(summary_person) > 0 else "-"
-        summary_person["pct_contrib"] = (summary_person["actual_qty"] / tot_actual_personil * 100) if tot_actual_personil > 0 else 0
-
-        m1, m2, m3 = st.columns(3)
-        with m1:
-            st.markdown(f'<div style="background:#080c14; border:1.5px solid #00f0ff; border-radius:10px; padding:16px;"><div style="color:#ffffff; font-size:11px; font-weight:bold;">TOTAL ACTUAL PERSONIL</div><div style="color:#00ff88; font-size:28px; font-weight:800;">{tot_actual_personil:,.0f} Pcs</div></div>', unsafe_allow_html=True)
-        with m2:
-            st.markdown(f'<div style="background:#080c14; border:1.5px solid #00f0ff; border-radius:10px; padding:16px;"><div style="color:#ffffff; font-size:11px; font-weight:bold;">RATA-RATA PENJUALAN/STAF</div><div style="color:#00ff88; font-size:28px; font-weight:800;">{avg_sales_personil:,.0f} Pcs</div></div>', unsafe_allow_html=True)
-        with m3:
-            st.markdown(f'<div style="background:#080c14; border:1.5px solid #00f0ff; border-radius:10px; padding:16px;"><div style="color:#ffffff; font-size:11px; font-weight:bold;">TOP PERFORMER</div><div style="color:#00ff88; font-size:26px; font-weight:800;">{top_performer_name}</div></div>', unsafe_allow_html=True)
-
-        st.markdown("<br>", unsafe_allow_html=True)
-        if len(summary_person) >= 1:
-            p1_name = summary_person.iloc[0]["person_name"]
-            p1_qty = summary_person.iloc[0]["actual_qty"]
-            p2_name = summary_person.iloc[1]["person_name"] if len(summary_person) >= 2 else "-"
-            p2_qty = summary_person.iloc[1]["actual_qty"] if len(summary_person) >= 2 else 0
-            p3_name = summary_person.iloc[2]["person_name"] if len(summary_person) >= 3 else "-"
-            p3_qty = summary_person.iloc[2]["actual_qty"] if len(summary_person) >= 3 else 0
-
-            st.markdown(f"""
-                <div style="display: flex; gap: 12px; justify-content: center; align-items: flex-end; margin-bottom: 20px;">
-                    <div style="flex: 1; background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; text-align: center;">
-                        <span style="font-size: 18px;">🥈</span>
-                        <div style="color: #94a3b8; font-size: 10px; font-weight: bold;">JUARA 2</div>
-                        <div style="color: #ffffff; font-size: 12px; font-weight: bold;">{p2_name}</div>
-                        <div style="color: #00ff88; font-size: 15px; font-weight: 800;">{p2_qty:,.0f} Pcs</div>
-                    </div>
-                    <div style="flex: 1; background: #080c14; border: 2px solid #00f0ff; border-radius: 10px; padding: 12px; text-align: center; transform: scale(1.02);">
-                        <span style="font-size: 22px;">🥇</span>
-                        <div style="color: #f59e0b; font-size: 10px; font-weight: bold;">JUARA 1</div>
-                        <div style="color: #ffffff; font-size: 13px; font-weight: bold;">{p1_name}</div>
-                        <div style="color: #00ff88; font-size: 17px; font-weight: 800;">{p1_qty:,.0f} Pcs</div>
-                    </div>
-                    <div style="flex: 1; background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; text-align: center;">
-                        <span style="font-size: 18px;">🥉</span>
-                        <div style="color: #b45309; font-size: 10px; font-weight: bold;">JUARA 3</div>
-                        <div style="color: #ffffff; font-size: 12px; font-weight: bold;">{p3_name}</div>
-                        <div style="color: #00ff88; font-size: 15px; font-weight: 800;">{p3_qty:,.0f} Pcs</div>
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
-
-        st.markdown("---")
-        col_table, col_chart = st.columns([1, 1])
-        COMPONENT_HEIGHT = 310
-
-        with col_table:
-            st.markdown("<p style='color:#ffffff; font-size:15px; font-weight:bold;'>📋 Tabel Ranking Personil</p>", unsafe_allow_html=True)
-            table_rows_html = ""
-            for _, row in summary_person.iterrows():
-                table_rows_html += f"""
-                <tr style="border-bottom: 1px solid #1e293b;">
-                    <td style="padding: 12px; color: #ffffff; font-weight: bold;">{row['person_name']}</td>
-                    <td style="padding: 12px; color: #00ff88; font-weight: bold;">{row['actual_qty']:,.0f}</td>
-                    <td style="padding: 12px; color: #00ff88; font-weight: bold;">{row['pct_contrib']:.1f}%</td>
-                </tr>
-                """
-            st.markdown(f"""
-                <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; height: {COMPONENT_HEIGHT}px; overflow-y: auto;">
-                    <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
-                        <thead>
-                            <tr style="border-bottom: 2px solid #334155;">
-                                <th style="padding: 8px; color: #94a3b8; font-size: 11px;">PERSONIL</th>
-                                <th style="padding: 8px; color: #94a3b8; font-size: 11px;">TOTAL SALES</th>
-                                <th style="padding: 8px; color: #94a3b8; font-size: 11px;">KONTRIBUSI</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {table_rows_html}
-                </div>
-            """, unsafe_allow_html=True)
-
-        with col_chart:
-            st.markdown("<p style='color:#ffffff; font-size:15px; font-weight:bold;'>📊 Grafik Perbandingan Personil</p>", unsafe_allow_html=True)
-            fig_person = go.Figure()
-            fig_person.add_trace(go.Bar(
-                x=summary_person["person_name"],
-                y=summary_person["actual_qty"],
-                marker_color="#00ff88",
-                text=summary_person["actual_qty"].apply(lambda x: f"{x:,.0f}"),
-                textposition="outside"
-            ))
-            fig_person.update_layout(
-                height=COMPONENT_HEIGHT, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                font=dict(color="#ffffff"), margin=dict(l=10, r=10, t=10, b=10)
-            )
-            st.plotly_chart(fig_person, use_container_width=True)
-            
-# --- TAB 04: PENCAPAIAN PERNIK PER PERSONIL ---
-elif selected_tab == "04 Pencapaian Pernik":
-    st.title("🏆 Pencapaian Pernik Per Personil")
-
-    person_list = (
-        st.session_state.person_df["person_name"].dropna().unique().tolist()
-        if "person_df" in st.session_state
-        and not st.session_state.person_df.empty
-        else []
+    # Custom CSS Style
+    st.markdown(
+        """
+        <style>
+        .neon-card {
+            background: linear-gradient(135deg, #080c14 0%, #0f172a 100%);
+            border: 1.5px solid #00f0ff;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.15);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+        .neon-title { color: #94a3b8; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+        .neon-value { color: #00ff88; font-size: 24px; font-weight: 800; text-shadow: 0 0 8px rgba(0,255,136,0.3); }
+        .podium-1 {
+            background: linear-gradient(180deg, #1e1b4b 0%, #080c14 100%);
+            border: 2px solid #f59e0b;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+            border-radius: 12px; padding: 14px; text-align: center;
+        }
+        .podium-23 {
+            background: #080c14;
+            border: 1.5px solid #00f0ff;
+            border-radius: 12px; padding: 12px; text-align: center;
+        }
+        .status-growth { color: #00ff88; font-weight: bold; }
+        .status-disgrowth { color: #ef4444; font-weight: bold; }
+        </style>
+    """,
+        unsafe_allow_html=True,
     )
-    if not person_list and "sales_person_df" in st.session_state:
-        person_list = (
-            st.session_state.sales_person_df["person_name"]
-            .dropna()
-            .unique()
-            .tolist()
-        )
 
-    c_p1, _ = st.columns([1.5, 1])
-    with c_p1:
-        selected_person = st.selectbox(
-            "👤 PILIH PERSONIL TOKO",
-            person_list if person_list else ["Belum Ada Data"],
-            key="tab4_person_select",
-        )
+    # Sub-menu Navigasi 4 Sub-Tab
+    sub_view = st.radio(
+        "Pilih Modul Analisis:",
+        [
+            "🏆 Ranking & Summary Tim",
+            "📅 Evaluasi Harian & Tren",
+            "🎯 Detail Pernik Per-Personil",
+            "⏳ Dynamic Target (Sisa Hari)",
+        ],
+        horizontal=True,
+        key="personnel_sub_view_4tab",
+    )
 
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Load Data
     sp_df = st.session_state.sales_person_df.copy()
     si_df = st.session_state.sales_item_df.copy()
+    p_df = st.session_state.get("periods_df", pd.DataFrame()).copy()
 
+    # Clean Person Name
+    for df_temp in [sp_df, st.session_state.get("person_df", pd.DataFrame())]:
+        if not df_temp.empty and "person_name" in df_temp.columns:
+            df_temp["person_name"] = (
+                df_temp["person_name"]
+                .astype(str)
+                .str.replace("\xa0", " ", regex=False)
+                .str.strip()
+                .str.upper()
+            )
+            df_temp["person_name"] = df_temp["person_name"].str.replace(
+                r"\s+", " ", regex=True
+            )
+
+    # Filter Periode
     if selected_period_id:
         sp_df = sp_df[sp_df["period_id"] == selected_period_id]
         si_df = si_df[si_df["period_id"] == selected_period_id]
+        if not p_df.empty and "period_id" in p_df.columns:
+            p_df = p_df[p_df["period_id"] == selected_period_id]
 
-    sp_df = sp_df[sp_df["person_name"] == selected_person]
     sp_df["actual_qty"] = pd.to_numeric(
         sp_df["actual_qty"], errors="coerce"
     ).fillna(0)
 
-    target_col = (
-        "target_kasir" if "target_kasir" in si_df.columns else "target_qty"
+    # Normalisasi Kolom Tanggal jika ada
+    date_col = next(
+        (c for c in ["date", "transaction_date", "tanggal"] if c in sp_df.columns),
+        None,
     )
-    si_df[target_col] = pd.to_numeric(si_df[target_col], errors="coerce").fillna(
-        0
-    )
+    if date_col:
+        sp_df[date_col] = pd.to_datetime(sp_df[date_col], errors="coerce")
 
-    sp_grouped = (
-        sp_df.groupby(["item_id", "item_name"])["actual_qty"].sum().reset_index()
-        if not sp_df.empty
-        else pd.DataFrame(columns=["item_id", "item_name", "actual_qty"])
-    )
-    si_grouped = (
-        si_df.groupby(["item_id", "item_name"])[target_col].sum().reset_index()
-        if not si_df.empty
-        else pd.DataFrame(columns=["item_id", "item_name", target_col])
-    )
+    # =========================================================
+    # SUB-TAB 1: RANKING & SUMMARY TIM (TOTAL AKUMULASI)
+    # =========================================================
+    if sub_view == "🏆 Ranking & Summary Tim":
+        if not sp_df.empty:
+            summary_person = (
+                sp_df.groupby("person_name")["actual_qty"]
+                .sum()
+                .reset_index()
+                .sort_values(by="actual_qty", ascending=False)
+            )
+            tot_actual_personil = summary_person["actual_qty"].sum()
+            avg_sales_personil = (
+                summary_person["actual_qty"].mean()
+                if len(summary_person) > 0
+                else 0
+            )
+            top_performer_name = (
+                summary_person.iloc[0]["person_name"]
+                if len(summary_person) > 0
+                else "-"
+            )
+            summary_person["pct_contrib"] = (
+                (summary_person["actual_qty"] / tot_actual_personil * 100)
+                if tot_actual_personil > 0
+                else 0
+            )
 
-    # Konversi ID ke string agar merging konsisten
-    si_grouped["item_id"] = si_grouped["item_id"].astype(str)
-    sp_grouped["item_id"] = sp_grouped["item_id"].astype(str)
+            # Cards
+            m1, m2, m3 = st.columns(3)
+            with m1:
+                st.markdown(
+                    f"""<div class="neon-card"><div class="neon-title">TOTAL ACTUAL PERSONIL</div><div class="neon-value">{tot_actual_personil:,.0f} <span style="font-size:14px; color:#38bdf8;">Pcs</span></div></div>""",
+                    unsafe_allow_html=True,
+                )
+            with m2:
+                st.markdown(
+                    f"""<div class="neon-card"><div class="neon-title">RATA-RATA / STAF</div><div class="neon-value">{avg_sales_personil:,.0f} <span style="font-size:14px; color:#38bdf8;">Pcs</span></div></div>""",
+                    unsafe_allow_html=True,
+                )
+            with m3:
+                st.markdown(
+                    f"""<div class="neon-card" style="border-color:#f59e0b;"><div class="neon-title" style="color:#f59e0b;">👑 TOP PERFORMER</div><div class="neon-value" style="color:#ffffff; font-size:18px;">{top_performer_name}</div></div>""",
+                    unsafe_allow_html=True,
+                )
 
-    merged_item_df = pd.merge(
-        si_grouped,
-        sp_grouped[["item_id", "actual_qty"]],
-        on="item_id",
-        how="left",
-    )
-    merged_item_df["actual_qty"] = merged_item_df["actual_qty"].fillna(0)
-    merged_item_df.rename(columns={target_col: "target_val"}, inplace=True)
+            st.markdown("<br>", unsafe_allow_html=True)
 
-    merged_item_df["gap"] = (
-        merged_item_df["target_val"] - merged_item_df["actual_qty"]
-    )
-    merged_item_df["ach"] = merged_item_df.apply(
-        lambda r: (
-            (r["actual_qty"] / r["target_val"] * 100)
-            if r["target_val"] > 0
-            else 0
-        ),
-        axis=1,
-    )
+            # Podium
+            if len(summary_person) >= 1:
+                p1_name = summary_person.iloc[0]["person_name"]
+                p1_qty = summary_person.iloc[0]["actual_qty"]
+                p2_name = (
+                    summary_person.iloc[1]["person_name"]
+                    if len(summary_person) >= 2
+                    else "-"
+                )
+                p2_qty = (
+                    summary_person.iloc[1]["actual_qty"]
+                    if len(summary_person) >= 2
+                    else 0
+                )
+                p3_name = (
+                    summary_person.iloc[2]["person_name"]
+                    if len(summary_person) >= 3
+                    else "-"
+                )
+                p3_qty = (
+                    summary_person.iloc[2]["actual_qty"]
+                    if len(summary_person) >= 3
+                    else 0
+                )
 
-    tot_target = merged_item_df["target_val"].sum()
-    tot_actual = merged_item_df["actual_qty"].sum()
-    tot_gap = tot_target - tot_actual
-    tot_ach = (tot_actual / tot_target * 100) if tot_target > 0 else 0
+                st.markdown(
+                    f"""
+                    <div style="display: flex; gap: 14px; justify-content: center; align-items: flex-end; margin-bottom: 25px;">
+                        <div style="flex: 1;" class="podium-23">
+                            <span style="font-size: 24px;">🥈</span>
+                            <div style="color: #94a3b8; font-size: 11px; font-weight: bold;">JUARA 2</div>
+                            <div style="color: #ffffff; font-size: 13px; font-weight: bold; margin: 4px 0;">{p2_name}</div>
+                            <div style="color: #00ff88; font-size: 16px; font-weight: 800;">{p2_qty:,.0f} Pcs</div>
+                        </div>
+                        <div style="flex: 1.1;" class="podium-1">
+                            <span style="font-size: 30px;">🥇</span>
+                            <div style="color: #f59e0b; font-size: 11px; font-weight: bold;">JUARA 1</div>
+                            <div style="color: #ffffff; font-size: 15px; font-weight: bold; margin: 4px 0;">{p1_name}</div>
+                            <div style="color: #00ff88; font-size: 20px; font-weight: 800;">{p1_qty:,.0f} Pcs</div>
+                        </div>
+                        <div style="flex: 1;" class="podium-23">
+                            <span style="font-size: 24px;">🥉</span>
+                            <div style="color: #b45309; font-size: 11px; font-weight: bold;">JUARA 3</div>
+                            <div style="color: #ffffff; font-size: 13px; font-weight: bold; margin: 4px 0;">{p3_name}</div>
+                            <div style="color: #00ff88; font-size: 16px; font-weight: 800;">{p3_qty:,.0f} Pcs</div>
+                        </div>
+                    </div>
+                """,
+                    unsafe_allow_html=True,
+                )
 
-    m1, m2, m3, m4 = st.columns(4)
-    with m1:
-        st.metric("🎯 Target Kasir Item", f"{tot_target:,.0f} Pcs")
-    with m2:
-        st.metric("📦 Actual Penjualan", f"{tot_actual:,.0f} Pcs")
-    with m3:
-        st.metric("📉 Sisa Gap Target", f"{tot_gap:,.0f} Pcs")
-    with m4:
-        st.metric("⚡ % Achievement", f"{tot_ach:.1f}%")
+            st.markdown("---")
+            col_table, col_chart = st.columns([1.1, 1])
+            COMPONENT_HEIGHT = 330
 
-    st.markdown("---")
-    col_t4_left, col_t4_right = st.columns([1.2, 1])
+            with col_table:
+                st.markdown(
+                    "<p style='color:#38bdf8; font-size:15px; font-weight:bold;'>📋 Tabel Ranking Akumulasi</p>",
+                    unsafe_allow_html=True,
+                )
+                table_rows_html = ""
+                for idx, row in summary_person.iterrows():
+                    badge = (
+                        "🥇"
+                        if idx == 0
+                        else ("🥈" if idx == 1 else ("🥉" if idx == 2 else "👤"))
+                    )
+                    table_rows_html += f"""
+                    <tr style="border-bottom: 1px solid #1e293b;">
+                        <td style="padding: 10px; color: #ffffff; font-weight: bold;">{badge} {row['person_name']}</td>
+                        <td style="padding: 10px; color: #00ff88; font-weight: bold; text-align:right;">{row['actual_qty']:,.0f}</td>
+                        <td style="padding: 10px; color: #00f0ff; font-weight: bold; text-align:right;">{row['pct_contrib']:.1f}%</td>
+                    </tr>
+                    """
+                st.markdown(
+                    f"""
+                    <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; height: {COMPONENT_HEIGHT}px; overflow-y: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-family: sans-serif;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid #334155; text-align: left;">
+                                    <th style="padding: 8px; color: #94a3b8; font-size: 11px;">PERSONIL</th>
+                                    <th style="padding: 8px; color: #94a3b8; font-size: 11px; text-align:right;">TOTAL SALES</th>
+                                    <th style="padding: 8px; color: #94a3b8; font-size: 11px; text-align:right;">KONTRIBUSI</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {table_rows_html}
+                            </tbody>
+                        </table>
+                    </div>
+                """,
+                    unsafe_allow_html=True,
+                )
 
-    # === KOLOM KIRI: TABEL ===
-    with col_t4_left:
-        st.subheader("📋 Rincian Target Item Pernik")
-        table_rows_html = ""
-        for _, row in merged_item_df.iterrows():
-            gap_color = "#00ff88" if row["gap"] <= 0 else "#ef4444"
-            ach_color = "#00ff88" if row["ach"] >= 100 else "#ffb703"
-            table_rows_html += f"""
+            with col_chart:
+                st.markdown(
+                    "<p style='color:#38bdf8; font-size:15px; font-weight:bold;'>📊 Grafik Perbandingan Akumulasi</p>",
+                    unsafe_allow_html=True,
+                )
+                fig_person = go.Figure()
+                fig_person.add_trace(
+                    go.Bar(
+                        x=summary_person["person_name"],
+                        y=summary_person["actual_qty"],
+                        marker=dict(
+                            color=summary_person["actual_qty"],
+                            colorscale="Viridis",
+                        ),
+                        text=summary_person["actual_qty"].apply(
+                            lambda x: f"{x:,.0f}"
+                        ),
+                        textposition="outside",
+                    )
+                )
+                fig_person.update_layout(
+                    height=COMPONENT_HEIGHT,
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    font=dict(color="#ffffff"),
+                    margin=dict(l=10, r=10, t=25, b=10),
+                    yaxis=dict(showgrid=False),
+                    xaxis=dict(showgrid=False),
+                )
+                st.plotly_chart(fig_person, use_container_width=True)
+        else:
+            st.info("💡 Belum ada data penjualan personil untuk periode ini.")
+
+    # =========================================================
+    # SUB-TAB 2: EVALUASI HARIAN & TREN PENJUALAN
+    # =========================================================
+    elif sub_view == "📅 Evaluasi Harian & Tren":
+        if date_col and not sp_df[date_col].isna().all():
+            available_dates = sorted(
+                sp_df[date_col].dt.date.dropna().unique(), reverse=True
+            )
+
+            c_date, _ = st.columns([1.5, 1])
+            with c_date:
+                selected_date = st.selectbox(
+                    "📅 PILIH TANGGAL TRANSAKSI",
+                    available_dates,
+                    key="select_daily_date",
+                )
+
+            # Daily data & Prev day data for Growth
+            prev_date = selected_date - pd.Timedelta(days=1)
+
+            daily_df = sp_df[sp_df[date_col].dt.date == selected_date]
+            prev_df = sp_df[sp_df[date_col].dt.date == prev_date]
+
+            daily_grouped = (
+                daily_df.groupby("person_name")["actual_qty"]
+                .sum()
+                .reset_index()
+            )
+            prev_grouped = (
+                prev_df.groupby("person_name")["actual_qty"]
+                .sum()
+                .reset_index()
+                .rename(columns={"actual_qty": "prev_qty"})
+            )
+
+            # Master Personil List untuk kelengkapan
+            all_persons = pd.DataFrame(
+                {
+                    "person_name": sp_df["person_name"]
+                    .dropna()
+                    .unique()
+                    .tolist()
+                }
+            )
+            daily_merged = pd.merge(
+                all_persons, daily_grouped, on="person_name", how="left"
+            ).fillna(0)
+            daily_merged = pd.merge(
+                daily_merged, prev_grouped, on="person_name", how="left"
+            ).fillna(0)
+
+            daily_merged["diff"] = (
+                daily_merged["actual_qty"] - daily_merged["prev_qty"]
+            )
+            daily_merged["growth_pct"] = daily_merged.apply(
+                lambda r: (
+                    (r["diff"] / r["prev_qty"] * 100)
+                    if r["prev_qty"] > 0
+                    else (100 if r["actual_qty"] > 0 else 0)
+                ),
+                axis=1,
+            )
+            daily_merged = daily_merged.sort_values(
+                by="actual_qty", ascending=False
+            )
+
+            st.subheader(
+                f"📊 Performa Harian ({selected_date.strftime('%d %b %Y')})"
+            )
+
+            col_d_table, col_d_chart = st.columns([1.3, 1])
+            with col_d_table:
+                d_rows = ""
+                for _, r in daily_merged.iterrows():
+                    g_cls = (
+                        "status-growth"
+                        if r["diff"] >= 0
+                        else "status-disgrowth"
+                    )
+                    g_sign = "+" if r["diff"] > 0 else ""
+                    d_rows += f"""
+                    <tr style="border-bottom: 1px solid #1e293b;">
+                        <td style="padding: 10px; color: #ffffff; font-weight: bold;">{r['person_name']}</td>
+                        <td style="padding: 10px; color: #00ff88; font-weight: bold; text-align:right;">{r['actual_qty']:,.0f}</td>
+                        <td style="padding: 10px; color: #94a3b8; text-align:right;">{r['prev_qty']:,.0f}</td>
+                        <td style="padding: 10px; text-align:right;" class="{g_cls}">{g_sign}{r['diff']:,.0f} ({g_sign}{r['growth_pct']:.1f}%)</td>
+                    </tr>
+                    """
+                st.markdown(
+                    f"""
+                    <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; max-height: 320px; overflow-y: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-family: sans-serif;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid #334155; text-align: left;">
+                                    <th style="padding: 8px; color: #38bdf8; font-size: 11px;">PERSONIL</th>
+                                    <th style="padding: 8px; color: #38bdf8; font-size: 11px; text-align:right;">HARI INI</th>
+                                    <th style="padding: 8px; color: #38bdf8; font-size: 11px; text-align:right;">H-1</th>
+                                    <th style="padding: 8px; color: #38bdf8; font-size: 11px; text-align:right;">GROWTH</th>
+                                </tr>
+                            </thead>
+                            <tbody>{d_rows}</tbody>
+                        </table>
+                    </div>
+                """,
+                    unsafe_allow_html=True,
+                )
+
+            with col_d_chart:
+                fig_daily = px.bar(
+                    daily_merged,
+                    x="person_name",
+                    y="actual_qty",
+                    text="actual_qty",
+                    title=f"Sales Per-Personil ({selected_date.strftime('%d/%m')})",
+                    color="actual_qty",
+                    color_continuous_scale="Blues",
+                )
+                fig_daily.update_layout(
+                    height=320,
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    font=dict(color="#ffffff"),
+                    margin=dict(l=10, r=10, t=30, b=10),
+                    coloraxis_showscale=False,
+                )
+                st.plotly_chart(fig_daily, use_container_width=True)
+
+            st.markdown("---")
+            st.subheader("📈 Grafis Konsistensi Tren Penjualan Harian")
+
+            # Pivot Tren Harian
+            trend_df = (
+                sp_df.groupby([sp_df[date_col].dt.date, "person_name"])[
+                    "actual_qty"
+                ]
+                .sum()
+                .reset_index()
+            )
+            fig_trend = px.line(
+                trend_df,
+                x=date_col,
+                y="actual_qty",
+                color="person_name",
+                markers=True,
+                labels={
+                    date_col: "Tanggal",
+                    "actual_qty": "Sales (Pcs)",
+                    "person_name": "Personil",
+                },
+            )
+            fig_trend.update_layout(
+                height=380,
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#ffffff"),
+                xaxis=dict(showgrid=False),
+                yaxis=dict(showgrid=True, gridcolor="#1e293b"),
+            )
+            st.plotly_chart(fig_trend, use_container_width=True)
+        else:
+            st.warning(
+                "⚠️ Kolom tanggal transaksi tidak ditemukan atau bernilai kosong pada dataset `SALES_PERSONIL`."
+            )
+
+   # =========================================================
+    # SUB-TAB 3: DETAIL PERNIK PER-PERSONIL
+    # =========================================================
+    elif sub_view == "🎯 Detail Pernik Per-Personil":
+        person_list = (
+            sp_df["person_name"].dropna().unique().tolist()
+            if not sp_df.empty
+            else []
+        )
+
+        c_p1, _ = st.columns([1.5, 1])
+        with c_p1:
+            selected_person = st.selectbox(
+                "👤 PILIH PERSONIL TOKO",
+                person_list if person_list else ["Belum Ada Data"],
+                key="tab4_person_select_comb4",
+            )
+
+        sp_person_df = sp_df[sp_df["person_name"] == selected_person]
+
+        target_col = (
+            "target_kasir" if "target_kasir" in si_df.columns else "target_qty"
+        )
+        si_df[target_col] = pd.to_numeric(
+            si_df[target_col], errors="coerce"
+        ).fillna(0)
+
+        sp_grouped = (
+            sp_person_df.groupby(["item_id", "item_name"])["actual_qty"]
+            .sum()
+            .reset_index()
+            if not sp_person_df.empty
+            else pd.DataFrame(columns=["item_id", "item_name", "actual_qty"])
+        )
+        si_grouped = (
+            si_df.groupby(["item_id", "item_name"])[target_col]
+            .sum()
+            .reset_index()
+            if not si_df.empty
+            else pd.DataFrame(columns=["item_id", "item_name", target_col])
+        )
+
+        si_grouped["item_id"] = si_grouped["item_id"].astype(str)
+        sp_grouped["item_id"] = sp_grouped["item_id"].astype(str)
+
+        merged_item_df = pd.merge(
+            si_grouped,
+            sp_grouped[["item_id", "actual_qty"]],
+            on="item_id",
+            how="left",
+        )
+        merged_item_df["actual_qty"] = merged_item_df["actual_qty"].fillna(0)
+        merged_item_df.rename(columns={target_col: "target_val"}, inplace=True)
+
+        merged_item_df["gap"] = (
+            merged_item_df["target_val"] - merged_item_df["actual_qty"]
+        )
+        merged_item_df["ach"] = merged_item_df.apply(
+            lambda r: (
+                (r["actual_qty"] / r["target_val"] * 100)
+                if r["target_val"] > 0
+                else 0
+            ),
+            axis=1,
+        )
+
+        tot_target = merged_item_df["target_val"].sum()
+        tot_actual = merged_item_df["actual_qty"].sum()
+        tot_gap = tot_target - tot_actual
+        tot_ach = (tot_actual / tot_target * 100) if tot_target > 0 else 0
+
+        # KPI Metrics
+        m1, m2, m3, m4 = st.columns(4)
+        with m1:
+            st.metric("🎯 Target Kasir Item", f"{tot_target:,.0f} Pcs")
+        with m2:
+            st.metric("📦 Actual Penjualan", f"{tot_actual:,.0f} Pcs")
+        with m3:
+            st.metric("📉 Sisa Gap Target", f"{tot_gap:,.0f} Pcs")
+        with m4:
+            st.metric("⚡ % Achievement", f"{tot_ach:.1f}%")
+
+        st.markdown("---")
+        col_t4_left, col_t4_right = st.columns([1.2, 1])
+
+        with col_t4_left:
+            st.markdown(
+                "<p style='color:#38bdf8; font-size:15px; font-weight:bold;'>📋 Rincian Target Item Pernik</p>",
+                unsafe_allow_html=True,
+            )
+            table_rows_html = ""
+            for _, row in merged_item_df.iterrows():
+                gap_color = "#00ff88" if row["gap"] <= 0 else "#ef4444"
+                ach_color = "#00ff88" if row["ach"] >= 100 else "#ffb703"
+                table_rows_html += f"""
+                <tr style="border-bottom: 1px solid #1e293b;">
+                    <td style="padding: 10px; color: #ffffff; font-weight: bold;">{row['item_name']}</td>
+                    <td style="padding: 10px; color: #94a3b8;">{row['target_val']:,.0f}</td>
+                    <td style="padding: 10px; color: #00ff88; font-weight: bold;">{row['actual_qty']:,.0f}</td>
+                    <td style="padding: 10px; color: {gap_color};">{row['gap']:,.0f}</td>
+                    <td style="padding: 10px; color: {ach_color}; font-weight: bold;">{row['ach']:.1f}%</td>
+                </tr>
+                """
+
+            table_full_html = textwrap.dedent(f"""
+                <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; max-height: 380px; overflow-y: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #334155;">
+                                <th style="padding: 8px; color: #38bdf8; font-size: 11px;">NAMA ITEM</th>
+                                <th style="padding: 8px; color: #38bdf8; font-size: 11px;">TARGET KASIR</th>
+                                <th style="padding: 8px; color: #38bdf8; font-size: 11px;">ACTUAL</th>
+                                <th style="padding: 8px; color: #38bdf8; font-size: 11px;">GAP</th>
+                                <th style="padding: 8px; color: #38bdf8; font-size: 11px;">% ACH</th>
+                            </tr>
+                        </thead>
+                        <tbody>{table_rows_html}</tbody>
+                    </table>
+                </div>
+            """)
+            st.markdown(table_full_html, unsafe_allow_html=True)
+
+        with col_t4_right:
+            st.markdown(
+                "<p style='color:#38bdf8; font-size:15px; font-weight:bold;'>📊 Visual Breakdown Item</p>",
+                unsafe_allow_html=True,
+            )
+            fig_p4 = go.Figure()
+            fig_p4.add_trace(
+                go.Bar(
+                    y=merged_item_df["item_name"],
+                    x=merged_item_df["actual_qty"],
+                    name="Actual",
+                    orientation="h",
+                    marker_color="#00f2fe",
+                )
+            )
+            fig_p4.add_trace(
+                go.Bar(
+                    y=merged_item_df["item_name"],
+                    x=merged_item_df["target_val"],
+                    name="Target Kasir",
+                    orientation="h",
+                    marker_color="#475569",
+                )
+            )
+            fig_p4.update_layout(
+                barmode="group",
+                height=380,
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#ffffff"),
+                margin=dict(l=10, r=10, t=10, b=10),
+                legend=dict(orientation="h", yanchor="bottom", y=1.02),
+            )
+            st.plotly_chart(fig_p4, use_container_width=True)
+
+    # =========================================================
+    # SUB-TAB 4: DYNAMIC TARGET (TIMEFACTOR & SISA HARI KERJA)
+    # =========================================================
+    elif sub_view == "⏳ Dynamic Target (Sisa Hari)":
+        st.subheader("⏳ Kalkulator Timefactor & Target Harian Terupdate")
+
+        # Input Jumlah Hari Kerja / Timefactor
+        c_tf1, c_tf2, c_tf3 = st.columns(3)
+
+        default_total_days = 30
+        default_passed_days = (
+            datetime.now().day if datetime.now().day <= 30 else 30
+        )
+
+        with c_tf1:
+            total_days = st.number_input(
+                "📅 Total Hari Kerja Periode",
+                min_value=1,
+                max_value=31,
+                value=default_total_days,
+            )
+        with c_tf2:
+            passed_days = st.number_input(
+                "⏱️ Hari Kerja Berjalan",
+                min_value=0,
+                max_value=total_days,
+                value=min(default_passed_days, total_days),
+            )
+
+        remaining_days = total_days - passed_days
+        timefactor_pct = (
+            (passed_days / total_days * 100) if total_days > 0 else 0
+        )
+
+        with c_tf3:
+            st.markdown(
+                f"""
+                <div class="neon-card" style="border-color:#38bdf8;">
+                    <div class="neon-title">TIMEFACTOR PERIODE</div>
+                    <div class="neon-value" style="color:#00f0ff;">{timefactor_pct:.1f}%</div>
+                    <div style="font-size:11px; color:#94a3b8;">Sisa Hari: <b style="color:#ffffff;">{remaining_days} Hari</b></div>
+                </div>
+            """,
+                unsafe_allow_html=True,
+            )
+
+        st.markdown("---")
+
+        person_list_dyn = (
+            sp_df["person_name"].dropna().unique().tolist()
+            if not sp_df.empty
+            else []
+        )
+        c_p_dyn, _ = st.columns([1.5, 1])
+        with c_p_dyn:
+            sel_person_dyn = st.selectbox(
+                "👤 PILIH PERSONIL UNTUK TARGET HARIAN",
+                person_list_dyn if person_list_dyn else ["Belum Ada Data"],
+                key="select_person_dynamic",
+            )
+
+        sp_person_dyn = sp_df[sp_df["person_name"] == sel_person_dyn]
+
+        target_col = (
+            "target_kasir" if "target_kasir" in si_df.columns else "target_qty"
+        )
+        si_df[target_col] = pd.to_numeric(
+            si_df[target_col], errors="coerce"
+        ).fillna(0)
+
+        sp_grouped_dyn = (
+            sp_person_dyn.groupby(["item_id", "item_name"])["actual_qty"]
+            .sum()
+            .reset_index()
+            if not sp_person_dyn.empty
+            else pd.DataFrame(columns=["item_id", "item_name", "actual_qty"])
+        )
+        si_grouped_dyn = (
+            si_df.groupby(["item_id", "item_name"])[target_col]
+            .sum()
+            .reset_index()
+            if not si_df.empty
+            else pd.DataFrame(columns=["item_id", "item_name", target_col])
+        )
+
+        si_grouped_dyn["item_id"] = si_grouped_dyn["item_id"].astype(str)
+        sp_grouped_dyn["item_id"] = sp_grouped_dyn["item_id"].astype(str)
+
+        dyn_df = pd.merge(
+            si_grouped_dyn,
+            sp_grouped_dyn[["item_id", "actual_qty"]],
+            on="item_id",
+            how="left",
+        ).fillna(0)
+        dyn_df.rename(columns={target_col: "target_val"}, inplace=True)
+
+        dyn_df["sisa_gap"] = dyn_df["target_val"] - dyn_df["actual_qty"]
+        dyn_df["sisa_gap"] = dyn_df["sisa_gap"].apply(lambda x: max(x, 0))
+
+        # Target Harian Baru = Sisa Gap / Sisa Hari
+        dyn_df["req_daily_qty"] = dyn_df["sisa_gap"].apply(
+            lambda x: (x / remaining_days) if remaining_days > 0 else x
+        )
+
+        tot_target_dyn = dyn_df["target_val"].sum()
+        tot_actual_dyn = dyn_df["actual_qty"].sum()
+        tot_gap_dyn = max(tot_target_dyn - tot_actual_dyn, 0)
+        tot_req_daily = (
+            (tot_gap_dyn / remaining_days) if remaining_days > 0 else tot_gap_dyn
+        )
+
+        st.markdown(
+            f"### 💡 Target Harian Terupdate untuk **{sel_person_dyn}**"
+        )
+
+        m_d1, m_d2, m_d3, m_d4 = st.columns(4)
+        with m_d1:
+            st.metric("🎯 Total Target Periode", f"{tot_target_dyn:,.0f} Pcs")
+        with m_d2:
+            st.metric("📦 Actual Penjualan", f"{tot_actual_dyn:,.0f} Pcs")
+        with m_d3:
+            st.metric("📉 Sisa Gap Target", f"{tot_gap_dyn:,.0f} Pcs")
+        with m_d4:
+            st.metric(
+                "⚡ Wajib Target / Hari",
+                f"{tot_req_daily:.1f} Pcs/Hari",
+                help="Beban target per hari agar target periode tercapai 100%",
+            )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # Tabel Breakdown Target Harian Per-Item
+        dyn_rows = ""
+        for _, r in dyn_df.iterrows():
+            status_txt = (
+                "✅ TERCAPAI"
+                if r["sisa_gap"] <= 0
+                else f"⚡ {r['req_daily_qty']:.1f} Pcs/Hari"
+            )
+            status_color = "#00ff88" if r["sisa_gap"] <= 0 else "#ffb703"
+            dyn_rows += f"""
             <tr style="border-bottom: 1px solid #1e293b;">
-                <td style="padding: 10px; color: #ffffff; font-weight: bold;">{row['item_name']}</td>
-                <td style="padding: 10px; color: #94a3b8;">{row['target_val']:,.0f}</td>
-                <td style="padding: 10px; color: #00ff88; font-weight: bold;">{row['actual_qty']:,.0f}</td>
-                <td style="padding: 10px; color: {gap_color};">{row['gap']:,.0f}</td>
-                <td style="padding: 10px; color: {ach_color}; font-weight: bold;">{row['ach']:.1f}%</td>
+                <td style="padding: 10px; color: #ffffff; font-weight: bold;">{r['item_name']}</td>
+                <td style="padding: 10px; color: #94a3b8; text-align:right;">{r['target_val']:,.0f}</td>
+                <td style="padding: 10px; color: #00ff88; font-weight: bold; text-align:right;">{r['actual_qty']:,.0f}</td>
+                <td style="padding: 10px; color: #ef4444; text-align:right;">{r['sisa_gap']:,.0f}</td>
+                <td style="padding: 10px; color: {status_color}; font-weight: bold; text-align:right;">{status_txt}</td>
             </tr>
             """
 
-        # PERBAIKAN: st.markdown() dimasukkan ke dalam with col_t4_left
-        # dan ditambahkan tag penutup </tbody></table>
-        table_full_html = textwrap.dedent(f"""
-            <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 10px; max-height: 380px; overflow-y: auto;">
-                <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: left;">
+        st.markdown(
+            f"""
+            <div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 12px; overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-family: sans-serif;">
                     <thead>
-                        <tr style="border-bottom: 2px solid #334155;">
-                            <th style="padding: 8px; color: #38bdf8; font-size: 11px;">NAMA ITEM</th>
-                            <th style="padding: 8px; color: #38bdf8; font-size: 11px;">TARGET KASIR</th>
-                            <th style="padding: 8px; color: #38bdf8; font-size: 11px;">ACTUAL</th>
-                            <th style="padding: 8px; color: #38bdf8; font-size: 11px;">GAP</th>
-                            <th style="padding: 8px; color: #38bdf8; font-size: 11px;">% ACH</th>
+                        <tr style="border-bottom: 2px solid #334155; text-align: left;">
+                            <th style="padding: 10px; color: #38bdf8; font-size: 11px;">ITEM PERNIK</th>
+                            <th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">TARGET PERIODE</th>
+                            <th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">ACTUAL</th>
+                            <th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">SISA GAP</th>
+                            <th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">TARGET/HARI SISA HARI</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        {table_rows_html}
+                    <tbody>{dyn_rows}</tbody>
+                </table>
             </div>
-        """)
-        st.markdown(table_full_html, unsafe_allow_html=True)
-
-    # === KOLOM KANAN: GRAFIK ===
-    with col_t4_right:
-        st.subheader("📊 Visual Breakdown Item")
-        fig_p4 = go.Figure()
-        fig_p4.add_trace(
-            go.Bar(
-                y=merged_item_df["item_name"],
-                x=merged_item_df["actual_qty"],
-                name="Actual",
-                orientation="h",
-                marker_color="#00f2fe",
-            )
+        """,
+            unsafe_allow_html=True,
         )
-        fig_p4.add_trace(
-            go.Bar(
-                y=merged_item_df["item_name"],
-                x=merged_item_df["target_val"],
-                name="Target Kasir",
-                orientation="h",
-                marker_color="#64748b",
-            )
-        )
-        fig_p4.update_layout(
-            barmode="group",
-            height=380,
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#ffffff"),
-            margin=dict(l=10, r=10, t=10, b=10),
-        )
-        st.plotly_chart(fig_p4, use_container_width=True)
-
 
 
 # --- TAB 05: ANALISIS TREN HARIAN ---
