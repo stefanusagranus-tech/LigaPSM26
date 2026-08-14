@@ -794,7 +794,7 @@ elif selected_tab in [
     )
 
         # Sub-menu Navigasi 4 Sub-Tab
-        sub_view = st.radio(
+    sub_view = st.radio(
             "Pilih Modul Analisis:",
             [
                 "🏆 Ranking & Summary Tim",
