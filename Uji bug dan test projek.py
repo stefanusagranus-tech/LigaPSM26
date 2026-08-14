@@ -1039,10 +1039,10 @@ elif sub_view == "📅 Evaluasi Harian & Tren":
                 "⚠️ Kolom tanggal transaksi tidak ditemukan atau bernilai kosong pada dataset `SALES_PERSONIL`."
             )
 
-   # =========================================================
-    # SUB-TAB 3: DETAIL PERNIK PER-PERSONIL
-    # =========================================================
-    elif sub_view == "🎯 Detail Pernik Per-Personil":
+# =========================================================
+# SUB-TAB 3: DETAIL PERNIK PER-PERSONIL
+# =========================================================
+elif sub_view == "🎯 Detail Pernik Per-Personil":
         person_list = (
             sp_df["person_name"].dropna().unique().tolist()
             if not sp_df.empty
@@ -1196,10 +1196,10 @@ elif sub_view == "📅 Evaluasi Harian & Tren":
             )
             st.plotly_chart(fig_p4, use_container_width=True)
 
-    # =========================================================
-    # SUB-TAB 4: DYNAMIC TARGET (TIMEFACTOR & SISA HARI KERJA PERIODE)
-    # =========================================================
-    elif sub_view == "⏳ Dynamic Target (Sisa Hari)":
+# =========================================================
+# SUB-TAB 4: DYNAMIC TARGET (TIMEFACTOR & SISA HARI KERJA PERIODE)
+# =========================================================
+elif sub_view == "⏳ Dynamic Target (Sisa Hari)":
         st.subheader("⏳ Kalkulator Timefactor & Target Harian Terupdate")
 
         # --- 1. DETEKSI OTOMATIS RENTANG TANGGAL PERIODE ---
