@@ -542,7 +542,7 @@ elif selected_tab == "02 Detail Item":
         elif sort_option == "Nama Produk (A - Z)":
             item_grouped = item_grouped.sort_values(by="item_name", ascending=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
         r_col1, r_col2, r_col3 = st.columns(3)
         with r_col1:
             st.markdown(f"""
