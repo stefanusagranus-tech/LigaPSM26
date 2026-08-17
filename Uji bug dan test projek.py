@@ -270,7 +270,7 @@ def show_login_page():
                 if not username_input or not password_input:
                     st.warning("⚠️ Username dan Password wajib diisi!")
                 elif check_login(username_input, password_input):
-                    user_role : st.session_state.get("role, st.session_state.get("user_role", ''))
+                    user_role = st.session_state.get("role, st.session_state.get("user_role", ""))
                     st.session_state["is_admin"] = (str(user_role).strip().lower() == "admin")
                     
                     st.toast(f"🎉 Selamat Datang, {st.session_state.get('person_name', username_input)}!", icon="✅")
