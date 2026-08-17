@@ -1983,8 +1983,7 @@ elif selected_tab == "07 Master Data & Pengaturan":
             
             sub_itm1, sub_itm2, sub_itm3, sub_itm4 = st.tabs([
                 "➕ Tambah Item", 
-                "🎯 Set Target Toko & Kasir", 
-                "✏️ Edit Item & Target", 
+                "🎯 Set Target Toko & Kasir",  
                 "🗑️ Hapus Item"
             ])
 
@@ -2008,8 +2007,6 @@ elif selected_tab == "07 Master Data & Pengaturan":
                     col_name, col_price = st.columns(2)
                     with col_name:
                         new_item_name = st.text_input("Nama Produk / Item", placeholder="Contoh: PAKET HAPPY", key="add_itm_name")
-                    with col_price:
-                        new_item_price = st.number_input("Harga Satuan (Rp)", min_value=0, value=0, step=1000, key="add_itm_price")
 
                     btn_save_item = st.form_submit_button("💾 Simpan Item Baru", use_container_width=True)
 
@@ -2195,35 +2192,7 @@ elif selected_tab == "07 Master Data & Pengaturan":
                                 st.success(f"✅ Target item '{sel_item_name}' untuk Toko & Kasir berhasil tersimpan ke Google Sheets!")
                                 st.rerun()
 
-
-
-
-            # 3. EDIT ITEM & TARGET KASIR
-            with sub_itm3:
-                if items_df.empty:
-                    st.info("ℹ️ Belum ada item terdaftar.")
-                else:
-                    item_to_edit = st.selectbox("Pilih Item yang Ingin Di-edit", items_df["item_name"].tolist(), key="sb_edit_item")
-                    curr_item_row = items_df[items_df["item_name"] == item_to_edit].iloc[0]
-                    curr_item_id = str(curr_item_row["item_id"])
-
-                    with st.form("form_edit_item"):
-                        edit_nama_item = st.text_input("Nama Item / Produk", value=str(curr_item_row["item_name"]))
-                        btn_update_item = st.form_submit_button("✏️ Perbarui Item", use_container_width=True)
-
-                        if btn_update_item:
-                            st.session_state.items_df.loc[st.session_state.items_df["item_id"].astype(str) == curr_item_id, "item_name"] = edit_nama_item.strip().upper()
-                            save_master_table("MASTER_ITEM", st.session_state.items_df)
-                            
-                            # Update cascaded name di SALES_ITEM
-                            if not st.session_state.sales_item_df.empty:
-                                st.session_state.sales_item_df.loc[st.session_state.sales_item_df["item_id"].astype(str) == curr_item_id, "item_name"] = edit_nama_item.strip().upper()
-                                save_master_table("SALES_ITEM", st.session_state.sales_item_df)
-
-                            st.success(f"✅ Nama Item berhasil diperbarui menjadi '{edit_nama_item}'!")
-                            st.rerun()
-
-            # 4. HAPUS ITEM (INTEGRASI LANGSUNG SPREADSHEET)
+            # 3. HAPUS ITEM (INTEGRASI LANGSUNG SPREADSHEET)
             with sub_itm4:
                 if items_df.empty:
                     st.info("ℹ️ Tidak ada item untuk dihapus.")
