@@ -1988,26 +1988,74 @@ elif selected_tab == "07 Master Data & Pengaturan":
                 "🗑️ Hapus Item"
             ])
 
-            # 1. TAMBAH ITEM
+                      # 1. TAMBAH ITEM BARU (+ PERIODE PRODUK)
             with sub_itm1:
-                with st.form("form_add_item"):
-                    item_count = len(st.session_state.items_df) if "items_df" in st.session_state and st.session_state.items_df is not None else 0
-                    item_id_input = st.text_input("ID Item", value=f"ITM{len(items_df)+1:03d}")
-                    item_name_input = st.text_input("Nama Produk Pernik / Item")
-                    btn_add_item = st.form_submit_button("💾 Simpan Item Baru", use_container_width=True)
+                st.caption("Gunakan formulir ini untuk mendaftarkan barang/produk baru ke dalam database system.")
 
-                    if btn_add_item:
-                        if not item_name_input.strip():
-                            st.warning("⚠️ Nama produk wajib diisi!")
+                with st.form("form_add_new_item"):
+                    col_id, col_period = st.columns(2)
+
+                    with col_id:
+                        # Auto-generate ID Item
+                        next_id_num = len(items_df) + 1 if not items_df.empty else 1
+                        new_item_id = st.text_input("ID Item", value=f"ITM{next_id_num:03d}", key="add_itm_id")
+
+                    with col_period:
+                        # Pilih Periode Produk
+                        p_options = list(periods_dict.keys()) if periods_dict else ["Belum Ada Periode"]
+                        sel_item_period = st.selectbox("Pilih Periode Produk", options=p_options, key="add_itm_period")
+
+                    col_name, col_price = st.columns(2)
+                    with col_name:
+                        new_item_name = st.text_input("Nama Produk / Item", placeholder="Contoh: PAKET HAPPY", key="add_itm_name")
+                    with col_price:
+                        new_item_price = st.number_input("Harga Satuan (Rp)", min_value=0, value=0, step=1000, key="add_itm_price")
+
+                    btn_save_item = st.form_submit_button("💾 Simpan Item Baru", use_container_width=True)
+
+                    if btn_save_item:
+                        if not new_item_name.strip():
+                            st.error("❌ Nama produk tidak boleh kosong!")
+                        elif not periods_dict:
+                            st.error("❌ Silakan buat periode terlebih dahulu di menu Master Periode!")
                         else:
-                            new_item_row = pd.DataFrame([{
-                                "item_id": str(item_id_input).strip(),
-                                "item_name": str(item_name_input).strip().upper()
-                            }])
-                            st.session_state.items_df = pd.concat([st.session_state.items_df, new_item_row], ignore_index=True)
+                            selected_p_id = str(periods_dict[sel_item_period])
+
+                            # 1. Simpan ke MASTER_ITEM
+                            new_item_data = {
+                                "item_id": new_item_id,
+                                "item_name": new_item_name.strip(),
+                                "price": new_item_price,
+                                "period_id": selected_p_id
+                            }
+
+                            st.session_state.items_df = pd.concat([
+                                st.session_state.items_df, 
+                                pd.DataFrame([new_item_data])
+                            ], ignore_index=True)
+
                             save_master_table("MASTER_ITEM", st.session_state.items_df)
-                            st.success(f"✅ Item '{item_name_input}' berhasil disimpan!")
+
+                            # 2. Inisialisasi otomatis ke SALES_ITEM agar langsung terhubung ke periode terpilih
+                            new_si_row = {
+                                "period_id": selected_p_id,
+                                "item_id": new_item_id,
+                                "item_name": new_item_name.strip(),
+                                "target_qty": 0,
+                                "actual_qty": 0
+                            }
+
+                            st.session_state.sales_item_df = pd.concat([
+                                st.session_state.sales_item_df, 
+                                pd.DataFrame([new_si_row])
+                            ], ignore_index=True)
+
+                            save_master_table("SALES_ITEM", st.session_state.sales_item_df)
+
+                            st.success(f"✅ Produk '{new_item_name}' berhasil ditambahkan ke periode **{sel_item_period}**!")
                             st.rerun()
+
+
 
             # 2. SET TARGET TOKO & KASIR PER PERIODE (LAYOUT SESUAI REFERENSI)
             with sub_itm2:
