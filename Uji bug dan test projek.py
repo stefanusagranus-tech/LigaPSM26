@@ -1895,12 +1895,24 @@ elif selected_tab == "06 Input & Reset Data":
 # ==========================================
 # TAB 07: MASTER DATA & PENGATURAN SYSTEM
 # ==========================================
-elif selected_tab == "07 Master Data & Pengaturan" :
+elif selected_tab == "07 Master Data & Pengaturan":
     st.markdown("<h3 style='color: #00ff88;'>⚙️ Master Data & Pengaturan System</h3>", unsafe_allow_html=True)
 
-    is_admin = st.session_state.get("is_admin",False)
-    is_admin = st.session_state.get("user_role", "").lower() == "admin"
-    
+    # 1. Cek Status Admin
+    is_admin = st.session_state.get("is_admin", False) or (str(st.session_state.get("user_role", "")).strip().lower() == "admin")
+
+    # 2. Ambil data database dari session state (Mencegah Error items_df)
+    items_df = st.session_state.get("items_df", pd.DataFrame())
+    periods_df = st.session_state.get("periods_df", pd.DataFrame())
+    si_df = st.session_state.get("sales_item_df", pd.DataFrame())
+    person_df = st.session_state.get("person_df", pd.DataFrame())
+
+    # 3. Buat dictionary periode
+    periods_dict = {}
+    if not periods_df.empty and "period_name" in periods_df.columns and "period_id" in periods_df.columns:
+        periods_dict = dict(zip(periods_df["period_name"], periods_df["period_id"]))
+
+    # 4. Pengecekan Akses
     if not is_admin:
         st.warning("🔒 Akses terbatas! Halaman ini hanya dapat diakses oleh Admin.")
     else:
