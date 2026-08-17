@@ -1979,7 +1979,7 @@ elif selected_tab == "07 Master Data & Pengaturan" :
             # 1. TAMBAH ITEM
             with sub_itm1:
                 with st.form("form_add_item"):
-                    item_count = len(st.session_state.items_df) if "items_df" in st.session_state and st.session_state.items_df is not none else 0
+                    item_count = len(st.session_state.items_df) if "items_df" in st.session_state and st.session_state.items_df is not None else 0
                     item_id_input = st.text_input("ID Item", value=f"ITM{len(items_df)+1:03d}")
                     item_name_input = st.text_input("Nama Produk Pernik / Item")
                     btn_add_item = st.form_submit_button("💾 Simpan Item Baru", use_container_width=True)
