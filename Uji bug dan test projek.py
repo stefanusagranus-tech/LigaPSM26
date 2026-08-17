@@ -1328,7 +1328,7 @@ elif selected_tab == "07 Master Data & Pengaturan":
         with m_tab1:
             st.markdown("<h4 style='color: #00ff88;'>👥 Kelola Master Personil & User Login</h4>", unsafe_allow_html=True)
             
-            if "personil_success_msg" in st.session_state and st.session_state.person_personil_msg:
+            if "personil_success_msg" in st.session_state and st.session_state.person_personil_success_msg:
                 st.success(st.session_state.personil_success_msg)
                 del st.session_state["personil_success_msg"]
 
