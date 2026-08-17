@@ -782,6 +782,27 @@ if selected_tab == "01 Dashboard Toko":
 elif selected_tab == "03 Raport Personil Toko":
     st.markdown("<h3 style='color: #00ff88;'>📊 Raport & Evaluasi Personil Toko</h3>", unsafe_allow_html=True)
 
+# --- DEBUGGING DATA ---
+st.write("### Debugging: Apa yang dibaca aplikasi?")
+
+# Cek apakah dataframe kosong
+if person_df.empty:
+    st.error("❌ person_df KOSONG! Aplikasi belum memuat data dari Sheets.")
+else:
+    st.write(f"✅ person_df berhasil dimuat. Total data: {len(person_df)} baris.")
+    
+    # Menampilkan 5 baris pertama supaya Anda bisa melihat isi kolomnya
+    st.dataframe(person_df.head())
+    
+    # Cek apakah username yang Anda pakai ada di daftar?
+    my_user = st.session_state.get("username")
+    if 'username' in person_df.columns:
+        ada_user = my_user in person_df['username'].astype(str).values
+        st.write(f"Apakah username '{my_user}' ditemukan di database? **{ada_user}**")
+    else:
+        st.error("Kolom 'username' tidak ditemukan di person_df! Pastikan header di Sheets sudah benar.")
+
+
     # 1. Ambil data dari Session State
     sales_df = st.session_state.get("sales_df", pd.DataFrame())
     sp_df = st.session_state.get("sales_person_df", pd.DataFrame())
