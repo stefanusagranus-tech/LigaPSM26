@@ -261,15 +261,15 @@ def show_login_page():
         </div>
         """, unsafe_allow_html=True)
         
-with st.form("login_form", clear_on_submit=False):
-    username_input = st.text_input("Username", placeholder="Masukkan username")
-    password_input = st.text_input("Password", type="password", placeholder="Masukkan password")
-    submit_btn = st.form_submit_button("Masuk ke Aplikasi", use_container_width=True)
+    with st.form("login_form", clear_on_submit=False):
+        username_input = st.text_input("Username", placeholder="Masukkan username")
+        password_input = st.text_input("Password", type="password", placeholder="Masukkan password")
+        submit_btn = st.form_submit_button("Masuk ke Aplikasi", use_container_width=True)
 
-if submit_btn:
-    # Membersihkan spasi pada input
-    u_clean = username_input.strip()
-    p_clean = password_input.strip()
+    if submit_btn:
+        # Membersihkan spasi pada input
+        u_clean = username_input.strip()
+        p_clean = password_input.strip()
 
     if not u_clean or not p_clean:
         st.warning("⚠️ Username dan Password wajib diisi!")
@@ -286,11 +286,9 @@ if submit_btn:
     else:
         st.error("❌ Username atau Password salah!")
 
-
-
-if not st.session_state.logged_in:
-    show_login_page()
-    st.stop()
+    if not st.session_state.logged_in:
+        show_login_page()
+        st.stop()
 
 # =========================================================
 # 7. SIDEBAR DASHBOARD & NAVIGASI
