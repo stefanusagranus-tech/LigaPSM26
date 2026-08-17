@@ -1892,7 +1892,7 @@ elif selected_tab == "06 Input & Reset Data":
 # ==========================================
 # TAB 07: MASTER DATA & PENGATURAN SYSTEM
 # ==========================================
-elif selected_tab == "07 Master Data & Pengaturan"
+elif selected_tab == "07 Master Data & Pengaturan" :
     st.markdown("<h3 style='color: #00ff88;'>⚙️ Master Data & Pengaturan System</h3>", unsafe_allow_html=True)
 
     # Otorisasi Khusus Admin
