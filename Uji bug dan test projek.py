@@ -2193,7 +2193,7 @@ elif selected_tab == "07 Master Data & Pengaturan":
                                 st.rerun()
 
             # 3. HAPUS ITEM (INTEGRASI LANGSUNG SPREADSHEET)
-            with sub_itm4:
+            with sub_itm3:
                 if items_df.empty:
                     st.info("ℹ️ Tidak ada item untuk dihapus.")
                 else:
