@@ -357,8 +357,8 @@ selected_period_id = None if selected_period_name == "Semua Periode (Overall)" e
 st.sidebar.markdown("<hr style='margin: 15px 0; border-color: #334155;'>", unsafe_allow_html=True)
 
 if st.sidebar.button("🚪 Keluar / Logout", use_container_width=True):
-    st.session_state.logged_in = False
-    st.session_state.username = ""
+    st.session_state.clear()
+    st.session_state["logged_in"] = False
     st.rerun()
 
 # =========================================================
