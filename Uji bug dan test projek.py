@@ -240,55 +240,89 @@ if "username" not in st.session_state:
     st.session_state.username = ""
 
 # =========================================================
-# 6. HALAMAN LOGIN
+# 6. HALAMAN LOGIN & LOGIKA AUTHENTICATION
 # =========================================================
 def show_login_page():
     LOGO_URL = "https://raw.githubusercontent.com/stefanusagranus-tech/LigaPSM26/main/kgs_group_belgium_logo.jpg"
+    
     st.markdown("""
     <style>
-    .login-card { background-color: #1e293b; padding: 35px 30px; border-radius: 16px; box-shadow: 0 10px 25px 5px rgba(0, 0, 0, 0.4); text-align: center; margin-bottom: 20px; }
-    .login-logo { width: 100px; height: 100px; object-fit: contain; border-radius: 12px; background-color: #ffffff; padding: 8px; margin-bottom: 15px; display: block; margin-left: auto; margin-right: auto; }
-    .login-subtitle { color: #38bdf8; font-size: 13px; margin-bottom: 0px; }
+    .login-card { 
+        background-color: #1e293b; 
+        padding: 25px 20px; 
+        border-radius: 16px; 
+        box-shadow: 0 10px 25px 5px rgba(0, 0, 0, 0.4); 
+        text-align: center; 
+        margin-bottom: 20px; 
+    }
+    .login-logo { 
+        width: 100px; 
+        height: 100px; 
+        object-fit: contain; 
+        border-radius: 12px; 
+        background-color: #ffffff; 
+        padding: 8px; 
+        margin-bottom: 12px; 
+        display: block; 
+        margin-left: auto; 
+        margin-right: auto; 
+    }
+    .login-title { 
+        color: #ffffff; 
+        font-size: 20px; 
+        font-weight: 700; 
+        margin-bottom: 4px; 
+    }
+    .login-subtitle { 
+        color: #38bdf8; 
+        font-size: 13px; 
+        margin-bottom: 0px; 
+    }
     </style>
     """, unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1, 1.4, 1])
     with col2:
+        # 1. HEADER LOGO & JUDUL (TAMPIL PALING ATAS)
         st.markdown(f"""
         <div class='login-card'>
             <img src='{LOGO_URL}' class='login-logo' alt='KGS Group Logo'>
+            <div class='login-title'>TOKO C383</div>
             <p class='login-subtitle'>Sistem Monitoring PSM Toko</p>
         </div>
         """, unsafe_allow_html=True)
         
-    with st.form("login_form", clear_on_submit=False):
-        username_input = st.text_input("Username", placeholder="Masukkan username")
-        password_input = st.text_input("Password", type="password", placeholder="Masukkan password")
-        submit_btn = st.form_submit_button("Masuk ke Aplikasi", use_container_width=True)
+        # 2. FORM INPUT LOGIN (BERADA DI BAWAH JUDUL)
+        with st.form("login_form", clear_on_submit=False):
+            username_input = st.text_input("Username", placeholder="Masukkan username")
+            password_input = st.text_input("Password", type="password", placeholder="Masukkan password")
+            submit_btn = st.form_submit_button("Masuk ke Aplikasi", use_container_width=True)
 
-    if submit_btn:
-        # Membersihkan spasi pada input
-        u_clean = username_input.strip()
-        p_clean = password_input.strip()
+        if submit_btn:
+            u_clean = username_input.strip()
+            p_clean = password_input.strip()
 
-    if not u_clean or not p_clean:
-        st.warning("⚠️ Username dan Password wajib diisi!")
-    elif check_login(u_clean, p_clean):
-        # 1. TANDAI USER SUDAH LOGIN (PENTING!)
-        st.session_state["logged_in"] = True
-        
-        # 2. BACA ROLE USER
-        user_role = st.session_state.get("role", st.session_state.get("user_role", ""))
-        st.session_state["is_admin"] = (str(user_role).strip().lower() == "admin")
+            if not u_clean or not p_clean:
+                st.warning("⚠️ Username dan Password wajib diisi!")
+            elif check_login(u_clean, p_clean):
+                st.session_state["logged_in"] = True
+                user_role = st.session_state.get("role", st.session_state.get("user_role", ""))
+                st.session_state["is_admin"] = (str(user_role).strip().lower() == "admin")
 
-        st.toast(f"🎉 Selamat Datang, {st.session_state.get('person_name', u_clean)}!")
-        st.rerun()
-    else:
-        st.error("❌ Username atau Password salah!")
+                st.toast(f"🎉 Selamat Datang, {st.session_state.get('person_name', u_clean)}!")
+                st.rerun()
+            else:
+                st.error("❌ Username atau Password salah!")
 
-    if not st.session_state.logged_in:
-        show_login_page()
-        st.stop()
+# ---------------------------------------------------------
+# PEMBLOKIR UTAMA (Mencegah Akses Sebelum Login)
+# ---------------------------------------------------------
+if "logged_in" not in st.session_state:
+    st.session_state["logged_in"] = False
+
+if not st.session_state["logged_in"]:
+    show_login_page()
+    st.stop()  # ⛔ KUNCI UTAMA: Hentikan render sidebar & dashboard jika belum login
 
 # =========================================================
 # 7. SIDEBAR DASHBOARD & NAVIGASI
@@ -356,10 +390,13 @@ selected_period_id = None if selected_period_name == "Semua Periode (Overall)" e
 
 st.sidebar.markdown("<hr style='margin: 15px 0; border-color: #334155;'>", unsafe_allow_html=True)
 
+# 🚪 TOMBOL LOGOUT FIX
 if st.sidebar.button("🚪 Keluar / Logout", use_container_width=True):
     st.session_state.clear()
     st.session_state["logged_in"] = False
     st.rerun()
+
+
 
 # =========================================================
 # 8. HEADER UTAMA
