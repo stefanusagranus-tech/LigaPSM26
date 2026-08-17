@@ -1981,7 +1981,7 @@ elif selected_tab == "07 Master Data & Pengaturan":
         with m_tab2:
             st.markdown("<h4 style='color: #00ff88;'>📦 Kelola Master Item & Target Penjualan</h4>", unsafe_allow_html=True)
             
-            sub_itm1, sub_itm2, sub_itm3, sub_itm4 = st.tabs([
+            sub_itm1, sub_itm2, sub_itm3 = st.tabs([
                 "➕ Tambah Item", 
                 "🎯 Set Target Toko & Kasir",  
                 "🗑️ Hapus Item"
