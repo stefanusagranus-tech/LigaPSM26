@@ -1894,7 +1894,6 @@ elif selected_tab == "06 Input & Reset Data":
 # ==========================================
 elif selected_tab == "07 Master Data & Pengaturan" :
     st.markdown("<h3 style='color: #00ff88;'>⚙️ Master Data & Pengaturan System</h3>", unsafe_allow_html=True)
-
     # Otorisasi Khusus Admin
     if not is_admin:
         st.warning("🔒 Akses terbatas! Halaman ini hanya dapat diakses oleh Admin.")
