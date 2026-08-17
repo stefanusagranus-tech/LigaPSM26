@@ -1582,130 +1582,130 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
                             
                             st.rerun()
                             
-      # =========================================================
- # SUBTAB 2: MASTER ITEM & TARGET (KHUSUS ADMIN)
-# =========================================================
-if is_admin:
-    with m_tab2:
-        st.markdown("<h4 style='color: #00ff88;'>📦 Kelola Master Produk & Target Sales</h4>", unsafe_allow_html=True)
+    # =========================================================
+    # SUBTAB 2: MASTER ITEM & TARGET (KHUSUS ADMIN)
+    # =========================================================
+    if is_admin:
+        with m_tab2:
+            st.markdown("<h4 style='color: #00ff88;'>📦 Kelola Master Produk & Target Sales</h4>", unsafe_allow_html=True)
         
-        sub_m2 = st.radio("Pilih Fitur Item:", ["➕ Tambah / Edit Produk", "🎯 Set Target Toko & Kasir Per Periode"], horizontal=True)
+            sub_m2 = st.radio("Pilih Fitur Item:", ["➕ Tambah / Edit Produk", "🎯 Set Target Toko & Kasir Per Periode"], horizontal=True)
 
-        if sub_m2 == "➕ Tambah / Edit Produk":
-            if not items_df.empty:
-                st.dataframe(items_df, use_container_width=True)
+            if sub_m2 == "➕ Tambah / Edit Produk":
+                if not items_df.empty:
+                    st.dataframe(items_df, use_container_width=True)
             
-            # --- FORM TAMBAH PRODUK BARU ---
-            with st.form("form_item_master"):
-                st.subheader("➕ Tambah Produk Baru")
-                col_i1, col_i2 = st.columns(2)
-                with col_i1:
-                    item_id_in = st.text_input("ID Produk (Contoh: ITM001)")
-                    item_name_in = st.text_input("Nama Produk")
-                with col_i2:
-                    # Mengubah 'Kategori Produk' menjadi 'Periode Promosi'
-                    period_options = periods_df["period_name"].tolist() if not periods_df.empty and "period_name" in periods_df.columns else []
-                    period_promo_in = st.selectbox("Periode Promosi", options=period_options if period_options else ["Tidak Ada Periode"])
+                # --- FORM TAMBAH PRODUK BARU ---
+                with st.form("form_item_master"):
+                    st.subheader("➕ Tambah Produk Baru")
+                    col_i1, col_i2 = st.columns(2)
+                    with col_i1:
+                        item_id_in = st.text_input("ID Produk (Contoh: ITM001)")
+                        item_name_in = st.text_input("Nama Produk")
+                    with col_i2:
+                        # Mengubah 'Kategori Produk' menjadi 'Periode Promosi'
+                        period_options = periods_df["period_name"].tolist() if not periods_df.empty and "period_name" in periods_df.columns else []
+                        period_promo_in = st.selectbox("Periode Promosi", options=period_options if period_options else ["Tidak Ada Periode"])
                 
-                btn_save_item = st.form_submit_button("💾 Simpan Produk ke Master")
-                if btn_save_item:
-                    if not item_id_in or not item_name_in:
-                        st.warning("⚠️ ID dan Nama Produk tidak boleh kosong!")
-                    else:
-                        new_item = {
-                            "item_id": item_id_in, 
-                            "item_name": item_name_in, 
-                            "category": period_promo_in # Disimpan ke kolom category/periode
-                        }
-                        st.session_state.items_df = pd.concat([st.session_state.items_df, pd.DataFrame([new_item])], ignore_index=True)
-                        save_master_table("MASTER_ITEM", st.session_state.items_df)
+                    btn_save_item = st.form_submit_button("💾 Simpan Produk ke Master")
+                    if btn_save_item:
+                        if not item_id_in or not item_name_in:
+                            st.warning("⚠️ ID dan Nama Produk tidak boleh kosong!")
+                        else:
+                            new_item = {
+                                "item_id": item_id_in, 
+                                "item_name": item_name_in, 
+                                "category": period_promo_in # Disimpan ke kolom category/periode
+                            }
+                            st.session_state.items_df = pd.concat([st.session_state.items_df, pd.DataFrame([new_item])], ignore_index=True)
+                            save_master_table("MASTER_ITEM", st.session_state.items_df)
+                            
+                            # Otomatis daftarkan item ke sales_item_df per periode terpilih walau target = 0
+                            if not periods_df.empty and "period_name" in periods_df.columns:
+                                selected_p_id = periods_df[periods_df["period_name"] == period_promo_in]["period_id"].values
+                                if len(selected_p_id) > 0:
+                                    p_id = selected_p_id[0]
+                                    mask = (st.session_state.sales_item_df["period_id"] == p_id) & (st.session_state.sales_item_df["item_id"] == item_id_in)
+                                    if not mask.any():
+                                        new_target_row = {
+                                            "period_id": p_id,
+                                            "item_id": item_id_in,
+                                            "item_name": item_name_in,
+                                            "target_qty": 0,
+                                            "target_kasir": 0,
+                                            "actual_qty": 0
+                                        }
+                                        st.session_state.sales_item_df = pd.concat([st.session_state.sales_item_df, pd.DataFrame([new_target_row])], ignore_index=True)
+                                        save_database(st.session_state.sales_item_df, st.session_state.sales_person_df)
+
+                            st.success("✅ Produk baru berhasil ditambahkan dan masuk ke Master Item!")
+                            time.sleep(1.5)
+                            st.rerun()
+
+                st.divider()
+
+                # --- FORM HAPUS PRODUK ---
+                if not st.session_state.items_df.empty:
+                    with st.form("form_delete_item"):
+                        st.subheader("🗑️ Hapus Produk dari Master")
+                        item_list_to_delete = st.session_state.items_df["item_id"].astype(str) + " - " + st.session_state.items_df["item_name"].astype(str)
+                        selected_delete_item = st.selectbox("Pilih Produk yang Akan Dihapus", item_list_to_delete)
+                    
+                        btn_delete_item = st.form_submit_button("🗑️ Hapus Produk Permanen")
+                        if btn_delete_item:
+                            target_id = selected_delete_item.split(" - ")[0]
+                            # Filter dataframe untuk menghapus item
+                            st.session_state.items_df = st.session_state.items_df[st.session_state.items_df["item_id"] != target_id]
+                            save_master_table("MASTER_ITEM", st.session_state.items_df)
                         
-                        # Otomatis daftarkan item ke sales_item_df per periode terpilih walau target = 0
-                        if not periods_df.empty and "period_name" in periods_df.columns:
-                            selected_p_id = periods_df[periods_df["period_name"] == period_promo_in]["period_id"].values
-                            if len(selected_p_id) > 0:
-                                p_id = selected_p_id[0]
-                                mask = (st.session_state.sales_item_df["period_id"] == p_id) & (st.session_state.sales_item_df["item_id"] == item_id_in)
-                                if not mask.any():
+                            st.toast(f"🗑️ Produk {target_id} berhasil dihapus!", icon="✅")
+                            time.sleep(1.5)
+                            st.rerun()
+
+            elif sub_m2 == "🎯 Set Target Toko & Kasir Per Periode":
+                st.info("💡 Pilih periode dan produk untuk memperbarui target. Jika belum ada target, abaikan bagian ini (inputan transaksi tetap berjalan).")
+            
+                if not periods_df.empty and "period_name" in periods_df.columns:
+                    p_opt = {row["period_name"]: row["period_id"] for _, row in periods_df.iterrows()}
+                    selected_p_name = st.selectbox("Pilih Periode Target", list(p_opt.keys()), key="target_p_sel")
+                    target_p_id = p_opt[selected_p_name]
+
+                    if not items_df.empty and "item_name" in items_df.columns:
+                        selected_item_target = st.selectbox("Pilih Produk", items_df["item_name"].unique(), key="target_i_sel")
+                        item_id_target = items_df[items_df["item_name"] == selected_item_target].iloc[0]["item_id"]
+
+                        with st.form("form_target_period"):
+                            col_t1, col_t2 = st.columns(2)
+                            with col_t1:
+                                target_toko_val = st.number_input("Target Penjualan Toko (Qty Pcs)", min_value=0, step=1, value=0)
+                            with col_t2:
+                                target_kasir_val = st.number_input("Target Penjualan Kasir (Qty Pcs)", min_value=0, step=1, value=0)
+
+                            btn_save_target = st.form_submit_button("🎯 Simpan / Update Target Ke Google Sheets")
+
+                            if btn_save_target:
+                                # Cari apakah baris target di sales_item_df sudah ada untuk periode + item ini
+                                mask = (st.session_state.sales_item_df["period_id"] == target_p_id) & (st.session_state.sales_item_df["item_id"] == item_id_target)
+                            
+                                if mask.any():
+                                    st.session_state.sales_item_df.loc[mask, "target_qty"] = target_toko_val
+                                    st.session_state.sales_item_df.loc[mask, "target_kasir"] = target_kasir_val
+                                else:
+                                    # Buat entry target baru
                                     new_target_row = {
-                                        "period_id": p_id,
-                                        "item_id": item_id_in,
-                                        "item_name": item_name_in,
-                                        "target_qty": 0,
-                                        "target_kasir": 0,
+                                        "period_id": target_p_id,
+                                        "item_id": item_id_target,
+                                        "item_name": selected_item_target,
+                                        "target_qty": target_toko_val,
+                                        "target_kasir": target_kasir_val,
                                         "actual_qty": 0
                                     }
                                     st.session_state.sales_item_df = pd.concat([st.session_state.sales_item_df, pd.DataFrame([new_target_row])], ignore_index=True)
-                                    save_database(st.session_state.sales_item_df, st.session_state.sales_person_df)
 
-                        st.success("✅ Produk baru berhasil ditambahkan dan masuk ke Master Item!")
-                        time.sleep(1.5)
-                        st.rerun()
-
-            st.divider()
-
-            # --- FORM HAPUS PRODUK ---
-            if not st.session_state.items_df.empty:
-                with st.form("form_delete_item"):
-                    st.subheader("🗑️ Hapus Produk dari Master")
-                    item_list_to_delete = st.session_state.items_df["item_id"].astype(str) + " - " + st.session_state.items_df["item_name"].astype(str)
-                    selected_delete_item = st.selectbox("Pilih Produk yang Akan Dihapus", item_list_to_delete)
-                    
-                    btn_delete_item = st.form_submit_button("🗑️ Hapus Produk Permanen")
-                    if btn_delete_item:
-                        target_id = selected_delete_item.split(" - ")[0]
-                        # Filter dataframe untuk menghapus item
-                        st.session_state.items_df = st.session_state.items_df[st.session_state.items_df["item_id"] != target_id]
-                        save_master_table("MASTER_ITEM", st.session_state.items_df)
-                        
-                        st.toast(f"🗑️ Produk {target_id} berhasil dihapus!", icon="✅")
-                        time.sleep(1.5)
-                        st.rerun()
-
-        elif sub_m2 == "🎯 Set Target Toko & Kasir Per Periode":
-            st.info("💡 Pilih periode dan produk untuk memperbarui target. Jika belum ada target, abaikan bagian ini (inputan transaksi tetap berjalan).")
-            
-            if not periods_df.empty and "period_name" in periods_df.columns:
-                p_opt = {row["period_name"]: row["period_id"] for _, row in periods_df.iterrows()}
-                selected_p_name = st.selectbox("Pilih Periode Target", list(p_opt.keys()), key="target_p_sel")
-                target_p_id = p_opt[selected_p_name]
-
-                if not items_df.empty and "item_name" in items_df.columns:
-                    selected_item_target = st.selectbox("Pilih Produk", items_df["item_name"].unique(), key="target_i_sel")
-                    item_id_target = items_df[items_df["item_name"] == selected_item_target].iloc[0]["item_id"]
-
-                    with st.form("form_target_period"):
-                        col_t1, col_t2 = st.columns(2)
-                        with col_t1:
-                            target_toko_val = st.number_input("Target Penjualan Toko (Qty Pcs)", min_value=0, step=1, value=0)
-                        with col_t2:
-                            target_kasir_val = st.number_input("Target Penjualan Kasir (Qty Pcs)", min_value=0, step=1, value=0)
-
-                        btn_save_target = st.form_submit_button("🎯 Simpan / Update Target Ke Google Sheets")
-
-                        if btn_save_target:
-                            # Cari apakah baris target di sales_item_df sudah ada untuk periode + item ini
-                            mask = (st.session_state.sales_item_df["period_id"] == target_p_id) & (st.session_state.sales_item_df["item_id"] == item_id_target)
-                            
-                            if mask.any():
-                                st.session_state.sales_item_df.loc[mask, "target_qty"] = target_toko_val
-                                st.session_state.sales_item_df.loc[mask, "target_kasir"] = target_kasir_val
-                            else:
-                                # Buat entry target baru
-                                new_target_row = {
-                                    "period_id": target_p_id,
-                                    "item_id": item_id_target,
-                                    "item_name": selected_item_target,
-                                    "target_qty": target_toko_val,
-                                    "target_kasir": target_kasir_val,
-                                    "actual_qty": 0
-                                }
-                                st.session_state.sales_item_df = pd.concat([st.session_state.sales_item_df, pd.DataFrame([new_target_row])], ignore_index=True)
-
-                            save_database(st.session_state.sales_item_df, st.session_state.sales_person_df)
-                            st.toast("🎯 Target berhasil disimpan permanen!", icon="✅")
-                            time.sleep(1.5)
-                            st.rerun()
+                                save_database(st.session_state.sales_item_df, st.session_state.sales_person_df)
+                                st.toast("🎯 Target berhasil disimpan permanen!", icon="✅")
+                                time.sleep(1.5)
+                                st.rerun() 
 
     # =========================================================
     # SUBTAB 3: MASTER PERIODE (KHUSUS ADMIN)
