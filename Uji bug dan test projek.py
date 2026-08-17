@@ -782,27 +782,6 @@ if selected_tab == "01 Dashboard Toko":
 elif selected_tab == "03 Raport Personil Toko":
     st.markdown("<h3 style='color: #00ff88;'>📊 Raport & Evaluasi Personil Toko</h3>", unsafe_allow_html=True)
 
-# --- DEBUGGING DATA ---
-st.write("### Debugging: Apa yang dibaca aplikasi?")
-
-# Cek apakah dataframe kosong
-if person_df.empty:
-    st.error("❌ person_df KOSONG! Aplikasi belum memuat data dari Sheets.")
-else:
-    st.write(f"✅ person_df berhasil dimuat. Total data: {len(person_df)} baris.")
-    
-    # Menampilkan 5 baris pertama supaya Anda bisa melihat isi kolomnya
-    st.dataframe(person_df.head())
-    
-    # Cek apakah username yang Anda pakai ada di daftar?
-    my_user = st.session_state.get("username")
-    if 'username' in person_df.columns:
-        ada_user = my_user in person_df['username'].astype(str).values
-        st.write(f"Apakah username '{my_user}' ditemukan di database? **{ada_user}**")
-    else:
-        st.error("Kolom 'username' tidak ditemukan di person_df! Pastikan header di Sheets sudah benar.")
-
-
     # 1. Ambil data dari Session State
     sales_df = st.session_state.get("sales_df", pd.DataFrame())
     sp_df = st.session_state.get("sales_person_df", pd.DataFrame())
@@ -818,7 +797,7 @@ else:
         sel_period_name = st.selectbox("Pilih Periode Evaluasi:", list(periods_dict.keys()), key="rap_period_sel")
         target_p_id = str(periods_dict[sel_period_name])
 
-        # Sub-menu Analisis (Lengkap 4 Mode)
+        # Sub-menu Analisis
         rap_mode = st.radio(
             "Pilih Mode Analisis:",
             [
@@ -831,18 +810,32 @@ else:
             key="rap_mode_radio"
         )
 
-        # Filter Data Target Personil untuk Periode Ini
-        sp_period = sp_df[sp_df["period_id"].astype(str) == target_p_id].copy() if not sp_df.empty else pd.DataFrame()
-        sales_period = sales_df[sales_df["period_id"].astype(str) == target_p_id].copy() if not sales_df.empty else pd.DataFrame()
+        # Filter Data berdasarkan Periode
+        sp_period = sp_df[sp_df["period_id"].astype(str).str.strip() == target_p_id].copy() if not sp_df.empty else pd.DataFrame()
+        sales_period = sales_df[sales_df["period_id"].astype(str).str.strip() == target_p_id].copy() if not sales_df.empty else pd.DataFrame()
 
         # Filter Personil Kasir/Staff
         kasir_list = person_df[
             person_df["role"].astype(str).str.lower().isin(["kasir toko", "staff toko", "kasir", "staff"])
-        ] if not person_df.empty else pd.DataFrame()
+        ].copy() if not person_df.empty else pd.DataFrame()
 
         if kasir_list.empty:
             st.warning("⚠️ Belum ada data Personil Kasir/Staff yang terdaftar di Master Personil.")
         else:
+            # -------------------------------------------------------------
+            # NORMALISASI PERBAIKAN: COCOKKAN BERDASARKAN PERSON_NAME
+            # -------------------------------------------------------------
+            kasir_list["name_clean"] = kasir_list["person_name"].astype(str).str.strip().str.upper()
+            
+            if not sales_period.empty and "person_name" in sales_period.columns:
+                sales_period["name_clean"] = sales_period["person_name"].astype(str).str.strip().str.upper()
+                sales_period["qty"] = pd.to_numeric(sales_period["qty"], errors="coerce").fillna(0)
+            
+            if not sp_period.empty and "person_name" in sp_period.columns:
+                sp_period["name_clean"] = sp_period["person_name"].astype(str).str.strip().str.upper()
+                sp_period["target_qty"] = pd.to_numeric(sp_period.get("target_qty", 0), errors="coerce").fillna(0)
+                sp_period["actual_qty"] = pd.to_numeric(sp_period.get("actual_qty", 0), errors="coerce").fillna(0)
+
             # -------------------------------------------------------------
             # MODE 1: RANKING & SUMMARY TIM
             # -------------------------------------------------------------
@@ -850,31 +843,27 @@ else:
                 st.markdown(f"#### 📊 Ringkasan Pencapaian Kasir — Periode: **{sel_period_name}**")
 
                 summary_data = []
+                # Ambil daftar nama unik yang terdaftar di Master Personil
                 for _, k_row in kasir_list.iterrows():
-                    k_id = str(k_row["person_id"])
-                    k_name = str(k_row["person_name"])
+                    k_name_raw = str(k_row["person_name"])
+                    k_name_clean = str(k_row["name_clean"])
 
+                    # 1. Ambil Target
                     k_target = 0
-                    if not sp_period.empty:
-                        k_target_df = sp_period[sp_period["person_id"].astype(str) == k_id]
-                        if not k_target_df.empty:
-                            k_target = pd.to_numeric(k_target_df["target_qty"], errors="coerce").fillna(0).sum()
+                    if not sp_period.empty and "name_clean" in sp_period.columns:
+                        k_target = sp_period[sp_period["name_clean"] == k_name_clean]["target_qty"].sum()
 
+                    # 2. Ambil Penjualan Realtime (Aktual)
                     k_actual = 0
-                    if not sales_period.empty and "person_id" in sales_period.columns:
-                        k_sales_df = sales_period[sales_period["person_id"].astype(str) == k_id]
-                        if not k_sales_df.empty:
-                            k_actual = pd.to_numeric(k_sales_df["qty"], errors="coerce").fillna(0).sum()
-                    elif not sp_period.empty:
-                        k_target_df = sp_period[sp_period["person_id"].astype(str) == k_id]
-                        if not k_target_df.empty:
-                            k_actual = pd.to_numeric(k_target_df["actual_qty"], errors="coerce").fillna(0).sum()
+                    if not sales_period.empty and "name_clean" in sales_period.columns:
+                        k_actual = sales_period[sales_period["name_clean"] == k_name_clean]["qty"].sum()
+                    elif not sp_period.empty and "name_clean" in sp_period.columns:
+                        k_actual = sp_period[sp_period["name_clean"] == k_name_clean]["actual_qty"].sum()
 
                     achieve_pct = (k_actual / k_target * 100) if k_target > 0 else 0.0
 
                     summary_data.append({
-                        "ID Personil": k_id,
-                        "Nama Kasir": k_name,
+                        "Nama Kasir": k_name_raw,
                         "Target (Pcs)": int(k_target),
                         "Aktual (Pcs)": int(k_actual),
                         "Pencapaian (%)": round(achieve_pct, 1),
@@ -907,32 +896,32 @@ else:
             # MODE 3: DETAIL PERNIK PER-PERSONIL
             # -------------------------------------------------------------
             elif rap_mode == "🎯 Detail Pernik Per-Personil":
-                sel_kasir = st.selectbox("Pilih Personil / Kasir:", kasir_list["person_name"].tolist(), key="rap_kasir_sel")
-                sel_kasir_row = kasir_list[kasir_list["person_name"] == sel_kasir].iloc[0]
-                sel_k_id = str(sel_kasir_row["person_id"])
+                sel_kasir_raw = st.selectbox("Pilih Personil / Kasir:", kasir_list["person_name"].tolist(), key="rap_kasir_sel")
+                sel_kasir_clean = str(sel_kasir_raw).strip().upper()
 
-                st.markdown(f"#### 📦 Detail Target & Pencapaian Item: **{sel_kasir}**")
-                kasir_items_sp = sp_period[sp_period["person_id"].astype(str) == sel_k_id] if not sp_period.empty else pd.DataFrame()
+                st.markdown(f"#### 📦 Detail Target & Pencapaian Item: **{sel_kasir_raw}**")
+                
+                kasir_items_sp = sp_period[sp_period["name_clean"] == sel_kasir_clean] if not sp_period.empty and "name_clean" in sp_period.columns else pd.DataFrame()
 
                 if kasir_items_sp.empty:
-                    st.info(f"ℹ️ Belum ada target item yang di-set untuk **{sel_kasir}** pada periode ini.")
+                    st.info(f"ℹ️ Belum ada target item yang di-set untuk **{sel_kasir_raw}** pada periode ini.")
                 else:
                     item_details = []
                     for _, sp_item in kasir_items_sp.iterrows():
-                        itm_id = str(sp_item["item_id"])
-                        itm_name = str(sp_item["item_name"])
-                        t_qty = int(pd.to_numeric(sp_item.get("target_qty", 0), errors="coerce"))
+                        itm_id = str(sp_item.get("item_id", ""))
+                        itm_name = str(sp_item.get("item_name", ""))
+                        t_qty = int(sp_item.get("target_qty", 0))
 
                         a_qty = 0
-                        if not sales_period.empty and "person_id" in sales_period.columns:
+                        if not sales_period.empty and "name_clean" in sales_period.columns:
                             m_sales = sales_period[
-                                (sales_period["person_id"].astype(str) == sel_k_id) &
-                                (sales_period["item_id"].astype(str) == itm_id)
+                                (sales_period["name_clean"] == sel_kasir_clean) &
+                                (sales_period["item_id"].astype(str).str.strip() == itm_id.strip())
                             ]
                             if not m_sales.empty:
-                                a_qty = int(pd.to_numeric(m_sales["qty"], errors="coerce").fillna(0).sum())
+                                a_qty = int(m_sales["qty"].sum())
                         else:
-                            a_qty = int(pd.to_numeric(sp_item.get("actual_qty", 0), errors="coerce"))
+                            a_qty = int(sp_item.get("actual_qty", 0))
 
                         pct = (a_qty / t_qty * 100) if t_qty > 0 else 0.0
 
@@ -961,31 +950,27 @@ else:
 
                 dyn_data = []
                 for _, k_row in kasir_list.iterrows():
-                    k_id = str(k_row["person_id"])
-                    k_name = str(k_row["person_name"])
+                    k_name_raw = str(k_row["person_name"])
+                    k_name_clean = str(k_row["name_clean"])
 
+                    # Target
                     k_target = 0
-                    if not sp_period.empty:
-                        k_target_df = sp_period[sp_period["person_id"].astype(str) == k_id]
-                        if not k_target_df.empty:
-                            k_target = pd.to_numeric(k_target_df["target_qty"], errors="coerce").fillna(0).sum()
+                    if not sp_period.empty and "name_clean" in sp_period.columns:
+                        k_target = sp_period[sp_period["name_clean"] == k_name_clean]["target_qty"].sum()
 
+                    # Aktual
                     k_actual = 0
-                    if not sales_period.empty and "person_id" in sales_period.columns:
-                        k_sales_df = sales_period[sales_period["person_id"].astype(str) == k_id]
-                        if not k_sales_df.empty:
-                            k_actual = pd.to_numeric(k_sales_df["qty"], errors="coerce").fillna(0).sum()
-                    elif not sp_period.empty:
-                        k_target_df = sp_period[sp_period["person_id"].astype(str) == k_id]
-                        if not k_target_df.empty:
-                            k_actual = pd.to_numeric(k_target_df["actual_qty"], errors="coerce").fillna(0).sum()
+                    if not sales_period.empty and "name_clean" in sales_period.columns:
+                        k_actual = sales_period[sales_period["name_clean"] == k_name_clean]["qty"].sum()
+                    elif not sp_period.empty and "name_clean" in sp_period.columns:
+                        k_actual = sp_period[sp_period["name_clean"] == k_name_clean]["actual_qty"].sum()
 
                     remaining_target = max(0, k_target - k_actual)
                     run_rate_daily = remaining_target / days_remaining if days_remaining > 0 else remaining_target
                     current_daily_avg = k_actual / days_passed if days_passed > 0 else 0
 
                     dyn_data.append({
-                        "Nama Kasir": k_name,
+                        "Nama Kasir": k_name_raw,
                         "Total Target": int(k_target),
                         "Pencapaian Saat Ini": int(k_actual),
                         "Sisa Target": int(remaining_target),
@@ -995,8 +980,6 @@ else:
                     })
 
                 st.dataframe(pd.DataFrame(dyn_data), use_container_width=True)
-
-
 
 
 # --- TAB 05: ANALISIS TREN HARIAN ---
