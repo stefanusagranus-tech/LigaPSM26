@@ -270,6 +270,9 @@ def show_login_page():
                 if not username_input or not password_input:
                     st.warning("⚠️ Username dan Password wajib diisi!")
                 elif check_login(username_input, password_input):
+                    user_role : st.session_state.get("role, st.session_state.get("user_role"' ''))
+                    st.session_state["is_admin"] = (str(user_role).strip().lower() == "admin")
+                    
                     st.toast(f"🎉 Selamat Datang, {st.session_state.get('person_name', username_input)}!", icon="✅")
                     st.rerun()
                 else:
@@ -1894,7 +1897,10 @@ elif selected_tab == "06 Input & Reset Data":
 # ==========================================
 elif selected_tab == "07 Master Data & Pengaturan" :
     st.markdown("<h3 style='color: #00ff88;'>⚙️ Master Data & Pengaturan System</h3>", unsafe_allow_html=True)
-    # Otorisasi Khusus Admin
+
+    is_admin = st.session_state.gate("is_admin",false)
+    is_admin = st.session_state.get("user_role:, "").lower() == "admin"
+    
     if not is_admin:
         st.warning("🔒 Akses terbatas! Halaman ini hanya dapat diakses oleh Admin.")
     else:
