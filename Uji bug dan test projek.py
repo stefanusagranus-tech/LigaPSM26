@@ -261,7 +261,7 @@ def show_login_page():
         </div>
         """, unsafe_allow_html=True)
         
-       with st.form("login_form", clear_on_submit=False):
+with st.form("login_form", clear_on_submit=False):
     username_input = st.text_input("Username", placeholder="Masukkan username")
     password_input = st.text_input("Password", type="password", placeholder="Masukkan password")
     submit_btn = st.form_submit_button("Masuk ke Aplikasi", use_container_width=True)
