@@ -2009,59 +2009,177 @@ elif selected_tab == "07 Master Data & Pengaturan":
                             st.success(f"✅ Item '{item_name_input}' berhasil disimpan!")
                             st.rerun()
 
-            # 2. SET TARGET TOKO & KASIR PER PERIODE
+                      # 2. SET TARGET TOKO & KASIR PER PERIODE
             with sub_itm2:
                 if periods_df.empty:
-                    st.info("ℹ️ Belum ada periode promosi. Silakan buat periode terlebih dahulu.")
+                    st.info("ℹ️ Belum ada periode promosi. Silakan buat periode terlebih dahulu pada tab Master Periode.")
                 else:
                     sel_p_target = st.selectbox("Pilih Periode Promosi", list(periods_dict.keys()), key="target_period_sel")
-                    target_p_id = periods_dict[sel_p_target]
+                    target_p_id = str(periods_dict[sel_p_target])
 
-                    # Filter item yang relevan untuk periode
-                    si_p_sub = si_df[si_df["period_id"].astype(str) == str(target_p_id)] if not si_df.empty else pd.DataFrame()
-                    
-                    with st.form("form_set_target_periode"):
-                        st.markdown(f"##### Set Target Toko Periode: **{sel_p_target}**")
-                        target_inputs = {}
+                    # Filter data SALES_ITEM khusus periode terpilih
+                    si_p_sub = st.session_state.sales_item_df[
+                        st.session_state.sales_item_df["period_id"].astype(str) == target_p_id
+                    ] if not st.session_state.sales_item_df.empty else pd.DataFrame()
+
+                    # Sub-tab memisahkan Target Toko dan Target Kasir
+                    t_toko_tab, t_kasir_tab = st.tabs(["🏬 Target Toko", "👤 Target Kasir Per Personil"])
+
+                    # -------------------------------------------------------------
+                    # SUB-TAB 2.1: TARGET TOKO (FILTER ITEM SESUAI PERIODE)
+                    # -------------------------------------------------------------
+                    with t_toko_tab:
+                        st.markdown(f"##### 🎯 Pengaturan Target Toko — Periode: **{sel_p_target}**")
                         
-                        for _, i_row in items_df.iterrows():
-                            itm_id = str(i_row["item_id"])
-                            itm_name = str(i_row["item_name"])
-                            
-                            existing_val = 0
-                            if not si_p_sub.empty and "item_id" in si_p_sub.columns:
-                                match_si = si_p_sub[si_p_sub["item_id"].astype(str) == itm_id]
-                                if not match_si.empty:
-                                    existing_val = int(pd.to_numeric(match_si.iloc[0].get("target_qty", 0), errors="coerce"))
+                        all_available_items = items_df["item_name"].tolist() if not items_df.empty else []
+                        existing_items_in_p = si_p_sub["item_name"].tolist() if not si_p_sub.empty else []
 
-                            target_inputs[itm_id] = st.number_input(f"Target Toko: {itm_name}", min_value=0, value=existing_val, key=f"t_in_{target_p_id}_{itm_id}")
+                        # Filter/Pilih item yang berlaku HANYA untuk periode ini
+                        selected_period_items = st.multiselect(
+                            "Pilih Item Produk yang Berlaku pada Periode Ini:",
+                            options=all_available_items,
+                            default=existing_items_in_p,
+                            key=f"ms_items_{target_p_id}"
+                        )
 
-                        btn_save_target = st.form_submit_button("🎯 Simpan Target Toko", use_container_width=True)
+                        if not selected_period_items:
+                            st.warning("⚠️ Belum ada item yang dipilih untuk periode ini. Silakan pilih minimal 1 item di atas.")
+                        else:
+                            with st.form(f"form_target_toko_{target_p_id}"):
+                                target_inputs = {}
+                                for itm_name in selected_period_items:
+                                    itm_row = items_df[items_df["item_name"] == itm_name].iloc[0]
+                                    itm_id = str(itm_row["item_id"])
 
-                        if btn_save_target:
-                            updated_si = st.session_state.sales_item_df[st.session_state.sales_item_df["period_id"].astype(str) != str(target_p_id)].copy()
-                            new_si_rows = []
+                                    # Ambil nilai target eksisting
+                                    existing_val = 0
+                                    if not si_p_sub.empty:
+                                        match_item = si_p_sub[si_p_sub["item_id"].astype(str) == itm_id]
+                                        if not match_item.empty:
+                                            existing_val = int(pd.to_numeric(match_item.iloc[0].get("target_qty", 0), errors="coerce"))
 
-                            for itm_id, t_qty in target_inputs.items():
-                                itm_name = items_df[items_df["item_id"].astype(str) == itm_id].iloc[0]["item_name"]
-                                curr_actual = 0
-                                if not si_p_sub.empty:
-                                    m_act = si_p_sub[si_p_sub["item_id"].astype(str) == itm_id]
-                                    if not m_act.empty:
-                                        curr_actual = m_act.iloc[0].get("actual_qty", 0)
+                                    target_inputs[itm_id] = {
+                                        "item_name": itm_name,
+                                        "target_qty": st.number_input(
+                                            f"Target Toko: {itm_name}", 
+                                            min_value=0, 
+                                            value=existing_val, 
+                                            key=f"tt_in_{target_p_id}_{itm_id}"
+                                        )
+                                    }
 
-                                new_si_rows.append({
-                                    "period_id": str(target_p_id),
-                                    "item_id": str(itm_id),
-                                    "item_name": str(itm_name),
-                                    "target_qty": t_qty,
-                                    "actual_qty": curr_actual
-                                })
+                                btn_save_toko = st.form_submit_button("🎯 Simpan Target Toko Periode Ini", use_container_width=True)
 
-                            st.session_state.sales_item_df = pd.concat([updated_si, pd.DataFrame(new_si_rows)], ignore_index=True)
-                            save_master_table("SALES_ITEM", st.session_state.sales_item_df)
-                            st.success(f"✅ Target Toko Periode {sel_p_target} berhasil disinkronkan ke Spreadsheet!")
-                            st.rerun()
+                                if btn_save_toko:
+                                    other_si = st.session_state.sales_item_df[
+                                        st.session_state.sales_item_df["period_id"].astype(str) != target_p_id
+                                    ].copy() if not st.session_state.sales_item_df.empty else pd.DataFrame()
+
+                                    new_si_rows = []
+                                    for itm_id, data in target_inputs.items():
+                                        curr_actual = 0
+                                        if not si_p_sub.empty:
+                                            m_act = si_p_sub[si_p_sub["item_id"].astype(str) == itm_id]
+                                            if not m_act.empty:
+                                                curr_actual = int(pd.to_numeric(m_act.iloc[0].get("actual_qty", 0), errors="coerce"))
+
+                                        new_si_rows.append({
+                                            "period_id": target_p_id,
+                                            "item_id": itm_id,
+                                            "item_name": data["item_name"],
+                                            "target_qty": data["target_qty"],
+                                            "actual_qty": curr_actual
+                                        })
+
+                                    st.session_state.sales_item_df = pd.concat([other_si, pd.DataFrame(new_si_rows)], ignore_index=True)
+                                    save_master_table("SALES_ITEM", st.session_state.sales_item_df)
+                                    st.success(f"✅ Target Toko periode {sel_p_target} berhasil disimpan!")
+                                    st.rerun()
+
+                    # -------------------------------------------------------------
+                    # SUB-TAB 2.2: TARGET KASIR PER PERSONIL
+                    # -------------------------------------------------------------
+                    with t_kasir_tab:
+                        st.markdown(f"##### 👤 Pengaturan Target Kasir — Periode: **{sel_p_target}**")
+                        
+                        # Hanya ambil item yang sudah di-set pada periode ini
+                        period_items_df = st.session_state.sales_item_df[
+                            st.session_state.sales_item_df["period_id"].astype(str) == target_p_id
+                        ] if not st.session_state.sales_item_df.empty else pd.DataFrame()
+
+                        if period_items_df.empty:
+                            st.warning("⚠️ Belum ada item yang terdaftar/di-set untuk periode ini. Selesaikan pengaturan Target Toko terlebih dahulu.")
+                        else:
+                            kasir_df = person_df[person_df["role"].astype(str).str.lower().isin(["kasir toko", "staff toko", "kasir", "staff"])] if not person_df.empty else pd.DataFrame()
+
+                            if kasir_df.empty:
+                                st.info("ℹ️ Belum ada personil Kasir/Staff terdaftar di Master Personil.")
+                            else:
+                                sel_kasir_name = st.selectbox("Pilih Kasir / Personil:", kasir_df["person_name"].tolist(), key="sb_target_kasir")
+                                sel_kasir_row = kasir_df[kasir_df["person_name"] == sel_kasir_name].iloc[0]
+                                sel_kasir_id = str(sel_kasir_row["person_id"])
+
+                                sp_p_sub = st.session_state.sales_person_df[
+                                    (st.session_state.sales_person_df["period_id"].astype(str) == target_p_id) &
+                                    (st.session_state.sales_person_df["person_id"].astype(str) == sel_kasir_id)
+                                ] if not st.session_state.sales_person_df.empty else pd.DataFrame()
+
+                                with st.form(f"form_target_kasir_{target_p_id}_{sel_kasir_id}"):
+                                    st.markdown(f"Set Target Item untuk Kasir: **{sel_kasir_name}**")
+                                    kasir_target_inputs = {}
+
+                                    # HANYA TAMPILKAN ITEM PADA PERIODE INI
+                                    for _, p_itm in period_items_df.iterrows():
+                                        p_itm_id = str(p_itm["item_id"])
+                                        p_itm_name = str(p_itm["item_name"])
+
+                                        existing_k_target = 0
+                                        if not sp_p_sub.empty:
+                                            m_k = sp_p_sub[sp_p_sub["item_id"].astype(str) == p_itm_id]
+                                            if not m_k.empty:
+                                                existing_k_target = int(pd.to_numeric(m_k.iloc[0].get("target_qty", 0), errors="coerce"))
+
+                                        kasir_target_inputs[p_itm_id] = {
+                                            "item_name": p_itm_name,
+                                            "target_qty": st.number_input(
+                                                f"Target {sel_kasir_name} -> Item: {p_itm_name}",
+                                                min_value=0,
+                                                value=existing_k_target,
+                                                key=f"tk_in_{target_p_id}_{sel_kasir_id}_{p_itm_id}"
+                                            )
+                                        }
+
+                                    btn_save_kasir = st.form_submit_button(f"💾 Simpan Target Kasir {sel_kasir_name}", use_container_width=True)
+
+                                    if btn_save_kasir:
+                                        other_sp = st.session_state.sales_person_df[
+                                            ~((st.session_state.sales_person_df["period_id"].astype(str) == target_p_id) &
+                                              (st.session_state.sales_person_df["person_id"].astype(str) == sel_kasir_id))
+                                        ].copy() if not st.session_state.sales_person_df.empty else pd.DataFrame()
+
+                                        new_sp_rows = []
+                                        for k_itm_id, k_data in kasir_target_inputs.items():
+                                            curr_k_actual = 0
+                                            if not sp_p_sub.empty:
+                                                m_k_act = sp_p_sub[sp_p_sub["item_id"].astype(str) == k_itm_id]
+                                                if not m_k_act.empty:
+                                                    curr_k_actual = int(pd.to_numeric(m_k_act.iloc[0].get("actual_qty", 0), errors="coerce"))
+
+                                            new_sp_rows.append({
+                                                "period_id": target_p_id,
+                                                "person_id": sel_kasir_id,
+                                                "person_name": sel_kasir_name,
+                                                "item_id": k_itm_id,
+                                                "item_name": k_data["item_name"],
+                                                "target_qty": k_data["target_qty"],
+                                                "actual_qty": curr_k_actual
+                                            })
+
+                                        st.session_state.sales_person_df = pd.concat([other_sp, pd.DataFrame(new_sp_rows)], ignore_index=True)
+                                        save_master_table("SALES_PERSON", st.session_state.sales_person_df)
+                                        st.success(f"✅ Target Kasir '{sel_kasir_name}' periode {sel_p_target} berhasil disimpan!")
+                                        st.rerun()
+
 
             # 3. EDIT ITEM & TARGET KASIR
             with sub_itm3:
