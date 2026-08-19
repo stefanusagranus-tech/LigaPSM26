@@ -1092,11 +1092,15 @@ elif selected_tab == "06 · Input & Reset Data":
         return today.replace(day=1), today
 
     # =========================================================
-    # SUB MENU 1: MULTI INPUT SALES PERSONIL
+    # SUB MENU 1: MULTI INPUT SALES PERSONIL (FIXED DOUBLE TX)
     # =========================================================
     with tab_in1:
         st.markdown("<h4 style='color: #00ff88;'>⚡ Multi Input Sales Personil</h4>", unsafe_allow_html=True)
         
+        # Inisialisasi state pengunci untuk mencegah double submission
+        if "is_saving_multi" not in st.session_state:
+            st.session_state.is_saving_multi = False
+
         # Proteksi Khusus Akses Visitor
         if is_visitor:
             st.error("🔒 **Akses Ditolak!** Akun **Visitor** hanya memiliki akses membaca data (read-only). Anda tidak diizinkan melakukan penginputan data.")
@@ -1180,7 +1184,19 @@ elif selected_tab == "06 · Input & Reset Data":
                         }
 
                 st.markdown("---")
-                if st.button("💾 Simpan Semua Data Penjualan Multi-Input", use_container_width=True, key="btn_save_multi"):
+                
+                # PERBAIKAN: Tambahkan disabled=st.session_state.is_saving_multi
+                btn_save = st.button(
+                    "💾 Simpan Semua Data Penjualan Multi-Input", 
+                    use_container_width=True, 
+                    key="btn_save_multi",
+                    disabled=st.session_state.is_saving_multi
+                )
+
+                if btn_save and not st.session_state.is_saving_multi:
+                    # kunci tombol secara instan
+                    st.session_state.is_saving_multi = True
+                    
                     if not person_df.empty and "person_name" in person_df.columns:
                         p_match = person_df[person_df["person_name"] == m_person]
                     else:
@@ -1194,9 +1210,14 @@ elif selected_tab == "06 · Input & Reset Data":
                     new_rows = []
                     inserted_count = 0
                     
+                    # Gunakan epoch timestamp / UUID singkat agar record_id selalu unik dan tidak bentrok
+                    import time as t_mod
+                    timestamp_suffix = int(t_mod.time() * 1000)
+                    
                     for item_id, item_data in multi_input_values.items():
                         if item_data["qty"] > 0:
-                            new_id = f"SP{len(st.session_state.sales_person_df) + len(new_rows) + 1:05d}"
+                            # PERBAIKAN: Penamaan ID yang dijamin unik mencegah bentrok saat append
+                            new_id = f"SP-{timestamp_suffix}-{inserted_count+1}"
                             new_rows.append({
                                 "record_id": new_id,
                                 "period_id": m_p_id,
@@ -1217,11 +1238,13 @@ elif selected_tab == "06 · Input & Reset Data":
                         st.toast(f"🎉 {inserted_count} Data sukses diinputkan!", icon="✅")
                         st.success(f"✅ Berhasil menyimpan {inserted_count} item penjualan untuk {m_person} secara permanen!")
                         
-                        time.sleep(1.5)
+                        time.sleep(1)
+                        # Reset flag sebelum rerun
+                        st.session_state.is_saving_multi = False
                         st.rerun()
                     else:
+                        st.session_state.is_saving_multi = False
                         st.warning("⚠️ Tidak ada Qty produk yang diisi (semua bernilai 0).")
-
     # =========================================================
     # SUB MENU 2: EDIT SALES PERSONIL (KHUSUS ADMIN)
     # =========================================================
