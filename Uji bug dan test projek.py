@@ -369,10 +369,9 @@ with st.sidebar.expander("🧪 Mode Testing Role Switcher", expanded=False):
 st.sidebar.markdown("<p style='color:#38bdf8; font-weight:bold; letter-spacing:1px; margin-bottom:6px;'>📌 NAVIGASI MENU</p>", unsafe_allow_html=True)
 menu_options = [
     "01 Dashboard Toko",
-    "03 Raport Personil Toko",
-    "05 Analisis Tren",
-    "06 Input & Reset Data",
-    "07 Master Data & Pengaturan"
+    "02 Raport Personil Toko",
+    "03 Report IKT & PPS",
+    "04 Pengaturan & Download"
 ]
 selected_tab = st.sidebar.radio("", menu_options, label_visibility="collapsed")
 
@@ -778,7 +777,7 @@ if selected_tab == "01 Dashboard Toko":
 # =========================================================
 # --- TAB COMBINED: PERFORMA PERSONIL, PERNIK & DYNAMIC TARGET ---
 # =========================================================
-elif selected_tab in ["03 Raport Personil Toko"]:
+elif selected_tab in ["02 Raport Personil Toko"]:
     st.title("👥 Raport Personil Toko")
 
     # Custom CSS Style
