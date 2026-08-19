@@ -1092,12 +1092,12 @@ elif selected_tab == "06 · Input & Reset Data":
         return today.replace(day=1), today
 
     # =========================================================
-    # SUB MENU 1: MULTI INPUT SALES PERSONIL (FIXED DOUBLE TX)
+    # SUB MENU 1: MULTI INPUT SALES PERSONIL (FULL FIXED)
     # =========================================================
     with tab_in1:
         st.markdown("<h4 style='color: #00ff88;'>⚡ Multi Input Sales Personil</h4>", unsafe_allow_html=True)
         
-        # Inisialisasi state pengunci untuk mencegah double submission
+        # Inisialisasi flag kunci untuk mencegah double submit
         if "is_saving_multi" not in st.session_state:
             st.session_state.is_saving_multi = False
 
@@ -1185,16 +1185,16 @@ elif selected_tab == "06 · Input & Reset Data":
 
                 st.markdown("---")
                 
-                # PERBAIKAN: Tambahkan disabled=st.session_state.is_saving_multi
+                # Tombol Simpan dengan Proteksi Disable
                 btn_save = st.button(
                     "💾 Simpan Semua Data Penjualan Multi-Input", 
                     use_container_width=True, 
                     key="btn_save_multi",
-                    disabled=st.session_state.is_saving_multi
+                    disabled=st.session_state.get("is_saving_multi", False)
                 )
 
-                if btn_save and not st.session_state.is_saving_multi:
-                    # kunci tombol secara instan
+                if btn_save and not st.session_state.get("is_saving_multi", False):
+                    # Kunci state instan untuk cegah double click
                     st.session_state.is_saving_multi = True
                     
                     if not person_df.empty and "person_name" in person_df.columns:
@@ -1203,48 +1203,67 @@ elif selected_tab == "06 · Input & Reset Data":
                         p_match = pd.DataFrame()
 
                     if not p_match.empty and "person_id" in p_match.columns:
-                        person_id_val = p_match.iloc[0]["person_id"]
+                        person_id_val = str(p_match.iloc[0]["person_id"])
                     else:
                         person_id_val = "P999"
+
+                    # Hitung ID terbesar yang sudah ada agar format tetap rapi (SP00001, dst)
+                    existing_df = st.session_state.sales_person_df
+                    current_max_id = 0
+                    
+                    if not existing_df.empty and "record_id" in existing_df.columns:
+                        numeric_ids = existing_df["record_id"].astype(str).str.extract(r'(\d+)')[0].dropna()
+                        if not numeric_ids.empty:
+                            current_max_id = numeric_ids.astype(int).max()
 
                     new_rows = []
                     inserted_count = 0
                     
-                    # Gunakan epoch timestamp / UUID singkat agar record_id selalu unik dan tidak bentrok
-                    import time as t_mod
-                    timestamp_suffix = int(t_mod.time() * 1000)
-                    
                     for item_id, item_data in multi_input_values.items():
                         if item_data["qty"] > 0:
-                            # PERBAIKAN: Penamaan ID yang dijamin unik mencegah bentrok saat append
-                            new_id = f"SP-{timestamp_suffix}-{inserted_count+1}"
+                            current_max_id += 1
+                            new_id = f"SP{current_max_id:05d}"
+                            
                             new_rows.append({
-                                "record_id": new_id,
-                                "period_id": m_p_id,
-                                "item_id": item_id,
-                                "item_name": item_data["item_name"],
-                                "person_id": person_id_val,
-                                "person_name": m_person,
-                                "actual_qty": item_data["qty"],
+                                "record_id": str(new_id),
+                                "period_id": str(m_p_id),
+                                "item_id": str(item_id),
+                                "item_name": str(item_data["item_name"]),
+                                "person_id": str(person_id_val),
+                                "person_name": str(m_person),
+                                "actual_qty": int(item_data["qty"]),
                                 "updated_at": str(m_date)
                             })
                             inserted_count += 1
 
                     if inserted_count > 0:
-                        st.session_state.sales_person_df = pd.concat([st.session_state.sales_person_df, pd.DataFrame(new_rows)], ignore_index=True)
-                        sync_store_sales_from_personnel()
-                        save_database(st.session_state.sales_item_df, st.session_state.sales_person_df)
-                        
-                        st.toast(f"🎉 {inserted_count} Data sukses diinputkan!", icon="✅")
-                        st.success(f"✅ Berhasil menyimpan {inserted_count} item penjualan untuk {m_person} secara permanen!")
-                        
-                        time.sleep(1)
-                        # Reset flag sebelum rerun
-                        st.session_state.is_saving_multi = False
-                        st.rerun()
+                        try:
+                            # 1. Tambahkan data ke session_state
+                            new_df = pd.DataFrame(new_rows)
+                            st.session_state.sales_person_df = pd.concat([st.session_state.sales_person_df, new_df], ignore_index=True)
+                            
+                            # 2. Sinkronkan dan simpan ke Spreadsheet
+                            sync_store_sales_from_personnel()
+                            save_database(st.session_state.sales_item_df, st.session_state.sales_person_df)
+                            
+                            # 3. Reload ulang database jika fungsi tersedia agar data terekam permanen
+                            if "load_database" in globals():
+                                load_database()
+                            
+                            st.toast(f"🎉 {inserted_count} Data sukses diinputkan!", icon="✅")
+                            st.success(f"✅ Berhasil menyimpan {inserted_count} item penjualan untuk {m_person} secara permanen ke Spreadsheet!")
+                            
+                            time.sleep(1)
+                        except Exception as e:
+                            st.error(f"❌ Terjadi kesalahan saat menyimpan ke Spreadsheet: {str(e)}")
+                        finally:
+                            # Buka kunci state dan rerun
+                            st.session_state.is_saving_multi = False
+                            st.rerun()
                     else:
                         st.session_state.is_saving_multi = False
                         st.warning("⚠️ Tidak ada Qty produk yang diisi (semua bernilai 0).")
+                        
     # =========================================================
     # SUB MENU 2: EDIT SALES PERSONIL (KHUSUS ADMIN)
     # =========================================================
