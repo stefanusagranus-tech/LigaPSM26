@@ -1624,61 +1624,123 @@ elif selected_tab in ["02 Raport Personil Toko"]:
 # --- TAB 03: REPORT IKT & PPS ---
 elif selected_tab == "03 Report IKT & PPS":
     st.title("🎯 Report IKT & PPS")
-
     st.info(f"Periode Aktif : {selected_period_id}")
 
-    col1, col2, col3, col4 = st.columns(4)
-
+    # =========================================================
+    # 1. SUMMARY METRIC UTAMA (TOP LEVEL)
+    # =========================================================
+    col1, col2, col3 = st.columns(3)
     with col1:
         st.metric("Net Sales", "Rp 0", "0%")
-
     with col2:
-        st.metric("APC", "0", "0%")
-
+        st.metric("PPS", "0", "0%")
     with col3:
         st.metric("STD Toko", "0", "0%")
 
-    with col4:
-        st.metric("Member", "0%", "0%")
-
     st.divider()
 
-    st.subheader("📦 PSM")
+    # =========================================================
+    # 2. DETAIL DRILL-DOWN VIA SUB-TABS INTERAKTIF
+    # =========================================================
+    st.markdown("### 🔍 Detail Analytics & Breakdown")
+    tab_sales, tab_pps, tab_std = st.tabs([
+        "💰 Detail Net Sales & GM", 
+        "📦 Detail Report PPS", 
+        "👥 Detail STD & Kontribusi Member"
+    ])
 
-    psm_df = pd.DataFrame({
-        "PSM": ["P1", "P2", "P3", "P4"],
-        "Target": [0, 0, 0, 0],
-        "Actual": [0, 0, 0, 0]
-    })
+    # ---------------------------------------------------------
+    # SUB TAB 1: NET SALES & GROSS MARGIN
+    # ---------------------------------------------------------
+    with tab_sales:
+        st.subheader("📊 Performance Sales & Gross Margin")
+        
+        s_col1, s_col2, s_col3 = st.columns(3)
+        s_col1.metric("Total Net Sales", "Rp 0", "0%")
+        s_col2.metric("Gross Margin (%)", "0.0%", "0%")
+        s_col3.metric("Gross Margin (Rp)", "Rp 0", "0%")
 
-    psm_df["Achievement"] = (
-        psm_df["Actual"] / psm_df["Target"].replace(0, 1)
-    ) * 100
+        st.markdown("---")
+        st.subheader("📅 History Pencapaian Sales & GM Per Hari")
+        
+        df_sales_history = pd.DataFrame({
+            "Tanggal": ["2026-08-01", "2026-08-02", "2026-08-03"],
+            "Net Sales (Rp)": [0, 0, 0],
+            "GM (%)": [0.0, 0.0, 0.0],
+            "GM (Rp)": [0, 0, 0],
+            "Status": ["⏳ Proses", "⏳ Proses", "⏳ Proses"]
+        })
+        st.dataframe(df_sales_history, use_container_width=True)
 
-    st.dataframe(psm_df, use_container_width=True)
+    # ---------------------------------------------------------
+    # SUB TAB 2: REPORT PPS (TARGET, ACTUAL, GAP, BOBOT, SIMULASI)
+    # ---------------------------------------------------------
+    with tab_pps:
+        st.subheader("📦 Evaluation & Pencapaian PPS")
 
-    st.divider()
+        # Table Target, Actual, Gap, %, & Bobot
+        pps_summary_df = pd.DataFrame({
+            "Indikator PPS": ["PSM P1", "PSM P2", "PSM P3", "PSM P4"],
+            "Target": [0, 0, 0, 0],
+            "Actual": [0, 0, 0, 0],
+            "Gap": [0, 0, 0, 0],
+            "Ach (%)": [0.0, 0.0, 0.0, 0.0],
+            "Bobot (%)": [25.0, 25.0, 25.0, 25.0],
+            "Bobot Ach (%)": [0.0, 0.0, 0.0, 0.0]
+        })
+        st.dataframe(pps_summary_df, use_container_width=True)
 
-    st.subheader("⏱️ Time Factor")
+        st.markdown("---")
+        
+        c_pps1, c_pps2 = st.columns(2)
+        
+        with c_pps1:
+            st.subheader("📅 History Pencatatan PPS Per Hari")
+            df_pps_history = pd.DataFrame({
+                "Tanggal": ["2026-08-01", "2026-08-02", "2026-08-03"],
+                "Qty Penjualan PPS": [0, 0, 0],
+                "Kontribusi (Rp)": [0, 0, 0]
+            })
+            st.dataframe(df_pps_history, use_container_width=True)
 
-    tf_col1, tf_col2, tf_col3 = st.columns(3)
+        with c_pps2:
+            st.subheader("🧮 Simulasi Pencapaian PPS")
+            st.caption("Hitung proyeksi pencapaian bobot PPS berdasarkan estimasi penjualan.")
+            sim_target = st.number_input("Input Target PPS (Pcs):", min_value=1, value=100)
+            sim_actual = st.number_input("Input Estimasi Actual (Pcs):", min_value=0, value=85)
+            
+            sim_gap = sim_actual - sim_target
+            sim_ach = (sim_actual / sim_target * 100) if sim_target > 0 else 0
+            
+            st.write(f"• Proyeksi Gap: **{sim_gap} Pcs**")
+            st.write(f"• Proyeksi Achievement: **{round(sim_ach, 1)}%**")
 
-    tf_col1.metric("Time Factor", "0%")
-    tf_col2.metric("Achievement", "0%")
-    tf_col3.metric("Pace", "0%")
+    # ---------------------------------------------------------
+    # SUB TAB 3: STD TOKO & KONTRIBUSI MEMBER
+    # ---------------------------------------------------------
+    with tab_std:
+        st.subheader("👥 Performa STD Toko & Kontribusi Member")
 
-    st.divider()
+        col_std1, col_std2 = st.columns(2)
 
-    st.subheader("📊 KPI Achievement")
+        with col_std1:
+            st.markdown("#### 🛍️ Sales Struk Transactions (STD Toko)")
+            std_df = pd.DataFrame({
+                "Metrik": ["STD Toko (Struk)"],
+                "Target": [0],
+                "Actual": [0],
+                "Gap": [0],
+                "Achievement (%)": [0.0]
+            })
+            st.dataframe(std_df, use_container_width=True)
 
-    chart_df = pd.DataFrame({
-        "KPI": ["Net Sales", "APC", "PWP P1", "PWP P2", "STD"],
-        "Achievement": [0, 0, 0, 0, 0]
-    })
-
-    st.bar_chart(chart_df.set_index("KPI"))
-    
-
-# --- TAB 04: PENGATURAN & DOWNLOAD ---
-elif selected_tab == "04 Pengaturan & Download":
-    render_settings_download(selected_period_id)
+        with col_std2:
+            st.markdown("#### 💳 Kontribusi Member")
+            member_df = pd.DataFrame({
+                "Metrik": ["Member Sales (%)", "Member Transaksi (STD)"],
+                "Target": ["0%", "0"],
+                "Actual": ["0%", "0"],
+                "Achievement (%)": [0.0, 0.0]
+            })
+            st.dataframe(member_df, use_container_width=True)
+            
