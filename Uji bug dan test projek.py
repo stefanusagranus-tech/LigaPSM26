@@ -1624,7 +1624,7 @@ elif selected_tab in ["02 Raport Personil Toko"]:
 
 # --- TAB 03: REPORT IKT & PPS ---
 elif selected_tab == "03 Report IKT & PPS":
-    def render_ikt_pps_report(selected_period_id) : 
+def render_ikt_pps_report(selected_period_id) : 
 
     st.title("🎯 Report IKT & PPS")
 
