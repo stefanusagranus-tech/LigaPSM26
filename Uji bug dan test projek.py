@@ -1622,3 +1622,10 @@ elif selected_tab in ["02 Raport Personil Toko"]:
         st.markdown(dyn_full_html, unsafe_allow_html=True)
 
 
+# --- TAB 03: REPORT IKT & PPS ---
+elif selected_tab == "03 Report IKT & PPS":
+    render_ikt_pps_report(selected_period_id)
+
+# --- TAB 04: PENGATURAN & DOWNLOAD ---
+elif selected_tab == "04 Pengaturan & Download":
+    render_settings_download(selected_period_id)
