@@ -1626,33 +1626,42 @@ elif selected_tab == "03 Report IKT & PPS":
     st.title("🎯 Report IKT & PPS")
     st.info(f"Periode Aktif : {selected_period_id}")
 
+    # Initialize State untuk mengontrol expander mana yang terbuka
+    if "active_expander" not in st.session_state:
+        st.session_state.active_expander = None
+
     # =========================================================
-    # 1. SUMMARY METRIC UTAMA (TOP LEVEL)
+    # 1. SUMMARY METRIC UTAMA (3 KARTU DENGAN TOMBOL AKSI)
     # =========================================================
     col1, col2, col3 = st.columns(3)
+
     with col1:
         st.metric("Net Sales", "Rp 0", "0%")
+        if st.button("🔍 Detail Net Sales", key="btn_sales", use_container_width=True):
+            st.session_state.active_expander = "sales"
+
     with col2:
         st.metric("PPS", "0", "0%")
+        if st.button("🔍 Detail PPS", key="btn_pps", use_container_width=True):
+            st.session_state.active_expander = "pps"
+
     with col3:
         st.metric("STD Toko", "0", "0%")
+        if st.button("🔍 Detail STD & Member", key="btn_std", use_container_width=True):
+            st.session_state.active_expander = "std"
 
     st.divider()
 
     # =========================================================
-    # 2. DETAIL DRILL-DOWN VIA SUB-TABS INTERAKTIF
+    # 2. EXPANDERS DINAMIS (HANYA TERBUKA SESUAI KARTU DIKLIK)
     # =========================================================
-    st.markdown("### 🔍 Detail Analytics & Breakdown")
-    tab_sales, tab_pps, tab_std = st.tabs([
-        "💰 Detail Net Sales & GM", 
-        "📦 Detail Report PPS", 
-        "👥 Detail STD & Kontribusi Member"
-    ])
 
-    # ---------------------------------------------------------
-    # SUB TAB 1: NET SALES & GROSS MARGIN
-    # ---------------------------------------------------------
-    with tab_sales:
+    # --- EXPANDER 1: DETAIL NET SALES & GM ---
+    exp_sales = st.expander(
+        "💰 Detail Net Sales & Gross Margin", 
+        expanded=(st.session_state.active_expander == "sales")
+    )
+    with exp_sales:
         st.subheader("📊 Performance Sales & Gross Margin")
         
         s_col1, s_col2, s_col3 = st.columns(3)
@@ -1672,13 +1681,14 @@ elif selected_tab == "03 Report IKT & PPS":
         })
         st.dataframe(df_sales_history, use_container_width=True)
 
-    # ---------------------------------------------------------
-    # SUB TAB 2: REPORT PPS (TARGET, ACTUAL, GAP, BOBOT, SIMULASI)
-    # ---------------------------------------------------------
-    with tab_pps:
+    # --- EXPANDER 2: DETAIL REPORT PPS ---
+    exp_pps = st.expander(
+        "📦 Detail Report PPS (Target, Actual, Gap & Simulasi)", 
+        expanded=(st.session_state.active_expander == "pps")
+    )
+    with exp_pps:
         st.subheader("📦 Evaluation & Pencapaian PPS")
 
-        # Table Target, Actual, Gap, %, & Bobot
         pps_summary_df = pd.DataFrame({
             "Indikator PPS": ["PSM P1", "PSM P2", "PSM P3", "PSM P4"],
             "Target": [0, 0, 0, 0],
@@ -1691,7 +1701,6 @@ elif selected_tab == "03 Report IKT & PPS":
         st.dataframe(pps_summary_df, use_container_width=True)
 
         st.markdown("---")
-        
         c_pps1, c_pps2 = st.columns(2)
         
         with c_pps1:
@@ -1706,8 +1715,8 @@ elif selected_tab == "03 Report IKT & PPS":
         with c_pps2:
             st.subheader("🧮 Simulasi Pencapaian PPS")
             st.caption("Hitung proyeksi pencapaian bobot PPS berdasarkan estimasi penjualan.")
-            sim_target = st.number_input("Input Target PPS (Pcs):", min_value=1, value=100)
-            sim_actual = st.number_input("Input Estimasi Actual (Pcs):", min_value=0, value=85)
+            sim_target = st.number_input("Input Target PPS (Pcs):", min_value=1, value=100, key="sim_t_pps")
+            sim_actual = st.number_input("Input Estimasi Actual (Pcs):", min_value=0, value=85, key="sim_a_pps")
             
             sim_gap = sim_actual - sim_target
             sim_ach = (sim_actual / sim_target * 100) if sim_target > 0 else 0
@@ -1715,10 +1724,12 @@ elif selected_tab == "03 Report IKT & PPS":
             st.write(f"• Proyeksi Gap: **{sim_gap} Pcs**")
             st.write(f"• Proyeksi Achievement: **{round(sim_ach, 1)}%**")
 
-    # ---------------------------------------------------------
-    # SUB TAB 3: STD TOKO & KONTRIBUSI MEMBER
-    # ---------------------------------------------------------
-    with tab_std:
+    # --- EXPANDER 3: DETAIL STD & MEMBER ---
+    exp_std = st.expander(
+        "👥 Detail STD Toko & Kontribusi Member", 
+        expanded=(st.session_state.active_expander == "std")
+    )
+    with exp_std:
         st.subheader("👥 Performa STD Toko & Kontribusi Member")
 
         col_std1, col_std2 = st.columns(2)
@@ -1743,4 +1754,4 @@ elif selected_tab == "03 Report IKT & PPS":
                 "Achievement (%)": [0.0, 0.0]
             })
             st.dataframe(member_df, use_container_width=True)
-            
+                     
