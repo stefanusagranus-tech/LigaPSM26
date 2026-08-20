@@ -1621,16 +1621,11 @@ elif selected_tab in ["02 Raport Personil Toko"]:
         dyn_full_html = f'<div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 12px; overflow-x: auto;"><table style="width: 100%; border-collapse: collapse; font-family: sans-serif;"><thead><tr style="border-bottom: 2px solid #334155; text-align: left;"><th style="padding: 10px; color: #38bdf8; font-size: 11px;">ITEM PERNIK</th><th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">TARGET PERIODE</th><th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">ACTUAL</th><th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">SISA GAP</th><th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">TARGET/HARI SISA HARI</th></tr></thead><tbody>{dyn_rows}</tbody></table></div>'
         st.markdown(dyn_full_html, unsafe_allow_html=True)
 
-
 # --- TAB 03: REPORT IKT & PPS ---
 elif selected_tab == "03 Report IKT & PPS":
-def render_ikt_pps_report(selected_period_id) : 
-
     st.title("🎯 Report IKT & PPS")
 
-    st.info(
-        f"Periode Aktif : {selected_period_id}"
-    )
+    st.info(f"Periode Aktif : {selected_period_id}")
 
     col1, col2, col3, col4 = st.columns(4)
 
@@ -1651,14 +1646,13 @@ def render_ikt_pps_report(selected_period_id) :
     st.subheader("📦 PSM")
 
     psm_df = pd.DataFrame({
-        "PSM": ["P1","P2","P3","P4"],
-        "Target":[0,0,0,0],
-        "Actual":[0,0,0,0]
+        "PSM": ["P1", "P2", "P3", "P4"],
+        "Target": [0, 0, 0, 0],
+        "Actual": [0, 0, 0, 0]
     })
 
     psm_df["Achievement"] = (
-        psm_df["Actual"] /
-        psm_df["Target"].replace(0,1)
+        psm_df["Actual"] / psm_df["Target"].replace(0, 1)
     ) * 100
 
     st.dataframe(psm_df, use_container_width=True)
@@ -1669,39 +1663,22 @@ def render_ikt_pps_report(selected_period_id) :
 
     tf_col1, tf_col2, tf_col3 = st.columns(3)
 
-    tf_col1.metric(
-        "Time Factor",
-        "0%"
-    )
-
-    tf_col2.metric(
-        "Achievement",
-        "0%"
-    )
-
-    tf_col3.metric(
-        "Pace",
-        "0%"
-    )
+    tf_col1.metric("Time Factor", "0%")
+    tf_col2.metric("Achievement", "0%")
+    tf_col3.metric("Pace", "0%")
 
     st.divider()
 
     st.subheader("📊 KPI Achievement")
 
     chart_df = pd.DataFrame({
-        "KPI":[
-            "Net Sales",
-            "APC",
-            "PWP P1",
-            "PWP P2",
-            "STD"
-        ],
-        "Achievement":[0,0,0,0,0]
+        "KPI": ["Net Sales", "APC", "PWP P1", "PWP P2", "STD"],
+        "Achievement": [0, 0, 0, 0, 0]
     })
 
-    st.bar_chart(
-        chart_df.set_index("KPI")
-    )
+    st.bar_chart(chart_df.set_index("KPI"))
+    
+
 # --- TAB 04: PENGATURAN & DOWNLOAD ---
 elif selected_tab == "04 Pengaturan & Download":
     render_settings_download(selected_period_id)
