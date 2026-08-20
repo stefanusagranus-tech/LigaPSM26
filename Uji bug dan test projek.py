@@ -1624,8 +1624,84 @@ elif selected_tab in ["02 Raport Personil Toko"]:
 
 # --- TAB 03: REPORT IKT & PPS ---
 elif selected_tab == "03 Report IKT & PPS":
-    render_ikt_pps_report(selected_period_id)
+    def render_ikt_pps_report(selected_period_id)
 
+    st.title("🎯 Report IKT & PPS")
+
+    st.info(
+        f"Periode Aktif : {selected_period_id}"
+    )
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        st.metric("Net Sales", "Rp 0", "0%")
+
+    with col2:
+        st.metric("APC", "0", "0%")
+
+    with col3:
+        st.metric("STD Toko", "0", "0%")
+
+    with col4:
+        st.metric("Member", "0%", "0%")
+
+    st.divider()
+
+    st.subheader("📦 PSM")
+
+    psm_df = pd.DataFrame({
+        "PSM": ["P1","P2","P3","P4"],
+        "Target":[0,0,0,0],
+        "Actual":[0,0,0,0]
+    })
+
+    psm_df["Achievement"] = (
+        psm_df["Actual"] /
+        psm_df["Target"].replace(0,1)
+    ) * 100
+
+    st.dataframe(psm_df, use_container_width=True)
+
+    st.divider()
+
+    st.subheader("⏱️ Time Factor")
+
+    tf_col1, tf_col2, tf_col3 = st.columns(3)
+
+    tf_col1.metric(
+        "Time Factor",
+        "0%"
+    )
+
+    tf_col2.metric(
+        "Achievement",
+        "0%"
+    )
+
+    tf_col3.metric(
+        "Pace",
+        "0%"
+    )
+
+    st.divider()
+
+    st.subheader("📊 KPI Achievement")
+
+    chart_df = pd.DataFrame({
+        "KPI":[
+            "Net Sales",
+            "APC",
+            "PWP P1",
+            "PWP P2",
+            "STD"
+        ],
+        "Achievement":[0,0,0,0,0]
+    })
+
+    st.bar_chart(
+        chart_df.set_index("KPI")
+    )
 # --- TAB 04: PENGATURAN & DOWNLOAD ---
 elif selected_tab == "04 Pengaturan & Download":
     render_settings_download(selected_period_id)
