@@ -1621,49 +1621,63 @@ elif selected_tab in ["02 Raport Personil Toko"]:
         dyn_full_html = f'<div style="background: #080c14; border: 1.5px solid #00f0ff; border-radius: 10px; padding: 12px; overflow-x: auto;"><table style="width: 100%; border-collapse: collapse; font-family: sans-serif;"><thead><tr style="border-bottom: 2px solid #334155; text-align: left;"><th style="padding: 10px; color: #38bdf8; font-size: 11px;">ITEM PERNIK</th><th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">TARGET PERIODE</th><th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">ACTUAL</th><th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">SISA GAP</th><th style="padding: 10px; color: #38bdf8; font-size: 11px; text-align:right;">TARGET/HARI SISA HARI</th></tr></thead><tbody>{dyn_rows}</tbody></table></div>'
         st.markdown(dyn_full_html, unsafe_allow_html=True)
 
+import time
+
 # --- TAB 03: REPORT IKT & PPS ---
 elif selected_tab == "03 Report IKT & PPS":
-    st.title("🎯 Report IKT & PPS")
-    st.info(f"Periode Aktif : {selected_period_id}")
-
-    # Initialize State untuk mengontrol expander mana yang terbuka
-    if "active_expander" not in st.session_state:
-        st.session_state.active_expander = None
+    
+    # 1. Inisialisasi State Halaman (Default: 'summary')
+    if "current_view" not in st.session_state:
+        st.session_state.current_view = "summary"
 
     # =========================================================
-    # 1. SUMMARY METRIC UTAMA (3 KARTU DENGAN TOMBOL AKSI)
+    # LAYAR 1: TAMPILAN UTAMA (3 KARTU SUMMARY)
     # =========================================================
-    col1, col2, col3 = st.columns(3)
+    if st.session_state.current_view == "summary":
+        st.title("🎯 Report IKT & PPS")
+        st.info(f"Periode Aktif : {selected_period_id}")
 
-    with col1:
-        st.metric("Net Sales", "Rp 0", "0%")
-        if st.button("🔍 Detail Net Sales", key="btn_sales", use_container_width=True):
-            st.session_state.active_expander = "sales"
+        col1, col2, col3 = st.columns(3)
 
-    with col2:
-        st.metric("PPS", "0", "0%")
-        if st.button("🔍 Detail PPS", key="btn_pps", use_container_width=True):
-            st.session_state.active_expander = "pps"
+        with col1:
+            st.metric("Net Sales", "Rp 0", "0%")
+            if st.button("📱 Lihat Detail Net Sales", key="goto_sales", use_container_width=True):
+                with st.spinner("Memuat Detail Net Sales & GM..."):
+                    time.sleep(0.5)  # Efek jeda transisi
+                    st.session_state.current_view = "detail_sales"
+                    st.rerun()
 
-    with col3:
-        st.metric("STD Toko", "0", "0%")
-        if st.button("🔍 Detail STD & Member", key="btn_std", use_container_width=True):
-            st.session_state.active_expander = "std"
+        with col2:
+            st.metric("PPS", "0", "0%")
+            if st.button("📱 Lihat Detail PPS", key="goto_pps", use_container_width=True):
+                with st.spinner("Memuat Detail Report PPS..."):
+                    time.sleep(0.5)  # Efek jeda transisi
+                    st.session_state.current_view = "detail_pps"
+                    st.rerun()
 
-    st.divider()
+        with col3:
+            st.metric("STD Toko", "0", "0%")
+            if st.button("📱 Lihat Detail STD & Member", key="goto_std", use_container_width=True):
+                with st.spinner("Memuat Detail STD & Member..."):
+                    time.sleep(0.5)  # Efek jeda transisi
+                    st.session_state.current_view = "detail_std"
+                    st.rerun()
 
     # =========================================================
-    # 2. EXPANDERS DINAMIS (HANYA TERBUKA SESUAI KARTU DIKLIK)
+    # LAYAR 2: DETAIL NET SALES & GROSS MARGIN
     # =========================================================
+    elif st.session_state.current_view == "detail_sales":
+        if st.button("⬅️ Kembali ke Summary Utama"):
+            with st.spinner("Kembali ke Halaman Utama..."):
+                time.sleep(0.3)
+                st.session_state.current_view = "summary"
+                st.rerun()
 
-    # --- EXPANDER 1: DETAIL NET SALES & GM ---
-    exp_sales = st.expander(
-        "💰 Detail Net Sales & Gross Margin", 
-        expanded=(st.session_state.active_expander == "sales")
-    )
-    with exp_sales:
-        st.subheader("📊 Performance Sales & Gross Margin")
-        
+        st.title("💰 Detail Net Sales & Gross Margin")
+        st.caption(f"Periode Evaluasi: {selected_period_id}")
+        st.divider()
+
+        st.subheader("📊 Summary Performance Sales & GM")
         s_col1, s_col2, s_col3 = st.columns(3)
         s_col1.metric("Total Net Sales", "Rp 0", "0%")
         s_col2.metric("Gross Margin (%)", "0.0%", "0%")
@@ -1681,14 +1695,21 @@ elif selected_tab == "03 Report IKT & PPS":
         })
         st.dataframe(df_sales_history, use_container_width=True)
 
-    # --- EXPANDER 2: DETAIL REPORT PPS ---
-    exp_pps = st.expander(
-        "📦 Detail Report PPS (Target, Actual, Gap & Simulasi)", 
-        expanded=(st.session_state.active_expander == "pps")
-    )
-    with exp_pps:
-        st.subheader("📦 Evaluation & Pencapaian PPS")
+    # =========================================================
+    # LAYAR 3: DETAIL REPORT PPS
+    # =========================================================
+    elif st.session_state.current_view == "detail_pps":
+        if st.button("⬅️ Kembali ke Summary Utama"):
+            with st.spinner("Kembali ke Halaman Utama..."):
+                time.sleep(0.3)
+                st.session_state.current_view = "summary"
+                st.rerun()
 
+        st.title("📦 Detail Report PPS")
+        st.caption(f"Periode Evaluasi: {selected_period_id}")
+        st.divider()
+
+        st.subheader("📦 Target, Actual, Gap & Bobot PPS")
         pps_summary_df = pd.DataFrame({
             "Indikator PPS": ["PSM P1", "PSM P2", "PSM P3", "PSM P4"],
             "Target": [0, 0, 0, 0],
@@ -1714,9 +1735,8 @@ elif selected_tab == "03 Report IKT & PPS":
 
         with c_pps2:
             st.subheader("🧮 Simulasi Pencapaian PPS")
-            st.caption("Hitung proyeksi pencapaian bobot PPS berdasarkan estimasi penjualan.")
-            sim_target = st.number_input("Input Target PPS (Pcs):", min_value=1, value=100, key="sim_t_pps")
-            sim_actual = st.number_input("Input Estimasi Actual (Pcs):", min_value=0, value=85, key="sim_a_pps")
+            sim_target = st.number_input("Input Target PPS (Pcs):", min_value=1, value=100)
+            sim_actual = st.number_input("Input Estimasi Actual (Pcs):", min_value=0, value=85)
             
             sim_gap = sim_actual - sim_target
             sim_ach = (sim_actual / sim_target * 100) if sim_target > 0 else 0
@@ -1724,13 +1744,19 @@ elif selected_tab == "03 Report IKT & PPS":
             st.write(f"• Proyeksi Gap: **{sim_gap} Pcs**")
             st.write(f"• Proyeksi Achievement: **{round(sim_ach, 1)}%**")
 
-    # --- EXPANDER 3: DETAIL STD & MEMBER ---
-    exp_std = st.expander(
-        "👥 Detail STD Toko & Kontribusi Member", 
-        expanded=(st.session_state.active_expander == "std")
-    )
-    with exp_std:
-        st.subheader("👥 Performa STD Toko & Kontribusi Member")
+    # =========================================================
+    # LAYAR 4: DETAIL STD TOKO & MEMBER
+    # =========================================================
+    elif st.session_state.current_view == "detail_std":
+        if st.button("⬅️ Kembali ke Summary Utama"):
+            with st.spinner("Kembali ke Halaman Utama..."):
+                time.sleep(0.3)
+                st.session_state.current_view = "summary"
+                st.rerun()
+
+        st.title("👥 Detail STD Toko & Kontribusi Member")
+        st.caption(f"Periode Evaluasi: {selected_period_id}")
+        st.divider()
 
         col_std1, col_std2 = st.columns(2)
 
@@ -1754,4 +1780,4 @@ elif selected_tab == "03 Report IKT & PPS":
                 "Achievement (%)": [0.0, 0.0]
             })
             st.dataframe(member_df, use_container_width=True)
-                     
+        
