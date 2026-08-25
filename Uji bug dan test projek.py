@@ -320,6 +320,10 @@ elif selected_tab == "01 Dashboard Toko":
         default_daily_idx = date_options.index(today_date) if today_date in date_options else 0
         selected_daily_date = st.selectbox("📅 Pilih Tanggal Evaluasi:", date_options, index=default_daily_idx, key="detail_daily_date")
 
+        # Pastikan sub_sp ada (buat dataframe kosong jika belum terdefinisi)
+        if 'sub_sp' not in locals() or sub_sp is None:
+            sub_sp = pd.DataFrame(columns=["person_name", "actual_qty", "updated_at"])
+
         # Filter Data Sales Person Harian
         if not sub_sp.empty:
             if "updated_at" in sub_sp.columns:
