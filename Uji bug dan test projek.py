@@ -5,7 +5,6 @@ import plotly.graph_objects as go
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from streamlit_gsheets import GSheetsConnection
-import time
 
 # =========================================================
 # 1. KONFIGURASI HALAMAN STREAMLIT
@@ -13,18 +12,17 @@ import time
 st.set_page_config(
     page_title="PSM Toko - Mobile Dashboard",
     layout="wide",
-    initial_sidebar_state="collapsed"  # Sidebar tersembunyi agar fokus ke layar HP
+    initial_sidebar_state="collapsed"
 )
 
 SPREADSHEET_ID = "1kJ-OsjLEsFuNyyBg2TwxlWz8Ape4lwF9h0t66q3ldQk"
 
 # =========================================================
-# 2. INISIALISASI KONEKSI GOOGLE SHEETS & FUNGSI DATABASE
+# 2. INISIALISASI DATABASE & GSHEETS
 # =========================================================
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 def load_database():
-    """Membaca data realtime secara langsung dari Google Sheets."""
     try:
         periods_df = conn.read(worksheet="PERIODE", ttl=0)
         items_df = conn.read(worksheet="MASTER_ITEM", ttl=0)
@@ -54,27 +52,6 @@ def load_database():
         st.error(f"Gagal membaca Google Sheets: {e}")
         return pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
 
-def save_database(sales_item_df, sales_person_df):
-    """Menyimpan data transaksi harian ke Google Sheets secara permanen."""
-    try:
-        conn.update(worksheet="SALES_ITEM", data=sales_item_df)
-        conn.update(worksheet="SALES_PERSONIL", data=sales_person_df)
-        st.toast("Perubahan transaksi tersimpan permanen di Google Sheets!", icon="✅")
-        return True
-    except Exception as e:
-        st.error(f"Gagal menyimpan transaksi ke Google Sheets: {e}")
-        return False
-
-def save_master_table(sheet_name, df_data):
-    """Menyimpan perubahan master data ke Google Sheets."""
-    try:
-        conn.update(worksheet=sheet_name, data=df_data)
-        st.toast(f"Master {sheet_name} berhasil diperbarui di Google Sheets!", icon="✅")
-        return True
-    except Exception as e:
-        st.error(f"Gagal update master {sheet_name}: {e}")
-        return False
-
 if "data_loaded" not in st.session_state:
     p_df, i_df, pers_df, si_df, sp_df = load_database()
     st.session_state.periods_df = p_df
@@ -84,99 +61,66 @@ if "data_loaded" not in st.session_state:
     st.session_state.sales_person_df = sp_df
     st.session_state.data_loaded = True
 
-# Dynamic state navigasi
 if "active_tab" not in st.session_state:
     st.session_state.active_tab = "Home"
 
-# =========================================================
-# 3. WAKTU REALTIME GMT+7 (WIB)
-# =========================================================
+# Waktu Realtime
 waktu_wib = datetime.now(ZoneInfo("Asia/Jakarta"))
 current_time_str = waktu_wib.strftime("%A, %d %B %Y %H:%M WIB")
 
-# =========================================================
-# 4. FUNGSI AUTENTIKASI DINAMIS
-# =========================================================
+# Auth Sederhana
 def check_login(input_username, input_password):
-    input_user_clean = str(input_username).strip().lower()
-    input_pass_clean = str(input_password).strip()
-
-    if input_user_clean == "admin" and input_pass_clean == "lavitality":
+    u = str(input_username).strip().lower()
+    p = str(input_password).strip()
+    if (u == "admin" and p == "lavitality") or (u == "visitor" and p == "visitor"):
         st.session_state["logged_in"] = True
-        st.session_state["username"] = "admin"
-        st.session_state["person_name"] = "Administrator"
-        st.session_state["user_role"] = "Admin"
-        st.session_state["role"] = "Admin"
+        st.session_state["person_name"] = "Administrator" if u == "admin" else "Pengunjung"
+        st.session_state["role"] = "Admin" if u == "admin" else "Visitor"
         return True
-    elif input_user_clean == "visitor" and input_pass_clean == "visitor":
-        st.session_state["logged_in"] = True
-        st.session_state["username"] = "visitor"
-        st.session_state["person_name"] = "Pengunjung"
-        st.session_state["user_role"] = "Visitor"
-        st.session_state["role"] = "Visitor"
-        return True
-
+    
     df_users = st.session_state.get("person_df", pd.DataFrame())
-    if df_users.empty:
-        try:
-            df_users = conn.read(worksheet="MASTER_PERSONIL", ttl=0)
-            st.session_state.person_df = df_users.copy()
-        except Exception:
-            df_users = pd.DataFrame()
-
-    if df_users.empty or "username" not in df_users.columns or "password" not in df_users.columns:
-        return False
-
-    df_users["username_clean"] = df_users["username"].astype(str).str.strip().str.lower()
-    df_users["password_clean"] = df_users["password"].astype(str).str.strip()
-
-    user_match = df_users[
-        (df_users["username_clean"] == input_user_clean) &
-        (df_users["password_clean"] == input_pass_clean)
-    ]
-
-    if not user_match.empty:
-        matched_user = user_match.iloc[0]
-        st.session_state["logged_in"] = True
-        st.session_state["username"] = str(matched_user["username"]).strip()
-        st.session_state["person_name"] = str(matched_user.get("person_name", matched_user["username"]))
-        user_role_val = str(matched_user.get("role", "Staff Toko")).strip()
-        st.session_state["user_role"] = user_role_val
-        st.session_state["role"] = user_role_val
-        return True
-
+    if not df_users.empty and "username" in df_users.columns and "password" in df_users.columns:
+        df_users["u_clean"] = df_users["username"].astype(str).str.strip().str.lower()
+        df_users["p_clean"] = df_users["password"].astype(str).str.strip()
+        match = df_users[(df_users["u_clean"] == u) & (df_users["p_clean"] == p)]
+        if not match.empty:
+            st.session_state["logged_in"] = True
+            st.session_state["person_name"] = str(match.iloc[0].get("person_name", u))
+            st.session_state["role"] = str(match.iloc[0].get("role", "Staff"))
+            return True
     return False
 
 # =========================================================
-# 5. CUSTOM CSS (NEON DARK + MOBILE GRID HOME SCREEN)
+# 3. CUSTOM CSS FIX HEADER & MOBILE SCREEN
 # =========================================================
 st.markdown("""
 <style>
-.stApp { background-color: #0b0f19; color: #f8fafc; font-family: 'Inter', sans-serif; }
-.block-container { padding-top: 1rem !important; padding-bottom: 2rem !important; }
-
-/* Custom Styling Komponen UI */
-label, p[data-testid="stWidgetLabel"], div[data-testid="stWidgetLabel"] label, label p {
-    color: #38bdf8 !important; font-weight: 600 !important; font-size: 14px !important;
-}
-div[data-baseweb="input"] input, div[data-baseweb="select"] input, div[data-baseweb="select"] span {
-    color: #ffffff !important; background-color: transparent !important; font-weight: bold !important;
-}
-div[data-baseweb="input"] > div, div[data-baseweb="select"] > div {
-    background-color: #0d1117 !important; border: 1.5px solid #00f0ff !important; border-radius: 8px !important;
+/* Sembunyikan Header Bawaan Streamlit Supaya Tidak Kepotong */
+header[data-testid="stHeader"] {
+    display: none !important;
 }
 
-/* Metric Card */
+/* Background & Padding Layar HP */
+.stApp { 
+    background-color: #0b0f19; 
+    color: #f8fafc; 
+    font-family: 'Inter', sans-serif; 
+}
+.block-container { 
+    padding-top: 1.8rem !important; 
+    padding-bottom: 2rem !important; 
+}
+
+/* Custom Card & Metric */
 div[data-testid="stMetric"] {
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-    border: 1px solid #38bdf8; padding: 14px; border-radius: 12px; box-shadow: 0 0 15px rgba(56, 189, 248, 0.25);
+    border: 1px solid #38bdf8; 
+    padding: 12px; 
+    border-radius: 12px; 
 }
-div[data-testid="stMetric"] label { color: #94a3b8 !important; font-weight: 700; font-size: 12px; }
-div[data-testid="stMetric"] [data-testid="stMetricValue"] {
-    color: #38bdf8 !important; text-shadow: 0 0 10px rgba(56, 189, 248, 0.5); font-weight: 800; font-size: 22px;
-}
+div[data-testid="stMetric"] label { color: #94a3b8 !important; font-size: 11px; }
+div[data-testid="stMetric"] [data-testid="stMetricValue"] { color: #38bdf8 !important; font-size: 20px; font-weight: 800; }
 
-/* Styling Home Screen App Card ala HP */
 .app-card {
     background: linear-gradient(145deg, #1e293b, #0f172a);
     border: 1.5px solid #00f0ff;
@@ -186,14 +130,16 @@ div[data-testid="stMetric"] [data-testid="stMetricValue"] {
     box-shadow: 0 6px 16px rgba(0, 240, 255, 0.15);
     margin-bottom: 8px;
 }
-.app-icon { font-size: 38px; margin-bottom: 4px; display: block; }
-.app-title { color: #ffffff; font-size: 15px; font-weight: 700; margin: 0; }
+.app-icon { font-size: 36px; margin-bottom: 4px; display: block; }
+.app-title { color: #ffffff; font-size: 14px; font-weight: 700; margin: 0; }
 .app-desc { color: #94a3b8; font-size: 11px; margin-top: 2px; }
 
-/* Custom Button */
 div.stButton > button {
-    background-color: #080c14 !important; color: #ffffff !important; border: 1.5px solid #00f0ff !important;
-    border-radius: 10px !important; font-weight: bold !important; box-shadow: 0 0 10px rgba(0, 240, 255, 0.2) !important;
+    background-color: #080c14 !important; 
+    color: #ffffff !important; 
+    border: 1.5px solid #00f0ff !important;
+    border-radius: 10px !important; 
+    font-weight: bold !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -202,178 +148,93 @@ if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
 # =========================================================
-# 6. HALAMAN LOGIN
+# 4. LOGIN PAGE
 # =========================================================
-def show_login_page():
-    LOGO_URL = "https://raw.githubusercontent.com/stefanusagranus-tech/LigaPSM26/main/kgs_group_belgium_logo.jpg"
-    
-    st.markdown("""
-    <style>
-    .login-card { 
-        background-color: #1e293b; padding: 25px 20px; border-radius: 16px; 
-        box-shadow: 0 10px 25px 5px rgba(0, 0, 0, 0.4); text-align: center; margin-bottom: 20px; 
-    }
-    .login-logo { 
-        width: 90px; height: 90px; object-fit: contain; border-radius: 12px; 
-        background-color: #ffffff; padding: 6px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto; 
-    }
-    .login-title { color: #ffffff; font-size: 20px; font-weight: 700; margin-bottom: 4px; }
-    .login-subtitle { color: #38bdf8; font-size: 13px; margin-bottom: 0px; }
-    </style>
-    """, unsafe_allow_html=True)
-    
-    col1, col2, col3 = st.columns([1, 1.4, 1])
-    with col2:
-        st.markdown(f"""
-        <div class='login-card'>
-            <img src='{LOGO_URL}' class='login-logo' alt='KGS Group Logo'>
-            <div class='login-title'>TOKO C383</div>
-            <p class='login-subtitle'>Sistem Monitoring PSM Toko</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        with st.form("login_form", clear_on_submit=False):
-            username_input = st.text_input("Username", placeholder="Masukkan username")
-            password_input = st.text_input("Password", type="password", placeholder="Masukkan password")
-            submit_btn = st.form_submit_button("Masuk ke Aplikasi", use_container_width=True)
-
-        if submit_btn:
-            u_clean = username_input.strip()
-            p_clean = password_input.strip()
-
-            if not u_clean or not p_clean:
-                st.warning("⚠️ Username dan Password wajib diisi!")
-            elif check_login(u_clean, p_clean):
-                st.session_state["logged_in"] = True
-                st.toast(f"🎉 Selamat Datang, {st.session_state.get('person_name', u_clean)}!")
-                st.rerun()
-            else:
-                st.error("❌ Username atau Password salah!")
-
 if not st.session_state["logged_in"]:
-    show_login_page()
+    col1, col2, col3 = st.columns([1, 1.5, 1])
+    with col2:
+        st.markdown("<h2 style='text-align:center; color:#00f0ff;'>TOKO C383</h2>", unsafe_allow_html=True)
+        with st.form("login_form"):
+            u_in = st.text_input("Username")
+            p_in = st.text_input("Password", type="password")
+            if st.form_submit_button("Masuk", use_container_width=True):
+                if check_login(u_in, p_in):
+                    st.rerun()
+                else:
+                    st.error("Login Gagal")
     st.stop()
 
 # =========================================================
-# 7. HEADER UTAMA DASHBOARD
+# 5. HEADER ATAS (AMAN UNTUK HP)
 # =========================================================
-periods_df = st.session_state.get("periods_df", pd.DataFrame())
-if not periods_df.empty and "period_name" in periods_df.columns and "period_id" in periods_df.columns:
-    periods_dict = {str(row["period_name"]): str(row["period_id"]) for _, row in periods_df.iterrows()}
-else:
-    periods_dict = {"Periode Utama": "P01"}
-
-# Top Navigation Bar & Info User
 h_col1, h_col2 = st.columns([2.5, 1])
 with h_col1:
     st.markdown(f"""
-    <div style='display: flex; align-items: center; gap: 10px;'>
-        <div style='background: #00f0ff; width: 10px; height: 35px; border-radius: 4px;'></div>
+    <div style='display: flex; align-items: center; gap: 8px;'>
+        <div style='background: #00f0ff; width: 6px; height: 32px; border-radius: 3px;'></div>
         <div>
-            <h3 style='margin:0; color:#ffffff; font-size: 18px;'>TOKO C383 MOBILE</h3>
-            <p style='margin:0; color:#38bdf8; font-size: 11px;'>👤 {st.session_state.get("person_name", "User")} ({st.session_state.get("role", "Staff")})</p>
+            <h4 style='margin:0; color:#ffffff; font-size: 16px;'>TOKO C383 MOBILE</h4>
+            <p style='margin:0; color:#38bdf8; font-size: 11px;'>👤 {st.session_state.get("person_name", "User")}</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
 with h_col2:
-    if st.button("🚪 Logout", key="btn_logout_top", use_container_width=True):
+    if st.button("🚪 Keluar", key="btn_logout", use_container_width=True):
         st.session_state.clear()
-        st.session_state["logged_in"] = False
         st.rerun()
 
-st.markdown("<hr style='margin: 12px 0; border-color: #1e293b;'>", unsafe_allow_html=True)
+st.markdown("<hr style='margin: 10px 0; border-color: #1e293b;'>", unsafe_allow_html=True)
 
 # =========================================================
-# 8. TAMPILAN HOME SCREEN (GRID MENU ALA HP)
-# =========================================================
-def show_home_screen():
-    st.markdown("""
-    <div style='text-align: center; margin-bottom: 20px;'>
-        <p style='color: #94a3b8; font-size: 12px; font-weight: bold; margin-bottom: 2px;'>WAKTU SISTEM REALTIME</p>
-        <p style='color: #00f0ff; font-size: 13px; font-weight: bold; margin-top: 0;'>""" + current_time_str + """</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # BARIS 1 (GRID 2 KOLOM)
-    g1_col1, g1_col2 = st.columns(2)
-
-    with g1_col1:
-        st.markdown("""
-        <div class='app-card'>
-            <span class='app-icon'>📊</span>
-            <div class='app-title'>Dashboard</div>
-            <div class='app-desc'>Sales & Item Store</div>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("Buka Dashboard", key="btn_app_dash", use_container_width=True):
-            st.session_state.active_tab = "01 Dashboard Toko"
-            st.rerun()
-
-    with g1_col2:
-        st.markdown("""
-        <div class='app-card'>
-            <span class='app-icon'>👥</span>
-            <div class='app-title'>Raport Personil</div>
-            <div class='app-desc'>Ranking & Pencapaian</div>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("Buka Raport", key="btn_app_pers", use_container_width=True):
-            st.session_state.active_tab = "02 Raport Personil Toko"
-            st.rerun()
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # BARIS 2 (GRID 2 KOLOM)
-    g2_col1, g2_col2 = st.columns(2)
-
-    with g2_col1:
-        st.markdown("""
-        <div class='app-card'>
-            <span class='app-icon'>🎯</span>
-            <div class='app-title'>IKT & PPS</div>
-            <div class='app-desc'>Net Sales & Target</div>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("Buka IKT & PPS", key="btn_app_ikt", use_container_width=True):
-            st.session_state.active_tab = "03 Report IKT & PPS"
-            st.rerun()
-
-    with g2_col2:
-        st.markdown("""
-        <div class='app-card'>
-            <span class='app-icon'>⚙️</span>
-            <div class='app-title'>Pengaturan</div>
-            <div class='app-desc'>Master & Filter Data</div>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("Buka Pengaturan", key="btn_app_set", use_container_width=True):
-            st.session_state.active_tab = "04 Pengaturan & Download"
-            st.rerun()
-
-# =========================================================
-# 9. NAVIGASI BAR ATAS (MUNCUL SAAT DI DALAM MENU)
+# 6. NAVIGASI HOME SCREEN & TABS
 # =========================================================
 selected_tab = st.session_state.active_tab
 
 if selected_tab != "Home":
     nav_col1, nav_col2 = st.columns([1.2, 2.8])
     with nav_col1:
-        if st.button("🏠 Home Screen", key="btn_nav_home", use_container_width=True):
+        if st.button("🏠 Home", key="btn_nav_home", use_container_width=True):
             st.session_state.active_tab = "Home"
             st.rerun()
     with nav_col2:
-        st.markdown(f"<h4 style='color:#00f0ff; margin: 6px 0 0 0;'>📌 {selected_tab}</h4>", unsafe_allow_html=True)
-    
-    st.markdown("<hr style='margin: 10px 0 15px 0; border-color: #334155;'>", unsafe_allow_html=True)
+        st.markdown(f"<h4 style='color:#00f0ff; margin: 4px 0 0 0;'>📌 {selected_tab}</h4>", unsafe_allow_html=True)
+    st.markdown("<hr style='margin: 8px 0 12px 0; border-color: #334155;'>", unsafe_allow_html=True)
 
-# =========================================================
-# 10. MODUL HALAMAN APLIKASI
-# =========================================================
-
-# --- HOME SCREEN ---
+# --- DISPLAY HOME SCREEN ---
 if selected_tab == "Home":
-    show_home_screen()
+    st.markdown(f"""
+    <div style='text-align: center; margin-bottom: 16px;'>
+        <p style='color: #94a3b8; font-size: 11px; margin-bottom: 2px;'>WAKTU SISTEM REALTIME</p>
+        <p style='color: #00f0ff; font-size: 12px; font-weight: bold; margin-top: 0;'>{current_time_str}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    g1, g2 = st.columns(2)
+    with g1:
+        st.markdown("<div class='app-card'><span class='app-icon'>📊</span><div class='app-title'>Dashboard</div><div class='app-desc'>Sales & Item Toko</div></div>", unsafe_allow_html=True)
+        if st.button("Buka Dashboard", key="btn_a1", use_container_width=True):
+            st.session_state.active_tab = "01 Dashboard Toko"
+            st.rerun()
+    with g2:
+        st.markdown("<div class='app-card'><span class='app-icon'>👥</span><div class='app-title'>Raport Personil</div><div class='app-desc'>Ranking Sales Staff</div></div>", unsafe_allow_html=True)
+        if st.button("Buka Raport", key="btn_a2", use_container_width=True):
+            st.session_state.active_tab = "02 Raport Personil Toko"
+            st.rerun()
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    g3, g4 = st.columns(2)
+    with g3:
+        st.markdown("<div class='app-card'><span class='app-icon'>🎯</span><div class='app-title'>IKT & PPS</div><div class='app-desc'>Net Sales & Target</div></div>", unsafe_allow_html=True)
+        if st.button("Buka IKT & PPS", key="btn_a3", use_container_width=True):
+            st.session_state.active_tab = "03 Report IKT & PPS"
+            st.rerun()
+    with g4:
+        st.markdown("<div class='app-card'><span class='app-icon'>⚙️</span><div class='app-title'>Pengaturan</div><div class='app-desc'>Reload & Data</div></div>", unsafe_allow_html=True)
+        if st.button("Buka Pengaturan", key="btn_a4", use_container_width=True):
+            st.session_state.active_tab = "04 Pengaturan & Download"
+            st.rerun()
 
 # --- TAB 01: DASHBOARD TOKO ---
 elif selected_tab == "01 Dashboard Toko":
