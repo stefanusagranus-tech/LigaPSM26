@@ -584,11 +584,26 @@ elif selected_tab == "01 Dashboard Toko":
                 default_daily_idx = date_options.index(today_date) if today_date in date_options else 0
                 selected_daily_date = st.selectbox("📅 Pilih Tanggal Harian:", date_options, index=default_daily_idx, key="daily_date_picker")
 
-                if not sub_sp.empty and "dt_clean" in sub_sp.columns:
+                if not sub_sp.empty:
+                    if "updated_at" in sub_sp.columns:
+                        date_col = "updated_at"
+                    elif "date" in sub_sp.columns:
+                        date_col = "date"
+                    elif "tanggal" in sub_sp.columns:
+                        date_col = "tanggal"
+                    else:
+                        date_col = None
+                
+                    sub_sp["dt_clean"] = pd.to_datetime(sub_sp[date_col], errors="coerce").dt.date if date_col else None
                     sub_sp["actual_qty"] = pd.to_numeric(sub_sp.get("actual_qty", 0), errors="coerce").fillna(0)
-                    day_sp = sub_sp[sub_sp["dt_clean"] == selected_daily_date]
+                    
+                    if "dt_clean" in sub_sp.columns:
+                        day_sp = sub_sp[sub_sp["dt_clean"] == selected_daily_date]
+                    else:
+                        day_sp = pd.DataFrame()
                 else:
                     day_sp = pd.DataFrame()
+
 
                 top_person = "-"
                 person_col = "person_name" if "person_name" in day_sp.columns else ("sales_person" if "sales_person" in day_sp.columns else None)
