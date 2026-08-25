@@ -1837,8 +1837,8 @@ elif selected_tab == "06 · Input & Reset Data":
 
         else:
           st.error(
-              f"⚠️ Perhatian: Aksi ini akan menghapus SELURUH catatan penjualan"
-              f" {d_person} pada periode ini."
+              f"⚠️ Perhatian: Aksi me-reset akan menghapus SELURUH catatan"
+              f" penjualan {d_person} pada periode ini."
           )
           if st.button(
               f"🚨 Reset Total Sales {d_person} di Periode Ini",
@@ -1869,3 +1869,457 @@ elif selected_tab == "06 · Input & Reset Data":
             )
             time.sleep(1.5)
             st.rerun()
+
+# --- TAB MASTER DATA & PENGATURAN ---
+elif selected_tab == "⚙️ Master Data & Pengaturan":
+  st.markdown(
+      "<h2 style='color: #00f0ff; text-shadow: 0 0 10px rgba(0,240,255,0.5);'>⚙️"
+      " Master Data & Pengaturan Sistem</h2>",
+      unsafe_allow_html=True,
+  )
+
+  current_user = st.session_state.get("username", "visitor")
+  user_lower = str(current_user).lower()
+  is_admin = any(
+      x in user_lower for x in ["admin", "chief", "cos", "lavitality"]
+  )
+
+  if not is_admin:
+    st.error(
+        "🔒 **Akses Ditolak!** Fitur Master Data & Pengaturan hanya dapat"
+        " diakses oleh **Admin / COS**."
+    )
+    st.stop()
+
+  tab_m1, tab_m2, tab_m3, tab_m4 = st.tabs([
+      "➕ Penambahan Item & Target",
+      "⚙️ Pengaturan Item",
+      "📅 Pengaturan Periode",
+      "📊 Master Status & Summary",
+  ])
+
+  # SUB TAB 1: PENAMBAHAN ITEM & TARGET PER PERIODE
+  with tab_m1:
+    st.markdown(
+        "<h4 style='color: #00ff88;'>➕ Tambah Produk & Target Per Periode</h4>",
+        unsafe_allow_html=True,
+    )
+    with st.form("form_add_new_item"):
+      col_add1, col_add2 = st.columns(2)
+      with col_add1:
+        add_period_name = st.selectbox(
+            "Pilih Periode Alokasi Target",
+            list(periods_dict.keys()),
+            key="add_item_period",
+        )
+        add_period_id = periods_dict[add_period_name]
+        new_item_id = (
+            st.text_input(
+                "ID Item (PLU / Barcode)", placeholder="Contoh: 100234"
+            )
+            .strip()
+            .upper()
+        )
+        new_item_name = st.text_input(
+            "Nama Produk / Item", placeholder="Contoh: MINYAK GORENG 2L"
+        ).strip()
+      with col_add2:
+        new_target_toko = st.number_input(
+            "Target Toko (Total Pcs)", min_value=0, step=1, value=100
+        )
+        new_target_kasir = st.number_input(
+            "Target Kasir / Staf (Pcs/Personil)", min_value=0, step=1, value=20
+        )
+
+      btn_submit_add_item = st.form_submit_button(
+          "💾 Simpan Produk & Target Baru", use_container_width=True
+      )
+
+      if btn_submit_add_item:
+        if not new_item_id or not new_item_name:
+          st.error("⚠️ ID Item dan Nama Produk wajib diisi!")
+        else:
+          try:
+            # Update Master Item
+            m_items = st.session_state.items_df.copy()
+            if new_item_id not in m_items["item_id"].astype(str).tolist():
+              new_m_row = pd.DataFrame(
+                  [{"item_id": new_item_id, "item_name": new_item_name}]
+              )
+              st.session_state.items_df = pd.concat(
+                  [m_items, new_m_row], ignore_index=True
+              )
+              save_master_table("MASTER_ITEM", st.session_state.items_df)
+
+            # Update Sales Item Target
+            s_items = st.session_state.sales_item_df.copy()
+            new_si_row = pd.DataFrame([{
+                "period_id": str(add_period_id),
+                "item_id": str(new_item_id),
+                "item_name": str(new_item_name),
+                "target_qty": int(new_target_toko),
+                "target_kasir": int(new_target_kasir),
+                "actual_qty": 0,
+            }])
+            st.session_state.sales_item_df = pd.concat(
+                [s_items, new_si_row], ignore_index=True
+            )
+            save_database(
+                st.session_state.sales_item_df,
+                st.session_state.sales_person_df,
+            )
+
+            st.success(
+                f"✅ Produk **{new_item_name}** berhasil ditambahkan ke Periode"
+                f" **{add_period_name}**!"
+            )
+            time.sleep(1.5)
+            st.rerun()
+          except Exception as e:
+            st.error(f"❌ Gagal menambahkan produk: {e}")
+
+  # SUB TAB 2: PENGATURAN ITEM
+  with tab_m2:
+    st.markdown(
+        "<h4 style='color: #38bdf8;'>⚙️ Pengaturan, Edit & Hapus Item</h4>",
+        unsafe_allow_html=True,
+    )
+    si_df = st.session_state.sales_item_df.copy()
+    if si_df.empty:
+      st.info("Belum ada data item terdaftar.")
+    else:
+      m_p_name = st.selectbox(
+          "Pilih Periode Item",
+          list(periods_dict.keys()),
+          key="setting_item_period",
+      )
+      m_p_id = periods_dict[m_p_name]
+      si_sub = si_df[si_df["period_id"] == m_p_id]
+
+      if si_sub.empty:
+        st.warning("Tidak ada item di periode ini.")
+      else:
+        selected_item_name = st.selectbox(
+            "Pilih Item yang Ingin Diatur",
+            si_sub["item_name"].unique(),
+            key="setting_item_select",
+        )
+        curr_row = si_sub[si_sub["item_name"] == selected_item_name].iloc[0]
+
+        with st.form("form_edit_item"):
+          col_e1, col_e2 = st.columns(2)
+          with col_e1:
+            edit_item_name = st.text_input(
+                "Nama Item / Produk", value=str(curr_row["item_name"])
+            )
+            target_toko_val = int(curr_row.get("target_qty", 0))
+            edit_target_toko = st.number_input(
+                "Target Toko", min_value=0, step=1, value=target_toko_val
+            )
+          with col_e2:
+            target_kasir_val = int(curr_row.get("target_kasir", 0))
+            edit_target_kasir = st.number_input(
+                "Target Kasir / Staf",
+                min_value=0,
+                step=1,
+                value=target_kasir_val,
+            )
+            edit_period_dest = st.selectbox(
+                "Pindah ke Periode",
+                list(periods_dict.keys()),
+                index=list(periods_dict.keys()).index(m_p_name),
+            )
+
+          btn_save_item_setting = st.form_submit_button(
+              "💾 Simpan Perubahan Item", use_container_width=True
+          )
+
+        if btn_save_item_setting:
+          try:
+            target_p_id = periods_dict[edit_period_dest]
+            idx_list = st.session_state.sales_item_df[
+                (st.session_state.sales_item_df["period_id"] == m_p_id)
+                & (
+                    st.session_state.sales_item_df["item_id"]
+                    == str(curr_row["item_id"])
+                )
+            ].index
+
+            st.session_state.sales_item_df.loc[
+                idx_list, "item_name"
+            ] = edit_item_name
+            st.session_state.sales_item_df.loc[
+                idx_list, "target_qty"
+            ] = edit_target_toko
+            st.session_state.sales_item_df.loc[
+                idx_list, "target_kasir"
+            ] = edit_target_kasir
+            st.session_state.sales_item_df.loc[
+                idx_list, "period_id"
+            ] = target_p_id
+
+            # Update sales person jika nama berubah
+            sp_idx = st.session_state.sales_person_df[
+                st.session_state.sales_person_df["item_id"]
+                == str(curr_row["item_id"])
+            ].index
+            st.session_state.sales_person_df.loc[
+                sp_idx, "item_name"
+            ] = edit_item_name
+
+            save_database(
+                st.session_state.sales_item_df,
+                st.session_state.sales_person_df,
+            )
+            st.success("✅ Perubahan item berhasil disimpan!")
+            time.sleep(1.5)
+            st.rerun()
+          except Exception as e:
+            st.error(f"❌ Gagal memperbarui item: {e}")
+
+        st.markdown("---")
+        if st.button(
+            f"🗑️ Hapus Item '{selected_item_name}' dari Periode Ini",
+            use_container_width=True,
+        ):
+          st.session_state.sales_item_df = st.session_state.sales_item_df[
+              ~(
+                  (st.session_state.sales_item_df["period_id"] == m_p_id)
+                  & (
+                      st.session_state.sales_item_df["item_id"]
+                      == str(curr_row["item_id"])
+                  )
+              )
+          ]
+          save_database(
+              st.session_state.sales_item_df, st.session_state.sales_person_df
+          )
+          st.warning("⚠️ Item berhasil dihapus dari periode ini.")
+          time.sleep(1.5)
+          st.rerun()
+
+  # SUB TAB 3: PENGATURAN PERIODE
+  with tab_m3:
+    st.markdown(
+        "<h4 style='color: #f59e0b;'>📅 Pengaturan Periode Promosi</h4>",
+        unsafe_allow_html=True,
+    )
+    p_df = st.session_state.periods_df.copy()
+
+    col_p1, col_p2 = st.columns([1, 1.2])
+
+    with col_p1:
+      st.markdown("##### ➕ Tambah Periode Baru")
+      with st.form("form_add_period"):
+        new_p_id = (
+            st.text_input("ID Periode", placeholder="Contoh: P03")
+            .strip()
+            .upper()
+        )
+        new_p_name = st.text_input(
+            "Nama Periode", placeholder="Contoh: Periode Maret 2026"
+        ).strip()
+        new_p_start = st.date_input(
+            "Tanggal Mulai", value=waktu_wib.date(), key="add_p_start"
+        )
+        new_p_end = st.date_input(
+            "Tanggal Selesai", value=waktu_wib.date(), key="add_p_end"
+        )
+
+        btn_add_p = st.form_submit_button(
+            "💾 Tambah Periode Baru", use_container_width=True
+        )
+
+        if btn_add_p:
+          if not new_p_id or not new_p_name:
+            st.error("⚠️ ID dan Nama Periode wajib diisi!")
+          elif new_p_start > new_p_end:
+            st.error("⚠️ Tanggal Mulai tidak boleh melebihi Tanggal Selesai!")
+          else:
+            new_p_row = pd.DataFrame([{
+                "period_id": new_p_id,
+                "period_name": new_p_name,
+                "start_date": str(new_p_start),
+                "end_date": str(new_p_end),
+            }])
+            st.session_state.periods_df = pd.concat(
+                [p_df, new_p_row], ignore_index=True
+            )
+            save_master_table("PERIODE", st.session_state.periods_df)
+            st.success(f"✅ Periode **{new_p_name}** berhasil ditambahkan!")
+            time.sleep(1.5)
+            st.rerun()
+
+    with col_p2:
+      st.markdown("##### ✏️ Edit & Hapus Periode")
+      if not p_df.empty:
+        sel_p_edit = st.selectbox(
+            "Pilih Periode yang Ingin Diubah",
+            p_df["period_name"].tolist(),
+            key="select_p_edit",
+        )
+        p_row_match = p_df[p_df["period_name"] == sel_p_edit].iloc[0]
+
+        with st.form("form_edit_period"):
+          edit_p_name = st.text_input(
+              "Nama Periode", value=str(p_row_match["period_name"])
+          )
+          try:
+            curr_start_d = pd.to_datetime(p_row_match["start_date"]).date()
+            curr_end_d = pd.to_datetime(p_row_match["end_date"]).date()
+          except Exception:
+            curr_start_d, curr_end_d = (
+                waktu_wib.date(),
+                waktu_wib.date(),
+            )
+
+          edit_p_start = st.date_input(
+              "Tanggal Mulai", value=curr_start_d, key="edit_p_start"
+          )
+          edit_p_end = st.date_input(
+              "Tanggal Selesai", value=curr_end_d, key="edit_p_end"
+          )
+
+          btn_save_p_edit = st.form_submit_button(
+              "💾 Update Tanggal & Nama Periode", use_container_width=True
+          )
+
+        if btn_save_p_edit:
+          idx_p = st.session_state.periods_df[
+              st.session_state.periods_df["period_id"]
+              == str(p_row_match["period_id"])
+          ].index
+          st.session_state.periods_df.loc[idx_p, "period_name"] = edit_p_name
+          st.session_state.periods_df.loc[idx_p, "start_date"] = str(
+              edit_p_start
+          )
+          st.session_state.periods_df.loc[idx_p, "end_date"] = str(edit_p_end)
+
+          save_master_table("PERIODE", st.session_state.periods_df)
+          st.success("✅ Periode berhasil diperbarui!")
+          time.sleep(1.5)
+          st.rerun()
+
+  # SUB TAB 4: MASTER STATUS & SUMMARY
+  with tab_m4:
+    st.markdown(
+        "<h4 style='color: #00ff88;'>📊 Status Sistem & Summary Laporan</h4>",
+        unsafe_allow_html=True,
+    )
+
+    # 1. Status Dashboard & Database Connection
+    c_s1, c_s2, c_s3 = st.columns(3)
+    with c_s1:
+      st.metric("🔗 Koneksi Database", "Terhubung (GSheets)")
+    with c_s2:
+      st.metric(
+          "📦 Total Master Item", f"{len(st.session_state.items_df)} Item"
+      )
+    with c_s3:
+      st.metric(
+          "👥 Total Personil", f"{len(st.session_state.person_df)} Staf"
+      )
+
+    st.markdown("---")
+    st.subheader("📋 Summary Laporan Penjualan")
+
+    mode_summary = st.radio(
+        "Pilih Jenis Laporan Summary:",
+        ["Harian (Hari Ini)", "Per Periode (Aktif)", "Bulanan (Bulan Ini)"],
+        horizontal=True,
+    )
+
+    sp_data = st.session_state.sales_person_df.copy()
+    si_data = st.session_state.sales_item_df.copy()
+
+    if not sp_data.empty and "actual_qty" in sp_data.columns:
+      sp_data["actual_qty"] = pd.to_numeric(
+          sp_data["actual_qty"], errors="coerce"
+      ).fillna(0)
+    else:
+      sp_data["actual_qty"] = 0
+
+    today_str = waktu_wib.strftime("%Y-%m-%d")
+    current_month_str = waktu_wib.strftime("%Y-%m")
+
+    if mode_summary == "Harian (Hari Ini)":
+      if "updated_at" in sp_data.columns:
+        filtered_sum = sp_data[
+            sp_data["updated_at"].astype(str) == today_str
+        ]
+      else:
+        filtered_sum = pd.DataFrame()
+      title_sum = f"Laporan Harian ({waktu_wib.strftime('%d %B %Y')})"
+
+    elif mode_summary == "Per Periode (Aktif)":
+      if selected_period_id:
+        filtered_sum = sp_data[sp_data["period_id"] == selected_period_id]
+        title_sum = f"Laporan Periode ({selected_period_name})"
+      else:
+        filtered_sum = sp_data.copy()
+        title_sum = "Laporan Semua Periode"
+
+    else:  # Bulanan
+      if "updated_at" in sp_data.columns:
+        filtered_sum = sp_data[
+            sp_data["updated_at"].astype(str).str.startswith(current_month_str)
+        ]
+      else:
+        filtered_sum = pd.DataFrame()
+      title_sum = f"Laporan Bulanan ({waktu_wib.strftime('%B %Y')})"
+
+    tot_actual_sum = filtered_sum["actual_qty"].sum()
+    st.markdown(
+        f"##### 📌 {title_sum} — Total Sales: **{tot_actual_sum:,.0f} Pcs**"
+    )
+
+    # Breakdown per item
+    sum_item = (
+        filtered_sum.groupby("item_name")["actual_qty"]
+        .sum()
+        .reset_index()
+        .sort_values(by="actual_qty", ascending=False)
+    )
+    st.dataframe(sum_item, use_container_width=True)
+
+    st.markdown("---")
+    st.subheader("📲 Salin Laporan Format WhatsApp")
+
+    # Format Teks WhatsApp
+    wa_report_text = f"*📊 REPORT PSM TOKO C383*\n"
+    wa_report_text += f"*Jenis Laporan:* {title_sum}\n"
+    wa_report_text += f"*Waktu Update:* {current_time_str}\n"
+    wa_report_text += (
+        f"--------------------------------------------------\n"
+    )
+
+    for idx, r in sum_item.iterrows():
+      wa_report_text += (
+          f"• *{r['item_name']}*: {int(r['actual_qty']):,} Pcs\n"
+      )
+
+    wa_report_text += (
+        f"--------------------------------------------------\n"
+    )
+    wa_report_text += f"*TOTAL SALES:* *{int(tot_actual_sum):,} Pcs*\n\n"
+    wa_report_text += f"_Laporan dihasilkan otomatis oleh System Sales PSM_"
+
+    st.code(wa_report_text, language="markdown")
+    st.caption(
+        "💡 Klik tombol salin/copy di pojok kanan atas kotak kode di atas"
+        " untuk menempelkannya langsung ke WhatsApp!"
+    )
+
+    # Fitur Download Laporan
+    st.markdown("---")
+    st.subheader("📥 Export & Download Laporan")
+    csv_data = sum_item.to_csv(index=False).encode("utf-8")
+    st.download_button(
+        label="📄 Download Laporan Data (CSV)",
+        data=csv_data,
+        file_name=f"Report_PSM_{mode_summary.replace(' ', '_')}.csv",
+        mime="text/csv",
+        use_container_width=True,
+    )
+
+
