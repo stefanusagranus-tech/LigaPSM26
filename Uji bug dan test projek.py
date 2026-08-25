@@ -321,11 +321,23 @@ elif selected_tab == "01 Dashboard Toko":
         selected_daily_date = st.selectbox("📅 Pilih Tanggal Evaluasi:", date_options, index=default_daily_idx, key="detail_daily_date")
 
         # Filter Data Sales Person Harian
-        if not sp_df.empty:
-            date_col = "date" if "date" in sp_df.columns else ("tanggal" if "tanggal" in sp_df.columns else None)
-            sp_df["dt_clean"] = pd.to_datetime(sp_df[date_col], errors="coerce").dt.date if date_col else None
-            sp_df["actual_qty"] = pd.to_numeric(sp_df.get("actual_qty", 0), errors="coerce").fillna(0)
-            day_sp = sp_df[sp_df["dt_clean"] == selected_daily_date]
+        if not sub_sp.empty:
+            if "updated_at" in sub_sp.columns:
+                date_col = "updated_at"
+            elif "date" in sub_sp.columns:
+                date_col = "date"
+            elif "tanggal" in sub_sp.columns:
+                date_col = "tanggal"
+            else:
+                date_col = None
+        
+            sub_sp["dt_clean"] = pd.to_datetime(sub_sp[date_col], errors="coerce").dt.date if date_col else None
+            sub_sp["actual_qty"] = pd.to_numeric(sub_sp.get("actual_qty", 0), errors="coerce").fillna(0)
+            
+            if "dt_clean" in sub_sp.columns:
+                day_sp = sub_sp[sub_sp["dt_clean"] == selected_daily_date]
+            else:
+                day_sp = pd.DataFrame()
         else:
             day_sp = pd.DataFrame()
 
@@ -550,12 +562,20 @@ elif selected_tab == "01 Dashboard Toko":
                 st.markdown("##### 📈 Tren Penjualan Harian Per Minggu")
 
                 date_range = pd.date_range(start=start_date, end=end_date).date
-                if not sub_sp.empty and "dt_clean" in sub_sp.columns:
-                    sub_sp["actual_qty"] = pd.to_numeric(sub_sp["actual_qty"], errors="coerce").fillna(0)
-                    daily_agg = sub_sp.groupby("dt_clean")["actual_qty"].sum()
-                    trend_values = [daily_agg.get(d, 0) for d in date_range]
+                if not sub_sp.empty:
+                    if "updated_at" in sub_sp.columns:
+                        date_col = "updated_at"
+                    elif "date" in sub_sp.columns:
+                        date_col = "date"
+                    elif "tanggal" in sub_sp.columns:
+                        date_col = "tanggal"
+                    else:
+                        date_col = None
+                
+                    sub_sp["dt_clean"] = pd.to_datetime(sub_sp[date_col], errors="coerce").dt.date if date_col else None
+                    sub_sp["actual_qty"] = pd.to_numeric(sub_sp.get("actual_qty", 0), errors="coerce").fillna(0)
                 else:
-                    trend_values = [0] * len(date_range)
+                    sub_sp["dt_clean"] = None
 
                 daily_trend = pd.DataFrame({"Tanggal": date_range, "Actual": trend_values})
 
