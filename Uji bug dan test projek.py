@@ -320,30 +320,39 @@ elif selected_tab == "01 Dashboard Toko":
         default_daily_idx = date_options.index(today_date) if today_date in date_options else 0
         selected_daily_date = st.selectbox("📅 Pilih Tanggal Evaluasi:", date_options, index=default_daily_idx, key="detail_daily_date")
 
-        # Pastikan sub_sp ada (buat dataframe kosong jika belum terdefinisi)
+       # Pastikan sub_sp ada
         if 'sub_sp' not in locals() or sub_sp is None:
-            sub_sp = pd.DataFrame(columns=["person_name", "actual_qty", "updated_at"])
-
-        # Filter Data Sales Person Harian
-        if not sub_sp.empty:
-            if "updated_at" in sub_sp.columns:
-                date_col = "updated_at"
-            elif "date" in sub_sp.columns:
-                date_col = "date"
-            elif "tanggal" in sub_sp.columns:
-                date_col = "tanggal"
-            else:
-                date_col = None
+            sub_sp = pd.DataFrame()
         
-            sub_sp["dt_clean"] = pd.to_datetime(sub_sp[date_col], errors="coerce").dt.date if date_col else None
+        # Tampilkan nama kolom di terminal/layar untuk memastikan nama aslinya
+        # st.write("Kolom yang tersedia di sub_sp:", list(sub_sp.columns)) 
+        
+        if not sub_sp.empty:
+            # Cari kolom tanggal secara fleksibel (mengabaikan huruf besar/kecil atau spasi)
+            cols_lower = [str(c).strip().lower() for c in sub_sp.columns]
+            
+            date_col = None
+            if "updated_at" in cols_lower:
+                date_col = sub_sp.columns[cols_lower.index("updated_at")]
+            elif "date" in cols_lower:
+                date_col = sub_sp.columns[cols_lower.index("date")]
+            elif "tanggal" in cols_lower:
+                date_col = sub_sp.columns[cols_lower.index("tanggal")]
+        
+            if date_col:
+                sub_sp["dt_clean"] = pd.to_datetime(sub_sp[date_col], errors="coerce").dt.date
+            else:
+                sub_sp["dt_clean"] = None
+        
             sub_sp["actual_qty"] = pd.to_numeric(sub_sp.get("actual_qty", 0), errors="coerce").fillna(0)
             
-            if "dt_clean" in sub_sp.columns:
+            if sub_sp["dt_clean"] is not None:
                 day_sp = sub_sp[sub_sp["dt_clean"] == selected_daily_date]
             else:
                 day_sp = pd.DataFrame()
         else:
             day_sp = pd.DataFrame()
+
 
         # Target Kasir Harian
         tot_target_full = pd.to_numeric(si_df.get("target_qty", 0), errors="coerce").fillna(0).sum()
