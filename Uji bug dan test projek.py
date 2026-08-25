@@ -399,57 +399,184 @@ elif selected_tab == "01 Dashboard Toko":
             )
             st.plotly_chart(fig_trend, use_container_width=True)
 
-        # =========================================================
+                # =========================================================
         # 2. MODE: HARIAN (DAILY TARGET)
         # =========================================================
         elif view_mode == "☀️ Harian (Daily Target)":
+            # Selectbox pilihan tanggal harian berdasarkan rentang periode
             date_options = [start_date + pd.Timedelta(days=i) for i in range((end_date - start_date).days + 1)]
             default_daily_idx = date_options.index(today_date) if today_date in date_options else 0
             selected_daily_date = st.selectbox("📅 Pilih Tanggal Harian:", date_options, index=default_daily_idx, key="daily_date_picker")
 
-            # FIX FILTER HARIAN
+            # Filter data harian transaksi kasir
             if not sub_sp.empty and "dt_clean" in sub_sp.columns:
                 sub_sp["actual_qty"] = pd.to_numeric(sub_sp.get("actual_qty", 0), errors="coerce").fillna(0)
                 day_sp = sub_sp[sub_sp["dt_clean"] == selected_daily_date]
             else:
                 day_sp = pd.DataFrame()
 
-            # TOP CONTRIBUTOR
+            # Target Harian Toko & Target Kasir (Target Toko / 3)
+            tot_target_full = pd.to_numeric(sub_si.get("target_qty", 0), errors="coerce").fillna(0).sum()
+            daily_target = tot_target_full / total_days if total_days > 0 else 0
+            target_kasir = daily_target / 3
+
+            # --- AMBIL DATA CONTRIBUTOR (TERMASUK YANG BELUM INPUT DATA) ---
             top_person = "-"
-            if not day_sp.empty:
-                person_col = "person_name" if "person_name" in day_sp.columns else ("sales_person" if "sales_person" in day_sp.columns else None)
-                if person_col:
-                    top_p_df = day_sp.groupby(person_col)["actual_qty"].sum().reset_index()
-                    if not top_p_df.empty and top_p_df["actual_qty"].max() > 0:
-                        top_person = top_p_df.sort_values(by="actual_qty", ascending=False).iloc[0][person_col]
+            person_summary = pd.DataFrame()
 
-            # TOP ITEM
-            top_item = "-"
-            if not sub_si.empty and "item_name" in sub_si.columns:
-                sub_si["actual_qty"] = pd.to_numeric(sub_si.get("actual_qty", 0), errors="coerce").fillna(0)
-                top_i_df = sub_si.groupby("item_name")["actual_qty"].sum().reset_index()
-                if not top_i_df.empty and top_i_df["actual_qty"].max() > 0:
-                    top_item = top_i_df.sort_values(by="actual_qty", ascending=False).iloc[0]["item_name"]
-
-            tc1, tc2 = st.columns(2)
-            tc1.markdown(f"""
-            <div class='app-card' style='padding: 10px;'>
-                <span style='color:#94a3b8; font-size:10px;'>🥇 TOP CONTRIBUTOR</span>
-                <p style='color:#00f0ff; font-size:14px; font-weight:bold; margin:2px 0 0 0;'>{top_person}</p>
-            </div>
-            """, unsafe_allow_html=True)
+            # 1. Cari nama kolom sales person
+            person_col_master = "person_name" if "person_name" in sp_df.columns else ("sales_person" if "sales_person" in sp_df.columns else None)
             
-            tc2.markdown(f"""
-            <div class='app-card' style='padding: 10px;'>
-                <span style='color:#94a3b8; font-size:10px;'>📦 TOP ITEM</span>
-                <p style='color:#38bdf8; font-size:14px; font-weight:bold; margin:2px 0 0 0;'>{top_item}</p>
-            </div>
-            """, unsafe_allow_html=True)
+            if person_col_master:
+                # 2. Ambil master seluruh personil unik
+                all_persons = pd.DataFrame({person_col_master: sp_df[person_col_master].dropna().unique()})
+                
+                # 3. Aggregasi transaksi harian
+                if not day_sp.empty:
+                    day_sales = day_sp.groupby(person_col_master)["actual_qty"].sum().reset_index()
+                else:
+                    day_sales = pd.DataFrame(columns=[person_col_master, "actual_qty"])
+
+                # 4. Merge seluruh personil (Fill 0 untuk kasir yang belum input)
+                person_summary = pd.merge(all_persons, day_sales, on=person_col_master, how="left")
+                person_summary["actual_qty"] = person_summary["actual_qty"].fillna(0)
+                person_summary.columns = ["Nama Kasir", "Actual Qty"]
+                
+                # Urutkan dari capaian tertinggi
+                person_summary = person_summary.sort_values(by="Actual Qty", ascending=False).reset_index(drop=True)
+                
+                if not person_summary.empty and person_summary.iloc[0]["Actual Qty"] > 0:
+                    top_person = person_summary.iloc[0]["Nama Kasir"]
+
+            # --- AMBIL DATA ITEM HARIAN ---
+            top_item = "-"
+            item_summary = pd.DataFrame()
+            if not sub_si.empty and "item_name" in sub_si.columns:
+                sub_si["target_qty"] = pd.to_numeric(sub_si.get("target_qty", 0), errors="coerce").fillna(0)
+                sub_si["actual_qty"] = pd.to_numeric(sub_si.get("actual_qty", 0), errors="coerce").fillna(0)
+                
+                item_summary = sub_si.groupby("item_name").agg({"target_qty": "sum", "actual_qty": "sum"}).reset_index()
+                item_summary["daily_target"] = item_summary["target_qty"] / total_days
+                item_summary["gap"] = item_summary["daily_target"] - item_summary["actual_qty"]
+                item_summary["ach"] = item_summary.apply(lambda r: (r["actual_qty"] / r["daily_target"] * 100) if r["daily_target"] > 0 else 0, axis=1)
+                item_summary = item_summary.sort_values(by="actual_qty", ascending=False)
+                
+                if not item_summary.empty and item_summary.iloc[0]["actual_qty"] > 0:
+                    top_item = item_summary.iloc[0]["item_name"]
+
+            # =========================================================
+            # LAYOUT 2x1 CARD TOP CONTRIBUTOR & TOP ITEM DENGAN POPOVER
+            # =========================================================
+            tc1, tc2 = st.columns(2)
+            
+            # --- CARD 1: TOP CONTRIBUTOR ---
+            with tc1:
+                st.markdown(f"""
+                <div class='app-card' style='padding: 10px; margin-bottom: 5px;'>
+                    <span style='color:#94a3b8; font-size:10px;'>🥇 TOP CONTRIBUTOR</span>
+                    <p style='color:#00f0ff; font-size:14px; font-weight:bold; margin:2px 0 0 0;'>{top_person}</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                with st.popover("🔍 Detail Contributor"):
+                    st.markdown(f"### 🏆 Detail Performa Kasir ({selected_daily_date})")
+                    st.caption(f"🎯 Target Kasir Harian: **{target_kasir:,.0f} Pcs** (Target Toko / 3)")
+
+                    if not person_summary.empty:
+                        # PODIUM 1 - 3
+                        st.markdown("#### 🥇 Podium Kasir Teratas")
+                        pod1, pod2, pod3 = st.columns(3)
+                        if len(person_summary) >= 1:
+                            pod1.metric("🥇 Juara 1", f"{person_summary.iloc[0]['Nama Kasir']}", f"{person_summary.iloc[0]['Actual Qty']:,.0f} Pcs")
+                        if len(person_summary) >= 2:
+                            pod2.metric("🥈 Juara 2", f"{person_summary.iloc[1]['Nama Kasir']}", f"{person_summary.iloc[1]['Actual Qty']:,.0f} Pcs")
+                        if len(person_summary) >= 3:
+                            pod3.metric("🥉 Juara 3", f"{person_summary.iloc[2]['Nama Kasir']}", f"{person_summary.iloc[2]['Actual Qty']:,.0f} Pcs")
+
+                        # TABEL PERFORMA KASIR
+                        tot_actual_day = person_summary["Actual Qty"].sum()
+                        person_summary["Kontribusi (%)"] = (person_summary["Actual Qty"] / tot_actual_day * 100) if tot_actual_day > 0 else 0
+                        person_summary["Status Target"] = person_summary["Actual Qty"].apply(
+                            lambda x: "✅ Achieved" if x >= target_kasir and target_kasir > 0 else ("⚠️ Belum Ada Input" if x == 0 else "❌ Belum Achieved")
+                        )
+
+                        st.markdown("<br>", unsafe_allow_html=True)
+                        st.markdown("#### 📋 Tabel Seluruh Personil Toko")
+                        st.dataframe(
+                            person_summary[["Nama Kasir", "Actual Qty", "Kontribusi (%)", "Status Target"]].style.format({
+                                "Actual Qty": "{:,.0f}",
+                                "Kontribusi (%)": "{:.1f}%"
+                            }),
+                            use_container_width=True, hide_index=True
+                        )
+
+                        # GRAFIK PENJUALAN KASIR
+                        fig_p = px.bar(
+                            person_summary, x="Nama Kasir", y="Actual Qty",
+                            text="Actual Qty", title="📊 Grafik Penjualan Personil (Pcs)",
+                            color_discrete_sequence=['#00f0ff']
+                        )
+                        if target_kasir > 0:
+                            fig_p.add_hline(y=target_kasir, line_dash="dash", line_color="#ef4444", annotation_text="Target Kasir")
+                        fig_p.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(color="#ffffff"))
+                        st.plotly_chart(fig_p, use_container_width=True)
+                    else:
+                        st.info("Data personil toko tidak ditemukan.")
+
+            # --- CARD 2: TOP ITEM ---
+            with tc2:
+                st.markdown(f"""
+                <div class='app-card' style='padding: 10px; margin-bottom: 5px;'>
+                    <span style='color:#94a3b8; font-size:10px;'>📦 TOP ITEM</span>
+                    <p style='color:#38bdf8; font-size:14px; font-weight:bold; margin:2px 0 0 0;'>{top_item}</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                with st.popover("🔍 Detail Top Item"):
+                    st.markdown(f"### 📦 Detail Performa Produk ({selected_daily_date})")
+                    
+                    if not item_summary.empty:
+                        # PODIUM TOP ITEM
+                        st.markdown("#### 📦 Top 3 Best Seller Item")
+                        ipod1, ipod2, ipod3 = st.columns(3)
+                        if len(item_summary) >= 1:
+                            ipod1.metric("🥇 Top 1", f"{item_summary.iloc[0]['item_name']}", f"{item_summary.iloc[0]['actual_qty']:,.0f} Pcs")
+                        if len(item_summary) >= 2:
+                            ipod2.metric("🥈 Top 2", f"{item_summary.iloc[1]['item_name']}", f"{item_summary.iloc[1]['actual_qty']:,.0f} Pcs")
+                        if len(item_summary) >= 3:
+                            ipod3.metric("🥉 Top 3", f"{item_summary.iloc[2]['item_name']}", f"{item_summary.iloc[2]['actual_qty']:,.0f} Pcs")
+
+                        # GRAFIK TARGET VS ACTUAL (TOP 5 ITEM)
+                        st.markdown("<br>", unsafe_allow_html=True)
+                        st.markdown("#### 📊 Grafik Target vs Actual (Top 5 Item)")
+                        top5_items = item_summary.head(5)
+                        fig_i = go.Figure()
+                        fig_i.add_trace(go.Bar(x=top5_items["item_name"], y=top5_items["daily_target"], name="Target Harian", marker_color="#94a3b8"))
+                        fig_i.add_trace(go.Bar(x=top5_items["item_name"], y=top5_items["actual_qty"], name="Actual Sales", marker_color="#38bdf8"))
+                        fig_i.update_layout(barmode='group', paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(color="#ffffff"), height=300)
+                        st.plotly_chart(fig_i, use_container_width=True)
+
+                        # TABEL DETAIL ITEM
+                        st.markdown("#### 📋 Tabel Target & Capaian Produk")
+                        item_display = item_summary[["item_name", "daily_target", "actual_qty", "gap", "ach"]].copy()
+                        item_display.columns = ["Nama Item", "Target Harian", "Actual", "Sisa Gap", "% Ach"]
+                        st.dataframe(
+                            item_display.style.format({
+                                "Target Harian": "{:,.0f}",
+                                "Actual": "{:,.0f}",
+                                "Sisa Gap": "{:,.0f}",
+                                "% Ach": "{:.1f}%"
+                            }),
+                            use_container_width=True, hide_index=True
+                        )
+                    else:
+                        st.info("Belum ada data item untuk tanggal ini.")
 
             st.markdown("<br>", unsafe_allow_html=True)
 
-            tot_target_full = pd.to_numeric(sub_si.get("target_qty", 0), errors="coerce").fillna(0).sum()
-            daily_target = tot_target_full / total_days if total_days > 0 else 0
+            # =========================================================
+            # METRIC GRID 2x2 HARIAN
+            # =========================================================
             daily_actual = day_sp["actual_qty"].sum() if not day_sp.empty else 0
             daily_gap = daily_target - daily_actual
             daily_ach = (daily_actual / daily_target * 100) if daily_target > 0 else 0
@@ -462,6 +589,8 @@ elif selected_tab == "01 Dashboard Toko":
             g_col3, g_col4 = st.columns(2)
             g_col3.metric("📉 Sisa Gap Harian", f"{max(daily_gap, 0):,.0f} Pcs")
             g_col4.metric("⚡ % Ach Harian", f"{daily_ach:.1f}%")
+
+
 
         # =========================================================
         # 3. MODE: BULANAN
