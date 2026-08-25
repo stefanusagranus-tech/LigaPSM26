@@ -296,7 +296,10 @@ elif selected_tab == "01 Dashboard Toko":
     # KONDISI A: TAMPILAN HALAMAN DETAIL (HEADER UTAMA & FILTER DI-HIDE)
     # =========================================================
     if st.session_state.active_detail_view == "detail_harian":
-            
+
+        sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
+        sub_sp = sales_person_df.copy()
+        
         # Tombol Kembali di Paling Atas
         if st.button("⬅️ Kembali ke Overview Penjualan", key="back_to_ov"):
             st.session_state.active_detail_view = None
