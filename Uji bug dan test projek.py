@@ -330,7 +330,7 @@ elif selected_tab == "01 Dashboard Toko":
             sub_sp = pd.DataFrame()
         
         # Buka komentar di bawah jika ingin melihat daftar kolom di terminal/layar
-        # st.write("Kolom yang tersedia di sub_sp:", list(sub_sp.columns)) 
+        st.write("Kolom yang tersedia di sub_sp:", list(sub_sp.columns)) 
         
         if not sub_sp.empty:
             # Cari kolom tanggal secara fleksibel (mengabaikan huruf besar/kecil atau spasi)
