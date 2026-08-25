@@ -147,6 +147,44 @@ div.stButton > button {
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
+# =========================================================
+# 2. LETAKKAN KODE CSS GLOBAL DI SINI
+# =========================================================
+st.markdown("""
+<style>
+    /* Styling Neon Table Container */
+    .neon-table-container {
+        width: 100%;
+        overflow-x: auto;
+        border: 1px solid #00f0ff;
+        border-radius: 12px;
+        padding: 8px;
+        background: #0f172a;
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+        margin-bottom: 20px;
+    }
+    .neon-table {
+        width: 100%;
+        border-collapse: collapse;
+        color: #f8fafc;
+        font-size: 13px;
+    }
+    .neon-table th {
+        border-bottom: 2px solid #00f0ff;
+        padding: 8px;
+        text-align: left;
+        color: #00f0ff;
+    }
+    .neon-table td {
+        padding: 8px;
+        border-bottom: 1px solid #1e293b;
+    }
+    /* Warna Indikator Teks */
+    .text-green { color: #10b981; font-weight: bold; }
+    .text-cyan { color: #38bdf8; font-weight: bold; }
+    .text-red { color: #ef4444; font-weight: bold; }
+</style>
+""", unsafe_allow_html=True)
 
 # =========================================================
 # 4. LOGIN PAGE
