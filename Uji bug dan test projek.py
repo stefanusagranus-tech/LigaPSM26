@@ -245,18 +245,24 @@ elif selected_tab == "01 Dashboard Toko":
     )
     st.markdown("<br>", unsafe_allow_html=True)
 
-    si_df = st.session_state.sales_item_df.copy()
-    sp_df = st.session_state.sales_person_df.copy()
-    periods_df = st.session_state.periods_df.copy()
+    periods_df = st.session_state.get("periods_df", pd.DataFrame())
+    si_df = st.session_state.get("sales_item_df", pd.DataFrame()).copy()
+    sp_df = st.session_state.get("sales_person_df", pd.DataFrame()).copy()
+
+    # Ambil daftar nama periode dari DataFrame
+    period_options = list(periods_df["period_name"].dropna().unique()) if not periods_df.empty and "period_name" in periods_df.columns else []
 
     if sub_tab01 == "📊 Overview Penjualan":
-        selected_p_overview = st.selectbox("🗓️ Filter Periode:", ["Semua Periode (Overall)"] + list(periods_dict.keys()), key="ov_period_select")
+        selected_p_overview = st.selectbox("🗓️ Filter Periode:", ["Semua Periode (Overall)"] + period_options, key="ov_period_select")
 
         if selected_p_overview != "Semua Periode (Overall)":
-            p_id = periods_dict[selected_p_overview]
-            sub_periods = periods_df[periods_df["period_id"] == p_id]
-            sub_si = si_df[si_df["period_id"] == p_id]
-            sub_sp = sp_df[sp_df["period_id"] == p_id]
+            # Cari period_id langsung dari DataFrame
+            matched_period = periods_df[periods_df["period_name"] == selected_p_overview]
+            p_id = matched_period.iloc[0]["period_id"] if not matched_period.empty else None
+            
+            sub_periods = periods_df[periods_df["period_id"] == p_id] if p_id else pd.DataFrame()
+            sub_si = si_df[si_df["period_id"] == p_id] if p_id else pd.DataFrame()
+            sub_sp = sp_df[sp_df["period_id"] == p_id] if p_id else pd.DataFrame()
         else:
             sub_periods = periods_df
             sub_si = si_df
@@ -293,20 +299,30 @@ elif selected_tab == "01 Dashboard Toko":
 
     elif sub_tab01 == "📦 Detail Item & Performa Toko":
         search_query = st.text_input("🔍 Cari Produk:", placeholder="Ketik nama item...", key="search_item_mob")
-        selected_p_detail = st.selectbox("Filter Periode", ["Semua Periode"] + list(periods_dict.keys()), key="period_detail_mob")
+        selected_p_detail = st.selectbox("Filter Periode", ["Semua Periode"] + period_options, key="period_detail_mob")
         
-        si_det = si_df[si_df["period_id"] == periods_dict[selected_p_detail]].copy() if selected_p_detail != "Semua Periode" else si_df.copy()
-        si_det["target_qty"] = pd.to_numeric(si_det.get("target_qty", 0), errors="coerce").fillna(0)
-        si_det["actual_qty"] = pd.to_numeric(si_det.get("actual_qty", 0), errors="coerce").fillna(0)
+        if selected_p_detail != "Semua Periode":
+            matched_p = periods_df[periods_df["period_name"] == selected_p_detail]
+            p_id = matched_p.iloc[0]["period_id"] if not matched_p.empty else None
+            si_det = si_df[si_df["period_id"] == p_id].copy() if p_id else pd.DataFrame()
+        else:
+            si_det = si_df.copy()
+        
+        if not si_det.empty:
+            si_det["target_qty"] = pd.to_numeric(si_det.get("target_qty", 0), errors="coerce").fillna(0)
+            si_det["actual_qty"] = pd.to_numeric(si_det.get("actual_qty", 0), errors="coerce").fillna(0)
 
-        item_grouped = si_det.groupby("item_name").agg({"target_qty": "sum", "actual_qty": "sum"}).reset_index()
-        item_grouped["gap"] = item_grouped["target_qty"] - item_grouped["actual_qty"]
-        item_grouped["ach"] = item_grouped.apply(lambda r: (r["actual_qty"] / r["target_qty"] * 100) if r["target_qty"] > 0 else 0, axis=1)
+            item_grouped = si_det.groupby("item_name").agg({"target_qty": "sum", "actual_qty": "sum"}).reset_index()
+            item_grouped["gap"] = item_grouped["target_qty"] - item_grouped["actual_qty"]
+            item_grouped["ach"] = item_grouped.apply(lambda r: (r["actual_qty"] / r["target_qty"] * 100) if r["target_qty"] > 0 else 0, axis=1)
 
-        if search_query:
-            item_grouped = item_grouped[item_grouped["item_name"].str.contains(search_query, case=False, na=False)]
+            if search_query:
+                item_grouped = item_grouped[item_grouped["item_name"].str.contains(search_query, case=False, na=False)]
 
-        st.dataframe(item_grouped, use_container_width=True)
+            st.dataframe(item_grouped, use_container_width=True)
+        else:
+            st.info("Tidak ada data item untuk periode ini.")
+
 
 # --- TAB 02: RAPORT PERSONIL TOKO ---
 elif selected_tab == "02 Raport Personil Toko":
