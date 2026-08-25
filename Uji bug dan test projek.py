@@ -269,7 +269,7 @@ elif selected_tab == "01 Dashboard Toko":
             if curr_name in period_options:
                 default_index = period_options.index(curr_name) + 1  # +1 karena index 0 adalah "Semua Periode”
 
-          # --- SUBTAB 1: OVERVIEW PENJUALAN ---
+            # --- SUBTAB 1: OVERVIEW PENJUALAN ---
     if sub_tab01 == "📊 Overview Penjualan":
         view_mode = st.radio(
             "Mode Tampilan Overview:",
@@ -281,12 +281,10 @@ elif selected_tab == "01 Dashboard Toko":
         # FILTER PERIODE BULANAN VS REGULER
         # =========================================================
         if view_mode == "🗓️ Bulanan":
-            # Buat opsi bulan unik secara dinamis dari periods_df
             if not periods_df.empty and "start_date" in periods_df.columns:
                 periods_df["start_dt_temp"] = pd.to_datetime(periods_df["start_date"], errors="coerce")
                 periods_df["month_year"] = periods_df["start_dt_temp"].dt.strftime("%B %Y")
                 
-                # Buat label lengkap dengan rentang tanggal bulan (misal: Agustus 2026 (01 - 31 Agustus 2026))
                 monthly_options_dict = {}
                 for my, group in periods_df.groupby("month_year", sort=False):
                     min_d = group["start_dt_temp"].min().strftime("%d")
@@ -298,7 +296,6 @@ elif selected_tab == "01 Dashboard Toko":
                 selected_m_label = st.selectbox("🗓️ Pilih Bulan Penjualan:", monthly_labels, key="ov_month_select")
                 selected_month_year = monthly_options_dict[selected_m_label]
 
-                # Filter data berdasarkan bulan terpilih
                 month_periods = periods_df[periods_df["month_year"] == selected_month_year]
                 same_month_p_ids = month_periods["period_id"].tolist()
 
@@ -308,7 +305,6 @@ elif selected_tab == "01 Dashboard Toko":
             else:
                 sub_periods, sub_si, sub_sp = periods_df, si_df, sp_df
         else:
-            # Filter Periode Reguler untuk Mode 1 Periode Full & Harian
             selected_p_overview = st.selectbox(
                 "🗓️ Filter Periode:", 
                 ["Semua Periode (Overall)"] + period_options, 
@@ -323,9 +319,19 @@ elif selected_tab == "01 Dashboard Toko":
                 sub_si = si_df[si_df["period_id"] == p_id] if p_id else pd.DataFrame()
                 sub_sp = sp_df[sp_df["period_id"] == p_id] if p_id else pd.DataFrame()
             else:
-                sub_periods, sub_si, sub_sp = periods_df, si_df, sp_df
+                sub_periods, sub_si, sub_sp = periods_df, si_df, sp_sp
 
-        # Hitung rentang tanggal & sisa hari kerja
+        # FIX TANGGAL: Normalisasi kolom tanggal pada sub_sp ke format datetime.date
+        if not sub_sp.empty:
+            date_col = "date" if "date" in sub_sp.columns else ("tanggal" if "tanggal" in sub_sp.columns else None)
+            if date_col:
+                sub_sp["dt_clean"] = pd.to_datetime(sub_sp[date_col], errors="coerce").dt.date
+            else:
+                sub_sp["dt_clean"] = None
+        else:
+            sub_sp["dt_clean"] = None
+
+        # Hitung rentang tanggal
         if not sub_periods.empty and "start_date" in sub_periods.columns:
             start_date = pd.to_datetime(sub_periods["start_date"].min()).date()
             end_date = pd.to_datetime(sub_periods["end_date"].max()).date()
@@ -349,7 +355,6 @@ elif selected_tab == "01 Dashboard Toko":
             sisa_target = max(tot_gap, 0)
             target_per_day_remaining = sisa_target / remaining_days if sisa_target > 0 else 0
 
-            # Grid Kapsul Ringkasan
             c1, c2, c3 = st.columns(3)
             c1.metric("🎯 Target Periode", f"{tot_target:,.0f} Pcs")
             c2.metric("📦 Actual Sales", f"{tot_actual:,.0f} Pcs")
@@ -363,13 +368,16 @@ elif selected_tab == "01 Dashboard Toko":
             st.markdown("<br>", unsafe_allow_html=True)
             st.markdown("##### 📈 Tren Penjualan Harian Per Minggu")
 
-            date_range = pd.date_range(start=start_date, end=end_date)
-            if not sub_sp.empty and "date" in sub_sp.columns:
-                sub_sp["dt"] = pd.to_datetime(sub_sp["date"], errors="coerce").dt.date
-                daily_trend = sub_sp.groupby("dt")["actual_qty"].sum().reindex(date_range.date, fill_value=0).reset_index()
-                daily_trend.columns = ["Tanggal", "Actual"]
+            # FIX GRAFIK TREN PENJUALAN
+            date_range = pd.date_range(start=start_date, end=end_date).date
+            if not sub_sp.empty and "dt_clean" in sub_sp.columns:
+                sub_sp["actual_qty"] = pd.to_numeric(sub_sp["actual_qty"], errors="coerce").fillna(0)
+                daily_agg = sub_sp.groupby("dt_clean")["actual_qty"].sum()
+                trend_values = [daily_agg.get(d, 0) for d in date_range]
             else:
-                daily_trend = pd.DataFrame({"Tanggal": date_range.date, "Actual": [0]*len(date_range)})
+                trend_values = [0] * len(date_range)
+
+            daily_trend = pd.DataFrame({"Tanggal": date_range, "Actual": trend_values})
 
             fig_trend = go.Figure()
             fig_trend.add_trace(go.Scatter(
@@ -399,22 +407,28 @@ elif selected_tab == "01 Dashboard Toko":
             default_daily_idx = date_options.index(today_date) if today_date in date_options else 0
             selected_daily_date = st.selectbox("📅 Pilih Tanggal Harian:", date_options, index=default_daily_idx, key="daily_date_picker")
 
-            if not sub_sp.empty and "date" in sub_sp.columns:
-                sub_sp["dt"] = pd.to_datetime(sub_sp["date"], errors="coerce").dt.date
-                day_sp = sub_sp[sub_sp["dt"] == selected_daily_date]
+            # FIX FILTER HARIAN
+            if not sub_sp.empty and "dt_clean" in sub_sp.columns:
+                sub_sp["actual_qty"] = pd.to_numeric(sub_sp.get("actual_qty", 0), errors="coerce").fillna(0)
+                day_sp = sub_sp[sub_sp["dt_clean"] == selected_daily_date]
             else:
                 day_sp = pd.DataFrame()
 
+            # TOP CONTRIBUTOR
             top_person = "-"
-            if not day_sp.empty and "person_name" in day_sp.columns:
-                top_p_df = day_sp.groupby("person_name")["actual_qty"].sum().reset_index()
-                if not top_p_df.empty:
-                    top_person = top_p_df.sort_values(by="actual_qty", ascending=False).iloc[0]["person_name"]
+            if not day_sp.empty:
+                person_col = "person_name" if "person_name" in day_sp.columns else ("sales_person" if "sales_person" in day_sp.columns else None)
+                if person_col:
+                    top_p_df = day_sp.groupby(person_col)["actual_qty"].sum().reset_index()
+                    if not top_p_df.empty and top_p_df["actual_qty"].max() > 0:
+                        top_person = top_p_df.sort_values(by="actual_qty", ascending=False).iloc[0][person_col]
 
+            # TOP ITEM
             top_item = "-"
             if not sub_si.empty and "item_name" in sub_si.columns:
-                top_i_df = sub_si.groupby("item_name")["actual_qty"].sum().reset_index() if "actual_qty" in sub_si.columns else pd.DataFrame()
-                if not top_i_df.empty:
+                sub_si["actual_qty"] = pd.to_numeric(sub_si.get("actual_qty", 0), errors="coerce").fillna(0)
+                top_i_df = sub_si.groupby("item_name")["actual_qty"].sum().reset_index()
+                if not top_i_df.empty and top_i_df["actual_qty"].max() > 0:
                     top_item = top_i_df.sort_values(by="actual_qty", ascending=False).iloc[0]["item_name"]
 
             tc1, tc2 = st.columns(2)
@@ -436,7 +450,7 @@ elif selected_tab == "01 Dashboard Toko":
 
             tot_target_full = pd.to_numeric(sub_si.get("target_qty", 0), errors="coerce").fillna(0).sum()
             daily_target = tot_target_full / total_days if total_days > 0 else 0
-            daily_actual = pd.to_numeric(day_sp.get("actual_qty", 0), errors="coerce").fillna(0).sum() if not day_sp.empty else 0
+            daily_actual = day_sp["actual_qty"].sum() if not day_sp.empty else 0
             daily_gap = daily_target - daily_actual
             daily_ach = (daily_actual / daily_target * 100) if daily_target > 0 else 0
 
@@ -450,7 +464,7 @@ elif selected_tab == "01 Dashboard Toko":
             g_col4.metric("⚡ % Ach Harian", f"{daily_ach:.1f}%")
 
         # =========================================================
-        # 3. MODE: BULANAN (UPDATE BOBOT PPS & FILTER NAMA BULAN)
+        # 3. MODE: BULANAN
         # =========================================================
         elif view_mode == "🗓️ Bulanan":
             tot_target = pd.to_numeric(sub_si.get("target_qty", 0), errors="coerce").fillna(0).sum()
@@ -458,7 +472,6 @@ elif selected_tab == "01 Dashboard Toko":
             tot_gap = tot_target - tot_actual
             tot_ach = (tot_actual / tot_target * 100) if tot_target > 0 else 0
             
-            # Rumus Bobot PPS = (Ach % / 100) * 20
             bobot_pps = (tot_ach / 100) * 20
 
             bm1, bm2, bm3 = st.columns(3)
@@ -470,6 +483,8 @@ elif selected_tab == "01 Dashboard Toko":
             bm4, bm5 = st.columns(2)
             bm4.metric("⚡ % Ach Bulanan", f"{tot_ach:.1f}%")
             bm5.metric("🏆 Indeks Bobot PPS", f"{bobot_pps:.2f} Pt")
+
+
 
             
     # --- SUBTAB 2: DETAIL ITEM & PERFORMA TOKO ---
