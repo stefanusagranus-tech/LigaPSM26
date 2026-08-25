@@ -271,7 +271,7 @@ elif selected_tab == "01 Dashboard Toko":
 
 
 
-    # --- SUBTAB 1: OVERVIEW PENJUALAN ---
+       # --- SUBTAB 1: OVERVIEW PENJUALAN ---
     if sub_tab01 == "📊 Overview Penjualan":
         view_mode = st.radio(
             "Mode Tampilan Overview:",
@@ -291,10 +291,13 @@ elif selected_tab == "01 Dashboard Toko":
             p_id = matched_period.iloc[0]["period_id"] if not matched_period.empty else None
             
             if view_mode == "🗓️ Bulanan" and not matched_period.empty:
-                # Ambil semua periode dalam bulan & tahun yang sama
+                # FIX ERROR: Konversi ke datetime Series sebelum panggil .dt
+                start_series = pd.to_datetime(periods_df["start_dt"])
                 matched_month = matched_period.iloc[0]["start_dt"].month
                 matched_year = matched_period.iloc[0]["start_dt"].year
-                same_month_p_ids = periods_df[(periods_df["start_dt"].dt.month == matched_month) & (periods_df["start_dt"].dt.year == matched_year)]["period_id"].tolist()
+                
+                same_month_mask = (start_series.dt.month == matched_month) & (start_series.dt.year == matched_year)
+                same_month_p_ids = periods_df[same_month_mask]["period_id"].tolist()
                 
                 sub_periods = periods_df[periods_df["period_id"].isin(same_month_p_ids)]
                 sub_si = si_df[si_df["period_id"].isin(same_month_p_ids)]
@@ -308,40 +311,161 @@ elif selected_tab == "01 Dashboard Toko":
             sub_si = si_df
             sub_sp = sp_df
 
+        # Hitung rentang tanggal & sisa hari kerja
         if not sub_periods.empty and "start_date" in sub_periods.columns:
             start_date = pd.to_datetime(sub_periods["start_date"].min()).date()
             end_date = pd.to_datetime(sub_periods["end_date"].max()).date()
         else:
-            start_date = waktu_wib.date().replace(day=1)
-            end_date = waktu_wib.date()
+            start_date = today_date.replace(day=1)
+            end_date = today_date
 
         total_days = max((end_date - start_date).days + 1, 1)
         passed_days = total_days if today_date > end_date else (0 if today_date < start_date else max((today_date - start_date).days + 1, 1))
+        remaining_days = max(total_days - passed_days, 1)
 
-        time_factor = (passed_days / total_days) * 100 if total_days > 0 else 0
-        tot_target = pd.to_numeric(sub_si.get("target_qty", 0), errors="coerce").fillna(0).sum()
-        tot_actual = pd.to_numeric(sub_sp.get("actual_qty", 0), errors="coerce").fillna(0).sum()
+        # =========================================================
+        # 1. MODE: 1 PERIODE FULL
+        # =========================================================
+        if view_mode == "📅 1 Periode Full":
+            tot_target = pd.to_numeric(sub_si.get("target_qty", 0), errors="coerce").fillna(0).sum()
+            tot_actual = pd.to_numeric(sub_sp.get("actual_qty", 0), errors="coerce").fillna(0).sum()
+            tot_gap = tot_target - tot_actual
+            tot_ach = (tot_actual / tot_target * 100) if tot_target > 0 else 0
+            
+            # Target per hari disesuaikan sisa hari kerja
+            sisa_target = max(tot_gap, 0)
+            target_per_day_remaining = sisa_target / remaining_days if sisa_target > 0 else 0
 
-        # Kalkulasi jika mode Harian dipilih
-        if view_mode == "☀️ Harian (Daily Target)":
-            tot_target = tot_target / total_days if total_days > 0 else tot_target
-            tot_actual = tot_actual / max(passed_days, 1)
+            # Grid Kapsul Ringkasan (5 Metrik Rapi)
+            c1, c2, c3 = st.columns(3)
+            c1.metric("🎯 Target Periode", f"{tot_target:,.0f} Pcs")
+            c2.metric("📦 Actual Sales", f"{tot_actual:,.0f} Pcs")
+            c3.metric("⚡ % Ach", f"{tot_ach:.1f}%")
 
-        tot_gap = tot_target - tot_actual
-        tot_ach = (tot_actual / tot_target * 100) if tot_target > 0 else 0
-        weighted_score = (tot_ach / 100) * 20
+            st.markdown("<br>", unsafe_allow_html=True)
+            c4, c5 = st.columns(2)
+            c4.metric("📉 Sisa Gap Target", f"{sisa_target:,.0f} Pcs")
+            c5.metric("🎯 Target/Hari (Sisa)", f"{target_per_day_remaining:,.0f} Pcs/hr")
 
-        m1, m2, m3 = st.columns(3)
-        m1.metric("🎯 Target", f"{tot_target:,.0f} Pcs")
-        m2.metric("📦 Actual", f"{tot_actual:,.0f} Pcs")
-        m3.metric("📉 Sisa Gap", f"{max(tot_gap, 0):,.0f} Pcs")
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown("##### 📈 Tren Penjualan Harian Per Minggu")
 
-        st.markdown("<br>", unsafe_allow_html=True)
-        m4, m5, m6 = st.columns(3)
-        m4.metric("⚡ % Ach Toko", f"{tot_ach:.1f}%")
-        m5.metric("⏳ Time Factor", f"{time_factor:.1f}%")
-        m6.metric("🏆 Indeks Bobot", f"{weighted_score:.1f} Pt")
+            # Simulasi Grafik Tren Penjualan Harian per Tanggal Periode
+            date_range = pd.date_range(start=start_date, end=end_date)
+            # Ambil data aktual per tanggal jika ada, atau buat agregasi
+            if not sub_sp.empty and "date" in sub_sp.columns:
+                sub_sp["dt"] = pd.to_datetime(sub_sp["date"], errors="coerce").dt.date
+                daily_trend = sub_sp.groupby("dt")["actual_qty"].sum().reindex(date_range.date, fill_value=0).reset_index()
+                daily_trend.columns = ["Tanggal", "Actual"]
+            else:
+                daily_trend = pd.DataFrame({"Tanggal": date_range.date, "Actual": [0]*len(date_range)})
 
+            fig_trend = go.Figure()
+            fig_trend.add_trace(go.Scatter(
+                x=daily_trend["Tanggal"], 
+                y=daily_trend["Actual"],
+                mode='lines+markers',
+                line=dict(color='#00f0ff', width=3),
+                marker=dict(size=6, color='#ffffff'),
+                name='Actual Pcs'
+            ))
+            fig_trend.update_layout(
+                height=260,
+                margin=dict(l=10, r=10, t=10, b=10),
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#ffffff"),
+                xaxis=dict(showgrid=False, tickformat="%d %b"),
+                yaxis=dict(showgrid=True, gridcolor="#1e293b")
+            )
+            st.plotly_chart(fig_trend, use_container_width=True)
+
+        # =========================================================
+        # 2. MODE: HARIAN (DAILY TARGET)
+        # =========================================================
+        elif view_mode == "☀️ Harian (Daily Target)":
+            # Selectbox Kalender Perhari Sesuai Periode
+            date_options = [start_date + pd.Timedelta(days=i) for i in range((end_date - start_date).days + 1)]
+            
+            # Default pilihkah tanggal hari ini jika ada di opsi, jika tidak ambil tanggal pertama
+            default_daily_idx = date_options.index(today_date) if today_date in date_options else 0
+            selected_daily_date = st.selectbox("📅 Pilih Tanggal Harian:", date_options, index=default_daily_idx, key="daily_date_picker")
+
+            # Filter data khusus tanggal terpilih
+            if not sub_sp.empty and "date" in sub_sp.columns:
+                sub_sp["dt"] = pd.to_datetime(sub_sp["date"], errors="coerce").dt.date
+                day_sp = sub_sp[sub_sp["dt"] == selected_daily_date]
+            else:
+                day_sp = pd.DataFrame()
+
+            # Hitung Top Contributor & Top Item Hari Tersebut
+            top_person = "-"
+            if not day_sp.empty and "person_name" in day_sp.columns:
+                top_p_df = day_sp.groupby("person_name")["actual_qty"].sum().reset_index()
+                if not top_p_df.empty:
+                    top_person = top_p_df.sort_values(by="actual_qty", ascending=False).iloc[0]["person_name"]
+
+            top_item = "-"
+            if not sub_si.empty and "item_name" in sub_si.columns:
+                # Estimasi item terpilih/sales item
+                top_i_df = sub_si.groupby("item_name")["actual_qty"].sum().reset_index() if "actual_qty" in sub_si.columns else pd.DataFrame()
+                if not top_i_df.empty:
+                    top_item = top_i_df.sort_values(by="actual_qty", ascending=False).iloc[0]["item_name"]
+
+            # Layout 2x1 Top Contributor & Top Item (Di Atas)
+            tc1, tc2 = st.columns(2)
+            tc1.markdown(f"""
+            <div class='app-card' style='padding: 10px;'>
+                <span style='color:#94a3b8; font-size:10px;'>🥇 TOP CONTRIBUTOR</span>
+                <p style='color:#00f0ff; font-size:14px; font-weight:bold; margin:2px 0 0 0;'>{top_person}</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            tc2.markdown(f"""
+            <div class='app-card' style='padding: 10px;'>
+                <span style='color:#94a3b8; font-size:10px;'>📦 TOP ITEM</span>
+                <p style='color:#38bdf8; font-size:14px; font-weight:bold; margin:2px 0 0 0;'>{top_item}</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            # Target Harian Dinamis
+            tot_target_full = pd.to_numeric(sub_si.get("target_qty", 0), errors="coerce").fillna(0).sum()
+            daily_target = tot_target_full / total_days if total_days > 0 else 0
+            daily_actual = pd.to_numeric(day_sp.get("actual_qty", 0), errors="coerce").fillna(0).sum() if not day_sp.empty else 0
+            daily_gap = daily_target - daily_actual
+            daily_ach = (daily_actual / daily_target * 100) if daily_target > 0 else 0
+
+            # Layout Grid 2x2 (Target, Actual, Sisa Gap, % Ach)
+            g_col1, g_col2 = st.columns(2)
+            g_col1.metric("🎯 Target Hari Ini", f"{daily_target:,.0f} Pcs")
+            g_col2.metric("📦 Actual Sales", f"{daily_actual:,.0f} Pcs")
+
+            st.markdown("<br>", unsafe_allow_html=True)
+            g_col3, g_col4 = st.columns(2)
+            g_col3.metric("📉 Sisa Gap Harian", f"{max(daily_gap, 0):,.0f} Pcs")
+            g_col4.metric("⚡ % Ach Harian", f"{daily_ach:.1f}%")
+
+        # =========================================================
+        # 3. MODE: BULANAN
+        # =========================================================
+        elif view_mode == "🗓️ Bulanan":
+            tot_target = pd.to_numeric(sub_si.get("target_qty", 0), errors="coerce").fillna(0).sum()
+            tot_actual = pd.to_numeric(sub_sp.get("actual_qty", 0), errors="coerce").fillna(0).sum()
+            tot_gap = tot_target - tot_actual
+            tot_ach = (tot_actual / tot_target * 100) if tot_target > 0 else 0
+
+            bm1, bm2, bm3 = st.columns(3)
+            bm1.metric("🎯 Target Bulan Ini", f"{tot_target:,.0f} Pcs")
+            bm2.metric("📦 Actual Sales", f"{tot_actual:,.0f} Pcs")
+            bm3.metric("📉 Sisa Gap", f"{max(tot_gap, 0):,.0f} Pcs")
+
+            st.markdown("<br>", unsafe_allow_html=True)
+            bm4, bm5 = st.columns(2)
+            bm4.metric("⚡ % Ach Bulanan", f"{tot_ach:.1f}%")
+            bm5.metric("📅 Sisa Hari Kerja", f"{remaining_days} Hari")
+            
     # --- SUBTAB 2: DETAIL ITEM & PERFORMA TOKO ---
     elif sub_tab01 == "📦 Detail Item & Performa Toko":
         search_query = st.text_input("🔍 Cari Produk:", placeholder="Ketik nama item...", key="search_item_mob")
