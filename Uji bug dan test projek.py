@@ -341,43 +341,61 @@ elif selected_tab == "01 Dashboard Toko":
             else:
                 st.warning("Master data personil toko tidak ditemukan.")
 
-        # --- SUBTAB 2: TOP ITEM ---
+                # =========================================================
+        # SUBTAB 2: DETAIL TOP ITEM (PRODUK - BERDASARKAN TANGGAL)
+        # =========================================================
         with tab_item:
+            # Pastikan sub_si dan day_sp siap digunakan
             if not si_df.empty and "item_name" in si_df.columns:
-                si_df["target_qty"] = pd.to_numeric(si_df.get("target_qty", 0), errors="coerce").fillna(0)
-                si_df["actual_qty"] = pd.to_numeric(si_df.get("actual_qty", 0), errors="coerce").fillna(0)
                 
-                item_summary = si_df.groupby("item_name").agg({"target_qty": "sum", "actual_qty": "sum"}).reset_index()
-                item_summary["daily_target"] = item_summary["target_qty"] / total_days if total_days > 0 else 0
-                item_summary["gap"] = item_summary["daily_target"] - item_summary["actual_qty"]
-                item_summary["ach"] = item_summary.apply(lambda r: (r["actual_qty"] / r["daily_target"] * 100) if r["daily_target"] > 0 else 0, axis=1)
-                item_summary = item_summary.sort_values(by="actual_qty", ascending=False).reset_index(drop=True)
+                # Opsi A: Jika tabel SALES_ITEM di Google Sheets memiliki kolom tanggal (date/tanggal)
+                item_date_col = "date" if "date" in si_df.columns else ("tanggal" if "tanggal" in si_df.columns else None)
+                
+                if item_date_col:
+                    si_df["dt_clean"] = pd.to_datetime(si_df[item_date_col], errors="coerce").dt.date
+                    # Filter data item khusus untuk tanggal yang dipilih
+                    day_si = si_df[si_df["dt_clean"] == selected_daily_date].copy()
+                else:
+                    # Opsi B: Jika SALES_ITEM tidak ada tanggal, kita filter berdasarkan item yang muncul di SALES_PERSONIL pada tanggal tersebut
+                    if not day_sp.empty and "item_name" in day_sp.columns:
+                        active_items_today = day_sp["item_name"].unique()
+                        day_si = si_df[si_df["item_name"].isin(active_items_today)].copy()
+                    else:
+                        day_si = pd.DataFrame(columns=si_df.columns)
 
-                st.markdown("#### 📦 Top 3 Best Seller Item")
-                ipod1, ipod2, ipod3 = st.columns(3)
-                if len(item_summary) >= 1: ipod1.metric("🥇 Top 1", f"{item_summary.iloc[0]['item_name']}", f"{item_summary.iloc[0]['actual_qty']:,.0f} Pcs")
-                if len(item_summary) >= 2: ipod2.metric("🥈 Top 2", f"{item_summary.iloc[1]['item_name']}", f"{item_summary.iloc[1]['actual_qty']:,.0f} Pcs")
-                if len(item_summary) >= 3: ipod3.metric("🥉 Top 3", f"{item_summary.iloc[2]['item_name']}", f"{item_summary.iloc[2]['actual_qty']:,.0f} Pcs")
+                # Jika data harian item tidak kosong, hitung berdasarkan harian
+                if not day_si.empty:
+                    day_si["target_qty"] = pd.to_numeric(day_si.get("target_qty", 0), errors="coerce").fillna(0)
+                    day_si["actual_qty"] = pd.to_numeric(day_si.get("actual_qty", 0), errors="coerce").fillna(0)
+                    
+                    item_summary = day_si.groupby("item_name").agg({"target_qty": "sum", "actual_qty": "sum"}).reset_index()
+                    
+                    # Target harian per item (jika target_qty di sales_item adalah target periode, bagi dengan total_days)
+                    item_summary["daily_target"] = item_summary["target_qty"] / total_days if total_days > 0 else 0
+                    item_summary["gap"] = item_summary["daily_target"] - item_summary["actual_qty"]
+                    item_summary["ach"] = item_summary.apply(lambda r: (r["actual_qty"] / r["daily_target"] * 100) if r["daily_target"] > 0 else 0, axis=1)
+                    item_summary = item_summary.sort_values(by="actual_qty", ascending=False).reset_index(drop=True)
 
-                st.markdown("<br>", unsafe_allow_html=True)
-                col_itbl, col_icht = st.columns([1, 1])
-
-                with col_itbl:
-                    st.markdown("##### 📋 Tabel Capaian Per Produk")
+                    st.markdown(f"#### 📦 Top Best Seller Item (Tanggal: {selected_daily_date})")
+                    
+                    # Tabel Capaian Per Produk Harian
                     item_display = item_summary[["item_name", "daily_target", "actual_qty", "gap", "ach"]].copy()
                     item_display.columns = ["Nama Item", "Target Harian", "Actual", "Sisa Gap", "% Ach"]
-                    st.dataframe(item_display.style.format({"Target Harian": "{:,.0f}", "Actual": "{:,.0f}", "Sisa Gap": "{:,.0f}", "% Ach": "{:.1f}%"}), use_container_width=True, hide_index=True)
-
-                with col_icht:
-                    st.markdown("##### 📊 Target vs Actual (Top 5 Item)")
-                    top5_items = item_summary.head(5)
-                    fig_i = go.Figure()
-                    fig_i.add_trace(go.Bar(x=top5_items["item_name"], y=top5_items["daily_target"], name="Target Harian", marker_color="#94a3b8"))
-                    fig_i.add_trace(go.Bar(x=top5_items["item_name"], y=top5_items["actual_qty"], name="Actual Sales", marker_color="#38bdf8"))
-                    fig_i.update_layout(barmode='group', paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(color="#ffffff"), height=350, margin=dict(l=10, r=10, t=20, b=10))
-                    st.plotly_chart(fig_i, use_container_width=True)
+                    
+                    st.dataframe(
+                        item_display.style.format({
+                            "Target Harian": "{:,.0f}",
+                            "Actual": "{:,.0f}",
+                            "Sisa Gap": "{:,.0f}",
+                            "% Ach": "{:.1f}%"
+                        }),
+                        use_container_width=True, hide_index=True
+                    )
+                else:
+                    st.info(f"📭 Belum ada data penjualan produk tercatat pada tanggal {selected_daily_date}.")
             else:
                 st.warning("Data item produk tidak ditemukan.")
+
 
     # =========================================================
     # KONDISI B: TAMPILAN DASHBOARD UTAMA (TERMASUK SEMUA FILTER)
