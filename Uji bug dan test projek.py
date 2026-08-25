@@ -251,6 +251,9 @@ elif selected_tab == "01 Dashboard Toko":
     si_df = st.session_state.get("sales_item_df", pd.DataFrame()).copy()
     sp_df = st.session_state.get("sales_person_df", pd.DataFrame()).copy()
 
+    # PERBAIKAN: Pastikan today_date terdefinisi di sini
+    today_date = datetime.now(ZoneInfo("Asia/Jakarta")).date()
+
     period_options = list(periods_df["period_name"].dropna().unique()) if not periods_df.empty and "period_name" in periods_df.columns else []
 
     # OTOMATIS DETEKSI PERIODE BERJALAN BERDASARKAN TANGGAL HARI INI
@@ -259,11 +262,14 @@ elif selected_tab == "01 Dashboard Toko":
         periods_df["start_dt"] = pd.to_datetime(periods_df["start_date"], errors="coerce").dt.date
         periods_df["end_dt"] = pd.to_datetime(periods_df["end_date"], errors="coerce").dt.date
         
+        # Sekarang today_date sudah aman digunakan tanpa error
         current_period_match = periods_df[(periods_df["start_dt"] <= today_date) & (periods_df["end_dt"] >= today_date)]
         if not current_period_match.empty:
             curr_name = current_period_match.iloc[0]["period_name"]
             if curr_name in period_options:
-                default_index = period_options.index(curr_name) + 1  # +1 karena index 0 adalah "Semua Periode"
+                default_index = period_options.index(curr_name) + 1  # +1 karena index 0 adalah "Semua Periode”
+
+
 
     # --- SUBTAB 1: OVERVIEW PENJUALAN ---
     if sub_tab01 == "📊 Overview Penjualan":
