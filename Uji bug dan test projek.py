@@ -236,7 +236,9 @@ if selected_tab == "Home":
             st.session_state.active_tab = "04 Pengaturan & Download"
             st.rerun()
 
-# --- TAB 01: DASHBOARD TOKO ---
+# =========================================================
+# TAB 01: DASHBOARD TOKO
+# =========================================================
 elif selected_tab == "01 Dashboard Toko":
     sub_tab01 = st.radio(
         "Pilih Sub-Menu:",
@@ -249,20 +251,52 @@ elif selected_tab == "01 Dashboard Toko":
     si_df = st.session_state.get("sales_item_df", pd.DataFrame()).copy()
     sp_df = st.session_state.get("sales_person_df", pd.DataFrame()).copy()
 
-    # Ambil daftar nama periode dari DataFrame
     period_options = list(periods_df["period_name"].dropna().unique()) if not periods_df.empty and "period_name" in periods_df.columns else []
 
+    # OTOMATIS DETEKSI PERIODE BERJALAN BERDASARKAN TANGGAL HARI INI
+    default_index = 0
+    if not periods_df.empty and "start_date" in periods_df.columns and "end_date" in periods_df.columns:
+        periods_df["start_dt"] = pd.to_datetime(periods_df["start_date"], errors="coerce").dt.date
+        periods_df["end_dt"] = pd.to_datetime(periods_df["end_date"], errors="coerce").dt.date
+        
+        current_period_match = periods_df[(periods_df["start_dt"] <= today_date) & (periods_df["end_dt"] >= today_date)]
+        if not current_period_match.empty:
+            curr_name = current_period_match.iloc[0]["period_name"]
+            if curr_name in period_options:
+                default_index = period_options.index(curr_name) + 1  # +1 karena index 0 adalah "Semua Periode"
+
+    # --- SUBTAB 1: OVERVIEW PENJUALAN ---
     if sub_tab01 == "📊 Overview Penjualan":
-        selected_p_overview = st.selectbox("🗓️ Filter Periode:", ["Semua Periode (Overall)"] + period_options, key="ov_period_select")
+        view_mode = st.radio(
+            "Mode Tampilan Overview:",
+            ["📅 1 Periode Full", "☀️ Harian (Daily Target)", "🗓️ Bulanan"],
+            horizontal=True, key="ov_view_mode"
+        )
+
+        selected_p_overview = st.selectbox(
+            "🗓️ Filter Periode:", 
+            ["Semua Periode (Overall)"] + period_options, 
+            index=default_index, 
+            key="ov_period_select"
+        )
 
         if selected_p_overview != "Semua Periode (Overall)":
-            # Cari period_id langsung dari DataFrame
             matched_period = periods_df[periods_df["period_name"] == selected_p_overview]
             p_id = matched_period.iloc[0]["period_id"] if not matched_period.empty else None
             
-            sub_periods = periods_df[periods_df["period_id"] == p_id] if p_id else pd.DataFrame()
-            sub_si = si_df[si_df["period_id"] == p_id] if p_id else pd.DataFrame()
-            sub_sp = sp_df[sp_df["period_id"] == p_id] if p_id else pd.DataFrame()
+            if view_mode == "🗓️ Bulanan" and not matched_period.empty:
+                # Ambil semua periode dalam bulan & tahun yang sama
+                matched_month = matched_period.iloc[0]["start_dt"].month
+                matched_year = matched_period.iloc[0]["start_dt"].year
+                same_month_p_ids = periods_df[(periods_df["start_dt"].dt.month == matched_month) & (periods_df["start_dt"].dt.year == matched_year)]["period_id"].tolist()
+                
+                sub_periods = periods_df[periods_df["period_id"].isin(same_month_p_ids)]
+                sub_si = si_df[si_df["period_id"].isin(same_month_p_ids)]
+                sub_sp = sp_df[sp_df["period_id"].isin(same_month_p_ids)]
+            else:
+                sub_periods = periods_df[periods_df["period_id"] == p_id] if p_id else pd.DataFrame()
+                sub_si = si_df[si_df["period_id"] == p_id] if p_id else pd.DataFrame()
+                sub_sp = sp_df[sp_df["period_id"] == p_id] if p_id else pd.DataFrame()
         else:
             sub_periods = periods_df
             sub_si = si_df
@@ -276,12 +310,17 @@ elif selected_tab == "01 Dashboard Toko":
             end_date = waktu_wib.date()
 
         total_days = max((end_date - start_date).days + 1, 1)
-        today_date = waktu_wib.date()
         passed_days = total_days if today_date > end_date else (0 if today_date < start_date else max((today_date - start_date).days + 1, 1))
 
         time_factor = (passed_days / total_days) * 100 if total_days > 0 else 0
         tot_target = pd.to_numeric(sub_si.get("target_qty", 0), errors="coerce").fillna(0).sum()
         tot_actual = pd.to_numeric(sub_sp.get("actual_qty", 0), errors="coerce").fillna(0).sum()
+
+        # Kalkulasi jika mode Harian dipilih
+        if view_mode == "☀️ Harian (Daily Target)":
+            tot_target = tot_target / total_days if total_days > 0 else tot_target
+            tot_actual = tot_actual / max(passed_days, 1)
+
         tot_gap = tot_target - tot_actual
         tot_ach = (tot_actual / tot_target * 100) if tot_target > 0 else 0
         weighted_score = (tot_ach / 100) * 20
@@ -297,9 +336,15 @@ elif selected_tab == "01 Dashboard Toko":
         m5.metric("⏳ Time Factor", f"{time_factor:.1f}%")
         m6.metric("🏆 Indeks Bobot", f"{weighted_score:.1f} Pt")
 
+    # --- SUBTAB 2: DETAIL ITEM & PERFORMA TOKO ---
     elif sub_tab01 == "📦 Detail Item & Performa Toko":
         search_query = st.text_input("🔍 Cari Produk:", placeholder="Ketik nama item...", key="search_item_mob")
-        selected_p_detail = st.selectbox("Filter Periode", ["Semua Periode"] + period_options, key="period_detail_mob")
+        selected_p_detail = st.selectbox(
+            "Filter Periode", 
+            ["Semua Periode"] + period_options, 
+            index=default_index, 
+            key="period_detail_mob"
+        )
         
         if selected_p_detail != "Semua Periode":
             matched_p = periods_df[periods_df["period_name"] == selected_p_detail]
@@ -319,9 +364,45 @@ elif selected_tab == "01 Dashboard Toko":
             if search_query:
                 item_grouped = item_grouped[item_grouped["item_name"].str.contains(search_query, case=False, na=False)]
 
-            st.dataframe(item_grouped, use_container_width=True)
+            # GENERATE TABEL NEON CUSTOM HTML (TANPA INDEX BARIS 0,1,2...)
+            table_rows = ""
+            for idx, row in item_grouped.iterrows():
+                ach_val = row['ach']
+                ach_color_class = "text-green" if ach_val >= 100 else ("text-cyan" if ach_val >= 50 else "text-red")
+                
+                table_rows += f"""
+                <tr>
+                    <td style='font-weight:600;'>{row['item_name']}</td>
+                    <td style='text-align:right;'>{row['target_qty']:,.0f}</td>
+                    <td style='text-align:right;'>{row['actual_qty']:,.0f}</td>
+                    <td style='text-align:right;'>{row['gap']:,.0f}</td>
+                    <td style='text-align:right;' class='{ach_color_class}'>{ach_val:.1f}%</td>
+                </tr>
+                """
+
+            neon_table_html = f"""
+            <div class="neon-table-container">
+                <table class="neon-table">
+                    <thead>
+                        <tr>
+                            <th>Item Name</th>
+                            <th style='text-align:right;'>Target</th>
+                            <th style='text-align:right;'>Actual</th>
+                            <th style='text-align:right;'>Gap</th>
+                            <th style='text-align:right;'>% Ach</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {table_rows}
+                    </tbody>
+                </table>
+            </div>
+            """
+            st.markdown(neon_table_html, unsafe_allow_html=True)
         else:
             st.info("Tidak ada data item untuk periode ini.")
+
+
 
 
 # --- TAB 02: RAPORT PERSONIL TOKO ---
