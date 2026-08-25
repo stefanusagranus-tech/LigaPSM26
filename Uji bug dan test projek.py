@@ -577,6 +577,13 @@ elif selected_tab == "01 Dashboard Toko":
                 else:
                     sub_sp["dt_clean"] = None
 
+                if not sub_sp.empty and "dt_clean" in sub_sp.columns:
+                    sub_sp["actual_qty"] = pd.to_numeric(sub_sp.get("actual_qty", 0), errors="coerce").fillna(0)
+                    daily_agg = sub_sp.groupby("dt_clean")["actual_qty"].sum()
+                    trend_values = [daily_agg.get(d, 0) for d in date_range]
+                else:
+                    trend_values = [0] * len(date_range)
+
                 daily_trend = pd.DataFrame({"Tanggal": date_range, "Actual": trend_values})
 
                 fig_trend = go.Figure()
