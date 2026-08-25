@@ -341,7 +341,7 @@ elif selected_tab == "01 Dashboard Toko":
             else:
                 st.warning("Master data personil toko tidak ditemukan.")
 
-                # =========================================================
+        # =========================================================
         # SUBTAB 2: DETAIL TOP ITEM (PRODUK - BERDASARKAN TANGGAL)
         # =========================================================
         with tab_item:
@@ -625,7 +625,7 @@ elif selected_tab == "01 Dashboard Toko":
                 bm4.metric("⚡ % Ach Bulanan", f"{tot_ach:.1f}%")
                 bm5.metric("🏆 Indeks Bobot PPS", f"{bobot_pps:.2f} Pt")
 
-        # --- SUBTAB 2: DETAIL ITEM & PERFORMA TOKO ---
+                # --- SUBTAB 2: DETAIL ITEM & PERFORMA TOKO ---
         elif sub_tab01 == "📦 Detail Item & Performa Toko":
             search_query = st.text_input("🔍 Cari Produk:", placeholder="Ketik nama item...", key="search_item_mob")
             selected_p_detail = st.selectbox(
@@ -653,20 +653,21 @@ elif selected_tab == "01 Dashboard Toko":
                 if search_query:
                     item_grouped = item_grouped[item_grouped["item_name"].str.contains(search_query, case=False, na=False)]
 
+                # GENERATE TABEL NEON CUSTOM HTML YANG AMAN
                 table_rows = ""
                 for idx, row in item_grouped.iterrows():
                     ach_val = row['ach']
                     ach_color_class = "text-green" if ach_val >= 100 else ("text-cyan" if ach_val >= 50 else "text-red")
                     
-                    table_rows += f"""
-                    <tr>
-                        <td style='font-weight:600;'>{row['item_name']}</td>
-                        <td style='text-align:right;'>{row['target_qty']:,.0f}</td>
-                        <td style='text-align:right;'>{row['actual_qty']:,.0f}</td>
-                        <td style='text-align:right;'>{row['gap']:,.0f}</td>
-                        <td style='text-align:right;' class='{ach_color_class}'>{ach_val:.1f}%</td>
-                    </tr>
-                    """
+                    table_rows += (
+                        "<tr>"
+                        f"<td style='font-weight:600;'>{row['item_name']}</td>"
+                        f"<td style='text-align:right;'>{row['target_qty']:,.0f}</td>"
+                        f"<td style='text-align:right;'>{row['actual_qty']:,.0f}</td>"
+                        f"<td style='text-align:right;'>{row['gap']:,.0f}</td>"
+                        f"<td style='text-align:right;' class='{ach_color_class}'>{ach_val:.1f}%</td>"
+                        "</tr>"
+                    )
 
                 neon_table_html = f"""
                 <div class="neon-table-container">
@@ -689,6 +690,7 @@ elif selected_tab == "01 Dashboard Toko":
                 st.markdown(neon_table_html, unsafe_allow_html=True)
             else:
                 st.info("Tidak ada data item untuk periode ini.")
+
 
 # --- TAB 02: RAPORT PERSONIL TOKO ---
 elif selected_tab == "02 Raport Personil Toko":
