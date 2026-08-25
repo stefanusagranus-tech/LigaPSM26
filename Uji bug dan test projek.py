@@ -319,7 +319,7 @@ elif selected_tab == "01 Dashboard Toko":
                 sub_si = si_df[si_df["period_id"] == p_id] if p_id else pd.DataFrame()
                 sub_sp = sp_df[sp_df["period_id"] == p_id] if p_id else pd.DataFrame()
             else:
-                sub_periods, sub_si, sub_sp = periods_df, si_df, sp_sp
+                sub_periods, sub_si, sub_sp = periods_df, si_df, sp_df
 
         # FIX TANGGAL: Normalisasi kolom tanggal pada sub_sp ke format datetime.date
         if not sub_sp.empty:
