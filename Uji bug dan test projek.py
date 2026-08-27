@@ -409,41 +409,41 @@ elif selected_tab == "01 Dashboard":
                 g_col4.metric("⚡ % Ach Harian", f"{daily_ach:.1f}%")
 
 
-        # ==========================================
-        # MODE: PERIODE
-        # ==========================================
-        elif view_mode == "⏱️ Periode":
-            st.markdown("##### ⏱️ Pencapaian PSM Berdasarkan Periode")
-            if not df_periods.empty and "period_name" in df_periods.columns:
-                st.selectbox("Pilih Periode:", df_periods["period_name"].unique(), key="sel_period_psm")
+            # ==========================================
+            # MODE: PERIODE
+            # ==========================================
+            elif view_mode == "⏱️ Periode":
+                st.markdown("##### ⏱️ Pencapaian PSM Berdasarkan Periode")
+                if not df_periods.empty and "period_name" in df_periods.columns:
+                    st.selectbox("Pilih Periode:", df_periods["period_name"].unique(), key="sel_period_psm")
+                else:
+                    st.selectbox("Pilih Periode:", ["Periode 1", "Periode 2"], key="sel_period_dummy")
+                
+                st.markdown("<br>", unsafe_allow_html=True)
+                m1, m2, m3 = st.columns(3)
+                m1.metric("Target Periode", "0 Pcs")
+                m2.metric("Actual Periode", "0 Pcs")
+                m3.metric("Achievement", "0.0%")
+    
+            # ==========================================
+            # MODE: BULANAN
+            # ==========================================
             else:
-                st.selectbox("Pilih Periode:", ["Periode 1", "Periode 2"], key="sel_period_dummy")
-            
+                st.markdown("##### 🗓️ Pencapaian PSM Bulanan")
+                st.selectbox("Pilih Bulan:", ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"], key="sel_bulan_psm")
+                
+                st.markdown("<br>", unsafe_allow_html=True)
+                m1, m2, m3 = st.columns(3)
+                m1.metric("Target Bulanan", "0 Pcs")
+                m2.metric("Actual Bulanan", "0 Pcs")
+                m3.metric("Achievement", "0.0%")
+    
             st.markdown("<br>", unsafe_allow_html=True)
-            m1, m2, m3 = st.columns(3)
-            m1.metric("Target Periode", "0 Pcs")
-            m2.metric("Actual Periode", "0 Pcs")
-            m3.metric("Achievement", "0.0%")
-
-        # ==========================================
-        # MODE: BULANAN
-        # ==========================================
-        else:
-            st.markdown("##### 🗓️ Pencapaian PSM Bulanan")
-            st.selectbox("Pilih Bulan:", ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"], key="sel_bulan_psm")
-            
-            st.markdown("<br>", unsafe_allow_html=True)
-            m1, m2, m3 = st.columns(3)
-            m1.metric("Target Bulanan", "0 Pcs")
-            m2.metric("Actual Bulanan", "0 Pcs")
-            m3.metric("Achievement", "0.0%")
-
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown("##### 📋 Rincian Item PSM")
-        if not df_sales_item.empty:
-            st.dataframe(df_sales_item, use_container_width=True)
-        else:
-            st.info("Belum ada data rincian item PSM yang dimuat.")
+            st.markdown("##### 📋 Rincian Item PSM")
+            if not df_sales_item.empty:
+                st.dataframe(df_sales_item, use_container_width=True)
+            else:
+                st.info("Belum ada data rincian item PSM yang dimuat.")
 
 
 
