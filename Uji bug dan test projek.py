@@ -283,7 +283,7 @@ elif selected_tab == "01 Dashboard":
         active_date = st.session_state.get("calendar_psm_harian", today_date)
             
             # --- 1. MODE: HARIAN ---
-            if view_mode == "☀️ Harian":
+            elif view_mode == "☀️ Harian":
                 selected_daily_date = st.date_input("📅 Pilih Tanggal Laporan:", value=today_date, key="calendar_psm_harian")
             
                 sub_sp = df_sales_person.copy() if not df_sales_person.empty else pd.DataFrame()
