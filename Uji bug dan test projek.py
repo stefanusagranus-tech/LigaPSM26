@@ -433,7 +433,10 @@ elif selected_tab == "01 Dashboard":
                             sisa_target_periode = max(tot_p_target - tot_p_actual, 0)
                             sisa_hari = (p_e - selected_daily_date).days + 1
                             
-                            if sisa_hari > 0:
+                            if sisa_hari <= 0:
+                                 sisa_hari = 1
+
+                            try
                                 import math
                                 daily_target = math.ceil(sisa_target_periode / sisa_hari)
                             else:
