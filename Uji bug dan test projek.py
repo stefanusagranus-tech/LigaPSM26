@@ -226,21 +226,22 @@ if selected_tab == "Home":
             st.rerun()
 
 # =========================================================
-# TAB 01: DASHBOARD (DENGAN TOMBOL KEMBALI)
+# TAB 01: DASHBOARD - HALAMAN 1: REPORT PSM
 # =========================================================
 elif selected_tab == "01 Dashboard":
     
     if "dash_page" not in st.session_state:
         st.session_state.dash_page = "Main"
 
-    # Tombol Kembali jika berada di dalam sub-menu (PSM, Sales, PPS, STD)
+    # Tombol Kembali jika berada di dalam sub-menu
     if st.session_state.dash_page != "Main":
         if st.button("⬅️ Kembali ke Menu Utama Dashboard", key="btn_back_dash", use_container_width=True):
             st.session_state.dash_page = "Main"
+            st.session_state.active_detail_view = None
             st.rerun()
         st.markdown("<hr style='margin: 8px 0; border-color: #334155;'>", unsafe_allow_html=True)
 
-    # --- TAMPILAN UTAMA DASHBOARD (GRID 2x2) ---
+    # --- TAMPILAN UTAMA DASHBOARD (MENU GRID 2x2) ---
     if st.session_state.dash_page == "Main":
         st.markdown("<h4 style='text-align: center; color: #00f0ff; margin-bottom: 16px;'>📊 MENU DASHBOARD UTAMA</h4>", unsafe_allow_html=True)
 
@@ -272,53 +273,84 @@ elif selected_tab == "01 Dashboard":
                 st.session_state.dash_page = "StdMember"
                 st.rerun()
 
-           # --- HALAMAN 1: REPORT PSM ---
+    # =========================================================
+    # HALAMAN 1: REPORT PSM
+    # =========================================================
     elif st.session_state.dash_page == "PSM":
         
-        # Cek apakah sedang membuka sub-halaman detail kontributor
+        today_date = waktu_wib.date() if 'waktu_wib' in locals() else datetime.now().date()
+        active_date = st.session_state.get("calendar_psm_harian", today_date)
+
+        # Sub-halaman: Detail Kontributor Harian (Donut Chart & Status Input)
         if st.session_state.get("active_detail_view") == "detail_kontributor":
             if st.button("⬅️ Kembali ke Report PSM", key="btn_back_psm_main", use_container_width=True):
                 st.session_state.active_detail_view = None
                 st.rerun()
             st.markdown("<hr style='margin: 8px 0; border-color: #334155;'>", unsafe_allow_html=True)
             
-            st.markdown("### 🍩 Detail Kontribusi Personil Harian")
+            st.markdown(f"### 🍩 Detail Kontribusi Personil Harian (Tanggal: {active_date})")
             
             df_sp_detail = st.session_state.get("sales_person_df", pd.DataFrame())
+            df_person_master = st.session_state.get("person_df", pd.DataFrame())
+            
             if not df_sp_detail.empty:
-                # Kolom person & actual
-                p_col = "person_name" if "person_name" in df_sp_detail.columns else "sales_person"
-                a_col = "actual_qty" if "actual_qty" in df_sp_detail.columns else None
+                date_col_sp = next((c for c in df_sp_detail.columns if "updated_at" in c or "date" in c or "tanggal" in c), None)
+                p_col = next((c for c in df_sp_detail.columns if "person_name" in c or "sales_person" in c), None)
+                a_col = next((c for c in df_sp_detail.columns if "actual_qty" in c or "actual" in c), None)
                 
                 if p_col and a_col:
-                    df_sp_detail[a_col] = pd.to_numeric(df_sp_detail[a_col], errors="coerce").fillna(0)
-                    df_contrib = df_sp_detail.groupby(p_col)[a_col].sum().reset_index()
+                    sub_sp_dt = df_sp_detail.copy()
+                    
+                    if date_col_sp:
+                        sub_sp_dt["dt_clean"] = pd.to_datetime(sub_sp_dt[date_col_sp], errors="coerce").dt.date
+                        sub_sp_dt = sub_sp_dt[sub_sp_dt["dt_clean"] == active_date]
+                    
+                    sub_sp_dt[a_col] = pd.to_numeric(sub_sp_dt[a_col], errors="coerce").fillna(0)
+                    df_contrib = sub_sp_dt.groupby(p_col)[a_col].sum().reset_index()
                     df_contrib.columns = ["Nama Personil", "Total Actual Qty"]
                     
-                    # Hitung persentase kontribusi
-                    total_all = df_contrib["Total Actual Qty"].sum()
-                    df_contrib["Kontribusi (%)"] = df_contrib["Total Actual Qty"].apply(lambda x: (x / total_all * 100) if total_all > 0 else 0)
+                    if not df_person_master.empty:
+                        master_name_col = next((c for c in df_person_master.columns if "person_name" in c or "name" in c), None)
+                        if master_name_col:
+                            all_persons = df_person_master[master_name_col].dropna().unique()
+                            
+                            full_person_data = []
+                            for p in all_persons:
+                                matched_row = df_contrib[df_contrib["Nama Personil"] == p]
+                                qty_val = matched_row["Total Actual Qty"].values[0] if not matched_row.empty else 0
+                                status = "✅ Sudah Input" if not matched_row.empty and qty_val > 0 else "❌ Belum Input"
+                                
+                                full_person_data.append({
+                                    "Nama Personil": p,
+                                    "Total Actual Qty": qty_val,
+                                    "Status Input": status
+                                })
+                            df_contrib = pd.DataFrame(full_person_data)
                     
-                    col_dt1, col_dt2 = st.columns([1.2, 1])
+                    total_all = df_contrib["Total Actual Qty"].sum()
+                    df_contrib["Kontribusi (%)"] = df_contrib["Total Actual Qty"].apply(lambda x: f"{(x / total_all * 100):.1f}%" if total_all > 0 else "0.0%")
+                    
+                    col_dt1, col_dt2 = st.columns([1.3, 1])
                     with col_dt1:
-                        st.markdown("##### 📋 Tabel Rincian Kontributor")
-                        st.dataframe(df_contrib, use_container_width=True)
+                        st.markdown("##### 📋 Tabel Status & Kontribusi Personil")
+                        st.dataframe(df_contrib, use_container_width=True, hide_index=True)
                     with col_dt2:
                         st.markdown("##### 📊 Grafik Donat Kontribusi")
-                        if not df_contrib.empty and total_all > 0:
+                        df_active_chart = df_contrib[df_contrib["Total Actual Qty"] > 0]
+                        if not df_active_chart.empty and total_all > 0:
                             import plotly.express as px
-                            fig_donut = px.pie(df_contrib, names="Nama Personil", values="Total Actual Qty", hole=0.5)
+                            fig_donut = px.pie(df_active_chart, names="Nama Personil", values="Total Actual Qty", hole=0.5)
                             fig_donut.update_layout(margin=dict(t=10, b=10, l=10, r=10), height=300)
                             st.plotly_chart(fig_donut, use_container_width=True)
                         else:
-                            st.info("Belum ada data untuk grafik.")
+                            st.info("Belum ada data input pada tanggal ini untuk ditampilkan ke grafik.")
                 else:
                     st.warning("Struktur kolom pada data sales personil tidak lengkap.")
             else:
                 st.warning("Data sales personil kosong.")
                 
         else:
-            # TAMPILAN UTAMA REPORT PSM
+            # Tampilan Utama Report PSM
             st.markdown("### 📈 Report Pencapaian PSM")
             
             psm_filter_options = ["☀️ Harian", "⏱️ Periode", "🗓️ Bulanan"]
@@ -333,21 +365,16 @@ elif selected_tab == "01 Dashboard":
             df_periods = st.session_state.get("periods_df", pd.DataFrame())
             df_sales_person = st.session_state.get("sales_person_df", pd.DataFrame())
             
-            today_date = waktu_wib.date() if 'waktu_wib' in locals() else datetime.now().date()
-            
-            # ==========================================
-            # MODE: HARIAN (MENGGUNAKAN KALENDER)
-            # ==========================================
+            # 1. MODE: HARIAN
             if view_mode == "☀️ Harian":
-                # Navigasi Kalender
                 selected_daily_date = st.date_input("📅 Pilih Tanggal Laporan:", value=today_date, key="calendar_psm_harian")
 
                 sub_sp = df_sales_person.copy() if not df_sales_person.empty else pd.DataFrame()
                 sub_si = df_sales_item.copy() if not df_sales_item.empty else pd.DataFrame()
 
                 if not sub_sp.empty:
-                    date_col = "updated_at" if "updated_at" in sub_sp.columns else ("date" if "date" in sub_sp.columns else ("tanggal" if "tanggal" in sub_sp.columns else None))
-                    sub_sp["dt_clean"] = pd.to_datetime(sub_sp[date_col], errors="coerce").dt.date if date_col else None
+                    date_col_sp = next((c for c in sub_sp.columns if "updated_at" in c or "date" in c or "tanggal" in c), None)
+                    sub_sp["dt_clean"] = pd.to_datetime(sub_sp[date_col_sp], errors="coerce").dt.date if date_col_sp else None
                     sub_sp["actual_qty"] = pd.to_numeric(sub_sp.get("actual_qty", 0), errors="coerce").fillna(0)
                     day_sp = sub_sp[sub_sp["dt_clean"] == selected_daily_date] if "dt_clean" in sub_sp.columns else pd.DataFrame()
                 else:
@@ -362,12 +389,19 @@ elif selected_tab == "01 Dashboard":
 
                 top_item = "-"
                 if not sub_si.empty and "item_name" in sub_si.columns:
-                    sub_si["actual_qty"] = pd.to_numeric(sub_si.get("actual_qty", 0), errors="coerce").fillna(0)
-                    top_i_df = sub_si.groupby("item_name")["actual_qty"].sum().reset_index()
+                    date_col_si_top = next((c for c in sub_si.columns if "updated_at" in c or "date" in c or "tanggal" in c), None)
+                    if date_col_si_top:
+                        sub_si["dt_clean"] = pd.to_datetime(sub_si[date_col_si_top], errors="coerce").dt.date
+                        day_si = sub_si[sub_si["dt_clean"] == selected_daily_date]
+                    else:
+                        day_si = sub_si.copy()
+                        
+                    day_si["actual_qty"] = pd.to_numeric(day_si.get("actual_qty", 0), errors="coerce").fillna(0)
+                    top_i_df = day_si.groupby("item_name")["actual_qty"].sum().reset_index()
                     if not top_i_df.empty and top_i_df["actual_qty"].max() > 0:
                         top_item = top_i_df.sort_values(by="actual_qty", ascending=False).iloc[0]["item_name"]
 
-                # Kartu Top Contributor & Top Item dengan Tombol Detail
+                # Kartu Top Contributor & Top Item
                 tc1, tc2 = st.columns(2)
                 with tc1:
                     st.markdown(f"""
@@ -387,13 +421,12 @@ elif selected_tab == "01 Dashboard":
                         <p style='color:#38bdf8; font-size:14px; font-weight:bold; margin:2px 0 0 0;'>{top_item}</p>
                     </div>
                     """, unsafe_allow_html=True)
-                    st.markdown("<div style='height: 38px;'></div>", unsafe_allow_html=True) # Penyelaras tinggi tombol
+                    st.markdown("<div style='height: 38px;'></div>", unsafe_allow_html=True)
 
                 st.markdown("<br>", unsafe_allow_html=True)
 
-                # Metrik Harian Ringkas
-                tot_target_full = pd.to_numeric(sub_si.get("target_qty", 0), errors="coerce").fillna(0).sum() if not sub_si.empty else 0
-                total_days = 30 # Default asumsi hari dalam periode jika belum dihitung dinamis
+                tot_target_full = pd.to_numeric(sub_si["target_qty"], errors="coerce").fillna(0).sum() if not sub_si.empty and "target_qty" in sub_si.columns else 0
+                total_days = 30
                 daily_target = tot_target_full / total_days if total_days > 0 else 0
                 daily_actual = day_sp["actual_qty"].sum() if not day_sp.empty else 0
                 daily_gap = daily_target - daily_actual
@@ -408,10 +441,7 @@ elif selected_tab == "01 Dashboard":
                 g_col3.metric("📉 Sisa Gap Harian", f"{max(daily_gap, 0):,.0f} Pcs")
                 g_col4.metric("⚡ % Ach Harian", f"{daily_ach:.1f}%")
 
-
-            # ==========================================
-            # MODE: PERIODE
-            # ==========================================
+            # 2. MODE: PERIODE
             elif view_mode == "⏱️ Periode":
                 st.markdown("##### ⏱️ Pencapaian PSM Berdasarkan Periode")
                 if not df_periods.empty and "period_name" in df_periods.columns:
@@ -424,10 +454,8 @@ elif selected_tab == "01 Dashboard":
                 m1.metric("Target Periode", "0 Pcs")
                 m2.metric("Actual Periode", "0 Pcs")
                 m3.metric("Achievement", "0.0%")
-    
-            # ==========================================
-            # MODE: BULANAN
-            # ==========================================
+
+            # 3. MODE: BULANAN
             else:
                 st.markdown("##### 🗓️ Pencapaian PSM Bulanan")
                 st.selectbox("Pilih Bulan:", ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"], key="sel_bulan_psm")
@@ -437,16 +465,55 @@ elif selected_tab == "01 Dashboard":
                 m1.metric("Target Bulanan", "0 Pcs")
                 m2.metric("Actual Bulanan", "0 Pcs")
                 m3.metric("Achievement", "0.0%")
-    
+
+            # --- BAGIAN TABEL RINCIAN ITEM PSM & GRAFIK (FILTER TANGGAL) ---
             st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown("##### 📋 Rincian Item PSM")
+            active_date_val = locals().get('selected_daily_date', today_date)
+            display_date_label = active_date_val if view_mode == "☀️ Harian" else "Semua Periode/Bulan"
+            st.markdown(f"##### 📋 Rincian Item PSM & Grafik Kontribusi ({display_date_label})")
+            
             if not df_sales_item.empty:
-                st.dataframe(df_sales_item, use_container_width=True)
+                date_col_si = next((c for c in df_sales_item.columns if "updated_at" in c or "date" in c or "tanggal" in c), None)
+                item_name_col = next((c for c in df_sales_item.columns if "item_name" in c or "name" in c), None)
+                actual_qty_col = next((c for c in df_sales_item.columns if "actual_qty" in c or "actual" in c), None)
+                
+                if item_name_col and actual_qty_col:
+                    sub_item_df = df_sales_item.copy()
+                    
+                    if view_mode == "☀️ Harian" and date_col_si:
+                        sub_item_df["dt_clean"] = pd.to_datetime(sub_item_df[date_col_si], errors="coerce").dt.date
+                        sub_item_df = sub_item_df[sub_item_df["dt_clean"] == active_date_val]
+                    
+                    if not sub_item_df.empty:
+                        sub_item_df["actual_qty"] = pd.to_numeric(sub_item_df[actual_qty_col], errors="coerce").fillna(0)
+                        df_grouped = sub_item_df.groupby(item_name_col)["actual_qty"].sum().reset_index()
+                        df_grouped.columns = ["Nama Item", "Actual Qty"]
+                        
+                        sum_actual = df_grouped["Actual Qty"].sum()
+                        df_grouped["Kontribusi (%)"] = df_grouped["Actual Qty"].apply(lambda x: f"{(x / sum_actual * 100):.1f}%" if sum_actual > 0 else "0.0%")
+                        
+                        col_tbl, col_chart = st.columns([1.2, 1])
+                        with col_tbl:
+                            st.dataframe(df_grouped, use_container_width=True, hide_index=True)
+                            
+                        with col_chart:
+                            import plotly.express as px
+                            fig_bar = px.bar(
+                                df_grouped, 
+                                x="Nama Item", 
+                                y="Actual Qty", 
+                                title="Grafik Actual Qty per Item",
+                                color="Actual Qty",
+                                color_continuous_scale="blues"
+                            )
+                            fig_bar.update_layout(margin=dict(t=30, b=10, l=10, r=10), height=350)
+                            st.plotly_chart(fig_bar, use_container_width=True)
+                    else:
+                        st.info("Tidak ada data item terjual pada filter waktu yang dipilih.")
+                else:
+                    st.warning("Struktur kolom 'item_name' atau 'actual_qty' tidak ditemukan pada sheet SALES_ITEM.")
             else:
                 st.info("Belum ada data rincian item PSM yang dimuat.")
-
-
-
 
     # --- HALAMAN 2: REPORT SALES TOKO ---
     elif st.session_state.dash_page == "SalesToko":
