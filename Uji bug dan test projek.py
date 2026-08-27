@@ -226,18 +226,24 @@ if selected_tab == "Home":
             st.rerun()
 
 # =========================================================
-# TAB 01: DASHBOARD (DENGAN 5 TOMBOL NAVIGASI CEPAT)
+# TAB 01: DASHBOARD (DENGAN TOMBOL KEMBALI)
 # =========================================================
 elif selected_tab == "01 Dashboard":
     
     if "dash_page" not in st.session_state:
         st.session_state.dash_page = "Main"
-        
+
+    # Tombol Kembali jika berada di dalam sub-menu (PSM, Sales, PPS, STD)
+    if st.session_state.dash_page != "Main":
+        if st.button("⬅️ Kembali ke Menu Utama Dashboard", key="btn_back_dash", use_container_width=True):
+            st.session_state.dash_page = "Main"
+            st.rerun()
+        st.markdown("<hr style='margin: 8px 0; border-color: #334155;'>", unsafe_allow_html=True)
+
     # --- TAMPILAN UTAMA DASHBOARD (GRID 2x2) ---
     if st.session_state.dash_page == "Main":
         st.markdown("<h4 style='text-align: center; color: #00f0ff; margin-bottom: 16px;'>📊 MENU DASHBOARD UTAMA</h4>", unsafe_allow_html=True)
 
-        # Baris 1 Grid 2x2
         col_d1, col_d2 = st.columns(2)
         with col_d1:
             st.markdown("<div class='app-card'><span class='app-icon'>📈</span><div class='app-title'>Report PSM</div><div class='app-desc'>Pencapaian PSM Toko</div></div>", unsafe_allow_html=True)
@@ -253,7 +259,6 @@ elif selected_tab == "01 Dashboard":
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # Baris 2 Grid 2x2
         col_d3, col_d4 = st.columns(2)
         with col_d3:
             st.markdown("<div class='app-card'><span class='app-icon'>🛒</span><div class='app-title'>Report PPS Toko</div><div class='app-desc'>APC, PWP, Sueger, Simulasi</div></div>", unsafe_allow_html=True)
@@ -267,7 +272,7 @@ elif selected_tab == "01 Dashboard":
                 st.session_state.dash_page = "StdMember"
                 st.rerun()
 
-        # --- HALAMAN 1: REPORT PSM ---
+    # --- HALAMAN 1: REPORT PSM ---
     elif st.session_state.dash_page == "PSM":
         st.markdown("### 📈 Report Pencapaian PSM")
         
@@ -280,32 +285,24 @@ elif selected_tab == "01 Dashboard":
             
         st.markdown("<hr style='margin: 8px 0; border-color: #334155;'>", unsafe_allow_html=True)
         
-        # Ambil data dari session state
         df_sales_item = st.session_state.get("sales_item_df", pd.DataFrame())
         df_periods = st.session_state.get("periods_df", pd.DataFrame())
         
-        # Konten berdasarkan filter kapsul yang dipilih
         if psm_mode == "Harian":
             st.markdown("##### 📅 Pencapaian PSM Harian")
             st.date_input("Pilih Tanggal Laporan:", key="date_psm_harian")
-            # Logika filter harian di sini
-            
         elif psm_mode == "Periode":
             st.markdown("##### ⏱️ Pencapaian PSM Berdasarkan Periode")
             if not df_periods.empty and "period_name" in df_periods.columns:
-                selected_period = st.selectbox("Pilih Periode:", df_periods["period_name"].unique(), key="sel_period_psm")
+                st.selectbox("Pilih Periode:", df_periods["period_name"].unique(), key="sel_period_psm")
             else:
                 st.selectbox("Pilih Periode:", ["Periode 1", "Periode 2"], key="sel_period_dummy")
-            # Logika filter periode di sini
-            
         else:
             st.markdown("##### 🗓️ Pencapaian PSM Bulanan")
             st.selectbox("Pilih Bulan:", ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"], key="sel_bulan_psm")
-            # Logika filter bulanan di sini
 
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # Ringkasan Metrik PSM
         m1, m2, m3 = st.columns(3)
         m1.metric("Target PSM", "Rp 0")
         m2.metric("Actual PSM", "Rp 0")
@@ -317,6 +314,7 @@ elif selected_tab == "01 Dashboard":
             st.dataframe(df_sales_item, use_container_width=True)
         else:
             st.info("Belum ada data rincian item PSM yang dimuat.")
+
 
     # --- HALAMAN 2: REPORT SALES TOKO ---
     elif st.session_state.dash_page == "SalesToko":
