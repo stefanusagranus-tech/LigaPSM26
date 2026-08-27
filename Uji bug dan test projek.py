@@ -436,7 +436,7 @@ elif selected_tab == "01 Dashboard":
                             if sisa_hari <= 0:
                                  sisa_hari = 1
 
-                            try
+                            try:
                                 import math
                                 daily_target = math.ceil(sisa_target_periode / sisa_hari)
                             else:
