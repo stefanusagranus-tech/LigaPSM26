@@ -367,7 +367,7 @@ elif selected_tab == "01 Dashboard":
             df_sales_person = st.session_state.get("sales_person_df", pd.DataFrame())
             
             # --- 1. MODE: HARIAN ---
-            if view_mode == "☀️ Harian":
+            elif view_mode == "☀️ Harian":
                 selected_daily_date = st.date_input("📅 Pilih Tanggal Laporan:", value=today_date, key="calendar_psm_harian")
             
                 sub_sp = df_sales_person.copy() if not df_sales_person.empty else pd.DataFrame()
@@ -389,7 +389,7 @@ elif selected_tab == "01 Dashboard":
                     if not top_p_df.empty and top_p_df["actual_qty"].max() > 0:
                         top_person = top_p_df.sort_values(by="actual_qty", ascending=False).iloc[0][person_col]
             
-                # Top Item (Diambil dari SALES_PERSONIL sesuai tanggal harian)
+                # Top Item Harian (Diambil dari SALES_PERSONIL)
                 top_item = "-"
                 if not day_sp.empty and "item_name" in day_sp.columns:
                     top_i_df = day_sp.groupby("item_name")["actual_qty"].sum().reset_index()
@@ -416,7 +416,7 @@ elif selected_tab == "01 Dashboard":
             
                 st.markdown("<br>", unsafe_allow_html=True)
             
-                # Kalkulasi Target Harian Dinamis Berdasarkan Sisa Periode & Sisa Hari
+                # --- PERHITUNGAN TARGET HARIAN DINAMIS (MENGIKUTI SISA PERIODE) ---
                 daily_target = 0
                 if not df_periods.empty:
                     for _, row_p in df_periods.iterrows():
@@ -426,20 +426,24 @@ elif selected_tab == "01 Dashboard":
                             period_id = row_p["period_id"]
                             tot_p_target = float(row_p.get("target_total", 0))
                             
+                            # Hitung actual yang sudah terkumpul pada periode tersebut hingga saat ini
                             sub_p_sales = sub_si[sub_si["period_id"] == period_id] if not sub_si.empty and "period_id" in sub_si.columns else pd.DataFrame()
                             tot_p_actual = pd.to_numeric(sub_p_sales["actual_qty"], errors="coerce").fillna(0).sum() if not sub_p_sales.empty else 0
                             
                             sisa_target_periode = max(tot_p_target - tot_p_actual, 0)
                             sisa_hari = (p_e - selected_daily_date).days + 1
-                            sisa_hari = max(sisa_hari, 1)
                             
-                            import math
-                            daily_target = math.ceil(sisa_target_periode / sisa_hari)
+                            if sisa_hari > 0:
+                                import math
+                                daily_target = math.ceil(sisa_target_periode / sisa_hari)
+                            else:
+                                daily_target = sisa_target_periode
                             break
                             
+                # Fallback jika tanggal di luar rentang periode terdaftar
                 if daily_target == 0:
                     tot_target_full = pd.to_numeric(sub_si["target_qty"], errors="coerce").fillna(0).sum() if not sub_si.empty and "target_qty" in sub_si.columns else 0
-                    daily_target = tot_target_full / 30
+                    daily_target = tot_target_full / 30 if tot_target_full > 0 else 0
             
                 daily_actual = day_sp["actual_qty"].sum() if not day_sp.empty else 0
                 daily_gap = daily_target - daily_actual
@@ -567,6 +571,7 @@ elif selected_tab == "01 Dashboard":
                         st.info("Belum ada data transaksi yang dimuat untuk menampilkan grafik garis.")
                 else:
                     st.info("👆 Silakan tentukan Tanggal Awal & Tanggal Akhir, lalu klik tombol **'Proses Grafik Penjualan'** di atas.")
+
 
 
             # --- 2. MODE: PERIODE ---
