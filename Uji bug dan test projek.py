@@ -607,7 +607,7 @@ elif selected_tab == "01 Dashboard":
                     remaining_days = max(remaining_days, 1)
                     
                     sisa_target = max(gap_periode, 0)
-                    target_harian_terbaru = sisa_target / remaining_days
+                    target_harian_terbaru = math.ceil(sisa_target / remaining_days)
             
                 # --- 5. TAMPILAN 6 METRIK (GRID 2 BARIS x 3 KOLOM) ---
                 st.markdown("<br>", unsafe_allow_html=True)
