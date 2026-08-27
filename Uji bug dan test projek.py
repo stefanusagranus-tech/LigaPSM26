@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from streamlit_gsheets import GSheetsConnection
+import math
 
 # =========================================================
 # 1. KONFIGURASI HALAMAN STREAMLIT
