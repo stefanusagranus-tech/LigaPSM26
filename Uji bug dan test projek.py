@@ -226,19 +226,38 @@ if selected_tab == "Home":
             st.rerun()
 
 # =========================================================
-# TAB 01: DASHBOARD (GRID 2x2 & 4 HALAMAN TERPISAH)
+# TAB 01: DASHBOARD (DENGAN 5 TOMBOL NAVIGASI CEPAT)
 # =========================================================
 elif selected_tab == "01 Dashboard":
     
-    # Inisialisasi state untuk sub-halaman dashboard jika belum ada
     if "dash_page" not in st.session_state:
         st.session_state.dash_page = "Main"
 
-    # Tombol Kembali jika sedang berada di dalam salah satu dari 4 sub-menu
+    # --- NAVBAR 5 TOMBOL CEPAT DI BAGIAN ATAS ---
     if st.session_state.dash_page != "Main":
-        if st.button("⬅️ Kembali ke Menu Dashboard", key="btn_back_dash"):
-            st.session_state.dash_page = "Main"
-            st.rerun()
+        n1, n2, n3, n4, n5 = st.columns(5)
+        
+        with n1:
+            if st.button("🏠 Home", key="nav_home", use_container_width=True):
+                st.session_state.dash_page = "Main"
+                st.rerun()
+        with n2:
+            if st.button("📈 PSM", key="nav_psm", use_container_width=True):
+                st.session_state.dash_page = "PSM"
+                st.rerun()
+        with n3:
+            if st.button("💰 Sales", key="nav_sales", use_container_width=True):
+                st.session_state.dash_page = "SalesToko"
+                st.rerun()
+        with n4:
+            if st.button("🛒 PPS", key="nav_pps", use_container_width=True):
+                st.session_state.dash_page = "PPSToko"
+                st.rerun()
+        with n5:
+            if st.button("👥 Member", key="nav_std", use_container_width=True):
+                st.session_state.dash_page = "StdMember"
+                st.rerun()
+                
         st.markdown("<hr style='margin: 8px 0; border-color: #334155;'>", unsafe_allow_html=True)
 
     # --- TAMPILAN UTAMA DASHBOARD (GRID 2x2) ---
@@ -280,7 +299,6 @@ elif selected_tab == "01 Dashboard":
         st.markdown("### 📈 Report Pencapaian PSM")
         st.write("Rincian data target, actual, gap, dan persentase achievement PSM toko ditarik langsung dari database Google Sheets.")
         
-        # Contoh layout metrik
         m1, m2 = st.columns(2)
         m1.metric("Total Target PSM", "Rp 0")
         m2.metric("Total Actual PSM", "Rp 0")
@@ -308,7 +326,7 @@ elif selected_tab == "01 Dashboard":
             st.markdown("##### Menu NSB Toko")
             sales_toko = st.number_input("Sales Toko (Rp):", value=0, step=100000, key="st_input")
             
-            budget_nbh = sales_toko * 0.0015  # Sales x 0.15%
+            budget_nbh = sales_toko * 0.0015
             adjust_so = st.number_input("Adjust SO (Rp):", value=0, step=10000, key="adj_input")
             total_nbh = budget_nbh - adjust_so
             
@@ -354,7 +372,6 @@ elif selected_tab == "01 Dashboard":
         sm1.metric("Rata-rata STD", "0.00")
         sm2.metric("Kontribusi Member", "0.0%")
         st.info("Data grafik harian akan dimuat dari database Google Sheets.")
-
 
 # =========================================================
 # TAB 02: RAPORT PERSONIL TOKO (3 MENU UTAMA)
