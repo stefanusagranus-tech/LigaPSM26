@@ -442,83 +442,83 @@ elif selected_tab == "01 Dashboard":
                 g_col4.metric("⚡ % Ach Harian", f"{daily_ach:.1f}%")
 
 
-            # --- BAGIAN GRAFIK GARIS PENJUALAN HARIAN DENGAN RENTANG TANGGAL & TOMBOL PROSES ---
-            st.markdown("<br>", unsafe_allow_html=True)
-            
-            # Membuat input tanggal awal dan tanggal akhir (bisa diubah manual)
-            col_d1, col_d2 = st.columns(2)
-            with col_d1:
-                default_start = waktu_wib.date().replace(day=1) if 'waktu_wib' in locals() else datetime.now().date().replace(day=1)
-                start_periode_custom = st.date_input("📅 Tanggal Awal:", value=default_start, key="custom_start_date")
-            with col_d2:
-                default_end = waktu_wib.date() if 'waktu_wib' in locals() else datetime.now().date()
-                end_periode_custom = st.date_input("📅 Tanggal Akhir:", value=default_end, key="custom_end_date")
-            
-            # Tombol Proses untuk memunculkan grafik
-            is_processed = st.button("🚀 Proses Grafik Penjualan", key="btn_process_grafik", use_container_width=True)
-            
-            # Grafik hanya akan muncul jika tombol "Proses" sudah diklik
-            if is_processed:
-                st.markdown(f"##### 📈 GRAFIK GARIS PENJUALAN HARIAN ({start_periode_custom.strftime('%d %b %Y')} s.d. {end_periode_custom.strftime('%d %b %Y')})")
-            
-                df_target_source = pd.DataFrame()
-                if not df_sales_person.empty:
-                    df_target_source = df_sales_person.copy()
-                elif not df_sales_item.empty:
-                    df_target_source = df_sales_item.copy()
-            
-                if not df_target_source.empty:
-                    date_col = next((c for c in df_target_source.columns if "updated_at" in c or "date" in c or "tanggal" in c), None)
-                    actual_qty_col = next((c for c in df_target_source.columns if "actual_qty" in c or "actual" in c), None)
-                    
-                    if date_col and actual_qty_col:
-                        sub_line_df = df_target_source.copy()
-                        sub_line_df["dt_clean"] = pd.to_datetime(sub_line_df[date_col], errors="coerce").dt.date
-                        sub_line_df["actual_qty"] = pd.to_numeric(sub_line_df[actual_qty_col], errors="coerce").fillna(0)
+                # --- BAGIAN GRAFIK GARIS PENJUALAN HARIAN DENGAN RENTANG TANGGAL & TOMBOL PROSES ---
+                st.markdown("<br>", unsafe_allow_html=True)
+                
+                # Membuat input tanggal awal dan tanggal akhir (bisa diubah manual)
+                col_d1, col_d2 = st.columns(2)
+                with col_d1:
+                    default_start = waktu_wib.date().replace(day=1) if 'waktu_wib' in locals() else datetime.now().date().replace(day=1)
+                    start_periode_custom = st.date_input("📅 Tanggal Awal:", value=default_start, key="custom_start_date")
+                with col_d2:
+                    default_end = waktu_wib.date() if 'waktu_wib' in locals() else datetime.now().date()
+                    end_periode_custom = st.date_input("📅 Tanggal Akhir:", value=default_end, key="custom_end_date")
+                
+                # Tombol Proses untuk memunculkan grafik
+                is_processed = st.button("🚀 Proses Grafik Penjualan", key="btn_process_grafik", use_container_width=True)
+                
+                # Grafik hanya akan muncul jika tombol "Proses" sudah diklik
+                if is_processed:
+                    st.markdown(f"##### 📈 GRAFIK GARIS PENJUALAN HARIAN ({start_periode_custom.strftime('%d %b %Y')} s.d. {end_periode_custom.strftime('%d %b %Y')})")
+                
+                    df_target_source = pd.DataFrame()
+                    if not df_sales_person.empty:
+                        df_target_source = df_sales_person.copy()
+                    elif not df_sales_item.empty:
+                        df_target_source = df_sales_item.copy()
+                
+                    if not df_target_source.empty:
+                        date_col = next((c for c in df_target_source.columns if "updated_at" in c or "date" in c or "tanggal" in c), None)
+                        actual_qty_col = next((c for c in df_target_source.columns if "actual_qty" in c or "actual" in c), None)
                         
-                        # Filter berdasarkan rentang tanggal awal dan akhir yang dipilih
-                        sub_line_df = sub_line_df[(sub_line_df["dt_clean"] >= start_periode_custom) & (sub_line_df["dt_clean"] <= end_periode_custom)]
-                        
-                        if not sub_line_df.empty:
-                            df_daily_trend = sub_line_df.groupby("dt_clean")["actual_qty"].sum().reset_index()
-                            df_daily_trend.columns = ["Tanggal", "Total Actual Qty"]
-                            df_daily_trend = df_daily_trend.sort_values("Tanggal")
+                        if date_col and actual_qty_col:
+                            sub_line_df = df_target_source.copy()
+                            sub_line_df["dt_clean"] = pd.to_datetime(sub_line_df[date_col], errors="coerce").dt.date
+                            sub_line_df["actual_qty"] = pd.to_numeric(sub_line_df[actual_qty_col], errors="coerce").fillna(0)
                             
-                            df_daily_trend["Tanggal_Str"] = pd.to_datetime(df_daily_trend["Tanggal"]).dt.strftime("%d %b %Y")
+                            # Filter berdasarkan rentang tanggal awal dan akhir yang dipilih
+                            sub_line_df = sub_line_df[(sub_line_df["dt_clean"] >= start_periode_custom) & (sub_line_df["dt_clean"] <= end_periode_custom)]
                             
-                            import plotly.express as px
-                            fig_line = px.line(
-                                df_daily_trend, 
-                                x="Tanggal_Str", 
-                                y="Total Actual Qty", 
-                                markers=True,
-                                text="Total Actual Qty", # Memunculkan angka qty di setiap titik grafik
-                                labels={"Tanggal_Str": "Tanggal", "Total Actual Qty": "Jumlah Penjualan (Pcs)"}
-                            )
-                            
-                            # Mengatur posisi angka agar berada di atas titik garis & mempercantik tampilan
-                            fig_line.update_traces(
-                                textposition="top center",
-                                line_color="#00f0ff", 
-                                line_width=3, 
-                                marker_size=8
-                            )
-                            fig_line.update_layout(
-                                margin=dict(t=30, b=10, l=10, r=10), 
-                                height=400,
-                                xaxis_title="Tanggal",
-                                yaxis_title="Total Qty"
-                            )
-                            st.plotly_chart(fig_line, use_container_width=True)
+                            if not sub_line_df.empty:
+                                df_daily_trend = sub_line_df.groupby("dt_clean")["actual_qty"].sum().reset_index()
+                                df_daily_trend.columns = ["Tanggal", "Total Actual Qty"]
+                                df_daily_trend = df_daily_trend.sort_values("Tanggal")
+                                
+                                df_daily_trend["Tanggal_Str"] = pd.to_datetime(df_daily_trend["Tanggal"]).dt.strftime("%d %b %Y")
+                                
+                                import plotly.express as px
+                                fig_line = px.line(
+                                    df_daily_trend, 
+                                    x="Tanggal_Str", 
+                                    y="Total Actual Qty", 
+                                    markers=True,
+                                    text="Total Actual Qty", # Memunculkan angka qty di setiap titik grafik
+                                    labels={"Tanggal_Str": "Tanggal", "Total Actual Qty": "Jumlah Penjualan (Pcs)"}
+                                )
+                                
+                                # Mengatur posisi angka agar berada di atas titik garis & mempercantik tampilan
+                                fig_line.update_traces(
+                                    textposition="top center",
+                                    line_color="#00f0ff", 
+                                    line_width=3, 
+                                    marker_size=8
+                                )
+                                fig_line.update_layout(
+                                    margin=dict(t=30, b=10, l=10, r=10), 
+                                    height=400,
+                                    xaxis_title="Tanggal",
+                                    yaxis_title="Total Qty"
+                                )
+                                st.plotly_chart(fig_line, use_container_width=True)
+                            else:
+                                st.warning(f"Tidak ada data penjualan pada rentang tanggal tersebut.")
                         else:
-                            st.warning(f"Tidak ada data penjualan pada rentang tanggal tersebut.")
+                            st.warning("Kolom tanggal atau actual qty tidak ditemukan pada data transaksi.")
                     else:
-                        st.warning("Kolom tanggal atau actual qty tidak ditemukan pada data transaksi.")
+                        st.info("Belum ada data transaksi yang dimuat untuk menampilkan grafik garis.")
                 else:
-                    st.info("Belum ada data transaksi yang dimuat untuk menampilkan grafik garis.")
-            else:
-                st.info("👆 Silakan tentukan Tanggal Awal & Tanggal Akhir, lalu klik tombol **'Proses Grafik Penjualan'** di atas.")
-
+                    st.info("👆 Silakan tentukan Tanggal Awal & Tanggal Akhir, lalu klik tombol **'Proses Grafik Penjualan'** di atas.")
+    
 
             # 2. MODE: PERIODE
             elif view_mode == "⏱️ Periode":
