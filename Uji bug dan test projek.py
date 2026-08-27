@@ -272,99 +272,142 @@ elif selected_tab == "01 Dashboard":
                 st.session_state.dash_page = "StdMember"
                 st.rerun()
 
-        # --- HALAMAN 1: REPORT PSM ---
+           # --- HALAMAN 1: REPORT PSM ---
     elif st.session_state.dash_page == "PSM":
-        st.markdown("### 📈 Report Pencapaian PSM")
         
-        # Navigasi Kapsul Bar untuk Filter Waktu
-        psm_filter_options = ["☀️ Harian", "⏱️ Periode", "🗓️ Bulanan"]
-        if hasattr(st, "pills"):
-            view_mode = st.pills("Filter Waktu PSM", psm_filter_options, default="⏱️ Periode", key="pills_psm_filter")
-        else:
-            view_mode = st.selectbox("Filter Waktu PSM:", psm_filter_options, key="select_psm_filter")
+        # Cek apakah sedang membuka sub-halaman detail kontributor
+        if st.session_state.get("active_detail_view") == "detail_kontributor":
+            if st.button("⬅️ Kembali ke Report PSM", key="btn_back_psm_main", use_container_width=True):
+                st.session_state.active_detail_view = None
+                st.rerun()
+            st.markdown("<hr style='margin: 8px 0; border-color: #334155;'>", unsafe_allow_html=True)
             
-        st.markdown("<hr style='margin: 8px 0; border-color: #334155;'>", unsafe_allow_html=True)
-        
-        # Ambil data dari session_state
-        df_sales_item = st.session_state.get("sales_item_df", pd.DataFrame())
-        df_periods = st.session_state.get("periods_df", pd.DataFrame())
-        df_sales_person = st.session_state.get("sales_person_df", pd.DataFrame())
-        
-        # Variabel tanggal dummy pendukung jika rentang waktu dibutuhkan
-        today_date = waktu_wib.date() if 'waktu_wib' in locals() else datetime.now().date()
-        start_date = today_date - timedelta(days=30)
-        end_date = today_date
-        total_days = (end_date - start_date).days + 1
-        
-        # ==========================================
-        # MODE: HARIAN (DAILY TARGET)
-        # ==========================================
-        if view_mode == "☀️ Harian":
-            date_options = [start_date + timedelta(days=i) for i in range(total_days)]
-            default_daily_idx = date_options.index(today_date) if today_date in date_options else 0
-            selected_daily_date = st.selectbox("📅 Pilih Tanggal Harian:", date_options, index=default_daily_idx, key="daily_date_picker")
-
-            sub_sp = df_sales_person.copy() if not df_sales_person.empty else pd.DataFrame()
-            sub_si = df_sales_item.copy() if not df_sales_item.empty else pd.DataFrame()
-
-            if not sub_sp.empty:
-                date_col = "updated_at" if "updated_at" in sub_sp.columns else ("date" if "date" in sub_sp.columns else ("tanggal" if "tanggal" in sub_sp.columns else None))
+            st.markdown("### 🍩 Detail Kontribusi Personil Harian")
             
-                sub_sp["dt_clean"] = pd.to_datetime(sub_sp[date_col], errors="coerce").dt.date if date_col else None
-                sub_sp["actual_qty"] = pd.to_numeric(sub_sp.get("actual_qty", 0), errors="coerce").fillna(0)
+            df_sp_detail = st.session_state.get("sales_person_df", pd.DataFrame())
+            if not df_sp_detail.empty:
+                # Kolom person & actual
+                p_col = "person_name" if "person_name" in df_sp_detail.columns else "sales_person"
+                a_col = "actual_qty" if "actual_qty" in df_sp_detail.columns else None
                 
-                day_sp = sub_sp[sub_sp["dt_clean"] == selected_daily_date] if "dt_clean" in sub_sp.columns else pd.DataFrame()
+                if p_col and a_col:
+                    df_sp_detail[a_col] = pd.to_numeric(df_sp_detail[a_col], errors="coerce").fillna(0)
+                    df_contrib = df_sp_detail.groupby(p_col)[a_col].sum().reset_index()
+                    df_contrib.columns = ["Nama Personil", "Total Actual Qty"]
+                    
+                    # Hitung persentase kontribusi
+                    total_all = df_contrib["Total Actual Qty"].sum()
+                    df_contrib["Kontribusi (%)"] = df_contrib["Total Actual Qty"].apply(lambda x: (x / total_all * 100) if total_all > 0 else 0)
+                    
+                    col_dt1, col_dt2 = st.columns([1.2, 1])
+                    with col_dt1:
+                        st.markdown("##### 📋 Tabel Rincian Kontributor")
+                        st.dataframe(df_contrib, use_container_width=True)
+                    with col_dt2:
+                        st.markdown("##### 📊 Grafik Donat Kontribusi")
+                        if not df_contrib.empty and total_all > 0:
+                            import plotly.express as px
+                            fig_donut = px.pie(df_contrib, names="Nama Personil", values="Total Actual Qty", hole=0.5)
+                            fig_donut.update_layout(margin=dict(t=10, b=10, l=10, r=10), height=300)
+                            st.plotly_chart(fig_donut, use_container_width=True)
+                        else:
+                            st.info("Belum ada data untuk grafik.")
+                else:
+                    st.warning("Struktur kolom pada data sales personil tidak lengkap.")
             else:
-                day_sp = pd.DataFrame()
+                st.warning("Data sales personil kosong.")
+                
+        else:
+            # TAMPILAN UTAMA REPORT PSM
+            st.markdown("### 📈 Report Pencapaian PSM")
+            
+            psm_filter_options = ["☀️ Harian", "⏱️ Periode", "🗓️ Bulanan"]
+            if hasattr(st, "pills"):
+                view_mode = st.pills("Filter Waktu PSM", psm_filter_options, default="☀️ Harian", key="pills_psm_filter")
+            else:
+                view_mode = st.selectbox("Filter Waktu PSM:", psm_filter_options, key="select_psm_filter")
+                
+            st.markdown("<hr style='margin: 8px 0; border-color: #334155;'>", unsafe_allow_html=True)
+            
+            df_sales_item = st.session_state.get("sales_item_df", pd.DataFrame())
+            df_periods = st.session_state.get("periods_df", pd.DataFrame())
+            df_sales_person = st.session_state.get("sales_person_df", pd.DataFrame())
+            
+            today_date = waktu_wib.date() if 'waktu_wib' in locals() else datetime.now().date()
+            
+            # ==========================================
+            # MODE: HARIAN (MENGGUNAKAN KALENDER)
+            # ==========================================
+            if view_mode == "☀️ Harian":
+                # Navigasi Kalender
+                selected_daily_date = st.date_input("📅 Pilih Tanggal Laporan:", value=today_date, key="calendar_psm_harian")
 
-            top_person = "-"
-            person_col = "person_name" if "person_name" in day_sp.columns else ("sales_person" if "sales_person" in day_sp.columns else None)
-            if person_col and not day_sp.empty:
-                top_p_df = day_sp.groupby(person_col)["actual_qty"].sum().reset_index()
-                if not top_p_df.empty and top_p_df["actual_qty"].max() > 0:
-                    top_person = top_p_df.sort_values(by="actual_qty", ascending=False).iloc[0][person_col]
+                sub_sp = df_sales_person.copy() if not df_sales_person.empty else pd.DataFrame()
+                sub_si = df_sales_item.copy() if not df_sales_item.empty else pd.DataFrame()
 
-            top_item = "-"
-            if not sub_si.empty and "item_name" in sub_si.columns:
-                sub_si["actual_qty"] = pd.to_numeric(sub_si.get("actual_qty", 0), errors="coerce").fillna(0)
-                top_i_df = sub_si.groupby("item_name")["actual_qty"].sum().reset_index()
-                if not top_i_df.empty and top_i_df["actual_qty"].max() > 0:
-                    top_item = top_i_df.sort_values(by="actual_qty", ascending=False).iloc[0]["item_name"]
+                if not sub_sp.empty:
+                    date_col = "updated_at" if "updated_at" in sub_sp.columns else ("date" if "date" in sub_sp.columns else ("tanggal" if "tanggal" in sub_sp.columns else None))
+                    sub_sp["dt_clean"] = pd.to_datetime(sub_sp[date_col], errors="coerce").dt.date if date_col else None
+                    sub_sp["actual_qty"] = pd.to_numeric(sub_sp.get("actual_qty", 0), errors="coerce").fillna(0)
+                    day_sp = sub_sp[sub_sp["dt_clean"] == selected_daily_date] if "dt_clean" in sub_sp.columns else pd.DataFrame()
+                else:
+                    day_sp = pd.DataFrame()
 
-            # Kartu Top Contributor & Top Item
-            tc1, tc2 = st.columns(2)
-            with tc1:
-                st.markdown(f"""
-                <div class='app-card' style='padding: 10px; margin-bottom: 5px;'>
-                    <span style='color:#94a3b8; font-size:10px;'>🥇 TOP CONTRIBUTOR</span>
-                    <p style='color:#00f0ff; font-size:14px; font-weight:bold; margin:2px 0 0 0;'>{top_person}</p>
-                </div>
-                """, unsafe_allow_html=True)
+                top_person = "-"
+                person_col = "person_name" if "person_name" in day_sp.columns else ("sales_person" if "sales_person" in day_sp.columns else None)
+                if person_col and not day_sp.empty:
+                    top_p_df = day_sp.groupby(person_col)["actual_qty"].sum().reset_index()
+                    if not top_p_df.empty and top_p_df["actual_qty"].max() > 0:
+                        top_person = top_p_df.sort_values(by="actual_qty", ascending=False).iloc[0][person_col]
 
-            with tc2:
-                st.markdown(f"""
-                <div class='app-card' style='padding: 10px; margin-bottom: 5px;'>
-                    <span style='color:#94a3b8; font-size:10px;'>📦 TOP ITEM</span>
-                    <p style='color:#38bdf8; font-size:14px; font-weight:bold; margin:2px 0 0 0;'>{top_item}</p>
-                </div>
-                """, unsafe_allow_html=True)
+                top_item = "-"
+                if not sub_si.empty and "item_name" in sub_si.columns:
+                    sub_si["actual_qty"] = pd.to_numeric(sub_si.get("actual_qty", 0), errors="coerce").fillna(0)
+                    top_i_df = sub_si.groupby("item_name")["actual_qty"].sum().reset_index()
+                    if not top_i_df.empty and top_i_df["actual_qty"].max() > 0:
+                        top_item = top_i_df.sort_values(by="actual_qty", ascending=False).iloc[0]["item_name"]
 
-            st.markdown("<br>", unsafe_allow_html=True)
+                # Kartu Top Contributor & Top Item dengan Tombol Detail
+                tc1, tc2 = st.columns(2)
+                with tc1:
+                    st.markdown(f"""
+                    <div class='app-card' style='padding: 10px; margin-bottom: 5px;'>
+                        <span style='color:#94a3b8; font-size:10px;'>🥇 TOP CONTRIBUTOR</span>
+                        <p style='color:#00f0ff; font-size:14px; font-weight:bold; margin:2px 0 0 0;'>{top_person}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    if st.button("🔍 Klik Detail Kontributor", key="btn_to_contrib_detail", use_container_width=True):
+                        st.session_state.active_detail_view = "detail_kontributor"
+                        st.rerun()
 
-            tot_target_full = pd.to_numeric(sub_si.get("target_qty", 0), errors="coerce").fillna(0).sum()
-            daily_target = tot_target_full / total_days if total_days > 0 else 0
-            daily_actual = day_sp["actual_qty"].sum() if not day_sp.empty else 0
-            daily_gap = daily_target - daily_actual
-            daily_ach = (daily_actual / daily_target * 100) if daily_target > 0 else 0
+                with tc2:
+                    st.markdown(f"""
+                    <div class='app-card' style='padding: 10px; margin-bottom: 5px;'>
+                        <span style='color:#94a3b8; font-size:10px;'>📦 TOP ITEM</span>
+                        <p style='color:#38bdf8; font-size:14px; font-weight:bold; margin:2px 0 0 0;'>{top_item}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    st.markdown("<div style='height: 38px;'></div>", unsafe_allow_html=True) # Penyelaras tinggi tombol
 
-            g_col1, g_col2 = st.columns(2)
-            g_col1.metric("🎯 Target Hari Ini", f"{daily_target:,.0f} Pcs")
-            g_col2.metric("📦 Actual Sales", f"{daily_actual:,.0f} Pcs")
+                st.markdown("<br>", unsafe_allow_html=True)
 
-            st.markdown("<br>", unsafe_allow_html=True)
-            g_col3, g_col4 = st.columns(2)
-            g_col3.metric("📉 Sisa Gap Harian", f"{max(daily_gap, 0):,.0f} Pcs")
-            g_col4.metric("⚡ % Ach Harian", f"{daily_ach:.1f}%")
+                # Metrik Harian Ringkas
+                tot_target_full = pd.to_numeric(sub_si.get("target_qty", 0), errors="coerce").fillna(0).sum() if not sub_si.empty else 0
+                total_days = 30 # Default asumsi hari dalam periode jika belum dihitung dinamis
+                daily_target = tot_target_full / total_days if total_days > 0 else 0
+                daily_actual = day_sp["actual_qty"].sum() if not day_sp.empty else 0
+                daily_gap = daily_target - daily_actual
+                daily_ach = (daily_actual / daily_target * 100) if daily_target > 0 else 0
+
+                g_col1, g_col2 = st.columns(2)
+                g_col1.metric("🎯 Target Hari Ini", f"{daily_target:,.0f} Pcs")
+                g_col2.metric("📦 Actual Sales", f"{daily_actual:,.0f} Pcs")
+
+                st.markdown("<br>", unsafe_allow_html=True)
+                g_col3, g_col4 = st.columns(2)
+                g_col3.metric("📉 Sisa Gap Harian", f"{max(daily_gap, 0):,.0f} Pcs")
+                g_col4.metric("⚡ % Ach Harian", f"{daily_ach:.1f}%")
+
 
         # ==========================================
         # MODE: PERIODE
