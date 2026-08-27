@@ -541,12 +541,12 @@ elif selected_tab == "01 Dashboard":
                 # 1. Ambil pilihan periode dari dataframe df_periods
                 selected_period_name = None
                 selected_period_id = None
+                p_start, p_end = None, None
                 
                 if not df_periods.empty and "period_name" in df_periods.columns:
                     period_options = df_periods["period_name"].tolist()
                     selected_period_name = st.selectbox("Pilih Periode:", period_options, key="sel_period_psm")
                     
-                    # Ambil period_id yang sesuai dengan nama periode yang dipilih
                     matched_row = df_periods[df_periods["period_name"] == selected_period_name]
                     if not matched_row.empty:
                         selected_period_id = matched_row.iloc[0]["period_id"]
@@ -554,18 +554,17 @@ elif selected_tab == "01 Dashboard":
                         p_end = pd.to_datetime(matched_row.iloc[0]["end_date"], errors="coerce").date()
                 else:
                     st.selectbox("Pilih Periode:", ["Periode 1", "Periode 2"], key="sel_period_dummy")
-                    p_start, p_end = None, None
             
                 # 2. Filter data SALES_ITEM berdasarkan period_id yang dipilih
                 sub_item_periode = pd.DataFrame()
                 if not df_sales_item.empty and selected_period_id:
-                    # Filter berdasarkan kolom period_id di SALES_ITEM
                     if "period_id" in df_sales_item.columns:
                         sub_item_periode = df_sales_item[df_sales_item["period_id"] == selected_period_id].copy()
             
-                # 3. Hitung Target & Actual Periode dari data item yang sudah terfilter period_id
+                # 3. Hitung Target, Actual, dan Item Terlaris
                 total_target_periode = 0
                 total_actual_periode = 0
+                top_item_name = "-"
                 
                 if not sub_item_periode.empty:
                     if "target_qty" in sub_item_periode.columns:
@@ -575,50 +574,110 @@ elif selected_tab == "01 Dashboard":
                     if "actual_qty" in sub_item_periode.columns:
                         sub_item_periode["actual_qty"] = pd.to_numeric(sub_item_periode["actual_qty"], errors="coerce").fillna(0)
                         total_actual_periode = sub_item_periode["actual_qty"].sum()
+                        
+                    if "item_name" in sub_item_periode.columns and not sub_item_periode.empty:
+                        df_top = sub_item_periode.groupby("item_name")["actual_qty"].sum().reset_index()
+                        if not df_top.empty:
+                            df_top = df_top.sort_values(by="actual_qty", ascending=False)
+                            top_item_name = f"{df_top.iloc[0]['item_name']} ({df_top.iloc[0]['actual_qty']:,.0f} Pcs)"
             
                 ach_periode = (total_actual_periode / total_target_periode * 100) if total_target_periode > 0 else 0
+                gap_periode = total_target_periode - total_actual_periode
             
-                # Tampilkan Kartu Metrik Utama Periode
-                st.markdown("<br>", unsafe_allow_html=True)
-                m1, m2, m3 = st.columns(3)
-                m1.metric("Target Periode", f"{total_target_periode:,.0f} Pcs")
-                m2.metric("Actual Periode", f"{total_actual_periode:,.0f} Pcs")
-                m3.metric("Achievement", f"{ach_periode:.1f}%")
-            
-                st.markdown("<br>", unsafe_allow_html=True)
-                st.markdown(f"##### 📋 Rincian Penjualan Item ({selected_period_name})")
-            
-                # 4. Membuat Tabel Rincian Item khusus untuk Periode tersebut
-                if not sub_item_periode.empty:
-                    # Mengelompokkan berdasarkan item_name jika ada item yang duplikat dalam satu periode
-                    item_col = "item_name" if "item_name" in sub_item_periode.columns else None
+                # 4. Kalkulasi Time Factor, Target Per Hari Terbaru, & Status Keterangan
+                time_factor_pct = 0.0
+                elapsed_days = 0
+                total_days = 0
+                target_harian_terbaru = 0
+                
+                if p_start and p_end:
+                    today_val = datetime.now().date()
+                    total_days = (p_end - p_start).days + 1
                     
-                    if item_col:
-                        df_summary = sub_item_periode.groupby(item_col).agg({
-                            "target_qty": "sum",
-                            "actual_qty": "sum"
-                        }).reset_index()
-                        
-                        df_summary.columns = ["Item", "Target Toko", "Jumlah Penjualan"]
-                        
-                        df_summary["Target Toko"] = pd.to_numeric(df_summary["Target Toko"], errors="coerce").fillna(0)
-                        df_summary["Jumlah Penjualan"] = pd.to_numeric(df_summary["Jumlah Penjualan"], errors="coerce").fillna(0)
-                        
-                        # Hitung Achievement (%), Gap, dan Keterangan Status
-                        df_summary["Achievement (%)"] = df_summary.apply(
-                            lambda r: f"{(r['Jumlah Penjualan'] / r['Target Toko'] * 100):.1f}%" if r["Target Toko"] > 0 else "0.0%", axis=1
-                        )
-                        df_summary["Gap Penjualan"] = df_summary["Target Toko"] - df_summary["Jumlah Penjualan"]
-                        df_summary["Keterangan"] = df_summary.apply(
-                            lambda r: "Achieved ✅" if r['Jumlah Penjualan'] >= r['Target Toko'] else "Not Achieved ❌", axis=1
-                        )
-                        
-                        # Tampilkan Tabel di Streamlit
-                        st.dataframe(df_summary, use_container_width=True, hide_index=True)
+                    if today_val < p_start:
+                        elapsed_days = 0
+                    elif today_val > p_end:
+                        elapsed_days = total_days
                     else:
-                        st.warning("Kolom 'item_name' tidak ditemukan pada sheet SALES_ITEM.")
+                        elapsed_days = (today_val - p_start).days + 1
+                        
+                    time_factor_pct = (elapsed_days / total_days * 100) if total_days > 0 else 0
+                    
+                    remaining_days = (p_end - today_val).days + 1
+                    remaining_days = max(remaining_days, 1)
+                    
+                    sisa_target = max(gap_periode, 0)
+                    target_harian_terbaru = sisa_target / remaining_days
+            
+                # --- 5. TAMPILAN 6 METRIK (GRID 2 BARIS x 3 KOLOM) ---
+                st.markdown("<br>", unsafe_allow_html=True)
+                
+                # Baris 1 (3 Kolom)
+                c1, c2, c3 = st.columns(3)
+                c1.metric("Target Periode", f"{total_target_periode:,.0f} Pcs")
+                c2.metric("Actual Periode", f"{total_actual_periode:,.0f} Pcs")
+                c3.metric("Achievement", f"{ach_periode:.1f}%")
+                
+                st.markdown("<br>", unsafe_allow_html=True)
+                
+                # Baris 2 (3 Kolom)
+                c4, c5, c6 = st.columns(3)
+                c4.metric("Gap Target", f"{gap_periode:,.0f} Pcs")
+                c5.metric("Time Factor", f"{time_factor_pct:.1f}%", help="Persentase durasi hari periode yang sudah berjalan")
+                c6.metric("Target Per Hari (Sisa)", f"{target_harian_terbaru:,.1f} Pcs/hari")
+            
+                # --- 6. KARTU STATUS TIME FACTOR & EVALUASI OTOMATIS ---
+                st.markdown("<br>", unsafe_allow_html=True)
+                
+                if ach_periode >= time_factor_pct:
+                    status_box_type = "success"
+                    status_title = "🚀 Status: DI ATAS TIME FACTOR (SUKSES)"
+                    status_desc = f"Luar biasa! Pencapaian saat ini (**{ach_periode:.1f}%**) berhasil melampaui atau sejalan dengan durasi waktu periode yang sudah berjalan (**{time_factor_pct:.1f}%** pada hari ke-{elapsed_days} dari {total_days} hari). Pertahankan performa positif ini!"
                 else:
-                    st.info(f"Tidak ada data rincian item untuk {selected_period_name}.")
+                    status_box_type = "warning"
+                    status_title = "⚠️ Status: DI BAWAH TIME FACTOR (BELUM MENCAPAI TARGET)"
+                    status_desc = f"Perhatian! Pencapaian saat ini (**{ach_periode:.1f}%**) masih berada di bawah persentase waktu berjalan (**{time_factor_pct:.1f}%** pada hari ke-{elapsed_days} dari {total_days} hari). Perlu peningkatan strategi penjualan harian agar target dapat tercapai tepat waktu."
+            
+                if status_box_type == "success":
+                    st.success(f"**{status_title}**\n\n{status_desc}")
+                else:
+                    st.warning(f"**{status_title}**\n\n{status_desc}")
+            
+                # Info Item Terlaris
+                st.info(f"🏆 **Item Paling Laris Periode Ini:** {top_item_name}")
+            
+                # --- 7. TABEL RINCIAN ITEM DENGAN FITUR HIDE / EXPANDER ---
+                st.markdown("<br>", unsafe_allow_html=True)
+                
+                with st.expander(f"📋 Klik untuk Melihat Rincian Penjualan Item ({selected_period_name})", expanded=False):
+                    if not sub_item_periode.empty:
+                        item_col = "item_name" if "item_name" in sub_item_periode.columns else None
+                        
+                        if item_col:
+                            df_summary = sub_item_periode.groupby(item_col).agg({
+                                "target_qty": "sum",
+                                "actual_qty": "sum"
+                            }).reset_index()
+                            
+                            df_summary.columns = ["Item", "Target Toko", "Jumlah Penjualan"]
+                            
+                            df_summary["Target Toko"] = pd.to_numeric(df_summary["Target Toko"], errors="coerce").fillna(0)
+                            df_summary["Jumlah Penjualan"] = pd.to_numeric(df_summary["Jumlah Penjualan"], errors="coerce").fillna(0)
+                            
+                            # Hitung Achievement (%), Gap, dan Keterangan Status
+                            df_summary["Achievement (%)"] = df_summary.apply(
+                                lambda r: f"{(r['Jumlah Penjualan'] / r['Target Toko'] * 100):.1f}%" if r["Target Toko"] > 0 else "0.0%", axis=1
+                            )
+                            df_summary["Gap Penjualan"] = df_summary["Target Toko"] - df_summary["Jumlah Penjualan"]
+                            df_summary["Keterangan"] = df_summary.apply(
+                                lambda r: "Achieved ✅" if r['Jumlah Penjualan'] >= r['Target Toko'] else "Not Achieved ❌", axis=1
+                            )
+                            
+                            st.dataframe(df_summary, use_container_width=True, hide_index=True)
+                        else:
+                            st.warning("Kolom 'item_name' tidak ditemukan pada sheet SALES_ITEM.")
+                    else:
+                        st.info(f"Tidak ada data rincian item untuk {selected_period_name}.")
 
             # 3. MODE: BULANAN
             else:
