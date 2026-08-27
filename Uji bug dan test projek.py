@@ -538,62 +538,47 @@ elif selected_tab == "01 Dashboard":
             elif view_mode == "⏱️ Periode":
                 st.markdown("##### ⏱️ Pencapaian PSM Berdasarkan Periode")
                 
-                # 1. Pilihan Periode dari sheet/database df_periods
+                # 1. Ambil pilihan periode dari dataframe df_periods
                 selected_period_name = None
+                selected_period_id = None
+                
                 if not df_periods.empty and "period_name" in df_periods.columns:
-                    selected_period_name = st.selectbox("Pilih Periode:", df_periods["period_name"].unique(), key="sel_period_psm")
-                else:
-                    selected_period_name = st.selectbox("Pilih Periode:", ["Periode 1", "Periode 2"], key="sel_period_dummy")
-                
-                # 2. Ambil tanggal mulai & selesai dari periode yang dipilih
-                p_start, p_end = None, None
-                if not df_periods.empty and selected_period_name:
-                    col_name = next((c for c in df_periods.columns if "name" in c or "periode" in c), None)
-                    col_start = next((c for c in df_periods.columns if "start" in c or "mulai" in c), None)
-                    col_end = next((c for c in df_periods.columns if "end" in c or "selesai" in c), None)
+                    period_options = df_periods["period_name"].tolist()
+                    selected_period_name = st.selectbox("Pilih Periode:", period_options, key="sel_period_psm")
                     
-                    if col_name and col_start and col_end:
-                        matched_p = df_periods[df_periods[col_name] == selected_period_name]
-                        if not matched_p.empty:
-                            p_start = pd.to_datetime(matched_p.iloc[0][col_start], errors="coerce").date()
-                            p_end = pd.to_datetime(matched_p.iloc[0][col_end], errors="coerce").date()
+                    # Ambil period_id yang sesuai dengan nama periode yang dipilih
+                    matched_row = df_periods[df_periods["period_name"] == selected_period_name]
+                    if not matched_row.empty:
+                        selected_period_id = matched_row.iloc[0]["period_id"]
+                        p_start = pd.to_datetime(matched_row.iloc[0]["start_date"], errors="coerce").date()
+                        p_end = pd.to_datetime(matched_row.iloc[0]["end_date"], errors="coerce").date()
+                else:
+                    st.selectbox("Pilih Periode:", ["Periode 1", "Periode 2"], key="sel_period_dummy")
+                    p_start, p_end = None, None
             
-                # 3. Filter data sales_item dan sales_person berdasarkan rentang tanggal periode aktif
-                sub_item_periode = df_sales_item.copy() if not df_sales_item.empty else pd.DataFrame()
-                
-                if not sub_item_periode.empty and p_start and p_end:
-                    date_col_si = next((c for c in sub_item_periode.columns if "updated_at" in c or "date" in c or "tanggal" in c), None)
-                    if date_col_si:
-                        sub_item_periode["dt_clean"] = pd.to_datetime(sub_item_periode[date_col_si], errors="coerce").dt.date
-                        # Filter item yang tanggalnya masuk ke dalam rentang periode
-                        sub_item_periode = sub_item_periode[(sub_item_periode["dt_clean"] >= p_start) & (sub_item_periode["dt_clean"] <= p_end)]
+                # 2. Filter data SALES_ITEM berdasarkan period_id yang dipilih
+                sub_item_periode = pd.DataFrame()
+                if not df_sales_item.empty and selected_period_id:
+                    # Filter berdasarkan kolom period_id di SALES_ITEM
+                    if "period_id" in df_sales_item.columns:
+                        sub_item_periode = df_sales_item[df_sales_item["period_id"] == selected_period_id].copy()
             
-                # Hitung Target & Actual Periode secara akurat dari data yang sudah terfilter periode
+                # 3. Hitung Target & Actual Periode dari data item yang sudah terfilter period_id
                 total_target_periode = 0
                 total_actual_periode = 0
                 
                 if not sub_item_periode.empty:
-                    col_t_qty = next((c for c in sub_item_periode.columns if "target" in c), None)
-                    col_a_qty = next((c for c in sub_item_periode.columns if "actual_qty" in c or "actual" in c), None)
-                    
-                    if col_t_qty:
-                        total_target_periode = pd.to_numeric(sub_item_periode[col_t_qty], errors="coerce").fillna(0).sum()
-                    if col_a_qty:
-                        total_actual_periode = pd.to_numeric(sub_item_periode[col_a_qty], errors="coerce").fillna(0).sum()
-                
-                # Fallback actual dari sales_person jika di sales_item tidak ada kolom actual
-                if total_actual_periode == 0 and not df_sales_person.empty and p_start and p_end:
-                    date_col_sp = next((c for c in df_sales_person.columns if "updated_at" in c or "date" in c or "tanggal" in c), None)
-                    actual_col_sp = next((c for c in df_sales_person.columns if "actual_qty" in c or "actual" in c), None)
-                    if date_col_sp and actual_col_sp:
-                        temp_sp = df_sales_person.copy()
-                        temp_sp["dt_clean"] = pd.to_datetime(temp_sp[date_col_sp], errors="coerce").dt.date
-                        temp_sp["actual_val"] = pd.to_numeric(temp_sp[actual_col_sp], errors="coerce").fillna(0)
-                        filtered_sp = temp_sp[(temp_sp["dt_clean"] >= p_start) & (temp_sp["dt_clean"] <= p_end)]
-                        total_actual_periode = filtered_sp["actual_val"].sum()
+                    if "target_qty" in sub_item_periode.columns:
+                        sub_item_periode["target_qty"] = pd.to_numeric(sub_item_periode["target_qty"], errors="coerce").fillna(0)
+                        total_target_periode = sub_item_periode["target_qty"].sum()
+                        
+                    if "actual_qty" in sub_item_periode.columns:
+                        sub_item_periode["actual_qty"] = pd.to_numeric(sub_item_periode["actual_qty"], errors="coerce").fillna(0)
+                        total_actual_periode = sub_item_periode["actual_qty"].sum()
             
                 ach_periode = (total_actual_periode / total_target_periode * 100) if total_target_periode > 0 else 0
             
+                # Tampilkan Kartu Metrik Utama Periode
                 st.markdown("<br>", unsafe_allow_html=True)
                 m1, m2, m3 = st.columns(3)
                 m1.metric("Target Periode", f"{total_target_periode:,.0f} Pcs")
@@ -603,55 +588,37 @@ elif selected_tab == "01 Dashboard":
                 st.markdown("<br>", unsafe_allow_html=True)
                 st.markdown(f"##### 📋 Rincian Penjualan Item ({selected_period_name})")
             
-                # 4. Membuat Tabel Rincian Item khusus untuk Periode yang dipilih
+                # 4. Membuat Tabel Rincian Item khusus untuk Periode tersebut
                 if not sub_item_periode.empty:
-                    item_col = next((c for c in sub_item_periode.columns if "item_name" in c or "name" in c), None)
-                    target_col = next((c for c in sub_item_periode.columns if "target" in c), None)
-                    actual_i_col = next((c for c in sub_item_periode.columns if "actual_qty" in c or "actual" in c), None)
+                    # Mengelompokkan berdasarkan item_name jika ada item yang duplikat dalam satu periode
+                    item_col = "item_name" if "item_name" in sub_item_periode.columns else None
                     
                     if item_col:
-                        agg_dict = {}
-                        if target_col:
-                            agg_dict[target_col] = "sum"
-                        if actual_i_col:
-                            agg_dict[actual_i_col] = "sum"
-                            
-                        if agg_dict:
-                            df_summary = sub_item_periode.groupby(item_col).agg(agg_dict).reset_index()
-                            
-                            cols_rename = {item_col: "Item"}
-                            if target_col:
-                                cols_rename[target_col] = "Target Toko"
-                            if actual_i_col:
-                                cols_rename[actual_i_col] = "Jumlah Penjualan"
-                            df_summary = df_summary.rename(columns=cols_rename)
-                            
-                            if "Target Toko" not in df_summary.columns:
-                                df_summary["Target Toko"] = 0
-                            if "Jumlah Penjualan" not in df_summary.columns:
-                                df_summary["Jumlah Penjualan"] = 0
-                                
-                            df_summary["Target Toko"] = pd.to_numeric(df_summary["Target Toko"], errors="coerce").fillna(0)
-                            df_summary["Jumlah Penjualan"] = pd.to_numeric(df_summary["Jumlah Penjualan"], errors="coerce").fillna(0)
-                            
-                            # Hitung Achievement (%), Gap, dan Keterangan Status
-                            df_summary["Achievement (%)"] = df_summary.apply(
-                                lambda r: f"{(r['Jumlah Penjualan'] / r['Target Toko'] * 100):.1f}%" if r["Target Toko"] > 0 else "0.0%", axis=1
-                            )
-                            df_summary["Gap Penjualan"] = df_summary["Target Toko"] - df_summary["Jumlah Penjualan"]
-                            df_summary["Keterangan"] = df_summary.apply(
-                                lambda r: "Achieved ✅" if r["Jumlah Penjualan"] >= r["Target Toko"] else "Not Achieved ❌", axis=1
-                            )
-                            
-                            st.dataframe(df_summary, use_container_width=True, hide_index=True)
-                        else:
-                            st.info("Kolom target atau actual tidak ditemukan untuk membuat tabel rincian.")
+                        df_summary = sub_item_periode.groupby(item_col).agg({
+                            "target_qty": "sum",
+                            "actual_qty": "sum"
+                        }).reset_index()
+                        
+                        df_summary.columns = ["Item", "Target Toko", "Jumlah Penjualan"]
+                        
+                        df_summary["Target Toko"] = pd.to_numeric(df_summary["Target Toko"], errors="coerce").fillna(0)
+                        df_summary["Jumlah Penjualan"] = pd.to_numeric(df_summary["Jumlah Penjualan"], errors="coerce").fillna(0)
+                        
+                        # Hitung Achievement (%), Gap, dan Keterangan Status
+                        df_summary["Achievement (%)"] = df_summary.apply(
+                            lambda r: f"{(r['Jumlah Penjualan'] / r['Target Toko'] * 100):.1f}%" if r["Target Toko"] > 0 else "0.0%", axis=1
+                        )
+                        df_summary["Gap Penjualan"] = df_summary["Target Toko"] - df_summary["Jumlah Penjualan"]
+                        df_summary["Keterangan"] = df_summary.apply(
+                            lambda r: "Achieved ✅" if r['Jumlah Penjualan'] >= r['Target Toko'] else "Not Achieved ❌", axis=1
+                        )
+                        
+                        # Tampilkan Tabel di Streamlit
+                        st.dataframe(df_summary, use_container_width=True, hide_index=True)
                     else:
-                        st.warning("Kolom nama item tidak ditemukan pada sheet SALES_ITEM.")
+                        st.warning("Kolom 'item_name' tidak ditemukan pada sheet SALES_ITEM.")
                 else:
-                    st.info(f"Tidak ada data rincian item pada periode {selected_period_name}.")
-
-
+                    st.info(f"Tidak ada data rincian item untuk {selected_period_name}.")
 
             # 3. MODE: BULANAN
             else:
