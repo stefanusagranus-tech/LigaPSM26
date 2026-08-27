@@ -492,24 +492,39 @@ elif selected_tab == "01 Dashboard":
                                     x="Tanggal_Str", 
                                     y="Total Actual Qty", 
                                     markers=True,
-                                    text="Total Actual Qty", # Memunculkan angka qty di setiap titik grafik
+                                    text="Total Actual Qty",
                                     labels={"Tanggal_Str": "Tanggal", "Total Actual Qty": "Jumlah Penjualan (Pcs)"}
                                 )
                                 
-                                # Mengatur posisi angka agar berada di atas titik garis & mempercantik tampilan
+                                # Mempercantik gaya visual garis dan titik
                                 fig_line.update_traces(
                                     textposition="top center",
-                                    line_color="#00f0ff", 
-                                    line_width=3, 
-                                    marker_size=8
+                                    textfont=dict(size=11, color="#38bdf8", family="sans-serif"),
+                                    line=dict(color="#00f0ff", width=3, shape="spline"), # Garis sedikit melengkung (smooth) & neon cyan
+                                    marker=dict(size=9, color="#00f0ff", line=dict(width=2, color="#0f172a"))
                                 )
+                                
+                                # Desain layout latar belakang agar lebih clean, minimalis, dan menyatu dengan tema gelap
                                 fig_line.update_layout(
-                                    margin=dict(t=30, b=10, l=10, r=10), 
-                                    height=400,
-                                    xaxis_title="Tanggal",
-                                    yaxis_title="Total Qty"
+                                    margin=dict(t=40, b=20, l=20, r=20), 
+                                    height=380,
+                                    xaxis_title=None, # Menghilangkan label sumbu X agar tidak berlebihan
+                                    yaxis_title="Total Qty",
+                                    paper_bgcolor="rgba(0,0,0,0)", # Transparan agar mengikuti tema background aplikasi
+                                    plot_bgcolor="rgba(0,0,0,0)",
+                                    font=dict(color="#cbd5e1", size=12),
+                                    xaxis=dict(
+                                        showgrid=False, 
+                                        tickfont=dict(color="#94a3b8")
+                                    ),
+                                    yaxis=dict(
+                                        showgrid=True, 
+                                        gridcolor="rgba(255, 255, 255, 0.08)", # Garis grid tipis yang tidak mencolok
+                                        tickfont=dict(color="#94a3b8")
+                                    )
                                 )
                                 st.plotly_chart(fig_line, use_container_width=True)
+
                             else:
                                 st.warning(f"Tidak ada data penjualan pada rentang tanggal tersebut.")
                         else:
