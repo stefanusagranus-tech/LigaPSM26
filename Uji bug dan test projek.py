@@ -232,34 +232,7 @@ elif selected_tab == "01 Dashboard":
     
     if "dash_page" not in st.session_state:
         st.session_state.dash_page = "Main"
-
-    # --- NAVBAR 5 TOMBOL CEPAT DI BAGIAN ATAS ---
-    if st.session_state.dash_page != "Main":
-        n1, n2, n3, n4, n5 = st.columns(5)
         
-        with n1:
-            if st.button("🏠 Home", key="nav_home", use_container_width=True):
-                st.session_state.dash_page = "Main"
-                st.rerun()
-        with n2:
-            if st.button("📈 PSM", key="nav_psm", use_container_width=True):
-                st.session_state.dash_page = "PSM"
-                st.rerun()
-        with n3:
-            if st.button("💰 Sales", key="nav_sales", use_container_width=True):
-                st.session_state.dash_page = "SalesToko"
-                st.rerun()
-        with n4:
-            if st.button("🛒 PPS", key="nav_pps", use_container_width=True):
-                st.session_state.dash_page = "PPSToko"
-                st.rerun()
-        with n5:
-            if st.button("👥 Member", key="nav_std", use_container_width=True):
-                st.session_state.dash_page = "StdMember"
-                st.rerun()
-                
-        st.markdown("<hr style='margin: 8px 0; border-color: #334155;'>", unsafe_allow_html=True)
-
     # --- TAMPILAN UTAMA DASHBOARD (GRID 2x2) ---
     if st.session_state.dash_page == "Main":
         st.markdown("<h4 style='text-align: center; color: #00f0ff; margin-bottom: 16px;'>📊 MENU DASHBOARD UTAMA</h4>", unsafe_allow_html=True)
@@ -294,15 +267,56 @@ elif selected_tab == "01 Dashboard":
                 st.session_state.dash_page = "StdMember"
                 st.rerun()
 
-    # --- HALAMAN 1: REPORT PSM ---
+        # --- HALAMAN 1: REPORT PSM ---
     elif st.session_state.dash_page == "PSM":
         st.markdown("### 📈 Report Pencapaian PSM")
-        st.write("Rincian data target, actual, gap, dan persentase achievement PSM toko ditarik langsung dari database Google Sheets.")
         
-        m1, m2 = st.columns(2)
-        m1.metric("Total Target PSM", "Rp 0")
-        m2.metric("Total Actual PSM", "Rp 0")
-        st.info("Tabel data item PSM akan ditampilkan di sini.")
+        # Navigasi Kapsul Bar untuk Filter Waktu (Harian, Periode, Bulanan)
+        psm_filter_options = ["Harian", "Periode", "Bulanan"]
+        if hasattr(st, "pills"):
+            psm_mode = st.pills("Filter Waktu PSM", psm_filter_options, default="Periode", key="pills_psm_filter")
+        else:
+            psm_mode = st.selectbox("Filter Waktu PSM:", psm_filter_options, key="select_psm_filter")
+            
+        st.markdown("<hr style='margin: 8px 0; border-color: #334155;'>", unsafe_allow_html=True)
+        
+        # Ambil data dari session state
+        df_sales_item = st.session_state.get("sales_item_df", pd.DataFrame())
+        df_periods = st.session_state.get("periods_df", pd.DataFrame())
+        
+        # Konten berdasarkan filter kapsul yang dipilih
+        if psm_mode == "Harian":
+            st.markdown("##### 📅 Pencapaian PSM Harian")
+            st.date_input("Pilih Tanggal Laporan:", key="date_psm_harian")
+            # Logika filter harian di sini
+            
+        elif psm_mode == "Periode":
+            st.markdown("##### ⏱️ Pencapaian PSM Berdasarkan Periode")
+            if not df_periods.empty and "period_name" in df_periods.columns:
+                selected_period = st.selectbox("Pilih Periode:", df_periods["period_name"].unique(), key="sel_period_psm")
+            else:
+                st.selectbox("Pilih Periode:", ["Periode 1", "Periode 2"], key="sel_period_dummy")
+            # Logika filter periode di sini
+            
+        else:
+            st.markdown("##### 🗓️ Pencapaian PSM Bulanan")
+            st.selectbox("Pilih Bulan:", ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"], key="sel_bulan_psm")
+            # Logika filter bulanan di sini
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # Ringkasan Metrik PSM
+        m1, m2, m3 = st.columns(3)
+        m1.metric("Target PSM", "Rp 0")
+        m2.metric("Actual PSM", "Rp 0")
+        m3.metric("Achievement", "0.0%")
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("##### 📋 Rincian Item PSM")
+        if not df_sales_item.empty:
+            st.dataframe(df_sales_item, use_container_width=True)
+        else:
+            st.info("Belum ada data rincian item PSM yang dimuat.")
 
     # --- HALAMAN 2: REPORT SALES TOKO ---
     elif st.session_state.dash_page == "SalesToko":
