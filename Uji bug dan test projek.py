@@ -226,77 +226,135 @@ if selected_tab == "Home":
             st.rerun()
 
 # =========================================================
-# TAB 01: DASHBOARD (DENGAN 4 SUB-MENU UTAMA)
+# TAB 01: DASHBOARD (GRID 2x2 & 4 HALAMAN TERPISAH)
 # =========================================================
 elif selected_tab == "01 Dashboard":
-    if "dash_sub" not in st.session_state:
-        st.session_state.dash_sub = "Report PSM"
+    
+    # Inisialisasi state untuk sub-halaman dashboard jika belum ada
+    if "dash_page" not in st.session_state:
+        st.session_state.dash_page = "Main"
 
-    # Pilihan Kapsul untuk 4 Menu Dashboard
-    dash_options = ["Report PSM", "Report Sales Toko", "Report PPS Toko", "Report STD & Member"]
-    if hasattr(st, "pills"):
-        st.session_state.dash_sub = st.pills("Pilih Menu Dashboard", dash_options, default=st.session_state.dash_sub, key="pills_dash")
-    else:
-        st.session_state.dash_sub = st.selectbox("Pilih Menu Dashboard:", dash_options, key="select_dash")
+    # Tombol Kembali jika sedang berada di dalam salah satu dari 4 sub-menu
+    if st.session_state.dash_page != "Main":
+        if st.button("⬅️ Kembali ke Menu Dashboard", key="btn_back_dash"):
+            st.session_state.dash_page = "Main"
+            st.rerun()
+        st.markdown("<hr style='margin: 8px 0; border-color: #334155;'>", unsafe_allow_html=True)
 
-    st.markdown("---")
-    sub_menu = st.session_state.dash_sub
+    # --- TAMPILAN UTAMA DASHBOARD (GRID 2x2) ---
+    if st.session_state.dash_page == "Main":
+        st.markdown("<h4 style='text-align: center; color: #00f0ff; margin-bottom: 16px;'>📊 MENU DASHBOARD UTAMA</h4>", unsafe_allow_html=True)
 
-    # 1. Report PSM
-    if sub_menu == "Report PSM":
-        st.markdown("### 📊 Report Pencapaian PSM")
-        st.info("Menampilkan rangkuman target, actual, gap, dan persentase achievement PSM toko.")
-        # (Logika dashboard PSM awal kamu ditaruh di sini)
+        # Baris 1 Grid 2x2
+        col_d1, col_d2 = st.columns(2)
+        with col_d1:
+            st.markdown("<div class='app-card'><span class='app-icon'>📈</span><div class='app-title'>Report PSM</div><div class='app-desc'>Pencapaian PSM Toko</div></div>", unsafe_allow_html=True)
+            if st.button("Buka PSM", key="btn_dash_psm", use_container_width=True):
+                st.session_state.dash_page = "PSM"
+                st.rerun()
+                
+        with col_d2:
+            st.markdown("<div class='app-card'><span class='app-icon'>💰</span><div class='app-title'>Report Sales Toko</div><div class='app-desc'>Net Sales, GM & NSB</div></div>", unsafe_allow_html=True)
+            if st.button("Buka Sales Toko", key="btn_dash_sales", use_container_width=True):
+                st.session_state.dash_page = "SalesToko"
+                st.rerun()
 
-    # 2. Report Sales Toko
-    elif sub_menu == "Report Sales Toko":
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # Baris 2 Grid 2x2
+        col_d3, col_d4 = st.columns(2)
+        with col_d3:
+            st.markdown("<div class='app-card'><span class='app-icon'>🛒</span><div class='app-title'>Report PPS Toko</div><div class='app-desc'>APC, PWP, Sueger, Simulasi</div></div>", unsafe_allow_html=True)
+            if st.button("Buka PPS Toko", key="btn_dash_pps", use_container_width=True):
+                st.session_state.dash_page = "PPSToko"
+                st.rerun()
+                
+        with col_d4:
+            st.markdown("<div class='app-card'><span class='app-icon'>👥</span><div class='app-title'>Report STD & Member</div><div class='app-desc'>Kontribusi Member & STD</div></div>", unsafe_allow_html=True)
+            if st.button("Buka STD & Member", key="btn_dash_std", use_container_width=True):
+                st.session_state.dash_page = "StdMember"
+                st.rerun()
+
+    # --- HALAMAN 1: REPORT PSM ---
+    elif st.session_state.dash_page == "PSM":
+        st.markdown("### 📈 Report Pencapaian PSM")
+        st.write("Rincian data target, actual, gap, dan persentase achievement PSM toko ditarik langsung dari database Google Sheets.")
+        
+        # Contoh layout metrik
+        m1, m2 = st.columns(2)
+        m1.metric("Total Target PSM", "Rp 0")
+        m2.metric("Total Actual PSM", "Rp 0")
+        st.info("Tabel data item PSM akan ditampilkan di sini.")
+
+    # --- HALAMAN 2: REPORT SALES TOKO ---
+    elif st.session_state.dash_page == "SalesToko":
         st.markdown("### 💰 Report Sales Toko")
         
-        tab_s1, tab_s2 = st.tabs(["📌 Net Sales & GM", "🧾 NSB Toko"])
-        with tab_s1:
-            st.markdown("##### Menu Net Sales & GM")
-            net_sales = st.number_input("Input Net Sales (Rp):", value=0, step=100000)
-            gm_persen = st.number_input("Input GM (%):", value=0.0, step=0.1)
-            gm_rupiah = net_sales * (gm_persen / 100)
-            budget_so = st.number_input("Input Budget SO (Rp):", value=0, step=10000)
+        tab_st1, tab_st2 = st.tabs(["📌 Net Sales & GM", "🧾 NSB Toko"])
+        
+        with tab_st1:
+            st.markdown("##### Menu Net Sales, GM% & Budget SO")
+            net_sales = st.number_input("Net Sales (Rp):", value=0, step=100000, key="ns_input")
+            gm_persen = st.number_input("GM (%):", value=0.0, step=0.1, key="gm_input")
             
-            st.markdown(f"**GM Rupiah (Net Sales x GM%):** Rp {gm_rupiah:,.2f}")
-            st.success(f"**Budget SO Terhitung:** Rp {budget_so:,.2f}")
+            gm_rupiah = net_sales * (gm_persen / 100)
+            budget_so = st.number_input("Budget SO (Rp):", value=0, step=10000, key="bso_input")
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.metric("GM Rupiah (Net Sales x GM%)", f"Rp {gm_rupiah:,.2f}")
+            st.success(f"**Budget SO:** Rp {budget_so:,.2f}")
 
-        with tab_s2:
+        with tab_st2:
             st.markdown("##### Menu NSB Toko")
-            sales_toko = st.number_input("Sales Toko (Rp):", value=0, step=100000)
+            sales_toko = st.number_input("Sales Toko (Rp):", value=0, step=100000, key="st_input")
+            
             budget_nbh = sales_toko * 0.0015  # Sales x 0.15%
-            adjust_so = st.number_input("Adjust SO (Rp):", value=0, step=10000)
+            adjust_so = st.number_input("Adjust SO (Rp):", value=0, step=10000, key="adj_input")
             total_nbh = budget_nbh - adjust_so
             
-            st.metric("Budget NBH (0.15%)", f"Rp {budget_nbh:,.2f}")
-            st.metric("Total NBH (Budget - Adjust)", f"Rp {total_nbh:,.2f}")
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.metric("Budget NBH (Sales x 0.15%)", f"Rp {budget_nbh:,.2f}")
+            st.metric("Total NBH (Budget NBH - Adjust SO)", f"Rp {total_nbh:,.2f}")
 
-    # 3. Report PPS Toko
-    elif sub_menu == "Report PPS Toko":
-        st.markdown("### 🎯 Report PPS Toko")
-        pps_sub_tab = st.selectbox("Pilih Sub-Kategori PPS:", ["Report PPS Utama", "Report Sueger & Cemilan Ceban", "Simulasi PPS Toko"])
+    # --- HALAMAN 3: REPORT PPS TOKO ---
+    elif st.session_state.dash_page == "PPSToko":
+        st.markdown("### 🛒 Report PPS Toko")
         
-        if pps_sub_tab == "Report PPS Utama":
-            st.markdown("##### Rangkuman PPS Utama")
-            c1, c2 = st.columns(2)
-            c1.metric("Apc Toko", "0")
-            c1.metric("Psm Toko", "0")
-            c2.metric("Pwp Toko", "0")
-            c2.metric("Serba Gratis Toko", "0")
-        elif pps_sub_tab == "Report Sueger & Cemilan Ceban":
+        pps_menu_choice = st.selectbox("Pilih Kategori PPS:", [
+            "Report PPS (APC, PSM, PWP, Serba Gratis)", 
+            "Menu Sueger & Cemilan Ceban", 
+            "Simulasi PPS Toko"
+        ])
+        
+        st.markdown("---")
+        
+        if pps_menu_choice == "Report PPS (APC, PSM, PWP, Serba Gratis)":
+            st.markdown("##### Indikator PPS Toko")
+            c_p1, c_p2 = st.columns(2)
+            c_p1.metric("APC Toko", "0")
+            c_p1.metric("PSM Toko", "0")
+            c_p2.metric("PWP Toko", "0")
+            c_p2.metric("Serba Gratis Toko", "0")
+            
+        elif pps_menu_choice == "Menu Sueger & Cemilan Ceban":
             st.markdown("##### 🥤 Report Sueger & Cemilan Ceban")
-            st.write("Data dan pencapaian produk Sueger serta Cemilan Ceban.")
+            st.write("Monitoring pencapaian produk Sueger dan Cemilan Ceban.")
+            
         else:
             st.markdown("##### 🧮 Simulasi PPS Toko")
-            sim_val = st.slider("Simulasi Target Index PPS", 0, 100, 50)
-            st.write(f"Estimasi Poin Bonus / Bobot Berdasarkan Simulasi: **{sim_val * 0.2:.2f} Poin**")
+            sim_val = st.slider("Atur Target Simulasi PPS", 0, 100, 50, key="sim_pps_slider")
+            st.info(f"Proyeksi Hasil Simulasi: **{sim_val * 1.2:.1f} Poin**")
 
-    # 4. Report STD & Member
-    elif sub_menu == "Report STD & Member":
+    # --- HALAMAN 4: REPORT STD & MEMBER ---
+    elif st.session_state.dash_page == "StdMember":
         st.markdown("### 👥 Report STD & Kontribusi Member Toko")
-        st.info("Analisis data transaksi harian (STD) dan persentase kontribusi member terhadap total member belanja toko.")
+        st.write("Analisis performa Sales Through Department (STD) serta persentase kontribusi member belanja di toko.")
+        
+        sm1, sm2 = st.columns(2)
+        sm1.metric("Rata-rata STD", "0.00")
+        sm2.metric("Kontribusi Member", "0.0%")
+        st.info("Data grafik harian akan dimuat dari database Google Sheets.")
+
 
 # =========================================================
 # TAB 02: RAPORT PERSONIL TOKO (3 MENU UTAMA)
