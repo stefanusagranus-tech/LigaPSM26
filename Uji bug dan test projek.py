@@ -466,11 +466,34 @@ elif selected_tab == "01 Dashboard":
                 m2.metric("Actual Bulanan", "0 Pcs")
                 m3.metric("Achievement", "0.0%")
 
-            # --- BAGIAN TABEL RINCIAN ITEM PSM & GRAFIK (FILTER TANGGAL) ---
+            # --- BAGIAN GRAFIK (GRAFIK PENJUALAN HARIAN PER PERIODE) ---
             st.markdown("<br>", unsafe_allow_html=True)
             active_date_val = locals().get('selected_daily_date', today_date)
-            display_date_label = active_date_val if view_mode == "☀️ Harian" else "Semua Periode/Bulan"
-            st.markdown(f"##### 📋 Rincian Item PSM & Grafik Kontribusi ({display_date_label})")
+            
+            # 1. Cari rentang tanggal dari df_periode yang mencakup active_date_val
+            start_periode = None
+            end_periode = None
+            label_periode = "Periode Aktif"
+            
+            if 'df_periode' in locals() and not df_periode.empty:
+                col_start = next((c for c in df_periode.columns if "start" in c or "mulai" in c), None)
+                col_end = next((c for c in df_periode.columns if "end" in c or "selesai" in c), None)
+                col_name = next((c for c in df_periode.columns if "name" in c or "periode" in c), None)
+                
+                if col_start and col_end:
+                    df_periode["dt_start"] = pd.to_datetime(df_periode[col_start], errors="coerce").dt.date
+                    df_periode["dt_end"] = pd.to_datetime(df_periode[col_end], errors="coerce").dt.date
+                    
+                    matched_periode = df_periode[(df_periode["dt_start"] <= active_date_val) & (df_periode["dt_end"] >= active_date_val)]
+                    
+                    if not matched_periode.empty:
+                        start_periode = matched_periode.iloc[0]["dt_start"]
+                        end_periode = matched_periode.iloc[0]["dt_end"]
+                        p_name = matched_periode.iloc[0][col_name] if col_name else "Periode"
+                        label_periode = f"{p_name} ({start_periode.strftime('%d %b')} - {end_periode.strftime('%d %b %Y')})"
+            
+            # Judul Utama Sesuai Permintaan
+            st.markdown(f"##### 📊 GRAFIK PENJUALAN HARIAN PER PERIODE ({label_periode})")
             
             if not df_sales_item.empty:
                 date_col_si = next((c for c in df_sales_item.columns if "updated_at" in c or "date" in c or "tanggal" in c), None)
@@ -480,9 +503,9 @@ elif selected_tab == "01 Dashboard":
                 if item_name_col and actual_qty_col:
                     sub_item_df = df_sales_item.copy()
                     
-                    if view_mode == "☀️ Harian" and date_col_si:
+                    if date_col_si and start_periode and end_periode:
                         sub_item_df["dt_clean"] = pd.to_datetime(sub_item_df[date_col_si], errors="coerce").dt.date
-                        sub_item_df = sub_item_df[sub_item_df["dt_clean"] == active_date_val]
+                        sub_item_df = sub_item_df[(sub_item_df["dt_clean"] >= start_periode) & (sub_item_df["dt_clean"] <= end_periode)]
                     
                     if not sub_item_df.empty:
                         sub_item_df["actual_qty"] = pd.to_numeric(sub_item_df[actual_qty_col], errors="coerce").fillna(0)
@@ -502,18 +525,20 @@ elif selected_tab == "01 Dashboard":
                                 df_grouped, 
                                 x="Nama Item", 
                                 y="Actual Qty", 
-                                title="Grafik Actual Qty per Item",
+                                title=f"Grafik Penjualan per Item",
                                 color="Actual Qty",
                                 color_continuous_scale="blues"
                             )
                             fig_bar.update_layout(margin=dict(t=30, b=10, l=10, r=10), height=350)
                             st.plotly_chart(fig_bar, use_container_width=True)
                     else:
-                        st.info("Tidak ada data item terjual pada filter waktu yang dipilih.")
+                        st.info(f"Tidak ada data item terjual pada rentang periode ini.")
                 else:
                     st.warning("Struktur kolom 'item_name' atau 'actual_qty' tidak ditemukan pada sheet SALES_ITEM.")
             else:
                 st.info("Belum ada data rincian item PSM yang dimuat.")
+
+
 
     # --- HALAMAN 2: REPORT SALES TOKO ---
     elif st.session_state.dash_page == "SalesToko":
