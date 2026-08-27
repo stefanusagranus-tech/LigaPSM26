@@ -275,9 +275,9 @@ elif selected_tab == "01 Dashboard":
                 st.rerun()
 
    # =========================================================
-# HALAMAN 1: REPORT PSM (GABUNGAN HARIAN, PERIODE, & BULANAN)
-# =========================================================
-elif st.session_state.dash_page == "PSM":
+   # HALAMAN 1: REPORT PSM (GABUNGAN HARIAN, PERIODE, & BULANAN)
+   # =========================================================
+   elif st.session_state.dash_page == "PSM":
     
     today_date = waktu_wib.date() if 'waktu_wib' in locals() else datetime.now().date()
     active_date = st.session_state.get("calendar_psm_harian", today_date)
