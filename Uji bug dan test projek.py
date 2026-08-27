@@ -282,14 +282,14 @@ elif selected_tab == "01 Dashboard":
         today_date = waktu_wib.date() if 'waktu_wib' in locals() else datetime.now().date()
         active_date = st.session_state.get("calendar_psm_harian", today_date)
 
-        # Sub-halaman: Detail Kontributor Harian (Donut Chart & Status Input)
+        # Sub-halaman: Detail Kontributor Harian (Podium, Bar Chart Horizontal & Peringkat Ber-Medali)
         if st.session_state.get("active_detail_view") == "detail_kontributor":
             if st.button("⬅️ Kembali ke Report PSM", key="btn_back_psm_main", use_container_width=True):
                 st.session_state.active_detail_view = None
                 st.rerun()
             st.markdown("<hr style='margin: 8px 0; border-color: #334155;'>", unsafe_allow_html=True)
             
-            st.markdown(f"### 🍩 Detail Kontribusi Personil Harian (Tanggal: {active_date})")
+            st.markdown(f"### 📊 Detail Kontribusi Personil Harian (Tanggal: {active_date})")
             
             df_sp_detail = st.session_state.get("sales_person_df", pd.DataFrame())
             df_person_master = st.session_state.get("person_df", pd.DataFrame())
@@ -328,43 +328,114 @@ elif selected_tab == "01 Dashboard":
                                 })
                             df_contrib = pd.DataFrame(full_person_data)
                     
+                    # --- 1. URUTKAN TABEL DARI PENJUALAN TERBANYAK ---
+                    df_contrib = df_contrib.sort_values(by="Total Actual Qty", ascending=False).reset_index(drop=True)
+                    
                     total_all = df_contrib["Total Actual Qty"].sum()
                     df_contrib["Kontribusi (%)"] = df_contrib["Total Actual Qty"].apply(lambda x: f"{(x / total_all * 100):.1f}%" if total_all > 0 else "0.0%")
                     
+                    # --- 2. TAMPILKAN PODIUM STANDAR (JUARA 1 DI TENGAH) ---
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    st.markdown("##### 🏆 Podium Kontributor Terbaik Hari Ini")
+                    
+                    df_podium_candidates = df_contrib[df_contrib["Total Actual Qty"] > 0].reset_index(drop=True)
+                    
+                    if len(df_podium_candidates) >= 3:
+                        p_cols = st.columns(3)
+                        podium_order = [1, 0, 2]  # Juara 2 di kiri, Juara 1 di tengah, Juara 3 di kanan
+                        medals = ["🥈 Juara 2", "🥇 Juara 1", "🥉 Juara 3"]
+                        colors = ["#94a3b8", "#f59e0b", "#b45309"]
+                        heights = ["130px", "160px", "110px"]
+        
+                        for target_col_idx, orig_rank_idx in enumerate(podium_order):
+                            with p_cols[target_col_idx]:
+                                if orig_rank_idx < len(df_podium_candidates):
+                                    name = df_podium_candidates.iloc[orig_rank_idx]["Nama Personil"]
+                                    qty = df_podium_candidates.iloc[orig_rank_idx]["Total Actual Qty"]
+                                    st.markdown(f"""
+                                    <div style='background-color: #1e293b; padding: 15px; border-radius: 10px; border: 2px solid {colors[orig_rank_idx]}; text-align: center; min-height: {heights[target_col_idx]};'>
+                                        <h4 style='margin:0; color: {colors[orig_rank_idx]}; font-size:14px;'>{medals[orig_rank_idx]}</h4>
+                                        <p style='font-size: 15px; font-weight: bold; color: #ffffff; margin: 8px 0 4px 0;'>{name}</p>
+                                        <p style='font-size: 13px; color: #38bdf8; margin: 0;'>{qty:,.0f} Pcs</p>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                    elif len(df_podium_candidates) > 0:
+                        p_cols = st.columns(len(df_podium_candidates))
+                        for idx, col in enumerate(p_cols):
+                            with col:
+                                name = df_podium_candidates.iloc[idx]["Nama Personil"]
+                                qty = df_podium_candidates.iloc[idx]["Total Actual Qty"]
+                                st.markdown(f"""
+                                <div style='background-color: #1e293b; padding: 15px; border-radius: 10px; border: 2px solid #f59e0b; text-align: center;'>
+                                    <h4 style='margin:0; color: #f59e0b; font-size:14px;'>Juara {idx+1}</h4>
+                                    <p style='font-size: 15px; font-weight: bold; color: #ffffff; margin: 8px 0 4px 0;'>{name}</p>
+                                    <p style='font-size: 13px; color: #38bdf8; margin: 0;'>{qty:,.0f} Pcs</p>
+                                </div>
+                                """, unsafe_allow_html=True)
+                    else:
+                        st.info("Belum ada kontributor yang mencatat penjualan pada tanggal ini.")
+        
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    
+                    # --- 3. TABEL YANG DIPERCANTIK & GRAFIK BATANG HORIZONTAL ---
                     col_dt1, col_dt2 = st.columns([1.3, 1])
                     with col_dt1:
                         st.markdown("##### 📋 Tabel Status & Kontribusi Personil")
-                        st.dataframe(df_contrib, use_container_width=True, hide_index=True)
+                        
+                        # Persiapan dataframe dengan format peringkat khusus (Medali untuk 1-3, Angka untuk seterusnya)
+                        df_table_show = df_contrib.copy()
+                        
+                        def format_rank(idx):
+                            if idx == 0: return "🥇 1"
+                            elif idx == 1: return "🥈 2"
+                            elif idx == 2: return "🥉 3"
+                            else: return str(idx + 1)
+                        
+                        df_table_show.insert(0, "Peringkat", [format_rank(i) for i in range(len(df_table_show))])
+                        
+                        # Menampilkan tabel dipercantik
+                        st.dataframe(
+                            df_table_show,
+                            use_container_width=True,
+                            hide_index=True,
+                            column_config={
+                                "Peringkat": st.column_config.TextColumn("Rank", width="small"),
+                                "Nama Personil": st.column_config.TextColumn("Nama Personil", width="medium"),
+                                "Total Actual Qty": st.column_config.NumberColumn("Total Qty", format="%d Pcs"),
+                                "Status Input": st.column_config.TextColumn("Status"),
+                                "Kontribusi (%)": st.column_config.TextColumn("Kontribusi")
+                            }
+                        )
+                        
                     with col_dt2:
-                        st.markdown("##### 📊 Grafik Donat Kontribusi")
+                        st.markdown("##### 📊 Grafik Perbandingan Penjualan")
                         df_active_chart = df_contrib[df_contrib["Total Actual Qty"] > 0]
                         if not df_active_chart.empty and total_all > 0:
                             import plotly.express as px
-                            fig_donut = px.pie(df_active_chart, names="Nama Personil", values="Total Actual Qty", hole=0.5)
-                            fig_donut.update_layout(margin=dict(t=10, b=10, l=10, r=10), height=300)
-                            st.plotly_chart(fig_donut, use_container_width=True)
+                            fig_bar = px.bar(
+                                df_active_chart.sort_values(by="Total Actual Qty", ascending=True), 
+                                x="Total Actual Qty", 
+                                y="Nama Personil", 
+                                orientation="h",
+                                text="Total Actual Qty"
+                            )
+                            fig_bar.update_traces(texttemplate='%{text:,.0f} Pcs', textposition='outside', marker_color='#38bdf8')
+                            fig_bar.update_layout(
+                                margin=dict(t=10, b=10, l=10, r=40), 
+                                height=350,
+                                paper_bgcolor="rgba(0,0,0,0)",
+                                plot_bgcolor="rgba(0,0,0,0)",
+                                font=dict(color="#cbd5e1"),
+                                xaxis=dict(showgrid=True, gridcolor="#334155"),
+                                yaxis=dict(showgrid=False)
+                            )
+                            st.plotly_chart(fig_bar, use_container_width=True)
                         else:
                             st.info("Belum ada data input pada tanggal ini untuk ditampilkan ke grafik.")
                 else:
                     st.warning("Struktur kolom pada data sales personil tidak lengkap.")
             else:
                 st.warning("Data sales personil kosong.")
-                
-        else:
-            # Tampilan Utama Report PSM
-            st.markdown("### 📈 Report Pencapaian PSM")
-            
-            psm_filter_options = ["☀️ Harian", "⏱️ Periode", "🗓️ Bulanan"]
-            if hasattr(st, "pills"):
-                view_mode = st.pills("Filter Waktu PSM", psm_filter_options, default="☀️ Harian", key="pills_psm_filter")
-            else:
-                view_mode = st.selectbox("Filter Waktu PSM:", psm_filter_options, key="select_psm_filter")
-                
-            st.markdown("<hr style='margin: 8px 0; border-color: #334155;'>", unsafe_allow_html=True)
-            
-            df_sales_item = st.session_state.get("sales_item_df", pd.DataFrame())
-            df_periods = st.session_state.get("periods_df", pd.DataFrame())
-            df_sales_person = st.session_state.get("sales_person_df", pd.DataFrame())
             
             # --- 1. MODE: HARIAN ---
             if view_mode == "☀️ Harian":
