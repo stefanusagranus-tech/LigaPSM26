@@ -441,6 +441,85 @@ elif selected_tab == "01 Dashboard":
                 g_col3.metric("📉 Sisa Gap Harian", f"{max(daily_gap, 0):,.0f} Pcs")
                 g_col4.metric("⚡ % Ach Harian", f"{daily_ach:.1f}%")
 
+
+            # --- BAGIAN GRAFIK GARIS PENJUALAN HARIAN DENGAN RENTANG TANGGAL & TOMBOL PROSES ---
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            # Membuat input tanggal awal dan tanggal akhir (bisa diubah manual)
+            col_d1, col_d2 = st.columns(2)
+            with col_d1:
+                default_start = waktu_wib.date().replace(day=1) if 'waktu_wib' in locals() else datetime.now().date().replace(day=1)
+                start_periode_custom = st.date_input("📅 Tanggal Awal:", value=default_start, key="custom_start_date")
+            with col_d2:
+                default_end = waktu_wib.date() if 'waktu_wib' in locals() else datetime.now().date()
+                end_periode_custom = st.date_input("📅 Tanggal Akhir:", value=default_end, key="custom_end_date")
+            
+            # Tombol Proses untuk memunculkan grafik
+            is_processed = st.button("🚀 Proses Grafik Penjualan", key="btn_process_grafik", use_container_width=True)
+            
+            # Grafik hanya akan muncul jika tombol "Proses" sudah diklik
+            if is_processed:
+                st.markdown(f"##### 📈 GRAFIK GARIS PENJUALAN HARIAN ({start_periode_custom.strftime('%d %b %Y')} s.d. {end_periode_custom.strftime('%d %b %Y')})")
+            
+                df_target_source = pd.DataFrame()
+                if not df_sales_person.empty:
+                    df_target_source = df_sales_person.copy()
+                elif not df_sales_item.empty:
+                    df_target_source = df_sales_item.copy()
+            
+                if not df_target_source.empty:
+                    date_col = next((c for c in df_target_source.columns if "updated_at" in c or "date" in c or "tanggal" in c), None)
+                    actual_qty_col = next((c for c in df_target_source.columns if "actual_qty" in c or "actual" in c), None)
+                    
+                    if date_col and actual_qty_col:
+                        sub_line_df = df_target_source.copy()
+                        sub_line_df["dt_clean"] = pd.to_datetime(sub_line_df[date_col], errors="coerce").dt.date
+                        sub_line_df["actual_qty"] = pd.to_numeric(sub_line_df[actual_qty_col], errors="coerce").fillna(0)
+                        
+                        # Filter berdasarkan rentang tanggal awal dan akhir yang dipilih
+                        sub_line_df = sub_line_df[(sub_line_df["dt_clean"] >= start_periode_custom) & (sub_line_df["dt_clean"] <= end_periode_custom)]
+                        
+                        if not sub_line_df.empty:
+                            df_daily_trend = sub_line_df.groupby("dt_clean")["actual_qty"].sum().reset_index()
+                            df_daily_trend.columns = ["Tanggal", "Total Actual Qty"]
+                            df_daily_trend = df_daily_trend.sort_values("Tanggal")
+                            
+                            df_daily_trend["Tanggal_Str"] = pd.to_datetime(df_daily_trend["Tanggal"]).dt.strftime("%d %b %Y")
+                            
+                            import plotly.express as px
+                            fig_line = px.line(
+                                df_daily_trend, 
+                                x="Tanggal_Str", 
+                                y="Total Actual Qty", 
+                                markers=True,
+                                text="Total Actual Qty", # Memunculkan angka qty di setiap titik grafik
+                                labels={"Tanggal_Str": "Tanggal", "Total Actual Qty": "Jumlah Penjualan (Pcs)"}
+                            )
+                            
+                            # Mengatur posisi angka agar berada di atas titik garis & mempercantik tampilan
+                            fig_line.update_traces(
+                                textposition="top center",
+                                line_color="#00f0ff", 
+                                line_width=3, 
+                                marker_size=8
+                            )
+                            fig_line.update_layout(
+                                margin=dict(t=30, b=10, l=10, r=10), 
+                                height=400,
+                                xaxis_title="Tanggal",
+                                yaxis_title="Total Qty"
+                            )
+                            st.plotly_chart(fig_line, use_container_width=True)
+                        else:
+                            st.warning(f"Tidak ada data penjualan pada rentang tanggal tersebut.")
+                    else:
+                        st.warning("Kolom tanggal atau actual qty tidak ditemukan pada data transaksi.")
+                else:
+                    st.info("Belum ada data transaksi yang dimuat untuk menampilkan grafik garis.")
+            else:
+                st.info("👆 Silakan tentukan Tanggal Awal & Tanggal Akhir, lalu klik tombol **'Proses Grafik Penjualan'** di atas.")
+
+
             # 2. MODE: PERIODE
             elif view_mode == "⏱️ Periode":
                 st.markdown("##### ⏱️ Pencapaian PSM Berdasarkan Periode")
@@ -466,91 +545,7 @@ elif selected_tab == "01 Dashboard":
                 m2.metric("Actual Bulanan", "0 Pcs")
                 m3.metric("Achievement", "0.0%")
 
-           # --- BAGIAN GRAFIK GARIS PENJUALAN HARIAN PER PERIODE ---
-            st.markdown("<br>", unsafe_allow_html=True)
-            active_date_val = locals().get('selected_daily_date', today_date)
-            
-            # 1. Cari rentang tanggal dari df_periode yang mencakup active_date_val
-            start_periode = None
-            end_periode = None
-            label_periode = "Periode Aktif"
-            
-            if 'df_periode' in locals() and not df_periode.empty:
-                col_start = next((c for c in df_periode.columns if "start" in c or "mulai" in c), None)
-                col_end = next((c for c in df_periode.columns if "end" in c or "selesai" in c), None)
-                col_name = next((c for c in df_periode.columns if "name" in c or "periode" in c), None)
-                
-                if col_start and col_end:
-                    df_periode["dt_start"] = pd.to_datetime(df_periode[col_start], errors="coerce").dt.date
-                    df_periode["dt_end"] = pd.to_datetime(df_periode[col_end], errors="coerce").dt.date
-                    
-                    matched_periode = df_periode[(df_periode["dt_start"] <= active_date_val) & (df_periode["dt_end"] >= active_date_val)]
-                    
-                    if not matched_periode.empty:
-                        start_periode = matched_periode.iloc[0]["dt_start"]
-                        end_periode = matched_periode.iloc[0]["dt_end"]
-                        p_name = matched_periode.iloc[0][col_name] if col_name else "Periode"
-                        label_periode = f"{p_name} ({start_periode.strftime('%d %b')} - {end_periode.strftime('%d %b %Y')})"
-            
-            # Judul Utama Sesuai Permintaan
-            st.markdown(f"##### 📈 GRAFIK GARIS PENJUALAN HARIAN ({label_periode})")
-            
-            # Kita gunakan data sales_person atau sales_item yang memiliki informasi tanggal harian
-            # Mengingat sebelumnya kamu menyebutkan tanggal pencatatan ada di data sales personil, 
-            # kita bisa pakai df_sales_person untuk melihat total penjualan per tanggal dalam periode tersebut.
-            df_target_source = pd.DataFrame()
-            if not df_sales_person.empty:
-                df_target_source = df_sales_person.copy()
-            elif not df_sales_item.empty:
-                df_target_source = df_sales_item.copy()
-            
-            if not df_target_source.empty:
-                date_col = next((c for c in df_target_source.columns if "updated_at" in c or "date" in c or "tanggal" in c), None)
-                actual_qty_col = next((c for c in df_target_source.columns if "actual_qty" in c or "actual" in c), None)
-                
-                if date_col and actual_qty_col:
-                    sub_line_df = df_target_source.copy()
-                    sub_line_df["dt_clean"] = pd.to_datetime(sub_line_df[date_col], errors="coerce").dt.date
-                    sub_line_df["actual_qty"] = pd.to_numeric(sub_line_df[actual_qty_col], errors="coerce").fillna(0)
-                    
-                    # Filter berdasarkan rentang tanggal periode yang aktif
-                    if start_periode and end_periode:
-                        sub_line_df = sub_line_df[(sub_line_df["dt_clean"] >= start_periode) & (sub_line_df["dt_clean"] <= end_periode)]
-                    
-                    if not sub_line_df.empty:
-                        # Groupby per tanggal untuk mendapatkan total penjualan harian
-                        df_daily_trend = sub_line_df.groupby("dt_clean")["actual_qty"].sum().reset_index()
-                        df_daily_trend.columns = ["Tanggal", "Total Actual Qty"]
-                        df_daily_trend = df_daily_trend.sort_values("Tanggal")
-                        
-                        # Format tanggal agar mudah dibaca di grafik (misal: "24 Aug")
-                        df_daily_trend["Tanggal_Str"] = pd.to_datetime(df_daily_trend["Tanggal"]).dt.strftime("%d %b %Y")
-                        
-                        import plotly.express as px
-                        fig_line = px.line(
-                            df_daily_trend, 
-                            x="Tanggal_Str", 
-                            y="Total Actual Qty", 
-                            markers=True,
-                            labels={"Tanggal_Str": "Tanggal", "Total Actual Qty": "Jumlah Penjualan (Pcs)"}
-                        )
-                        fig_line.update_traces(line_color="#00f0ff", line_width=3, marker_size=8)
-                        fig_line.update_layout(
-                            margin=dict(t=20, b=10, l=10, r=10), 
-                            height=350,
-                            xaxis_title="Tanggal",
-                            yaxis_title="Total Qty"
-                        )
-                        st.plotly_chart(fig_line, use_container_width=True)
-                    else:
-                        st.info(f"Tidak ada data penjualan harian pada rentang periode {label_periode}.")
-                else:
-                    st.warning("Kolom tanggal atau actual qty tidak ditemukan pada data transaksi.")
-            else:
-                st.info("Belum ada data transaksi yang dimuat untuk menampilkan grafik garis.")
-            
-            
-
+           
     # --- HALAMAN 2: REPORT SALES TOKO ---
     elif st.session_state.dash_page == "SalesToko":
         st.markdown("### 💰 Report Sales Toko")
