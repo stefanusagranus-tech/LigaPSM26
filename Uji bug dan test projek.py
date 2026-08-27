@@ -65,7 +65,6 @@ if "data_loaded" not in st.session_state:
 if "active_tab" not in st.session_state:
     st.session_state.active_tab = "Home"
 
-# Waktu Realtime
 waktu_wib = datetime.now(ZoneInfo("Asia/Jakarta"))
 current_time_str = waktu_wib.strftime("%A, %d %B %Y %H:%M WIB")
 
@@ -92,27 +91,14 @@ def check_login(input_username, input_password):
     return False
 
 # =========================================================
-# 3. CUSTOM CSS FIX HEADER & MOBILE SCREEN
+# 3. CUSTOM CSS STYLING (MOBILE LOOK & GRID)
 # =========================================================
 st.markdown("""
 <style>
-/* Sembunyikan Header Bawaan Streamlit Supaya Tidak Kepotong */
-header[data-testid="stHeader"] {
-    display: none !important;
-}
+header[data-testid="stHeader"] { display: none !important; }
+.stApp { background-color: #0b0f19; color: #f8fafc; font-family: 'Inter', sans-serif; }
+.block-container { padding-top: 1.5rem !important; padding-bottom: 2rem !important; }
 
-/* Background & Padding Layar HP */
-.stApp { 
-    background-color: #0b0f19; 
-    color: #f8fafc; 
-    font-family: 'Inter', sans-serif; 
-}
-.block-container { 
-    padding-top: 1.8rem !important; 
-    padding-bottom: 2rem !important; 
-}
-
-/* Custom Card & Metric */
 div[data-testid="stMetric"] {
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
     border: 1px solid #38bdf8; 
@@ -120,20 +106,20 @@ div[data-testid="stMetric"] {
     border-radius: 12px; 
 }
 div[data-testid="stMetric"] label { color: #94a3b8 !important; font-size: 11px; }
-div[data-testid="stMetric"] [data-testid="stMetricValue"] { color: #38bdf8 !important; font-size: 20px; font-weight: 800; }
+div[data-testid="stMetric"] [data-testid="stMetricValue"] { color: #38bdf8 !important; font-size: 18px; font-weight: 800; }
 
 .app-card {
     background: linear-gradient(145deg, #1e293b, #0f172a);
     border: 1.5px solid #00f0ff;
-    border-radius: 18px;
-    padding: 16px 10px;
+    border-radius: 16px;
+    padding: 14px 8px;
     text-align: center;
-    box-shadow: 0 6px 16px rgba(0, 240, 255, 0.15);
-    margin-bottom: 8px;
+    box-shadow: 0 4px 14px rgba(0, 240, 255, 0.12);
+    margin-bottom: 6px;
 }
-.app-icon { font-size: 36px; margin-bottom: 4px; display: block; }
-.app-title { color: #ffffff; font-size: 14px; font-weight: 700; margin: 0; }
-.app-desc { color: #94a3b8; font-size: 11px; margin-top: 2px; }
+.app-icon { font-size: 30px; margin-bottom: 2px; display: block; }
+.app-title { color: #ffffff; font-size: 13px; font-weight: 700; margin: 0; }
+.app-desc { color: #94a3b8; font-size: 10px; margin-top: 2px; }
 
 div.stButton > button {
     background-color: #080c14 !important; 
@@ -147,44 +133,6 @@ div.stButton > button {
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
-# =========================================================
-# 2. LETAKKAN KODE CSS GLOBAL DI SINI
-# =========================================================
-st.markdown("""
-<style>
-    /* Styling Neon Table Container */
-    .neon-table-container {
-        width: 100%;
-        overflow-x: auto;
-        border: 1px solid #00f0ff;
-        border-radius: 12px;
-        padding: 8px;
-        background: #0f172a;
-        box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
-        margin-bottom: 20px;
-    }
-    .neon-table {
-        width: 100%;
-        border-collapse: collapse;
-        color: #f8fafc;
-        font-size: 13px;
-    }
-    .neon-table th {
-        border-bottom: 2px solid #00f0ff;
-        padding: 8px;
-        text-align: left;
-        color: #00f0ff;
-    }
-    .neon-table td {
-        padding: 8px;
-        border-bottom: 1px solid #1e293b;
-    }
-    /* Warna Indikator Teks */
-    .text-green { color: #10b981; font-weight: bold; }
-    .text-cyan { color: #38bdf8; font-weight: bold; }
-    .text-red { color: #ef4444; font-weight: bold; }
-</style>
-""", unsafe_allow_html=True)
 
 # =========================================================
 # 4. LOGIN PAGE
@@ -204,16 +152,16 @@ if not st.session_state["logged_in"]:
     st.stop()
 
 # =========================================================
-# 5. HEADER ATAS (AMAN UNTUK HP)
+# 5. HEADER ATAS (MOBILE FRIENDLY)
 # =========================================================
 h_col1, h_col2 = st.columns([2.5, 1])
 with h_col1:
     st.markdown(f"""
     <div style='display: flex; align-items: center; gap: 8px;'>
-        <div style='background: #00f0ff; width: 6px; height: 32px; border-radius: 3px;'></div>
+        <div style='background: #00f0ff; width: 5px; height: 28px; border-radius: 3px;'></div>
         <div>
-            <h4 style='margin:0; color:#ffffff; font-size: 16px;'>TOKO C383 MOBILE</h4>
-            <p style='margin:0; color:#38bdf8; font-size: 11px;'>👤 {st.session_state.get("person_name", "User")}</p>
+            <h4 style='margin:0; color:#ffffff; font-size: 15px;'>TOKO C383 MOBILE</h4>
+            <p style='margin:0; color:#38bdf8; font-size: 10px;'>👤 {st.session_state.get("person_name", "User")}</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -223,10 +171,10 @@ with h_col2:
         st.session_state.clear()
         st.rerun()
 
-st.markdown("<hr style='margin: 10px 0; border-color: #1e293b;'>", unsafe_allow_html=True)
+st.markdown("<hr style='margin: 8px 0; border-color: #1e293b;'>", unsafe_allow_html=True)
 
 # =========================================================
-# 6. NAVIGASI HOME SCREEN & TABS
+# 6. NAVIGASI UTAMA (HOME GRID 2x2 & TABS)
 # =========================================================
 selected_tab = st.session_state.active_tab
 
@@ -237,579 +185,165 @@ if selected_tab != "Home":
             st.session_state.active_tab = "Home"
             st.rerun()
     with nav_col2:
-        st.markdown(f"<h4 style='color:#00f0ff; margin: 4px 0 0 0;'>📌 {selected_tab}</h4>", unsafe_allow_html=True)
-    st.markdown("<hr style='margin: 8px 0 12px 0; border-color: #334155;'>", unsafe_allow_html=True)
+        st.markdown(f"<h4 style='color:#00f0ff; margin: 4px 0 0 0; font-size:14px;'>📌 {selected_tab}</h4>", unsafe_allow_html=True)
+    st.markdown("<hr style='margin: 6px 0 10px 0; border-color: #334155;'>", unsafe_allow_html=True)
 
-# --- DISPLAY HOME SCREEN ---
+# --- DISPLAY HOME SCREEN (GRID 2x2) ---
 if selected_tab == "Home":
     st.markdown(f"""
-    <div style='text-align: center; margin-bottom: 16px;'>
-        <p style='color: #94a3b8; font-size: 11px; margin-bottom: 2px;'>WAKTU SISTEM REALTIME</p>
-        <p style='color: #00f0ff; font-size: 12px; font-weight: bold; margin-top: 0;'>{current_time_str}</p>
+    <div style='text-align: center; margin-bottom: 12px;'>
+        <p style='color: #94a3b8; font-size: 10px; margin-bottom: 2px;'>WAKTU SISTEM REALTIME</p>
+        <p style='color: #00f0ff; font-size: 11px; font-weight: bold; margin-top: 0;'>{current_time_str}</p>
     </div>
     """, unsafe_allow_html=True)
 
+    # Baris 1 Grid 2x2
     g1, g2 = st.columns(2)
     with g1:
-        st.markdown("<div class='app-card'><span class='app-icon'>📊</span><div class='app-title'>Dashboard</div><div class='app-desc'>Sales & Item Toko</div></div>", unsafe_allow_html=True)
+        st.markdown("<div class='app-card'><span class='app-icon'>📊</span><div class='app-title'>01 Dashboard</div><div class='app-desc'>PSM, Sales, PPS, STD</div></div>", unsafe_allow_html=True)
         if st.button("Buka Dashboard", key="btn_a1", use_container_width=True):
-            st.session_state.active_tab = "01 Dashboard Toko"
+            st.session_state.active_tab = "01 Dashboard"
             st.rerun()
     with g2:
-        st.markdown("<div class='app-card'><span class='app-icon'>👥</span><div class='app-title'>Raport Personil</div><div class='app-desc'>Ranking Sales Staff</div></div>", unsafe_allow_html=True)
+        st.markdown("<div class='app-card'><span class='app-icon'>🏆</span><div class='app-title'>02 Raport Personil</div><div class='app-desc'>Penjualan, Rank PSM & PPS</div></div>", unsafe_allow_html=True)
         if st.button("Buka Raport", key="btn_a2", use_container_width=True):
-            st.session_state.active_tab = "02 Raport Personil Toko"
+            st.session_state.active_tab = "02 Raport Personil"
             st.rerun()
 
     st.markdown("<br>", unsafe_allow_html=True)
 
+    # Baris 2 Grid 2x2
     g3, g4 = st.columns(2)
     with g3:
-        st.markdown("<div class='app-card'><span class='app-icon'>🎯</span><div class='app-title'>IKT & PPS</div><div class='app-desc'>Net Sales & Target</div></div>", unsafe_allow_html=True)
-        if st.button("Buka IKT & PPS", key="btn_a3", use_container_width=True):
-            st.session_state.active_tab = "03 Report IKT & PPS"
+        st.markdown("<div class='app-card'><span class='app-icon'>📥</span><div class='app-title'>03 Input Laporan</div><div class='app-desc'>Input Data Harian</div></div>", unsafe_allow_html=True)
+        if st.button("Buka Input", key="btn_a3", use_container_width=True):
+            st.session_state.active_tab = "03 Input Laporan"
             st.rerun()
     with g4:
-        st.markdown("<div class='app-card'><span class='app-icon'>⚙️</span><div class='app-title'>Pengaturan</div><div class='app-desc'>Reload & Data</div></div>", unsafe_allow_html=True)
+        st.markdown("<div class='app-card'><span class='app-icon'>⚙️</span><div class='app-title'>04 Pengaturan</div><div class='app-desc'>Reload & Info Sistem</div></div>", unsafe_allow_html=True)
         if st.button("Buka Pengaturan", key="btn_a4", use_container_width=True):
-            st.session_state.active_tab = "04 Pengaturan & Download"
+            st.session_state.active_tab = "04 Pengaturan"
             st.rerun()
 
 # =========================================================
-# TAB 01: DASHBOARD TOKO
+# TAB 01: DASHBOARD (DENGAN 4 SUB-MENU UTAMA)
 # =========================================================
-elif selected_tab == "01 Dashboard Toko":
+elif selected_tab == "01 Dashboard":
+    if "dash_sub" not in st.session_state:
+        st.session_state.dash_sub = "Report PSM"
 
-    # Inisialisasi state halaman detail jika belum ada
-    if "active_detail_view" not in st.session_state:
-        st.session_state.active_detail_view = None
-
-    # Load Data Frame
-    periods_df = st.session_state.get("periods_df", pd.DataFrame())
-    si_df = st.session_state.get("sales_item_df", pd.DataFrame()).copy()
-    sp_df = st.session_state.get("sales_person_df", pd.DataFrame()).copy()
-
-    # Waktu Hari Ini
-    today_date = datetime.now(ZoneInfo("Asia/Jakarta")).date()
-
-    # =========================================================
-    # KONDISI A: TAMPILAN HALAMAN DETAIL (HEADER UTAMA & FILTER DI-HIDE)
-    # =========================================================
-    if st.session_state.active_detail_view == "detail_harian":
-
-        sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
-        sub_sp = sales_person_df.copy()
-        
-        # Tombol Kembali di Paling Atas
-        if st.button("⬅️ Kembali ke Overview Penjualan", key="back_to_ov"):
-            st.session_state.active_detail_view = None
-            st.rerun()
-    
-        st.markdown("## 📊 Detail Laporan Harian Toko")
-        st.caption("Analisis mendalam performa Personil Toko dan Produk Harian")
-        st.markdown("---")
-    
-        # Hitung Tanggal Evaluasi Harian Berdasarkan Periode Aktif
-        if 'periods_df' in locals() and periods_df is not None and not periods_df.empty and "start_date" in periods_df.columns:
-            start_date = pd.to_datetime(periods_df["start_date"].min()).date()
-            end_date = pd.to_datetime(periods_df["end_date"].max()).date()
-        else:
-            start_date = today_date.replace(day=1)
-            end_date = today_date
-    
-        total_days = max((end_date - start_date).days + 1, 1)
-    
-        # Opsi tanggal dibatasi murni sesuai rentang start_date sampai end_date periode aktif
-        date_options = [start_date + pd.Timedelta(days=i) for i in range((end_date - start_date).days + 1)]
-        
-        default_daily_idx = date_options.index(today_date) if today_date in date_options else 0
-        
-        # Tampilkan informasi periode aktif dan selectbox tanggal
-        st.markdown(f"🗓️ **Periode Aktif:** {start_date.strftime('%d %b %Y')} s.d. {end_date.strftime('%d %b %Y')}")
-        selected_daily_date = st.selectbox("📅 Pilih Tanggal Evaluasi:", date_options, index=default_daily_idx, key="detail_daily_date")
-    
-        # Pastikan sub_sp ada
-        if 'sub_sp' not in locals() or sub_sp is None:
-            sub_sp = pd.DataFrame()
-        
-        # Buka komentar di bawah jika ingin melihat daftar kolom di terminal/layar
-        st.write("Kolom yang tersedia di sub_sp:", list(sub_sp.columns)) 
-        
-        if not sub_sp.empty:
-            # Cari kolom tanggal secara fleksibel (mengabaikan huruf besar/kecil atau spasi)
-            cols_lower = [str(c).strip().lower() for c in sub_sp.columns]
-            
-            date_col = None
-            if "updated_at" in cols_lower:
-                date_col = sub_sp.columns[cols_lower.index("updated_at")]
-            elif "date" in cols_lower:
-                date_col = sub_sp.columns[cols_lower.index("date")]
-            elif "tanggal" in cols_lower:
-                date_col = sub_sp.columns[cols_lower.index("tanggal")]
-        
-            if date_col:
-                # Ubah ke datetime lalu ambil bagian tanggalnya saja (.dt.date)
-                sub_sp["dt_clean"] = pd.to_datetime(sub_sp[date_col], errors="coerce").dt.date
-            else:
-                sub_sp["dt_clean"] = None
-        
-            sub_sp["actual_qty"] = pd.to_numeric(sub_sp.get("actual_qty", 0), errors="coerce").fillna(0)
-            
-            # Validasi aman untuk memfilter data harian sesuai tanggal yang dipilih
-            if "dt_clean" in sub_sp.columns and sub_sp["dt_clean"].notna().any():
-                day_sp = sub_sp[sub_sp["dt_clean"] == selected_daily_date]
-            else:
-                day_sp = pd.DataFrame()
-        else:
-            day_sp = pd.DataFrame()
-    
-        # Target Kasir Harian (Amankan si_df jika belum ada)
-        if 'si_df' not in locals() or si_df is None or si_df.empty:
-            tot_target_full = 0
-        else:
-            tot_target_full = pd.to_numeric(si_df.get("target_qty", 0), errors="coerce").fillna(0).sum()
-            
-        daily_target = tot_target_full / total_days if total_days > 0 else 0
-        target_kasir = daily_target / 3
-    
-        # DUA SUBTAB DETAIL
-        tab_contrib, tab_item = st.tabs(["🥇 Detail Contributor (Kasir)", "📦 Detail Top Item"])
-    
-        # --- SUBTAB 1: KASIR ---
-        with tab_contrib:
-            if 'sp_df' in locals() and sp_df is not None and not sp_df.empty:
-                person_col_master = "person_name" if "person_name" in sp_df.columns else ("sales_person" if "sales_person" in sp_df.columns else None)
-            else:
-                person_col_master = None
-    
-            if person_col_master:
-                all_persons = pd.DataFrame({person_col_master: sp_df[person_col_master].dropna().unique()})
-                day_sales = day_sp.groupby(person_col_master)["actual_qty"].sum().reset_index() if not day_sp.empty else pd.DataFrame(columns=[person_col_master, "actual_qty"])
-                
-                person_summary = pd.merge(all_persons, day_sales, on=person_col_master, how="left")
-                person_summary["actual_qty"] = person_summary["actual_qty"].fillna(0)
-                person_summary.columns = ["Nama Kasir", "Actual Qty"]
-                person_summary = person_summary.sort_values(by="Actual Qty", ascending=False).reset_index(drop=True)
-    
-                st.info(f"🎯 **Target Harian per Kasir:** {target_kasir:,.0f} Pcs (Target Toko / 3 Kasir)")
-    
-                st.markdown("#### 🥇 Top 3 Contributor Kasir")
-                pod1, pod2, pod3 = st.columns(3)
-                if len(person_summary) >= 1: pod1.metric("🥇 Juara 1", f"{person_summary.iloc[0]['Nama Kasir']}", f"{person_summary.iloc[0]['Actual Qty']:,.0f} Pcs")
-                if len(person_summary) >= 2: pod2.metric("🥈 Juara 2", f"{person_summary.iloc[1]['Nama Kasir']}", f"{person_summary.iloc[1]['Actual Qty']:,.0f} Pcs")
-                if len(person_summary) >= 3: pod3.metric("🥉 Juara 3", f"{person_summary.iloc[2]['Nama Kasir']}", f"{person_summary.iloc[2]['Actual Qty']:,.0f} Pcs")
-    
-                st.markdown("<br>", unsafe_allow_html=True)
-                tot_actual_day = person_summary["Actual Qty"].sum()
-                person_summary["Kontribusi (%)"] = (person_summary["Actual Qty"] / tot_actual_day * 100) if tot_actual_day > 0 else 0
-                person_summary["Status Target"] = person_summary["Actual Qty"].apply(
-                    lambda x: "✅ Achieved" if (x >= target_kasir and target_kasir > 0) else ("⚠️ Belum Ada Input" if x == 0 else "❌ Belum Achieved")
-                )
-    
-                col_tbl, col_cht = st.columns([1, 1])
-                with col_tbl:
-                    st.markdown("##### 📋 Tabel Seluruh Personil Toko")
-                    st.dataframe(person_summary[["Nama Kasir", "Actual Qty", "Kontribusi (%)", "Status Target"]].style.format({"Actual Qty": "{:,.0f}", "Kontribusi (%)": "{:.1f}%"}), use_container_width=True, hide_index=True)
-    
-                with col_cht:
-                    st.markdown("##### 📊 Grafik Penjualan Personil")
-                    fig_p = px.bar(person_summary, x="Nama Kasir", y="Actual Qty", text="Actual Qty", color_discrete_sequence=['#00f0ff'])
-                    fig_p.update_traces(texttemplate='%{text:,.0f}', textposition='outside')
-                    if target_kasir > 0: fig_p.add_hline(y=target_kasir, line_dash="dash", line_color="#ef4444", annotation_text="Target Kasir")
-                    fig_p.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(color="#ffffff"), height=350, xaxis_title=None, yaxis_title="Qty (Pcs)")
-                    st.plotly_chart(fig_p, use_container_width=True)
-            else:
-                st.warning("Master data personil toko tidak ditemukan.")
-    
-
-    # =========================================================
-    # KONDISI B: TAMPILAN DASHBOARD UTAMA (TERMASUK SEMUA FILTER)
-    # =========================================================
+    # Pilihan Kapsul untuk 4 Menu Dashboard
+    dash_options = ["Report PSM", "Report Sales Toko", "Report PPS Toko", "Report STD & Member"]
+    if hasattr(st, "pills"):
+        st.session_state.dash_sub = st.pills("Pilih Menu Dashboard", dash_options, default=st.session_state.dash_sub, key="pills_dash")
     else:
-        sub_tab01 = st.radio(
-            "Pilih Sub-Menu:",
-            ["📊 Overview Penjualan", "📦 Detail Item & Performa Toko"],
-            horizontal=True, key="sub_tab01_mobile"
-        )
-        st.markdown("<br>", unsafe_allow_html=True)
+        st.session_state.dash_sub = st.selectbox("Pilih Menu Dashboard:", dash_options, key="select_dash")
 
-        period_options = list(periods_df["period_name"].dropna().unique()) if not periods_df.empty and "period_name" in periods_df.columns else []
+    st.markdown("---")
+    sub_menu = st.session_state.dash_sub
 
-        default_index = 0
-        if not periods_df.empty and "start_date" in periods_df.columns and "end_date" in periods_df.columns:
-            periods_df["start_dt"] = pd.to_datetime(periods_df["start_date"], errors="coerce").dt.date
-            periods_df["end_dt"] = pd.to_datetime(periods_df["end_date"], errors="coerce").dt.date
+    # 1. Report PSM
+    if sub_menu == "Report PSM":
+        st.markdown("### 📊 Report Pencapaian PSM")
+        st.info("Menampilkan rangkuman target, actual, gap, dan persentase achievement PSM toko.")
+        # (Logika dashboard PSM awal kamu ditaruh di sini)
+
+    # 2. Report Sales Toko
+    elif sub_menu == "Report Sales Toko":
+        st.markdown("### 💰 Report Sales Toko")
+        
+        tab_s1, tab_s2 = st.tabs(["📌 Net Sales & GM", "🧾 NSB Toko"])
+        with tab_s1:
+            st.markdown("##### Menu Net Sales & GM")
+            net_sales = st.number_input("Input Net Sales (Rp):", value=0, step=100000)
+            gm_persen = st.number_input("Input GM (%):", value=0.0, step=0.1)
+            gm_rupiah = net_sales * (gm_persen / 100)
+            budget_so = st.number_input("Input Budget SO (Rp):", value=0, step=10000)
             
-            current_period_match = periods_df[(periods_df["start_dt"] <= today_date) & (periods_df["end_dt"] >= today_date)]
-            if not current_period_match.empty:
-                curr_name = current_period_match.iloc[0]["period_name"]
-                if curr_name in period_options:
-                    default_index = period_options.index(curr_name) + 1
+            st.markdown(f"**GM Rupiah (Net Sales x GM%):** Rp {gm_rupiah:,.2f}")
+            st.success(f"**Budget SO Terhitung:** Rp {budget_so:,.2f}")
 
-        # --- SUBTAB 1: OVERVIEW PENJUALAN ---
-        if sub_tab01 == "📊 Overview Penjualan":
-            view_mode = st.radio(
-                "Mode Tampilan Overview:",
-                ["📅 1 Periode Full", "☀️ Harian (Daily Target)", "🗓️ Bulanan"],
-                horizontal=True, key="ov_view_mode"
-            )
-
-            # FILTER PERIODE BULANAN VS REGULER
-            if view_mode == "🗓️ Bulanan":
-                if not periods_df.empty and "start_date" in periods_df.columns:
-                    periods_df["start_dt_temp"] = pd.to_datetime(periods_df["start_date"], errors="coerce")
-                    periods_df["month_year"] = periods_df["start_dt_temp"].dt.strftime("%B %Y")
-                    
-                    monthly_options_dict = {}
-                    for my, group in periods_df.groupby("month_year", sort=False):
-                        min_d = group["start_dt_temp"].min().strftime("%d")
-                        max_d = group["start_dt_temp"].max().strftime("%d %B %Y")
-                        label = f"{my} ({min_d} - {max_d})"
-                        monthly_options_dict[label] = my
-                    
-                    monthly_labels = list(monthly_options_dict.keys())
-                    selected_m_label = st.selectbox("🗓️ Pilih Bulan Penjualan:", monthly_labels, key="ov_month_select")
-                    selected_month_year = monthly_options_dict[selected_m_label]
-
-                    month_periods = periods_df[periods_df["month_year"] == selected_month_year]
-                    same_month_p_ids = month_periods["period_id"].tolist()
-
-                    sub_periods = month_periods
-                    sub_si = si_df[si_df["period_id"].isin(same_month_p_ids)]
-                    sub_sp = sp_df[sp_df["period_id"].isin(same_month_p_ids)]
-                else:
-                    sub_periods, sub_si, sub_sp = periods_df, si_df, sp_df
-            else:
-                selected_p_overview = st.selectbox(
-                    "🗓️ Filter Periode:", 
-                    ["Semua Periode (Overall)"] + period_options, 
-                    index=default_index, 
-                    key="ov_period_select"
-                )
-
-                if selected_p_overview != "Semua Periode (Overall)":
-                    matched_period = periods_df[periods_df["period_name"] == selected_p_overview]
-                    p_id = matched_period.iloc[0]["period_id"] if not matched_period.empty else None
-                    sub_periods = periods_df[periods_df["period_id"] == p_id] if p_id else pd.DataFrame()
-                    sub_si = si_df[si_df["period_id"] == p_id] if p_id else pd.DataFrame()
-                    sub_sp = sp_df[sp_df["period_id"] == p_id] if p_id else pd.DataFrame()
-                else:
-                    sub_periods, sub_si, sub_sp = periods_df, si_df, sp_df
-
-            if not sub_sp.empty:
-                date_col = "date" if "date" in sub_sp.columns else ("tanggal" if "tanggal" in sub_sp.columns else None)
-                sub_sp["dt_clean"] = pd.to_datetime(sub_sp[date_col], errors="coerce").dt.date if date_col else None
-            else:
-                sub_sp["dt_clean"] = None
-
-            if not sub_periods.empty and "start_date" in sub_periods.columns:
-                start_date = pd.to_datetime(sub_periods["start_date"].min()).date()
-                end_date = pd.to_datetime(sub_periods["end_date"].max()).date()
-            else:
-                start_date = today_date.replace(day=1)
-                end_date = today_date
-
-            total_days = max((end_date - start_date).days + 1, 1)
-            passed_days = total_days if today_date > end_date else (0 if today_date < start_date else max((today_date - start_date).days + 1, 1))
-            remaining_days = max(total_days - passed_days, 1)
-
-            # MODE: 1 PERIODE FULL
-            if view_mode == "📅 1 Periode Full":
-                tot_target = pd.to_numeric(sub_si.get("target_qty", 0), errors="coerce").fillna(0).sum()
-                tot_actual = pd.to_numeric(sub_sp.get("actual_qty", 0), errors="coerce").fillna(0).sum()
-                tot_gap = tot_target - tot_actual
-                tot_ach = (tot_actual / tot_target * 100) if tot_target > 0 else 0
-                
-                sisa_target = max(tot_gap, 0)
-                target_per_day_remaining = sisa_target / remaining_days if sisa_target > 0 else 0
-
-                c1, c2, c3 = st.columns(3)
-                c1.metric("🎯 Target Periode", f"{tot_target:,.0f} Pcs")
-                c2.metric("📦 Actual Sales", f"{tot_actual:,.0f} Pcs")
-                c3.metric("⚡ % Ach", f"{tot_ach:.1f}%")
-
-                st.markdown("<br>", unsafe_allow_html=True)
-                c4, c5 = st.columns(2)
-                c4.metric("📉 Sisa Gap Target", f"{sisa_target:,.0f} Pcs")
-                c5.metric("🎯 Target/Hari (Sisa)", f"{target_per_day_remaining:,.0f} Pcs/hr")
-
-                st.markdown("<br>", unsafe_allow_html=True)
-                st.markdown("##### 📈 Tren Penjualan Harian Per Minggu")
-
-                date_range = pd.date_range(start=start_date, end=end_date).date
-                if not sub_sp.empty:
-                    if "updated_at" in sub_sp.columns:
-                        date_col = "updated_at"
-                    elif "date" in sub_sp.columns:
-                        date_col = "date"
-                    elif "tanggal" in sub_sp.columns:
-                        date_col = "tanggal"
-                    else:
-                        date_col = None
-                
-                    sub_sp["dt_clean"] = pd.to_datetime(sub_sp[date_col], errors="coerce").dt.date if date_col else None
-                    sub_sp["actual_qty"] = pd.to_numeric(sub_sp.get("actual_qty", 0), errors="coerce").fillna(0)
-                else:
-                    sub_sp["dt_clean"] = None
-
-                if not sub_sp.empty and "dt_clean" in sub_sp.columns:
-                    sub_sp["actual_qty"] = pd.to_numeric(sub_sp.get("actual_qty", 0), errors="coerce").fillna(0)
-                    daily_agg = sub_sp.groupby("dt_clean")["actual_qty"].sum()
-                    trend_values = [daily_agg.get(d, 0) for d in date_range]
-                else:
-                    trend_values = [0] * len(date_range)
-
-                daily_trend = pd.DataFrame({"Tanggal": date_range, "Actual": trend_values})
-
-                fig_trend = go.Figure()
-                fig_trend.add_trace(go.Scatter(
-                    x=daily_trend["Tanggal"], 
-                    y=daily_trend["Actual"],
-                    mode='lines+markers',
-                    line=dict(color='#00f0ff', width=3),
-                    marker=dict(size=6, color='#ffffff'),
-                    name='Actual Pcs'
-                ))
-                fig_trend.update_layout(
-                    height=260,
-                    margin=dict(l=10, r=10, t=10, b=10),
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    font=dict(color="#ffffff"),
-                    xaxis=dict(showgrid=False, tickformat="%d %b"),
-                    yaxis=dict(showgrid=True, gridcolor="#1e293b")
-                )
-                st.plotly_chart(fig_trend, use_container_width=True)
- # MODE: HARIAN (DAILY TARGET)
-            elif view_mode == "☀️ Harian (Daily Target)":
-                date_options = [start_date + pd.Timedelta(days=i) for i in range((end_date - start_date).days + 1)]
-                default_daily_idx = date_options.index(today_date) if today_date in date_options else 0
-                selected_daily_date = st.selectbox("📅 Pilih Tanggal Harian:", date_options, index=default_daily_idx, key="daily_date_picker")
-
-                if not sub_sp.empty:
-                    if "updated_at" in sub_sp.columns:
-                        date_col = "updated_at"
-                    elif "date" in sub_sp.columns:
-                        date_col = "date"
-                    elif "tanggal" in sub_sp.columns:
-                        date_col = "tanggal"
-                    else:
-                        date_col = None
-                
-                    sub_sp["dt_clean"] = pd.to_datetime(sub_sp[date_col], errors="coerce").dt.date if date_col else None
-                    sub_sp["actual_qty"] = pd.to_numeric(sub_sp.get("actual_qty", 0), errors="coerce").fillna(0)
-                    
-                    if "dt_clean" in sub_sp.columns:
-                        day_sp = sub_sp[sub_sp["dt_clean"] == selected_daily_date]
-                    else:
-                        day_sp = pd.DataFrame()
-                else:
-                    day_sp = pd.DataFrame()
-
-
-                top_person = "-"
-                person_col = "person_name" if "person_name" in day_sp.columns else ("sales_person" if "sales_person" in day_sp.columns else None)
-                if person_col and not day_sp.empty:
-                    top_p_df = day_sp.groupby(person_col)["actual_qty"].sum().reset_index()
-                    if not top_p_df.empty and top_p_df["actual_qty"].max() > 0:
-                        top_person = top_p_df.sort_values(by="actual_qty", ascending=False).iloc[0][person_col]
-
-                top_item = "-"
-                if not sub_si.empty and "item_name" in sub_si.columns:
-                    sub_si["actual_qty"] = pd.to_numeric(sub_si.get("actual_qty", 0), errors="coerce").fillna(0)
-                    top_i_df = sub_si.groupby("item_name")["actual_qty"].sum().reset_index()
-                    if not top_i_df.empty and top_i_df["actual_qty"].max() > 0:
-                        top_item = top_i_df.sort_values(by="actual_qty", ascending=False).iloc[0]["item_name"]
-
-                tc1, tc2 = st.columns(2)
-                with tc1:
-                    st.markdown(f"""
-                    <div class='app-card' style='padding: 10px; margin-bottom: 5px;'>
-                        <span style='color:#94a3b8; font-size:10px;'>🥇 TOP CONTRIBUTOR</span>
-                        <p style='color:#00f0ff; font-size:14px; font-weight:bold; margin:2px 0 0 0;'>{top_person}</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    if st.button("🔍 Klik disini untuk Detail", key="btn_to_contrib_detail", use_container_width=True):
-                        st.session_state.active_detail_view = "detail_harian"
-                        st.rerun()
-
-                with tc2:
-                    st.markdown(f"""
-                    <div class='app-card' style='padding: 10px; margin-bottom: 5px;'>
-                        <span style='color:#94a3b8; font-size:10px;'>📦 TOP ITEM</span>
-                        <p style='color:#38bdf8; font-size:14px; font-weight:bold; margin:2px 0 0 0;'>{top_item}</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    if st.button("🔍 Klik disini untuk Detail", key="btn_to_item_detail", use_container_width=True):
-                        st.session_state.active_detail_view = "detail_harian"
-                        st.rerun()
-
-                st.markdown("<br>", unsafe_allow_html=True)
-
-                tot_target_full = pd.to_numeric(sub_si.get("target_qty", 0), errors="coerce").fillna(0).sum()
-                daily_target = tot_target_full / total_days if total_days > 0 else 0
-                daily_actual = day_sp["actual_qty"].sum() if not day_sp.empty else 0
-                daily_gap = daily_target - daily_actual
-                daily_ach = (daily_actual / daily_target * 100) if daily_target > 0 else 0
-
-                g_col1, g_col2 = st.columns(2)
-                g_col1.metric("🎯 Target Hari Ini", f"{daily_target:,.0f} Pcs")
-                g_col2.metric("📦 Actual Sales", f"{daily_actual:,.0f} Pcs")
-
-                st.markdown("<br>", unsafe_allow_html=True)
-                g_col3, g_col4 = st.columns(2)
-                g_col3.metric("📉 Sisa Gap Harian", f"{max(daily_gap, 0):,.0f} Pcs")
-                g_col4.metric("⚡ % Ach Harian", f"{daily_ach:.1f}%")
-
-            # MODE: BULANAN
-            elif view_mode == "🗓️ Bulanan":
-                tot_target = pd.to_numeric(sub_si.get("target_qty", 0), errors="coerce").fillna(0).sum()
-                tot_actual = pd.to_numeric(sub_sp.get("actual_qty", 0), errors="coerce").fillna(0).sum()
-                tot_gap = tot_target - tot_actual
-                tot_ach = (tot_actual / tot_target * 100) if tot_target > 0 else 0
-                
-                bobot_pps = (tot_ach / 100) * 20
-
-                bm1, bm2, bm3 = st.columns(3)
-                bm1.metric("🎯 Target Bulan Ini", f"{tot_target:,.0f} Pcs")
-                bm2.metric("📦 Actual Sales", f"{tot_actual:,.0f} Pcs")
-                bm3.metric("📉 Sisa Gap", f"{max(tot_gap, 0):,.0f} Pcs")
-
-                st.markdown("<br>", unsafe_allow_html=True)
-                bm4, bm5 = st.columns(2)
-                bm4.metric("⚡ % Ach Bulanan", f"{tot_ach:.1f}%")
-                bm5.metric("🏆 Indeks Bobot PPS", f"{bobot_pps:.2f} Pt")
-
-                # --- SUBTAB 2: DETAIL ITEM & PERFORMA TOKO ---
-        elif sub_tab01 == "📦 Detail Item & Performa Toko":
-            search_query = st.text_input("🔍 Cari Produk:", placeholder="Ketik nama item...", key="search_item_mob")
-            selected_p_detail = st.selectbox(
-                "Filter Periode", 
-                ["Semua Periode"] + period_options, 
-                index=default_index, 
-                key="period_detail_mob"
-            )
+        with tab_s2:
+            st.markdown("##### Menu NSB Toko")
+            sales_toko = st.number_input("Sales Toko (Rp):", value=0, step=100000)
+            budget_nbh = sales_toko * 0.0015  # Sales x 0.15%
+            adjust_so = st.number_input("Adjust SO (Rp):", value=0, step=10000)
+            total_nbh = budget_nbh - adjust_so
             
-            if selected_p_detail != "Semua Periode":
-                matched_p = periods_df[periods_df["period_name"] == selected_p_detail]
-                p_id = matched_p.iloc[0]["period_id"] if not matched_p.empty else None
-                si_det = si_df[si_df["period_id"] == p_id].copy() if p_id else pd.DataFrame()
-            else:
-                si_det = si_df.copy()
-            
-            if not si_det.empty:
-                si_det["target_qty"] = pd.to_numeric(si_det.get("target_qty", 0), errors="coerce").fillna(0)
-                si_det["actual_qty"] = pd.to_numeric(si_det.get("actual_qty", 0), errors="coerce").fillna(0)
+            st.metric("Budget NBH (0.15%)", f"Rp {budget_nbh:,.2f}")
+            st.metric("Total NBH (Budget - Adjust)", f"Rp {total_nbh:,.2f}")
 
-                item_grouped = si_det.groupby("item_name").agg({"target_qty": "sum", "actual_qty": "sum"}).reset_index()
-                item_grouped["gap"] = item_grouped["target_qty"] - item_grouped["actual_qty"]
-                item_grouped["ach"] = item_grouped.apply(lambda r: (r["actual_qty"] / r["target_qty"] * 100) if r["target_qty"] > 0 else 0, axis=1)
+    # 3. Report PPS Toko
+    elif sub_menu == "Report PPS Toko":
+        st.markdown("### 🎯 Report PPS Toko")
+        pps_sub_tab = st.selectbox("Pilih Sub-Kategori PPS:", ["Report PPS Utama", "Report Sueger & Cemilan Ceban", "Simulasi PPS Toko"])
+        
+        if pps_sub_tab == "Report PPS Utama":
+            st.markdown("##### Rangkuman PPS Utama")
+            c1, c2 = st.columns(2)
+            c1.metric("Apc Toko", "0")
+            c1.metric("Psm Toko", "0")
+            c2.metric("Pwp Toko", "0")
+            c2.metric("Serba Gratis Toko", "0")
+        elif pps_sub_tab == "Report Sueger & Cemilan Ceban":
+            st.markdown("##### 🥤 Report Sueger & Cemilan Ceban")
+            st.write("Data dan pencapaian produk Sueger serta Cemilan Ceban.")
+        else:
+            st.markdown("##### 🧮 Simulasi PPS Toko")
+            sim_val = st.slider("Simulasi Target Index PPS", 0, 100, 50)
+            st.write(f"Estimasi Poin Bonus / Bobot Berdasarkan Simulasi: **{sim_val * 0.2:.2f} Poin**")
 
-                if search_query:
-                    item_grouped = item_grouped[item_grouped["item_name"].str.contains(search_query, case=False, na=False)]
+    # 4. Report STD & Member
+    elif sub_menu == "Report STD & Member":
+        st.markdown("### 👥 Report STD & Kontribusi Member Toko")
+        st.info("Analisis data transaksi harian (STD) dan persentase kontribusi member terhadap total member belanja toko.")
 
-                # GENERATE TABEL NEON CUSTOM HTML YANG AMAN
-                table_rows = ""
-                for idx, row in item_grouped.iterrows():
-                    ach_val = row['ach']
-                    ach_color_class = "text-green" if ach_val >= 100 else ("text-cyan" if ach_val >= 50 else "text-red")
-                    
-                    table_rows += (
-                        "<tr>"
-                        f"<td style='font-weight:600;'>{row['item_name']}</td>"
-                        f"<td style='text-align:right;'>{row['target_qty']:,.0f}</td>"
-                        f"<td style='text-align:right;'>{row['actual_qty']:,.0f}</td>"
-                        f"<td style='text-align:right;'>{row['gap']:,.0f}</td>"
-                        f"<td style='text-align:right;' class='{ach_color_class}'>{ach_val:.1f}%</td>"
-                        "</tr>"
-                    )
-
-                neon_table_html = f"""
-                <div class="neon-table-container">
-                    <table class="neon-table">
-                        <thead>
-                            <tr>
-                                <th>Item Name</th>
-                                <th style='text-align:right;'>Target</th>
-                                <th style='text-align:right;'>Actual</th>
-                                <th style='text-align:right;'>Gap</th>
-                                <th style='text-align:right;'>% Ach</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {table_rows}
-                        </tbody>
-                    </table>
-                </div>
-                """
-                st.markdown(neon_table_html, unsafe_allow_html=True)
-            else:
-                st.info("Tidak ada data item untuk periode ini.")
-
-
-# --- TAB 02: RAPORT PERSONIL TOKO ---
-elif selected_tab == "02 Raport Personil Toko":
-    st.markdown("### 🏆 Ranking & Summary Personil")
-    sp_df = st.session_state.sales_person_df.copy()
-    sp_df["actual_qty"] = pd.to_numeric(sp_df.get("actual_qty", 0), errors="coerce").fillna(0)
-
-    if not sp_df.empty:
-        summary_person = sp_df.groupby("person_name")["actual_qty"].sum().reset_index().sort_values(by="actual_qty", ascending=False)
-        tot_actual_personil = summary_person["actual_qty"].sum()
-
-        m1, m2 = st.columns(2)
-        m1.metric("TOTAL SALES", f"{tot_actual_personil:,.0f} Pcs")
-        m2.metric("👑 TOP PERSONIL", summary_person.iloc[0]["person_name"] if not summary_person.empty else "-")
-
-        st.markdown("<br>", unsafe_allow_html=True)
-        fig_person = go.Figure(go.Bar(
-            x=summary_person["person_name"], y=summary_person["actual_qty"],
-            text=summary_person["actual_qty"].apply(lambda x: f"{x:,.0f}"), textposition="outside",
-            marker=dict(color=summary_person["actual_qty"], colorscale="Viridis")
-        ))
-        fig_person.update_layout(height=320, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(color="#ffffff"))
-        st.plotly_chart(fig_person, use_container_width=True)
+# =========================================================
+# TAB 02: RAPORT PERSONIL TOKO (3 MENU UTAMA)
+# =========================================================
+selected_tab = st.session_state.active_tab
+if selected_tab == "02 Raport Personil":
+    st.markdown("### 🏆 Raport Personil Toko")
+    
+    r_options = ["Penjualan Personil Toko", "Rangking PSM Toko", "Rangking PPS Toko"]
+    if hasattr(st, "pills"):
+        r_choice = st.pills("Menu Raport", r_options, default=r_options[0], key="pills_raport")
     else:
-        st.info("💡 Belum ada data transaksi personil.")
+        r_choice = st.selectbox("Pilih Menu Raport:", r_options, key="select_raport")
+        
+    st.markdown("---")
+    
+    if r_choice == "Penjualan Personil Toko":
+        st.markdown("##### 📊 Menu Penjualan Personil Toko")
+        st.write("Daftar rinci pencapaian aktual penjualan masing-masing kasir/personil.")
+    elif r_choice == "Rangking PSM Toko":
+        st.markdown("##### 🥇 Menu Rangking PSM Toko")
+        st.write("Papan peringkat (Leaderboard) personil berdasarkan target dan actual PSM.")
+    else:
+        st.markdown("##### 🎯 Menu Rangking PPS Toko")
+        st.write("Papan peringkat personil berdasarkan performa indikator PPS.")
 
-# --- TAB 03: REPORT IKT & PPS ---
-elif selected_tab == "03 Report IKT & PPS":
-    if "current_view" not in st.session_state:
-        st.session_state.current_view = "summary"
+# =========================================================
+# TAB 03: INPUT LAPORAN (SEMENTARA)
+# =========================================================
+elif selected_tab == "03 Input Laporan":
+    st.markdown("### 📥 Menu Input Laporan")
+    st.info("Menu input laporan harian akan segera dikembangkan di tahap berikutnya.")
 
-    if st.session_state.current_view == "summary":
-        st.markdown("### 🎯 Summary Performance")
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("Net Sales", "Rp 0", "0%")
-            if st.button("Detail Net Sales", key="goto_sales_mob", use_container_width=True):
-                st.session_state.current_view = "detail_sales"
-                st.rerun()
-
-        with col2:
-            st.metric("PPS", "0", "0%")
-            if st.button("Detail PPS", key="goto_pps_mob", use_container_width=True):
-                st.session_state.current_view = "detail_pps"
-                st.rerun()
-
-    elif st.session_state.current_view == "detail_sales":
-        if st.button("⬅️ Kembali", key="back_ik_s"):
-            st.session_state.current_view = "summary"
-            st.rerun()
-        st.markdown("### 💰 Detail Net Sales")
-        st.metric("Total Sales", "Rp 0")
-
-    elif st.session_state.current_view == "detail_pps":
-        if st.button("⬅️ Kembali", key="back_ik_p"):
-            st.session_state.current_view = "summary"
-            st.rerun()
-        st.markdown("### 📦 Detail Report PPS")
-        st.info("Data PPS Siap Ditampilkan.")
-
-# --- TAB 04: PENGATURAN & DOWNLOAD ---
-elif selected_tab == "04 Pengaturan & Download":
-    st.markdown("### ⚙️ Pengaturan & Data Master")
+# =========================================================
+# TAB 04: PENGATURAN
+# =========================================================
+elif selected_tab == "04 Pengaturan":
+    st.markdown("### ⚙️ Pengaturan & Informasi Sistem")
     st.success("Aplikasi terhubung dengan Google Sheets!")
-    if st.button("🔄 Reload Data Realtime", use_container_width=True):
+    
+    st.markdown("##### 🔄 Manajemen Data")
+    if st.button("Reload Data Realtime dari GSheets", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
+        
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("##### ℹ️ Tentang Aplikasi")
+    st.text("Versi: 2.0 (Mobile Optimized)\nArea: Toko C383\nFramework: Streamlit & Python")
+
+
