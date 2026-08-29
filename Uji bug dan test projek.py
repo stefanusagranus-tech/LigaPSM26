@@ -883,7 +883,7 @@ elif selected_tab == "02 Raport Personil":
                     st.rerun()
 
     # ---------------------------------------------------------
-    # HALAMAN 2: DETAIL PENJUALAN PERSONIL TOKO
+    # HALAMAN 2: DETAIL PENJUALAN PERSONIL TOKO (RPG STYLE)
     # ---------------------------------------------------------
     elif st.session_state.sub_page_raport == "PENJUALAN":
         if st.button("⬅️ Kembali ke Menu Utama", key="btn_back_1"):
@@ -891,9 +891,252 @@ elif selected_tab == "02 Raport Personil":
             st.session_state.sub_page_raport = "MENU_UTAMA"
             st.rerun()
             
-        st.markdown("### 📊 Penjualan Personil Toko")
+        st.markdown("### 📊 Raport Penjualan Personil (RPG Stats)")
         st.markdown("---")
-        st.info("Daftar rinci pencapaian aktual penjualan masing-masing kasir/personil toko.")
+
+        # Standardisasi dataframes dari Session State
+        df_periods = st.session_state.get("periods_df", pd.DataFrame())
+        df_sales_person = st.session_state.get("sales_person_df", pd.DataFrame())
+        df_sales_item = st.session_state.get("sales_item_df", pd.DataFrame())
+
+        # CSS KHUSUS TEMA RPG CHARACTER CARD
+        st.markdown("""
+        <style>
+            .rpg-card {
+                background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+                border: 2px solid #38bdf8;
+                border-radius: 20px;
+                padding: 24px;
+                box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
+                margin-bottom: 25px;
+            }
+            .avatar-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 15px;
+            }
+            .avatar-img {
+                width: 100px;
+                height: 100px;
+                border-radius: 50%;
+                border: 3px solid #00f0ff;
+                box-shadow: 0 0 15px #00f0ff;
+                object-fit: cover;
+                background-color: #334155;
+            }
+            .stat-box {
+                background: rgba(15, 23, 42, 0.6);
+                border: 1px solid #334155;
+                border-radius: 12px;
+                padding: 12px;
+                text-align: center;
+            }
+            .stat-label {
+                color: #94a3b8;
+                font-size: 11px;
+                font-weight: bold;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            .stat-value {
+                color: #f8fafc;
+                font-size: 18px;
+                font-weight: bold;
+                margin-top: 4px;
+            }
+            .hp-bar-bg {
+                background-color: #334155;
+                border-radius: 10px;
+                height: 14px;
+                width: 100%;
+                overflow: hidden;
+                margin-top: 6px;
+                border: 1px solid #475569;
+            }
+            .hp-bar-fill {
+                background: linear-gradient(90deg, #00f0ff 0%, #3b82f6 100%);
+                height: 100%;
+                border-radius: 10px;
+                transition: width 0.5s ease-in-out;
+            }
+        </style>
+        """, unsafe_allow_html=True)
+
+        # 1. FILTER PILIHAN BULAN & PERIODE DINAMIS
+        list_bulan = [
+            "Januari", "Februari", "Maret", "April", "Mei", "Juni", 
+            "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+        ]
+        
+        col_f1, col_f2, col_f3 = st.columns([1, 1, 1])
+        
+        with col_f1:
+            selected_bulan_str = st.selectbox("📅 Pilih Bulan:", list_bulan, index=7, key="rpg_sel_bulan")
+            selected_month_num = list_bulan.index(selected_bulan_str) + 1
+
+        # Filter Periode berdasarkan Bulan yang dipilih
+        filtered_periods = pd.DataFrame()
+        period_options = ["Semua Periode"]
+        
+        if not df_periods.empty:
+            df_periods_copy = df_periods.copy()
+            if "start_date" in df_periods_copy.columns:
+                df_periods_copy["start_dt"] = pd.to_datetime(df_periods_copy["start_date"], errors="coerce")
+                filtered_periods = df_periods_copy[df_periods_copy["start_dt"].dt.month == selected_month_num]
+            
+            if not filtered_periods.empty and "period_name" in filtered_periods.columns:
+                period_options += filtered_periods["period_name"].tolist()
+            else:
+                period_options += df_periods["period_name"].tolist() if "period_name" in df_periods.columns else []
+
+        with col_f2:
+            selected_period_name = st.selectbox("⏱️ Pilih Periode:", period_options, key="rpg_sel_periode")
+
+        # Selectbox Personil / Username
+        person_list = ["Pilih Personil"]
+        if not df_sales_person.empty:
+            person_col = next((c for c in df_sales_person.columns if "person_name" in c or "sales_person" in c or "nama" in c), None)
+            if person_col:
+                person_list += sorted(df_sales_person[person_col].dropna().unique().tolist())
+
+        with col_f3:
+            selected_person = st.selectbox("👤 Pilih Personil (User):", person_list, key="rpg_sel_person")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # 2. PROSES CALCULATE STATS PERSONIL
+        if selected_person != "Pilih Personil":
+            
+            # Filter Data Sales Person
+            sub_sp = df_sales_person.copy() if not df_sales_person.empty else pd.DataFrame()
+            person_col = next((c for c in sub_sp.columns if "person_name" in c or "sales_person" in c or "nama" in c), None)
+            
+            if person_col and not sub_sp.empty:
+                sub_sp = sub_sp[sub_sp[person_col] == selected_person]
+
+            # Filter Berdasarkan Periode
+            if selected_period_name != "Semua Periode" and not sub_sp.empty and not df_periods.empty:
+                period_row = df_periods[df_periods["period_name"] == selected_period_name]
+                if not period_row.empty and "period_id" in sub_sp.columns:
+                    target_pid = period_row.iloc[0].get("period_id")
+                    sub_sp = sub_sp[sub_sp["period_id"] == target_pid]
+
+            # Hitung Nilai Aktual Penjualan Personil
+            actual_qty_person = 0.0
+            if not sub_sp.empty and "actual_qty" in sub_sp.columns:
+                sub_sp["actual_qty"] = pd.to_numeric(sub_sp["actual_qty"], errors="coerce").fillna(0)
+                actual_qty_person = float(sub_sp["actual_qty"].sum())
+
+            # Hitung Target Toko (Item) & Target Personil (Estimasi Per Personil)
+            sub_si = df_sales_item.copy() if not df_sales_item.empty else pd.DataFrame()
+            if selected_period_name != "Semua Periode" and not sub_si.empty and not df_periods.empty:
+                period_row = df_periods[df_periods["period_name"] == selected_period_name]
+                if not period_row.empty and "period_id" in sub_si.columns:
+                    target_pid = period_row.iloc[0].get("period_id")
+                    sub_si = sub_si[sub_si["period_id"] == target_pid]
+
+            total_target_qty = 0.0
+            if not sub_si.empty and "target_qty" in sub_si.columns:
+                sub_si["target_qty"] = pd.to_numeric(sub_si["target_qty"], errors="coerce").fillna(0)
+                total_target_qty = float(sub_si["target_qty"].sum())
+
+            # Asumsi/Estimasi pembagian target personil (misal target per personil = target toko / jumlah personil)
+            num_personil = max(len(person_list) - 1, 1)
+            target_person_est = total_target_qty / num_personil if total_target_qty > 0 else 0.0
+
+            ach_person_pct = (actual_qty_person / target_person_est * 100.0) if target_person_est > 0 else 0.0
+            ach_person_pct_clamped = min(max(ach_person_pct, 0.0), 100.0)
+
+            # Hitung Jumlah Item Capaian Personil (Item yang terjual oleh personil ini)
+            total_item_achieved = 0
+            if not sub_sp.empty and "item_name" in sub_sp.columns:
+                total_item_achieved = sub_sp[sub_sp["actual_qty"] > 0]["item_name"].nunique()
+
+            # URL Avatar default RPG (menggunakan RoboHash sebagai contoh visual avatar unik per nama)
+            avatar_url = f"https://api.dicebear.com/7.x/bottts/svg?seed={selected_person}"
+
+            # 3. KARTU PROFIL RPG (RPG CHARACTER CARD)
+            st.markdown(f"""
+            <div class='rpg-card'>
+                <div class='avatar-container'>
+                    <img src='{avatar_url}' class='avatar-img' alt='Avatar'>
+                    <h3 style='color: #00f0ff; margin: 10px 0 2px 0; text-align: center; font-size: 22px;'>{selected_person}</h3>
+                    <span style='color: #e2e8f0; background: #0284c7; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: bold;'>
+                        LEVEL {int(ach_person_pct // 10) + 1} • SALES WARRIOR
+                    </span>
+                </div>
+                
+                <div style='margin-bottom: 18px;'>
+                    <div style='display: flex; justify-content: space-between; font-size: 12px; font-weight: bold;'>
+                        <span style='color: #94a3b8;'>EXP / ACHIEVEMENT BAR</span>
+                        <span style='color: #00f0ff;'>{ach_person_pct:.1f}%</span>
+                    </div>
+                    <div class='hp-bar-bg'>
+                        <div class='hp-bar-fill' style='width: {ach_person_pct_clamped}%;'></div>
+                    </div>
+                </div>
+
+                <div style='display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;'>
+                    <div class='stat-box'>
+                        <div class='stat-label'>🎯 TARGET QTY</div>
+                        <div class='stat-value' style='color: #cbd5e1;'>{target_person_est:,.0f}</div>
+                    </div>
+                    <div class='stat-box'>
+                        <div class='stat-label'>📦 ACTUAL SALES</div>
+                        <div class='stat-value' style='color: #38bdf8;'>{actual_qty_person:,.0f}</div>
+                    </div>
+                    <div class='stat-box'>
+                        <div class='stat-label'>⚡ ACHIEVEMENT</div>
+                        <div class='stat-value' style='color: #10b981;'>{ach_person_pct:.1f}%</div>
+                    </div>
+                    <div class='stat-box'>
+                        <div class='stat-label'>🏆 ITEM REACHED</div>
+                        <div class='stat-value' style='color: #f59e0b;'>{total_item_achieved} Item</div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # 4. TABEL ITEM PENJUALAN (QUEST / ITEM LIST)
+            st.markdown("##### 🗡️ Detail Penjualan Item (Item Achievements)")
+            
+            if not sub_sp.empty and "item_name" in sub_sp.columns:
+                df_item_summary = sub_sp.groupby("item_name").agg({
+                    "actual_qty": "sum"
+                }).reset_index()
+
+                # Gabungkan dengan target item jika ada
+                if not sub_si.empty and "item_name" in sub_si.columns and "target_qty" in sub_si.columns:
+                    sub_si_grouped = sub_si.groupby("item_name")["target_qty"].sum().reset_index()
+                    df_item_summary = df_item_summary.merge(sub_si_grouped, on="item_name", how="left")
+                else:
+                    df_item_summary["target_qty"] = 0
+
+                df_item_summary["target_qty"] = pd.to_numeric(df_item_summary["target_qty"], errors="coerce").fillna(0)
+                df_item_summary["actual_qty"] = pd.to_numeric(df_item_summary["actual_qty"], errors="coerce").fillna(0)
+                
+                # Hitung target per personil per item
+                df_item_summary["Target Personil"] = (df_item_summary["target_qty"] / num_personil).apply(lambda x: math.ceil(x))
+                df_item_summary["Achievement (%)"] = df_item_summary.apply(
+                    lambda r: f"{(r['actual_qty'] / r['Target Personil'] * 100):.1f}%" if r["Target Personil"] > 0 else "0.0%", axis=1
+                )
+                df_item_summary["Gap Qty"] = df_item_summary.apply(
+                    lambda r: max(r["Target Personil"] - r["actual_qty"], 0), axis=1
+                )
+
+                df_item_summary = df_item_summary.rename(columns={
+                    "item_name": "Nama Item",
+                    "actual_qty": "Actual Sales (Pcs)"
+                })
+
+                df_display = df_item_summary[["Nama Item", "Target Personil", "Actual Sales (Pcs)", "Achievement (%)", "Gap Qty"]]
+                st.dataframe(df_display, use_container_width=True, hide_index=True)
+            else:
+                st.info(f"Belum ada data transaksi item untuk **{selected_person}** pada periode ini.")
+        else:
+            st.info("👆 Silakan pilih nama **Personil (User)** pada dropdown di atas untuk melihat Raport RPG Card.")
 
     # ---------------------------------------------------------
     # HALAMAN 3: DETAIL RANGKING PSM TOKO
