@@ -1175,8 +1175,8 @@ elif selected_tab == "02 Raport Personil":
         else:
             st.info("👆 Silakan pilih nama **Personil (User)** pada dropdown di atas.")
         
-    # ---------------------------------------------------------
-    # HALAMAN 3: DETAIL RANGKING PSM TOKO
+   # ---------------------------------------------------------
+    # HALAMAN 3: DETAIL RANGKING PSM TOKO (CYBERPUNK RPG LEADERBOARD)
     # ---------------------------------------------------------
     elif st.session_state.sub_page_raport == "RANK_PSM":
         if st.button("⬅️ Kembali ke Menu Utama", key="btn_back_2"):
@@ -1184,9 +1184,231 @@ elif selected_tab == "02 Raport Personil":
             st.session_state.sub_page_raport = "MENU_UTAMA"
             st.rerun()
             
-        st.markdown("### 🥇 Rangking PSM Toko")
+        st.markdown("### 🥇 Guild Leaderboard - Rangking PSM Toko")
         st.markdown("---")
-        st.info("Papan peringkat (Leaderboard) personil berdasarkan target dan actual PSM.")
+    
+        # LOAD DATA DARI SESSION STATE
+        df_periods = st.session_state.get("periods_df", pd.DataFrame())
+        df_sales_person = st.session_state.get("sales_person_df", pd.DataFrame())
+        df_sales_item = st.session_state.get("sales_item_df", pd.DataFrame())
+        df_users = st.session_state.get("users_df", pd.DataFrame())
+    
+        # CSS STYLING KAPSUL RPG FUTURISTIK & PODIUM
+        st.markdown("""
+        <style>
+            /* Tombol Kapsul Aktif (Glow Neon Cyan) */
+            button[kind="primary"] {
+                background: linear-gradient(135deg, #00f0ff 0%, #3b82f6 100%) !important;
+                color: #0f172a !important;
+                font-weight: 800 !important;
+                font-size: 13px !important;
+                letter-spacing: 0.5px !important;
+                border: 1px solid #00f0ff !important;
+                border-radius: 30px !important;
+                box-shadow: 0 0 15px rgba(0, 240, 255, 0.6) !important;
+                transition: all 0.3s ease !important;
+            }
+            
+            /* Tombol Kapsul Non-Aktif (Dark Mode Glass) */
+            button[kind="secondary"] {
+                background: rgba(30, 41, 59, 0.6) !important;
+                color: #94a3b8 !important;
+                font-weight: 600 !important;
+                font-size: 13px !important;
+                border: 1px solid #334155 !important;
+                border-radius: 30px !important;
+                transition: all 0.3s ease !important;
+            }
+            
+            button[kind="secondary"]:hover {
+                color: #00f0ff !important;
+                border: 1px solid rgba(0, 240, 255, 0.5) !important;
+                background: rgba(30, 41, 59, 0.9) !important;
+            }
+    
+            .podium-card {
+                background: #1e293b;
+                border-radius: 16px;
+                padding: 16px;
+                text-align: center;
+                transition: transform 0.2s;
+            }
+        </style>
+        """, unsafe_allow_html=True)
+    
+        # 1. MODE SWITCHER KAPSUL FUTURISTIK
+        if "psm_filter_mode" not in st.session_state:
+            st.session_state.psm_filter_mode = "Bulanan"
+    
+        st.caption("⚔️ SELECT CAMPAIGN MODE")
+        col_k1, col_k2, col_k3 = st.columns(3)
+    
+        with col_k1:
+            type_daily = "primary" if st.session_state.psm_filter_mode == "Harian" else "secondary"
+            if st.button("⚡ DAILY QUEST", use_container_width=True, type=type_daily, key="capsule_daily"):
+                st.session_state.psm_filter_mode = "Harian"
+                st.rerun()
+    
+        with col_k2:
+            type_range = "primary" if st.session_state.psm_filter_mode == "Rentang Periode" else "secondary"
+            if st.button("🛰️ CAMPAIGN PERIODE", use_container_width=True, type=type_range, key="capsule_range"):
+                st.session_state.psm_filter_mode = "Rentang Periode"
+                st.rerun()
+    
+        with col_k3:
+            type_monthly = "primary" if st.session_state.psm_filter_mode == "Bulanan" else "secondary"
+            if st.button("🌕 SEASONAL MONTH", use_container_width=True, type=type_monthly, key="capsule_monthly"):
+                st.session_state.psm_filter_mode = "Bulanan"
+                st.rerun()
+    
+        filter_mode = st.session_state.psm_filter_mode
+        st.markdown("<br>", unsafe_allow_html=True)
+    
+        # 2. SELECTION COMPONENT BERDASARKAN KAPSUL AKTIF
+        start_date, end_date = None, None
+        selected_month_num = None
+        list_bulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
+    
+        if filter_mode == "Harian":
+            single_date = st.date_input("📅 Pilih Tanggal Penjualan:", datetime.date.today(), key="psm_date_single")
+            start_date = pd.to_datetime(single_date)
+            end_date = pd.to_datetime(single_date)
+    
+        elif filter_mode == "Rentang Periode":
+            col_r1, col_r2 = st.columns(2)
+            with col_r1:
+                d_start = st.date_input("📅 Start Date:", datetime.date.today() - datetime.timedelta(days=7), key="psm_d_start")
+            with col_r2:
+                d_end = st.date_input("📅 End Date:", datetime.date.today(), key="psm_d_end")
+            start_date = pd.to_datetime(d_start)
+            end_date = pd.to_datetime(d_end)
+    
+        elif filter_mode == "Bulanan":
+            selected_bulan_str = st.selectbox("📅 Pilih Bulan Season:", list_bulan, index=datetime.datetime.now().month - 1, key="psm_month_sel")
+            selected_month_num = list_bulan.index(selected_bulan_str) + 1
+    
+        # 3. FILTER DATA PENJUALAN PERSONIL
+        sub_sp = df_sales_person.copy() if not df_sales_person.empty else pd.DataFrame()
+        person_col = next((c for c in sub_sp.columns if "person_name" in c or "sales_person" in c or "nama" in c), None) if not sub_sp.empty else None
+    
+        # Master Karyawan Toko (Memastikan yang 0 Sales tetap masuk)
+        all_employees = []
+        if not df_users.empty and "nama" in df_users.columns:
+            all_employees = df_users["nama"].dropna().unique().tolist()
+        elif person_col and not sub_sp.empty:
+            all_employees = sub_sp[person_col].dropna().unique().tolist()
+    
+        if not sub_sp.empty and "trans_date" in sub_sp.columns:
+            sub_sp["dt"] = pd.to_datetime(sub_sp["trans_date"], errors="coerce")
+            if filter_mode in ["Harian", "Rentang Periode"] and start_date and end_date:
+                sub_sp = sub_sp[(sub_sp["dt"] >= start_date) & (sub_sp["dt"] <= end_date)]
+            elif filter_mode == "Bulanan" and selected_month_num:
+                sub_sp = sub_sp[sub_sp["dt"].dt.month == selected_month_num]
+    
+        # Omzet/Qty Total Seluruh Toko (Untuk Kontribusi %)
+        total_store_qty = 0.0
+        if not sub_sp.empty and "actual_qty" in sub_sp.columns:
+            sub_sp["actual_qty"] = pd.to_numeric(sub_sp["actual_qty"], errors="coerce").fillna(0)
+            total_store_qty = float(sub_sp["actual_qty"].sum())
+    
+        # 4. HITUNG METRIK PERSONIL
+        leaderboard_data = []
+    
+        for emp in all_employees:
+            emp_sp = sub_sp[sub_sp[person_col] == emp] if person_col and not sub_sp.empty else pd.DataFrame()
+            
+            actual_qty = 0.0
+            items_100_done = 0
+    
+            if not emp_sp.empty and "actual_qty" in emp_sp.columns:
+                actual_qty = float(emp_sp["actual_qty"].sum())
+    
+                # Hitung Jumlah Item Yang Target 100% Achieved
+                if "item_name" in emp_sp.columns:
+                    emp_item_grp = emp_sp.groupby("item_name")["actual_qty"].sum().reset_index()
+                    if not df_sales_item.empty and "item_name" in df_sales_item.columns:
+                        target_col = "target_kasir" if "target_kasir" in df_sales_item.columns else "target_qty"
+                        target_map = df_sales_item.groupby("item_name")[target_col].sum().to_dict()
+                        
+                        for _, irow in emp_item_grp.iterrows():
+                            iname = irow["item_name"]
+                            iqty = irow["actual_qty"]
+                            itarget = target_map.get(iname, 0)
+                            if itarget > 0 and iqty >= itarget:
+                                items_100_done += 1
+    
+            kontribusi_pct = (actual_qty / total_store_qty * 100.0) if total_store_qty > 0 else 0.0
+    
+            leaderboard_data.append({
+                "Nama Personil": emp,
+                "Total Qty": actual_qty,
+                "% Kontribusi": kontribusi_pct,
+                "Target 100% Done": items_100_done
+            })
+    
+        df_lb = pd.DataFrame(leaderboard_data)
+    
+        # URUTKAN RANGKING (QTY TERBANYAK & QUEST DONE)
+        if not df_lb.empty:
+            df_lb = df_lb.sort_values(by=["Total Qty", "Target 100% Done"], ascending=[False, False]).reset_index(drop=True)
+            df_lb.index += 1
+    
+        # 5. PODIUM TOP 3 ADVENTURER
+        st.markdown("<br>", unsafe_allow_html=True)
+        if len(df_lb) >= 3:
+            p1, p2, p3 = df_lb.iloc[0], df_lb.iloc[1], df_lb.iloc[2]
+            
+            podium_html = f"""
+            <div style='display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin-bottom: 30px;'>
+                <!-- JUARA 2 -->
+                <div class='podium-card' style='border: 2px solid #94a3b8; width: 30%; box-shadow: 0 0 12px rgba(148, 163, 184, 0.2);'>
+                    <div style='font-size: 32px;'>🥈</div>
+                    <div style='font-weight: bold; color: #94a3b8; font-size: 15px;'>{p2["Nama Personil"]}</div>
+                    <div style='font-size: 22px; font-weight: bold; color: #f8fafc; margin-top: 4px;'>{p2["Total Qty"]:,.0f} <span style='font-size: 11px;'>Pcs</span></div>
+                    <div style='color: #00f0ff; font-size: 12px; font-weight: bold;'>{p2["% Kontribusi"]:.1f}% Kontribusi</div>
+                    <div style='background: #334155; border-radius: 6px; padding: 4px; font-size: 11px; margin-top: 8px; color: #f59e0b;'>🏆 {p2["Target 100% Done"]} Item 100%</div>
+                </div>
+                
+                <!-- JUARA 1 -->
+                <div class='podium-card' style='border: 3px solid #f59e0b; width: 36%; box-shadow: 0 0 25px rgba(245, 158, 11, 0.4); transform: scale(1.05); background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);'>
+                    <div style='font-size: 42px;'>🥇</div>
+                    <span style='background: #f59e0b; color: #0f172a; font-size: 10px; font-weight: 800; padding: 2px 10px; border-radius: 10px;'>GUILD MASTER</span>
+                    <div style='font-weight: bold; color: #fbbf24; font-size: 18px; margin-top: 6px;'>{p1["Nama Personil"]}</div>
+                    <div style='font-size: 26px; font-weight: bold; color: #f8fafc; margin-top: 4px;'>{p1["Total Qty"]:,.0f} <span style='font-size: 12px;'>Pcs</span></div>
+                    <div style='color: #00f0ff; font-size: 13px; font-weight: bold;'>{p1["% Kontribusi"]:.1f}% Kontribusi</div>
+                    <div style='background: #334155; border-radius: 6px; padding: 4px; font-size: 11px; margin-top: 8px; color: #f59e0b;'>🏆 {p1["Target 100% Done"]} Item 100%</div>
+                </div>
+    
+                <!-- JUARA 3 -->
+                <div class='podium-card' style='border: 2px solid #d97706; width: 30%; box-shadow: 0 0 12px rgba(217, 119, 6, 0.2);'>
+                    <div style='font-size: 32px;'>🥉</div>
+                    <div style='font-weight: bold; color: #d97706; font-size: 15px;'>{p3["Nama Personil"]}</div>
+                    <div style='font-size: 22px; font-weight: bold; color: #f8fafc; margin-top: 4px;'>{p3["Total Qty"]:,.0f} <span style='font-size: 11px;'>Pcs</span></div>
+                    <div style='color: #00f0ff; font-size: 12px; font-weight: bold;'>{p3["% Kontribusi"]:.1f}% Kontribusi</div>
+                    <div style='background: #334155; border-radius: 6px; padding: 4px; font-size: 11px; margin-top: 8px; color: #f59e0b;'>🏆 {p3["Target 100% Done"]} Item 100%</div>
+                </div>
+            </div>
+            """
+            st.markdown(podium_html, unsafe_allow_html=True)
+    
+        # 6. TABEL FULL ADVENTURER LEADERBOARD
+        st.markdown("##### 📜 Full Adventurer Leaderboard")
+    
+        df_display = df_lb.copy()
+        df_display["Total Qty"] = df_display["Total Qty"].map("{:,.0f} Pcs".format)
+        df_display["% Kontribusi"] = df_display["% Kontribusi"].map("{:.2f} %".format)
+        df_display["Target 100% Done"] = df_display["Target 100% Done"].map("{} Item".format)
+    
+        st.dataframe(
+            df_display,
+            use_container_width=True,
+            column_config={
+                "Nama Personil": st.column_config.TextColumn("👤 Nama Personil"),
+                "Total Qty": st.column_config.TextColumn("📦 Total Penjualan"),
+                "% Kontribusi": st.column_config.TextColumn("📊 Kontribusi Toko"),
+                "Target 100% Done": st.column_config.TextColumn("🎯 Target 100% Achieved"),
+            }
+        )
 
     # ---------------------------------------------------------
     # HALAMAN 4: DETAIL RANGKING PPS TOKO
