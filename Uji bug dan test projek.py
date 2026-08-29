@@ -656,9 +656,21 @@ elif selected_tab == "01 Dashboard":
         elif view_mode == "🗓️ Bulanan":
             st.markdown("##### 🗓️ Pencapaian PSM Bulanan")
             
-            list_bulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
-            selected_bulan_str = st.selectbox("Pilih Bulan:", list_bulan, key="sel_bulan_psm")
-        
+            # Pilihan Bulan dan Tahun
+            list_bulan = [
+                "Januari", "Februari", "Maret", "April", "Mei", "Juni", 
+                "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+            ]
+            
+            col_sel1, col_sel2 = st.columns(2)
+            with col_sel1:
+                selected_bulan_str = st.selectbox("Pilih Bulan:", list_bulan, index=7, key="sel_bulan_psm") # Default Agustus
+            with col_sel2:
+                selected_tahun = st.number_input("Pilih Tahun:", min_value=2020, max_value=2030, value=2026, key="sel_tahun_psm")
+
+            # Konversi nama bulan ke nomor bulan (1 - 12)
+            month_idx = list_bulan.index(selected_bulan_str) + 1
+
             sub_target = df_sales_item.copy() if not df_sales_item.empty else pd.DataFrame()
             sub_sp = df_sales_person.copy() if not df_sales_person.empty else pd.DataFrame()
         
@@ -666,9 +678,18 @@ elif selected_tab == "01 Dashboard":
             monthly_actual = 0.0
         
             if not sub_target.empty:
-                periode_col = next((c for c in sub_target.columns if "periode" in c or "range" in c or "name" in c), None)
-                if periode_col:
-                    df_filtered_bulan = sub_target[sub_target[periode_col].astype(str).str.contains(selected_bulan_str, case=False, na=False)]
+                # Cari kolom tanggal / periode / range / name
+                date_col = next((c for c in sub_target.columns if any(k in c.lower() for k in ["tgl", "tanggal", "date", "periode", "range", "name"])), None)
+                
+                if date_col:
+                    # Konversi kolom ke tipe datetime
+                    sub_target[date_col] = pd.to_datetime(sub_target[date_col], errors="coerce")
+                    
+                    # Filter data berdasarkan Bulan dan Tahun (misal: 1 - 31 Agustus 2026)
+                    df_filtered_bulan = sub_target[
+                        (sub_target[date_col].dt.month == month_idx) & 
+                        (sub_target[date_col].dt.year == selected_tahun)
+                    ]
                     
                     if "target_qty" in df_filtered_bulan.columns:
                         monthly_target = float(pd.to_numeric(df_filtered_bulan["target_qty"], errors="coerce").fillna(0).sum())
@@ -676,11 +697,13 @@ elif selected_tab == "01 Dashboard":
                     if "actual_qty" in df_filtered_bulan.columns:
                         monthly_actual = float(pd.to_numeric(df_filtered_bulan["actual_qty"], errors="coerce").fillna(0).sum())
         
+            # Perhitungan KPI Bulanan
             monthly_gap = monthly_actual - monthly_target  
             monthly_ach = (monthly_actual / monthly_target * 100.0) if monthly_target > 0 else 0.0
             bobot_pencapaian = (monthly_ach / 100.0) * 20.0
             time_factor_val = 100.0  
             
+            # Status Performa
             if monthly_ach >= time_factor_val:
                 status_label = "🔥 Achieved (Sangat On Track)"
                 status_color = "#10b981" 
@@ -691,32 +714,35 @@ elif selected_tab == "01 Dashboard":
                 status_label = "❌ Off Track (Perlu Pergerakan Ekstra)"
                 status_color = "#ef4444" 
         
-            st.markdown("<br>", unsafe_allow_html=True)
+            # Baris Metrik Utama
+            st.divider()
             m1, m2, m3 = st.columns(3)
             m1.metric("Target Bulanan", f"{monthly_target:,.0f} Pcs")
             m2.metric("Actual Bulanan", f"{monthly_actual:,.0f} Pcs", delta=f"{monthly_gap:+,.0f} Pcs (GAP)")
             m3.metric("Achievement", f"{monthly_ach:.1f}%")
         
-            st.markdown("<br>", unsafe_allow_html=True)
+            # Indikator Sekunder
+            st.write("")
             b1, b2, b3 = st.columns(3)
             b1.metric("Bobot Pencapaian", f"{bobot_pencapaian:.2f}", help="Rumus: Achievement % x 20")
             b2.metric("Time Factor", f"{time_factor_val:.1f}%")
             
             with b3:
                 st.markdown(f"""
-                <div style='background-color: #1e293b; padding: 10px 14px; border-radius: 8px; border: 1px solid #334155; text-align: center;'>
-                    <span style='font-size: 12px; color: #94a3b8;'>Status Performa</span>
-                    <p style='font-size: 14px; font-weight: bold; color: {status_color}; margin: 4px 0 0 0;'>{status_label}</p>
+                <div style='background-color: #1e293b; padding: 12px 14px; border-radius: 8px; border: 1px solid #334155; text-align: center;'>
+                    <span style='font-size: 12px; color: #94a3b8; display: block;'>Status Performa</span>
+                    <span style='font-size: 14px; font-weight: bold; color: {status_color}; margin-top: 4px; display: block;'>{status_label}</span>
                 </div>
                 """, unsafe_allow_html=True)
         
-            st.markdown("<br>", unsafe_allow_html=True)
+            # Pesan Motivasi
+            st.write("")
             if monthly_ach >= 100:
-                st.success(f"🌟 Luar biasa! Performa bulan **{selected_bulan_str}** ini benar-benar bersinar terang. Pertahankan konsistensi tim yang hebat ini! 💪✨")
+                st.success(f"🌟 Luar biasa! Performa bulan **{selected_bulan_str} {selected_tahun}** ini benar-benar bersinar terang. Pertahankan konsistensi tim yang hebat ini! 💪✨")
             elif monthly_ach >= 80:
-                st.info(f"☕ Hebat banget! Bulan **{selected_bulan_str}** sudah berjalan di jalur yang positif. Tinggal sedikit dorongan lagi! 🚀🔥")
+                st.info(f"☕ Hebat banget! Bulan **{selected_bulan_str} {selected_tahun}** sudah berjalan di jalur yang positif. Tinggal sedikit dorongan lagi! 🚀🔥")
             else:
-                st.warning(f"💡 Semangat terus untuk tim di bulan **{selected_bulan_str}**! Setiap angka adalah proses belajar. Pacu strategi baru! 🎯❤️")
+                st.warning(f"💡 Semangat terus untuk tim di bulan **{selected_bulan_str} {selected_tahun}**! Setiap angka adalah proses belajar. Pacu strategi baru! 🎯❤️")
 
     # --- HALAMAN 2: REPORT SALES TOKO ---
     elif st.session_state.dash_page == "SalesToko":
