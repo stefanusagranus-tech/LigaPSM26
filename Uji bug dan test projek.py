@@ -63,6 +63,14 @@ if "data_loaded" not in st.session_state:
     st.session_state.sales_person_df = sp_df
     st.session_state.data_loaded = True
 
+# Contoh saat me-load data di bagian atas aplikasi Streamlit:
+df_periode = pd.read_excel("Database_Penjualan_PSM_Toko_Clean_GoogleSheets (2).xlsx", sheet_name="PERIODE")
+df_sales_item = pd.read_excel("Database_Penjualan_PSM_Toko_Clean_GoogleSheets (2).xlsx", sheet_name="SALES_ITEM")
+
+# Simpan ke session_state agar aman diakses di mana saja
+st.session_state['df_periode'] = df_periode
+st.session_state['df_sales_item'] = df_sales_item
+
 if "active_tab" not in st.session_state:
     st.session_state.active_tab = "Home"
 
@@ -667,39 +675,48 @@ elif selected_tab == "01 Dashboard":
             with col_sel2:
                 selected_tahun = st.number_input("Pilih Tahun:", min_value=2020, max_value=2030, value=2026, key="sel_tahun_psm")
 
-            # Konversi nama bulan ke angka (1 - 12)
+            # Angka bulan (1 - 12)
             selected_month_num = list_bulan.index(selected_bulan_str) + 1
 
             sub_target = df_sales_item.copy() if not df_sales_item.empty else pd.DataFrame()
-            sub_periode = df_periode.copy() if 'df_periode' in locals() and not df_periode.empty else pd.DataFrame()
+            
+            # Ambil df_periode dari session_state atau lokal
+            if 'df_periode' in st.session_state:
+                sub_periode = st.session_state.df_periode.copy()
+            elif 'df_periode' in locals() and not df_periode.empty:
+                sub_periode = df_periode.copy()
+            else:
+                sub_periode = pd.DataFrame()
         
             monthly_target = 0.0
             monthly_actual = 0.0
         
             if not sub_target.empty:
-                # 1. Jika df_sales_item belum memiliki kolom tanggal/period_name, lakukan Merge dengan df_periode
+                # 1. Lakukan MERGE dengan df_periode jika kolom 'start_date' atau 'period_name' belum ada di df_sales_item
                 if "period_id" in sub_target.columns and not sub_periode.empty:
-                    sub_target = sub_target.merge(sub_periode, on="period_id", how="left", suffixes=("", "_periode"))
+                    # Hapus kolom bentrok jika ada
+                    cols_to_use = [c for c in sub_periode.columns if c not in sub_target.columns or c == "period_id"]
+                    sub_target = sub_target.merge(sub_periode[cols_to_use], on="period_id", how="left")
 
-                # 2. Ambil acuan tanggal dari start_date / end_date / period_name
+                # 2. Filter Berdasarkan Bulan dan Tahun
+                df_filtered_bulan = pd.DataFrame()
+                
+                # Opsi A: Filter lewat start_date (datetime)
                 if "start_date" in sub_target.columns:
                     sub_target["start_date_dt"] = pd.to_datetime(sub_target["start_date"], errors="coerce")
-                    
-                    # Filter berdasarkan Bulan dan Tahun dari start_date
                     df_filtered_bulan = sub_target[
                         (sub_target["start_date_dt"].dt.month == selected_month_num) & 
                         (sub_target["start_date_dt"].dt.year == selected_tahun)
                     ]
-                elif "period_name" in sub_target.columns:
-                    # Alternatif filter string jika kolom tanggal datetime tidak ada
+                
+                # Opsi B: Filter lewat string period_name (misal: '1 - 7 Agustus 2026')
+                if df_filtered_bulan.empty and "period_name" in sub_target.columns:
                     df_filtered_bulan = sub_target[
                         sub_target["period_name"].astype(str).str.contains(selected_bulan_str, case=False, na=False) &
                         sub_target["period_name"].astype(str).str.contains(str(selected_tahun), case=False, na=False)
                     ]
-                else:
-                    df_filtered_bulan = pd.DataFrame()
-                    
-                # 3. Hitung Total Target dan Actual untuk 1 Bulan Penuh
+
+                # 3. Hitung Penjumlahan Target & Actual
                 if not df_filtered_bulan.empty:
                     if "target_qty" in df_filtered_bulan.columns:
                         monthly_target = float(pd.to_numeric(df_filtered_bulan["target_qty"], errors="coerce").fillna(0).sum())
@@ -753,6 +770,7 @@ elif selected_tab == "01 Dashboard":
                 st.info(f"☕ Hebat banget! Bulan **{selected_bulan_str} {selected_tahun}** sudah berjalan di jalur yang positif. Tinggal sedikit dorongan lagi! 🚀🔥")
             else:
                 st.warning(f"💡 Semangat terus untuk tim di bulan **{selected_bulan_str} {selected_tahun}**! Setiap angka adalah proses belajar. Pacu strategi baru! 🎯❤️")
+    
     
     # --- HALAMAN 2: REPORT SALES TOKO ---
     elif st.session_state.dash_page == "SalesToko":
