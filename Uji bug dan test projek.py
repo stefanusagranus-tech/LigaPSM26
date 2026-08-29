@@ -775,15 +775,18 @@ elif selected_tab == "01 Dashboard":
 # TAB 02: RAPORT PERSONIL TOKO
 # =========================================================
 elif selected_tab == "02 Raport Personil":
-    
-    # Inisialisasi state untuk navigasi halaman di Tab 2 jika belum ada
-    if "sub_page_raport" not in st.session_state:
-        st.session_state.sub_page_raport = "MENU_UTAMA"
 
-    # --- CSS Khusus Gaya Kartu Android & Segmented Kapsul ---
+    # 1. BACA PARAMETER URL UNTUK TOMBOL BACK BROWSER/HP
+    query_params = st.query_params
+    current_sub_page = query_params.get("sub_page", "MENU_UTAMA")
+
+    # Sync state dengan URL
+    st.session_state.sub_page_raport = current_sub_page
+
+    # --- CSS GAYA KARD ANDROID KLIK UTUH & SEGMENTED KAPSUL ---
     st.markdown("""
     <style>
-        /* Mengubah Segmented Control menjadi Kapsul */
+        /* Segmented Control Mode Kapsul */
         div[data-baseweb="segmented-control"] {
             border-radius: 9999px !important;
             padding: 4px !important;
@@ -795,19 +798,28 @@ elif selected_tab == "02 Raport Personil":
             transition: all 0.3s ease !important;
         }
         
-        /* Gaya Kartu Menu Android */
-        .android-card {
+        /* Desain Card Utuh yang Bisa Diklik */
+        div[data-testid="stVerticalBlockBorderWrapper"] .android-card-box {
             background-color: #1e293b;
             border: 1px solid #334155;
             border-radius: 16px;
-            padding: 20px;
+            padding: 24px 16px;
             text-align: center;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s ease, border-color 0.2s ease;
+            transition: all 0.25s ease;
+            cursor: pointer;
         }
-        .android-card:hover {
-            transform: translateY(-4px);
+        
+        div[data-testid="stVerticalBlockBorderWrapper"]:hover .android-card-box {
             border-color: #00f0ff;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 240, 255, 0.15);
+        }
+
+        /* Merubah Tombol Streamlit Menjadi Kapsul / Menyatu dengan Card */
+        .stButton > button {
+            border-radius: 9999px !important;
+            font-weight: bold !important;
+            transition: all 0.2s ease !important;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -817,81 +829,91 @@ elif selected_tab == "02 Raport Personil":
     # ---------------------------------------------------------
     if st.session_state.sub_page_raport == "MENU_UTAMA":
         st.markdown("### 🏆 Raport Personil Toko")
-        st.write("Silakan pilih menu laporan personil di bawah ini:")
+        st.write("Pilih menu laporan personil di bawah ini:")
         st.markdown("<br>", unsafe_allow_html=True)
 
         col1, col2, col3 = st.columns(3)
 
+        # --- CARD 1: PENJUALAN PERSONIL ---
         with col1:
-            st.markdown("""
-            <div class='android-card'>
-                <div style='font-size: 40px; margin-bottom: 8px;'>📊</div>
-                <div style='font-weight: bold; color: #f8fafc; font-size: 16px;'>Penjualan Personil</div>
-                <div style='font-size: 12px; color: #94a3b8; margin-top: 4px;'>Rincian pencapaian aktual penjualan per personil</div>
-            </div>
-            """, unsafe_allow_html=True)
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("Buka Laporan 📊", key="btn_to_penjualan", use_container_width=True):
-                st.session_state.sub_page_raport = "PENJUALAN"
-                st.rerun()
+            with st.container(border=True):
+                st.markdown("""
+                <div class='android-card-box'>
+                    <div style='font-size: 42px; margin-bottom: 8px;'>📊</div>
+                    <div style='font-weight: bold; color: #f8fafc; font-size: 16px;'>Penjualan Personil</div>
+                    <div style='font-size: 12px; color: #94a3b8; margin-top: 6px; min-height: 36px;'>Rincian pencapaian aktual penjualan per personil</div>
+                </div>
+                """, unsafe_allow_html=True)
+                st.markdown("<br>", unsafe_allow_html=True)
+                if st.button("Buka Laporan 📊", key="card_btn_penjualan", use_container_width=True):
+                    st.query_params["sub_page"] = "PENJUALAN"
+                    st.session_state.sub_page_raport = "PENJUALAN"
+                    st.rerun()
 
+        # --- CARD 2: RANGKING PSM ---
         with col2:
-            st.markdown("""
-            <div class='android-card'>
-                <div style='font-size: 40px; margin-bottom: 8px;'>🥇</div>
-                <div style='font-weight: bold; color: #f8fafc; font-size: 16px;'>Rangking PSM Toko</div>
-                <div style='font-size: 12px; color: #94a3b8; margin-top: 4px;'>Papan peringkat leaderboard PSM personil</div>
-            </div>
-            """, unsafe_allow_html=True)
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("Lihat Rangking 🥇", key="btn_to_psm", use_container_width=True):
-                st.session_state.sub_page_raport = "RANK_PSM"
-                st.rerun()
+            with st.container(border=True):
+                st.markdown("""
+                <div class='android-card-box'>
+                    <div style='font-size: 42px; margin-bottom: 8px;'>🥇</div>
+                    <div style='font-weight: bold; color: #f8fafc; font-size: 16px;'>Rangking PSM Toko</div>
+                    <div style='font-size: 12px; color: #94a3b8; margin-top: 6px; min-height: 36px;'>Papan peringkat leaderboard PSM personil</div>
+                </div>
+                """, unsafe_allow_html=True)
+                st.markdown("<br>", unsafe_allow_html=True)
+                if st.button("Lihat Rangking 🥇", key="card_btn_psm", use_container_width=True):
+                    st.query_params["sub_page"] = "RANK_PSM"
+                    st.session_state.sub_page_raport = "RANK_PSM"
+                    st.rerun()
 
+        # --- CARD 3: RANGKING PPS ---
         with col3:
-            st.markdown("""
-            <div class='android-card'>
-                <div style='font-size: 40px; margin-bottom: 8px;'>🎯</div>
-                <div style='font-weight: bold; color: #f8fafc; font-size: 16px;'>Rangking PPS Toko</div>
-                <div style='font-size: 12px; color: #94a3b8; margin-top: 4px;'>Papan peringkat pencapaian PPS personil</div>
-            </div>
-            """, unsafe_allow_html=True)
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("Lihat Rangking 🎯", key="btn_to_pps", use_container_width=True):
-                st.session_state.sub_page_raport = "RANK_PPS"
-                st.rerun()
+            with st.container(border=True):
+                st.markdown("""
+                <div class='android-card-box'>
+                    <div style='font-size: 42px; margin-bottom: 8px;'>🎯</div>
+                    <div style='font-weight: bold; color: #f8fafc; font-size: 16px;'>Rangking PPS Toko</div>
+                    <div style='font-size: 12px; color: #94a3b8; margin-top: 6px; min-height: 36px;'>Papan peringkat pencapaian PPS personil</div>
+                </div>
+                """, unsafe_allow_html=True)
+                st.markdown("<br>", unsafe_allow_html=True)
+                if st.button("Lihat Rangking 🎯", key="card_btn_pps", use_container_width=True):
+                    st.query_params["sub_page"] = "RANK_PPS"
+                    st.session_state.sub_page_raport = "RANK_PPS"
+                    st.rerun()
 
     # ---------------------------------------------------------
     # HALAMAN 2: DETAIL PENJUALAN PERSONIL TOKO
     # ---------------------------------------------------------
     elif st.session_state.sub_page_raport == "PENJUALAN":
         if st.button("⬅️ Kembali ke Menu Utama", key="btn_back_1"):
+            st.query_params["sub_page"] = "MENU_UTAMA"
             st.session_state.sub_page_raport = "MENU_UTAMA"
             st.rerun()
             
         st.markdown("### 📊 Penjualan Personil Toko")
         st.markdown("---")
         st.info("Daftar rinci pencapaian aktual penjualan masing-masing kasir/personil toko.")
-        # Masukkan logika & tabel data penjualan personil Anda di sini...
 
     # ---------------------------------------------------------
     # HALAMAN 3: DETAIL RANGKING PSM TOKO
     # ---------------------------------------------------------
     elif st.session_state.sub_page_raport == "RANK_PSM":
         if st.button("⬅️ Kembali ke Menu Utama", key="btn_back_2"):
+            st.query_params["sub_page"] = "MENU_UTAMA"
             st.session_state.sub_page_raport = "MENU_UTAMA"
             st.rerun()
             
         st.markdown("### 🥇 Rangking PSM Toko")
         st.markdown("---")
         st.info("Papan peringkat (Leaderboard) personil berdasarkan target dan actual PSM.")
-        # Masukkan logika Leaderboard/Podium PSM Anda di sini...
 
     # ---------------------------------------------------------
     # HALAMAN 4: DETAIL RANGKING PPS TOKO
     # ---------------------------------------------------------
     elif st.session_state.sub_page_raport == "RANK_PPS":
         if st.button("⬅️ Kembali ke Menu Utama", key="btn_back_3"):
+            st.query_params["sub_page"] = "MENU_UTAMA"
             st.session_state.sub_page_raport = "MENU_UTAMA"
             st.rerun()
             
