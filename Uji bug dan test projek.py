@@ -825,59 +825,59 @@ elif selected_tab == "02 Raport Personil":
     """, unsafe_allow_html=True)
 
     # ---------------------------------------------------------
-# HALAMAN 1: DASHBOARD MENU UTAMA
-# ---------------------------------------------------------
-if st.session_state.sub_page_raport == "MENU_UTAMA":
-    st.markdown("### 🏆 Raport Personil Toko")
-    st.write("Pilih menu laporan personil di bawah ini:")
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    col1, col2, col3 = st.columns(3)
-
-    # --- CARD 1: PENJUALAN PERSONIL ---
-    with col1:
-        with st.container(border=True):
-            st.markdown("""
-            <div style='text-align: center; padding: 10px 0;'>
-                <div style='font-size: 42px; margin-bottom: 8px;'>📊</div>
-                <div style='font-weight: bold; color: #f8fafc; font-size: 16px;'>Penjualan Personil</div>
-            </div>
-            """, unsafe_allow_html=True)
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("Buka Laporan 📊", key="card_btn_penjualan", use_container_width=True):
-                st.query_params["sub_page"] = "PENJUALAN"
-                st.session_state.sub_page_raport = "PENJUALAN"
-                st.rerun()
-
-    # --- CARD 2: RANGKING PSM ---
-    with col2:
-        with st.container(border=True):
-            st.markdown("""
-            <div style='text-align: center; padding: 10px 0;'>
-                <div style='font-size: 42px; margin-bottom: 8px;'>🥇</div>
-                <div style='font-weight: bold; color: #f8fafc; font-size: 16px;'>Rangking PSM Toko</div>
-            </div>
-            """, unsafe_allow_html=True)
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("Lihat Rangking 🥇", key="card_btn_psm", use_container_width=True):
-                st.query_params["sub_page"] = "RANK_PSM"
-                st.session_state.sub_page_raport = "RANK_PSM"
-                st.rerun()
-
-    # --- CARD 3: RANGKING PPS ---
-    with col3:
-        with st.container(border=True):
-            st.markdown("""
-            <div style='text-align: center; padding: 10px 0;'>
-                <div style='font-size: 42px; margin-bottom: 8px;'>🎯</div>
-                <div style='font-weight: bold; color: #f8fafc; font-size: 16px;'>Rangking PPS Toko</div>
-            </div>
-            """, unsafe_allow_html=True)
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("Lihat Rangking 🎯", key="card_btn_pps", use_container_width=True):
-                st.query_params["sub_page"] = "RANK_PPS"
-                st.session_state.sub_page_raport = "RANK_PPS"
-                st.rerun()
+    # HALAMAN 1: DASHBOARD MENU UTAMA
+    # ---------------------------------------------------------
+    if st.session_state.sub_page_raport == "MENU_UTAMA":
+        st.markdown("### 🏆 Raport Personil Toko")
+        st.write("Pilih menu laporan personil di bawah ini:")
+        st.markdown("<br>", unsafe_allow_html=True)
+    
+        col1, col2, col3 = st.columns(3)
+    
+        # --- CARD 1: PENJUALAN PERSONIL ---
+        with col1:
+            with st.container(border=True):
+                st.markdown("""
+                <div style='text-align: center; padding: 10px 0;'>
+                    <div style='font-size: 42px; margin-bottom: 8px;'>📊</div>
+                    <div style='font-weight: bold; color: #f8fafc; font-size: 16px;'>Penjualan Personil</div>
+                </div>
+                """, unsafe_allow_html=True)
+                st.markdown("<br>", unsafe_allow_html=True)
+                if st.button("Buka Laporan 📊", key="card_btn_penjualan", use_container_width=True):
+                    st.query_params["sub_page"] = "PENJUALAN"
+                    st.session_state.sub_page_raport = "PENJUALAN"
+                    st.rerun()
+    
+        # --- CARD 2: RANGKING PSM ---
+        with col2:
+            with st.container(border=True):
+                st.markdown("""
+                <div style='text-align: center; padding: 10px 0;'>
+                    <div style='font-size: 42px; margin-bottom: 8px;'>🥇</div>
+                    <div style='font-weight: bold; color: #f8fafc; font-size: 16px;'>Rangking PSM Toko</div>
+                </div>
+                """, unsafe_allow_html=True)
+                st.markdown("<br>", unsafe_allow_html=True)
+                if st.button("Lihat Rangking 🥇", key="card_btn_psm", use_container_width=True):
+                    st.query_params["sub_page"] = "RANK_PSM"
+                    st.session_state.sub_page_raport = "RANK_PSM"
+                    st.rerun()
+    
+        # --- CARD 3: RANGKING PPS ---
+        with col3:
+            with st.container(border=True):
+                st.markdown("""
+                <div style='text-align: center; padding: 10px 0;'>
+                    <div style='font-size: 42px; margin-bottom: 8px;'>🎯</div>
+                    <div style='font-weight: bold; color: #f8fafc; font-size: 16px;'>Rangking PPS Toko</div>
+                </div>
+                """, unsafe_allow_html=True)
+                st.markdown("<br>", unsafe_allow_html=True)
+                if st.button("Lihat Rangking 🎯", key="card_btn_pps", use_container_width=True):
+                    st.query_params["sub_page"] = "RANK_PPS"
+                    st.session_state.sub_page_raport = "RANK_PPS"
+                    st.rerun()
     
     # ---------------------------------------------------------
     # HALAMAN 2: DETAIL PENJUALAN PERSONIL TOKO (FULL RPG & ISOLATED MONTH)
