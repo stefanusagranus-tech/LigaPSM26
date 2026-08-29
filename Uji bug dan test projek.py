@@ -775,25 +775,129 @@ elif selected_tab == "01 Dashboard":
 # TAB 02: RAPORT PERSONIL TOKO
 # =========================================================
 elif selected_tab == "02 Raport Personil":
-    st.markdown("### 🏆 Raport Personil Toko")
     
-    r_options = ["Penjualan Personil Toko", "Rangking PSM Toko", "Rangking PPS Toko"]
-    if hasattr(st, "pills"):
-        r_choice = st.pills("Menu Raport", r_options, default=r_options[0], key="pills_raport")
-    else:
-        r_choice = st.selectbox("Pilih Menu Raport:", r_options, key="select_raport")
+    # Inisialisasi state untuk navigasi halaman di Tab 2 jika belum ada
+    if "sub_page_raport" not in st.session_state:
+        st.session_state.sub_page_raport = "MENU_UTAMA"
+
+    # --- CSS Khusus Gaya Kartu Android & Segmented Kapsul ---
+    st.markdown("""
+    <style>
+        /* Mengubah Segmented Control menjadi Kapsul */
+        div[data-baseweb="segmented-control"] {
+            border-radius: 9999px !important;
+            padding: 4px !important;
+            background-color: #1e293b !important;
+        }
+        div[data-baseweb="segmented-control"] button {
+            border-radius: 9999px !important;
+            border: none !important;
+            transition: all 0.3s ease !important;
+        }
         
-    st.markdown("---")
-    
-    if r_choice == "Penjualan Personil Toko":
-        st.markdown("##### 📊 Menu Penjualan Personil Toko")
-        st.write("Daftar rinci pencapaian aktual penjualan masing-masing kasir/personil.")
-    elif r_choice == "Rangking PSM Toko":
-        st.markdown("##### 🥇 Menu Rangking PSM Toko")
-        st.write("Papan peringkat (Leaderboard) personil berdasarkan target dan actual PSM.")
-    else:
-        st.markdown("##### 🎯 Menu Rangking PPS Toko")
-        st.write("Papan peringkat personil berdasarkan performa indikator PPS.")
+        /* Gaya Kartu Menu Android */
+        .android-card {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        .android-card:hover {
+            transform: translateY(-4px);
+            border-color: #00f0ff;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # ---------------------------------------------------------
+    # HALAMAN 1: DASHBOARD MENU UTAMA (ALA ANDROID)
+    # ---------------------------------------------------------
+    if st.session_state.sub_page_raport == "MENU_UTAMA":
+        st.markdown("### 🏆 Raport Personil Toko")
+        st.write("Silakan pilih menu laporan personil di bawah ini:")
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.markdown("""
+            <div class='android-card'>
+                <div style='font-size: 40px; margin-bottom: 8px;'>📊</div>
+                <div style='font-weight: bold; color: #f8fafc; font-size: 16px;'>Penjualan Personil</div>
+                <div style='font-size: 12px; color: #94a3b8; margin-top: 4px;'>Rincian pencapaian aktual penjualan per personil</div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("Buka Laporan 📊", key="btn_to_penjualan", use_container_width=True):
+                st.session_state.sub_page_raport = "PENJUALAN"
+                st.rerun()
+
+        with col2:
+            st.markdown("""
+            <div class='android-card'>
+                <div style='font-size: 40px; margin-bottom: 8px;'>🥇</div>
+                <div style='font-weight: bold; color: #f8fafc; font-size: 16px;'>Rangking PSM Toko</div>
+                <div style='font-size: 12px; color: #94a3b8; margin-top: 4px;'>Papan peringkat leaderboard PSM personil</div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("Lihat Rangking 🥇", key="btn_to_psm", use_container_width=True):
+                st.session_state.sub_page_raport = "RANK_PSM"
+                st.rerun()
+
+        with col3:
+            st.markdown("""
+            <div class='android-card'>
+                <div style='font-size: 40px; margin-bottom: 8px;'>🎯</div>
+                <div style='font-weight: bold; color: #f8fafc; font-size: 16px;'>Rangking PPS Toko</div>
+                <div style='font-size: 12px; color: #94a3b8; margin-top: 4px;'>Papan peringkat pencapaian PPS personil</div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("Lihat Rangking 🎯", key="btn_to_pps", use_container_width=True):
+                st.session_state.sub_page_raport = "RANK_PPS"
+                st.rerun()
+
+    # ---------------------------------------------------------
+    # HALAMAN 2: DETAIL PENJUALAN PERSONIL TOKO
+    # ---------------------------------------------------------
+    elif st.session_state.sub_page_raport == "PENJUALAN":
+        if st.button("⬅️ Kembali ke Menu Utama", key="btn_back_1"):
+            st.session_state.sub_page_raport = "MENU_UTAMA"
+            st.rerun()
+            
+        st.markdown("### 📊 Penjualan Personil Toko")
+        st.markdown("---")
+        st.info("Daftar rinci pencapaian aktual penjualan masing-masing kasir/personil toko.")
+        # Masukkan logika & tabel data penjualan personil Anda di sini...
+
+    # ---------------------------------------------------------
+    # HALAMAN 3: DETAIL RANGKING PSM TOKO
+    # ---------------------------------------------------------
+    elif st.session_state.sub_page_raport == "RANK_PSM":
+        if st.button("⬅️ Kembali ke Menu Utama", key="btn_back_2"):
+            st.session_state.sub_page_raport = "MENU_UTAMA"
+            st.rerun()
+            
+        st.markdown("### 🥇 Rangking PSM Toko")
+        st.markdown("---")
+        st.info("Papan peringkat (Leaderboard) personil berdasarkan target dan actual PSM.")
+        # Masukkan logika Leaderboard/Podium PSM Anda di sini...
+
+    # ---------------------------------------------------------
+    # HALAMAN 4: DETAIL RANGKING PPS TOKO
+    # ---------------------------------------------------------
+    elif st.session_state.sub_page_raport == "RANK_PPS":
+        if st.button("⬅️ Kembali ke Menu Utama", key="btn_back_3"):
+            st.session_state.sub_page_raport = "MENU_UTAMA"
+            st.rerun()
+            
+        st.markdown("### 🎯 Rangking PPS Toko")
+        st.markdown("---")
+        st.warning("🛠️ Fitur ini masih dalam tahap pengembangan. Harap bersabar!")
 
 # =========================================================
 # TAB 03: INPUT LAPORAN
