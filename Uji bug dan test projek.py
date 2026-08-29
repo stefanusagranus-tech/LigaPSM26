@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from streamlit_gsheets import GSheetsConnection
 import math
-import datetime
 
 # =========================================================
 # 1. KONFIGURASI HALAMAN STREAMLIT
@@ -1266,28 +1265,28 @@ elif selected_tab == "02 Raport Personil":
         st.markdown("<br>", unsafe_allow_html=True)
     
         # 2. SELECTION COMPONENT BERDASARKAN KAPSUL AKTIF
-        start_date, end_date = None, None
+        start_date = None
+        end_date = None
         selected_month_num = None
         list_bulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
     
         if filter_mode == "Harian":
-            single_date = st.date_input("📅 Pilih Tanggal Penjualan:", datetime.date.today(), key="psm_date_single")
-            # Set jam 00:00:00 s/d 23:59:59 agar pencarian harian mencakup seluruh transaksi hari tersebut
+            single_date = st.date_input("📅 Pilih Tanggal Penjualan:", datetime.today().date(), key="psm_date_single")
             start_date = pd.to_datetime(single_date).normalize()
             end_date = start_date + pd.Timedelta(days=1) - pd.Timedelta(nanoseconds=1)
     
         elif filter_mode == "Rentang Periode":
             col_r1, col_r2 = st.columns(2)
             with col_r1:
-                d_start = st.date_input("📅 Start Date:", datetime.date.today() - datetime.timedelta(days=7), key="psm_d_start")
+                d_start = st.date_input("📅 Start Date:", datetime.today().date() - timedelta(days=7), key="psm_d_start")
             with col_r2:
-                d_end = st.date_input("📅 End Date:", datetime.date.today(), key="psm_d_end")
+                d_end = st.date_input("📅 End Date:", datetime.today().date(), key="psm_d_end")
             
             start_date = pd.to_datetime(d_start).normalize()
             end_date = pd.to_datetime(d_end).normalize() + pd.Timedelta(days=1) - pd.Timedelta(nanoseconds=1)
     
         elif filter_mode == "Bulanan":
-            current_m = datetime.datetime.now().month - 1
+            current_m = datetime.now().month - 1
             selected_bulan_str = st.selectbox("📅 Pilih Bulan Season:", list_bulan, index=current_m, key="psm_month_sel")
             selected_month_num = list_bulan.index(selected_bulan_str) + 1
     
