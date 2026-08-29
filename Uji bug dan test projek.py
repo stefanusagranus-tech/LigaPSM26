@@ -656,7 +656,6 @@ elif selected_tab == "01 Dashboard":
         elif view_mode == "🗓️ Bulanan":
             st.markdown("##### 🗓️ Pencapaian PSM Bulanan")
             
-            # Pilihan Bulan dan Tahun
             list_bulan = [
                 "Januari", "Februari", "Maret", "April", "Mei", "Juni", 
                 "Juli", "Agustus", "September", "Oktober", "November", "Desember"
@@ -664,33 +663,44 @@ elif selected_tab == "01 Dashboard":
             
             col_sel1, col_sel2 = st.columns(2)
             with col_sel1:
-                selected_bulan_str = st.selectbox("Pilih Bulan:", list_bulan, index=7, key="sel_bulan_psm") # Default Agustus
+                selected_bulan_str = st.selectbox("Pilih Bulan:", list_bulan, index=7, key="sel_bulan_psm")
             with col_sel2:
                 selected_tahun = st.number_input("Pilih Tahun:", min_value=2020, max_value=2030, value=2026, key="sel_tahun_psm")
 
-            # Konversi nama bulan ke nomor bulan (1 - 12)
-            month_idx = list_bulan.index(selected_bulan_str) + 1
+            # Konversi nama bulan ke angka (1 - 12)
+            selected_month_num = list_bulan.index(selected_bulan_str) + 1
 
             sub_target = df_sales_item.copy() if not df_sales_item.empty else pd.DataFrame()
-            sub_sp = df_sales_person.copy() if not df_sales_person.empty else pd.DataFrame()
+            sub_periode = df_periode.copy() if 'df_periode' in locals() and not df_periode.empty else pd.DataFrame()
         
             monthly_target = 0.0
             monthly_actual = 0.0
         
             if not sub_target.empty:
-                # Cari kolom tanggal / periode / range / name
-                date_col = next((c for c in sub_target.columns if any(k in c.lower() for k in ["tgl", "tanggal", "date", "periode", "range", "name"])), None)
-                
-                if date_col:
-                    # Konversi kolom ke tipe datetime
-                    sub_target[date_col] = pd.to_datetime(sub_target[date_col], errors="coerce")
+                # 1. Jika df_sales_item belum memiliki kolom tanggal/period_name, lakukan Merge dengan df_periode
+                if "period_id" in sub_target.columns and not sub_periode.empty:
+                    sub_target = sub_target.merge(sub_periode, on="period_id", how="left", suffixes=("", "_periode"))
+
+                # 2. Ambil acuan tanggal dari start_date / end_date / period_name
+                if "start_date" in sub_target.columns:
+                    sub_target["start_date_dt"] = pd.to_datetime(sub_target["start_date"], errors="coerce")
                     
-                    # Filter data berdasarkan Bulan dan Tahun (misal: 1 - 31 Agustus 2026)
+                    # Filter berdasarkan Bulan dan Tahun dari start_date
                     df_filtered_bulan = sub_target[
-                        (sub_target[date_col].dt.month == month_idx) & 
-                        (sub_target[date_col].dt.year == selected_tahun)
+                        (sub_target["start_date_dt"].dt.month == selected_month_num) & 
+                        (sub_target["start_date_dt"].dt.year == selected_tahun)
                     ]
+                elif "period_name" in sub_target.columns:
+                    # Alternatif filter string jika kolom tanggal datetime tidak ada
+                    df_filtered_bulan = sub_target[
+                        sub_target["period_name"].astype(str).str.contains(selected_bulan_str, case=False, na=False) &
+                        sub_target["period_name"].astype(str).str.contains(str(selected_tahun), case=False, na=False)
+                    ]
+                else:
+                    df_filtered_bulan = pd.DataFrame()
                     
+                # 3. Hitung Total Target dan Actual untuk 1 Bulan Penuh
+                if not df_filtered_bulan.empty:
                     if "target_qty" in df_filtered_bulan.columns:
                         monthly_target = float(pd.to_numeric(df_filtered_bulan["target_qty"], errors="coerce").fillna(0).sum())
                     
@@ -743,7 +753,7 @@ elif selected_tab == "01 Dashboard":
                 st.info(f"☕ Hebat banget! Bulan **{selected_bulan_str} {selected_tahun}** sudah berjalan di jalur yang positif. Tinggal sedikit dorongan lagi! 🚀🔥")
             else:
                 st.warning(f"💡 Semangat terus untuk tim di bulan **{selected_bulan_str} {selected_tahun}**! Setiap angka adalah proses belajar. Pacu strategi baru! 🎯❤️")
-
+    
     # --- HALAMAN 2: REPORT SALES TOKO ---
     elif st.session_state.dash_page == "SalesToko":
         st.markdown("### 💰 Report Sales Toko")
