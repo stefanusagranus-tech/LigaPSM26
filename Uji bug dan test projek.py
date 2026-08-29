@@ -825,62 +825,62 @@ elif selected_tab == "02 Raport Personil":
     """, unsafe_allow_html=True)
 
     # ---------------------------------------------------------
-    # HALAMAN 1: DASHBOARD MENU UTAMA (DESKRIPSI REMOVED)
+# HALAMAN 1: DASHBOARD MENU UTAMA
+# ---------------------------------------------------------
+if st.session_state.sub_page_raport == "MENU_UTAMA":
+    st.markdown("### 🏆 Raport Personil Toko")
+    st.write("Pilih menu laporan personil di bawah ini:")
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    col1, col2, col3 = st.columns(3)
+
+    # --- CARD 1: PENJUALAN PERSONIL ---
+    with col1:
+        with st.container(border=True):
+            st.markdown("""
+            <div style='text-align: center; padding: 10px 0;'>
+                <div style='font-size: 42px; margin-bottom: 8px;'>📊</div>
+                <div style='font-weight: bold; color: #f8fafc; font-size: 16px;'>Penjualan Personil</div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("Buka Laporan 📊", key="card_btn_penjualan", use_container_width=True):
+                st.query_params["sub_page"] = "PENJUALAN"
+                st.session_state.sub_page_raport = "PENJUALAN"
+                st.rerun()
+
+    # --- CARD 2: RANGKING PSM ---
+    with col2:
+        with st.container(border=True):
+            st.markdown("""
+            <div style='text-align: center; padding: 10px 0;'>
+                <div style='font-size: 42px; margin-bottom: 8px;'>🥇</div>
+                <div style='font-weight: bold; color: #f8fafc; font-size: 16px;'>Rangking PSM Toko</div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("Lihat Rangking 🥇", key="card_btn_psm", use_container_width=True):
+                st.query_params["sub_page"] = "RANK_PSM"
+                st.session_state.sub_page_raport = "RANK_PSM"
+                st.rerun()
+
+    # --- CARD 3: RANGKING PPS ---
+    with col3:
+        with st.container(border=True):
+            st.markdown("""
+            <div style='text-align: center; padding: 10px 0;'>
+                <div style='font-size: 42px; margin-bottom: 8px;'>🎯</div>
+                <div style='font-weight: bold; color: #f8fafc; font-size: 16px;'>Rangking PPS Toko</div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("Lihat Rangking 🎯", key="card_btn_pps", use_container_width=True):
+                st.query_params["sub_page"] = "RANK_PPS"
+                st.session_state.sub_page_raport = "RANK_PPS"
+                st.rerun()
+    
     # ---------------------------------------------------------
-    if st.session_state.sub_page_raport == "MENU_UTAMA":
-        st.markdown("### 🏆 Raport Personil Toko")
-        st.write("Pilih menu laporan personil di bawah ini:")
-        st.markdown("<br>", unsafe_allow_html=True)
-    
-        col1, col2, col3 = st.columns(3)
-    
-        # --- CARD 1: PENJUALAN PERSONIL ---
-        with col1:
-            with st.container(border=True):
-                st.markdown("""
-                <div class='android-card-box'>
-                    <div style='font-size: 42px; margin-bottom: 8px;'>📊</div>
-                    <div style='font-weight: bold; color: #f8fafc; font-size: 16px;'>Penjualan Personil</div>
-                </div>
-                """, unsafe_allow_html=True)
-                st.markdown("<br>", unsafe_allow_html=True)
-                if st.button("Buka Laporan 📊", key="card_btn_penjualan", use_container_width=True):
-                    st.query_params["sub_page"] = "PENJUALAN"
-                    st.session_state.sub_page_raport = "PENJUALAN"
-                    st.rerun()
-    
-        # --- CARD 2: RANGKING PSM ---
-        with col2:
-            with st.container(border=True):
-                st.markdown("""
-                <div class='android-card-box'>
-                    <div style='font-size: 42px; margin-bottom: 8px;'>🥇</div>
-                    <div style='font-weight: bold; color: #f8fafc; font-size: 16px;'>Rangking PSM Toko</div>
-                </div>
-                """, unsafe_allow_html=True)
-                st.markdown("<br>", unsafe_allow_html=True)
-                if st.button("Lihat Rangking 🥇", key="card_btn_psm", use_container_width=True):
-                    st.query_params["sub_page"] = "RANK_PSM"
-                    st.session_state.sub_page_raport = "RANK_PSM"
-                    st.rerun()
-    
-        # --- CARD 3: RANGKING PPS ---
-        with col3:
-            with st.container(border=True):
-                st.markdown("""
-                <div class='android-card-box'>
-                    <div style='font-size: 42px; margin-bottom: 8px;'>🎯</div>
-                    <div style='font-weight: bold; color: #f8fafc; font-size: 16px;'>Rangking PPS Toko</div>
-                </div>
-                """, unsafe_allow_html=True)
-                st.markdown("<br>", unsafe_allow_html=True)
-                if st.button("Lihat Rangking 🎯", key="card_btn_pps", use_container_width=True):
-                    st.query_params["sub_page"] = "RANK_PPS"
-                    st.session_state.sub_page_raport = "RANK_PPS"
-                    st.rerun()
-    
-    # ---------------------------------------------------------
-    # HALAMAN 2: DETAIL PENJUALAN PERSONIL TOKO (FULL RPG TEMA)
+    # HALAMAN 2: DETAIL PENJUALAN PERSONIL TOKO (FULL RPG & ISOLATED MONTH)
     # ---------------------------------------------------------
     elif st.session_state.sub_page_raport == "PENJUALAN":
         if st.button("⬅️ Kembali ke Menu Utama", key="btn_back_1"):
@@ -984,15 +984,27 @@ elif selected_tab == "02 Raport Personil":
             selected_month_num = list_bulan.index(selected_bulan_str) + 1
     
         period_options = ["Semua Periode"]
+        target_period_ids = []
+    
         if not df_periods.empty and "start_date" in df_periods.columns:
             df_periods_copy = df_periods.copy()
             df_periods_copy["start_dt"] = pd.to_datetime(df_periods_copy["start_date"], errors="coerce")
             filtered_periods = df_periods_copy[df_periods_copy["start_dt"].dt.month == selected_month_num]
-            if not filtered_periods.empty and "period_name" in filtered_periods.columns:
-                period_options += filtered_periods["period_name"].tolist()
+            
+            if not filtered_periods.empty:
+                if "period_name" in filtered_periods.columns:
+                    period_options += filtered_periods["period_name"].tolist()
+                if "period_id" in filtered_periods.columns:
+                    target_period_ids = filtered_periods["period_id"].tolist()
     
         with col_f2:
             selected_period_name = st.selectbox("⏱️ Pilih Periode:", period_options, key="rpg_sel_periode")
+    
+        selected_period_id = None
+        if selected_period_name != "Semua Periode" and not df_periods.empty:
+            p_row = df_periods[df_periods["period_name"] == selected_period_name]
+            if not p_row.empty and "period_id" in p_row.columns:
+                selected_period_id = p_row.iloc[0]["period_id"]
     
         person_list = ["Pilih Personil"]
         if not df_sales_person.empty:
@@ -1007,96 +1019,105 @@ elif selected_tab == "02 Raport Personil":
     
         # 2. PROSES STATISTIK PERSONIL
         if selected_person != "Pilih Personil":
-            sub_sp = df_sales_person.copy() if not df_sales_person.empty else pd.DataFrame()
-            person_col = next((c for c in sub_sp.columns if "person_name" in c or "sales_person" in c or "nama" in c), None)
+            sub_sp_all = df_sales_person.copy() if not df_sales_person.empty else pd.DataFrame()
+            person_col = next((c for c in sub_sp_all.columns if "person_name" in c or "sales_person" in c or "nama" in c), None)
             
-            if person_col and not sub_sp.empty:
-                sub_sp = sub_sp[sub_sp[person_col] == selected_person]
+            # --- A. LEVELING RPG PERMANEN (SEPANJANG MASA) ---
+            total_qty_all_time = 0.0
+            if person_col and not sub_sp_all.empty:
+                sp_user_all = sub_sp_all[sub_sp_all[person_col] == selected_person]
+                if "actual_qty" in sp_user_all.columns:
+                    total_qty_all_time = float(pd.to_numeric(sp_user_all["actual_qty"], errors="coerce").fillna(0).sum())
     
-            if selected_period_name != "Semua Periode" and not sub_sp.empty and not df_periods.empty:
-                period_row = df_periods[df_periods["period_name"] == selected_period_name]
-                if not period_row.empty and "period_id" in sub_sp.columns:
-                    target_pid = period_row.iloc[0].get("period_id")
-                    sub_sp = sub_sp[sub_sp["period_id"] == target_pid]
+            EXP_PER_LEVEL = 100 
+            user_level = int(total_qty_all_time // EXP_PER_LEVEL) + 1
+            current_level_exp = total_qty_all_time % EXP_PER_LEVEL
+            exp_progress_pct = (current_level_exp / EXP_PER_LEVEL) * 100.0
     
-            actual_qty_person = 0.0
-            if not sub_sp.empty and "actual_qty" in sub_sp.columns:
-                sub_sp["actual_qty"] = pd.to_numeric(sub_sp["actual_qty"], errors="coerce").fillna(0)
-                actual_qty_person = float(sub_sp["actual_qty"].sum())
-    
+            # --- B. FILTER PENJUALAN KHUSUS BULAN / PERIODE TERPILIH ---
+            sub_sp = sub_sp_all[sub_sp_all[person_col] == selected_person] if person_col and not sub_sp_all.empty else pd.DataFrame()
             sub_si = df_sales_item.copy() if not df_sales_item.empty else pd.DataFrame()
-            if selected_period_name != "Semua Periode" and not sub_si.empty and not df_periods.empty:
-                period_row = df_periods[df_periods["period_name"] == selected_period_name]
-                if not period_row.empty and "period_id" in sub_si.columns:
-                    target_pid = period_row.iloc[0].get("period_id")
-                    sub_si = sub_si[sub_si["period_id"] == target_pid]
     
-            total_target_qty = 0.0
-            if not sub_si.empty and "target_qty" in sub_si.columns:
-                sub_si["target_qty"] = pd.to_numeric(sub_si["target_qty"], errors="coerce").fillna(0)
-                total_target_qty = float(sub_si["target_qty"].sum())
+            if selected_period_id is not None:
+                if "period_id" in sub_sp.columns:
+                    sub_sp = sub_sp[sub_sp["period_id"] == selected_period_id]
+                if "period_id" in sub_si.columns:
+                    sub_si = sub_si[sub_si["period_id"] == selected_period_id]
+            else:
+                if target_period_ids:
+                    if "period_id" in sub_sp.columns:
+                        sub_sp = sub_sp[sub_sp["period_id"].isin(target_period_ids)]
+                    if "period_id" in sub_si.columns:
+                        sub_si = sub_si[sub_si["period_id"].isin(target_period_ids)]
     
-            num_personil = max(len(person_list) - 1, 1)
-            target_person_est = total_target_qty / num_personil if total_target_qty > 0 else 0.0
+            actual_qty_person_period = 0.0
+            if not sub_sp.empty and "actual_qty" in sub_sp.columns:
+                actual_qty_person_period = float(pd.to_numeric(sub_sp["actual_qty"], errors="coerce").fillna(0).sum())
     
-            ach_person_pct = (actual_qty_person / target_person_est * 100.0) if target_person_est > 0 else 0.0
-            ach_person_pct_clamped = min(max(ach_person_pct, 0.0), 100.0)
-    
-            # ---------------------------------------------------------
-            # PENGGABUNGAN DATA (MENGACU KEPADA SELURUH TARGET ITEM TOKO)
-            # ---------------------------------------------------------
+            # --- C. PROSES DATA TARGET KASIR DARI TABLE SALES_ITEM ---
             total_item_achieved = 0
             df_item_summary = pd.DataFrame()
+            total_target_kasir_period = 0.0
     
-            if not sub_si.empty and "item_name" in sub_si.columns and "target_qty" in sub_si.columns:
-                df_target_summary = sub_si.groupby("item_name")["target_qty"].sum().reset_index()
+            if not sub_si.empty and "item_name" in sub_si.columns:
+                if "target_kasir" in sub_si.columns:
+                    sub_si["target_kasir"] = pd.to_numeric(sub_si["target_kasir"], errors="coerce").fillna(0)
+                elif "target_qty" in sub_si.columns:
+                    sub_si["target_qty"] = pd.to_numeric(sub_si["target_qty"], errors="coerce").fillna(0)
+                    sub_si["target_kasir"] = sub_si["target_qty"].apply(lambda x: math.ceil(x / 3.0))
+                else:
+                    sub_si["target_kasir"] = 0
+    
+                df_target_summary = sub_si.groupby("item_name")["target_kasir"].sum().reset_index()
     
                 if not sub_sp.empty and "item_name" in sub_sp.columns and "actual_qty" in sub_sp.columns:
                     df_actual_summary = sub_sp.groupby("item_name")["actual_qty"].sum().reset_index()
-                    # MERGE LEFT JOIN agar seluruh target item toko tetap muncul
                     df_item_summary = df_target_summary.merge(df_actual_summary, on="item_name", how="left")
                 else:
                     df_item_summary = df_target_summary.copy()
                     df_item_summary["actual_qty"] = 0
     
-                df_item_summary["target_qty"] = pd.to_numeric(df_item_summary["target_qty"], errors="coerce").fillna(0)
+                df_item_summary["target_kasir"] = pd.to_numeric(df_item_summary["target_kasir"], errors="coerce").fillna(0)
                 df_item_summary["actual_qty"] = pd.to_numeric(df_item_summary["actual_qty"], errors="coerce").fillna(0)
     
-                # HITUNG ITEM YANG MENCAPAI TARGET PERSONIL
+                total_target_kasir_period = float(df_item_summary["target_kasir"].sum())
+    
                 for _, row in df_item_summary.iterrows():
-                    target_p = math.ceil(row["target_qty"] / num_personil) if num_personil > 0 else 0
-                    if target_p > 0 and row["actual_qty"] >= target_p:
+                    tk = row["target_kasir"]
+                    if tk > 0 and row["actual_qty"] >= tk:
                         total_item_achieved += 1
+    
+            ach_person_pct = (actual_qty_person_period / total_target_kasir_period * 100.0) if total_target_kasir_period > 0 else 0.0
     
             avatar_url = f"https://api.dicebear.com/7.x/bottts/svg?seed={selected_person}"
     
-            # RENDER CHARACTER PROFILE CARD
+            # RENDER RPG PROFILE CARD (PERMANENT LEVEL)
             html_card = f"""
             <div class='rpg-card'>
                 <div class='avatar-container'>
                     <img src='{avatar_url}' class='avatar-img' alt='Avatar'>
                     <h3 style='color: #00f0ff; margin: 8px 0 2px 0; text-align: center; font-size: 20px;'>{selected_person}</h3>
                     <span style='color: #e2e8f0; background: #0284c7; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: bold;'>
-                        LEVEL {int(ach_person_pct // 10) + 1} • SALES WARRIOR
+                        LEVEL {user_level} • TOTAL SALES: {total_qty_all_time:,.0f} PCS
                     </span>
                 </div>
                 <div style='margin-bottom: 14px;'>
                     <div style='display: flex; justify-content: space-between; font-size: 11px; font-weight: bold;'>
-                        <span style='color: #94a3b8;'>TOTAL EXP / ACHIEVEMENT</span>
-                        <span style='color: #00f0ff;'>{ach_person_pct:.1f}%</span>
+                        <span style='color: #94a3b8;'>LEVEL PROGRESS ({current_level_exp:,.0f}/{EXP_PER_LEVEL} PCS)</span>
+                        <span style='color: #00f0ff;'>{exp_progress_pct:.1f}%</span>
                     </div>
                     <div class='hp-bar-bg'>
-                        <div class='hp-bar-fill' style='width: {ach_person_pct_clamped}%; background: linear-gradient(90deg, #00f0ff 0%, #3b82f6 100%);'></div>
+                        <div class='hp-bar-fill' style='width: {exp_progress_pct}%; background: linear-gradient(90deg, #00f0ff 0%, #3b82f6 100%);'></div>
                     </div>
                 </div>
                 <div style='display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;'>
                     <div class='stat-box'>
-                        <div class='stat-label'>🎯 TARGET</div>
-                        <div class='stat-value' style='color: #cbd5e1;'>{target_person_est:,.0f}</div>
+                        <div class='stat-label'>🎯 TARGET ({selected_bulan_str[:3]})</div>
+                        <div class='stat-value' style='color: #cbd5e1;'>{total_target_kasir_period:,.0f}</div>
                     </div>
                     <div class='stat-box'>
-                        <div class='stat-label'>📦 ACTUAL</div>
-                        <div class='stat-value' style='color: #38bdf8;'>{actual_qty_person:,.0f}</div>
+                        <div class='stat-label'>📦 ACTUAL ({selected_bulan_str[:3]})</div>
+                        <div class='stat-value' style='color: #38bdf8;'>{actual_qty_person_period:,.0f}</div>
                     </div>
                     <div class='stat-box'>
                         <div class='stat-label'>⚡ ACH (%)</div>
@@ -1111,20 +1132,20 @@ elif selected_tab == "02 Raport Personil":
             """
             st.markdown(html_card, unsafe_allow_html=True)
     
-            # 3. BAR ITEM PENJUALAN BERGAYA HP BAR RPG (SELUARUH ITEM TARGET)
-            st.markdown("##### 🗡️ Quest Item Achievements (HP Bars)")
+            # 3. BAR ITEM PENJUALAN BERGAYA HP BAR RPG (QUEST ITEM ACHIEVEMENTS)
+            st.markdown(f"##### 🗡️ Quest Item Achievements - {selected_bulan_str} ({selected_period_name})")
     
             if not df_item_summary.empty:
                 for _, row in df_item_summary.iterrows():
                     item_name = row["item_name"]
                     actual = int(row["actual_qty"])
-                    target_person = math.ceil(row["target_qty"] / num_personil) if num_personil > 0 else 0
+                    target_kasir = int(row["target_kasir"])
                     
-                    ach_pct = (actual / target_person * 100.0) if target_person > 0 else 0.0
+                    ach_pct = (actual / target_kasir * 100.0) if target_kasir > 0 else 0.0
                     ach_pct_clamped = min(max(ach_pct, 0.0), 100.0)
-                    gap_qty = max(target_person - actual, 0)
+                    gap_qty = max(target_kasir - actual, 0)
     
-                    if target_person == 0:
+                    if target_kasir == 0:
                         bar_label = "TIDAK ADA TARGET"
                         bar_color = "#475569"
                     elif gap_qty == 0:
@@ -1139,7 +1160,7 @@ elif selected_tab == "02 Raport Personil":
                         <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;'>
                             <span style='font-weight: bold; color: #f8fafc; font-size: 14px;'>📦 {item_name}</span>
                             <span style='font-weight: bold; color: #38bdf8; font-size: 13px;'>
-                                {actual} / {target_person} Pcs <span style='color: {"#10b981" if gap_qty==0 else "#00f0ff"};'>({ach_pct:.1f}%)</span>
+                                {actual} / {target_kasir} Pcs <span style='color: {"#10b981" if gap_qty==0 else "#00f0ff"};'>({ach_pct:.1f}%)</span>
                             </span>
                         </div>
                         <div class='hp-bar-bg'>
@@ -1150,10 +1171,9 @@ elif selected_tab == "02 Raport Personil":
                     """
                     st.markdown(item_card_html, unsafe_allow_html=True)
             else:
-                st.info("Belum ada target item yang ditetapkan pada periode ini.")
+                st.info(f"Belum ada target item yang ditetapkan untuk bulan **{selected_bulan_str}**.")
         else:
             st.info("👆 Silakan pilih nama **Personil (User)** pada dropdown di atas.")
-    
         
     # ---------------------------------------------------------
     # HALAMAN 3: DETAIL RANGKING PSM TOKO
