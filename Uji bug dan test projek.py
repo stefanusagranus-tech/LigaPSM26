@@ -1393,24 +1393,36 @@ elif selected_tab == "02 Raport Personil":
             """)
             st.markdown(podium_html, unsafe_allow_html=True)
     
-        # 7. TABEL FULL ADVENTURER LEADERBOARD
+       # 7. TABEL FULL ADVENTURER LEADERBOARD (AMAN & TERTATA)
         st.markdown("##### 📜 Full Adventurer Leaderboard")
     
         if not df_lb.empty:
+            # Gunakan DataFrame mentah (tanpa .map() string format) agar st.dataframe() tidak crash
             df_display = df_lb.copy()
             
-            df_display["Total Qty"] = pd.to_numeric(df_display["Total Qty"], errors="coerce").fillna(0).map("{:,.0f} Pcs".format)
-            df_display["% Kontribusi"] = pd.to_numeric(df_display["% Kontribusi"], errors="coerce").fillna(0).map("{:.2f} %".format)
-            df_display["Target 100% Done"] = pd.to_numeric(df_display["Target 100% Done"], errors="coerce").fillna(0).map("{:.0f} Item".format)
+            # Pastikan tipe datanya numerik murni
+            df_display["Total Qty"] = pd.to_numeric(df_display["Total Qty"], errors="coerce").fillna(0)
+            df_display["% Kontribusi"] = pd.to_numeric(df_display["% Kontribusi"], errors="coerce").fillna(0)
+            df_display["Target 100% Done"] = pd.to_numeric(df_display["Target 100% Done"], errors="coerce").fillna(0)
     
+            # Rendering menggunakan column_config (Standar Terbaik Streamlit)
             st.dataframe(
                 df_display,
                 use_container_width=True,
                 column_config={
                     "Nama Personil": st.column_config.TextColumn("👤 Nama Personil"),
-                    "Total Qty": st.column_config.TextColumn("📦 Total Penjualan"),
-                    "% Kontribusi": st.column_config.TextColumn("📊 Kontribusi Toko"),
-                    "Target 100% Done": st.column_config.TextColumn("🎯 Target 100% Achieved"),
+                    "Total Qty": st.column_config.NumberColumn(
+                        "📦 Total Penjualan",
+                        format="%.0f Pcs"
+                    ),
+                    "% Kontribusi": st.column_config.NumberColumn(
+                        "📊 Kontribusi Toko",
+                        format="%.2f %%"
+                    ),
+                    "Target 100% Done": st.column_config.NumberColumn(
+                        "🎯 Target 100% Achieved",
+                        format="%.0f Item"
+                    ),
                 }
             )
         else:
