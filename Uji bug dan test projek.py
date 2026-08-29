@@ -10,6 +10,7 @@ import math
 
 # =========================================================
 # 1. KONFIGURASI HALAMAN STREAMLIT
+# (Harus ditaruh di baris paling awal dari perintah Streamlit!)
 # =========================================================
 st.set_page_config(
     page_title="PSM Toko - Mobile Dashboard",
@@ -54,6 +55,7 @@ def load_database():
         st.error(f"Gagal membaca Google Sheets: {e}")
         return pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
 
+# Load Data ke Session State saat pertama kali dibuka
 if "data_loaded" not in st.session_state:
     p_df, i_df, pers_df, si_df, sp_df = load_database()
     st.session_state.periods_df = p_df
@@ -63,13 +65,18 @@ if "data_loaded" not in st.session_state:
     st.session_state.sales_person_df = sp_df
     st.session_state.data_loaded = True
 
+# Alias Variabel Lokal agar mudah dipanggil di skrip bawahnya
+df_periode = st.session_state.get("periods_df", pd.DataFrame())
+df_sales_item = st.session_state.get("sales_item_df", pd.DataFrame())
+df_sales_person = st.session_state.get("sales_person_df", pd.DataFrame())
+
 if "active_tab" not in st.session_state:
     st.session_state.active_tab = "Home"
 
 waktu_wib = datetime.now(ZoneInfo("Asia/Jakarta"))
 current_time_str = waktu_wib.strftime("%A, %d %B %Y %H:%M WIB")
 
-# Auth Sederhana
+# Fungsi Authentication
 def check_login(input_username, input_password):
     u = str(input_username).strip().lower()
     p = str(input_password).strip()
