@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from streamlit_gsheets import GSheetsConnection
 import math
+import textwrap
 
 # =========================================================
 # 1. KONFIGURASI HALAMAN STREAMLIT
@@ -1188,16 +1189,15 @@ elif selected_tab == "02 Raport Personil":
         st.markdown("### 🥇 Guild Leaderboard - Rangking PSM Toko")
         st.markdown("---")
     
-        # 1. LOAD & PREPARE DATA FROM SESSION STATE
+        # 1. LOAD DATA DARI SESSION STATE
         df_periods = st.session_state.get("periods_df", pd.DataFrame())
         df_sales_person = st.session_state.get("sales_person_df", pd.DataFrame())
         df_sales_item = st.session_state.get("sales_item_df", pd.DataFrame())
         df_users = st.session_state.get("users_df", pd.DataFrame())
     
         # CSS STYLING KAPSUL RPG FUTURISTIK & PODIUM
-        st.markdown("""
+        css_style = """
         <style>
-            /* Tombol Kapsul Aktif (Glow Neon Cyan) */
             button[kind="primary"] {
                 background: linear-gradient(135deg, #00f0ff 0%, #3b82f6 100%) !important;
                 color: #0f172a !important;
@@ -1207,10 +1207,7 @@ elif selected_tab == "02 Raport Personil":
                 border: 1px solid #00f0ff !important;
                 border-radius: 30px !important;
                 box-shadow: 0 0 15px rgba(0, 240, 255, 0.6) !important;
-                transition: all 0.3s ease !important;
             }
-            
-            /* Tombol Kapsul Non-Aktif (Dark Mode Glass) */
             button[kind="secondary"] {
                 background: rgba(30, 41, 59, 0.6) !important;
                 color: #94a3b8 !important;
@@ -1218,15 +1215,7 @@ elif selected_tab == "02 Raport Personil":
                 font-size: 13px !important;
                 border: 1px solid #334155 !important;
                 border-radius: 30px !important;
-                transition: all 0.3s ease !important;
             }
-            
-            button[kind="secondary"]:hover {
-                color: #00f0ff !important;
-                border: 1px solid rgba(0, 240, 255, 0.5) !important;
-                background: rgba(30, 41, 59, 0.9) !important;
-            }
-    
             .podium-card {
                 background: #1e293b;
                 border-radius: 16px;
@@ -1234,7 +1223,8 @@ elif selected_tab == "02 Raport Personil":
                 text-align: center;
             }
         </style>
-        """, unsafe_allow_html=True)
+        """
+        st.markdown(textwrap.dedent(css_style), unsafe_allow_html=True)
     
         # 2. MODE SWITCHER KAPSUL FUTURISTIK
         if "psm_filter_mode" not in st.session_state:
@@ -1264,7 +1254,7 @@ elif selected_tab == "02 Raport Personil":
         filter_mode = st.session_state.psm_filter_mode
         st.markdown("<br>", unsafe_allow_html=True)
     
-        # 3. FILTER SELECTION COMPONENT
+        # 3. SELECTION COMPONENT BERDASARKAN KAPSUL AKTIF
         start_date, end_date = None, None
         selected_month_num = None
         selected_period_name = None
@@ -1276,24 +1266,31 @@ elif selected_tab == "02 Raport Personil":
             end_date = start_date + pd.Timedelta(days=1) - pd.Timedelta(nanoseconds=1)
     
         elif filter_mode == "Rentang Periode":
-            if df_periods is not None and not df_periods.empty and "periode_name" in df_periods.columns:
-                list_periode = df_periods["period_name"].dropna().unique().tolist()
-                selected_period_name = st.selectbox("📅 Pilih Campaign Periode:", list_periode, key="psm_periode_sel")
+            if not df_periods.empty and "period_name" in df_periods.columns:
+                period_options = df_periods["period_name"].dropna().tolist()
+                selected_period_name = st.selectbox("📅 Pilih Campaign Periode:", period_options, key="sel_period_psm")
+                
+                matched_row = df_periods[df_periods["period_name"] == selected_period_name]
+                if not matched_row.empty:
+                    p_start_raw = matched_row.iloc[0]["start_date"]
+                    p_end_raw = matched_row.iloc[0]["end_date"]
+                    start_date = pd.to_datetime(p_start_raw, errors="coerce").normalize()
+                    end_date = pd.to_datetime(p_end_raw, errors="coerce").normalize() + pd.Timedelta(days=1) - pd.Timedelta(nanoseconds=1)
             else:
-                st.warning("⚠️ Data Sheet PERIODE (kolom 'periode_name') tidak ditemukan.")
+                st.info("ℹ️ Data sheet PERIODE tidak ditemukan atau kolom 'period_name' belum sesuai.")
     
         elif filter_mode == "Bulanan":
             current_m = datetime.now().month - 1
             selected_bulan_str = st.selectbox("📅 Pilih Bulan Season:", list_bulan, index=current_m, key="psm_month_sel")
             selected_month_num = list_bulan.index(selected_bulan_str) + 1
     
-        # 4. FILTER DATA PENJUALAN PERSONIL BERDASARKAN UPDATED_AT
+        # 4. FILTER DATA PENJUALAN PERSONIL
         sub_sp = df_sales_person.copy() if df_sales_person is not None and not df_sales_person.empty else pd.DataFrame()
         
         person_col = next((c for c in sub_sp.columns if "person_name" in c or "sales_person" in c or "nama" in c), None) if not sub_sp.empty else None
         date_col = "updated_at" if "updated_at" in sub_sp.columns else ("trans_date" if "trans_date" in sub_sp.columns else None)
     
-        # Master Karyawan Toko (Tetap Muncul Meski Sales = 0)
+        # Master Karyawan Toko
         all_employees = []
         if df_users is not None and not df_users.empty and "nama" in df_users.columns:
             all_employees = df_users["nama"].dropna().unique().tolist()
@@ -1303,125 +1300,122 @@ elif selected_tab == "02 Raport Personil":
         if not sub_sp.empty and date_col:
             sub_sp["dt"] = pd.to_datetime(sub_sp[date_col], errors="coerce")
     
-            if filter_mode == "Harian" and start_date is not None and end_date is not None:
+            if filter_mode in ["Harian", "Rentang Periode"] and start_date is not None and end_date is not None:
                 sub_sp = sub_sp[(sub_sp["dt"] >= start_date) & (sub_sp["dt"] <= end_date)]
                 
-            elif filter_mode == "Rentang Periode" and selected_period_name:
-                if "periode_name" in sub_sp.columns:
-                    sub_sp = sub_sp[sub_sp["periode_name"] == selected_period_name]
-                elif df_periods is not None and not df_periods.empty and "periode_name" in df_periods.columns:
-                    row_p = df_periods[df_periods["periode_name"] == selected_period_name]
-                    if not row_p.empty and "start_date" in row_p.columns and "end_date" in row_p.columns:
-                        p_start = pd.to_datetime(row_p.iloc[0]["start_date"]).normalize()
-                        p_end = pd.to_datetime(row_p.iloc[0]["end_date"]).normalize() + pd.Timedelta(days=1) - pd.Timedelta(nanoseconds=1)
-                        sub_sp = sub_sp[(sub_sp["dt"] >= p_start) & (sub_sp["dt"] <= p_end)]
-                        
             elif filter_mode == "Bulanan" and selected_month_num is not None:
                 sub_sp = sub_sp[sub_sp["dt"].dt.month == selected_month_num]
     
-        # Qty Total Seluruh Toko (Untuk Persentase Kontribusi)
+        # Qty Total Seluruh Toko
         total_store_qty = 0.0
         if not sub_sp.empty and "actual_qty" in sub_sp.columns:
             sub_sp["actual_qty"] = pd.to_numeric(sub_sp["actual_qty"], errors="coerce").fillna(0)
             total_store_qty = float(sub_sp["actual_qty"].sum())
     
-        # 5. HITUNG METRIK PERSONIL & AKUMULASI
+        # 5. HITUNG METRIK PERSONIL
         leaderboard_data = []
     
         for emp in all_employees:
-            emp_sp = sub_sp[sub_sp[person_col] == emp] if person_col and not sub_sp.empty else pd.DataFrame()
+            emp_sp = sub_sp[sub_sp[person_col] == emp] if (person_col and not sub_sp.empty) else pd.DataFrame()
             
             actual_qty = 0.0
             items_100_done = 0
     
             if not emp_sp.empty and "actual_qty" in emp_sp.columns:
-                actual_qty = float(emp_sp["actual_qty"].sum())
+                actual_qty = float(pd.to_numeric(emp_sp["actual_qty"], errors="coerce").fillna(0).sum())
     
-                # Hitung Jumlah Item Yang Target 100% Achieved
                 if "item_name" in emp_sp.columns:
                     emp_item_grp = emp_sp.groupby("item_name")["actual_qty"].sum().reset_index()
                     if df_sales_item is not None and not df_sales_item.empty and "item_name" in df_sales_item.columns:
                         target_col = "target_kasir" if "target_kasir" in df_sales_item.columns else "target_qty"
-                        target_map = df_sales_item.groupby("item_name")[target_col].sum().to_dict()
-                        
-                        for _, irow in emp_item_grp.iterrows():
-                            iname = irow["item_name"]
-                            iqty = irow["actual_qty"]
-                            itarget = target_map.get(iname, 0)
-                            if itarget > 0 and iqty >= itarget:
-                                items_100_done += 1
+                        if target_col in df_sales_item.columns:
+                            target_map = df_sales_item.groupby("item_name")[target_col].sum().to_dict()
+                            for _, irow in emp_item_grp.iterrows():
+                                iname = irow["item_name"]
+                                iqty = irow["actual_qty"]
+                                itarget = target_map.get(iname, 0)
+                                if itarget > 0 and iqty >= itarget:
+                                    items_100_done += 1
     
             kontribusi_pct = (actual_qty / total_store_qty * 100.0) if total_store_qty > 0 else 0.0
     
             leaderboard_data.append({
-                "Nama Personil": emp,
+                "Nama Personil": str(emp),
                 "Total Qty": actual_qty,
                 "% Kontribusi": kontribusi_pct,
-                "Target 100% Done": items_100_done
+                "Target 100% Done": int(items_100_done)
             })
     
         df_lb = pd.DataFrame(leaderboard_data)
     
-        # URUTKAN RANGKING (QTY TERBANYAK & QUEST DONE)
         if not df_lb.empty:
             df_lb = df_lb.sort_values(by=["Total Qty", "Target 100% Done"], ascending=[False, False]).reset_index(drop=True)
             df_lb.index += 1
     
-        # 6. PODIUM TOP 3 ADVENTURER (HTML RENDER CLEAN)
+        # 6. PODIUM TOP 3 ADVENTURER (SAFE HTML RENDER)
         st.markdown("<br>", unsafe_allow_html=True)
-        if len(df_lb) >= 3:
-            p1, p2, p3 = df_lb.iloc[0], df_lb.iloc[1], df_lb.iloc[2]
-            
-            podium_html = f"""
-            <div style='display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin-bottom: 30px;'>
-                <div class='podium-card' style='border: 2px solid #94a3b8; width: 30%; box-shadow: 0 0 12px rgba(148, 163, 184, 0.2);'>
-                    <div style='font-size: 32px;'>🥈</div>
-                    <div style='font-weight: bold; color: #94a3b8; font-size: 15px;'>{p2["Nama Personil"]}</div>
-                    <div style='font-size: 22px; font-weight: bold; color: #f8fafc; margin-top: 4px;'>{p2["Total Qty"]:,.0f} <span style='font-size: 11px;'>Pcs</span></div>
-                    <div style='color: #00f0ff; font-size: 12px; font-weight: bold;'>{p2["% Kontribusi"]:.1f}% Kontribusi</div>
-                    <div style='background: #334155; border-radius: 6px; padding: 4px; font-size: 11px; margin-top: 8px; color: #f59e0b;'>🏆 {p2["Target 100% Done"]} Item 100%</div>
-                </div>
-                
-                <div class='podium-card' style='border: 3px solid #f59e0b; width: 36%; box-shadow: 0 0 25px rgba(245, 158, 11, 0.4); transform: scale(1.05); background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);'>
-                    <div style='font-size: 42px;'>🥇</div>
-                    <span style='background: #f59e0b; color: #0f172a; font-size: 10px; font-weight: 800; padding: 2px 10px; border-radius: 10px;'>GUILD MASTER</span>
-                    <div style='font-weight: bold; color: #fbbf24; font-size: 18px; margin-top: 6px;'>{p1["Nama Personil"]}</div>
-                    <div style='font-size: 26px; font-weight: bold; color: #f8fafc; margin-top: 4px;'>{p1["Total Qty"]:,.0f} <span style='font-size: 12px;'>Pcs</span></div>
-                    <div style='color: #00f0ff; font-size: 13px; font-weight: bold;'>{p1["% Kontribusi"]:.1f}% Kontribusi</div>
-                    <div style='background: #334155; border-radius: 6px; padding: 4px; font-size: 11px; margin-top: 8px; color: #f59e0b;'>🏆 {p1["Target 100% Done"]} Item 100%</div>
-                </div>
+        if not df_lb.empty:
+            top_players = []
+            for idx in range(3):
+                if idx < len(df_lb):
+                    top_players.append(df_lb.iloc[idx].to_dict())
+                else:
+                    top_players.append({"Nama Personil": "-", "Total Qty": 0.0, "% Kontribusi": 0.0, "Target 100% Done": 0})
     
-                <div class='podium-card' style='border: 2px solid #d97706; width: 30%; box-shadow: 0 0 12px rgba(217, 119, 6, 0.2);'>
-                    <div style='font-size: 32px;'>🥉</div>
-                    <div style='font-weight: bold; color: #d97706; font-size: 15px;'>{p3["Nama Personil"]}</div>
-                    <div style='font-size: 22px; font-weight: bold; color: #f8fafc; margin-top: 4px;'>{p3["Total Qty"]:,.0f} <span style='font-size: 11px;'>Pcs</span></div>
-                    <div style='color: #00f0ff; font-size: 12px; font-weight: bold;'>{p3["% Kontribusi"]:.1f}% Kontribusi</div>
-                    <div style='background: #334155; border-radius: 6px; padding: 4px; font-size: 11px; margin-top: 8px; color: #f59e0b;'>🏆 {p3["Target 100% Done"]} Item 100%</div>
+            p1, p2, p3 = top_players[0], top_players[1], top_players[2]
+            
+            # HTML DIBERSIHKAN DARI SPASI INDENTASI MENGGUNAKAN DEDENT
+            podium_html = textwrap.dedent(f"""
+            <div style="display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin-bottom: 30px;">
+                <div class="podium-card" style="border: 2px solid #94a3b8; width: 30%; box-shadow: 0 0 12px rgba(148, 163, 184, 0.2);">
+                    <div style="font-size: 32px;">🥈</div>
+                    <div style="font-weight: bold; color: #94a3b8; font-size: 15px;">{p2["Nama Personil"]}</div>
+                    <div style="font-size: 22px; font-weight: bold; color: #f8fafc; margin-top: 4px;">{p2["Total Qty"]:,.0f} <span style="font-size: 11px;">Pcs</span></div>
+                    <div style="color: #00f0ff; font-size: 12px; font-weight: bold;">{p2["% Kontribusi"]:.1f}% Kontribusi</div>
+                    <div style="background: #334155; border-radius: 6px; padding: 4px; font-size: 11px; margin-top: 8px; color: #f59e0b;">🏆 {p2["Target 100% Done"]} Item 100%</div>
+                </div>
+                <div class="podium-card" style="border: 3px solid #f59e0b; width: 36%; box-shadow: 0 0 25px rgba(245, 158, 11, 0.4); transform: scale(1.05); background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);">
+                    <div style="font-size: 42px;">🥇</div>
+                    <span style="background: #f59e0b; color: #0f172a; font-size: 10px; font-weight: 800; padding: 2px 10px; border-radius: 10px;">GUILD MASTER</span>
+                    <div style="font-weight: bold; color: #fbbf24; font-size: 18px; margin-top: 6px;">{p1["Nama Personil"]}</div>
+                    <div style="font-size: 26px; font-weight: bold; color: #f8fafc; margin-top: 4px;">{p1["Total Qty"]:,.0f} <span style="font-size: 12px;">Pcs</span></div>
+                    <div style="color: #00f0ff; font-size: 13px; font-weight: bold;">{p1["% Kontribusi"]:.1f}% Kontribusi</div>
+                    <div style="background: #334155; border-radius: 6px; padding: 4px; font-size: 11px; margin-top: 8px; color: #f59e0b;">🏆 {p1["Target 100% Done"]} Item 100%</div>
+                </div>
+                <div class="podium-card" style="border: 2px solid #d97706; width: 30%; box-shadow: 0 0 12px rgba(217, 119, 6, 0.2);">
+                    <div style="font-size: 32px;">🥉</div>
+                    <div style="font-weight: bold; color: #d97706; font-size: 15px;">{p3["Nama Personil"]}</div>
+                    <div style="font-size: 22px; font-weight: bold; color: #f8fafc; margin-top: 4px;">{p3["Total Qty"]:,.0f} <span style="font-size: 11px;">Pcs</span></div>
+                    <div style="color: #00f0ff; font-size: 12px; font-weight: bold;">{p3["% Kontribusi"]:.1f}% Kontribusi</div>
+                    <div style="background: #334155; border-radius: 6px; padding: 4px; font-size: 11px; margin-top: 8px; color: #f59e0b;">🏆 {p3["Target 100% Done"]} Item 100%</div>
                 </div>
             </div>
-            """
+            """)
             st.markdown(podium_html, unsafe_allow_html=True)
     
         # 7. TABEL FULL ADVENTURER LEADERBOARD
         st.markdown("##### 📜 Full Adventurer Leaderboard")
     
-        df_display = df_lb.copy()
-        df_display["Total Qty"] = df_display["Total Qty"].map("{:,.0f} Pcs".format)
-        df_display["% Kontribusi"] = df_display["% Kontribusi"].map("{:.2f} %".format)
-        df_display["Target 100% Done"] = df_display["Target 100% Done"].map("{} Item".format)
+        if not df_lb.empty:
+            df_display = df_lb.copy()
+            
+            df_display["Total Qty"] = pd.to_numeric(df_display["Total Qty"], errors="coerce").fillna(0).map("{:,.0f} Pcs".format)
+            df_display["% Kontribusi"] = pd.to_numeric(df_display["% Kontribusi"], errors="coerce").fillna(0).map("{:.2f} %".format)
+            df_display["Target 100% Done"] = pd.to_numeric(df_display["Target 100% Done"], errors="coerce").fillna(0).map("{:.0f} Item".format)
     
-        st.dataframe(
-            df_display,
-            use_container_width=True,
-            column_config={
-                "Nama Personil": st.column_config.TextColumn("👤 Nama Personil"),
-                "Total Qty": st.column_config.TextColumn("📦 Total Penjualan"),
-                "% Kontribusi": st.column_config.TextColumn("📊 Kontribusi Toko"),
-                "Target 100% Done": st.column_config.TextColumn("🎯 Target 100% Achieved"),
-            }
-        )
-
-    
+            st.dataframe(
+                df_display,
+                use_container_width=True,
+                column_config={
+                    "Nama Personil": st.column_config.TextColumn("👤 Nama Personil"),
+                    "Total Qty": st.column_config.TextColumn("📦 Total Penjualan"),
+                    "% Kontribusi": st.column_config.TextColumn("📊 Kontribusi Toko"),
+                    "Target 100% Done": st.column_config.TextColumn("🎯 Target 100% Achieved"),
+                }
+            )
+        else:
+            st.warning("⚠️ Tidak ada data penjualan untuk filter yang dipilih.")
+        
     # ---------------------------------------------------------
     # HALAMAN 4: DETAIL RANGKING PPS TOKO
     # ---------------------------------------------------------
