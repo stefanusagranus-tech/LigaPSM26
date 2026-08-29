@@ -1174,11 +1174,12 @@ elif selected_tab == "02 Raport Personil":
                 st.info(f"Belum ada target item yang ditetapkan untuk bulan **{selected_bulan_str}**.")
         else:
             st.info("👆 Silakan pilih nama **Personil (User)** pada dropdown di atas.")
-        
+
+    
     # ---------------------------------------------------------
     # HALAMAN 3: DETAIL RANGKING PSM TOKO (CYBERPUNK RPG LEADERBOARD)
     # ---------------------------------------------------------
-    elif st.session_state.sub_page_raport == "RANK_PSM":
+    if st.session_state.get("sub_page_raport") == "RANK_PSM":
         if st.button("⬅️ Kembali ke Menu Utama", key="btn_back_2"):
             st.query_params["sub_page"] = "MENU_UTAMA"
             st.session_state.sub_page_raport = "MENU_UTAMA"
@@ -1187,7 +1188,7 @@ elif selected_tab == "02 Raport Personil":
         st.markdown("### 🥇 Guild Leaderboard - Rangking PSM Toko")
         st.markdown("---")
     
-        # LOAD DATA DARI SESSION STATE
+        # 1. LOAD & PREPARE DATA FROM SESSION STATE
         df_periods = st.session_state.get("periods_df", pd.DataFrame())
         df_sales_person = st.session_state.get("sales_person_df", pd.DataFrame())
         df_sales_item = st.session_state.get("sales_item_df", pd.DataFrame())
@@ -1231,12 +1232,11 @@ elif selected_tab == "02 Raport Personil":
                 border-radius: 16px;
                 padding: 16px;
                 text-align: center;
-                transition: transform 0.2s;
             }
         </style>
         """, unsafe_allow_html=True)
     
-        # 1. MODE SWITCHER KAPSUL FUTURISTIK
+        # 2. MODE SWITCHER KAPSUL FUTURISTIK
         if "psm_filter_mode" not in st.session_state:
             st.session_state.psm_filter_mode = "Bulanan"
     
@@ -1264,10 +1264,10 @@ elif selected_tab == "02 Raport Personil":
         filter_mode = st.session_state.psm_filter_mode
         st.markdown("<br>", unsafe_allow_html=True)
     
-        # 2. SELECTION COMPONENT BERDASARKAN KAPSUL AKTIF
-        start_date = None
-        end_date = None
+        # 3. FILTER SELECTION COMPONENT
+        start_date, end_date = None, None
         selected_month_num = None
+        selected_period_name = None
         list_bulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
     
         if filter_mode == "Harian":
@@ -1276,45 +1276,56 @@ elif selected_tab == "02 Raport Personil":
             end_date = start_date + pd.Timedelta(days=1) - pd.Timedelta(nanoseconds=1)
     
         elif filter_mode == "Rentang Periode":
-            col_r1, col_r2 = st.columns(2)
-            with col_r1:
-                d_start = st.date_input("📅 Start Date:", datetime.today().date() - timedelta(days=7), key="psm_d_start")
-            with col_r2:
-                d_end = st.date_input("📅 End Date:", datetime.today().date(), key="psm_d_end")
-            
-            start_date = pd.to_datetime(d_start).normalize()
-            end_date = pd.to_datetime(d_end).normalize() + pd.Timedelta(days=1) - pd.Timedelta(nanoseconds=1)
+            if df_periods is not None and not df_periods.empty and "periode_name" in df_periods.columns:
+                list_periode = df_periods["periode_name"].dropna().unique().tolist()
+                selected_period_name = st.selectbox("📅 Pilih Campaign Periode:", list_periode, key="psm_periode_sel")
+            else:
+                st.warning("⚠️ Data Sheet PERIODE (kolom 'periode_name') tidak ditemukan.")
     
         elif filter_mode == "Bulanan":
             current_m = datetime.now().month - 1
             selected_bulan_str = st.selectbox("📅 Pilih Bulan Season:", list_bulan, index=current_m, key="psm_month_sel")
             selected_month_num = list_bulan.index(selected_bulan_str) + 1
     
-        # 3. FILTER DATA PENJUALAN PERSONIL
-        sub_sp = df_sales_person.copy() if not df_sales_person.empty else pd.DataFrame()
+        # 4. FILTER DATA PENJUALAN PERSONIL BERDASARKAN UPDATED_AT
+        sub_sp = df_sales_person.copy() if df_sales_person is not None and not df_sales_person.empty else pd.DataFrame()
+        
         person_col = next((c for c in sub_sp.columns if "person_name" in c or "sales_person" in c or "nama" in c), None) if not sub_sp.empty else None
+        date_col = "updated_at" if "updated_at" in sub_sp.columns else ("trans_date" if "trans_date" in sub_sp.columns else None)
     
-        # Master Karyawan Toko (Memastikan yang 0 Sales tetap masuk)
+        # Master Karyawan Toko (Tetap Muncul Meski Sales = 0)
         all_employees = []
-        if not df_users.empty and "nama" in df_users.columns:
+        if df_users is not None and not df_users.empty and "nama" in df_users.columns:
             all_employees = df_users["nama"].dropna().unique().tolist()
         elif person_col and not sub_sp.empty:
             all_employees = sub_sp[person_col].dropna().unique().tolist()
     
-        if not sub_sp.empty and "trans_date" in sub_sp.columns:
-            sub_sp["dt"] = pd.to_datetime(sub_sp["trans_date"], errors="coerce")
-            if filter_mode in ["Harian", "Rentang Periode"] and start_date and end_date:
+        if not sub_sp.empty and date_col:
+            sub_sp["dt"] = pd.to_datetime(sub_sp[date_col], errors="coerce")
+    
+            if filter_mode == "Harian" and start_date is not None and end_date is not None:
                 sub_sp = sub_sp[(sub_sp["dt"] >= start_date) & (sub_sp["dt"] <= end_date)]
-            elif filter_mode == "Bulanan" and selected_month_num:
+                
+            elif filter_mode == "Rentang Periode" and selected_period_name:
+                if "periode_name" in sub_sp.columns:
+                    sub_sp = sub_sp[sub_sp["periode_name"] == selected_period_name]
+                elif df_periods is not None and not df_periods.empty and "periode_name" in df_periods.columns:
+                    row_p = df_periods[df_periods["periode_name"] == selected_period_name]
+                    if not row_p.empty and "start_date" in row_p.columns and "end_date" in row_p.columns:
+                        p_start = pd.to_datetime(row_p.iloc[0]["start_date"]).normalize()
+                        p_end = pd.to_datetime(row_p.iloc[0]["end_date"]).normalize() + pd.Timedelta(days=1) - pd.Timedelta(nanoseconds=1)
+                        sub_sp = sub_sp[(sub_sp["dt"] >= p_start) & (sub_sp["dt"] <= p_end)]
+                        
+            elif filter_mode == "Bulanan" and selected_month_num is not None:
                 sub_sp = sub_sp[sub_sp["dt"].dt.month == selected_month_num]
     
-        # Omzet/Qty Total Seluruh Toko (Untuk Kontribusi %)
+        # Qty Total Seluruh Toko (Untuk Persentase Kontribusi)
         total_store_qty = 0.0
         if not sub_sp.empty and "actual_qty" in sub_sp.columns:
             sub_sp["actual_qty"] = pd.to_numeric(sub_sp["actual_qty"], errors="coerce").fillna(0)
             total_store_qty = float(sub_sp["actual_qty"].sum())
     
-        # 4. HITUNG METRIK PERSONIL
+        # 5. HITUNG METRIK PERSONIL & AKUMULASI
         leaderboard_data = []
     
         for emp in all_employees:
@@ -1329,7 +1340,7 @@ elif selected_tab == "02 Raport Personil":
                 # Hitung Jumlah Item Yang Target 100% Achieved
                 if "item_name" in emp_sp.columns:
                     emp_item_grp = emp_sp.groupby("item_name")["actual_qty"].sum().reset_index()
-                    if not df_sales_item.empty and "item_name" in df_sales_item.columns:
+                    if df_sales_item is not None and not df_sales_item.empty and "item_name" in df_sales_item.columns:
                         target_col = "target_kasir" if "target_kasir" in df_sales_item.columns else "target_qty"
                         target_map = df_sales_item.groupby("item_name")[target_col].sum().to_dict()
                         
@@ -1356,14 +1367,13 @@ elif selected_tab == "02 Raport Personil":
             df_lb = df_lb.sort_values(by=["Total Qty", "Target 100% Done"], ascending=[False, False]).reset_index(drop=True)
             df_lb.index += 1
     
-        # 5. PODIUM TOP 3 ADVENTURER
+        # 6. PODIUM TOP 3 ADVENTURER (HTML RENDER CLEAN)
         st.markdown("<br>", unsafe_allow_html=True)
         if len(df_lb) >= 3:
             p1, p2, p3 = df_lb.iloc[0], df_lb.iloc[1], df_lb.iloc[2]
             
             podium_html = f"""
             <div style='display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin-bottom: 30px;'>
-                <!-- JUARA 2 -->
                 <div class='podium-card' style='border: 2px solid #94a3b8; width: 30%; box-shadow: 0 0 12px rgba(148, 163, 184, 0.2);'>
                     <div style='font-size: 32px;'>🥈</div>
                     <div style='font-weight: bold; color: #94a3b8; font-size: 15px;'>{p2["Nama Personil"]}</div>
@@ -1372,7 +1382,6 @@ elif selected_tab == "02 Raport Personil":
                     <div style='background: #334155; border-radius: 6px; padding: 4px; font-size: 11px; margin-top: 8px; color: #f59e0b;'>🏆 {p2["Target 100% Done"]} Item 100%</div>
                 </div>
                 
-                <!-- JUARA 1 -->
                 <div class='podium-card' style='border: 3px solid #f59e0b; width: 36%; box-shadow: 0 0 25px rgba(245, 158, 11, 0.4); transform: scale(1.05); background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);'>
                     <div style='font-size: 42px;'>🥇</div>
                     <span style='background: #f59e0b; color: #0f172a; font-size: 10px; font-weight: 800; padding: 2px 10px; border-radius: 10px;'>GUILD MASTER</span>
@@ -1382,7 +1391,6 @@ elif selected_tab == "02 Raport Personil":
                     <div style='background: #334155; border-radius: 6px; padding: 4px; font-size: 11px; margin-top: 8px; color: #f59e0b;'>🏆 {p1["Target 100% Done"]} Item 100%</div>
                 </div>
     
-                <!-- JUARA 3 -->
                 <div class='podium-card' style='border: 2px solid #d97706; width: 30%; box-shadow: 0 0 12px rgba(217, 119, 6, 0.2);'>
                     <div style='font-size: 32px;'>🥉</div>
                     <div style='font-weight: bold; color: #d97706; font-size: 15px;'>{p3["Nama Personil"]}</div>
@@ -1394,7 +1402,7 @@ elif selected_tab == "02 Raport Personil":
             """
             st.markdown(podium_html, unsafe_allow_html=True)
     
-        # 6. TABEL FULL ADVENTURER LEADERBOARD
+        # 7. TABEL FULL ADVENTURER LEADERBOARD
         st.markdown("##### 📜 Full Adventurer Leaderboard")
     
         df_display = df_lb.copy()
@@ -1413,6 +1421,7 @@ elif selected_tab == "02 Raport Personil":
             }
         )
 
+    
     # ---------------------------------------------------------
     # HALAMAN 4: DETAIL RANGKING PPS TOKO
     # ---------------------------------------------------------
