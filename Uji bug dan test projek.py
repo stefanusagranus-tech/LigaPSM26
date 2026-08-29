@@ -63,14 +63,6 @@ if "data_loaded" not in st.session_state:
     st.session_state.sales_person_df = sp_df
     st.session_state.data_loaded = True
 
-# Contoh saat me-load data di bagian atas aplikasi Streamlit:
-df_periode = pd.read_excel("Database_Penjualan_PSM_Toko_Clean_GoogleSheets (2).xlsx", sheet_name="PERIODE")
-df_sales_item = pd.read_excel("Database_Penjualan_PSM_Toko_Clean_GoogleSheets (2).xlsx", sheet_name="SALES_ITEM")
-
-# Simpan ke session_state agar aman diakses di mana saja
-st.session_state['df_periode'] = df_periode
-st.session_state['df_sales_item'] = df_sales_item
-
 if "active_tab" not in st.session_state:
     st.session_state.active_tab = "Home"
 
