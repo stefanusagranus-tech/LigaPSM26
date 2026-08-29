@@ -1277,7 +1277,7 @@ elif selected_tab == "02 Raport Personil":
     
         elif filter_mode == "Rentang Periode":
             if df_periods is not None and not df_periods.empty and "periode_name" in df_periods.columns:
-                list_periode = df_periods["periode_name"].dropna().unique().tolist()
+                list_periode = df_periods["period_name"].dropna().unique().tolist()
                 selected_period_name = st.selectbox("📅 Pilih Campaign Periode:", list_periode, key="psm_periode_sel")
             else:
                 st.warning("⚠️ Data Sheet PERIODE (kolom 'periode_name') tidak ditemukan.")
