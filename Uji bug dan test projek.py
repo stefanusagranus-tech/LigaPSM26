@@ -1175,7 +1175,7 @@ elif selected_tab == "02 Raport Personil":
         else:
             st.info("👆 Silakan pilih nama **Personil (User)** pada dropdown di atas.")
         
-   # ---------------------------------------------------------
+    # ---------------------------------------------------------
     # HALAMAN 3: DETAIL RANGKING PSM TOKO (CYBERPUNK RPG LEADERBOARD)
     # ---------------------------------------------------------
     elif st.session_state.sub_page_raport == "RANK_PSM":
@@ -1271,8 +1271,9 @@ elif selected_tab == "02 Raport Personil":
     
         if filter_mode == "Harian":
             single_date = st.date_input("📅 Pilih Tanggal Penjualan:", datetime.date.today(), key="psm_date_single")
-            start_date = pd.to_datetime(single_date)
-            end_date = pd.to_datetime(single_date)
+            # Set jam 00:00:00 s/d 23:59:59 agar pencarian harian mencakup seluruh transaksi hari tersebut
+            start_date = pd.to_datetime(single_date).normalize()
+            end_date = start_date + pd.Timedelta(days=1) - pd.Timedelta(nanoseconds=1)
     
         elif filter_mode == "Rentang Periode":
             col_r1, col_r2 = st.columns(2)
@@ -1280,11 +1281,13 @@ elif selected_tab == "02 Raport Personil":
                 d_start = st.date_input("📅 Start Date:", datetime.date.today() - datetime.timedelta(days=7), key="psm_d_start")
             with col_r2:
                 d_end = st.date_input("📅 End Date:", datetime.date.today(), key="psm_d_end")
-            start_date = pd.to_datetime(d_start)
-            end_date = pd.to_datetime(d_end)
+            
+            start_date = pd.to_datetime(d_start).normalize()
+            end_date = pd.to_datetime(d_end).normalize() + pd.Timedelta(days=1) - pd.Timedelta(nanoseconds=1)
     
         elif filter_mode == "Bulanan":
-            selected_bulan_str = st.selectbox("📅 Pilih Bulan Season:", list_bulan, index=datetime.datetime.now().month - 1, key="psm_month_sel")
+            current_m = datetime.datetime.now().month - 1
+            selected_bulan_str = st.selectbox("📅 Pilih Bulan Season:", list_bulan, index=current_m, key="psm_month_sel")
             selected_month_num = list_bulan.index(selected_bulan_str) + 1
     
         # 3. FILTER DATA PENJUALAN PERSONIL
