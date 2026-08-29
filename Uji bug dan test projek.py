@@ -137,12 +137,30 @@ div.stButton > button {
     border-radius: 10px !important; 
     font-weight: bold !important;
 }
+
+/* --- TAMBAHAN STYLING TABEL CYBERPUNK --- */
+dataframe th, [data-testid="stDataFrame"] th {
+    background-color: #1e293b !important;
+    color: #00f0ff !important;
+    font-weight: 700 !important;
+    border-bottom: 2px solid #334155 !important;
+}
+
+[data-testid="stDataFrame"] td {
+    background-color: #0f172a !important;
+    color: #f8fafc !important;
+    border-bottom: 1px solid #1e293b !important;
+}
+
+[data-testid="stDataFrame"] tr:hover td {
+    background-color: #1e293b !important;
+    color: #00f0ff !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
-
 # =========================================================
 # 4. LOGIN PAGE
 # =========================================================
