@@ -825,317 +825,334 @@ elif selected_tab == "02 Raport Personil":
     """, unsafe_allow_html=True)
 
    # ---------------------------------------------------------
-    # HALAMAN 1: DASHBOARD MENU UTAMA (DESKRIPSI REMOVED)
-    # ---------------------------------------------------------
-    if st.session_state.sub_page_raport == "MENU_UTAMA":
-        st.markdown("### 🏆 Raport Personil Toko")
-        st.write("Pilih menu laporan personil di bawah ini:")
-        st.markdown("<br>", unsafe_allow_html=True)
+# HALAMAN 1: DASHBOARD MENU UTAMA (DESKRIPSI REMOVED)
+# ---------------------------------------------------------
+if st.session_state.sub_page_raport == "MENU_UTAMA":
+    st.markdown("### 🏆 Raport Personil Toko")
+    st.write("Pilih menu laporan personil di bawah ini:")
+    st.markdown("<br>", unsafe_allow_html=True)
 
-        col1, col2, col3 = st.columns(3)
+    col1, col2, col3 = st.columns(3)
 
-        # --- CARD 1: PENJUALAN PERSONIL ---
-        with col1:
-            with st.container(border=True):
-                st.markdown("""
-                <div class='android-card-box'>
-                    <div style='font-size: 42px; margin-bottom: 8px;'>📊</div>
-                    <div style='font-weight: bold; color: #f8fafc; font-size: 16px;'>Penjualan Personil</div>
-                </div>
-                """, unsafe_allow_html=True)
-                st.markdown("<br>", unsafe_allow_html=True)
-                if st.button("Buka Laporan 📊", key="card_btn_penjualan", use_container_width=True):
-                    st.query_params["sub_page"] = "PENJUALAN"
-                    st.session_state.sub_page_raport = "PENJUALAN"
-                    st.rerun()
+    # --- CARD 1: PENJUALAN PERSONIL ---
+    with col1:
+        with st.container(border=True):
+            st.markdown("""
+            <div class='android-card-box'>
+                <div style='font-size: 42px; margin-bottom: 8px;'>📊</div>
+                <div style='font-weight: bold; color: #f8fafc; font-size: 16px;'>Penjualan Personil</div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("Buka Laporan 📊", key="card_btn_penjualan", use_container_width=True):
+                st.query_params["sub_page"] = "PENJUALAN"
+                st.session_state.sub_page_raport = "PENJUALAN"
+                st.rerun()
 
-        # --- CARD 2: RANGKING PSM ---
-        with col2:
-            with st.container(border=True):
-                st.markdown("""
-                <div class='android-card-box'>
-                    <div style='font-size: 42px; margin-bottom: 8px;'>🥇</div>
-                    <div style='font-weight: bold; color: #f8fafc; font-size: 16px;'>Rangking PSM Toko</div>
-                </div>
-                """, unsafe_allow_html=True)
-                st.markdown("<br>", unsafe_allow_html=True)
-                if st.button("Lihat Rangking 🥇", key="card_btn_psm", use_container_width=True):
-                    st.query_params["sub_page"] = "RANK_PSM"
-                    st.session_state.sub_page_raport = "RANK_PSM"
-                    st.rerun()
+    # --- CARD 2: RANGKING PSM ---
+    with col2:
+        with st.container(border=True):
+            st.markdown("""
+            <div class='android-card-box'>
+                <div style='font-size: 42px; margin-bottom: 8px;'>🥇</div>
+                <div style='font-weight: bold; color: #f8fafc; font-size: 16px;'>Rangking PSM Toko</div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("Lihat Rangking 🥇", key="card_btn_psm", use_container_width=True):
+                st.query_params["sub_page"] = "RANK_PSM"
+                st.session_state.sub_page_raport = "RANK_PSM"
+                st.rerun()
 
-        # --- CARD 3: RANGKING PPS ---
-        with col3:
-            with st.container(border=True):
-                st.markdown("""
-                <div class='android-card-box'>
-                    <div style='font-size: 42px; margin-bottom: 8px;'>🎯</div>
-                    <div style='font-weight: bold; color: #f8fafc; font-size: 16px;'>Rangking PPS Toko</div>
-                </div>
-                """, unsafe_allow_html=True)
-                st.markdown("<br>", unsafe_allow_html=True)
-                if st.button("Lihat Rangking 🎯", key="card_btn_pps", use_container_width=True):
-                    st.query_params["sub_page"] = "RANK_PPS"
-                    st.session_state.sub_page_raport = "RANK_PPS"
-                    st.rerun()
+    # --- CARD 3: RANGKING PPS ---
+    with col3:
+        with st.container(border=True):
+            st.markdown("""
+            <div class='android-card-box'>
+                <div style='font-size: 42px; margin-bottom: 8px;'>🎯</div>
+                <div style='font-weight: bold; color: #f8fafc; font-size: 16px;'>Rangking PPS Toko</div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("Lihat Rangking 🎯", key="card_btn_pps", use_container_width=True):
+                st.query_params["sub_page"] = "RANK_PPS"
+                st.session_state.sub_page_raport = "RANK_PPS"
+                st.rerun()
 
-    # ---------------------------------------------------------
-    # HALAMAN 2: DETAIL PENJUALAN PERSONIL TOKO (RPG STYLE FIXED)
-    # ---------------------------------------------------------
-    elif st.session_state.sub_page_raport == "PENJUALAN":
-        if st.button("⬅️ Kembali ke Menu Utama", key="btn_back_1"):
-            st.query_params["sub_page"] = "MENU_UTAMA"
-            st.session_state.sub_page_raport = "MENU_UTAMA"
-            st.rerun()
-            
-        st.markdown("### 📊 Raport Penjualan Personil")
-        st.markdown("---")
-
-        df_periods = st.session_state.get("periods_df", pd.DataFrame())
-        df_sales_person = st.session_state.get("sales_person_df", pd.DataFrame())
-        df_sales_item = st.session_state.get("sales_item_df", pd.DataFrame())
-
-        # STYLESHEET TEMA RPG
-        st.markdown("""
-        <style>
-            .rpg-card {
-                background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
-                border: 2px solid #38bdf8;
-                border-radius: 16px;
-                padding: 20px;
-                box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
-                margin-bottom: 20px;
-            }
-            .avatar-container {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                margin-bottom: 12px;
-            }
-            .avatar-img {
-                width: 90px;
-                height: 90px;
-                border-radius: 50%;
-                border: 3px solid #00f0ff;
-                box-shadow: 0 0 12px #00f0ff;
-                background-color: #334155;
-            }
-            .stat-box {
-                background: rgba(15, 23, 42, 0.7);
-                border: 1px solid #334155;
-                border-radius: 10px;
-                padding: 10px;
-                text-align: center;
-            }
-            .stat-label {
-                color: #94a3b8;
-                font-size: 11px;
-                font-weight: bold;
-            }
-            .stat-value {
-                color: #f8fafc;
-                font-size: 17px;
-                font-weight: bold;
-                margin-top: 2px;
-            }
-            .hp-bar-bg {
-                background-color: #334155;
-                border-radius: 10px;
-                height: 16px;
-                width: 100%;
-                overflow: hidden;
-                margin-top: 4px;
-                position: relative;
-                border: 1px solid #475569;
-            }
-            .hp-bar-fill {
-                background: linear-gradient(90deg, #00f0ff 0%, #3b82f6 100%);
-                height: 100%;
-                border-radius: 10px;
-            }
-            .item-hp-card {
-                background: #0f172a;
-                border: 1px solid #334155;
-                border-radius: 12px;
-                padding: 14px;
-                margin-bottom: 12px;
-            }
-            .hp-bar-text {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                font-size: 10px;
-                font-weight: bold;
-                color: #ffffff;
-                text-shadow: 1px 1px 2px #000;
-                width: 100%;
-                text-align: center;
-            }
-        </style>
-        """, unsafe_allow_html=True)
-
-        # 1. FILTER PILIHAN BULAN & PERIODE
-        list_bulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
-        col_f1, col_f2, col_f3 = st.columns(3)
+# ---------------------------------------------------------
+# HALAMAN 2: DETAIL PENJUALAN PERSONIL TOKO (FULL RPG TEMA)
+# ---------------------------------------------------------
+elif st.session_state.sub_page_raport == "PENJUALAN":
+    if st.button("⬅️ Kembali ke Menu Utama", key="btn_back_1"):
+        st.query_params["sub_page"] = "MENU_UTAMA"
+        st.session_state.sub_page_raport = "MENU_UTAMA"
+        st.rerun()
         
-        with col_f1:
-            selected_bulan_str = st.selectbox("📅 Pilih Bulan:", list_bulan, index=7, key="rpg_sel_bulan")
-            selected_month_num = list_bulan.index(selected_bulan_str) + 1
+    st.markdown("### 📊 Raport Penjualan Personil")
+    st.markdown("---")
 
-        period_options = ["Semua Periode"]
-        if not df_periods.empty and "start_date" in df_periods.columns:
-            df_periods_copy = df_periods.copy()
-            df_periods_copy["start_dt"] = pd.to_datetime(df_periods_copy["start_date"], errors="coerce")
-            filtered_periods = df_periods_copy[df_periods_copy["start_dt"].dt.month == selected_month_num]
-            if not filtered_periods.empty and "period_name" in filtered_periods.columns:
-                period_options += filtered_periods["period_name"].tolist()
+    df_periods = st.session_state.get("periods_df", pd.DataFrame())
+    df_sales_person = st.session_state.get("sales_person_df", pd.DataFrame())
+    df_sales_item = st.session_state.get("sales_item_df", pd.DataFrame())
 
-        with col_f2:
-            selected_period_name = st.selectbox("⏱️ Pilih Periode:", period_options, key="rpg_sel_periode")
+    # STYLESHEET TEMA RPG & HP BARS
+    st.markdown("""
+    <style>
+        .rpg-card {
+            background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+            border: 2px solid #38bdf8;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+            margin-bottom: 20px;
+        }
+        .avatar-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .avatar-img {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: 3px solid #00f0ff;
+            box-shadow: 0 0 12px #00f0ff;
+            background-color: #334155;
+        }
+        .stat-box {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+        }
+        .stat-label {
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .stat-value {
+            color: #f8fafc;
+            font-size: 17px;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+        .hp-bar-bg {
+            background-color: #334155;
+            border-radius: 10px;
+            height: 16px;
+            width: 100%;
+            overflow: hidden;
+            margin-top: 4px;
+            position: relative;
+            border: 1px solid #475569;
+        }
+        .hp-bar-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.4s ease;
+        }
+        .item-hp-card {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+        .hp-bar-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 10px;
+            font-weight: bold;
+            color: #ffffff;
+            text-shadow: 1px 1px 2px #000;
+            width: 100%;
+            text-align: center;
+        }
+    </style>
+    """, unsafe_allow_html=True)
 
-        person_list = ["Pilih Personil"]
-        if not df_sales_person.empty:
-            person_col = next((c for c in df_sales_person.columns if "person_name" in c or "sales_person" in c or "nama" in c), None)
-            if person_col:
-                person_list += sorted(df_sales_person[person_col].dropna().unique().tolist())
+    # 1. FILTER PILIHAN BULAN, PERIODE & PERSONIL
+    list_bulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
+    col_f1, col_f2, col_f3 = st.columns(3)
+    
+    with col_f1:
+        selected_bulan_str = st.selectbox("📅 Pilih Bulan:", list_bulan, index=7, key="rpg_sel_bulan")
+        selected_month_num = list_bulan.index(selected_bulan_str) + 1
 
-        with col_f3:
-            selected_person = st.selectbox("👤 Pilih Personil (User):", person_list, key="rpg_sel_person")
+    period_options = ["Semua Periode"]
+    if not df_periods.empty and "start_date" in df_periods.columns:
+        df_periods_copy = df_periods.copy()
+        df_periods_copy["start_dt"] = pd.to_datetime(df_periods_copy["start_date"], errors="coerce")
+        filtered_periods = df_periods_copy[df_periods_copy["start_dt"].dt.month == selected_month_num]
+        if not filtered_periods.empty and "period_name" in filtered_periods.columns:
+            period_options += filtered_periods["period_name"].tolist()
 
-        st.markdown("<br>", unsafe_allow_html=True)
+    with col_f2:
+        selected_period_name = st.selectbox("⏱️ Pilih Periode:", period_options, key="rpg_sel_periode")
 
-        # 2. PROSES STATS PERSONIL
-        if selected_person != "Pilih Personil":
-            sub_sp = df_sales_person.copy() if not df_sales_person.empty else pd.DataFrame()
-            person_col = next((c for c in sub_sp.columns if "person_name" in c or "sales_person" in c or "nama" in c), None)
-            
-            if person_col and not sub_sp.empty:
-                sub_sp = sub_sp[sub_sp[person_col] == selected_person]
+    person_list = ["Pilih Personil"]
+    if not df_sales_person.empty:
+        person_col = next((c for c in df_sales_person.columns if "person_name" in c or "sales_person" in c or "nama" in c), None)
+        if person_col:
+            person_list += sorted(df_sales_person[person_col].dropna().unique().tolist())
 
-            if selected_period_name != "Semua Periode" and not sub_sp.empty and not df_periods.empty:
-                period_row = df_periods[df_periods["period_name"] == selected_period_name]
-                if not period_row.empty and "period_id" in sub_sp.columns:
-                    target_pid = period_row.iloc[0].get("period_id")
-                    sub_sp = sub_sp[sub_sp["period_id"] == target_pid]
+    with col_f3:
+        selected_person = st.selectbox("👤 Pilih Personil (User):", person_list, key="rpg_sel_person")
 
-            actual_qty_person = 0.0
-            if not sub_sp.empty and "actual_qty" in sub_sp.columns:
-                sub_sp["actual_qty"] = pd.to_numeric(sub_sp["actual_qty"], errors="coerce").fillna(0)
-                actual_qty_person = float(sub_sp["actual_qty"].sum())
+    st.markdown("<br>", unsafe_allow_html=True)
 
-            sub_si = df_sales_item.copy() if not df_sales_item.empty else pd.DataFrame()
-            if selected_period_name != "Semua Periode" and not sub_si.empty and not df_periods.empty:
-                period_row = df_periods[df_periods["period_name"] == selected_period_name]
-                if not period_row.empty and "period_id" in sub_si.columns:
-                    target_pid = period_row.iloc[0].get("period_id")
-                    sub_si = sub_si[sub_si["period_id"] == target_pid]
+    # 2. PROSES STATISTIK PERSONIL
+    if selected_person != "Pilih Personil":
+        sub_sp = df_sales_person.copy() if not df_sales_person.empty else pd.DataFrame()
+        person_col = next((c for c in sub_sp.columns if "person_name" in c or "sales_person" in c or "nama" in c), None)
+        
+        if person_col and not sub_sp.empty:
+            sub_sp = sub_sp[sub_sp[person_col] == selected_person]
 
-            total_target_qty = 0.0
-            if not sub_si.empty and "target_qty" in sub_si.columns:
-                sub_si["target_qty"] = pd.to_numeric(sub_si["target_qty"], errors="coerce").fillna(0)
-                total_target_qty = float(sub_si["target_qty"].sum())
+        if selected_period_name != "Semua Periode" and not sub_sp.empty and not df_periods.empty:
+            period_row = df_periods[df_periods["period_name"] == selected_period_name]
+            if not period_row.empty and "period_id" in sub_sp.columns:
+                target_pid = period_row.iloc[0].get("period_id")
+                sub_sp = sub_sp[sub_sp["period_id"] == target_pid]
 
-            num_personil = max(len(person_list) - 1, 1)
-            target_person_est = total_target_qty / num_personil if total_target_qty > 0 else 0.0
+        actual_qty_person = 0.0
+        if not sub_sp.empty and "actual_qty" in sub_sp.columns:
+            sub_sp["actual_qty"] = pd.to_numeric(sub_sp["actual_qty"], errors="coerce").fillna(0)
+            actual_qty_person = float(sub_sp["actual_qty"].sum())
 
-            ach_person_pct = (actual_qty_person / target_person_est * 100.0) if target_person_est > 0 else 0.0
-            ach_person_pct_clamped = min(max(ach_person_pct, 0.0), 100.0)
+        sub_si = df_sales_item.copy() if not df_sales_item.empty else pd.DataFrame()
+        if selected_period_name != "Semua Periode" and not sub_si.empty and not df_periods.empty:
+            period_row = df_periods[df_periods["period_name"] == selected_period_name]
+            if not period_row.empty and "period_id" in sub_si.columns:
+                target_pid = period_row.iloc[0].get("period_id")
+                sub_si = sub_si[sub_si["period_id"] == target_pid]
 
-            total_item_achieved = sub_sp[sub_sp["actual_qty"] > 0]["item_name"].nunique() if not sub_sp.empty and "item_name" in sub_sp.columns else 0
-            avatar_url = f"https://api.dicebear.com/7.x/bottts/svg?seed={selected_person}"
+        total_target_qty = 0.0
+        if not sub_si.empty and "target_qty" in sub_si.columns:
+            sub_si["target_qty"] = pd.to_numeric(sub_si["target_qty"], errors="coerce").fillna(0)
+            total_target_qty = float(sub_si["target_qty"].sum())
 
-            # --- RENDER CARD RPG CHARACTER (FIXED HTML ERROR) ---
-            html_card = f"""
-            <div class='rpg-card'>
-                <div class='avatar-container'>
-                    <img src='{avatar_url}' class='avatar-img' alt='Avatar'>
-                    <h3 style='color: #00f0ff; margin: 8px 0 2px 0; text-align: center; font-size: 20px;'>{selected_person}</h3>
-                    <span style='color: #e2e8f0; background: #0284c7; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: bold;'>
-                        LEVEL {int(ach_person_pct // 10) + 1} • SALES WARRIOR
-                    </span>
+        num_personil = max(len(person_list) - 1, 1)
+        target_person_est = total_target_qty / num_personil if total_target_qty > 0 else 0.0
+
+        ach_person_pct = (actual_qty_person / target_person_est * 100.0) if target_person_est > 0 else 0.0
+        ach_person_pct_clamped = min(max(ach_person_pct, 0.0), 100.0)
+
+        # ---------------------------------------------------------
+        # PENGGABUNGAN DATA (MENGACU KEPADA SELURUH TARGET ITEM TOKO)
+        # ---------------------------------------------------------
+        total_item_achieved = 0
+        df_item_summary = pd.DataFrame()
+
+        if not sub_si.empty and "item_name" in sub_si.columns and "target_qty" in sub_si.columns:
+            df_target_summary = sub_si.groupby("item_name")["target_qty"].sum().reset_index()
+
+            if not sub_sp.empty and "item_name" in sub_sp.columns and "actual_qty" in sub_sp.columns:
+                df_actual_summary = sub_sp.groupby("item_name")["actual_qty"].sum().reset_index()
+                # MERGE LEFT JOIN agar seluruh target item toko tetap muncul
+                df_item_summary = df_target_summary.merge(df_actual_summary, on="item_name", how="left")
+            else:
+                df_item_summary = df_target_summary.copy()
+                df_item_summary["actual_qty"] = 0
+
+            df_item_summary["target_qty"] = pd.to_numeric(df_item_summary["target_qty"], errors="coerce").fillna(0)
+            df_item_summary["actual_qty"] = pd.to_numeric(df_item_summary["actual_qty"], errors="coerce").fillna(0)
+
+            # HITUNG ITEM YANG MENCAPAI TARGET PERSONIL
+            for _, row in df_item_summary.iterrows():
+                target_p = math.ceil(row["target_qty"] / num_personil) if num_personil > 0 else 0
+                if target_p > 0 and row["actual_qty"] >= target_p:
+                    total_item_achieved += 1
+
+        avatar_url = f"https://api.dicebear.com/7.x/bottts/svg?seed={selected_person}"
+
+        # RENDER CHARACTER PROFILE CARD
+        html_card = f"""
+        <div class='rpg-card'>
+            <div class='avatar-container'>
+                <img src='{avatar_url}' class='avatar-img' alt='Avatar'>
+                <h3 style='color: #00f0ff; margin: 8px 0 2px 0; text-align: center; font-size: 20px;'>{selected_person}</h3>
+                <span style='color: #e2e8f0; background: #0284c7; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: bold;'>
+                    LEVEL {int(ach_person_pct // 10) + 1} • SALES WARRIOR
+                </span>
+            </div>
+            <div style='margin-bottom: 14px;'>
+                <div style='display: flex; justify-content: space-between; font-size: 11px; font-weight: bold;'>
+                    <span style='color: #94a3b8;'>TOTAL EXP / ACHIEVEMENT</span>
+                    <span style='color: #00f0ff;'>{ach_person_pct:.1f}%</span>
                 </div>
-                <div style='margin-bottom: 14px;'>
-                    <div style='display: flex; justify-content: space-between; font-size: 11px; font-weight: bold;'>
-                        <span style='color: #94a3b8;'>TOTAL EXP / ACHIEVEMENT</span>
-                        <span style='color: #00f0ff;'>{ach_person_pct:.1f}%</span>
-                    </div>
-                    <div class='hp-bar-bg'>
-                        <div class='hp-bar-fill' style='width: {ach_person_pct_clamped}%;'></div>
-                    </div>
-                </div>
-                <div style='display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;'>
-                    <div class='stat-box'>
-                        <div class='stat-label'>🎯 TARGET</div>
-                        <div class='stat-value' style='color: #cbd5e1;'>{target_person_est:,.0f}</div>
-                    </div>
-                    <div class='stat-box'>
-                        <div class='stat-label'>📦 ACTUAL</div>
-                        <div class='stat-value' style='color: #38bdf8;'>{actual_qty_person:,.0f}</div>
-                    </div>
-                    <div class='stat-box'>
-                        <div class='stat-label'>⚡ ACH (%)</div>
-                        <div class='stat-value' style='color: #10b981;'>{ach_person_pct:.1f}%</div>
-                    </div>
-                    <div class='stat-box'>
-                        <div class='stat-label'>🏆 ITEM REACH</div>
-                        <div class='stat-value' style='color: #f59e0b;'>{total_item_achieved} Item</div>
-                    </div>
+                <div class='hp-bar-bg'>
+                    <div class='hp-bar-fill' style='width: {ach_person_pct_clamped}%; background: linear-gradient(90deg, #00f0ff 0%, #3b82f6 100%);'></div>
                 </div>
             </div>
-            """
-            st.markdown(html_card, unsafe_allow_html=True)
+            <div style='display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;'>
+                <div class='stat-box'>
+                    <div class='stat-label'>🎯 TARGET</div>
+                    <div class='stat-value' style='color: #cbd5e1;'>{target_person_est:,.0f}</div>
+                </div>
+                <div class='stat-box'>
+                    <div class='stat-label'>📦 ACTUAL</div>
+                    <div class='stat-value' style='color: #38bdf8;'>{actual_qty_person:,.0f}</div>
+                </div>
+                <div class='stat-box'>
+                    <div class='stat-label'>⚡ ACH (%)</div>
+                    <div class='stat-value' style='color: #10b981;'>{ach_person_pct:.1f}%</div>
+                </div>
+                <div class='stat-box'>
+                    <div class='stat-label'>🏆 TARGET DONE</div>
+                    <div class='stat-value' style='color: #f59e0b;'>{total_item_achieved} Item</div>
+                </div>
+            </div>
+        </div>
+        """
+        st.markdown(html_card, unsafe_allow_html=True)
 
-            # 3. BAR ITEM PENJUALAN BERGAYA HP BAR RPG
-            st.markdown("##### 🗡️ Quest Item Achievements (HP Bars)")
+        # 3. BAR ITEM PENJUALAN BERGAYA HP BAR RPG (SELUARUH ITEM TARGET)
+        st.markdown("##### 🗡️ Quest Item Achievements (HP Bars)")
 
-            if not sub_sp.empty and "item_name" in sub_sp.columns:
-                df_item_summary = sub_sp.groupby("item_name")["actual_qty"].sum().reset_index()
+        if not df_item_summary.empty:
+            for _, row in df_item_summary.iterrows():
+                item_name = row["item_name"]
+                actual = int(row["actual_qty"])
+                target_person = math.ceil(row["target_qty"] / num_personil) if num_personil > 0 else 0
+                
+                ach_pct = (actual / target_person * 100.0) if target_person > 0 else 0.0
+                ach_pct_clamped = min(max(ach_pct, 0.0), 100.0)
+                gap_qty = max(target_person - actual, 0)
 
-                if not sub_si.empty and "item_name" in sub_si.columns and "target_qty" in sub_si.columns:
-                    sub_si_grouped = sub_si.groupby("item_name")["target_qty"].sum().reset_index()
-                    df_item_summary = df_item_summary.merge(sub_si_grouped, on="item_name", how="left")
+                if target_person == 0:
+                    bar_label = "TIDAK ADA TARGET"
+                    bar_color = "#475569"
+                elif gap_qty == 0:
+                    bar_label = "TARGET REACHED! 🎉"
+                    bar_color = "linear-gradient(90deg, #10b981 0%, #059669 100%)"
                 else:
-                    df_item_summary["target_qty"] = 0
+                    bar_label = f"Sisa Gap: {gap_qty} Pcs"
+                    bar_color = "linear-gradient(90deg, #00f0ff 0%, #3b82f6 100%)"
 
-                df_item_summary["target_qty"] = pd.to_numeric(df_item_summary["target_qty"], errors="coerce").fillna(0)
-                df_item_summary["actual_qty"] = pd.to_numeric(df_item_summary["actual_qty"], errors="coerce").fillna(0)
-
-                # Render HP Bar Per Item
-                for _, row in df_item_summary.iterrows():
-                    item_name = row["item_name"]
-                    actual = int(row["actual_qty"])
-                    target_person = math.ceil(row["target_qty"] / num_personil) if num_personil > 0 else 0
-                    
-                    ach_pct = (actual / target_person * 100.0) if target_person > 0 else 0.0
-                    ach_pct_clamped = min(max(ach_pct, 0.0), 100.0)
-                    gap_qty = max(target_person - actual, 0)
-
-                    # Teks di dalam Bar HP
-                    bar_label = f"Sisa Gap: {gap_qty} Pcs" if gap_qty > 0 else "TARGET REACHED! 🎉"
-                    
-                    # Warna indikator bar (Hijau jika tercapai, Biru jika berjalan)
-                    bar_color = "linear-gradient(90deg, #10b981 0%, #059669 100%)" if gap_qty == 0 else "linear-gradient(90deg, #00f0ff 0%, #3b82f6 100%)"
-
-                    item_card_html = f"""
-                    <div class='item-hp-card'>
-                        <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;'>
-                            <span style='font-weight: bold; color: #f8fafc; font-size: 14px;'>📦 {item_name}</span>
-                            <span style='font-weight: bold; color: #38bdf8; font-size: 13px;'>
-                                {actual} / {target_person} Pcs <span style='color: #10b981;'>({ach_pct:.1f}%)</span>
-                            </span>
-                        </div>
-                        <div class='hp-bar-bg'>
-                            <div class='hp-bar-fill' style='width: {ach_pct_clamped}%; background: {bar_color};'></div>
-                            <div class='hp-bar-text'>{bar_label}</div>
-                        </div>
+                item_card_html = f"""
+                <div class='item-hp-card'>
+                    <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;'>
+                        <span style='font-weight: bold; color: #f8fafc; font-size: 14px;'>📦 {item_name}</span>
+                        <span style='font-weight: bold; color: #38bdf8; font-size: 13px;'>
+                            {actual} / {target_person} Pcs <span style='color: {"#10b981" if gap_qty==0 else "#00f0ff"};'>({ach_pct:.1f}%)</span>
+                        </span>
                     </div>
-                    """
-                    st.markdown(item_card_html, unsafe_allow_html=True)
-            else:
-                st.info(f"Belum ada data transaksi item untuk **{selected_person}** pada periode ini.")
+                    <div class='hp-bar-bg'>
+                        <div class='hp-bar-fill' style='width: {ach_pct_clamped}%; background: {bar_color};'></div>
+                        <div class='hp-bar-text'>{bar_label}</div>
+                    </div>
+                </div>
+                """
+                st.markdown(item_card_html, unsafe_allow_html=True)
         else:
-            st.info("👆 Silakan pilih nama **Personil (User)** pada dropdown di atas.")
+            st.info("Belum ada target item yang ditetapkan pada periode ini.")
+    else:
+        st.info("👆 Silakan pilih nama **Personil (User)** pada dropdown di atas.")
 
     
     # ---------------------------------------------------------
