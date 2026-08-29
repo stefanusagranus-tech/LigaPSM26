@@ -1411,36 +1411,39 @@ elif selected_tab == "02 Raport Personil":
             """)
             st.markdown(podium_html, unsafe_allow_html=True)
     
-       # 7. TABEL FULL ADVENTURER LEADERBOARD (AMAN & TERTATA)
+       # 7. TABEL FULL ADVENTURER LEADERBOARD (STYLING DIRECT PANDAS)
         st.markdown("##### 📜 Full Adventurer Leaderboard")
     
         if not df_lb.empty:
-            # Gunakan DataFrame mentah (tanpa .map() string format) agar st.dataframe() tidak crash
             df_display = df_lb.copy()
             
-            # Pastikan tipe datanya numerik murni
             df_display["Total Qty"] = pd.to_numeric(df_display["Total Qty"], errors="coerce").fillna(0)
             df_display["% Kontribusi"] = pd.to_numeric(df_display["% Kontribusi"], errors="coerce").fillna(0)
             df_display["Target 100% Done"] = pd.to_numeric(df_display["Target 100% Done"], errors="coerce").fillna(0)
     
-            # Rendering menggunakan column_config (Standar Terbaik Streamlit)
+            # Menerapkan styling warna gelap langsung ke Pandas Styler
+            styled_df = (
+                df_display.style
+                .set_properties(**{
+                    'background-color': '#0f172a',
+                    'color': '#f8fafc',
+                    'border-color': '#1e293b'
+                })
+                .format({
+                    "Total Qty": "{:,.0f} Pcs",
+                    "% Kontribusi": "{:.2f} %",
+                    "Target 100% Done": "{:.0f} Item"
+                })
+            )
+    
             st.dataframe(
-                df_display,
+                styled_df,
                 use_container_width=True,
                 column_config={
-                    "Nama Personil": st.column_config.TextColumn("👤 Nama Personil"),
-                    "Total Qty": st.column_config.NumberColumn(
-                        "📦 Total Penjualan",
-                        format="%.0f Pcs"
-                    ),
-                    "% Kontribusi": st.column_config.NumberColumn(
-                        "📊 Kontribusi Toko",
-                        format="%.2f %%"
-                    ),
-                    "Target 100% Done": st.column_config.NumberColumn(
-                        "🎯 Target 100% Achieved",
-                        format="%.0f Item"
-                    ),
+                    "Nama Personil": st.column_config.TextColumn("👤 Nama Personil", width="medium"),
+                    "Total Qty": st.column_config.TextColumn("📦 Total Penjualan", width="small"),
+                    "% Kontribusi": st.column_config.TextColumn("📊 Kontribusi Toko", width="small"),
+                    "Target 100% Done": st.column_config.TextColumn("🎯 Target 100% Achieved", width="small"),
                 }
             )
         else:
