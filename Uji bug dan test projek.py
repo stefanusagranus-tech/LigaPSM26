@@ -289,12 +289,27 @@ elif selected_tab == "01 Dashboard":
     elif st.session_state.dash_page == "PSM":
         st.markdown("### 📈 Report PSM Toko")
         
-        view_mode = st.radio("Pilih Mode Tampilan PSM:", ["☀️ Harian", "⏱️ Periode", "🗓️ Bulanan"], horizontal=True, key="rad_psm_mode")
+        # Tampilan tombol segmented modern
+        view_mode = st.segmented_control(
+            "Pilihan Mode Tampilan:",
+            options=["☀️ Harian", "⏱️ Periode", "🗓️ Bulanan"],
+            default="☀️ Harian",
+            key="seg_psm_mode"
+        )
         st.markdown("---")
 
-        today_date = waktu_wib.date() if 'waktu_wib' in locals() else datetime.now().date()
-        active_date = st.session_state.get("calendar_psm_harian", today_date)
-            
+        today_date = waktu_wib.date() if 'waktu_wib' in locals() and hasattr(waktu_wib, 'date') else datetime.now().date()
+        
+        if view_mode == "☀️ Harian":
+            active_date = st.date_input(
+                "📅 Pilih Tanggal Laporan:",
+                value=st.session_state.get("calendar_psm_harian", today_date),
+                key="calendar_psm_harian"
+            )
+        else:
+            active_date = st.session_state.get("calendar_psm_harian", today_date)
+
+        active_date_dt = pd.to_datetime(active_date)
         # 1. MODE HARIAN
         if view_mode == "☀️ Harian":
             if st.session_state.get("active_detail_view") == "detail_kontributor":
