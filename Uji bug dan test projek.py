@@ -1394,7 +1394,7 @@ elif selected_tab == "02 Raport Personil":
                 </div>
                 <div class="podium-card" style="border: 3px solid #f59e0b; width: 36%; box-shadow: 0 0 25px rgba(245, 158, 11, 0.4); transform: scale(1.05); background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);">
                     <div style="font-size: 42px;">🥇</div>
-                    <span style="background: #f59e0b; color: #0f172a; font-size: 10px; font-weight: 800; padding: 2px 10px; border-radius: 10px;">GUILD MASTER</span>
+                    <span style="background: #f59e0b; color: #0f172a; font-size: 10px; font-weight: 800; padding: 2px 10px; border-radius: 10px;">TOP PENJUALAN</span>
                     <div style="font-weight: bold; color: #fbbf24; font-size: 18px; margin-top: 6px;">{p1["Nama Personil"]}</div>
                     <div style="font-size: 26px; font-weight: bold; color: #f8fafc; margin-top: 4px;">{p1["Total Qty"]:,.0f} <span style="font-size: 12px;">Pcs</span></div>
                     <div style="color: #00f0ff; font-size: 13px; font-weight: bold;">{p1["% Kontribusi"]:.1f}% Kontribusi</div>
