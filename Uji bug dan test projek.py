@@ -1411,41 +1411,79 @@ elif selected_tab == "02 Raport Personil":
             """)
             st.markdown(podium_html, unsafe_allow_html=True)
     
-       # 7. TABEL FULL ADVENTURER LEADERBOARD (STYLING DIRECT PANDAS)
+       # 7. TABEL LEADERBOARD BERGAYA MOBILE APP UI (CARD LIST)
         st.markdown("##### 📜 Full Adventurer Leaderboard")
     
         if not df_lb.empty:
-            df_display = df_lb.copy()
-            
-            df_display["Total Qty"] = pd.to_numeric(df_display["Total Qty"], errors="coerce").fillna(0)
-            df_display["% Kontribusi"] = pd.to_numeric(df_display["% Kontribusi"], errors="coerce").fillna(0)
-            df_display["Target 100% Done"] = pd.to_numeric(df_display["Target 100% Done"], errors="coerce").fillna(0)
+            # Loop untuk merender setiap baris peringkat menjadi kartu UI modern
+            for index, row in df_lb.iterrows():
+                nama = row["Nama Personil"]
+                qty = row["Total Qty"]
+                kontribusi = row["% Kontribusi"]
+                target_done = row["Target 100% Done"]
+                
+                # Menentukan warna border dan ikon berdasarkan posisi rank
+                if index == 1:
+                    rank_bg = "linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(30, 41, 59, 0.8))"
+                    border_color = "#f59e0b"
+                    rank_icon = "👑"
+                elif index == 2:
+                    rank_bg = "linear-gradient(135deg, rgba(148, 163, 184, 0.2), rgba(30, 41, 59, 0.8))"
+                    border_color = "#94a3b8"
+                    rank_icon = "🥈"
+                elif index == 3:
+                    rank_bg = "linear-gradient(135deg, rgba(217, 119, 6, 0.2), rgba(30, 41, 59, 0.8))"
+                    border_color = "#d97706"
+                    rank_icon = "🥉"
+                else:
+                    rank_bg = "rgba(30, 41, 59, 0.6)"
+                    border_color = "#334155"
+                    rank_icon = f"#{index}"
     
-            # Menerapkan styling warna gelap langsung ke Pandas Styler
-            styled_df = (
-                df_display.style
-                .set_properties(**{
-                    'background-color': '#0f172a',
-                    'color': '#f8fafc',
-                    'border-color': '#1e293b'
-                })
-                .format({
-                    "Total Qty": "{:,.0f} Pcs",
-                    "% Kontribusi": "{:.2f} %",
-                    "Target 100% Done": "{:.0f} Item"
-                })
-            )
-    
-            st.dataframe(
-                styled_df,
-                use_container_width=True,
-                column_config={
-                    "Nama Personil": st.column_config.TextColumn("👤 Nama Personil", width="medium"),
-                    "Total Qty": st.column_config.TextColumn("📦 Total Penjualan", width="small"),
-                    "% Kontribusi": st.column_config.TextColumn("📊 Kontribusi Toko", width="small"),
-                    "Target 100% Done": st.column_config.TextColumn("🎯 Target 100% Achieved", width="small"),
-                }
-            )
+                # Template HTML Kartu UI per Personil
+                card_html = f"""
+                <div style="
+                    background: {rank_bg}; 
+                    border: 1.5px solid {border_color}; 
+                    border-radius: 14px; 
+                    padding: 12px 16px; 
+                    margin-bottom: 10px; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: space-between;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                ">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                        <div style="
+                            font-size: 16px; 
+                            font-weight: 800; 
+                            color: #f8fafc; 
+                            background: #0f172a; 
+                            width: 36px; 
+                            height: 36px; 
+                            border-radius: 50%; 
+                            display: flex; 
+                            align-items: center; 
+                            justify-content: center;
+                            border: 1px solid {border_color};
+                        ">
+                            {rank_icon}
+                        </div>
+                        <div>
+                            <div style="font-weight: 700; color: #ffffff; font-size: 14px;">{nama}</div>
+                            <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">
+                                📊 Kontribusi: <span style="color: #00f0ff; font-weight: bold;">{kontribusi:.2f}%</span> | 
+                                🎯 Target 100%: <span style="color: #f59e0b; font-weight: bold;">{target_done} Item</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 16px; font-weight: 800; color: #38bdf8;">{qty:,.0f}</div>
+                        <div style="font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Pcs Sold</div>
+                    </div>
+                </div>
+                """
+                st.markdown(card_html, unsafe_allow_html=True)
         else:
             st.warning("⚠️ Tidak ada data penjualan untuk filter yang dipilih.")
         
