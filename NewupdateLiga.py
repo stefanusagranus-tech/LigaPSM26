@@ -1591,47 +1591,28 @@ elif selected_tab == "06 · Input & Reset Data":
 
       # Ambil items_df dari session_state dengan aman
       if "items_df" in st.session_state and not st.session_state.items_df.empty:
-        local_items_df = st.session_state.items_df
+        local_items_df = st.session_state.items_df.copy()
       else:
         local_items_df = (
-            items_df
+            items_df.copy()
             if "items_df" in locals() and not items_df.empty
             else pd.DataFrame()
         )
 
-      # FILTER ITEM BERDASARKAN PERIODE YANG DIPILIH SECARA KETAT
-      if not local_items_df.empty:
-        if "period_id" in local_items_df.columns:
-          cleaned_df_period = (
-              local_items_df["period_id"]
-              .astype(str)
-              .str.replace(r"\.0$", "", regex=True)
-              .str.strip()
-          )
-          cleaned_target_id = (
-              str(m_p_id).strip().replace(r"\.0$", "", regex=True)
-          )
-          filtered_items_df = local_items_df[
-              cleaned_df_period == cleaned_target_id
-          ]
-        elif (
-            "start_date" in local_items_df.columns
-            and "end_date" in local_items_df.columns
-        ):
-          local_items_df["item_start"] = pd.to_datetime(
-              local_items_df["start_date"]
-          ).dt.date
-          local_items_df["item_end"] = pd.to_datetime(
-              local_items_df["end_date"]
-          ).dt.date
-          filtered_items_df = local_items_df[
-              (local_items_df["item_start"] >= p_start)
-              & (local_items_df["item_end"] <= p_end)
-          ]
-        else:
-          filtered_items_df = local_items_df
+      # FILTER ITEM BERDASARKAN period_id DARI MASTER_ITEM
+      if not local_items_df.empty and "period_id" in local_items_df.columns:
+        cleaned_df_period = (
+            local_items_df["period_id"]
+            .astype(str)
+            .str.replace(r"\.0$", "", regex=True)
+            .str.strip()
+        )
+        cleaned_target_id = str(m_p_id).strip().replace(r"\.0$", "", regex=True)
+        filtered_items_df = local_items_df[
+            cleaned_df_period == cleaned_target_id
+        ]
       else:
-        filtered_items_df = local_items_df
+        filtered_items_df = pd.DataFrame()
 
       items_list = (
           filtered_items_df[["item_id", "item_name"]]
@@ -1647,7 +1628,9 @@ elif selected_tab == "06 · Input & Reset Data":
       if not items_list:
         st.warning(
             f"⚠️ Tidak ada daftar item produk yang terdaftar pada periode"
-            f" **{m_period_name}**."
+            f" **{m_period_name}** (ID: {m_p_id}). Pastikan sheet"
+            f" `MASTER_ITEM` sudah diisi kolom `period_id` dengan nilai yang"
+            f" sesuai."
         )
       else:
         st.markdown("---")
@@ -1759,7 +1742,6 @@ elif selected_tab == "06 · Input & Reset Data":
       )
     else:
 
-      # Dialog pop-up sukses khusus untuk PPS
       @st.dialog("🎉 Data PPS Berhasil Disimpan!")
       def show_success_pps_dialog(
           staff_val, kasir_val, date_str, syarat_pwp_val, redeem_pwp_val
