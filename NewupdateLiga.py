@@ -25,46 +25,51 @@ SPREADSHEET_ID = "1kJ-OsjLEsFuNyyBg2TwxlWz8Ape4lwF9h0t66q3ldQk"
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 
+@st.cache_data(ttl=60)
 def load_database():
-  """Membaca data realtime secara langsung dari Google Sheets."""
+  """Membaca data sheet secara bertahap sesuai modul PSM, PPS, dan Store Performance."""
   try:
+    # 1. Modul PSM & Master Data Umum
     periods_df = conn.read(worksheet="PERIODE", ttl=0)
-    periods_pps_df = conn.read(worksheet="PERIODE_PPS", ttl=0)
-    periods_store_df = conn.read(worksheet="PERIODE_STOREPERFORMANCE", ttl=0)
-
+    time.sleep(0.3)
     items_df = conn.read(worksheet="MASTER_ITEM", ttl=0)
+    time.sleep(0.3)
     person_df = conn.read(worksheet="MASTER_PERSONIL", ttl=0)
-
+    time.sleep(0.3)
     sales_item_df = conn.read(worksheet="SALES_ITEM", ttl=0)
+    time.sleep(0.3)
     sales_person_df = conn.read(worksheet="SALES_PERSONIL", ttl=0)
+    time.sleep(0.3)
+
+    # 2. Modul PPS
+    periods_pps_df = conn.read(worksheet="PERIODE_PPS", ttl=0)
+    time.sleep(0.3)
     sales_pps_df = conn.read(worksheet="SALES_PPS", ttl=0)
+    time.sleep(0.3)
+
+    # 3. Modul Store Performance
+    periods_store_df = conn.read(worksheet="PERIODE_STOREPERFORMANCE", ttl=0)
+    time.sleep(0.3)
     sales_store_df = conn.read(worksheet="SALES_STOREPERFORMANCE", ttl=0)
 
     # Pembersihan nama kolom menjadi string bersih dan huruf kecil
-    for df in [
+    all_dfs = [
         periods_df,
-        periods_pps_df,
-        periods_store_df,
         items_df,
         person_df,
         sales_item_df,
         sales_person_df,
+        periods_pps_df,
         sales_pps_df,
+        periods_store_df,
         sales_store_df,
-    ]:
+    ]
+    for df in all_dfs:
       if not df.empty:
         df.columns = df.columns.astype(str).str.strip().str.lower()
 
     # Normalisasi tipe data period_id
-    for df in [
-        periods_df,
-        periods_pps_df,
-        periods_store_df,
-        sales_item_df,
-        sales_person_df,
-        sales_pps_df,
-        sales_store_df,
-    ]:
+    for df in all_dfs:
       if not df.empty and "period_id" in df.columns:
         df["period_id"] = df["period_id"].astype(str).str.strip()
 
@@ -93,17 +98,7 @@ def load_database():
     )
   except Exception as e:
     st.error(f"Gagal membaca Google Sheets: {e}")
-    return (
-        pd.DataFrame(),
-        pd.DataFrame(),
-        pd.DataFrame(),
-        pd.DataFrame(),
-        pd.DataFrame(),
-        pd.DataFrame(),
-        pd.DataFrame(),
-        pd.DataFrame(),
-        pd.DataFrame(),
-    )
+    return tuple([pd.DataFrame() for _ in range(9)])
 
 
 def save_database(
@@ -175,7 +170,7 @@ def sync_store_sales_from_personnel():
     st.session_state.sales_item_df = merged
 
 
-# Load database awal ke session state
+# Inisialisasi Session State Data
 if "data_loaded" not in st.session_state:
   (
       p_df,
@@ -198,103 +193,6 @@ if "data_loaded" not in st.session_state:
   st.session_state.sales_pps_df = s_pps_df
   st.session_state.sales_store_df = s_store_df
   st.session_state.data_loaded = True
-
-
-# Load database awal ke session state
-if "data_loaded" not in st.session_state:
-  p_df, i_df, pers_df, si_df, sp_df = load_database()
-  st.session_state.periods_df = p_df
-  st.session_state.items_df = i_df
-  st.session_state.person_df = pers_df
-  st.session_state.sales_item_df = si_df
-  st.session_state.sales_person_df = sp_df
-  st.session_state.data_loaded = True
-
-import time
-import streamlit as st
-
-
-# Cache data selama 60 detik agar tidak melakukan request berlebihan ke Google Sheets
-@st.cache_data(ttl=60)
-def load_database():
-  """Membaca data secara bertahap dengan jeda waktu untuk menghindari rate limit."""
-  try:
-    # Membaca sheet satu per satu dengan jeda aman 0.3 detik
-    periods_df = conn.read(worksheet="PERIODE", ttl=0)
-    time.sleep(0.3)
-    periods_pps_df = conn.read(worksheet="PERIODE_PPS", ttl=0)
-    time.sleep(0.3)
-    periods_store_df = conn.read(worksheet="PERIODE_STOREPERFORMANCE", ttl=0)
-    time.sleep(0.3)
-
-    items_df = conn.read(worksheet="MASTER_ITEM", ttl=0)
-    time.sleep(0.3)
-    person_df = conn.read(worksheet="MASTER_PERSONIL", ttl=0)
-    time.sleep(0.3)
-
-    sales_item_df = conn.read(worksheet="SALES_ITEM", ttl=0)
-    time.sleep(0.3)
-    sales_person_df = conn.read(worksheet="SALES_PERSONIL", ttl=0)
-    time.sleep(0.3)
-    sales_pps_df = conn.read(worksheet="SALES_PPS", ttl=0)
-    time.sleep(0.3)
-    sales_store_df = conn.read(worksheet="SALES_STOREPERFORMANCE", ttl=0)
-
-    # Pembersihan nama kolom menjadi string bersih dan huruf kecil
-    for df in [
-        periods_df,
-        periods_pps_df,
-        periods_store_df,
-        items_df,
-        person_df,
-        sales_item_df,
-        sales_person_df,
-        sales_pps_df,
-        sales_store_df,
-    ]:
-      if not df.empty:
-        df.columns = df.columns.astype(str).str.strip().str.lower()
-
-    # Normalisasi tipe data period_id
-    for df in [
-        periods_df,
-        periods_pps_df,
-        periods_store_df,
-        sales_item_df,
-        sales_person_df,
-        sales_pps_df,
-        sales_store_df,
-    ]:
-      if not df.empty and "period_id" in df.columns:
-        df["period_id"] = df["period_id"].astype(str).str.strip()
-
-    # Normalisasi tipe data item_id
-    for df in [items_df, sales_item_df, sales_person_df]:
-      if not df.empty and "item_id" in df.columns:
-        df["item_id"] = df["item_id"].astype(str).str.strip()
-
-    # Normalisasi nama personil
-    for df in [person_df, sales_person_df, sales_pps_df, sales_store_df]:
-      for col in ["person_name", "staff_name", "kasir_name"]:
-        if not df.empty and col in df.columns:
-          df[col] = df[col].astype(str).str.strip().str.upper()
-          df[col] = df[col].str.replace(r"\s+", " ", regex=True)
-
-    return (
-        periods_df,
-        periods_pps_df,
-        periods_store_df,
-        items_df,
-        person_df,
-        sales_item_df,
-        sales_person_df,
-        sales_pps_df,
-        sales_store_df,
-    )
-  except Exception as e:
-    st.error(f"Gagal membaca Google Sheets: {e}")
-    # Mengembalikan 9 buah DataFrame kosong jika terjadi error
-    return tuple([pd.DataFrame() for _ in range(9)])
 
 # ==========================================
 # 3. WAKTU REALTIME GMT+7 (WIB)
