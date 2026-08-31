@@ -29,39 +29,68 @@ def load_database():
   """Membaca data realtime secara langsung dari Google Sheets."""
   try:
     periods_df = conn.read(worksheet="PERIODE", ttl=0)
+    periods_pps_df = conn.read(worksheet="PERIODE_PPS", ttl=0)
+    periods_store_df = conn.read(worksheet="PERIODE_STOREPERFORMANCE", ttl=0)
+
     items_df = conn.read(worksheet="MASTER_ITEM", ttl=0)
     person_df = conn.read(worksheet="MASTER_PERSONIL", ttl=0)
+
     sales_item_df = conn.read(worksheet="SALES_ITEM", ttl=0)
     sales_person_df = conn.read(worksheet="SALES_PERSONIL", ttl=0)
+    sales_pps_df = conn.read(worksheet="SALES_PPS", ttl=0)
+    sales_store_df = conn.read(worksheet="SALES_STOREPERFORMANCE", ttl=0)
 
+    # Pembersihan nama kolom menjadi string bersih dan huruf kecil
     for df in [
         periods_df,
+        periods_pps_df,
+        periods_store_df,
         items_df,
         person_df,
         sales_item_df,
         sales_person_df,
+        sales_pps_df,
+        sales_store_df,
     ]:
       if not df.empty:
         df.columns = df.columns.astype(str).str.strip().str.lower()
 
-    for df in [periods_df, sales_item_df, sales_person_df]:
+    # Normalisasi tipe data period_id
+    for df in [
+        periods_df,
+        periods_pps_df,
+        periods_store_df,
+        sales_item_df,
+        sales_person_df,
+        sales_pps_df,
+        sales_store_df,
+    ]:
       if not df.empty and "period_id" in df.columns:
         df["period_id"] = df["period_id"].astype(str).str.strip()
 
+    # Normalisasi tipe data item_id
     for df in [items_df, sales_item_df, sales_person_df]:
       if not df.empty and "item_id" in df.columns:
         df["item_id"] = df["item_id"].astype(str).str.strip()
 
-    for df in [person_df, sales_person_df]:
-      if not df.empty and "person_name" in df.columns:
-        df["person_name"] = (
-            df["person_name"].astype(str).str.strip().str.upper()
-        )
-        df["person_name"] = df["person_name"].str.replace(
-            r"\s+", " ", regex=True
-        )
+    # Normalisasi nama personil
+    for df in [person_df, sales_person_df, sales_pps_df, sales_store_df]:
+      for col in ["person_name", "staff_name", "kasir_name"]:
+        if not df.empty and col in df.columns:
+          df[col] = df[col].astype(str).str.strip().str.upper()
+          df[col] = df[col].str.replace(r"\s+", " ", regex=True)
 
-    return periods_df, items_df, person_df, sales_item_df, sales_person_df
+    return (
+        periods_df,
+        periods_pps_df,
+        periods_store_df,
+        items_df,
+        person_df,
+        sales_item_df,
+        sales_person_df,
+        sales_pps_df,
+        sales_store_df,
+    )
   except Exception as e:
     st.error(f"Gagal membaca Google Sheets: {e}")
     return (
@@ -70,13 +99,21 @@ def load_database():
         pd.DataFrame(),
         pd.DataFrame(),
         pd.DataFrame(),
+        pd.DataFrame(),
+        pd.DataFrame(),
+        pd.DataFrame(),
+        pd.DataFrame(),
     )
 
 
-def save_database(sales_item_df, sales_person_df):
+def save_database(
+    sales_item_df, sales_person_df, sales_pps_df, sales_store_df
+):
   try:
     conn.update(worksheet="SALES_ITEM", data=sales_item_df)
     conn.update(worksheet="SALES_PERSONIL", data=sales_person_df)
+    conn.update(worksheet="SALES_PPS", data=sales_pps_df)
+    conn.update(worksheet="SALES_STOREPERFORMANCE", data=sales_store_df)
     st.toast(
         "Perubahan transaksi tersimpan permanen di Google Sheets!", icon="✅"
     )
@@ -136,6 +173,31 @@ def sync_store_sales_from_personnel():
     merged["actual_qty"] = merged["calc_actual_qty"]
     merged.drop(columns=["calc_actual_qty"], inplace=True)
     st.session_state.sales_item_df = merged
+
+
+# Load database awal ke session state
+if "data_loaded" not in st.session_state:
+  (
+      p_df,
+      p_pps_df,
+      p_store_df,
+      i_df,
+      pers_df,
+      si_df,
+      sp_df,
+      s_pps_df,
+      s_store_df,
+  ) = load_database()
+  st.session_state.periods_df = p_df
+  st.session_state.periods_pps_df = p_pps_df
+  st.session_state.periods_store_df = p_store_df
+  st.session_state.items_df = i_df
+  st.session_state.person_df = pers_df
+  st.session_state.sales_item_df = si_df
+  st.session_state.sales_person_df = sp_df
+  st.session_state.sales_pps_df = s_pps_df
+  st.session_state.sales_store_df = s_store_df
+  st.session_state.data_loaded = True
 
 
 # Load database awal ke session state
