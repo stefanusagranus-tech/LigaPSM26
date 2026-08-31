@@ -1539,8 +1539,8 @@ elif selected_tab == "06 · Input & Reset Data":
     if st.button("👍 Mantap, Tutup", use_container_width=True):
       st.rerun()
 
-    # SUB TAB 1: MULTI INPUT SALES
-    with tab_in1:
+ # SUB TAB 1: MULTI INPUT SALES
+ with tab_in1:
       st.markdown(
           "<h4 style='color: #00ff88;'>⚡ Multi Input Sales Personil</h4>",
           unsafe_allow_html=True,
