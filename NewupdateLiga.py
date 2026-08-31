@@ -1821,6 +1821,30 @@ elif selected_tab == "06 · Input & Reset Data":
           " data (read-only)."
       )
     else:
+
+      # Dialog pop-up sukses khusus untuk PPS (Solusi aman bagi pengguna iPhone)
+      @st.dialog("🎉 Data PPS Berhasil Disimpan!")
+      def show_success_pps_dialog(
+          staff_val, kasir_val, date_str, pwp_syarat, pwp_redeem
+      ):
+        st.success(
+            "✅ **Data Sales PPS** berhasil disimpan secara permanen ke"
+            " database!"
+        )
+        st.markdown(f"""
+            * **Staf / Personil:** `{staff_val}`
+            * **Kasir:** `{kasir_val}`
+            * **Tanggal:** `{date_str}`
+            * **Syarat PWP:** `{pwp_syarat}` | **Tebus PWP:** `{pwp_redeem}`
+            * **Status:** Synchronized to Google Sheets ✅
+            """)
+        if st.button(
+            "👍 Oke, Lanjutkan / Tutup",
+            use_container_width=True,
+            key="btn_close_pps_dialog",
+        ):
+          st.rerun()
+
       periods_pps_df = (
           st.session_state.get("periods_pps_df", pd.DataFrame())
           if "periods_pps_df" in st.session_state
@@ -1880,15 +1904,16 @@ elif selected_tab == "06 · Input & Reset Data":
         col_q1, col_q2, col_q3 = st.columns(3)
 
         with col_q1:
+          # PWP dipisah secara independen tanpa penjumlahan otomatis
           syarat_pwp = st.number_input(
               "Syarat PWP", min_value=0, step=1, value=0, key="pps_syarat_pwp"
           )
           redeem_pwp = st.number_input(
-              "Redeem PWP", min_value=0, step=1, value=0, key="pps_redeem_pwp"
-          )
-          total_pwp = syarat_pwp + redeem_pwp
-          st.markdown(
-              f"**Total PWP (Auto):** `{total_pwp}`", unsafe_allow_html=True
+              "Tebus / Redeem PWP",
+              min_value=0,
+              step=1,
+              value=0,
+              key="pps_redeem_pwp",
           )
 
         with col_q2:
@@ -1944,6 +1969,7 @@ elif selected_tab == "06 · Input & Reset Data":
             current_max_pps_id = numeric_ids.astype(int).max()
 
         current_max_pps_id += 1
+        # Jika database tetap memerlukan kolom total_pwp, kita isikan sebagai informasi total (atau simpan redeem_pwp sebagai total tebus)
         new_pps_record = {
             "record_id": f"PPS{current_max_pps_id:05d}",
             "period_id": str(pps_p_id),
@@ -1952,7 +1978,9 @@ elif selected_tab == "06 · Input & Reset Data":
             "kasir_name": str(kasir_name),
             "syarat_pwp": int(syarat_pwp),
             "redeem_pwp": int(redeem_pwp),
-            "total_pwp": int(total_pwp),
+            "total_pwp": int(
+                redeem_pwp
+            ),  # Disesuaikan jika backend butuh kolom total
             "serba_gratis": int(serba_gratis),
             "syarat_sueger": int(syarat_sueger),
             "tebus_sueger": int(tebus_sueger),
@@ -1976,9 +2004,15 @@ elif selected_tab == "06 · Input & Reset Data":
                 st.session_state.sales_pps_df,
                 st.session_state.sales_store_df,
             )
-          st.success("✅ Data Sales PPS berhasil disimpan secara permanen!")
-          time.sleep(1.2)
-          st.rerun()
+
+          # Memunculkan pop-up dialog agar jelas di HP/iPhone
+          show_success_pps_dialog(
+              staff_name,
+              kasir_name,
+              tanggal_pps.strftime("%d/%m/%Y"),
+              syarat_pwp,
+              redeem_pwp,
+          )
         except Exception as e:
           st.error(f"❌ Gagal menyimpan data PPS: {str(e)}")
 
