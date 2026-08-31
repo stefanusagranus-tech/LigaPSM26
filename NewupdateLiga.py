@@ -210,6 +210,92 @@ if "data_loaded" not in st.session_state:
   st.session_state.sales_person_df = sp_df
   st.session_state.data_loaded = True
 
+import time
+import streamlit as st
+
+
+# Cache data selama 60 detik agar tidak melakukan request berlebihan ke Google Sheets
+@st.cache_data(ttl=60)
+def load_database():
+  """Membaca data secara bertahap dengan jeda waktu untuk menghindari rate limit."""
+  try:
+    # Membaca sheet satu per satu dengan jeda aman 0.3 detik
+    periods_df = conn.read(worksheet="PERIODE", ttl=0)
+    time.sleep(0.3)
+    periods_pps_df = conn.read(worksheet="PERIODE_PPS", ttl=0)
+    time.sleep(0.3)
+    periods_store_df = conn.read(worksheet="PERIODE_STOREPERFORMANCE", ttl=0)
+    time.sleep(0.3)
+
+    items_df = conn.read(worksheet="MASTER_ITEM", ttl=0)
+    time.sleep(0.3)
+    person_df = conn.read(worksheet="MASTER_PERSONIL", ttl=0)
+    time.sleep(0.3)
+
+    sales_item_df = conn.read(worksheet="SALES_ITEM", ttl=0)
+    time.sleep(0.3)
+    sales_person_df = conn.read(worksheet="SALES_PERSONIL", ttl=0)
+    time.sleep(0.3)
+    sales_pps_df = conn.read(worksheet="SALES_PPS", ttl=0)
+    time.sleep(0.3)
+    sales_store_df = conn.read(worksheet="SALES_STOREPERFORMANCE", ttl=0)
+
+    # Pembersihan nama kolom menjadi string bersih dan huruf kecil
+    for df in [
+        periods_df,
+        periods_pps_df,
+        periods_store_df,
+        items_df,
+        person_df,
+        sales_item_df,
+        sales_person_df,
+        sales_pps_df,
+        sales_store_df,
+    ]:
+      if not df.empty:
+        df.columns = df.columns.astype(str).str.strip().str.lower()
+
+    # Normalisasi tipe data period_id
+    for df in [
+        periods_df,
+        periods_pps_df,
+        periods_store_df,
+        sales_item_df,
+        sales_person_df,
+        sales_pps_df,
+        sales_store_df,
+    ]:
+      if not df.empty and "period_id" in df.columns:
+        df["period_id"] = df["period_id"].astype(str).str.strip()
+
+    # Normalisasi tipe data item_id
+    for df in [items_df, sales_item_df, sales_person_df]:
+      if not df.empty and "item_id" in df.columns:
+        df["item_id"] = df["item_id"].astype(str).str.strip()
+
+    # Normalisasi nama personil
+    for df in [person_df, sales_person_df, sales_pps_df, sales_store_df]:
+      for col in ["person_name", "staff_name", "kasir_name"]:
+        if not df.empty and col in df.columns:
+          df[col] = df[col].astype(str).str.strip().str.upper()
+          df[col] = df[col].str.replace(r"\s+", " ", regex=True)
+
+    return (
+        periods_df,
+        periods_pps_df,
+        periods_store_df,
+        items_df,
+        person_df,
+        sales_item_df,
+        sales_person_df,
+        sales_pps_df,
+        sales_store_df,
+    )
+  except Exception as e:
+    st.error(f"Gagal membaca Google Sheets: {e}")
+    # Mengembalikan 9 buah DataFrame kosong jika terjadi error
+    return tuple([pd.DataFrame() for _ in range(9)])
+
 # ==========================================
 # 3. WAKTU REALTIME GMT+7 (WIB)
 # ==========================================
@@ -461,9 +547,9 @@ if not st.session_state.logged_in:
   show_login_page()
   st.stop()
 
-# ==========================================
+# ==========================================================
 # 7. SIDEBAR DASHBOARD
-# ==========================================
+# ==========================================================
 st.sidebar.markdown(
     """
     <style>
@@ -528,6 +614,14 @@ st.sidebar.markdown(
     "<div class='store-subtitle'>Report PSM dan Target PSM</div>",
     unsafe_allow_html=True,
 )
+
+# ➔ Tombol Refresh Cache ditaruh di sini agar mudah dijangkau
+if st.sidebar.button("🔄 Refresh Data Cache", use_container_width=True):
+  st.cache_data.clear()
+  for key in list(st.session_state.keys()):
+    del st.session_state[key]
+  st.rerun()
+
 st.sidebar.markdown("---")
 
 st.sidebar.markdown(
@@ -583,7 +677,7 @@ if st.sidebar.button("🚪 Keluar / Logout", use_container_width=True):
   st.session_state.logged_in = False
   st.session_state.username = ""
   st.rerun()
-
+    
 # ==========================================
 # 8. HEADER UTAMA
 # ==========================================
