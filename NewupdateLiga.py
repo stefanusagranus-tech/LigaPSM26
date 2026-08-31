@@ -1698,7 +1698,7 @@ elif selected_tab == "06 · Input & Reset Data":
             st.error(f"❌ Terjadi kesalahan penyimpanan: {str(e)}")
         else:
           st.warning("⚠️ Tidak ada Qty produk yang diisi (semua bernilai 0).")
-
+            
   # SUB TAB 2: INPUT SALES PPS
   with tab_in2:
     st.markdown(
