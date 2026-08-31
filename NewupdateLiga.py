@@ -1601,8 +1601,9 @@ elif selected_tab == "06 · Input & Reset Data":
       else pd.DataFrame()
   )
 
-  tab_in1, tab_in2, tab_in3 = st.tabs([
+  tab_in1, tab_in2, tab_in3, tab_in4 = st.tabs([
       "⚡ Multi Input Sales Personil",
+      "🎯 Input Sales PPS",
       "✏️ Edit Sales Personil",
       "🗑️ Hapus & Reset Sales",
   ])
@@ -1699,7 +1700,9 @@ elif selected_tab == "06 · Input & Reset Data":
           else pd.DataFrame()
       )
       items_list = (
-          filtered_si_m[["item_id", "item_name"]].drop_duplicates().to_dict("records")
+          filtered_si_m[["item_id", "item_name"]]
+          .drop_duplicates()
+          .to_dict("records")
           if not filtered_si_m.empty
           else []
       )
@@ -1794,6 +1797,8 @@ elif selected_tab == "06 · Input & Reset Data":
                 save_database(
                     st.session_state.sales_item_df,
                     st.session_state.sales_person_df,
+                    st.session_state.sales_pps_df,
+                    st.session_state.sales_store_df,
                 )
               show_success_popup(
                   inserted_count, m_person, m_date.strftime("%d/%m/%Y")
@@ -1803,8 +1808,182 @@ elif selected_tab == "06 · Input & Reset Data":
           else:
             st.warning("⚠️ Tidak ada Qty produk yang diisi (semua bernilai 0).")
 
-  # SUB TAB 2: EDIT SALES PERSONIL
+  # SUB TAB 2: INPUT SALES PPS
   with tab_in2:
+    st.markdown(
+        "<h4 style='color: #00ff88;'>🎯 Form Input Penjualan & Kinerja"
+        " PPS</h4>",
+        unsafe_allow_html=True,
+    )
+    if is_visitor:
+      st.error(
+          "🔒 **Akses Ditolak!** Akun **Visitor** hanya memiliki akses membaca"
+          " data (read-only)."
+      )
+    else:
+      periods_pps_df = (
+          st.session_state.get("periods_pps_df", pd.DataFrame())
+          if "periods_pps_df" in st.session_state
+          else periods_df
+      )
+      if not periods_pps_df.empty and "period_name" in periods_pps_df.columns:
+        pps_periods_dict = {
+            row["period_name"]: row["period_id"]
+            for _, row in periods_pps_df.iterrows()
+        }
+      else:
+        pps_periods_dict = periods_dict
+
+      pps_period_name = st.selectbox(
+          "Pilih Periode PPS",
+          list(pps_periods_dict.keys()),
+          key="pps_period_select",
+      )
+      pps_p_id = pps_periods_dict[pps_period_name]
+
+      all_personnel = (
+          person_df["person_name"].dropna().unique().tolist()
+          if not person_df.empty and "person_name" in person_df.columns
+          else [current_user]
+      )
+
+      with st.form(key=f"form_input_pps_{pps_p_id}"):
+        st.markdown(
+            "##### 📋 Masukkan Detail Transaksi & Kinerja Program PPS:"
+        )
+        col_p1, col_p2 = st.columns(2)
+
+        with col_p1:
+          shift_personil = st.selectbox(
+              "Shift Personil",
+              ["Shift 1", "Shift 2", "Shift 3", "Full Shift"],
+              key="pps_shift",
+          )
+          if is_admin:
+            staff_name = st.selectbox(
+                "Nama Staf", all_personnel, key="pps_staff"
+            )
+          else:
+            staff_name = current_user
+            st.info(f"👤 Staf Input: **{current_user}**")
+
+        with col_p2:
+          kasir_name = st.selectbox(
+              "Nama Kasir", all_personnel, key="pps_kasir"
+          )
+          tanggal_pps = st.date_input(
+              "Tanggal Input PPS", value=waktu_wib.date(), key="pps_date"
+          )
+
+        st.markdown("---")
+        st.markdown("##### 🛒 Kategori PWP & Item Spesial:")
+        col_q1, col_q2, col_q3 = st.columns(3)
+
+        with col_q1:
+          syarat_pwp = st.number_input(
+              "Syarat PWP", min_value=0, step=1, value=0, key="pps_syarat_pwp"
+          )
+          redeem_pwp = st.number_input(
+              "Redeem PWP", min_value=0, step=1, value=0, key="pps_redeem_pwp"
+          )
+          total_pwp = syarat_pwp + redeem_pwp
+          st.markdown(
+              f"**Total PWP (Auto):** `{total_pwp}`", unsafe_allow_html=True
+          )
+
+        with col_q2:
+          serba_gratis = st.number_input(
+              "Jumlah Serba Gratis",
+              min_value=0,
+              step=1,
+              value=0,
+              key="pps_serba_gratis",
+          )
+          syarat_sueger = st.number_input(
+              "Syarat Item Sueger",
+              min_value=0,
+              step=1,
+              value=0,
+              key="pps_syarat_sueger",
+          )
+
+        with col_q3:
+          tebus_sueger = st.number_input(
+              "Tebus Item Sueger",
+              min_value=0,
+              step=1,
+              value=0,
+              key="pps_tebus_sueger",
+          )
+          cemilan_ceban = st.number_input(
+              "Total Item Cemilan Ceban",
+              min_value=0,
+              step=1,
+              value=0,
+              key="pps_cemilan_ceban",
+          )
+
+        st.markdown("---")
+        btn_save_pps = st.form_submit_button(
+            "💾 Simpan Data Sales PPS", use_container_width=True
+        )
+
+      if btn_save_pps:
+        existing_pps_df = st.session_state.get(
+            "sales_pps_df", pd.DataFrame()
+        )
+        current_max_pps_id = 0
+        if not existing_pps_df.empty and "record_id" in existing_pps_df.columns:
+          numeric_ids = (
+              existing_pps_df["record_id"]
+              .astype(str)
+              .str.extract(r"(\d+)")[0]
+              .dropna()
+          )
+          if not numeric_ids.empty:
+            current_max_pps_id = numeric_ids.astype(int).max()
+
+        current_max_pps_id += 1
+        new_pps_record = {
+            "record_id": f"PPS{current_max_pps_id:05d}",
+            "period_id": str(pps_p_id),
+            "shift_personil": str(shift_personil),
+            "staff_name": str(staff_name),
+            "kasir_name": str(kasir_name),
+            "syarat_pwp": int(syarat_pwp),
+            "redeem_pwp": int(redeem_pwp),
+            "total_pwp": int(total_pwp),
+            "serba_gratis": int(serba_gratis),
+            "syarat_sueger": int(syarat_sueger),
+            "tebus_sueger": int(tebus_sueger),
+            "cemilan_ceban": int(cemilan_ceban),
+            "updated_at": str(tanggal_pps),
+        }
+
+        try:
+          with st.spinner("⏳ Menyimpan data PPS ke Spreadsheet..."):
+            new_pps_df = pd.DataFrame([new_pps_record])
+            if "sales_pps_df" not in st.session_state:
+              st.session_state.sales_pps_df = pd.DataFrame()
+
+            st.session_state.sales_pps_df = pd.concat(
+                [st.session_state.sales_pps_df, new_pps_df], ignore_index=True
+            )
+
+            save_database(
+                st.session_state.sales_item_df,
+                st.session_state.sales_person_df,
+                st.session_state.sales_pps_df,
+                st.session_state.sales_store_df,
+            )
+          st.success("✅ Data Sales PPS berhasil disimpan secara permanen!")
+          time.sleep(1.2)
+          st.rerun()
+        except Exception as e:
+          st.error(f"❌ Gagal menyimpan data PPS: {str(e)}")
+
+  # SUB TAB 3: EDIT SALES PERSONIL
+  with tab_in3:
     st.markdown(
         "<h4 style='color: #38bdf8;'>✏️ Edit Transaksi Sales (Koreksi"
         " Input)</h4>",
@@ -1900,6 +2079,8 @@ elif selected_tab == "06 · Input & Reset Data":
             save_database(
                 st.session_state.sales_item_df,
                 st.session_state.sales_person_df,
+                st.session_state.sales_pps_df,
+                st.session_state.sales_store_df,
             )
 
             st.toast("🎉 Perubahan data sukses disimpan!", icon="✅")
@@ -1907,8 +2088,8 @@ elif selected_tab == "06 · Input & Reset Data":
             time.sleep(1.5)
             st.rerun()
 
-  # SUB TAB 3: HAPUS & RESET
-  with tab_in3:
+  # SUB TAB 4: HAPUS & RESET
+  with tab_in4:
     st.markdown(
         "<h4 style='color: #38bdf8;'>🗑️ Hapus Transaksi / Reset Sales"
         " Personil</h4>",
@@ -1982,6 +2163,8 @@ elif selected_tab == "06 · Input & Reset Data":
             save_database(
                 st.session_state.sales_item_df,
                 st.session_state.sales_person_df,
+                st.session_state.sales_pps_df,
+                st.session_state.sales_store_df,
             )
             st.toast("🗑️ Transaksi sukses dihapus!", icon="⚠️")
             st.warning(
@@ -2017,6 +2200,8 @@ elif selected_tab == "06 · Input & Reset Data":
             save_database(
                 st.session_state.sales_item_df,
                 st.session_state.sales_person_df,
+                st.session_state.sales_pps_df,
+                st.session_state.sales_store_df,
             )
             st.toast("🚨 Seluruh data transaksi di-reset!", icon="⚠️")
             st.warning(
