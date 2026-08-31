@@ -1599,12 +1599,37 @@ elif selected_tab == "06 · Input & Reset Data":
             else pd.DataFrame()
         )
 
-      # FILTER ITEM BERDASARKAN PERIODE YANG DIPILIH
-      if not local_items_df.empty and "period_id" in local_items_df.columns:
-        filtered_items_df = local_items_df[
-            local_items_df["period_id"].astype(str).str.strip()
-            == str(m_p_id).strip()
-        ]
+      # FILTER ITEM BERDASARKAN PERIODE YANG DIPILIH SECARA KETAT
+      if not local_items_df.empty:
+        if "period_id" in local_items_df.columns:
+          cleaned_df_period = (
+              local_items_df["period_id"]
+              .astype(str)
+              .str.replace(r"\.0$", "", regex=True)
+              .str.strip()
+          )
+          cleaned_target_id = (
+              str(m_p_id).strip().replace(r"\.0$", "", regex=True)
+          )
+          filtered_items_df = local_items_df[
+              cleaned_df_period == cleaned_target_id
+          ]
+        elif (
+            "start_date" in local_items_df.columns
+            and "end_date" in local_items_df.columns
+        ):
+          local_items_df["item_start"] = pd.to_datetime(
+              local_items_df["start_date"]
+          ).dt.date
+          local_items_df["item_end"] = pd.to_datetime(
+              local_items_df["end_date"]
+          ).dt.date
+          filtered_items_df = local_items_df[
+              (local_items_df["item_start"] >= p_start)
+              & (local_items_df["item_end"] <= p_end)
+          ]
+        else:
+          filtered_items_df = local_items_df
       else:
         filtered_items_df = local_items_df
 
