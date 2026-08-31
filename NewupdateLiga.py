@@ -1592,6 +1592,29 @@ elif selected_tab == "06 · Input & Reset Data":
             f" **{current_user}**"
         )
 
+      if (
+              "items_df" in st.session_state
+              and not st.session_state.items_df.empty
+          ):
+            local_items_df = st.session_state.items_df
+          else:
+            local_items_df = (
+                items_df
+                if "items_df" in locals() and not items_df.empty
+                else pd.DataFrame()
+            )
+
+          items_list = (
+              local_items_df[["item_id", "item_name"]]
+              .drop_duplicates()
+              .to_dict("records")
+              if not local_items_df.empty
+              and all(
+                  col in local_items_df.columns for col in ["item_id", "item_name"]
+              )
+              else []
+          )  
+        
       items_list = (
           items_df[["item_id", "item_name"]]
           .drop_duplicates()
