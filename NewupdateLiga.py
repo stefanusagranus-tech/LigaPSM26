@@ -1822,10 +1822,10 @@ elif selected_tab == "06 · Input & Reset Data":
       )
     else:
 
-      # Dialog pop-up sukses khusus untuk PPS (Solusi aman bagi pengguna iPhone)
+      # Dialog pop-up sukses khusus untuk PPS (Solusi jelas untuk pengguna iPhone)
       @st.dialog("🎉 Data PPS Berhasil Disimpan!")
       def show_success_pps_dialog(
-          staff_val, kasir_val, date_str, pwp_syarat, pwp_redeem
+          staff_val, kasir_val, date_str, syarat_pwp_val, redeem_pwp_val
       ):
         st.success(
             "✅ **Data Sales PPS** berhasil disimpan secara permanen ke"
@@ -1835,7 +1835,7 @@ elif selected_tab == "06 · Input & Reset Data":
             * **Staf / Personil:** `{staff_val}`
             * **Kasir:** `{kasir_val}`
             * **Tanggal:** `{date_str}`
-            * **Syarat PWP:** `{pwp_syarat}` | **Tebus PWP:** `{pwp_redeem}`
+            * **Syarat PWP:** `{syarat_pwp_val}` | **Redeem PWP:** `{redeem_pwp_val}`
             * **Status:** Synchronized to Google Sheets ✅
             """)
         if st.button(
@@ -1900,53 +1900,52 @@ elif selected_tab == "06 · Input & Reset Data":
           )
 
         st.markdown("---")
-        st.markdown("##### 🛒 Kategori PWP & Item Spesial:")
+        st.markdown("##### 🛒 Detail 7 Kolom Kinerja PPS:")
+
+        # Layout pembagian kolom input agar rapi di HP maupun Laptop
         col_q1, col_q2, col_q3 = st.columns(3)
 
         with col_q1:
-          # PWP dipisah secara independen tanpa penjumlahan otomatis
           syarat_pwp = st.number_input(
               "Syarat PWP", min_value=0, step=1, value=0, key="pps_syarat_pwp"
           )
           redeem_pwp = st.number_input(
-              "Tebus / Redeem PWP",
-              min_value=0,
-              step=1,
-              value=0,
-              key="pps_redeem_pwp",
+              "Redeem PWP", min_value=0, step=1, value=0, key="pps_redeem_pwp"
           )
 
         with col_q2:
-          serba_gratis = st.number_input(
-              "Jumlah Serba Gratis",
+          qty_pwp = st.number_input(
+              "Qty PWP", min_value=0, step=1, value=0, key="pps_qty_pwp"
+          )
+          qty_sg = st.number_input(
+              "Qty SG (Serba Gratis)",
               min_value=0,
               step=1,
               value=0,
-              key="pps_serba_gratis",
+              key="pps_qty_sg",
           )
+
+        with col_q3:
           syarat_sueger = st.number_input(
-              "Syarat Item Sueger",
+              "Syarat Sueger",
               min_value=0,
               step=1,
               value=0,
               key="pps_syarat_sueger",
           )
+          redeem_sueger = st.number_input(
+              "Redeem Sueger",
+              min_value=0,
+              step=1,
+              value=0,
+              key="pps_redeem_sueger",
+          )
 
-        with col_q3:
-          tebus_sueger = st.number_input(
-              "Tebus Item Sueger",
-              min_value=0,
-              step=1,
-              value=0,
-              key="pps_tebus_sueger",
-          )
-          cemilan_ceban = st.number_input(
-              "Total Item Cemilan Ceban",
-              min_value=0,
-              step=1,
-              value=0,
-              key="pps_cemilan_ceban",
-          )
+        # Baris tambahan untuk kolom ke-7 (Cemilan Ceban)
+        st.markdown("")
+        cemilan_ceban = st.number_input(
+            "Cemilan Ceban", min_value=0, step=1, value=0, key="pps_cemilan_ceban"
+        )
 
         st.markdown("---")
         btn_save_pps = st.form_submit_button(
@@ -1969,7 +1968,8 @@ elif selected_tab == "06 · Input & Reset Data":
             current_max_pps_id = numeric_ids.astype(int).max()
 
         current_max_pps_id += 1
-        # Jika database tetap memerlukan kolom total_pwp, kita isikan sebagai informasi total (atau simpan redeem_pwp sebagai total tebus)
+
+        # Struktur record yang disimpan sesuai dengan 7 kolom rincian baru
         new_pps_record = {
             "record_id": f"PPS{current_max_pps_id:05d}",
             "period_id": str(pps_p_id),
@@ -1978,12 +1978,10 @@ elif selected_tab == "06 · Input & Reset Data":
             "kasir_name": str(kasir_name),
             "syarat_pwp": int(syarat_pwp),
             "redeem_pwp": int(redeem_pwp),
-            "total_pwp": int(
-                redeem_pwp
-            ),  # Disesuaikan jika backend butuh kolom total
-            "serba_gratis": int(serba_gratis),
+            "qty_pwp": int(qty_pwp),
+            "qty_sg": int(qty_sg),
             "syarat_sueger": int(syarat_sueger),
-            "tebus_sueger": int(tebus_sueger),
+            "redeem_sueger": int(redeem_sueger),
             "cemilan_ceban": int(cemilan_ceban),
             "updated_at": str(tanggal_pps),
         }
@@ -1998,6 +1996,7 @@ elif selected_tab == "06 · Input & Reset Data":
                 [st.session_state.sales_pps_df, new_pps_df], ignore_index=True
             )
 
+            # Simpan otomatis ke Google Spreadsheet
             save_database(
                 st.session_state.sales_item_df,
                 st.session_state.sales_person_df,
@@ -2005,7 +2004,7 @@ elif selected_tab == "06 · Input & Reset Data":
                 st.session_state.sales_store_df,
             )
 
-          # Memunculkan pop-up dialog agar jelas di HP/iPhone
+          # Memunculkan pop-up dialog agar status sukses langsung terlihat jelas di iPhone
           show_success_pps_dialog(
               staff_name,
               kasir_name,
