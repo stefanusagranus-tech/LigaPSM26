@@ -2249,9 +2249,13 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
               s_items = pd.concat([s_items, new_si_row], ignore_index=True)
 
             st.session_state.sales_item_df = s_items
+            
+            # PERBAIKAN: Memanggil save_database dengan 4 argumen lengkap sesuai inisialisasi
             save_database(
                 st.session_state.sales_item_df,
                 st.session_state.sales_person_df,
+                st.session_state.sales_pps_df,
+                st.session_state.sales_store_df,
             )
 
             st.toast(
@@ -2350,9 +2354,12 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
                 sp_idx, "item_name"
             ] = edit_item_name
 
+            # PERBAIKAN: Memanggil save_database dengan 4 argumen lengkap
             save_database(
                 st.session_state.sales_item_df,
                 st.session_state.sales_person_df,
+                st.session_state.sales_pps_df,
+                st.session_state.sales_store_df,
             )
             st.toast("✅ Perubahan item berhasil disimpan!", icon="💾")
             time.sleep(1.5)
@@ -2374,8 +2381,12 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
                   )
               )
           ]
+          # PERBAIKAN: Memanggil save_database dengan 4 argumen lengkap
           save_database(
-              st.session_state.sales_item_df, st.session_state.sales_person_df
+              st.session_state.sales_item_df, 
+              st.session_state.sales_person_df,
+              st.session_state.sales_pps_df,
+              st.session_state.sales_store_df,
           )
           st.toast("⚠️ Item berhasil dihapus dari periode.", icon="🗑️")
           time.sleep(1.5)
@@ -2490,8 +2501,8 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
         unsafe_allow_html=True,
     )
 
-    if "periode_pps_df" not in st.session_state:
-      st.session_state.periode_pps_df = pd.DataFrame(columns=[
+    if "sales_pps_df" not in st.session_state:
+      st.session_state.sales_pps_df = pd.DataFrame(columns=[
           "jenis_program",
           "period_id",
           "start_date",
@@ -2539,7 +2550,7 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
           st.markdown(f"👤 **Target Per Personil Kasir (Otomatis / 9):** `{pps_target_kasir_auto} Pcs`")
 
         btn_submit_pps = st.form_submit_button(
-            "💾 Simpan ke PERIODE_PPS", use_container_width=True
+            "💾 Simpan ke SALES_PPS", use_container_width=True
         )
 
         if btn_submit_pps:
@@ -2558,12 +2569,12 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
                   "target_promo": int(pps_target_promo),
                   "target_kasir": int(pps_target_kasir_auto),
               }])
-              st.session_state.periode_pps_df = pd.concat(
-                  [st.session_state.periode_pps_df, new_pps_row],
+              st.session_state.sales_pps_df = pd.concat(
+                  [st.session_state.sales_pps_df, new_pps_row],
                   ignore_index=True,
               )
               save_master_table(
-                  "PERIODE_PPS", st.session_state.periode_pps_df
+                  "SALES_PPS", st.session_state.sales_pps_df
               )
 
               st.toast(
@@ -2576,7 +2587,7 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
               st.error(f"❌ Gagal menyimpan data: {e}")
 
     with sub_pps2:
-      pps_df = st.session_state.periode_pps_df.copy()
+      pps_df = st.session_state.sales_pps_df.copy()
       if pps_df.empty:
         st.info("Belum ada data program PPS/Sueger yang tersimpan.")
       else:
@@ -2626,30 +2637,30 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
 
           if btn_update_pps:
             try:
-              idx_target = st.session_state.periode_pps_df[
-                  st.session_state.periode_pps_df["period_id"] == selected_id
+              idx_target = st.session_state.sales_pps_df[
+                  st.session_state.sales_pps_df["period_id"] == selected_id
               ].index
-              st.session_state.periode_pps_df.loc[
+              st.session_state.sales_pps_df.loc[
                   idx_target, "jenis_program"
               ] = edit_jenis
-              st.session_state.periode_pps_df.loc[
+              st.session_state.sales_pps_df.loc[
                   idx_target, "promo_name"
               ] = edit_promo_name
-              st.session_state.periode_pps_df.loc[
+              st.session_state.sales_pps_df.loc[
                   idx_target, "start_date"
               ] = str(edit_start)
-              st.session_state.periode_pps_df.loc[
+              st.session_state.sales_pps_df.loc[
                   idx_target, "end_date"
               ] = str(edit_end)
-              st.session_state.periode_pps_df.loc[
+              st.session_state.sales_pps_df.loc[
                   idx_target, "target_promo"
               ] = int(edit_t_promo)
-              st.session_state.periode_pps_df.loc[
+              st.session_state.sales_pps_df.loc[
                   idx_target, "target_kasir"
               ] = int(edit_t_kasir_auto)
 
               save_master_table(
-                  "PERIODE_PPS", st.session_state.periode_pps_df
+                  "SALES_PPS", st.session_state.sales_pps_df
               )
               st.toast("✅ Perubahan program berhasil disimpan!", icon="💾")
               time.sleep(1.2)
@@ -2661,21 +2672,21 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
         if st.button(
             f"🗑️ Hapus Program ID: {selected_id}", use_container_width=True
         ):
-          st.session_state.periode_pps_df = st.session_state.periode_pps_df[
-              st.session_state.periode_pps_df["period_id"] != selected_id
+          st.session_state.sales_pps_df = st.session_state.sales_pps_df[
+              st.session_state.sales_pps_df["period_id"] != selected_id
           ]
-          save_master_table("PERIODE_PPS", st.session_state.periode_pps_df)
+          save_master_table("SALES_PPS", st.session_state.sales_pps_df)
           st.toast("⚠️ Program berhasil dihapus dari sistem.", icon="🗑️")
           time.sleep(1.2)
           st.rerun()
 
     with sub_pps3:
-      if not st.session_state.periode_pps_df.empty:
+      if not st.session_state.sales_pps_df.empty:
         st.dataframe(
-            st.session_state.periode_pps_df, use_container_width=True
+            st.session_state.sales_pps_df, use_container_width=True
         )
       else:
-        st.info("Belum ada data tersimpan di tabel PERIODE_PPS.")
+        st.info("Belum ada data tersimpan di tabel SALES_PPS.")
 
   # SUB TAB 5: MASTER STATUS & SUMMARY (PSM)
   with tab_m5:
