@@ -2227,7 +2227,6 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
             "Target Toko (Total Pcs)", min_value=0, step=1, value=90
         )
 
-        # Logika pembulatan ke atas (Math.ceil) agar nilai koma (seperti 14,1) naik menjadi 15
         new_target_otomatis = int(math.ceil(new_target_toko / 3)) if new_target_toko > 0 else 0
         
         st.markdown(f"📦 **Target Otomatis (Target Toko / 3):** `{new_target_otomatis} Pcs`")
@@ -2242,7 +2241,17 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
           st.error("⚠️ ID Item dan Nama Produk wajib diisi!")
         else:
           try:
+            # Pengaman inisialisasi DataFrame items_df jika belum ada / kosong
+            if "items_df" not in st.session_state or st.session_state.items_df is None:
+              st.session_state.items_df = pd.DataFrame(columns=["item_id", "item_name"])
+            
             m_items = st.session_state.items_df.copy()
+            
+            if "item_id" not in m_items.columns:
+              m_items["item_id"] = ""
+            if "item_name" not in m_items.columns:
+              m_items["item_name"] = ""
+
             if new_item_id not in m_items["item_id"].astype(str).values:
               new_m_row = pd.DataFrame(
                   [{"item_id": new_item_id, "item_name": new_item_name}]
@@ -2251,6 +2260,12 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
                   [m_items, new_m_row], ignore_index=True
               )
               save_master_table("MASTER_ITEM", st.session_state.items_df)
+
+            # Pengaman inisialisasi sales_item_df
+            if "sales_item_df" not in st.session_state or st.session_state.sales_item_df is None:
+              st.session_state.sales_item_df = pd.DataFrame(columns=[
+                  "period_id", "item_id", "item_name", "target_qty", "target_kasir", "actual_qty"
+              ])
 
             s_items = st.session_state.sales_item_df.copy()
             mask = (
@@ -2568,7 +2583,6 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
               "Target Promo / Toko (Total Pcs)", min_value=0, step=1, value=180
           )
 
-          # Logika pembulatan ke atas juga diterapkan di sini jika dibutuhkan
           pps_target_kasir_auto = int(math.ceil(pps_target_promo / 9)) if pps_target_promo > 0 else 0
           st.markdown(f"👤 **Target Per Personil Kasir (Otomatis / 9):** `{pps_target_kasir_auto} Pcs`")
 
