@@ -2200,7 +2200,6 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
             "Target Toko (Total Pcs)", min_value=0, step=1, value=90
         )
 
-        # Rumus otomatis: Target Toko / 3
         new_target_otomatis = int(round(new_target_toko / 3)) if new_target_toko > 0 else 0
         
         st.markdown(f"📦 **Target Otomatis (Target Toko / 3):** `{new_target_otomatis} Pcs`")
@@ -2215,7 +2214,6 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
           st.error("⚠️ ID Item dan Nama Produk wajib diisi!")
         else:
           try:
-            # 1. Update Master Item
             m_items = st.session_state.items_df.copy()
             if new_item_id not in m_items["item_id"].astype(str).values:
               new_m_row = pd.DataFrame(
@@ -2226,7 +2224,6 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
               )
               save_master_table("MASTER_ITEM", st.session_state.items_df)
 
-            # 2. Update Sales Item dengan pengecekan aman agar data lama tidak tertimpa
             s_items = st.session_state.sales_item_df.copy()
             mask = (
                 (s_items["period_id"].astype(str) == str(add_period_id)) & 
@@ -2250,7 +2247,6 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
 
             st.session_state.sales_item_df = s_items
             
-            # PERBAIKAN: Memanggil save_database dengan 4 argumen lengkap sesuai inisialisasi
             save_database(
                 st.session_state.sales_item_df,
                 st.session_state.sales_person_df,
@@ -2354,7 +2350,6 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
                 sp_idx, "item_name"
             ] = edit_item_name
 
-            # PERBAIKAN: Memanggil save_database dengan 4 argumen lengkap
             save_database(
                 st.session_state.sales_item_df,
                 st.session_state.sales_person_df,
@@ -2381,7 +2376,6 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
                   )
               )
           ]
-          # PERBAIKAN: Memanggil save_database dengan 4 argumen lengkap
           save_database(
               st.session_state.sales_item_df, 
               st.session_state.sales_person_df,
@@ -2588,29 +2582,37 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
 
     with sub_pps2:
       pps_df = st.session_state.sales_pps_df.copy()
-      if pps_df.empty:
-        st.info("Belum ada data program PPS/Sueger yang tersimpan.")
+      
+      # Validasi kolom untuk mencegah KeyError
+      required_pps_cols = ["jenis_program", "period_id", "promo_name", "start_date", "end_date", "target_promo", "target_kasir"]
+      missing_pps_cols = [col for col in required_pps_cols if col not in pps_df.columns]
+      
+      if pps_df.empty or len(missing_pps_cols) > 0:
+        st.info("Belum ada data program PPS/Sueger yang tersimpan atau struktur kolom belum lengkap.")
       else:
         list_promo_options = (
-            pps_df["period_id"] + " - " + pps_df["promo_name"]
+            pps_df["period_id"].astype(str) + " - " + pps_df["promo_name"].astype(str)
         ).tolist()
         selected_edit_opt = st.selectbox(
             "Pilih Program yang Ingin Diubah/Dihapus", list_promo_options
         )
 
         selected_id = selected_edit_opt.split(" - ")[0]
-        row_match = pps_df[pps_df["period_id"] == selected_id].iloc[0]
+        row_match = pps_df[pps_df["period_id"].astype(str) == str(selected_id)].iloc[0]
 
         with st.form("form_edit_pps"):
           col_e1, col_e2 = st.columns(2)
           with col_e1:
+            curr_jenis = str(row_match.get("jenis_program", "PPS"))
+            idx_jenis = ["PPS", "Sueger"].index(curr_jenis) if curr_jenis in ["PPS", "Sueger"] else 0
+            
             edit_jenis = st.selectbox(
                 "Jenis Program",
                 ["PPS", "Sueger"],
-                index=["PPS", "Sueger"].index(row_match["jenis_program"]),
+                index=idx_jenis,
             )
             edit_promo_name = st.text_input(
-                "Nama Promo", value=str(row_match["promo_name"])
+                "Nama Promo", value=str(row_match.get("promo_name", ""))
             )
             try:
               curr_s = pd.to_datetime(row_match["start_date"]).date()
@@ -2625,7 +2627,7 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
                 "Target Promo",
                 min_value=0,
                 step=1,
-                value=int(row_match["target_promo"]),
+                value=int(row_match.get("target_promo", 0)),
             )
             
             edit_t_kasir_auto = int(round(edit_t_promo / 9)) if edit_t_promo > 0 else 0
@@ -2638,8 +2640,9 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
           if btn_update_pps:
             try:
               idx_target = st.session_state.sales_pps_df[
-                  st.session_state.sales_pps_df["period_id"] == selected_id
+                  st.session_state.sales_pps_df["period_id"].astype(str) == str(selected_id)
               ].index
+              
               st.session_state.sales_pps_df.loc[
                   idx_target, "jenis_program"
               ] = edit_jenis
@@ -2673,7 +2676,7 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
             f"🗑️ Hapus Program ID: {selected_id}", use_container_width=True
         ):
           st.session_state.sales_pps_df = st.session_state.sales_pps_df[
-              st.session_state.sales_pps_df["period_id"] != selected_id
+              st.session_state.sales_pps_df["period_id"].astype(str) != str(selected_id)
           ]
           save_master_table("SALES_PPS", st.session_state.sales_pps_df)
           st.toast("⚠️ Program berhasil dihapus dari sistem.", icon="🗑️")
