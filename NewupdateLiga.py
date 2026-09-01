@@ -2222,7 +2222,7 @@ elif selected_tab == "06 · Input & Reset Data":
             time.sleep(1.5)
             st.rerun()
 
-  # SUB TAB 5: SALIN FORMAT WHATSAPP (Desain Transparan & Berdasarkan Filter Kasir)
+  # SUB TAB 5: SALIN FORMAT WHATSAPP (Desain Transparan & Berdasarkan Filter Kasir Khusus Sueger)
   with tab_in5:
     st.markdown(
         "<h4 style='color: #00ff88;'>📱 Generator Format Laporan"
@@ -2231,12 +2231,11 @@ elif selected_tab == "06 · Input & Reset Data":
     )
     st.markdown(
         "<p style='color: #cbd5e1; font-size: 14px;'>Pilih jenis laporan dan"
-        " filter berdasarkan Nama Kasir untuk menyalin rekapitulasi siap kirim"
-        " ke WhatsApp.</p>",
+        " filter berdasarkan Nama Kasir (khusus Sueger) untuk menyalin"
+        " rekapitulasi siap kirim ke WhatsApp.</p>",
         unsafe_allow_html=True,
     )
 
-    # Container transparan dengan gaya modern glassmorphism
     st.markdown(
         """
         <div style="background: rgba(15, 23, 42, 0.6); padding: 20px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); margin-bottom: 20px;">
@@ -2270,31 +2269,32 @@ elif selected_tab == "06 · Input & Reset Data":
         )
     )
 
-    selected_kasir = st.selectbox(
-        "🔍 Filter Berdasarkan Nama Kasir:",
-        available_kasir,
-        key="wa_filter_kasir",
-    )
+    # Filter Kasir hanya aktif jika memilih Format Laporan Sueger
+    if wa_format_type == "🥤 Format Laporan Sueger":
+      selected_kasir = st.selectbox(
+          "🔍 Filter Berdasarkan Nama Kasir:",
+          available_kasir,
+          key="wa_filter_kasir_sueger",
+      )
+    else:
+      selected_kasir = None
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # Filter Data berdasarkan Tanggal & Kasir
-    sp_filtered = (
-        sp_df[
-            (
-                pd.to_datetime(sp_df["updated_at"], errors="coerce").dt.date
-                == selected_wa_date
-            )
-            & (
-                sp_df["person_name"].astype(str).str.lower()
-                == str(selected_kasir).lower()
-            )
+    # Filter Data PPS Harian (Menyeluruh per Shift)
+    pps_filtered_harian = (
+        pps_df_report[
+            pd.to_datetime(
+                pps_df_report["updated_at"], errors="coerce"
+            ).dt.date
+            == selected_wa_date
         ]
-        if not sp_df.empty and "updated_at" in sp_df.columns
+        if not pps_df_report.empty and "updated_at" in pps_df_report.columns
         else pd.DataFrame()
     )
 
-    pps_filtered = (
+    # Filter Data Sueger (Berdasarkan Tanggal & Kasir Terpilih)
+    pps_filtered_sueger = (
         pps_df_report[
             (
                 pd.to_datetime(
@@ -2307,44 +2307,62 @@ elif selected_tab == "06 · Input & Reset Data":
                 == str(selected_kasir).lower()
             )
         ]
-        if not pps_df_report.empty and "updated_at" in pps_df_report.columns
+        if not pps_df_report.empty
+        and "updated_at" in pps_df_report.columns
+        and selected_kasir
         else pd.DataFrame()
     )
 
     if wa_format_type == "📋 Format Laporan PPS":
       st.markdown(
-          "<h5 style='color: #38bdf8;'>✨ Preview Format Laporan PPS</h5>",
+          "<h5 style='color: #38bdf8;'>✨ Preview Format Laporan PPS (Harian per Shift)</h5>",
           unsafe_allow_html=True,
       )
 
-      wa_pps_text = f"🌟 *REKAP LAPORAN HARIAN PPS* 🌟\n"
+      periode_bulan = selected_wa_date.strftime("%B %Y")
+
+      wa_pps_text = "🌟 *REKAP LAPORAN HARIAN PPS* 🌟\n"
       wa_pps_text += f"📅 Tanggal: {date_str_formatted}\n"
-      wa_pps_text += f"👤 Kasir: *{selected_kasir}*\n\n"
+      wa_pps_text += f"📦 *Periode*: {periode_bulan}\n\n"
 
-      wa_pps_text += "📦 *1. Laporan PSM (Item & Total Qty)*:\n"
-      if not sp_filtered.empty:
-        psm_group = (
-            sp_filtered.groupby("item_name")["actual_qty"].sum().reset_index()
-        )
-        total_psm_qty = psm_group["actual_qty"].sum()
-        for idx, row in psm_group.iterrows():
-          wa_pps_text += f"   ▪️ {row['item_name']}: *{row['actual_qty']} Pcs*\n"
-        wa_pps_text += f"   👉 *Total Qty Keseluruhan PSM: {total_psm_qty} Pcs*\n\n"
+      wa_pps_text += "🎯 *Detail Kinerja Program (PWP, SG, Ceban)*:\n"
+
+      if not pps_filtered_harian.empty:
+        for shift_name, group_df in pps_filtered_harian.groupby(
+            "shift_personil"
+        ):
+          kasir_list = group_df["kasir_name"].dropna().unique().tolist()
+          kasir_str = " & ".join(kasir_list)
+
+          staff_list = group_df["staff_name"].dropna().unique().tolist()
+          staff_str = ", ".join(staff_list)
+
+          tot_syarat_pwp = int(group_df["syarat_pwp"].sum())
+          tot_redeem_pwp = int(group_df["redeem_pwp"].sum())
+          tot_qty_pwp = int(group_df["qty_pwp"].sum())
+
+          tot_qty_sg = int(group_df["qty_sg"].sum())
+
+          tot_qty_sueger = int(
+              group_df.get("qty_sueger", 0).sum()
+              if "qty_sueger" in group_df.columns
+              else group_df["redeem_sueger"].sum()
+          )
+          tot_syarat_sueger = int(group_df["syarat_sueger"].sum())
+          tot_redeem_sueger = int(group_df["redeem_sueger"].sum())
+
+          tot_ceban = int(group_df["cemilan_ceban"].sum())
+
+          wa_pps_text += (
+              f"   📌 *{shift_name}* (Staf: {staff_str} | Kasir: {kasir_str})\n"
+          )
+          wa_pps_text += f"      • PWP ➔ Syarat: {tot_syarat_pwp} | Redeem: {tot_redeem_pwp} | Qty: {tot_qty_pwp}\n"
+          wa_pps_text += f"      • Serba Gratis (SG) ➔ Qty: {tot_qty_sg}\n"
+          wa_pps_text += f"      • Sueger ➔ Qty: {tot_qty_sueger} | Syarat: {tot_syarat_sueger} | Redeem: {tot_redeem_sueger}\n"
+          wa_pps_text += f"      • Cemilan Ceban ➔ Qty: {tot_ceban}\n\n"
       else:
         wa_pps_text += (
-            f"   _Belum ada catatan penjualan PSM untuk kasir {selected_kasir}._\n\n"
-        )
-
-      wa_pps_text += "🎯 *2. Detail Kinerja Program (PWP, SG, Ceban)*:\n"
-      if not pps_filtered.empty:
-        for idx, row in pps_filtered.iterrows():
-          wa_pps_text += f"   📌 *Shift: {row.get('shift_personil', '-')}* (Staf: {row.get('staff_name', '-')})\n"
-          wa_pps_text += f"      • PWP ➔ Syarat: {row.get('syarat_pwp', 0)} | Redeem: {row.get('redeem_pwp', 0)} | Qty: {row.get('qty_pwp', 0)}\n"
-          wa_pps_text += f"      • Serba Gratis (SG) ➔ Qty: {row.get('qty_sg', 0)}\n"
-          wa_pps_text += f"      • Cemilan Ceban ➔ Qty: {row.get('cemilan_ceban', 0)}\n\n"
-      else:
-        wa_pps_text += (
-            f"   _Belum ada data input PPS/PWP untuk kasir {selected_kasir}._\n\n"
+            f"   _Belum ada data input PPS untuk tanggal {date_str_formatted}._\n\n"
         )
 
       wa_pps_text += "✅ *Status: Program PPS Berjalan Lancar & Termonitor*"
@@ -2352,13 +2370,13 @@ elif selected_tab == "06 · Input & Reset Data":
       st.text_area(
           "Salin Teks Pesan WhatsApp:",
           value=wa_pps_text,
-          height=280,
+          height=320,
           key="text_area_wa_pps_transparan",
       )
 
     else:
       st.markdown(
-          "<h5 style='color: #38bdf8;'>✨ Preview Format Laporan Sueger</h5>",
+          "<h5 style='color: #38bdf8;'>✨ Preview Format Laporan Sueger (Per Kasir)</h5>",
           unsafe_allow_html=True,
       )
 
@@ -2366,40 +2384,47 @@ elif selected_tab == "06 · Input & Reset Data":
       wa_sueger_text += "NAMA TOKO: Karang Satria\n"
       wa_sueger_text += f"TANGGAL UPDATE: {date_str_formatted}\n"
       wa_sueger_text += f"NAMA KASIR: *{selected_kasir}*\n\n"
-      wa_sueger_text += "🥤 *LAPORAN PENJUALAN SUEGER* 🥤\n\n"
+      wa_sueger_text += "🥤 *LAPORAN PENJUALAN SUEGER* 🥤\n"
+      wa_sueger_text += "🔹 TANGGAL / SYARAT / REDEEM / ACHIVMENT / KETERANGAN\n"
 
-      if not pps_filtered.empty:
+      if not pps_filtered_sueger.empty:
         total_syarat_sueger = 0
         total_redeem_sueger = 0
-        count_records = len(pps_filtered)
 
-        for idx, row in pps_filtered.iterrows():
-          s_val = row.get("syarat_sueger", 0)
-          r_val = row.get("redeem_sueger", 0)
+        for idx, (i_row, row) in enumerate(pps_filtered_sueger.iterrows(), start=1):
+          s_val = int(row.get("syarat_sueger", 0))
+          r_val = int(row.get("redeem_sueger", 0))
           total_syarat_sueger += s_val
           total_redeem_sueger += r_val
 
-          target_sueger = s_val * 0.5  # Target 50% dari syarat
+          target_sueger = s_val * 0.5
           achv_pct = (r_val / s_val * 100) if s_val > 0 else 0.0
           keterangan_status = (
               "LULUS ✅" if r_val >= target_sueger else "TIDAK LULUS ❌"
           )
 
-          wa_sueger_text += f"🔹 *Shift: {row.get('shift_personil', '-')}* (Staf: {row.get('staff_name', '-')})\n"
-          wa_sueger_text += f"   • Syarat: {s_val}\n"
-          wa_sueger_text += f"   • Redeem: {r_val}\n"
-          wa_sueger_text += f"   • Target (50%): {target_sueger:.1f}\n"
-          wa_sueger_text += f"   • Achv: {achv_pct:.1f}%\n"
-          wa_sueger_text += f"   • Keterangan: *{keterangan_status}*\n\n"
+          row_date_str = pd.to_datetime(
+              row.get("updated_at", selected_wa_date), errors="coerce"
+          ).strftime("%d-%m-%y")
 
-        avg_redeem = (
-            total_redeem_sueger / count_records if count_records > 0 else 0
+          # Format per baris: No. Tanggal/Syarat/Redeem/Achv/Keterangan
+          wa_sueger_text += f"{idx}. {row_date_str}/{s_val}/{r_val}/{achv_pct:.1f}%/{keterangan_status}\n"
+
+        # Summary Total Keseluruhan
+        total_target_all = total_syarat_sueger * 0.5
+        total_achv_pct = (
+            (total_redeem_sueger / total_syarat_sueger * 100)
+            if total_syarat_sueger > 0
+            else 0.0
         )
+        total_keterangan_status = (
+            "LULUS ✅" if total_redeem_sueger >= total_target_all else "TIDAK LULUS ❌"
+        )
+
         wa_sueger_text += "==================\n"
         wa_sueger_text += "📊 *SUMMARY TOTAL KESELURUHAN*:\n"
-        wa_sueger_text += f"   - Total Syarat: {total_syarat_sueger}\n"
-        wa_sueger_text += f"   - Total Redeem: {total_redeem_sueger}\n"
-        wa_sueger_text += f"   - Rata-rata Redeem: {avg_redeem:.2f}\n"
+        wa_sueger_text += "   TOTAL SYARAT / TOTAL REDEEM / ACHIVMENT / KETERANGAN\n"
+        wa_sueger_text += f"   {total_syarat_sueger}/{total_redeem_sueger}/{total_achv_pct:.1f}%/{total_keterangan_status}"
       else:
         wa_sueger_text += f"_Belum ada data input Sueger untuk kasir {selected_kasir} pada tanggal ini._\n"
 
