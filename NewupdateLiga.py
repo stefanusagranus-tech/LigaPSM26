@@ -2540,7 +2540,7 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
           time.sleep(1.5)
           st.rerun()
 
-  # SUB TAB 4: INPUT & MASTER PPS & SUEGER (Diperbarui ke SALES_PPS & PERIODE_PPS)
+  # SUB TAB 4: INPUT & MASTER PPS & SUEGER (Diperbarui dengan Pengaman Aman)
   with tab_m4:
     st.markdown(
         "<h4 style='color: #c084fc;'>🎯 Input & Pengaturan Periode PPS &"
@@ -2626,7 +2626,6 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
                   ignore_index=True,
               )
               
-              # Disimpan ke tabel/sheet SALES_PPS dan PERIODE_PPS secara sinkron
               save_master_table("SALES_PPS", st.session_state.sales_pps_df)
               save_master_table("PERIODE_PPS", st.session_state.sales_pps_df)
 
@@ -2648,107 +2647,118 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
       if pps_df.empty or len(missing_pps_cols) > 0 or pps_df["period_id"].dropna().empty:
         st.info("Belum ada data program PPS/Sueger yang tersimpan atau struktur kolom belum lengkap.")
       else:
-        list_promo_options = (
-            pps_df["period_id"].astype(str) + " - " + pps_df["promo_name"].astype(str)
-        ).tolist()
+        pps_df["period_id"] = pps_df["period_id"].astype(str).str.strip()
+        pps_df["promo_name"] = pps_df["promo_name"].astype(str).str.strip()
         
-        selected_edit_opt = st.selectbox(
-            "Pilih Program yang Ingin Diubah/Dihapus", list_promo_options
-        )
+        valid_pps_df = pps_df[pps_df["period_id"] != ""]
+        
+        if valid_pps_df.empty:
+          st.info("Tidak ada ID Program yang valid untuk diedit.")
+        else:
+          list_promo_options = (
+              valid_pps_df["period_id"] + " - " + valid_pps_df["promo_name"]
+          ).tolist()
+          
+          selected_edit_opt = st.selectbox(
+              "Pilih Program yang Ingin Diubah/Dihapus", list_promo_options
+          )
 
-        if selected_edit_opt:
-          selected_id = selected_edit_opt.split(" - ")[0]
-          row_match = pps_df[pps_df["period_id"].astype(str) == str(selected_id)].iloc[0]
+          if selected_edit_opt and " - " in selected_edit_opt:
+            selected_id = selected_edit_opt.split(" - ")[0]
+            matched_rows = valid_pps_df[valid_pps_df["period_id"] == selected_id]
+            
+            if not matched_rows.empty:
+              row_match = matched_rows.iloc[0]
 
-          with st.form("form_edit_pps"):
-            col_e1, col_e2 = st.columns(2)
-            with col_e1:
-              curr_jenis = str(row_match.get("jenis_program", "PPS"))
-              idx_jenis = ["PPS", "Sueger"].index(curr_jenis) if curr_jenis in ["PPS", "Sueger"] else 0
-              
-              edit_jenis = st.selectbox(
-                  "Jenis Program",
-                  ["PPS", "Sueger"],
-                  index=idx_jenis,
-              )
-              edit_promo_name = st.text_input(
-                  "Nama Promo", value=str(row_match.get("promo_name", ""))
-              )
-              try:
-                curr_s = pd.to_datetime(row_match["start_date"]).date()
-                curr_e = pd.to_datetime(row_match["end_date"]).date()
-              except Exception:
-                curr_s, curr_e = waktu_wib.date(), waktu_wib.date()
+              with st.form("form_edit_pps"):
+                col_e1, col_e2 = st.columns(2)
+                with col_e1:
+                  curr_jenis = str(row_match.get("jenis_program", "PPS"))
+                  idx_jenis = ["PPS", "Sueger"].index(curr_jenis) if curr_jenis in ["PPS", "Sueger"] else 0
+                  
+                  edit_jenis = st.selectbox(
+                      "Jenis Program",
+                      ["PPS", "Sueger"],
+                      index=idx_jenis,
+                  )
+                  edit_promo_name = st.text_input(
+                      "Nama Promo", value=str(row_match.get("promo_name", ""))
+                  )
+                  try:
+                    curr_s = pd.to_datetime(row_match["start_date"]).date()
+                    curr_e = pd.to_datetime(row_match["end_date"]).date()
+                  except Exception:
+                    curr_s, curr_e = waktu_wib.date(), waktu_wib.date()
 
-              edit_start = st.date_input("Tanggal Mulai", value=curr_s)
-            with col_e2:
-              edit_end = st.date_input("Tanggal Akhir", value=curr_e)
-              
-              if edit_jenis == "PPS":
-                edit_t_promo = st.number_input(
-                    "Target Promo",
-                    min_value=0,
-                    step=1,
-                    value=int(row_match.get("target_promo", 0)),
+                  edit_start = st.date_input("Tanggal Mulai", value=curr_s)
+                with col_e2:
+                  edit_end = st.date_input("Tanggal Akhir", value=curr_e)
+                  
+                  if edit_jenis == "PPS":
+                    edit_t_promo = st.number_input(
+                        "Target Promo",
+                        min_value=0,
+                        step=1,
+                        value=int(row_match.get("target_promo", 0)),
+                    )
+                    edit_t_kasir_auto = int(math.ceil(edit_t_promo / 9)) if edit_t_promo > 0 else 0
+                    st.markdown(f"👤 **Target Per Personil (Otomatis / 9):** `{edit_t_kasir_auto} Pcs`")
+                  else:
+                    edit_t_promo = 0
+                    edit_t_kasir_auto = 0
+                    st.info("ℹ️ Program **Sueger** tidak memerlukan input target.")
+
+                btn_update_pps = st.form_submit_button(
+                    "💾 Simpan Perubahan Program", use_container_width=True
                 )
-                edit_t_kasir_auto = int(math.ceil(edit_t_promo / 9)) if edit_t_promo > 0 else 0
-                st.markdown(f"👤 **Target Per Personil (Otomatis / 9):** `{edit_t_kasir_auto} Pcs`")
-              else:
-                edit_t_promo = 0
-                edit_t_kasir_auto = 0
-                st.info("ℹ️ Program **Sueger** tidak memerlukan input target.")
 
-            btn_update_pps = st.form_submit_button(
-                "💾 Simpan Perubahan Program", use_container_width=True
-            )
+                if btn_update_pps:
+                  try:
+                    idx_target = st.session_state.sales_pps_df[
+                        st.session_state.sales_pps_df["period_id"].astype(str) == str(selected_id)
+                    ].index
+                    
+                    st.session_state.sales_pps_df.loc[
+                        idx_target, "jenis_program"
+                    ] = edit_jenis
+                    st.session_state.sales_pps_df.loc[
+                        idx_target, "promo_name"
+                    ] = edit_promo_name
+                    st.session_state.sales_pps_df.loc[
+                        idx_target, "start_date"
+                    ] = str(edit_start)
+                    st.session_state.sales_pps_df.loc[
+                        idx_target, "end_date"
+                    ] = str(edit_end)
+                    st.session_state.sales_pps_df.loc[
+                        idx_target, "target_promo"
+                    ] = int(edit_t_promo)
+                    st.session_state.sales_pps_df.loc[
+                        idx_target, "target_kasir"
+                    ] = int(edit_t_kasir_auto)
 
-            if btn_update_pps:
-              try:
-                idx_target = st.session_state.sales_pps_df[
-                    st.session_state.sales_pps_df["period_id"].astype(str) == str(selected_id)
-                ].index
-                
-                st.session_state.sales_pps_df.loc[
-                    idx_target, "jenis_program"
-                ] = edit_jenis
-                st.session_state.sales_pps_df.loc[
-                    idx_target, "promo_name"
-                ] = edit_promo_name
-                st.session_state.sales_pps_df.loc[
-                    idx_target, "start_date"
-                ] = str(edit_start)
-                st.session_state.sales_pps_df.loc[
-                    idx_target, "end_date"
-                ] = str(edit_end)
-                st.session_state.sales_pps_df.loc[
-                    idx_target, "target_promo"
-                ] = int(edit_t_promo)
-                st.session_state.sales_pps_df.loc[
-                    idx_target, "target_kasir"
-                ] = int(edit_t_kasir_auto)
+                    save_master_table("SALES_PPS", st.session_state.sales_pps_df)
+                    save_master_table("PERIODE_PPS", st.session_state.sales_pps_df)
+                    
+                    st.toast("✅ Perubahan program berhasil disimpan ke SALES_PPS & PERIODE_PPS!", icon="💾")
+                    time.sleep(1.2)
+                    st.rerun()
+                  except Exception as e:
+                    st.error(f"❌ Gagal memperbarui data: {e}")
 
+              st.markdown("---")
+              if st.button(
+                  f"🗑️ Hapus Program ID: {selected_id}", use_container_width=True
+              ):
+                st.session_state.sales_pps_df = st.session_state.sales_pps_df[
+                    st.session_state.sales_pps_df["period_id"].astype(str) != str(selected_id)
+                ]
                 save_master_table("SALES_PPS", st.session_state.sales_pps_df)
                 save_master_table("PERIODE_PPS", st.session_state.sales_pps_df)
                 
-                st.toast("✅ Perubahan program berhasil disimpan ke SALES_PPS & PERIODE_PPS!", icon="💾")
+                st.toast("⚠️ Program berhasil dihapus dari sistem.", icon="🗑️")
                 time.sleep(1.2)
                 st.rerun()
-              except Exception as e:
-                st.error(f"❌ Gagal memperbarui data: {e}")
-
-          st.markdown("---")
-          if st.button(
-              f"🗑️ Hapus Program ID: {selected_id}", use_container_width=True
-          ):
-            st.session_state.sales_pps_df = st.session_state.sales_pps_df[
-                st.session_state.sales_pps_df["period_id"].astype(str) != str(selected_id)
-            ]
-            save_master_table("SALES_PPS", st.session_state.sales_pps_df)
-            save_master_table("PERIODE_PPS", st.session_state.sales_pps_df)
-            
-            st.toast("⚠️ Program berhasil dihapus dari sistem.", icon="🗑️")
-            time.sleep(1.2)
-            st.rerun()
 
     with sub_pps3:
       if not st.session_state.sales_pps_df.empty:
