@@ -106,34 +106,60 @@ def load_database():
 def save_database(
     sales_item_df, sales_person_df, sales_pps_df, sales_store_df
 ):
+  """Menyimpan data transaksi ke Google Sheets dengan pengaman validasi data kosong."""
   try:
+    # PENGAMANAN: Blokir penyimpanan jika data transaksi utama mendadak kosong melompong
+    if sales_item_df.empty or sales_person_df.empty:
+      st.warning(
+          "⚠️ Proses simpan dibatalkan: Data transaksi terdeteksi kosong untuk"
+          " mencegah kehilangan data."
+      )
+      return False
+
+    # Proses update bertahap dengan jeda waktu untuk menghindari rate limit API
     conn.update(worksheet="SALES_ITEM", data=sales_item_df)
+    time.sleep(0.4)
     conn.update(worksheet="SALES_PERSONIL", data=sales_person_df)
+    time.sleep(0.4)
     conn.update(worksheet="SALES_PPS", data=sales_pps_df)
+    time.sleep(0.4)
     conn.update(worksheet="SALES_STOREPERFORMANCE", data=sales_store_df)
+
     st.toast(
         "Perubahan transaksi tersimpan permanen di Google Sheets!", icon="✅"
     )
     return True
   except Exception as e:
-    st.error(f"Gagal menyimpan transaksi ke Google Sheets: {e}")
+    st.error(
+        f"❌ Gagal menyimpan transaksi ke Google Sheets (Kemungkinan terkena"
+        f" limit/timeout): {e}"
+    )
     return False
 
 
 def save_master_table(sheet_name, df_data):
+  """Menyimpan tabel master dengan pengaman validasi data kosong."""
   try:
+    if df_data.empty:
+      st.warning(f"⚠️ Master {sheet_name} batal disimpan karena data kosong.")
+      return False
+
     conn.update(worksheet=sheet_name, data=df_data)
+    time.sleep(0.3)
     st.toast(
         f"Master {sheet_name} berhasil diperbarui di Google Sheets!", icon="✅"
     )
     return True
   except Exception as e:
-    st.error(f"Gagal update master {sheet_name}: {e}")
+    st.error(f"❌ Gagal update master {sheet_name} (Terkena limit API): {e}")
     return False
 
 
 def sync_store_sales_from_personnel():
-  if "sales_person_df" in st.session_state and "sales_item_df" in st.session_state:
+  if (
+      "sales_person_df" in st.session_state
+      and "sales_item_df" in st.session_state
+  ):
     sp_df = st.session_state.sales_person_df.copy()
     si_df = st.session_state.sales_item_df.copy()
 
