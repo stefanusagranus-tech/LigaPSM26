@@ -2168,7 +2168,7 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
       "📊 Master Status & Summary",
   ])
 
-  # SUB TAB 1: PENAMBAHAN ITEM & TARGET PER PERIODE (PSM)
+  # SUB TAB 1: PENAMBAHAN ITEM & TARGET PER PERIODE
   with tab_m1:
     st.markdown(
         "<h4 style='color: #00ff88;'>➕ Tambah Produk & Target Per Periode</h4>",
@@ -2183,6 +2183,7 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
             key="add_item_period",
         )
         add_period_id = periods_dict[add_period_name]
+        
         new_item_id = (
             st.text_input(
                 "ID Item (PLU / Barcode)", placeholder="Contoh: 100234"
@@ -2193,13 +2194,17 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
         new_item_name = st.text_input(
             "Nama Produk / Item", placeholder="Contoh: MINYAK GORENG 2L"
         ).strip()
+
       with col_add2:
         new_target_toko = st.number_input(
-            "Target Toko (Total Pcs)", min_value=0, step=1, value=100
+            "Target Toko (Total Pcs)", min_value=0, step=1, value=90
         )
-        new_target_kasir = st.number_input(
-            "Target Kasir / Staf (Pcs/Personil)", min_value=0, step=1, value=20
-        )
+
+        # Rumus otomatis: Target Toko / 3
+        new_target_otomatis = int(round(new_target_toko / 3)) if new_target_toko > 0 else 0
+        
+        st.markdown(f"📦 **Target Otomatis (Target Toko / 3):** `{new_target_otomatis} Pcs`")
+        new_target_kasir = new_target_otomatis
 
       btn_submit_add_item = st.form_submit_button(
           "💾 Simpan Produk & Target Baru", use_container_width=True
@@ -2210,8 +2215,9 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
           st.error("⚠️ ID Item dan Nama Produk wajib diisi!")
         else:
           try:
+            # 1. Update Master Item
             m_items = st.session_state.items_df.copy()
-            if new_item_id not in m_items["item_id"].astype(str).tolist():
+            if new_item_id not in m_items["item_id"].astype(str).values:
               new_m_row = pd.DataFrame(
                   [{"item_id": new_item_id, "item_name": new_item_name}]
               )
@@ -2220,25 +2226,36 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
               )
               save_master_table("MASTER_ITEM", st.session_state.items_df)
 
+            # 2. Update Sales Item dengan pengecekan aman agar data lama tidak tertimpa
             s_items = st.session_state.sales_item_df.copy()
-            new_si_row = pd.DataFrame([{
-                "period_id": str(add_period_id),
-                "item_id": str(new_item_id),
-                "item_name": str(new_item_name),
-                "target_qty": int(new_target_toko),
-                "target_kasir": int(new_target_kasir),
-                "actual_qty": 0,
-            }])
-            st.session_state.sales_item_df = pd.concat(
-                [s_items, new_si_row], ignore_index=True
+            mask = (
+                (s_items["period_id"].astype(str) == str(add_period_id)) & 
+                (s_items["item_id"].astype(str) == str(new_item_id))
             )
+
+            if mask.any():
+              s_items.loc[mask, "item_name"] = str(new_item_name)
+              s_items.loc[mask, "target_qty"] = int(new_target_toko)
+              s_items.loc[mask, "target_kasir"] = int(new_target_kasir)
+            else:
+              new_si_row = pd.DataFrame([{
+                  "period_id": str(add_period_id),
+                  "item_id": str(new_item_id),
+                  "item_name": str(new_item_name),
+                  "target_qty": int(new_target_toko),
+                  "target_kasir": int(new_target_kasir),
+                  "actual_qty": 0,
+              }])
+              s_items = pd.concat([s_items, new_si_row], ignore_index=True)
+
+            st.session_state.sales_item_df = s_items
             save_database(
                 st.session_state.sales_item_df,
                 st.session_state.sales_person_df,
             )
 
             st.toast(
-                f"✅ Produk {new_item_name} berhasil ditambahkan!", icon="🎉"
+                f"✅ Produk {new_item_name} berhasil disimpan!", icon="🎉"
             )
             time.sleep(1.5)
             st.rerun()
@@ -2465,7 +2482,7 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
           time.sleep(1.5)
           st.rerun()
 
-  # SUB TAB 4: INPUT & MASTER PPS & SUEGER (DENGAN TARGET KASIR OTOMATIS / 9)
+  # SUB TAB 4: INPUT & MASTER PPS & SUEGER
   with tab_m4:
     st.markdown(
         "<h4 style='color: #c084fc;'>🎯 Input & Pengaturan Periode PPS &"
@@ -2518,9 +2535,7 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
               "Target Promo / Toko (Total Pcs)", min_value=0, step=1, value=180
           )
 
-          # Rumus Otomatis: Target Total dibagi 9 personil (dibulatkan ke integer terdekat)
           pps_target_kasir_auto = int(round(pps_target_promo / 9)) if pps_target_promo > 0 else 0
-          
           st.markdown(f"👤 **Target Per Personil Kasir (Otomatis / 9):** `{pps_target_kasir_auto} Pcs`")
 
         btn_submit_pps = st.form_submit_button(
@@ -2602,7 +2617,6 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
                 value=int(row_match["target_promo"]),
             )
             
-            # Hitung otomatis untuk edit juga
             edit_t_kasir_auto = int(round(edit_t_promo / 9)) if edit_t_promo > 0 else 0
             st.markdown(f"👤 **Target Per Personil (Otomatis / 9):** `{edit_t_kasir_auto} Pcs`")
 
