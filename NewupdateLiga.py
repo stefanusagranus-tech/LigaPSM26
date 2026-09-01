@@ -2594,12 +2594,18 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
           pps_end_date = st.date_input(
               "Tanggal Akhir Periode", value=waktu_wib.date(), key="pps_end"
           )
-          pps_target_promo = st.number_input(
-              "Target Promo / Toko (Total Pcs)", min_value=0, step=1, value=180
-          )
-
-          pps_target_kasir_auto = int(math.ceil(pps_target_promo / 9)) if pps_target_promo > 0 else 0
-          st.markdown(f"👤 **Target Per Personil Kasir (Otomatis / 9):** `{pps_target_kasir_auto} Pcs`")
+          
+          # Target hanya muncul jika opsi yang dipilih adalah PPS
+          if jenis_program == "PPS":
+            pps_target_promo = st.number_input(
+                "Target Promo / Toko (Total Pcs)", min_value=0, step=1, value=180
+            )
+            pps_target_kasir_auto = int(math.ceil(pps_target_promo / 9)) if pps_target_promo > 0 else 0
+            st.markdown(f"👤 **Target Per Personil Kasir (Otomatis / 9):** `{pps_target_kasir_auto} Pcs`")
+          else:
+            pps_target_promo = 0
+            pps_target_kasir_auto = 0
+            st.info("ℹ️ Program **Sueger** tidak memerlukan input target.")
 
         btn_submit_pps = st.form_submit_button(
             "💾 Simpan ke SALES_PPS", use_container_width=True
@@ -2680,15 +2686,21 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
             edit_start = st.date_input("Tanggal Mulai", value=curr_s)
           with col_e2:
             edit_end = st.date_input("Tanggal Akhir", value=curr_e)
-            edit_t_promo = st.number_input(
-                "Target Promo",
-                min_value=0,
-                step=1,
-                value=int(row_match.get("target_promo", 0)),
-            )
             
-            edit_t_kasir_auto = int(math.ceil(edit_t_promo / 9)) if edit_t_promo > 0 else 0
-            st.markdown(f"👤 **Target Per Personil (Otomatis / 9):** `{edit_t_kasir_auto} Pcs`")
+            # Jika program berupa PPS, tampilkan input target, jika Sueger set 0
+            if edit_jenis == "PPS":
+              edit_t_promo = st.number_input(
+                  "Target Promo",
+                  min_value=0,
+                  step=1,
+                  value=int(row_match.get("target_promo", 0)),
+              )
+              edit_t_kasir_auto = int(math.ceil(edit_t_promo / 9)) if edit_t_promo > 0 else 0
+              st.markdown(f"👤 **Target Per Personil (Otomatis / 9):** `{edit_t_kasir_auto} Pcs`")
+            else:
+              edit_t_promo = 0
+              edit_t_kasir_auto = 0
+              st.info("ℹ️ Program **Sueger** tidak memerlukan input target.")
 
           btn_update_pps = st.form_submit_button(
               "💾 Simpan Perubahan Program", use_container_width=True
