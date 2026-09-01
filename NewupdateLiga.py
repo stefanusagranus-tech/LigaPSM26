@@ -2270,11 +2270,9 @@ elif selected_tab == "06 · Input & Reset Data":
         )
     )
 
-    # Fungsi callback untuk mereset state generate ketika kasir atau format diubah
     def reset_sueger_state():
       st.session_state["sueger_generated"] = False
 
-    # Filter Kasir hanya aktif jika memilih Format Laporan Sueger
     if wa_format_type == "🥤 Format Laporan Sueger":
       selected_kasir = st.selectbox(
           "🔍 Filter Berdasarkan Nama Kasir:",
@@ -2287,7 +2285,6 @@ elif selected_tab == "06 · Input & Reset Data":
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # Filter Data PPS Harian (Menyeluruh per Shift)
     pps_filtered_harian = (
         pps_df_report[
             pd.to_datetime(
@@ -2299,7 +2296,6 @@ elif selected_tab == "06 · Input & Reset Data":
         else pd.DataFrame()
     )
 
-    # Filter Data Sueger (Berdasarkan Tanggal & Kasir Terpilih) dari sheet SALES_PPS
     pps_filtered_sueger = (
         pps_df_report[
             (
@@ -2321,7 +2317,8 @@ elif selected_tab == "06 · Input & Reset Data":
 
     if wa_format_type == "📋 Format Laporan PPS":
       st.markdown(
-          "<h5 style='color: #38bdf8;'>✨ Preview Format Laporan PPS (Harian per Shift)</h5>",
+          "<h5 style='color: #38bdf8;'>✨ Preview Format Laporan PPS (Harian per"
+          " Shift)</h5>",
           unsafe_allow_html=True,
       )
 
@@ -2330,7 +2327,6 @@ elif selected_tab == "06 · Input & Reset Data":
       wa_pps_text = "🌟 *REKAP LAPORAN HARIAN PPS* 🌟\n"
       wa_pps_text += f"📅 Tanggal: {date_str_formatted}\n"
       wa_pps_text += f"📦 *Periode*: {periode_bulan}\n\n"
-
       wa_pps_text += "🎯 *Detail Kinerja Program (PWP, SG, Ceban)*:\n"
 
       if not pps_filtered_harian.empty:
@@ -2346,9 +2342,7 @@ elif selected_tab == "06 · Input & Reset Data":
           tot_syarat_pwp = int(group_df["syarat_pwp"].sum())
           tot_redeem_pwp = int(group_df["redeem_pwp"].sum())
           tot_qty_pwp = int(group_df["qty_pwp"].sum())
-
           tot_qty_sg = int(group_df["qty_sg"].sum())
-
           tot_qty_sueger = int(
               group_df.get("qty_sueger", 0).sum()
               if "qty_sueger" in group_df.columns
@@ -2356,7 +2350,6 @@ elif selected_tab == "06 · Input & Reset Data":
           )
           tot_syarat_sueger = int(group_df["syarat_sueger"].sum())
           tot_redeem_sueger = int(group_df["redeem_sueger"].sum())
-
           tot_ceban = int(group_df["cemilan_ceban"].sum())
 
           wa_pps_text += (
@@ -2373,20 +2366,21 @@ elif selected_tab == "06 · Input & Reset Data":
 
       wa_pps_text += "✅ *Status: Program PPS Berjalan Lancar & Termonitor*"
 
-      st.text_area(
-          "Salin Teks Pesan WhatsApp:",
-          value=wa_pps_text,
-          height=320,
-          key="text_area_wa_pps_transparan",
+      st.markdown(
+          "<p style='font-size: 13px; color: #94a3b8; margin-bottom:"
+          " -5px;'>📋 <b>Ketuk ikon salin di pojok kanan kotak di bawah ini"
+          " untuk menyalin laporan:</b></p>",
+          unsafe_allow_html=True,
       )
+      st.code(wa_pps_text, language="markdown")
 
     else:
       st.markdown(
-          "<h5 style='color: #38bdf8;'>✨ Preview Format Laporan Sueger (Per Kasir)</h5>",
+          "<h5 style='color: #38bdf8;'>✨ Preview Format Laporan Sueger (Per"
+          " Kasir)</h5>",
           unsafe_allow_html=True,
       )
 
-      # Tombol Trigger Generate Laporan Sueger
       btn_generate_sueger = st.button(
           "🚀 Generate Laporan Sueger",
           use_container_width=True,
@@ -2402,7 +2396,9 @@ elif selected_tab == "06 · Input & Reset Data":
         wa_sueger_text += f"TANGGAL UPDATE: {date_str_formatted}\n"
         wa_sueger_text += f"NAMA KASIR: *{selected_kasir}*\n\n"
         wa_sueger_text += "🥤 *LAPORAN PENJUALAN SUEGER* 🥤\n"
-        wa_sueger_text += "🔹 TANGGAL / SYARAT / REDEEM / ACHIVMENT / KETERANGAN\n"
+        wa_sueger_text += (
+            "🔹 TANGGAL / SYARAT / REDEEM / ACHIVMENT / KETERANGAN\n"
+        )
 
         if not pps_filtered_sueger.empty:
           total_syarat_sueger = 0
@@ -2449,12 +2445,14 @@ elif selected_tab == "06 · Input & Reset Data":
         else:
           wa_sueger_text += f"_Belum ada data input Sueger untuk kasir {selected_kasir} pada tanggal ini._\n"
 
-        st.text_area(
-            "Salin Teks Pesan WhatsApp:",
-            value=wa_sueger_text,
-            height=280,
-            key="text_area_wa_sueger_transparan",
+        st.markdown(
+            "<p style='font-size: 13px; color: #94a3b8; margin-bottom:"
+            " -5px;'>📋 <b>Ketuk ikon salin di pojok kanan kotak di bawah ini"
+            " untuk menyalin laporan:</b></p>",
+            unsafe_allow_html=True,
         )
+        st.code(wa_sueger_text, language="markdown")
+
       else:
         st.info(
             f"ℹ️ Silakan pilih kasir **{selected_kasir}** lalu klik tombol"
