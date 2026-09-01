@@ -1499,7 +1499,6 @@ elif selected_tab == "05 · Analisis Tren":
           f"**{r['item_name']}** — Sisa Gap: **{max(0, r['gap']):,.0f} Pcs**"
           f" (Ach: **{r['ach']:.1f}%**)"
       )
-
 # --- TAB 06: INPUT & RESET DATA ---
 elif selected_tab == "06 · Input & Reset Data":
   st.markdown(
@@ -1521,7 +1520,6 @@ elif selected_tab == "06 · Input & Reset Data":
       if "periods_df" in st.session_state
       else pd.DataFrame()
   )
-  # Ambil data PERIODE_PPS untuk mapping dinamis PPS
   periode_pps_df = (
       st.session_state.periode_pps_df.copy()
       if "periode_pps_df" in st.session_state
@@ -1776,7 +1774,7 @@ elif selected_tab == "06 · Input & Reset Data":
           else:
             st.warning("⚠️ Tidak ada Qty produk yang diisi (semua bernilai 0).")
 
-  # SUB TAB 2: INPUT SALES PPS (Terintegrasi Dinamis dengan PERIODE_PPS & Simpan ke SALES_PPS)
+  # SUB TAB 2: INPUT SALES PPS
   with tab_in2:
     st.markdown(
         "<h4 style='color: #00ff88;'>🎯 Form Input Penjualan & Kinerja"
@@ -1881,7 +1879,7 @@ elif selected_tab == "06 · Input & Reset Data":
           )
 
         st.markdown("---")
-        st.markdown("##### 🛒 Detail 7 Kolom Kinerja PPS:")
+        st.markdown("##### 🛒 Detail Kolom Kinerja PPS:")
 
         col_q1, col_q2, col_q3 = st.columns(3)
 
@@ -2224,192 +2222,194 @@ elif selected_tab == "06 · Input & Reset Data":
             time.sleep(1.5)
             st.rerun()
 
-  # --- SUB TAB 5: SALIN FORMAT WHATSAPP (Dengan Filter Kasir & Desain Transparan) ---
-with tab_in5:
-  st.markdown(
-      "<h4 style='color: #00ff88;'>📱 Generator Format Laporan"
-      " WhatsApp</h4>",
-      unsafe_allow_html=True,
-  )
-  st.markdown(
-      "<p style='color: #cbd5e1; font-size: 14px;'>Pilih jenis laporan dan"
-      " filter berdasarkan Nama Kasir untuk menyalin rekapitulasi siap kirim"
-      " ke WhatsApp.</p>",
-      unsafe_allow_html=True,
-  )
+  # SUB TAB 5: SALIN FORMAT WHATSAPP (Desain Transparan & Berdasarkan Filter Kasir)
+  with tab_in5:
+    st.markdown(
+        "<h4 style='color: #00ff88;'>📱 Generator Format Laporan"
+        " WhatsApp</h4>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        "<p style='color: #cbd5e1; font-size: 14px;'>Pilih jenis laporan dan"
+        " filter berdasarkan Nama Kasir untuk menyalin rekapitulasi siap kirim"
+        " ke WhatsApp.</p>",
+        unsafe_allow_html=True,
+    )
 
-  # Container transparan dengan gaya modern glassmorphism
-  st.markdown(
-      """
+    # Container transparan dengan gaya modern glassmorphism
+    st.markdown(
+        """
         <div style="background: rgba(15, 23, 42, 0.6); padding: 20px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); margin-bottom: 20px;">
         """,
-      unsafe_allow_html=True,
-  )
-
-  col_f1, col_f2 = st.columns(2)
-  with col_f1:
-    wa_format_type = st.radio(
-        "Pilih Format Laporan:",
-        ["📋 Format Laporan PPS", "🥤 Format Laporan Sueger"],
-        key="wa_format_selector",
-    )
-  with col_f2:
-    selected_wa_date = st.date_input(
-        "Pilih Tanggal Laporan",
-        value=waktu_wib.date(),
-        key="wa_report_date",
-    )
-
-  date_str_formatted = selected_wa_date.strftime("%d-%m-%Y")
-
-  # Ambil daftar kasir yang tersedia dari SALES_PPS atau person_df
-  available_kasir = (
-      pps_df_report["kasir_name"].dropna().unique().tolist()
-      if not pps_df_report.empty and "kasir_name" in pps_df_report.columns
-      else (
-          person_df["person_name"].dropna().unique().tolist()
-          if not person_df.empty
-          else ["TIKA"]
-      )
-  )
-
-  selected_kasir = st.selectbox(
-      "🔍 Filter Berdasarkan Nama Kasir:",
-      available_kasir,
-      key="wa_filter_kasir",
-  )
-
-  st.markdown("</div>", unsafe_allow_html=True)
-
-  # Filter Data berdasarkan Tanggal & Kasir
-  sp_filtered = (
-      sp_df[
-          (
-              pd.to_datetime(sp_df["updated_at"], errors="coerce").dt.date
-              == selected_wa_date
-          )
-          & (sp_df["person_name"].astype(str).str.lower() == str(selected_kasir).lower())
-      ]
-      if not sp_df.empty and "updated_at" in sp_df.columns
-      else pd.DataFrame()
-  )
-
-  pps_filtered = (
-      pps_df_report[
-          (
-              pd.to_datetime(
-                  pps_df_report["updated_at"], errors="coerce"
-              ).dt.date
-              == selected_wa_date
-          )
-          & (
-              pps_df_report["kasir_name"].astype(str).str.lower()
-              == str(selected_kasir).lower()
-          )
-      ]
-      if not pps_df_report.empty and "updated_at" in pps_df_report.columns
-      else pd.DataFrame()
-  )
-
-  if wa_format_type == "📋 Format Laporan PPS":
-    st.markdown(
-        "<h5 style='color: #38bdf8;'>✨ Preview Format Laporan PPS</h5>",
         unsafe_allow_html=True,
     )
 
-    wa_pps_text = f"🌟 *REKAP LAPORAN HARIAN PPS* 🌟\n"
-    wa_pps_text += f"📅 Tanggal: {date_str_formatted}\n"
-    wa_pps_text += f"👤 Kasir: *{selected_kasir}*\n\n"
-
-    wa_pps_text += "📦 *1. Laporan PSM (Item & Total Qty)*:\n"
-    if not sp_filtered.empty:
-      psm_group = (
-          sp_filtered.groupby("item_name")["actual_qty"].sum().reset_index()
+    col_f1, col_f2 = st.columns(2)
+    with col_f1:
+      wa_format_type = st.radio(
+          "Pilih Format Laporan:",
+          ["📋 Format Laporan PPS", "🥤 Format Laporan Sueger"],
+          key="wa_format_selector",
       )
-      total_psm_qty = psm_group["actual_qty"].sum()
-      for idx, row in psm_group.iterrows():
-        wa_pps_text += f"   ▪️ {row['item_name']}: *{row['actual_qty']} Pcs*\n"
-      wa_pps_text += f"   👉 *Total Qty Keseluruhan PSM: {total_psm_qty} Pcs*\n\n"
-    else:
-      wa_pps_text += (
-          f"   _Belum ada catatan penjualan PSM untuk kasir {selected_kasir}._\n\n"
+    with col_f2:
+      selected_wa_date = st.date_input(
+          "Pilih Tanggal Laporan",
+          value=waktu_wib.date(),
+          key="wa_report_date",
       )
 
-    wa_pps_text += "🎯 *2. Detail Kinerja Program (PWP, SG, Ceban)*:\n"
-    if not pps_filtered.empty:
-      for idx, row in pps_filtered.iterrows():
-        wa_pps_text += f"   📌 *Shift: {row.get('shift_personil', '-')}* (Staf: {row.get('staff_name', '-')})\n"
-        wa_pps_text += f"      • PWP ➔ Syarat: {row.get('syarat_pwp', 0)} | Redeem: {row.get('redeem_pwp', 0)} | Qty: {row.get('qty_pwp', 0)}\n"
-        wa_pps_text += f"      • Serba Gratis (SG) ➔ Qty: {row.get('qty_sg', 0)}\n"
-        wa_pps_text += f"      • Cemilan Ceban ➔ Qty: {row.get('cemilan_ceban', 0)}\n\n"
-    else:
-      wa_pps_text += (
-          f"   _Belum ada data input PPS/PWP untuk kasir {selected_kasir}._\n\n"
-      )
+    date_str_formatted = selected_wa_date.strftime("%d-%m-%Y")
 
-    wa_pps_text += "✅ *Status: Program PPS Berjalan Lancar & Termonitor*"
-
-    st.text_area(
-        "Salin Teks Pesan WhatsApp:",
-        value=wa_pps_text,
-        height=280,
-        key="text_area_wa_pps_transparan",
+    available_kasir = (
+        pps_df_report["kasir_name"].dropna().unique().tolist()
+        if not pps_df_report.empty and "kasir_name" in pps_df_report.columns
+        else (
+            person_df["person_name"].dropna().unique().tolist()
+            if not person_df.empty
+            else ["TIKA"]
+        )
     )
 
-  else:
-    st.markdown(
-        "<h5 style='color: #38bdf8;'>✨ Preview Format Laporan Sueger</h5>",
-        unsafe_allow_html=True,
+    selected_kasir = st.selectbox(
+        "🔍 Filter Berdasarkan Nama Kasir:",
+        available_kasir,
+        key="wa_filter_kasir",
     )
 
-    wa_sueger_text = "KODE TOKO: C383\n"
-    wa_sueger_text += "NAMA TOKO: Karang Satria\n"
-    wa_sueger_text += f"TANGGAL UPDATE: {date_str_formatted}\n"
-    wa_sueger_text += f"NAMA KASIR: *{selected_kasir}*\n\n"
-    wa_sueger_text += "🥤 *LAPORAN PENJUALAN SUEGER* 🥤\n\n"
+    st.markdown("</div>", unsafe_allow_html=True)
 
-    if not pps_filtered.empty:
-      total_syarat_sueger = 0
-      total_redeem_sueger = 0
-      count_records = len(pps_filtered)
+    # Filter Data berdasarkan Tanggal & Kasir
+    sp_filtered = (
+        sp_df[
+            (
+                pd.to_datetime(sp_df["updated_at"], errors="coerce").dt.date
+                == selected_wa_date
+            )
+            & (
+                sp_df["person_name"].astype(str).str.lower()
+                == str(selected_kasir).lower()
+            )
+        ]
+        if not sp_df.empty and "updated_at" in sp_df.columns
+        else pd.DataFrame()
+    )
 
-      for idx, row in pps_filtered.iterrows():
-        s_val = row.get("syarat_sueger", 0)
-        r_val = row.get("redeem_sueger", 0)
-        total_syarat_sueger += s_val
-        total_redeem_sueger += r_val
+    pps_filtered = (
+        pps_df_report[
+            (
+                pd.to_datetime(
+                    pps_df_report["updated_at"], errors="coerce"
+                ).dt.date
+                == selected_wa_date
+            )
+            & (
+                pps_df_report["kasir_name"].astype(str).str.lower()
+                == str(selected_kasir).lower()
+            )
+        ]
+        if not pps_df_report.empty and "updated_at" in pps_df_report.columns
+        else pd.DataFrame()
+    )
 
-        target_sueger = s_val * 0.5  # Target 50% dari syarat
-        achv_pct = (r_val / s_val * 100) if s_val > 0 else 0.0
-        keterangan_status = (
-            "LULUS ✅" if r_val >= target_sueger else "TIDAK LULUS ❌"
+    if wa_format_type == "📋 Format Laporan PPS":
+      st.markdown(
+          "<h5 style='color: #38bdf8;'>✨ Preview Format Laporan PPS</h5>",
+          unsafe_allow_html=True,
+      )
+
+      wa_pps_text = f"🌟 *REKAP LAPORAN HARIAN PPS* 🌟\n"
+      wa_pps_text += f"📅 Tanggal: {date_str_formatted}\n"
+      wa_pps_text += f"👤 Kasir: *{selected_kasir}*\n\n"
+
+      wa_pps_text += "📦 *1. Laporan PSM (Item & Total Qty)*:\n"
+      if not sp_filtered.empty:
+        psm_group = (
+            sp_filtered.groupby("item_name")["actual_qty"].sum().reset_index()
+        )
+        total_psm_qty = psm_group["actual_qty"].sum()
+        for idx, row in psm_group.iterrows():
+          wa_pps_text += f"   ▪️ {row['item_name']}: *{row['actual_qty']} Pcs*\n"
+        wa_pps_text += f"   👉 *Total Qty Keseluruhan PSM: {total_psm_qty} Pcs*\n\n"
+      else:
+        wa_pps_text += (
+            f"   _Belum ada catatan penjualan PSM untuk kasir {selected_kasir}._\n\n"
         )
 
-        wa_sueger_text += f"🔹 *Shift: {row.get('shift_personil', '-')}* (Staf: {row.get('staff_name', '-')})\n"
-        wa_sueger_text += f"   • Syarat: {s_val}\n"
-        wa_sueger_text += f"   • Redeem: {r_val}\n"
-        wa_sueger_text += f"   • Target (50%): {target_sueger:.1f}\n"
-        wa_sueger_text += f"   • Achv: {achv_pct:.1f}%\n"
-        wa_sueger_text += f"   • Keterangan: *{keterangan_status}*\n\n"
+      wa_pps_text += "🎯 *2. Detail Kinerja Program (PWP, SG, Ceban)*:\n"
+      if not pps_filtered.empty:
+        for idx, row in pps_filtered.iterrows():
+          wa_pps_text += f"   📌 *Shift: {row.get('shift_personil', '-')}* (Staf: {row.get('staff_name', '-')})\n"
+          wa_pps_text += f"      • PWP ➔ Syarat: {row.get('syarat_pwp', 0)} | Redeem: {row.get('redeem_pwp', 0)} | Qty: {row.get('qty_pwp', 0)}\n"
+          wa_pps_text += f"      • Serba Gratis (SG) ➔ Qty: {row.get('qty_sg', 0)}\n"
+          wa_pps_text += f"      • Cemilan Ceban ➔ Qty: {row.get('cemilan_ceban', 0)}\n\n"
+      else:
+        wa_pps_text += (
+            f"   _Belum ada data input PPS/PWP untuk kasir {selected_kasir}._\n\n"
+        )
 
-      avg_redeem = (
-          total_redeem_sueger / count_records if count_records > 0 else 0
+      wa_pps_text += "✅ *Status: Program PPS Berjalan Lancar & Termonitor*"
+
+      st.text_area(
+          "Salin Teks Pesan WhatsApp:",
+          value=wa_pps_text,
+          height=280,
+          key="text_area_wa_pps_transparan",
       )
-      wa_sueger_text += "==================\n"
-      wa_sueger_text += "📊 *SUMMARY TOTAL KESELURUHAN*:\n"
-      wa_sueger_text += f"   - Total Syarat: {total_syarat_sueger}\n"
-      wa_sueger_text += f"   - Total Redeem: {total_redeem_sueger}\n"
-      wa_sueger_text += f"   - Rata-rata Redeem: {avg_redeem:.2f}\n"
+
     else:
-      wa_sueger_text += f"_Belum ada data input Sueger untuk kasir {selected_kasir} pada tanggal ini._\n"
+      st.markdown(
+          "<h5 style='color: #38bdf8;'>✨ Preview Format Laporan Sueger</h5>",
+          unsafe_allow_html=True,
+      )
 
-    st.text_area(
-        "Salin Teks Pesan WhatsApp:",
-        value=wa_sueger_text,
-        height=280,
-        key="text_area_wa_sueger_transparan",
-    )
+      wa_sueger_text = "KODE TOKO: C383\n"
+      wa_sueger_text += "NAMA TOKO: Karang Satria\n"
+      wa_sueger_text += f"TANGGAL UPDATE: {date_str_formatted}\n"
+      wa_sueger_text += f"NAMA KASIR: *{selected_kasir}*\n\n"
+      wa_sueger_text += "🥤 *LAPORAN PENJUALAN SUEGER* 🥤\n\n"
 
+      if not pps_filtered.empty:
+        total_syarat_sueger = 0
+        total_redeem_sueger = 0
+        count_records = len(pps_filtered)
+
+        for idx, row in pps_filtered.iterrows():
+          s_val = row.get("syarat_sueger", 0)
+          r_val = row.get("redeem_sueger", 0)
+          total_syarat_sueger += s_val
+          total_redeem_sueger += r_val
+
+          target_sueger = s_val * 0.5  # Target 50% dari syarat
+          achv_pct = (r_val / s_val * 100) if s_val > 0 else 0.0
+          keterangan_status = (
+              "LULUS ✅" if r_val >= target_sueger else "TIDAK LULUS ❌"
+          )
+
+          wa_sueger_text += f"🔹 *Shift: {row.get('shift_personil', '-')}* (Staf: {row.get('staff_name', '-')})\n"
+          wa_sueger_text += f"   • Syarat: {s_val}\n"
+          wa_sueger_text += f"   • Redeem: {r_val}\n"
+          wa_sueger_text += f"   • Target (50%): {target_sueger:.1f}\n"
+          wa_sueger_text += f"   • Achv: {achv_pct:.1f}%\n"
+          wa_sueger_text += f"   • Keterangan: *{keterangan_status}*\n\n"
+
+        avg_redeem = (
+            total_redeem_sueger / count_records if count_records > 0 else 0
+        )
+        wa_sueger_text += "==================\n"
+        wa_sueger_text += "📊 *SUMMARY TOTAL KESELURUHAN*:\n"
+        wa_sueger_text += f"   - Total Syarat: {total_syarat_sueger}\n"
+        wa_sueger_text += f"   - Total Redeem: {total_redeem_sueger}\n"
+        wa_sueger_text += f"   - Rata-rata Redeem: {avg_redeem:.2f}\n"
+      else:
+        wa_sueger_text += f"_Belum ada data input Sueger untuk kasir {selected_kasir} pada tanggal ini._\n"
+
+      st.text_area(
+          "Salin Teks Pesan WhatsApp:",
+          value=wa_sueger_text,
+          height=280,
+          key="text_area_wa_sueger_transparan",
+      )
+        
 # --- TAB MASTER DATA & PENGATURAN ---
 elif selected_tab == "⚙️ Master Data & Pengaturan":
   st.markdown(
