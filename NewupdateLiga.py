@@ -138,11 +138,21 @@ def save_database(
 
 
 def save_master_table(sheet_name, df_data):
-  """Menyimpan tabel master dengan pengaman validasi data kosong."""
+  """Menyimpan tabel master dengan pengaman validasi data kosong dan urutan kolom."""
   try:
     if df_data.empty:
       st.warning(f"⚠️ Master {sheet_name} batal disimpan karena data kosong.")
       return False
+
+    # Penyelarasan urutan kolom khusus untuk MASTER_ITEM agar tidak bergeser
+    if sheet_name == "MASTER_ITEM":
+      expected_cols = ["period_id", "item_id", "item_name", "active", "category"]
+      # Pastikan kolom yang belum ada ditambahkan sebagai string kosong
+      for col in expected_cols:
+        if col not in df_data.columns:
+          df_data[col] = ""
+      # Urutkan DataFrame persis seperti struktur Google Sheets
+      df_data = df_data[expected_cols]
 
     conn.update(worksheet=sheet_name, data=df_data)
     time.sleep(0.3)
@@ -2221,6 +2231,9 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
         new_item_name = st.text_input(
             "Nama Produk / Item", placeholder="Contoh: MINYAK GORENG 2L"
         ).strip()
+        
+        # Kolom tambahan sesuai struktur baru Google Sheets
+        new_category = st.text_input("Kategori Produk", placeholder="Contoh: FOOD / NON-FOOD").strip()
 
       with col_add2:
         new_target_toko = st.number_input(
@@ -2228,7 +2241,6 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
         )
 
         new_target_otomatis = int(math.ceil(new_target_toko / 3)) if new_target_toko > 0 else 0
-        
         st.markdown(f"📦 **Target Otomatis (Target Toko / 3):** `{new_target_otomatis} Pcs`")
         new_target_kasir = new_target_otomatis
 
@@ -2241,42 +2253,47 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
           st.error("⚠️ ID Item dan Nama Produk wajib diisi!")
         else:
           try:
-            # Pengaman inisialisasi DataFrame items_df jika belum ada / kosong
+            # 1. Update MASTER_ITEM dengan kolom lengkap
             if "items_df" not in st.session_state or st.session_state.items_df is None:
-              st.session_state.items_df = pd.DataFrame(columns=["item_id", "item_name"])
+              st.session_state.items_df = pd.DataFrame(columns=["period_id", "item_id", "item_name", "active", "category"])
             
             m_items = st.session_state.items_df.copy()
             
-            if "item_id" not in m_items.columns:
-              m_items["item_id"] = ""
-            if "item_name" not in m_items.columns:
-              m_items["item_name"] = ""
+            # Pastikan semua kolom tersedia
+            for col in ["period_id", "item_id", "item_name", "active", "category"]:
+              if col not in m_items.columns:
+                m_items[col] = ""
 
-            if new_item_id not in m_items["item_id"].astype(str).values:
-              new_m_row = pd.DataFrame(
-                  [{"item_id": new_item_id, "item_name": new_item_name}]
-              )
-              st.session_state.items_df = pd.concat(
-                  [m_items, new_m_row], ignore_index=True
-              )
+            # Cek duplikasi berdasarkan period_id dan item_id
+            mask_master = (m_items["period_id"].astype(str) == str(add_period_id)) & (m_items["item_id"].astype(str) == str(new_item_id))
+            
+            if not mask_master.any():
+              new_m_row = pd.DataFrame([{
+                  "period_id": str(add_period_id),
+                  "item_id": str(new_item_id),
+                  "item_name": str(new_item_name),
+                  "active": "TRUE",
+                  "category": str(new_category)
+              }])
+              st.session_state.items_df = pd.concat([m_items, new_m_row], ignore_index=True)
               save_master_table("MASTER_ITEM", st.session_state.items_df)
 
-            # Pengaman inisialisasi sales_item_df
+            # 2. Update SALES_ITEM_DF
             if "sales_item_df" not in st.session_state or st.session_state.sales_item_df is None:
               st.session_state.sales_item_df = pd.DataFrame(columns=[
                   "period_id", "item_id", "item_name", "target_qty", "target_kasir", "actual_qty"
               ])
 
             s_items = st.session_state.sales_item_df.copy()
-            mask = (
+            mask_sales = (
                 (s_items["period_id"].astype(str) == str(add_period_id)) & 
                 (s_items["item_id"].astype(str) == str(new_item_id))
             )
 
-            if mask.any():
-              s_items.loc[mask, "item_name"] = str(new_item_name)
-              s_items.loc[mask, "target_qty"] = int(new_target_toko)
-              s_items.loc[mask, "target_kasir"] = int(new_target_kasir)
+            if mask_sales.any():
+              s_items.loc[mask_sales, "item_name"] = str(new_item_name)
+              s_items.loc[mask_sales, "target_qty"] = int(new_target_toko)
+              s_items.loc[mask_sales, "target_kasir"] = int(new_target_kasir)
             else:
               new_si_row = pd.DataFrame([{
                   "period_id": str(add_period_id),
@@ -2297,9 +2314,7 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
                 st.session_state.sales_store_df,
             )
 
-            st.toast(
-                f"✅ Produk {new_item_name} berhasil disimpan!", icon="🎉"
-            )
+            st.toast(f"✅ Produk {new_item_name} berhasil disimpan!", icon="🎉")
             time.sleep(1.5)
             st.rerun()
           except Exception as e:
