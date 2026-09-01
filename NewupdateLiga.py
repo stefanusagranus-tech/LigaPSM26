@@ -1521,6 +1521,12 @@ elif selected_tab == "06 · Input & Reset Data":
       if "periods_df" in st.session_state
       else pd.DataFrame()
   )
+  # Ambil data PERIODE_PPS untuk mapping dinamis PPS
+  periode_pps_df = (
+      st.session_state.periode_pps_df.copy()
+      if "periode_pps_df" in st.session_state
+      else pd.DataFrame()
+  )
   si_df = (
       st.session_state.sales_item_df.copy()
       if "sales_item_df" in st.session_state
@@ -1531,17 +1537,23 @@ elif selected_tab == "06 · Input & Reset Data":
       if "sales_person_df" in st.session_state
       else pd.DataFrame()
   )
+  pps_df_report = (
+      st.session_state.sales_pps_df.copy()
+      if "sales_pps_df" in st.session_state
+      else pd.DataFrame()
+  )
   person_df = (
       st.session_state.person_df.copy()
       if "person_df" in st.session_state
       else pd.DataFrame()
   )
 
-  tab_in1, tab_in2, tab_in3, tab_in4 = st.tabs([
+  tab_in1, tab_in2, tab_in3, tab_in4, tab_in5 = st.tabs([
       "⚡ Multi Input Sales Personil",
       "🎯 Input Sales PPS",
       "✏️ Edit Sales Personil",
       "🗑️ Hapus & Reset Sales",
+      "📱 Salin Format WA",
   ])
 
   def get_period_date_bounds(p_id):
@@ -1764,7 +1776,7 @@ elif selected_tab == "06 · Input & Reset Data":
           else:
             st.warning("⚠️ Tidak ada Qty produk yang diisi (semua bernilai 0).")
 
-  # SUB TAB 2: INPUT SALES PPS (Mode Uji Coba Tanpa Periode)
+  # SUB TAB 2: INPUT SALES PPS (Terintegrasi Dinamis dengan PERIODE_PPS & Simpan ke SALES_PPS)
   with tab_in2:
     st.markdown(
         "<h4 style='color: #00ff88;'>🎯 Form Input Penjualan & Kinerja"
@@ -1780,18 +1792,19 @@ elif selected_tab == "06 · Input & Reset Data":
 
       @st.dialog("🎉 Data PPS Berhasil Disimpan!")
       def show_success_pps_dialog(
-          staff_val, kasir_val, date_str, syarat_pwp_val, redeem_pwp_val
+          staff_val, kasir_val, date_str, matched_pps_id, syarat_pwp_val, redeem_pwp_val
       ):
         st.success(
             "✅ **Data Sales PPS** berhasil disimpan secara permanen ke"
-            " database!"
+            " database (SALES_PPS)!"
         )
         st.markdown(f"""
+            * **ID Periode PPS:** `{matched_pps_id}`
             * **Staf / Personil:** `{staff_val}`
             * **Kasir:** `{kasir_val}`
             * **Tanggal:** `{date_str}`
             * **Syarat PWP:** `{syarat_pwp_val}` | **Redeem PWP:** `{redeem_pwp_val}`
-            * **Status:** Synchronized to Google Sheets ✅
+            * **Status:** Synchronized to SALES_PPS ✅
             """)
         if st.button(
             "👍 Oke, Lanjutkan / Tutup",
@@ -1800,15 +1813,13 @@ elif selected_tab == "06 · Input & Reset Data":
         ):
           st.rerun()
 
-      pps_p_id = "UJI_COBA_PPS"
-
       all_personnel = (
           person_df["person_name"].dropna().unique().tolist()
           if not person_df.empty and "person_name" in person_df.columns
           else [current_user]
       )
 
-      with st.form(key="form_input_pps_trial"):
+      with st.form(key="form_input_pps_dynamic"):
         st.markdown(
             "##### 📋 Masukkan Detail Transaksi & Kinerja Program PPS:"
         )
@@ -1818,11 +1829,11 @@ elif selected_tab == "06 · Input & Reset Data":
           shift_personil = st.selectbox(
               "Shift Personil",
               ["Shift 1", "Shift 2", "Shift 3", "Full Shift"],
-              key="pps_shift",
+              key="pps_shift_dyn",
           )
           if is_admin:
             staff_name = st.selectbox(
-                "Nama Staf", all_personnel, key="pps_staff"
+                "Nama Staf", all_personnel, key="pps_staff_dyn"
             )
           else:
             staff_name = current_user
@@ -1830,10 +1841,43 @@ elif selected_tab == "06 · Input & Reset Data":
 
         with col_p2:
           kasir_name = st.selectbox(
-              "Nama Kasir", all_personnel, key="pps_kasir"
+              "Nama Kasir", all_personnel, key="pps_kasir_dyn"
           )
           tanggal_pps = st.date_input(
-              "Tanggal Input PPS", value=waktu_wib.date(), key="pps_date"
+              "Tanggal Input PPS", value=waktu_wib.date(), key="pps_date_dyn"
+          )
+
+        active_pps_id = "PPS_DEFAULT"
+        if not periode_pps_df.empty and all(
+            col in periode_pps_df.columns
+            for col in ["period_id", "start_date", "end_date"]
+        ):
+          matched_row = periode_pps_df[
+              (
+                  pd.to_datetime(periode_pps_df["start_date"]).dt.date
+                  <= tanggal_pps
+              )
+              & (
+                  pd.to_datetime(periode_pps_df["end_date"]).dt.date
+                  >= tanggal_pps
+              )
+          ]
+          if not matched_row.empty:
+            active_pps_id = str(matched_row.iloc[0]["period_id"])
+            st.info(
+                f"📅 Berdasarkan tanggal `{tanggal_pps.strftime('%d/%m/%Y')}`,"
+                f" sistem mendeteksi ID Periode PPS: **{active_pps_id}**"
+            )
+          else:
+            st.warning(
+                f"⚠️ Tanggal `{tanggal_pps.strftime('%d/%m/%Y')}` tidak masuk"
+                " dalam rentang periode aktif di `PERIODE_PPS`. Menggunakan"
+                " default: `PPS_DEFAULT`"
+            )
+        else:
+          st.info(
+              "ℹ️ Belum ada data rentang tanggal di `PERIODE_PPS`. Menggunakan"
+              " ID default: `PPS_DEFAULT`"
           )
 
         st.markdown("---")
@@ -1843,22 +1887,22 @@ elif selected_tab == "06 · Input & Reset Data":
 
         with col_q1:
           syarat_pwp = st.number_input(
-              "Syarat PWP", min_value=0, step=1, value=0, key="pps_syarat_pwp"
+              "Syarat PWP", min_value=0, step=1, value=0, key="pps_syarat_pwp_dyn"
           )
           redeem_pwp = st.number_input(
-              "Redeem PWP", min_value=0, step=1, value=0, key="pps_redeem_pwp"
+              "Redeem PWP", min_value=0, step=1, value=0, key="pps_redeem_pwp_dyn"
           )
 
         with col_q2:
           qty_pwp = st.number_input(
-              "Qty PWP", min_value=0, step=1, value=0, key="pps_qty_pwp"
+              "Qty PWP", min_value=0, step=1, value=0, key="pps_qty_pwp_dyn"
           )
           qty_sg = st.number_input(
               "Qty SG (Serba Gratis)",
               min_value=0,
               step=1,
               value=0,
-              key="pps_qty_sg",
+              key="pps_qty_sg_dyn",
           )
 
         with col_q3:
@@ -1867,30 +1911,32 @@ elif selected_tab == "06 · Input & Reset Data":
               min_value=0,
               step=1,
               value=0,
-              key="pps_syarat_sueger",
+              key="pps_syarat_sueger_dyn",
           )
           redeem_sueger = st.number_input(
               "Redeem Sueger",
               min_value=0,
               step=1,
               value=0,
-              key="pps_redeem_sueger",
+              key="pps_redeem_sueger_dyn",
           )
 
         st.markdown("")
         cemilan_ceban = st.number_input(
-            "Cemilan Ceban", min_value=0, step=1, value=0, key="pps_cemilan_ceban"
+            "Cemilan Ceban",
+            min_value=0,
+            step=1,
+            value=0,
+            key="pps_cemilan_ceban_dyn",
         )
 
         st.markdown("---")
         btn_save_pps = st.form_submit_button(
-            "💾 Simpan Data Sales PPS (Uji Coba)", use_container_width=True
+            "💾 Simpan Data ke SALES_PPS", use_container_width=True
         )
 
       if btn_save_pps:
-        existing_pps_df = st.session_state.get(
-            "sales_pps_df", pd.DataFrame()
-        )
+        existing_pps_df = st.session_state.get("sales_pps_df", pd.DataFrame())
         current_max_pps_id = 0
         if not existing_pps_df.empty and "record_id" in existing_pps_df.columns:
           numeric_ids = (
@@ -1906,7 +1952,7 @@ elif selected_tab == "06 · Input & Reset Data":
 
         new_pps_record = {
             "record_id": f"PPS{current_max_pps_id:05d}",
-            "period_id": str(pps_p_id),
+            "period_id": str(active_pps_id),
             "shift_personil": str(shift_personil),
             "staff_name": str(staff_name),
             "kasir_name": str(kasir_name),
@@ -1921,7 +1967,7 @@ elif selected_tab == "06 · Input & Reset Data":
         }
 
         try:
-          with st.spinner("⏳ Menyimpan data PPS ke Spreadsheet..."):
+          with st.spinner("⏳ Menyimpan data ke sheet SALES_PPS..."):
             new_pps_df = pd.DataFrame([new_pps_record])
             if "sales_pps_df" not in st.session_state:
               st.session_state.sales_pps_df = pd.DataFrame()
@@ -1930,6 +1976,7 @@ elif selected_tab == "06 · Input & Reset Data":
                 [st.session_state.sales_pps_df, new_pps_df], ignore_index=True
             )
 
+            save_master_table("SALES_PPS", st.session_state.sales_pps_df)
             save_database(
                 st.session_state.sales_item_df,
                 st.session_state.sales_person_df,
@@ -1941,11 +1988,12 @@ elif selected_tab == "06 · Input & Reset Data":
               staff_name,
               kasir_name,
               tanggal_pps.strftime("%d/%m/%Y"),
+              active_pps_id,
               syarat_pwp,
               redeem_pwp,
           )
         except Exception as e:
-          st.error(f"❌ Gagal menyimpan data PPS: {str(e)}")
+          st.error(f"❌ Gagal menyimpan data SALES_PPS: {str(e)}")
 
   # SUB TAB 3: EDIT SALES PERSONIL
   with tab_in3:
@@ -2175,6 +2223,157 @@ elif selected_tab == "06 · Input & Reset Data":
             )
             time.sleep(1.5)
             st.rerun()
+
+  # SUB TAB 5: SALIN FORMAT WHATSAPP (Format PPS & Format Sueger)
+  with tab_in5:
+    st.markdown(
+        "<h4 style='color: #00ff88;'>📱 Generator Format Laporan"
+        " WhatsApp</h4>",
+        unsafe_allow_html=True,
+    )
+    st.info(
+        "Pilih jenis format laporan di bawah ini untuk disalin secara instan ke"
+        " WhatsApp berdasarkan data real-time."
+    )
+
+    wa_format_type = st.radio(
+        "Pilih Format Laporan:",
+        ["📋 Format Laporan PPS", "🥤 Format Laporan Sueger"],
+        key="wa_format_selector",
+    )
+
+    # Filter data berdasarkan tanggal atau tanggal hari ini secara default untuk laporan harian
+    selected_wa_date = st.date_input(
+        "Pilih Tanggal Laporan WhatsApp",
+        value=waktu_wib.date(),
+        key="wa_report_date",
+    )
+    date_str_formatted = selected_wa_date.strftime("%d-%m-%Y")
+
+    if wa_format_type == "📋 Format Laporan PPS":
+      st.markdown("##### Preview Format Laporan PPS")
+
+      # Ambil data transaksi sales personil & pps untuk tanggal tersebut
+      sp_filtered = (
+          sp_df[
+              pd.to_datetime(sp_df["updated_at"], errors="coerce").dt.date
+              == selected_wa_date
+          ]
+          if not sp_df.empty and "updated_at" in sp_df.columns
+          else pd.DataFrame()
+      )
+      pps_filtered = (
+          pps_df_report[
+              pd.to_datetime(
+                  pps_df_report["updated_at"], errors="coerce"
+              ).dt.date
+              == selected_wa_date
+          ]
+          if not pps_df_report.empty and "updated_at" in pps_df_report.columns
+          else pd.DataFrame()
+      )
+
+      # Susun string WhatsApp untuk PPS
+      wa_pps_text = f"*LAPORAN HARIAN PPS*\n"
+      wa_pps_text += f"📅 Tanggal: {date_str_formatted}\n\n"
+
+      wa_pps_text += "*1. Laporan PSM (Per-Item & Total Qty)*:\n"
+      if not sp_filtered.empty:
+        psm_group = (
+            sp_filtered.groupby("item_name")["actual_qty"].sum().reset_index()
+        )
+        total_psm_qty = psm_group["actual_qty"].sum()
+        for idx, row in psm_group.iterrows():
+          wa_pps_text += (
+              f"- {row['item_name']}: {row['actual_qty']} Pcs\n"
+          )
+        wa_pps_text += f"*Total Qty PSM: {total_psm_qty} Pcs*\n\n"
+      else:
+        wa_pps_text += "_Belum ada data penjualan PSM pada tanggal ini._\n\n"
+
+      wa_pps_text += "*2. PWP (Target, Shift, Staf, Kasir, Qty)*:\n"
+      wa_pps_text += "*3. Serba Gratis (SG)*:\n"
+      wa_pps_text += "*4. Cemilan Ceban*:\n"
+      if not pps_filtered.empty:
+        for idx, row in pps_filtered.iterrows():
+          wa_pps_text += f"--- Shift: {row.get('shift_personil', '-')} ---\n"
+          wa_pps_text += f"Staf: {row.get('staff_name', '-')} | Kasir: {row.get('kasir_name', '-')}\n"
+          wa_pps_text += f"• PWP -> Syarat: {row.get('syarat_pwp', 0)} | Redeem: {row.get('redeem_pwp', 0)} | Qty: {row.get('qty_pwp', 0)}\n"
+          wa_pps_text += f"• Serba Gratis -> Qty: {row.get('qty_sg', 0)}\n"
+          wa_pps_text += f"• Cemilan Ceban -> Qty: {row.get('cemilan_ceban', 0)}\n\n"
+      else:
+        wa_pps_text += "_Belum ada data input PPS pada tanggal ini._\n\n"
+
+      wa_pps_text += "*Summary Keseluruhan Program PPS Tercapai ✅*"
+
+      st.text_area(
+          "Salin Teks di Bawah Ini:",
+          value=wa_pps_text,
+          height=250,
+          key="text_area_wa_pps",
+      )
+
+    else:
+      st.markdown("##### Preview Format Laporan Sueger")
+
+      pps_sueger_filtered = (
+          pps_df_report[
+              pd.to_datetime(
+                  pps_df_report["updated_at"], errors="coerce"
+              ).dt.date
+              == selected_wa_date
+          ]
+          if not pps_df_report.empty and "updated_at" in pps_df_report.columns
+          else pd.DataFrame()
+      )
+
+      wa_sueger_text = "KODE TOKO: C383\n"
+      wa_sueger_text += "NAMA TOKO: Karang Satria\n"
+      wa_sueger_text += f"TANGGAL UPDATE: {date_str_formatted}\n\n"
+      wa_sueger_text += "*LAPORAN PENJUALAN SUEGER*\n\n"
+
+      if not pps_sueger_filtered.empty:
+        total_syarat_sueger = 0
+        total_redeem_sueger = 0
+        count_records = len(pps_sueger_filtered)
+
+        for idx, row in pps_sueger_filtered.iterrows():
+          s_val = row.get("syarat_sueger", 0)
+          r_val = row.get("redeem_sueger", 0)
+          total_syarat_sueger += s_val
+          total_redeem_sueger += r_val
+
+          target_sueger = s_val * 0.5  # Target 50% dari syarat/redeem
+          achv_pct = (
+              (r_val / s_val * 100) if s_val > 0 else 0.0
+          )
+          keterangan_status = "LULUS ✅" if r_val >= target_sueger else "TIDAK LULUS ❌"
+
+          wa_sueger_text += f"Shift: {row.get('shift_personil', '-')}\n"
+          wa_sueger_text += f"Staf: {row.get('staff_name', '-')} | Kasir: {row.get('kasir_name', '-')}\n"
+          wa_sueger_text += f"• Syarat: {s_val}\n"
+          wa_sueger_text += f"• Redeem: {r_val}\n"
+          wa_sueger_text += f"• Target (50%): {target_sueger:.1f}\n"
+          wa_sueger_text += f"• Achv: {achv_pct:.1f}%\n"
+          wa_sueger_text += f"• Keterangan: {keterangan_status}\n\n"
+
+        avg_redeem = (
+            total_redeem_sueger / count_records if count_records > 0 else 0
+        )
+        wa_sueger_text += "==================\n"
+        wa_sueger_text += f"*SUMMARY TOTAL Keseluruhan:*\n"
+        wa_sueger_text += f"- Total Syarat: {total_syarat_sueger}\n"
+        wa_sueger_text += f"- Total Redeem: {total_redeem_sueger}\n"
+        wa_sueger_text += f"- Rata-rata Redeem: {avg_redeem:.2f}\n"
+      else:
+        wa_sueger_text += "_Belum ada data input Sueger untuk tanggal ini._\n"
+
+      st.text_area(
+          "Salin Teks di Bawah Ini:",
+          value=wa_sueger_text,
+          height=250,
+          key="text_area_wa_sueger",
+      )
 
 # --- TAB MASTER DATA & PENGATURAN ---
 elif selected_tab == "⚙️ Master Data & Pengaturan":
