@@ -2160,14 +2160,15 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
     )
     st.stop()
 
-  tab_m1, tab_m2, tab_m3, tab_m4 = st.tabs([
+  tab_m1, tab_m2, tab_m3, tab_m4, tab_m5 = st.tabs([
       "➕ Penambahan Item & Target",
       "⚙️ Pengaturan Item",
       "📅 Pengaturan Periode",
+      "🎯 Input & Master PPS/Sueger",
       "📊 Master Status & Summary",
   ])
 
-  # SUB TAB 1: PENAMBAHAN ITEM & TARGET PER PERIODE
+  # SUB TAB 1: PENAMBAHAN ITEM & TARGET PER PERIODE (PSM)
   with tab_m1:
     st.markdown(
         "<h4 style='color: #00ff88;'>➕ Tambah Produk & Target Per Periode</h4>",
@@ -2209,7 +2210,6 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
           st.error("⚠️ ID Item dan Nama Produk wajib diisi!")
         else:
           try:
-            # Update Master Item
             m_items = st.session_state.items_df.copy()
             if new_item_id not in m_items["item_id"].astype(str).tolist():
               new_m_row = pd.DataFrame(
@@ -2220,7 +2220,6 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
               )
               save_master_table("MASTER_ITEM", st.session_state.items_df)
 
-            # Update Sales Item Target
             s_items = st.session_state.sales_item_df.copy()
             new_si_row = pd.DataFrame([{
                 "period_id": str(add_period_id),
@@ -2238,16 +2237,15 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
                 st.session_state.sales_person_df,
             )
 
-            st.success(
-                f"✅ Produk **{new_item_name}** berhasil ditambahkan ke Periode"
-                f" **{add_period_name}**!"
+            st.toast(
+                f"✅ Produk {new_item_name} berhasil ditambahkan!", icon="🎉"
             )
             time.sleep(1.5)
             st.rerun()
           except Exception as e:
             st.error(f"❌ Gagal menambahkan produk: {e}")
 
-  # SUB TAB 2: PENGATURAN ITEM
+  # SUB TAB 2: PENGATURAN ITEM (PSM)
   with tab_m2:
     st.markdown(
         "<h4 style='color: #38bdf8;'>⚙️ Pengaturan, Edit & Hapus Item</h4>",
@@ -2327,7 +2325,6 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
                 idx_list, "period_id"
             ] = target_p_id
 
-            # Update sales person jika nama berubah
             sp_idx = st.session_state.sales_person_df[
                 st.session_state.sales_person_df["item_id"]
                 == str(curr_row["item_id"])
@@ -2340,7 +2337,7 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
                 st.session_state.sales_item_df,
                 st.session_state.sales_person_df,
             )
-            st.success("✅ Perubahan item berhasil disimpan!")
+            st.toast("✅ Perubahan item berhasil disimpan!", icon="💾")
             time.sleep(1.5)
             st.rerun()
           except Exception as e:
@@ -2363,18 +2360,17 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
           save_database(
               st.session_state.sales_item_df, st.session_state.sales_person_df
           )
-          st.warning("⚠️ Item berhasil dihapus dari periode ini.")
+          st.toast("⚠️ Item berhasil dihapus dari periode.", icon="🗑️")
           time.sleep(1.5)
           st.rerun()
 
-  # SUB TAB 3: PENGATURAN PERIODE
+  # SUB TAB 3: PENGATURAN PERIODE (PSM)
   with tab_m3:
     st.markdown(
         "<h4 style='color: #f59e0b;'>📅 Pengaturan Periode Promosi</h4>",
         unsafe_allow_html=True,
     )
     p_df = st.session_state.periods_df.copy()
-
     col_p1, col_p2 = st.columns([1, 1.2])
 
     with col_p1:
@@ -2415,7 +2411,7 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
                 [p_df, new_p_row], ignore_index=True
             )
             save_master_table("PERIODE", st.session_state.periods_df)
-            st.success(f"✅ Periode **{new_p_name}** berhasil ditambahkan!")
+            st.toast(f"✅ Periode {new_p_name} berhasil ditambahkan!", icon="🎉")
             time.sleep(1.5)
             st.rerun()
 
@@ -2465,18 +2461,215 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
           st.session_state.periods_df.loc[idx_p, "end_date"] = str(edit_p_end)
 
           save_master_table("PERIODE", st.session_state.periods_df)
-          st.success("✅ Periode berhasil diperbarui!")
+          st.toast("✅ Periode berhasil diperbarui!", icon="💾")
           time.sleep(1.5)
           st.rerun()
 
-  # SUB TAB 4: MASTER STATUS & SUMMARY
+  # SUB TAB 4: INPUT & MASTER PPS & SUEGER (DENGAN TARGET KASIR OTOMATIS / 9)
   with tab_m4:
+    st.markdown(
+        "<h4 style='color: #c084fc;'>🎯 Input & Pengaturan Periode PPS &"
+        " Sueger</h4>",
+        unsafe_allow_html=True,
+    )
+
+    if "periode_pps_df" not in st.session_state:
+      st.session_state.periode_pps_df = pd.DataFrame(columns=[
+          "jenis_program",
+          "period_id",
+          "start_date",
+          "end_date",
+          "promo_name",
+          "target_promo",
+          "target_kasir",
+      ])
+
+    sub_pps1, sub_pps2, sub_pps3 = st.tabs([
+        "➕ Tambah Program",
+        "✏️ Edit & Hapus Program",
+        "📊 Monitoring PPS & Sueger",
+    ])
+
+    with sub_pps1:
+      with st.form("form_add_pps_sueger"):
+        col_p1, col_p2 = st.columns(2)
+        with col_p1:
+          jenis_program = st.selectbox(
+              "Pilih Jenis Program", ["PPS", "Sueger"], key="pps_jenis"
+          )
+          pps_id = (
+              st.text_input(
+                  "ID Periode / Program", placeholder="Contoh: PPS01 atau SGR01"
+              )
+              .strip()
+              .upper()
+          )
+          pps_nama_promo = st.text_input(
+              "Nama Promo", placeholder="Contoh: PROMO HEMAT PPS MARET"
+          ).strip()
+        with col_p2:
+          pps_start_date = st.date_input(
+              "Tanggal Mulai Periode", value=waktu_wib.date(), key="pps_start"
+          )
+          pps_end_date = st.date_input(
+              "Tanggal Akhir Periode", value=waktu_wib.date(), key="pps_end"
+          )
+          pps_target_promo = st.number_input(
+              "Target Promo / Toko (Total Pcs)", min_value=0, step=1, value=180
+          )
+
+          # Rumus Otomatis: Target Total dibagi 9 personil (dibulatkan ke integer terdekat)
+          pps_target_kasir_auto = int(round(pps_target_promo / 9)) if pps_target_promo > 0 else 0
+          
+          st.markdown(f"👤 **Target Per Personil Kasir (Otomatis / 9):** `{pps_target_kasir_auto} Pcs`")
+
+        btn_submit_pps = st.form_submit_button(
+            "💾 Simpan ke PERIODE_PPS", use_container_width=True
+        )
+
+        if btn_submit_pps:
+          if not pps_id or not pps_nama_promo:
+            st.error("⚠️ ID Periode dan Nama Promo wajib diisi!")
+          elif pps_start_date > pps_end_date:
+            st.error("⚠️ Tanggal mulai tidak boleh melebihi tanggal akhir!")
+          else:
+            try:
+              new_pps_row = pd.DataFrame([{
+                  "jenis_program": jenis_program,
+                  "period_id": pps_id,
+                  "start_date": str(pps_start_date),
+                  "end_date": str(pps_end_date),
+                  "promo_name": pps_nama_promo,
+                  "target_promo": int(pps_target_promo),
+                  "target_kasir": int(pps_target_kasir_auto),
+              }])
+              st.session_state.periode_pps_df = pd.concat(
+                  [st.session_state.periode_pps_df, new_pps_row],
+                  ignore_index=True,
+              )
+              save_master_table(
+                  "PERIODE_PPS", st.session_state.periode_pps_df
+              )
+
+              st.toast(
+                  f"✅ Berhasil menyimpan {jenis_program} - {pps_nama_promo}!",
+                  icon="🎉",
+              )
+              time.sleep(1.2)
+              st.rerun()
+            except Exception as e:
+              st.error(f"❌ Gagal menyimpan data: {e}")
+
+    with sub_pps2:
+      pps_df = st.session_state.periode_pps_df.copy()
+      if pps_df.empty:
+        st.info("Belum ada data program PPS/Sueger yang tersimpan.")
+      else:
+        list_promo_options = (
+            pps_df["period_id"] + " - " + pps_df["promo_name"]
+        ).tolist()
+        selected_edit_opt = st.selectbox(
+            "Pilih Program yang Ingin Diubah/Dihapus", list_promo_options
+        )
+
+        selected_id = selected_edit_opt.split(" - ")[0]
+        row_match = pps_df[pps_df["period_id"] == selected_id].iloc[0]
+
+        with st.form("form_edit_pps"):
+          col_e1, col_e2 = st.columns(2)
+          with col_e1:
+            edit_jenis = st.selectbox(
+                "Jenis Program",
+                ["PPS", "Sueger"],
+                index=["PPS", "Sueger"].index(row_match["jenis_program"]),
+            )
+            edit_promo_name = st.text_input(
+                "Nama Promo", value=str(row_match["promo_name"])
+            )
+            try:
+              curr_s = pd.to_datetime(row_match["start_date"]).date()
+              curr_e = pd.to_datetime(row_match["end_date"]).date()
+            except Exception:
+              curr_s, curr_e = waktu_wib.date(), waktu_wib.date()
+
+            edit_start = st.date_input("Tanggal Mulai", value=curr_s)
+          with col_e2:
+            edit_end = st.date_input("Tanggal Akhir", value=curr_e)
+            edit_t_promo = st.number_input(
+                "Target Promo",
+                min_value=0,
+                step=1,
+                value=int(row_match["target_promo"]),
+            )
+            
+            # Hitung otomatis untuk edit juga
+            edit_t_kasir_auto = int(round(edit_t_promo / 9)) if edit_t_promo > 0 else 0
+            st.markdown(f"👤 **Target Per Personil (Otomatis / 9):** `{edit_t_kasir_auto} Pcs`")
+
+          btn_update_pps = st.form_submit_button(
+              "💾 Simpan Perubahan Program", use_container_width=True
+          )
+
+          if btn_update_pps:
+            try:
+              idx_target = st.session_state.periode_pps_df[
+                  st.session_state.periode_pps_df["period_id"] == selected_id
+              ].index
+              st.session_state.periode_pps_df.loc[
+                  idx_target, "jenis_program"
+              ] = edit_jenis
+              st.session_state.periode_pps_df.loc[
+                  idx_target, "promo_name"
+              ] = edit_promo_name
+              st.session_state.periode_pps_df.loc[
+                  idx_target, "start_date"
+              ] = str(edit_start)
+              st.session_state.periode_pps_df.loc[
+                  idx_target, "end_date"
+              ] = str(edit_end)
+              st.session_state.periode_pps_df.loc[
+                  idx_target, "target_promo"
+              ] = int(edit_t_promo)
+              st.session_state.periode_pps_df.loc[
+                  idx_target, "target_kasir"
+              ] = int(edit_t_kasir_auto)
+
+              save_master_table(
+                  "PERIODE_PPS", st.session_state.periode_pps_df
+              )
+              st.toast("✅ Perubahan program berhasil disimpan!", icon="💾")
+              time.sleep(1.2)
+              st.rerun()
+            except Exception as e:
+              st.error(f"❌ Gagal memperbarui data: {e}")
+
+        st.markdown("---")
+        if st.button(
+            f"🗑️ Hapus Program ID: {selected_id}", use_container_width=True
+        ):
+          st.session_state.periode_pps_df = st.session_state.periode_pps_df[
+              st.session_state.periode_pps_df["period_id"] != selected_id
+          ]
+          save_master_table("PERIODE_PPS", st.session_state.periode_pps_df)
+          st.toast("⚠️ Program berhasil dihapus dari sistem.", icon="🗑️")
+          time.sleep(1.2)
+          st.rerun()
+
+    with sub_pps3:
+      if not st.session_state.periode_pps_df.empty:
+        st.dataframe(
+            st.session_state.periode_pps_df, use_container_width=True
+        )
+      else:
+        st.info("Belum ada data tersimpan di tabel PERIODE_PPS.")
+
+  # SUB TAB 5: MASTER STATUS & SUMMARY (PSM)
+  with tab_m5:
     st.markdown(
         "<h4 style='color: #00ff88;'>📊 Status Sistem & Summary Laporan</h4>",
         unsafe_allow_html=True,
     )
 
-    # 1. Status Dashboard & Database Connection
     c_s1, c_s2, c_s3 = st.columns(3)
     with c_s1:
       st.metric("🔗 Koneksi Database", "Terhubung (GSheets)")
@@ -2499,8 +2692,6 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
     )
 
     sp_data = st.session_state.sales_person_df.copy()
-    si_data = st.session_state.sales_item_df.copy()
-
     if not sp_data.empty and "actual_qty" in sp_data.columns:
       sp_data["actual_qty"] = pd.to_numeric(
           sp_data["actual_qty"], errors="coerce"
@@ -2519,7 +2710,6 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
       else:
         filtered_sum = pd.DataFrame()
       title_sum = f"Laporan Harian ({waktu_wib.strftime('%d %B %Y')})"
-
     elif mode_summary == "Per Periode (Aktif)":
       if selected_period_id:
         filtered_sum = sp_data[sp_data["period_id"] == selected_period_id]
@@ -2527,8 +2717,7 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
       else:
         filtered_sum = sp_data.copy()
         title_sum = "Laporan Semua Periode"
-
-    else:  # Bulanan
+    else:
       if "updated_at" in sp_data.columns:
         filtered_sum = sp_data[
             sp_data["updated_at"].astype(str).str.startswith(current_month_str)
@@ -2542,7 +2731,6 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
         f"##### 📌 {title_sum} — Total Sales: **{tot_actual_sum:,.0f} Pcs**"
     )
 
-    # Breakdown per item
     sum_item = (
         filtered_sum.groupby("item_name")["actual_qty"]
         .sum()
@@ -2553,8 +2741,6 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
 
     st.markdown("---")
     st.subheader("📲 Salin Laporan Format WhatsApp")
-
-    # Format Teks WhatsApp
     wa_report_text = f"*📊 REPORT PSM TOKO C383*\n"
     wa_report_text += f"*Jenis Laporan:* {title_sum}\n"
     wa_report_text += f"*Waktu Update:* {current_time_str}\n"
@@ -2579,7 +2765,6 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
         " untuk menempelkannya langsung ke WhatsApp!"
     )
 
-    # Fitur Download Laporan
     st.markdown("---")
     st.subheader("📥 Export & Download Laporan")
     csv_data = sum_item.to_csv(index=False).encode("utf-8")
@@ -2590,5 +2775,3 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
         mime="text/csv",
         use_container_width=True,
     )
-
-
