@@ -2293,7 +2293,7 @@ elif selected_tab == "06 · Input & Reset Data":
         else pd.DataFrame()
     )
 
-    # Filter Data Sueger (Berdasarkan Tanggal & Kasir Terpilih)
+    # Filter Data Sueger (Berdasarkan Tanggal & Kasir Terpilih) dari sheet SALES_PPS
     pps_filtered_sueger = (
         pps_df_report[
             (
@@ -2380,60 +2380,81 @@ elif selected_tab == "06 · Input & Reset Data":
           unsafe_allow_html=True,
       )
 
-      wa_sueger_text = "KODE TOKO: C383\n"
-      wa_sueger_text += "NAMA TOKO: Karang Satria\n"
-      wa_sueger_text += f"TANGGAL UPDATE: {date_str_formatted}\n"
-      wa_sueger_text += f"NAMA KASIR: *{selected_kasir}*\n\n"
-      wa_sueger_text += "🥤 *LAPORAN PENJUALAN SUEGER* 🥤\n"
-      wa_sueger_text += "🔹 TANGGAL / SYARAT / REDEEM / ACHIVMENT / KETERANGAN\n"
+      # Tombol Trigger Generate Laporan Sueger
+      btn_generate_sueger = st.button(
+          "🚀 Generate Laporan Sueger",
+          use_container_width=True,
+          key="btn_gen_sueger",
+      )
 
-      if not pps_filtered_sueger.empty:
-        total_syarat_sueger = 0
-        total_redeem_sueger = 0
+      if btn_generate_sueger:
+        st.session_state["sueger_generated"] = True
 
-        for idx, (i_row, row) in enumerate(pps_filtered_sueger.iterrows(), start=1):
-          s_val = int(row.get("syarat_sueger", 0))
-          r_val = int(row.get("redeem_sueger", 0))
-          total_syarat_sueger += s_val
-          total_redeem_sueger += r_val
+      if st.session_state.get("sueger_generated", False):
+        wa_sueger_text = "KODE TOKO: C383\n"
+        wa_sueger_text += "NAMA TOKO: Karang Satria\n"
+        wa_sueger_text += f"TANGGAL UPDATE: {date_str_formatted}\n"
+        wa_sueger_text += f"NAMA KASIR: *{selected_kasir}*\n\n"
+        wa_sueger_text += "🥤 *LAPORAN PENJUALAN SUEGER* 🥤\n"
+        wa_sueger_text += "🔹 TANGGAL / SYARAT / REDEEM / ACHIVMENT / KETERANGAN\n"
 
-          target_sueger = s_val * 0.5
-          achv_pct = (r_val / s_val * 100) if s_val > 0 else 0.0
-          keterangan_status = (
-              "LULUS ✅" if r_val >= target_sueger else "TIDAK LULUS ❌"
+        if not pps_filtered_sueger.empty:
+          total_syarat_sueger = 0
+          total_redeem_sueger = 0
+
+          for idx, (i_row, row) in enumerate(
+              pps_filtered_sueger.iterrows(), start=1
+          ):
+            s_val = int(row.get("syarat_sueger", 0))
+            r_val = int(row.get("redeem_sueger", 0))
+            total_syarat_sueger += s_val
+            total_redeem_sueger += r_val
+
+            target_sueger = s_val * 0.5
+            achv_pct = (r_val / s_val * 100) if s_val > 0 else 0.0
+            keterangan_status = (
+                "LULUS ✅" if r_val >= target_sueger else "TIDAK LULUS ❌"
+            )
+
+            row_date_str = pd.to_datetime(
+                row.get("updated_at", selected_wa_date), errors="coerce"
+            ).strftime("%d-%m-%y")
+
+            wa_sueger_text += f"{idx}. {row_date_str}/{s_val}/{r_val}/{achv_pct:.1f}%/{keterangan_status}\n"
+
+          total_target_all = total_syarat_sueger * 0.5
+          total_achv_pct = (
+              (total_redeem_sueger / total_syarat_sueger * 100)
+              if total_syarat_sueger > 0
+              else 0.0
+          )
+          total_keterangan_status = (
+              "LULUS ✅"
+              if total_redeem_sueger >= total_target_all
+              else "TIDAK LULUS ❌"
           )
 
-          row_date_str = pd.to_datetime(
-              row.get("updated_at", selected_wa_date), errors="coerce"
-          ).strftime("%d-%m-%y")
+          wa_sueger_text += "==================\n"
+          wa_sueger_text += "📊 *SUMMARY TOTAL KESELURUHAN*:\n"
+          wa_sueger_text += (
+              "   TOTAL SYARAT / TOTAL REDEEM / ACHIVMENT / KETERANGAN\n"
+          )
+          wa_sueger_text += f"   {total_syarat_sueger}/{total_redeem_sueger}/{total_achv_pct:.1f}%/{total_keterangan_status}"
+        else:
+          wa_sueger_text += f"_Belum ada data input Sueger untuk kasir {selected_kasir} pada tanggal ini._\n"
 
-          # Format per baris: No. Tanggal/Syarat/Redeem/Achv/Keterangan
-          wa_sueger_text += f"{idx}. {row_date_str}/{s_val}/{r_val}/{achv_pct:.1f}%/{keterangan_status}\n"
-
-        # Summary Total Keseluruhan
-        total_target_all = total_syarat_sueger * 0.5
-        total_achv_pct = (
-            (total_redeem_sueger / total_syarat_sueger * 100)
-            if total_syarat_sueger > 0
-            else 0.0
+        st.text_area(
+            "Salin Teks Pesan WhatsApp:",
+            value=wa_sueger_text,
+            height=280,
+            key="text_area_wa_sueger_transparan",
         )
-        total_keterangan_status = (
-            "LULUS ✅" if total_redeem_sueger >= total_target_all else "TIDAK LULUS ❌"
-        )
-
-        wa_sueger_text += "==================\n"
-        wa_sueger_text += "📊 *SUMMARY TOTAL KESELURUHAN*:\n"
-        wa_sueger_text += "   TOTAL SYARAT / TOTAL REDEEM / ACHIVMENT / KETERANGAN\n"
-        wa_sueger_text += f"   {total_syarat_sueger}/{total_redeem_sueger}/{total_achv_pct:.1f}%/{total_keterangan_status}"
       else:
-        wa_sueger_text += f"_Belum ada data input Sueger untuk kasir {selected_kasir} pada tanggal ini._\n"
-
-      st.text_area(
-          "Salin Teks Pesan WhatsApp:",
-          value=wa_sueger_text,
-          height=280,
-          key="text_area_wa_sueger_transparan",
-      )
+        st.info(
+            f"ℹ️ Silakan pilih kasir **{selected_kasir}** lalu klik tombol"
+            " **'Generate Laporan Sueger'** di atas untuk menampilkan data"
+            " dari sheet `SALES_PPS`."
+        )
         
 # --- TAB MASTER DATA & PENGATURAN ---
 elif selected_tab == "⚙️ Master Data & Pengaturan":
