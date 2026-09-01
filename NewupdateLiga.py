@@ -1499,6 +1499,7 @@ elif selected_tab == "05 · Analisis Tren":
           f"**{r['item_name']}** — Sisa Gap: **{max(0, r['gap']):,.0f} Pcs**"
           f" (Ach: **{r['ach']:.1f}%**)"
       )
+        
 # --- TAB 06: INPUT & RESET DATA ---
 elif selected_tab == "06 · Input & Reset Data":
   st.markdown(
@@ -2269,12 +2270,17 @@ elif selected_tab == "06 · Input & Reset Data":
         )
     )
 
+    # Fungsi callback untuk mereset state generate ketika kasir atau format diubah
+    def reset_sueger_state():
+      st.session_state["sueger_generated"] = False
+
     # Filter Kasir hanya aktif jika memilih Format Laporan Sueger
     if wa_format_type == "🥤 Format Laporan Sueger":
       selected_kasir = st.selectbox(
           "🔍 Filter Berdasarkan Nama Kasir:",
           available_kasir,
           key="wa_filter_kasir_sueger",
+          on_change=reset_sueger_state,
       )
     else:
       selected_kasir = None
