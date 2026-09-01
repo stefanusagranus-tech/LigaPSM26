@@ -2200,7 +2200,8 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
             "Target Toko (Total Pcs)", min_value=0, step=1, value=90
         )
 
-        new_target_otomatis = int(round(new_target_toko / 3)) if new_target_toko > 0 else 0
+        # Logika pembulatan ke atas (Math.ceil) agar nilai koma (seperti 14,1) naik menjadi 15
+        new_target_otomatis = int(math.ceil(new_target_toko / 3)) if new_target_toko > 0 else 0
         
         st.markdown(f"📦 **Target Otomatis (Target Toko / 3):** `{new_target_otomatis} Pcs`")
         new_target_kasir = new_target_otomatis
@@ -2540,7 +2541,8 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
               "Target Promo / Toko (Total Pcs)", min_value=0, step=1, value=180
           )
 
-          pps_target_kasir_auto = int(round(pps_target_promo / 9)) if pps_target_promo > 0 else 0
+          # Logika pembulatan ke atas juga diterapkan di sini jika dibutuhkan
+          pps_target_kasir_auto = int(math.ceil(pps_target_promo / 9)) if pps_target_promo > 0 else 0
           st.markdown(f"👤 **Target Per Personil Kasir (Otomatis / 9):** `{pps_target_kasir_auto} Pcs`")
 
         btn_submit_pps = st.form_submit_button(
@@ -2583,7 +2585,6 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
     with sub_pps2:
       pps_df = st.session_state.sales_pps_df.copy()
       
-      # Validasi kolom untuk mencegah KeyError
       required_pps_cols = ["jenis_program", "period_id", "promo_name", "start_date", "end_date", "target_promo", "target_kasir"]
       missing_pps_cols = [col for col in required_pps_cols if col not in pps_df.columns]
       
@@ -2630,7 +2631,7 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
                 value=int(row_match.get("target_promo", 0)),
             )
             
-            edit_t_kasir_auto = int(round(edit_t_promo / 9)) if edit_t_promo > 0 else 0
+            edit_t_kasir_auto = int(math.ceil(edit_t_promo / 9)) if edit_t_promo > 0 else 0
             st.markdown(f"👤 **Target Per Personil (Otomatis / 9):** `{edit_t_kasir_auto} Pcs`")
 
           btn_update_pps = st.form_submit_button(
