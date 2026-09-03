@@ -2074,7 +2074,7 @@ elif selected_tab == "➕ Edit Data (Admin)":
                         st.rerun()
               
 # --- TAB MASTER DATA & PENGATURAN ---
-elif selected_tab == ""⚙️ Pengaturan & Master":
+elif selected_tab == "⚙️ Pengaturan & Master":
     st.markdown(
         "<h2 style='color: #00f0ff; text-shadow: 0 0 10px rgba(0,240,255,0.5);'>⚙️"
         " Master Data & Pengaturan Sistem</h2>",
