@@ -908,7 +908,7 @@ if "portal_guild_ready" in st.session_state and st.session_state.portal_guild_re
     st.stop()
 
 # =========================================================================
-# 🚀 LANGKAH 1B: KUNCI HALAMAN PREPARATION CAMP FULLSCREEN (TARUH DI PALING ATAS BERKAS)
+# 🚀 LANGKAH 1B: KUNCI HALAMAN PREPARATION CAMP (DESAIN PREMIUM MEDIEVAL RPG)
 # =========================================================================
 if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_ready:
     st.markdown(
@@ -916,7 +916,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         <style>
             /* Mengunci tata letak agar ramping dan pas di Android, iOS, & PC */
             .main .block-container {
-                background-color: #0b0f19 !important;
+                background-color: #090d16 !important;
                 min-height: 100vh !important;
                 max-width: 800px !important;    
                 margin: 0 auto !important;       
@@ -929,139 +929,181 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             [data-testid="stHeader"] { display: none !important; }
 
             /* Desain Kontainer Grid Pilihan Menu Game */
-            .camp-grid {
+            .camp-grid-fixed {
                 display: flex;
-                flex-wrap: wrap; /* Otomatis meluncur ke bawah jika dibuka di layar HP */
-                gap: 16px;
+                flex-wrap: wrap;
+                gap: 20px;
                 justify-content: center;
                 margin-top: 30px;
                 width: 100%;
             }
 
-            /* Desain Kartu Gulungan Kertas / Kitab Abad Pertengahan */
-            .camp-card {
+            /* 📜 KARTU UTUH: Menampung Teks + Tombol di Dalam Satu Bingkai */
+            .camp-block-rpg {
                 flex: 1;
                 min-width: 240px;
                 max-width: 360px;
-                background: linear-gradient(135deg, #131926 0%, #1e2638 100%);
-                border: 2px solid #b45309; /* Warna Cokelat Tembaga Kerajaan */
-                border-radius: 12px;
+                background: linear-gradient(135deg, #111622 0%, #1a202f 100%);
+                border: 2px solid #b45309; /* Warna Tembaga Kerajaan */
+                border-radius: 16px;
                 padding: 24px;
+                min-height: 330px; /* Dikunci tingginya agar sejajar seimbang */
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between; /* Memaksa tombol menetap kokoh di dasar kartu */
+                align-items: center;
                 text-align: center;
                 position: relative;
                 box-shadow: 0 4px 15px rgba(180, 83, 9, 0.15);
                 transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             }
-            .camp-card:hover {
-                transform: translateY(-5px);
-                border-color: #fbbf24; /* Menyala Emas saat disorot */
-                box-shadow: 0 0 25px rgba(251, 191, 36, 0.35);
+            
+            /* Efek Hover Menyala Emas Legenda */
+            .camp-block-rpg:hover {
+                transform: translateY(-6px);
+                border-color: #f59e0b; /* Berubah jadi emas menyala */
+                box-shadow: 0 0 25px rgba(245, 158, 11, 0.35), inset 0 0 15px rgba(245, 158, 11, 0.05);
             }
 
-            /* Desain Teks & Ikon RPG */
-            .camp-icon {
-                font-size: 45px;
+            /* Desain Ikon Besar RPG */
+            .camp-icon-fixed {
+                font-size: 50px;
+                margin-top: 10px;
                 margin-bottom: 12px;
-                filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.4));
+                filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.4));
             }
-            .camp-title {
+            
+            /* Desain Teks Judul & Deskripsi */
+            .camp-title-fixed {
                 color: #fef08a; /* Kuning Gading Kerajaan */
                 font-family: monospace;
-                font-size: 16px;
+                font-size: 17px;
                 font-weight: 800;
                 margin-bottom: 8px;
                 letter-spacing: 1px;
+                text-shadow: 0 0 8px rgba(254, 240, 138, 0.2);
             }
-            .camp-desc {
+            .camp-desc-fixed {
                 color: #94a3b8;
                 font-family: monospace;
-                font-size: 12px;
-                line-height: 1.5;
+                font-size: 12.5px;
+                line-height: 1.6;
                 margin-bottom: 20px;
             }
 
-            /* Menyelaraskan Tombol Bawaan Streamlit di bawah Kartu */
-            div[data-testid="stColumn"] div.stButton > button {
-                background: rgba(180, 83, 9, 0.1) !important;
+            /* 🚀 KUNCI PERBAIKAN: Menata Tombol Asli Streamlit agar Menyatu di Dalam Kartu */
+            .camp-block-rpg div.stButton {
+                width: 100%;
+            }
+            .camp-block-rpg div.stButton > button {
+                background: rgba(180, 83, 9, 0.08) !important;
                 color: #fef08a !important;
                 border: 1px solid #b45309 !important;
-                border-radius: 8px !important;
+                border-radius: 10px !important;
                 font-family: monospace !important;
                 font-size: 13px !important;
                 font-weight: 700 !important;
-                padding: 8px 0px !important;
+                padding: 10px 0px !important;
+                letter-spacing: 0.5px !important;
                 transition: all 0.2s ease !important;
             }
-            div[data-testid="stColumn"] div.stButton > button:hover {
+            .camp-block-rpg div.stButton > button:hover {
                 background: #b45309 !important;
-                color: #0b0f19 !important;
-                box-shadow: 0 0 12px rgba(180, 83, 9, 0.5) !important;
+                color: #090d16 !important;
+                box-shadow: 0 0 12px rgba(180, 83, 9, 0.6) !important;
+            }
+
+            /* Tombol Keluar Gerbang Utama */
+            .btn-leave-camp-container div.stButton > button {
+                background: rgba(239, 68, 68, 0.08) !important;
+                color: #ef4444 !important;
+                border: 1px solid rgba(239, 68, 68, 0.4) !important;
+                border-radius: 10px !important;
+                font-family: monospace !important;
+                font-weight: 700 !important;
+                padding: 12px 0px !important;
+            }
+            .btn-leave-camp-container div.stButton > button:hover {
+                background: #ef4444 !important;
+                color: white !important;
+                box-shadow: 0 0 15px rgba(239, 68, 68, 0.5) !important;
             }
         </style>
         """, 
         unsafe_allow_html=True
     )
 
-    # Header Atas Halaman Camp
-    st.markdown("<h1 style='color: #f59e0b; font-family: monospace; font-size: 32px; text-shadow: 0 0 15px rgba(245,158,11,0.4); text-align: center;'>⛺ PREPARATION CAMP ⛺</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #64748b; font-family: monospace; text-align: center; font-size: 13px;'>Persiapkan perlengkapan, cek papan misi, dan tingkatkan keahlian beladiri Anda sebelum melangkah keluar.</p>", unsafe_allow_html=True)
+    # Judul Atas
+    st.markdown("<h1 style='color: #f59e0b; font-family: monospace; font-size: 32px; text-shadow: 0 0 15px rgba(245,158,11,0.4); text-align: center; margin-bottom: 5px;'>⛺ PREPARATION CAMP ⛺</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #64748b; font-family: monospace; text-align: center; font-size: 13px; margin-bottom: 30px;'>Persiapkan perlengkapan, cek papan misi, dan tingkatkan keahlian Anda sebelum melangkah keluar.</p>", unsafe_allow_html=True)
     
-    st.markdown("<div class='camp-grid'>", unsafe_allow_html=True)
-    
-    # Membagi 3 Kolom Kartu Berdampingan secara responsif
+    # Render Grid 3 Kolom
     col_camp1, col_camp2, col_camp3 = st.columns(3)
     
+    # 📜 KARTU 1: ANGGOTA GUILD
     with col_camp1:
         st.markdown(
             """
-            <div class='camp-card'>
-                <div class='camp-icon'>📜</div>
-                <div class='camp-title'>ANGGOTA GUILD</div>
-                <div class='camp-desc'>Buka gulungan piagam untuk memeriksa status level, poin atribut, dan rapor performa penjualan individu Anda.</div>
-            </div>
+            <div class='camp-block-rpg'>
+                <div>
+                    <div class='camp-icon-fixed'>📜</div>
+                    <div class='camp-title-fixed'>ANGGOTA GUILD</div>
+                    <div class='camp-desc-fixed'>Buka gulungan piagam untuk memeriksa status level, poin atribut, dan rapor performa penjualan individu Anda.</div>
+                </div>
         """, unsafe_allow_html=True
         )
         if st.button("Lihat Status ➔", use_container_width=True, key="btn_camp_status"):
             st.toast("Membuka Piagam Anggota...", icon="📜")
-            # Logika menu Rapor akan kita bahas setelah ini
+            # Hubungkan fungsi sub-menu di sini nanti
             
+        st.markdown("</div>", unsafe_allow_html=True) # Penutup Kartu 1
+            
+    # 🎯 KARTU 2: QUIZ CAMPAIGN
     with col_camp2:
         st.markdown(
             """
-            <div class='camp-card'>
-                <div class='camp-icon'>🎯</div>
-                <div class='camp-title'>QUIZ CAMPAIGN</div>
-                <div class='camp-desc'>Cek papan pengumuman untuk melihat quest musiman, tugas mingguan PSM, serta daily target buruan Anda.</div>
-            </div>
+            <div class='camp-block-rpg'>
+                <div>
+                    <div class='camp-icon-fixed'>🎯</div>
+                    <div class='camp-title-fixed'>QUIZ CAMPAIGN</div>
+                    <div class='camp-desc-fixed'>Cek papan pengumuman untuk melihat quest musiman, tugas mingguan PSM, serta daily target buruan Anda.</div>
+                </div>
         """, unsafe_allow_html=True
         )
         if st.button("Ambil Quest ➔", use_container_width=True, key="btn_camp_quest"):
             st.toast("Membuka Papan Misi...", icon="🎯")
-            # Logika menu Quiz akan kita bahas setelah ini
+            # Hubungkan fungsi sub-menu di sini nanti
             
+        st.markdown("</div>", unsafe_allow_html=True) # Penutup Kartu 2
+            
+    # ⚔️ KARTU 3: UPGRADE SKILL
     with col_camp3:
         st.markdown(
             """
-            <div class='camp-card'>
-                <div class='camp-icon'>⚔️</div>
-                <div class='camp-title'>UPGRADE SKILL</div>
-                <div class='camp-desc'>Masuki ruang latihan untuk mengasah keahlian bertarung Anda (Shortcut penginputan data transaksi penjualan).</div>
-            </div>
+            <div class='camp-block-rpg'>
+                <div>
+                    <div class='camp-icon-fixed'>⚔️</div>
+                    <div class='camp-title-fixed'>UPGRADE SKILL</div>
+                    <div class='camp-desc-fixed'>Masuki ruang latihan untuk mengasah keahlian bertarung Anda (Shortcut penginputan data transaksi penjualan).</div>
+                </div>
         """, unsafe_allow_html=True
         )
         if st.button("Latih Skill ➔", use_container_width=True, key="btn_camp_skill"):
             st.toast("Membuka Ruang Latihan...", icon="⚔️")
-            # Logika menu Input akan kita bahas setelah ini
+            # Hubungkan fungsi sub-menu di sini nanti
+            
+        st.markdown("</div>", unsafe_allow_html=True) # Penutup Kartu 3
 
     st.markdown("<br><br>", unsafe_allow_html=True)
     
-    # Tombol Kembali Utama untuk meruntuhkan layar camp dan pulang ke beranda utama
+    # Tombol Keluar/Batal yang dikunci ke kontainer kelas kustom
+    st.markdown("<div class='btn-leave-camp-container'>", unsafe_allow_html=True)
     if st.button("🚪 KEMBALI KE BERANDA KOTA", use_container_width=True, key="btn_leave_camp"):
         st.session_state.portal_prep_ready = False
         st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
         
     st.stop()
-
 
 # =========================================================================
 # MENU UTAMA: GAYA RPG RESPONSIVE (PORTAL GUILD ONLY)
