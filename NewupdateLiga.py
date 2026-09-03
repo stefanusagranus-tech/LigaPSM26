@@ -906,7 +906,163 @@ if "portal_guild_ready" in st.session_state and st.session_state.portal_guild_re
             
     # Mengunci aplikasi secara mutlak agar kode di bawah tidak ikut dibaca
     st.stop()
+
+# =========================================================================
+# 🚀 LANGKAH 1B: KUNCI HALAMAN PREPARATION CAMP FULLSCREEN (TARUH DI PALING ATAS BERKAS)
+# =========================================================================
+if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_ready:
+    st.markdown(
+        """
+        <style>
+            /* Mengunci tata letak agar ramping dan pas di Android, iOS, & PC */
+            .main .block-container {
+                background-color: #0b0f19 !important;
+                min-height: 100vh !important;
+                max-width: 800px !important;    
+                margin: 0 auto !important;       
+                padding-top: 5% !important;
+                padding-left: 20px !important;   
+                padding-right: 20px !important;  
+                box-sizing: border-box !important;
+            }
+            [data-testid="stSidebar"] { display: none !important; }
+            [data-testid="stHeader"] { display: none !important; }
+
+            /* Desain Kontainer Grid Pilihan Menu Game */
+            .camp-grid {
+                display: flex;
+                flex-wrap: wrap; /* Otomatis meluncur ke bawah jika dibuka di layar HP */
+                gap: 16px;
+                justify-content: center;
+                margin-top: 30px;
+                width: 100%;
+            }
+
+            /* Desain Kartu Gulungan Kertas / Kitab Abad Pertengahan */
+            .camp-card {
+                flex: 1;
+                min-width: 240px;
+                max-width: 360px;
+                background: linear-gradient(135deg, #131926 0%, #1e2638 100%);
+                border: 2px solid #b45309; /* Warna Cokelat Tembaga Kerajaan */
+                border-radius: 12px;
+                padding: 24px;
+                text-align: center;
+                position: relative;
+                box-shadow: 0 4px 15px rgba(180, 83, 9, 0.15);
+                transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            }
+            .camp-card:hover {
+                transform: translateY(-5px);
+                border-color: #fbbf24; /* Menyala Emas saat disorot */
+                box-shadow: 0 0 25px rgba(251, 191, 36, 0.35);
+            }
+
+            /* Desain Teks & Ikon RPG */
+            .camp-icon {
+                font-size: 45px;
+                margin-bottom: 12px;
+                filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.4));
+            }
+            .camp-title {
+                color: #fef08a; /* Kuning Gading Kerajaan */
+                font-family: monospace;
+                font-size: 16px;
+                font-weight: 800;
+                margin-bottom: 8px;
+                letter-spacing: 1px;
+            }
+            .camp-desc {
+                color: #94a3b8;
+                font-family: monospace;
+                font-size: 12px;
+                line-height: 1.5;
+                margin-bottom: 20px;
+            }
+
+            /* Menyelaraskan Tombol Bawaan Streamlit di bawah Kartu */
+            div[data-testid="stColumn"] div.stButton > button {
+                background: rgba(180, 83, 9, 0.1) !important;
+                color: #fef08a !important;
+                border: 1px solid #b45309 !important;
+                border-radius: 8px !important;
+                font-family: monospace !important;
+                font-size: 13px !important;
+                font-weight: 700 !important;
+                padding: 8px 0px !important;
+                transition: all 0.2s ease !important;
+            }
+            div[data-testid="stColumn"] div.stButton > button:hover {
+                background: #b45309 !important;
+                color: #0b0f19 !important;
+                box-shadow: 0 0 12px rgba(180, 83, 9, 0.5) !important;
+            }
+        </style>
+        """, 
+        unsafe_allow_html=True
+    )
+
+    # Header Atas Halaman Camp
+    st.markdown("<h1 style='color: #f59e0b; font-family: monospace; font-size: 32px; text-shadow: 0 0 15px rgba(245,158,11,0.4); text-align: center;'>⛺ PREPARATION CAMP ⛺</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #64748b; font-family: monospace; text-align: center; font-size: 13px;'>Persiapkan perlengkapan, cek papan misi, dan tingkatkan keahlian beladiri Anda sebelum melangkah keluar.</p>", unsafe_allow_html=True)
     
+    st.markdown("<div class='camp-grid'>", unsafe_allow_html=True)
+    
+    # Membagi 3 Kolom Kartu Berdampingan secara responsif
+    col_camp1, col_camp2, col_camp3 = st.columns(3)
+    
+    with col_camp1:
+        st.markdown(
+            """
+            <div class='camp-card'>
+                <div class='camp-icon'>📜</div>
+                <div class='camp-title'>ANGGOTA GUILD</div>
+                <div class='camp-desc'>Buka gulungan piagam untuk memeriksa status level, poin atribut, dan rapor performa penjualan individu Anda.</div>
+            </div>
+        """, unsafe_allow_html=True
+        )
+        if st.button("Lihat Status ➔", use_container_width=True, key="btn_camp_status"):
+            st.toast("Membuka Piagam Anggota...", icon="📜")
+            # Logika menu Rapor akan kita bahas setelah ini
+            
+    with col_camp2:
+        st.markdown(
+            """
+            <div class='camp-card'>
+                <div class='camp-icon'>🎯</div>
+                <div class='camp-title'>QUIZ CAMPAIGN</div>
+                <div class='camp-desc'>Cek papan pengumuman untuk melihat quest musiman, tugas mingguan PSM, serta daily target buruan Anda.</div>
+            </div>
+        """, unsafe_allow_html=True
+        )
+        if st.button("Ambil Quest ➔", use_container_width=True, key="btn_camp_quest"):
+            st.toast("Membuka Papan Misi...", icon="🎯")
+            # Logika menu Quiz akan kita bahas setelah ini
+            
+    with col_camp3:
+        st.markdown(
+            """
+            <div class='camp-card'>
+                <div class='camp-icon'>⚔️</div>
+                <div class='camp-title'>UPGRADE SKILL</div>
+                <div class='camp-desc'>Masuki ruang latihan untuk mengasah keahlian bertarung Anda (Shortcut penginputan data transaksi penjualan).</div>
+            </div>
+        """, unsafe_allow_html=True
+        )
+        if st.button("Latih Skill ➔", use_container_width=True, key="btn_camp_skill"):
+            st.toast("Membuka Ruang Latihan...", icon="⚔️")
+            # Logika menu Input akan kita bahas setelah ini
+
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    
+    # Tombol Kembali Utama untuk meruntuhkan layar camp dan pulang ke beranda utama
+    if st.button("🚪 KEMBALI KE BERANDA KOTA", use_container_width=True, key="btn_leave_camp"):
+        st.session_state.portal_prep_ready = False
+        st.rerun()
+        
+    st.stop()
+
+
 # =========================================================================
 # MENU UTAMA: GAYA RPG RESPONSIVE (PORTAL GUILD ONLY)
 # =========================================================================
@@ -1083,7 +1239,7 @@ if selected_tab == "🏠 Menu Utama":
             st.session_state.portal_guild_ready = True
             st.rerun()
         
-    with col_game2:
+        with col_game2:
         st.markdown(
             """
             <div class='rpg-card-center-fixed'>
@@ -1096,33 +1252,52 @@ if selected_tab == "🏠 Menu Utama":
             unsafe_allow_html=True,
         )
         
+        # Menginisialisasi variabel state camp jika belum terdaftar
+        if "portal_prep_ready" not in st.session_state:
+            st.session_state.portal_prep_ready = False
+            
         if st.button("Buka Rapor Personil Toko ➔", use_container_width=True, key="btn_enter_prep_fixed"):
-            # 🚀 PROSES LOADING SCREEN FULLSCREEN (PREPARATION CAMP)
             placeholder = st.empty()
             with placeholder.container():
                 st.markdown(
                     """
-                    <div style='background-color: #0f172a; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
-                        <h1 style='color: #eab308; font-family: monospace; animation: blink 1.5s infinite; font-size: 28px;'>🎒 OPENING INVENTORY...</h1>
-                        <p style='color: #94a3b8; font-size: 14px; margin-top: 10px; font-family: monospace;'>Equipping gear and sorting personal records...</p>
+                    <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
+                        <div class="magic-portal-container">
+                            <svg width="180" height="180" viewBox="0 0 180 180" style="position: absolute;">
+                                <circle cx="90" cy="90" r="80" class="outer-vector" stroke="#eab308" stroke-width="3" stroke-dasharray="12, 8" fill="none" />
+                                <circle cx="90" cy="90" r="55" class="middle-vector" stroke="#b45309" stroke-width="2" stroke-dasharray="3, 6" fill="none" />
+                                <circle cx="90" cy="90" r="32" class="inner-vector" stroke="#f59e0b" stroke-width="2" fill="#0f172a" />
+                            </svg>
+                            <div class="portal-core-icon">🎒</div>
+                        </div>
+                        <h1 style='color: #eab308; font-family: monospace; animation: blink 1.5s infinite; font-size: 24px; margin-top: 50px; letter-spacing: 2px;'>OPENING INVENTORY...</h1>
+                        <p style='color: #64748b; font-size: 13px; margin-top: 5px; font-family: monospace;'>Equipping gear and sorting personal records...</p>
                         <style>
                             @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
                             [data-testid="stSidebar"] { display: none !important; }
+                            [data-testid="stHeader"] { display: none !important; }
+                            .magic-portal-container { position: relative; width: 180px; height: 180px; display: flex; justify-content: center; align-items: center; }
+                            .portal-core-icon { position: absolute; font-size: 32px; z-index: 10; animation: pulse-core 2s infinite ease-in-out; }
+                            .outer-vector { transform-origin: 90px 90px; animation: spin-clockwise 8s infinite linear; filter: drop-shadow(0 0 12px rgba(234, 179, 8, 0.4)); }
+                            .middle-vector { transform-origin: 90px 90px; animation: spin-counter 5s infinite linear; filter: drop-shadow(0 0 8px rgba(180, 83, 9, 0.4)); }
+                            .inner-vector { transform-origin: 90px 90px; filter: drop-shadow(0 0 15px rgba(245, 158, 11, 0.5)); }
+                            @keyframes spin-clockwise { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                            @keyframes spin-counter { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+                            @keyframes pulse-core { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
                         </style>
                     </div>
-                """, unsafe_allow_html=True
+                    """, 
+                    unsafe_allow_html=True
                 )
-                
                 progress_bar = st.progress(0)
                 for percent_complete in range(100):
-                    time.sleep(0.02)
+                    time.sleep(0.04) 
                     progress_bar.progress(percent_complete + 1)
             
             placeholder.empty()
-            # --- MASUKKAN LOGIKA PINDAH HALAMAN / MENYALAKAN TAB DI SINI ---
-            st.success("🛡️ Inventory Camp Opened!")
+            st.session_state.portal_prep_ready = True
+            st.rerun()
 
-    st.markdown("</div>", unsafe_allow_html=True)
     
 # =============================================================================
 # --- INPUT & RESET DATA ---
