@@ -798,11 +798,20 @@ st.markdown(
 # 9. MODUL TAB / SUB MENU
 # ==========================================
 
+# =============================================================================
+# --- INPUT & RESET DATA ---
+# =============================================================================
+if selected_tab == "🏠 Menu Utama":
+    st.markdown(
+        "<h2 style='color: #00f0ff; text-shadow: 0 0 10px rgba(0,240,255,0.5);'>✏️"
+        " SELAMAT DATANG KAWAN SILAHKAN PILIH JALAN MU SENDIRI</h2>",
+        unsafe_allow_html=True,
+    )
 
 # =============================================================================
 # --- INPUT & RESET DATA ---
 # =============================================================================
-if selected_tab == "📝 Input Data":
+elif selected_tab == "📝 Input Data":
     st.markdown(
         "<h2 style='color: #00f0ff; text-shadow: 0 0 10px rgba(0,240,255,0.5);'>✏️"
         " Kelola & Input Data Penjualan</h2>",
