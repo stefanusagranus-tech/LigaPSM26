@@ -9,6 +9,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
+import streamlit as st
+import streamlit.components.v1 as components
 
 # ==========================================
 # 1. KONFIGURASI HALAMAN STREAMLIT
@@ -564,65 +566,152 @@ if not st.session_state.logged_in:
   st.stop()
 
 # ==========================================================
-# 7. SIDEBAR DASHBOARD
+# 7. SIDEBAR DASHBOARD WITH CUSTOM COLLAPSE TOGGLE
 # ==========================================================
 st.sidebar.markdown(
     """
     <style>
+        /* Mengubah latar belakang sidebar menjadi gelap modern */
+        [data-testid="stSidebar"] {
+            background-color: #1c1c1e;
+        }
+        
+        /* Header Profil */
         .sidebar-header {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 20px;
+            justify-content: space-between; /* Memberi ruang untuk tombol toggle */
+            margin-bottom: 10px;
+            padding: 5px 10px;
+        }
+        .profile-container {
+            display: flex;
+            align-items: center;
+            gap: 14px;
         }
         .sidebar-logo {
-            width: 55px;
-            height: 55px;
-            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
             object-fit: cover;
-            border: 1.5px solid #38bdf8;
+            border: 2px solid #6366f1; /* Aksen Ungu */
         }
+        
+        /* Tombol Toggle Collapse bergaya Codinglab */
+        .toggle-collapse-btn {
+            background-color: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+            transition: transform 0.2s ease;
+        }
+        .toggle-collapse-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        /* Teks Judul & Subtitel */
         .store-title {
-            text-align: center;
             color: #ffffff;
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 700;
             margin-bottom: 2px;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
+            padding: 0 10px;
         }
         .store-subtitle {
-            text-align: center;
-            color: #38bdf8;
+            color: #a1a1aa;
             font-size: 12px;
-            font-weight: 600;
+            font-weight: 500;
             margin-top: 0px;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
+            padding: 0 10px;
+        }
+
+        /* Mengubah Tampilan Menu Radio Streamlit menjadi Tombol Navigasi Modern */
+        div[data-testid="stRadio"] > div {
+            gap: 8px;
+        }
+        div[data-testid="stRadio"] label {
+            background-color: transparent;
+            color: #e4e4e7 !important;
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: none;
+            transition: all 0.3s ease;
+            width: 100%;
+            cursor: pointer;
+        }
+        div[data-testid="stRadio"] label:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #ffffff !important;
+        }
+        div[data-testid="stRadio"] [data-checked="true"] label {
+            background-color: #6366f1 !important;
+            color: #ffffff !important;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+        div[data-testid="stRadio"] [data-testid="stMarkdownVisibility"] {
+            display: none;
+        }
+
+        /* Mengubah Gaya Tombol Komponen (Refresh & Logout) */
+        div.stButton > button {
+            background-color: #27272a;
+            color: #e4e4e7;
+            border: 1px solid #3f3f46;
+            border-radius: 8px;
+            padding: 10px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        div.stButton > button:hover {
+            background-color: #3f3f46;
+            color: #ffffff;
+            border-color: #52525b;
+        }
+        .logout-btn button {
+            background-color: rgba(239, 68, 68, 0.1) !important;
+            color: #ef4444 !important;
+            border: 1px solid rgba(239, 68, 68, 0.2) !important;
+        }
+        .logout-btn button:hover {
+            background-color: #ef4444 !important;
+            color: #ffffff !important;
         }
     </style>
 """,
     unsafe_allow_html=True,
 )
 
-LOGO_URL = "https://tse3.mm.bing.net/th/id/OIP.mVrKCdnlL5Yc-3wRmzFXOAAAAA?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
+LOGO_URL = "https://bing.net"
 username = st.session_state.get("username", "Admin")
 
+# Tampilan Header Profil lengkap dengan tombol collapse kustom (panah kiri ◀)
 st.sidebar.markdown(
     f"""
     <div class='sidebar-header'>
-        <img src='{LOGO_URL}' class='sidebar-logo'>
-        <div style='display: flex; flex-direction: column;'>
-            <span style='color: #94a3b8; font-size: 11px; font-weight: 500;'>Selamat Datang Kembali,</span>
-            <span style='color: #00ff88; font-size: 13px; font-weight: 700;'>👤 {username}</span>
+        <div class='profile-container'>
+            <img src='{LOGO_URL}' class='sidebar-logo'>
+            <div style='display: flex; flex-direction: column;'>
+                <span style='color: #a1a1aa; font-size: 11px; font-weight: 500;'>Selamat Datang,</span>
+                <span style='color: #ffffff; font-size: 14px; font-weight: 600;'>{username}</span>
+            </div>
         </div>
+        <button class='toggle-collapse-btn' onclick="window.parent.document.querySelector('.stSidebar button[kind=\\'headerNoPadding\\']').click();">◀</button>
     </div>
 """,
     unsafe_allow_html=True,
 )
 
-st.sidebar.markdown(
-    "<hr style='margin: 10px 0; border-color: #334155;'>",
-    unsafe_allow_html=True,
-)
 st.sidebar.markdown(
     "<div class='store-title'>TOKO C383</div>", unsafe_allow_html=True
 )
@@ -631,38 +720,40 @@ st.sidebar.markdown(
     unsafe_allow_html=True,
 )
 
-# ➔ Tombol Refresh Cache ditaruh di sini agar mudah dijangkau
+# ➔ Tombol Refresh Cache
 if st.sidebar.button("🔄 Refresh Data Cache", use_container_width=True):
   st.cache_data.clear()
   for key in list(st.session_state.keys()):
     del st.session_state[key]
   st.rerun()
 
-st.sidebar.markdown("---")
+st.sidebar.markdown("<hr style='margin: 15px 0; border-color: #27272a;'>", unsafe_allow_html=True)
 
 st.sidebar.markdown(
-    "<p style='color:#38bdf8; font-weight:bold; letter-spacing:1px;"
-    " margin-bottom:6px;'>📌 NAVIGASI MENU</p>",
+    "<p style='color:#a1a1aa; font-size:11px; font-weight:700; letter-spacing:1px;"
+    " margin-bottom:10px; padding: 0 10px;'>📌 NAVIGASI MENU</p>",
     unsafe_allow_html=True,
 )
+
 menu_options = [
-    "Menu Utama",
+    "🏠 Menu Utama",
     "📝 Input Data",
-    "➕Edit Data (admin only)",
-    "⚙️ Master Data & Pengaturan",
+    "➕ Edit Data (Admin)",
+    "⚙️ Pengaturan & Master",
 ]
+
 selected_tab = st.sidebar.radio(
     "", menu_options, label_visibility="collapsed"
 )
 
-st.sidebar.markdown(
-    "<hr style='margin: 15px 0; border-color: #334155;'>",
-    unsafe_allow_html=True,
-)
+st.sidebar.markdown("<hr style='margin: 20px 0; border-color: #27272a;'>", unsafe_allow_html=True)
+
+st.sidebar.markdown("<div class='logout-btn'>", unsafe_allow_html=True)
 if st.sidebar.button("🚪 Keluar / Logout", use_container_width=True):
   st.session_state.logged_in = False
   st.session_state.username = ""
   st.rerun()
+st.sidebar.markdown("</div>", unsafe_allow_html=True)
     
 # ==========================================
 # 8. HEADER UTAMA
