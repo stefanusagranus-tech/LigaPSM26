@@ -733,24 +733,28 @@ if selected_tab == "📝 Input Data":
         /* CSS khusus untuk Sub-Tab (Menu Navigasi Horizontal di Konten Utama) */
         div.block-container div[data-testid="stRadio"] div[role="radiogroup"] {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             flex-direction: row;
             align-stretch: stretch;
         }
         div.block-container div[data-testid="stRadio"] div[role="radiogroup"] > label {
             background-color: #1e293b !important;
             border: 1px solid #334155 !important;
-            padding: 12px 16px !important;
+            padding: 10px 12px !important;
             border-radius: 10px !important;
             color: #b0c4de !important;
             font-weight: 600 !important;
+            font-size: 12px !important; /* Ukuran font disesuaikan agar muat berdampingan */
+            white-space: nowrap !important; /* 🚀 Memaksa teks mutlak satu baris */
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
             cursor: pointer;
             flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            min-height: 55px;
+            min-height: 50px;
             transition: all 0.25s ease-in-out;
         }
         div.block-container div[data-testid="stRadio"] div[role="radiogroup"] input[type="radio"] {
@@ -781,6 +785,7 @@ if selected_tab == "📝 Input Data":
             text-align: left !important;
             min-height: auto !important;
             padding: 8px 12px !important;
+            white-space: normal !important; /* Kembalikan normal khusus sidebar */
         }
         section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] input[type="radio"] {
             display: inline-block !important;
