@@ -644,6 +644,48 @@ if selected_tab == "Input & Reset Data":
       unsafe_allow_html=True,
   )
 
+  # --- Custom CSS: Styling Tab Kapsul Transparan Neon ---
+  st.markdown(
+      """
+        <style>
+        div[data-baseweb="tab-list"] {
+            gap: 8px;
+            background-color: rgba(15, 23, 42, 0.4);
+            padding: 8px;
+            border-radius: 50px;
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+            backdrop-filter: blur(10px);
+        }
+        div[data-baseweb="tab-list"] button[data-baseweb="tab"] {
+            background-color: rgba(255, 255, 255, 0.03) !important;
+            border: 1px solid rgba(0, 240, 255, 0.3) !important;
+            border-radius: 30px !important;
+            color: #94a3b8 !important;
+            padding: 6px 18px !important;
+            transition: all 0.3s ease-in-out !important;
+        }
+        div[data-baseweb="tab-list"] button[data-baseweb="tab"]:hover {
+            border-color: #00f0ff !important;
+            color: #00f0ff !important;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.5) !important;
+            transform: translateY(-1px);
+        }
+        div[data-baseweb="tab-list"] button[aria-selected="true"] {
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(0, 150, 255, 0.4)) !important;
+            border: 1px solid #00f0ff !important;
+            color: #ffffff !important;
+            font-weight: bold !important;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.8), inset 0 0 8px rgba(0, 240, 255, 0.4) !important;
+        }
+        div[data-baseweb="tab-highlight"] {
+            display: none !important;
+        }
+        </style>
+    """,
+      unsafe_allow_html=True,
+  )
+
   # --- Context & User Role ---
   current_user = st.session_state.get("username", "visitor")
   user_lower = str(current_user).lower()
@@ -660,63 +702,14 @@ if selected_tab == "Input & Reset Data":
   pps_df_report = st.session_state.get("sales_pps_df", pd.DataFrame()).copy()
   person_df = st.session_state.get("person_df", pd.DataFrame()).copy()
 
-  # --- TAMPILAN SUB-TAB MENARIK (Option Menu) ---
-  options_subtab = [
-      "Multi Input Sales",
-      "Input Sales PPS",
-      "Edit Sales Personil",
-      "Hapus & Reset Sales",
-      "Salin Format WA",
-  ]
-  icons_subtab = [
-      "lightning-charge-fill",
-      "bullseye",
-      "pencil-square",
-      "trash-fill",
-      "whatsapp",
-  ]
-
-  try:
-    from streamlit_option_menu import option_menu
-
-    selected_sub_tab = option_menu(
-        menu_title=None,
-        options=options_subtab,
-        icons=icons_subtab,
-        default_index=0,
-        orientation="horizontal",
-        styles={
-            "container": {
-                "padding": "4px!important",
-                "background-color": "rgba(15, 23, 42, 0.6)",
-                "border-radius": "12px",
-                "border": "1px solid rgba(0, 240, 255, 0.2)",
-            },
-            "icon": {"color": "#00f0ff", "font-size": "16px"},
-            "nav-link": {
-                "font-size": "14px",
-                "text-align": "center",
-                "margin": "2px",
-                "color": "#94a3b8",
-                "border-radius": "8px",
-            },
-            "nav-link-selected": {
-                "background-color": "#00f0ff",
-                "color": "#0f172a",
-                "font-weight": "bold",
-            },
-        },
-    )
-  except ImportError:
-    # Fallback ke native st.tabs jika streamlit_option_menu tidak terinstall
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "⚡ Multi Input Sales",
-        "🎯 Input Sales PPS",
-        "✏️ Edit Sales Personil",
-        "🗑️ Hapus & Reset Sales",
-        "📱 Salin Format WA",
-    ])
-    selected_sub_tab = options_subtab[0]
+  # --- Render Option Menu Tabs ---
+  tab1, tab2, tab3, tab4, tab5 = st.tabs([
+      "⚡ Multi Input Sales",
+      "🎯 Input Sales PPS",
+      "✏️ Edit Sales Personil",
+      "🗑️ Hapus & Reset Sales",
+      "📱 Salin Format WA",
+  ])
 
   # --- Helper Functions & Dialogs ---
   def get_period_date_bounds(p_id):
@@ -755,7 +748,7 @@ if selected_tab == "Input & Reset Data":
   # =========================================================================
   # SUB TAB 1: MULTI INPUT SALES PERSONIL
   # =========================================================================
-  if selected_sub_tab == "Multi Input Sales":
+  with tab1:
     st.markdown(
         "<h4 style='color: #00ff88; margin-top: 15px;'>⚡ Multi Input Sales"
         " Personil</h4>",
@@ -843,9 +836,7 @@ if selected_tab == "Input & Reset Data":
       if not items_list:
         st.warning(
             f"⚠️ Tidak ada daftar item produk yang terdaftar pada periode"
-            f" **{m_period_name}** (ID: {m_p_id}). Pastikan sheet"
-            f" `MASTER_ITEM` sudah diisi kolom `period_id` dengan nilai yang"
-            f" sesuai."
+            f" **{m_period_name}** (ID: {m_p_id})."
         )
       else:
         st.markdown("---")
@@ -946,7 +937,7 @@ if selected_tab == "Input & Reset Data":
   # =========================================================================
   # SUB TAB 2: INPUT SALES PPS
   # =========================================================================
-  elif selected_sub_tab == "Input Sales PPS":
+  with tab2:
     st.markdown(
         "<h4 style='color: #00ff88; margin-top: 15px;'>🎯 Form Input Penjualan &"
         " Kinerja PPS</h4>",
@@ -993,7 +984,6 @@ if selected_tab == "Input & Reset Data":
           else [current_user]
       )
 
-      # Default index untuk staf berdasarkan user aktif jika ditemukan
       default_staff_idx = (
           all_personnel.index(current_user)
           if current_user in all_personnel
@@ -1012,7 +1002,7 @@ if selected_tab == "Input & Reset Data":
               ["Shift 1", "Shift 2", "Shift 3", "Full Shift"],
               key="pps_shift_dyn",
           )
-          # PERUBAHAN: Nama staf sekarang selalu bisa dipilih oleh siapa saja
+          # Opsi Nama Staf dapat dipilih oleh siapa saja
           staff_name = st.selectbox(
               "Nama Staf",
               all_personnel,
@@ -1046,26 +1036,19 @@ if selected_tab == "Input & Reset Data":
           if not matched_row.empty:
             active_pps_id = str(matched_row.iloc[0]["period_id"])
             st.info(
-                f"📅 Berdasarkan tanggal `{tanggal_pps.strftime('%d/%m/%Y')}`,"
-                f" sistem mendeteksi ID Periode PPS: **{active_pps_id}**"
+                f"📅 Tanggal `{tanggal_pps.strftime('%d/%m/%Y')}` mendeteksi ID"
+                f" Periode PPS: **{active_pps_id}**"
             )
           else:
             st.warning(
-                f"⚠️ Tanggal `{tanggal_pps.strftime('%d/%m/%Y')}` tidak masuk"
-                " dalam rentang periode aktif di `PERIODE_PPS`. Menggunakan"
-                " default: `PPS_DEFAULT`"
+                f"⚠️ Tanggal tidak ada di `PERIODE_PPS`. Default:"
+                f" `{active_pps_id}`"
             )
-        else:
-          st.info(
-              "ℹ️ Belum ada data rentang tanggal di `PERIODE_PPS`. Menggunakan"
-              " ID default: `PPS_DEFAULT`"
-          )
 
         st.markdown("---")
         st.markdown("##### 🛒 Detail Kolom Kinerja PPS:")
 
         col_q1, col_q2, col_q3 = st.columns(3)
-
         with col_q1:
           syarat_pwp = st.number_input(
               "Syarat PWP", min_value=0, step=1, value=0, key="pps_syarat_pwp_dyn"
@@ -1073,7 +1056,6 @@ if selected_tab == "Input & Reset Data":
           redeem_pwp = st.number_input(
               "Redeem PWP", min_value=0, step=1, value=0, key="pps_redeem_pwp_dyn"
           )
-
         with col_q2:
           qty_pwp = st.number_input(
               "Qty PWP", min_value=0, step=1, value=0, key="pps_qty_pwp_dyn"
@@ -1085,7 +1067,6 @@ if selected_tab == "Input & Reset Data":
               value=0,
               key="pps_qty_sg_dyn",
           )
-
         with col_q3:
           syarat_sueger = st.number_input(
               "Syarat Sueger",
@@ -1102,7 +1083,6 @@ if selected_tab == "Input & Reset Data":
               key="pps_redeem_sueger_dyn",
           )
 
-        st.markdown("")
         cemilan_ceban = st.number_input(
             "Cemilan Ceban",
             min_value=0,
@@ -1179,7 +1159,7 @@ if selected_tab == "Input & Reset Data":
   # =========================================================================
   # SUB TAB 3: EDIT SALES PERSONIL
   # =========================================================================
-  elif selected_sub_tab == "Edit Sales Personil":
+  with tab3:
     st.markdown(
         "<h4 style='color: #38bdf8; margin-top: 15px;'>✏️ Edit Transaksi Sales"
         " (Koreksi Input)</h4>",
@@ -1287,7 +1267,7 @@ if selected_tab == "Input & Reset Data":
   # =========================================================================
   # SUB TAB 4: HAPUS & RESET SALES
   # =========================================================================
-  elif selected_sub_tab == "Hapus & Reset Sales":
+  with tab4:
     st.markdown(
         "<h4 style='color: #38bdf8; margin-top: 15px;'>🗑️ Hapus Transaksi /"
         " Reset Sales Personil</h4>",
@@ -1412,23 +1392,10 @@ if selected_tab == "Input & Reset Data":
   # =========================================================================
   # SUB TAB 5: SALIN FORMAT WHATSAPP
   # =========================================================================
-  elif selected_sub_tab == "Salin Format WA":
+  with tab5:
     st.markdown(
         "<h4 style='color: #00ff88; margin-top: 15px;'>📱 Generator Format"
         " Laporan WhatsApp</h4>",
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        "<p style='color: #cbd5e1; font-size: 14px;'>Pilih jenis laporan dan"
-        " filter berdasarkan Nama Kasir (khusus Sueger) untuk menyalin"
-        " rekapitulasi siap kirim ke WhatsApp.</p>",
-        unsafe_allow_html=True,
-    )
-
-    st.markdown(
-        """
-        <div style="background: rgba(15, 23, 42, 0.6); padding: 20px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); margin-bottom: 20px;">
-        """,
         unsafe_allow_html=True,
     )
 
@@ -1474,8 +1441,6 @@ if selected_tab == "Input & Reset Data":
     else:
       selected_kasir = None
 
-    st.markdown("</div>", unsafe_allow_html=True)
-
     pps_filtered_harian = (
         pps_df_report[
             pd.to_datetime(
@@ -1496,28 +1461,41 @@ if selected_tab == "Input & Reset Data":
 
       periode_bulan = selected_wa_date.strftime("%B %Y")
 
-      psm_filtered = (
-          person_df[
-              pd.to_datetime(
-                  person_df["updated_at"], errors="coerce"
-              ).dt.date
-              == selected_wa_date
-          ]
-          if not person_df.empty and "updated_at" in person_df.columns
-          else pd.DataFrame()
-      )
+      # PERBAIKAN: Mengambil data PSM langsung dari sales_person_df
+      sp_report_df = st.session_state.get(
+          "sales_person_df", pd.DataFrame()
+      ).copy()
 
-      if not psm_filtered.empty and "nama_item" in psm_filtered.columns:
-        psm_grouped = (
-            psm_filtered.groupby("nama_item")["qty"].sum().reset_index()
-        )
-        total_qty_psm = int(psm_grouped["qty"].sum())
-        list_psm_text = "".join([
-            f"\t• {r['nama_item']} = {int(r['qty'])}\n"
-            for _, r in psm_grouped.iterrows()
-        ])
+      if not sp_report_df.empty and "updated_at" in sp_report_df.columns:
+        sp_report_df["clean_date"] = pd.to_datetime(
+            sp_report_df["updated_at"], errors="coerce"
+        ).dt.date
+        psm_filtered = sp_report_df[
+            sp_report_df["clean_date"] == selected_wa_date
+        ]
       else:
-        list_psm_text = "\t• (Tidak ada penjualan PSM)\n"
+        psm_filtered = pd.DataFrame()
+
+      if not psm_filtered.empty and "item_name" in psm_filtered.columns:
+        psm_filtered["actual_qty"] = pd.to_numeric(
+            psm_filtered["actual_qty"], errors="coerce"
+        ).fillna(0)
+        psm_grouped = (
+            psm_filtered.groupby("item_name")["actual_qty"].sum().reset_index()
+        )
+        psm_grouped = psm_grouped[psm_grouped["actual_qty"] > 0]
+
+        if not psm_grouped.empty:
+          total_qty_psm = int(psm_grouped["actual_qty"].sum())
+          list_psm_text = "".join([
+              f"\t• {r['item_name']} = {int(r['actual_qty'])}\n"
+              for _, r in psm_grouped.iterrows()
+          ])
+        else:
+          list_psm_text = "\t• (Tidak ada penjualan PSM pada tanggal ini)\n"
+          total_qty_psm = 0
+      else:
+        list_psm_text = "\t• (Tidak ada penjualan PSM pada tanggal ini)\n"
         total_qty_psm = 0
 
       wa_pps_text = (
@@ -1608,13 +1586,6 @@ if selected_tab == "Input & Reset Data":
         )
 
       wa_pps_text += "✅ *Status: Program PPS Berjalan Lancar & Termonitor*"
-
-      st.markdown(
-          "<p style='font-size: 13px; color: #94a3b8; margin-bottom: -5px;'>📋"
-          " <b>Ketuk ikon salin di pojok kanan kotak di bawah ini untuk menyalin"
-          " laporan:</b></p>",
-          unsafe_allow_html=True,
-      )
       st.code(wa_pps_text, language="markdown")
 
     elif wa_format_type == "🥤 Format Laporan Sueger":
@@ -1744,12 +1715,6 @@ if selected_tab == "Input & Reset Data":
         else:
           wa_sueger_text += f"_Belum ada catatan transaksi Sueger untuk Kasir {selected_kasir} bulan ini._\n"
 
-        st.markdown(
-            "<p style='font-size: 13px; color: #94a3b8; margin-bottom: -5px;'>📋"
-            " <b>Ketuk ikon salin di pojok kanan kotak di bawah ini untuk menyalin"
-            " laporan:</b></p>",
-            unsafe_allow_html=True,
-        )
         st.code(wa_sueger_text, language="markdown")
         
 # --- TAB MASTER DATA & PENGATURAN ---
