@@ -1630,283 +1630,337 @@ if selected_tab == "📝 Input Data":
 
 # --- EDIT DATA ---
 elif selected_tab == "➕Edit Data (admin only)":
-  st.markdown(
-      "<h2 style='color: #00f0ff; text-shadow: 0 0 10px rgba(0,240,255,0.5);'>⚙️"
-      " Edit Data Jika Terjadi Kesalahan Input </h2>",
-      unsafe_allow_html=True,
-  )
-
-  current_user = st.session_state.get("username", "visitor")
-  user_lower = str(current_user).lower()
-  is_admin = any(
-      x in user_lower for x in ["admin", "chief", "cos", "lavitality"]
-  )
-
-  if not is_admin:
-    st.error(
-        "🔒 **Akses Ditolak!** Fitur Master Data & Pengaturan hanya dapat"
-        " diakses oleh **Admin / COS**."
-    )
-    st.stop()
-
-  # --- AMBIL PERIODE & DATA SALES DARI SESSION STATE ---
-  periods_df = (
-      st.session_state.get("periods_df", pd.DataFrame())
-      if not st.session_state.get("periods_df", pd.DataFrame()).empty
-      else (
-          periode_df
-          if "periode_df" in locals() and not periode_df.empty
-          else pd.DataFrame()
-      )
-  )
-
-  sp_df = st.session_state.get("sales_person_df", pd.DataFrame())
-
-  edit_periods_dict = {}
-  if not periods_df.empty and all(
-      col in periods_df.columns
-      for col in ["period_id", "period_name", "start_date", "end_date"]
-  ):
-    for _, row in periods_df.iterrows():
-      edit_periods_dict[str(row["period_name"])] = str(row["period_id"])
-
-  if not edit_periods_dict and not periods_df.empty:
-    edit_periods_dict = {
-        str(row["period_name"]): str(row["period_id"])
-        for _, row in periods_df.iterrows()
-    }
-
-  tab_m1, tab_m2 = st.tabs([
-      "EDIT SALES PERSONIL",
-      "HAPUS & RESET",
-  ])
-
-  # SUB TAB 1: EDIT SALES PERSONIL
-  with tab_m1:
     st.markdown(
-        "<h4 style='color: #38bdf8;'>✏️ Edit Transaksi Sales (Koreksi"
-        " Input)</h4>",
+        "<h2 style='color: #00f0ff; text-shadow: 0 0 10px rgba(0,240,255,0.5);'>⚙️"
+        " Edit Data Jika Terjadi Kesalahan Input </h2>",
         unsafe_allow_html=True,
     )
-    if not edit_periods_dict:
-      st.warning("⚠️ Tidak ada data periode yang tersedia di sheet PERIODE.")
-    else:
-      e_period_name = st.selectbox(
-          "Pilih Periode", list(edit_periods_dict.keys()), key="edit_period"
-      )
-      e_p_id = edit_periods_dict[e_period_name]
-      p_start, p_end = get_period_date_bounds(e_p_id)
 
-      sp_sub = (
-          sp_df[sp_df["period_id"].astype(str) == str(e_p_id)].copy()
-          if not sp_df.empty and "period_id" in sp_df.columns
-          else pd.DataFrame()
-      )
-
-      if sp_sub.empty:
-        st.info("Belum ada data transaksi di periode ini untuk diedit.")
-      else:
-        e_person = st.selectbox(
-            "Pilih Personil", sp_sub["person_name"].unique(), key="edit_person"
-        )
-        sp_person_sub = sp_sub[sp_sub["person_name"] == e_person]
-
-        if sp_person_sub.empty:
-          st.info("Tidak ada transaksi untuk personil ini.")
-        else:
-          sp_person_sub["label_trx"] = sp_person_sub.apply(
-              lambda r: (
-                  f"[{r.get('updated_at', '-')}] {r['item_name']} -"
-                  f" {r['actual_qty']} Pcs"
-              ),
-              axis=1,
-          )
-          selected_label = st.selectbox(
-              "Pilih Transaksi yang Akan Diedit",
-              sp_person_sub["label_trx"].tolist(),
-              key="edit_trx_select",
-          )
-          selected_row = sp_person_sub[
-              sp_person_sub["label_trx"] == selected_label
-          ].iloc[0]
-
-          st.markdown("---")
-          col_e1, col_e2 = st.columns(2)
-          try:
-            raw_date = pd.to_datetime(selected_row.get("updated_at")).date()
-          except Exception:
-            raw_date = p_start
-
-          safe_e_date = (
-              p_start
-              if raw_date < p_start
-              else (p_end if raw_date > p_end else raw_date)
-          )
-
-          with col_e1:
-            new_e_date = st.date_input(
-                "Ubah Tanggal Transaksi",
-                value=safe_e_date,
-                min_value=p_start,
-                max_value=p_end,
-                key="edit_date_val",
-            )
-          with col_e2:
-            new_e_qty = st.number_input(
-                "Ubah Jumlah Qty (Pcs)",
-                min_value=0,
-                step=1,
-                value=int(selected_row["actual_qty"]),
-                key="edit_qty_val",
-            )
-
-          if st.button(
-              "💾 Simpan Perubahan Edit",
-              use_container_width=True,
-              key="btn_save_edit",
-          ):
-            idx = selected_row.name
-            st.session_state.sales_person_df.loc[idx, "actual_qty"] = new_e_qty
-            st.session_state.sales_person_df.loc[idx, "updated_at"] = str(
-                new_e_date
-            )
-
-            sync_store_sales_from_personnel()
-            save_database(
-                st.session_state.sales_item_df,
-                st.session_state.sales_person_df,
-                st.session_state.sales_pps_df,
-                st.session_state.sales_store_df,
-            )
-
-            st.toast("🎉 Perubahan data sukses disimpan!", icon="✅")
-            st.success("✅ Perubahan transaksi berhasil disimpan permanen!")
-            time.sleep(1.5)
-            st.rerun()
-
-  # SUB TAB 2: HAPUS & RESET
-  with tab_m2:
-    st.markdown(
-        "<h4 style='color: #38bdf8;'>🗑️ Hapus Transaksi / Reset Sales"
-        " Personil</h4>",
-        unsafe_allow_html=True,
+    current_user = st.session_state.get("username", "visitor")
+    user_lower = str(current_user).lower()
+    is_admin = any(
+        x in user_lower for x in ["admin", "chief", "cos", "lavitality"]
     )
-    if not edit_periods_dict:
-      st.warning("⚠️ Tidak ada data periode yang tersedia di sheet PERIODE.")
-    else:
-      d_period_name = st.selectbox(
-          "Pilih Periode", list(edit_periods_dict.keys()), key="del_period"
-      )
-      d_p_id = edit_periods_dict[d_period_name]
 
-      sp_del_sub = (
-          sp_df[sp_df["period_id"].astype(str) == str(d_p_id)].copy()
-          if not sp_df.empty and "period_id" in sp_df.columns
-          else pd.DataFrame()
-      )
-
-      if sp_del_sub.empty:
-        st.info("Tidak ada transaksi untuk dihapus pada periode ini.")
-      else:
-        d_person = st.selectbox(
-            "Pilih Personil",
-            sp_del_sub["person_name"].unique(),
-            key="del_person",
+    if not is_admin:
+        st.error(
+            "🔒 **Akses Ditolak!** Fitur Master Data & Pengaturan hanya dapat"
+            " diakses oleh **Admin / COS**."
         )
-        sp_del_person = sp_del_sub[sp_del_sub["person_name"] == d_person]
+        st.stop()
 
-        mode_hapus = st.radio(
-            "Pilih Opsi Penghapusan:",
-            [
-                "Hapus Item Tertentu Saja",
-                "Reset Seluruh Penjualan Personil Ini",
-            ],
-            key="del_mode",
+    # --- AMBIL PERIODE & DATA SALES DARI SESSION STATE ---
+    periods_df = (
+        st.session_state.get("periods_df", pd.DataFrame())
+        if not st.session_state.get("periods_df", pd.DataFrame()).empty
+        else (
+            periode_df
+            if "periode_df" in locals() and not periode_df.empty
+            else pd.DataFrame()
         )
+    )
 
-        if mode_hapus == "Hapus Item Tertentu Saja":
-          d_item_name = st.selectbox(
-              "Pilih Produk yang Ingin Dihapus",
-              sp_del_person["item_name"].unique(),
-              key="del_item_select",
-          )
+    sp_df = st.session_state.get("sales_person_df", pd.DataFrame())
 
-          if st.button(
-              f"🗑️ Hapus Transaksi Produk '{d_item_name}'",
-              use_container_width=True,
-              key="btn_del_single",
-          ):
-            st.session_state.sales_person_df = st.session_state.sales_person_df[
-                ~(
-                    (
-                        st.session_state.sales_person_df["period_id"].astype(
-                            str
-                        )
-                        == str(d_p_id)
-                    )
-                    & (
-                        st.session_state.sales_person_df["person_name"]
-                        == d_person
-                    )
-                    & (
-                        st.session_state.sales_person_df["item_name"]
-                        == d_item_name
-                    )
-                )
-            ]
-            sync_store_sales_from_personnel()
-            save_database(
-                st.session_state.sales_item_df,
-                st.session_state.sales_person_df,
-                st.session_state.sales_pps_df,
-                st.session_state.sales_store_df,
-            )
-            st.toast("🗑️ Transaksi sukses dihapus!", icon="⚠️")
-            st.warning(
-                f"⚠️ Transaksi '{d_item_name}' untuk {d_person} berhasil dihapus"
-                " permanen!"
-            )
-            time.sleep(1.5)
-            st.rerun()
+    edit_periods_dict = {}
+    if not periods_df.empty and all(
+        col in periods_df.columns
+        for col in ["period_id", "period_name", "start_date", "end_date"]
+    ):
+        for _, row in periods_df.iterrows():
+            edit_periods_dict[str(row["period_name"])] = str(row["period_id"])
 
+    if not edit_periods_dict and not periods_df.empty:
+        edit_periods_dict = {
+            str(row["period_name"]): str(row["period_id"])
+            for _, row in periods_df.iterrows()
+        }
+
+    # =========================================================================
+    # RENDER CUSTOM RADIO MENU UNTUK SUB-TAB EDIT DATA
+    # =========================================================================
+    st.markdown("""
+    <style>
+        div.block-container div[data-testid="stRadio"] div[role="radiogroup"] {
+            display: flex;
+            gap: 10px;
+            flex-direction: row;
+            align-stretch: stretch;
+        }
+        div.block-container div[data-testid="stRadio"] div[role="radiogroup"] > label {
+            background-color: #1e293b !important;
+            border: 1px solid #334155 !important;
+            padding: 10px 12px !important;
+            border-radius: 10px !important;
+            color: #b0c4de !important;
+            font-weight: 600 !important;
+            font-size: 12px !important;
+            white-space: nowrap !important; /* 🔥 Memaksa teks mutlak satu baris */
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            cursor: pointer;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 50px;
+            transition: all 0.25s ease-in-out;
+        }
+        div.block-container div[data-testid="stRadio"] div[role="radiogroup"] input[type="radio"] {
+            display: none !important;
+        }
+        div.block-container div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
+            border-color: #38bdf8 !important;
+            background-color: #334155 !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+        }
+        div.block-container div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"],
+        div.block-container div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+            border: 1px solid #00f0ff !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.5) !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    selected_sub_tab = st.radio(
+        "Pilih Menu Edit",
+        ["✏️ EDIT SALES PERSONIL", "🗑️ HAPUS & RESET"],
+        label_visibility="collapsed",
+        key="sub_tab_edit_radio"
+    )
+    
+    st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+
+    # SUB TAB 1: EDIT SALES PERSONIL
+    if selected_sub_tab == "✏️ EDIT SALES PERSONIL":
+        st.markdown(
+            "<h4 style='color: #38bdf8;'>✏️ Edit Transaksi Sales (Koreksi"
+            " Input)</h4>",
+            unsafe_allow_html=True,
+        )
+        if not edit_periods_dict:
+            st.warning("⚠️ Tidak ada data periode yang tersedia di sheet PERIODE.")
         else:
-          st.error(
-              f"⚠️ Perhatian: Aksi me-reset akan menghapus SELURUH catatan"
-              f" penjualan {d_person} pada periode ini."
-          )
-          if st.button(
-              f"🚨 Reset Total Sales {d_person} di Periode Ini",
-              use_container_width=True,
-              key="btn_reset_all",
-          ):
-            st.session_state.sales_person_df = st.session_state.sales_person_df[
-                ~(
-                    (
-                        st.session_state.sales_person_df["period_id"].astype(
-                            str
-                        )
-                        == str(d_p_id)
-                    )
-                    & (
-                        st.session_state.sales_person_df["person_name"]
-                        == d_person
-                    )
+            e_period_name = st.selectbox(
+                "Pilih Periode", list(edit_periods_dict.keys()), key="edit_period"
+            )
+            e_p_id = edit_periods_dict[e_period_name]
+            p_start, p_end = get_period_date_bounds(e_p_id)
+
+            sp_sub = (
+                sp_df[sp_df["period_id"].astype(str) == str(e_p_id)].copy()
+                if not sp_df.empty and "period_id" in sp_df.columns
+                else pd.DataFrame()
+            )
+
+            if sp_sub.empty:
+                st.info("Belum ada data transaksi di periode ini untuk diedit.")
+            else:
+                e_person = st.selectbox(
+                    "Pilih Personil", sp_sub["person_name"].unique(), key="edit_person"
                 )
-            ]
-            sync_store_sales_from_personnel()
-            save_database(
-                st.session_state.sales_item_df,
-                st.session_state.sales_person_df,
-                st.session_state.sales_pps_df,
-                st.session_state.sales_store_df,
+                sp_person_sub = sp_sub[sp_sub["person_name"] == e_person]
+
+                if sp_person_sub.empty:
+                    st.info("Tidak ada transaksi untuk personil ini.")
+                else:
+                    sp_person_sub["label_trx"] = sp_person_sub.apply(
+                        lambda r: (
+                            f"[{r.get('updated_at', '-')}] {r['item_name']} -"
+                            f" {r['actual_qty']} Pcs"
+                        ),
+                        axis=1,
+                    )
+                    selected_label = st.selectbox(
+                        "Pilih Transaksi yang Akan Diedit",
+                        sp_person_sub["label_trx"].tolist(),
+                        key="edit_trx_select",
+                    )
+                    selected_row = sp_person_sub[
+                        sp_person_sub["label_trx"] == selected_label
+                    ].iloc[0]
+
+                    st.markdown("---")
+                    col_e1, col_e2 = st.columns(2)
+                    try:
+                        raw_date = pd.to_datetime(selected_row.get("updated_at")).date()
+                    except Exception:
+                        raw_date = p_start
+
+                    safe_e_date = (
+                        p_start
+                        if raw_date < p_start
+                        else (p_end if raw_date > p_end else raw_date)
+                    )
+
+                    with col_e1:
+                        new_e_date = st.date_input(
+                            "Ubah Tanggal Transaksi",
+                            value=safe_e_date,
+                            min_value=p_start,
+                            max_value=p_end,
+                            key="edit_date_val",
+                        )
+                    with col_e2:
+                        new_e_qty = st.number_input(
+                            "Ubah Jumlah Qty (Pcs)",
+                            min_value=0,
+                            step=1,
+                            value=int(selected_row["actual_qty"]),
+                            key="edit_qty_val",
+                        )
+
+                    if st.button(
+                        "💾 Simpan Perubahan Edit",
+                        use_container_width=True,
+                        key="btn_save_edit",
+                    ):
+                        idx = selected_row.name
+                        st.session_state.sales_person_df.loc[idx, "actual_qty"] = new_e_qty
+                        st.session_state.sales_person_df.loc[idx, "updated_at"] = str(
+                            new_e_date
+                        )
+
+                        sync_store_sales_from_personnel()
+                        save_database(
+                            st.session_state.sales_item_df,
+                            st.session_state.sales_person_df,
+                            st.session_state.sales_pps_df,
+                            st.session_state.sales_store_df,
+                        )
+
+                        st.toast("🎉 Perubahan data sukses disimpan!", icon="✅")
+                        st.success("✅ Perubahan transaksi berhasil disimpan permanen!")
+                        time.sleep(1.5)
+                        st.rerun()
+
+    # SUB TAB 2: HAPUS & RESET
+    elif selected_sub_tab == "🗑️ HAPUS & RESET":
+        st.markdown(
+            "<h4 style='color: #38bdf8;'>🗑️ Hapus Transaksi / Reset Sales"
+            " Personil</h4>",
+            unsafe_allow_html=True,
+        )
+        if not edit_periods_dict:
+            st.warning("⚠️ Tidak ada data periode yang tersedia di sheet PERIODE.")
+        else:
+            d_period_name = st.selectbox(
+                "Pilih Periode", list(edit_periods_dict.keys()), key="del_period"
             )
-            st.toast("🚨 Seluruh data transaksi di-reset!", icon="⚠️")
-            st.warning(
-                f"⚠️ Seluruh transaksi {d_person} pada periode ini berhasil"
-                " di-reset!"
+            d_p_id = edit_periods_dict[d_period_name]
+
+            sp_del_sub = (
+                sp_df[sp_df["period_id"].astype(str) == str(d_p_id)].copy()
+                if not sp_df.empty and "period_id" in sp_df.columns
+                else pd.DataFrame()
             )
-            time.sleep(1.5)
-            st.rerun()
+
+            if sp_del_sub.empty:
+                st.info("Tidak ada transaksi untuk dihapus pada periode ini.")
+            else:
+                d_person = st.selectbox(
+                    "Pilih Personil",
+                    sp_del_sub["person_name"].unique(),
+                    key="del_person",
+                )
+                sp_del_person = sp_del_sub[sp_del_sub["person_name"] == d_person]
+
+                mode_hapus = st.radio(
+                    "Pilih Opsi Penghapusan:",
+                    [
+                        "Hapus Item Tertentu Saja",
+                        "Reset Seluruh Penjualan Personil Ini",
+                    ],
+                    key="del_mode",
+                )
+
+                if mode_hapus == "Hapus Item Tertentu Saja":
+                    d_item_name = st.selectbox(
+                        "Pilih Produk yang Ingin Dihapus",
+                        sp_del_person["item_name"].unique(),
+                        key="del_item_select",
+                    )
+
+                    if st.button(
+                        f"🗑️ Hapus Transaksi Produk '{d_item_name}'",
+                        use_container_width=True,
+                        key="btn_del_single",
+                    ):
+                        st.session_state.sales_person_df = st.session_state.sales_person_df[
+                            ~(
+                                (
+                                    st.session_state.sales_person_df["period_id"].astype(
+                                        str
+                                    )
+                                    == str(d_p_id)
+                                )
+                                & (
+                                    st.session_state.sales_person_df["person_name"]
+                                    == d_person
+                                )
+                                & (
+                                    st.session_state.sales_person_df["item_name"]
+                                    == d_item_name
+                                )
+                            )
+                        ]
+                        sync_store_sales_from_personnel()
+                        save_database(
+                            st.session_state.sales_item_df,
+                            st.session_state.sales_person_df,
+                            st.session_state.sales_pps_df,
+                            st.session_state.sales_store_df,
+                        )
+                        st.toast("🗑️ Transaksi sukses dihapus!", icon="⚠️")
+                        st.warning(
+                            f"⚠️ Transaksi '{d_item_name}' untuk {d_person} berhasil dihapus"
+                            " permanen!"
+                        )
+                        time.sleep(1.5)
+                        st.rerun()
+
+                else:
+                    st.error(
+                        f"⚠️ Perhatian: Aksi me-reset akan menghapus SELURUH catatan"
+                        f" penjualan {d_person} pada periode ini."
+                    )
+                    if st.button(
+                        f"🚨 Reset Total Sales {d_person} di Periode Ini",
+                        use_container_width=True,
+                        key="btn_reset_all",
+                    ):
+                        st.session_state.sales_person_df = st.session_state.sales_person_df[
+                            ~(
+                                (
+                                    st.session_state.sales_person_df["period_id"].astype(
+                                        str
+                                    )
+                                    == str(d_p_id)
+                                )
+                                & (
+                                    st.session_state.sales_person_df["person_name"]
+                                    == d_person
+                                )
+                            )
+                        ]
+                        sync_store_sales_from_personnel()
+                        save_database(
+                            st.session_state.sales_item_df,
+                            st.session_state.sales_person_df,
+                            st.session_state.sales_pps_df,
+                            st.session_state.sales_store_df,
+                        )
+                        st.toast("🚨 Seluruh data transaksi di-reset!", icon="⚠️")
+                        st.warning(
+                            f"⚠️ Seluruh transaksi {d_person} pada periode ini berhasil"
+                            " di-reset!"
+                        )
+                        time.sleep(1.5)
+                        st.rerun()
               
 # --- TAB MASTER DATA & PENGATURAN ---
 elif selected_tab == "⚙️ Master Data & Pengaturan":
