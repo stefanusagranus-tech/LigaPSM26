@@ -1039,86 +1039,41 @@ if selected_tab == "🏠 Menu Utama":
         if st.button("Masuk Markas Guild ➔", use_container_width=True, key="btn_enter_dungeon_fixed"):
             placeholder = st.empty()
             with placeholder.container():
-                # Kode di bawah ini murni menggunakan string biasa (TANPA huruf f) agar lingkaran sihir bulat utuh
+                # Suntikkan gaya CSS animasi berputar murni untuk menggerakkan grafik lingkaran sihir SVG
                 st.markdown(
                     """
+                    <style>
+                        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+                        [data-testid="stSidebar"] { display: none !important; }
+                        [data-testid="stHeader"] { display: none !important; }
+                        .magic-portal-container { position: relative; width: 180px; height: 180px; display: flex; justify-content: center; align-items: center; }
+                        .portal-core-icon { position: absolute; font-size: 32px; z-index: 10; animation: pulse-core 2s infinite ease-in-out; }
+                        .outer-vector { transform-origin: 90px 90px; animation: spin-clockwise 8s infinite linear; filter: drop-shadow(0 0 12px rgba(0, 240, 255, 0.5)); }
+                        .middle-vector { transform-origin: 90px 90px; animation: spin-counter 5s infinite linear; filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.5)); }
+                        .inner-vector { transform-origin: 90px 90px; filter: drop-shadow(0 0 15px rgba(0, 255, 136, 0.6)); }
+                        @keyframes spin-clockwise { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                        @keyframes spin-counter { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+                        @keyframes pulse-core { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+                    </style>
+                    
                     <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
-                        
+                        <!-- Grafik Vektor Matematika Lingkaran Sihir (Dijamin 100% anti-pecah kotak kaku) -->
                         <div class="magic-portal-container">
-                            <div class="magic-circle outer-circle"></div>
-                            <div class="magic-circle middle-circle"></div>
-                            <div class="magic-circle inner-circle">🏰</div>
+                            <svg width="180" height="180" viewBox="0 0 180 180" style="position: absolute;">
+                                <circle cx="90" cy="90" r="80" class="outer-vector" stroke="#00f0ff" stroke-width="3" stroke-dasharray="12, 8" fill="none" />
+                                <circle cx="90" cy="90" r="55" class="middle-vector" stroke="#6366f1" stroke-width="2" stroke-dasharray="3, 6" fill="none" />
+                                <circle cx="90" cy="90" r="32" class="inner-vector" stroke="#00ff88" stroke-width="2" fill="#0f172a" />
+                            </svg>
+                            <div class="portal-core-icon">🏰</div>
                         </div>
-                        
-                        <h1 style='color: #00f0ff; font-family: monospace; animation: blink 1.5s infinite; font-size: 24px; margin-top: 40px; letter-spacing: 2px;'>CONJURING PORTAL...</h1>
+                        <h1 style='color: #00f0ff; font-family: monospace; animation: blink 1.5s infinite; font-size: 24px; margin-top: 50px; letter-spacing: 2px;'>CONJURING PORTAL...</h1>
                         <p style='color: #64748b; font-size: 13px; margin-top: 5px; font-family: monospace;'>Channeling mana resources and stabilizing guild gate...</p>
-                        
-                        <style>
-                            @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-                            [data-testid="stSidebar"] { display: none !important; }
-                            [data-testid="stHeader"] { display: none !important; }
-                            
-                            .magic-portal-container {
-                                position: relative;
-                                width: 160px;
-                                height: 160px;
-                                display: flex;
-                                justify-content: center;
-                                align-items: center;
-                            }
-                            .magic-circle {
-                                position: absolute !important;
-                                border-radius: 50% !important; /* Membuat bentuk lingkaran bulat mutlak */
-                                border-style: dashed;
-                                box-sizing: border-box;
-                            }
-                            .outer-circle {
-                                width: 160px !important;
-                                height: 160px !important;
-                                border: 3px dashed #00f0ff !important;
-                                border-left-style: solid !important;
-                                filter: drop-shadow(0 0 15px rgba(0, 240, 255, 0.4)) !important;
-                                animation: rotate-clockwise 6s infinite linear !important;
-                            }
-                            .middle-circle {
-                                width: 120px !important;
-                                height: 120px !important;
-                                border: 2px dotted #6366f1 !important;
-                                border-right-style: solid !important;
-                                filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.4)) !important;
-                                animation: rotate-counter 4s infinite linear !important;
-                            }
-                            .inner-circle {
-                                width: 70px !important;
-                                height: 70px !important;
-                                border: 2px solid #00ff88 !important;
-                                background: rgba(15, 23, 42, 0.9) !important;
-                                display: flex !important;
-                                justify-content: center !important;
-                                align-items: center !important;
-                                font-size: 30px !important;
-                                filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.6)) !important;
-                                animation: pulse-core 2s infinite ease-in-out !important;
-                            }
-                            @keyframes rotate-clockwise {
-                                from { transform: rotate(0deg); }
-                                to { transform: rotate(360deg); }
-                            }
-                            @keyframes rotate-counter {
-                                from { transform: rotate(360deg); }
-                                to { transform: rotate(0deg); }
-                            }
-                            @keyframes pulse-core {
-                                0%, 100% { transform: scale(1); }
-                                50% { transform: scale(1.08); }
-                            }
-                        </style>
                     </div>
                     """, 
                     unsafe_allow_html=True
                 )
                 
-                # Progress bar berjalan lambat khidmat selama ~4 detik
+                # Progress bar khidmat berjalan perlahan (~4 detik)
                 progress_bar = st.progress(0)
                 for percent_complete in range(100):
                     time.sleep(0.04) 
