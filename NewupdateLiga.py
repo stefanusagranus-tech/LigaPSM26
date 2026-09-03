@@ -821,94 +821,94 @@ st.markdown(
 # 9. MODUL TAB / SUB MENU
 # ==========================================
 
- # =========================================================================
-        # 🚀 KUNCI UTAMA: MEMAKSA HALAMAN PORTAL GAME JADI FULLSCREEN MANDIRI
-        # =========================================================================
-        if "portal_guild_ready" in st.session_state and st.session_state.portal_guild_ready:
-            st.markdown(
-                """
-                <style>
-                    /* Mengubah total warna dasar aplikasi menjadi gelap game */
-                    .main .block-container {
-                        background-color: #0c1020 !important;
-                        min-height: 100vh;
-                        padding-top: 10% !important; /* Menggeser posisi konten ke tengah layar */
-                    }
-                    /* Menghilangkan sidebar bawaan secara total khusus di layar ini */
-                    [data-testid="stSidebar"] { 
-                        display: none !important; 
-                    }
-                    /* Menghilangkan header bawaan atas Streamlit */
-                    [data-testid="stHeader"] { 
-                        display: none !important; 
-                    }
-        
-                    /* Menata ulang gaya tombol asli Streamlit agar berbentuk Kartu Pilihan Game */
-                    div[data-testid="stColumn"] div.stButton > button,
-                    div[data-testid="stColumn"] a[data-testid="stLinkButton"] {
-                        min-height: 160px !important;
-                        display: flex !important;
-                        flex-direction: column !important;
-                        justify-content: center !important;
-                        align-items: center !important;
-                        border-radius: 16px !important;
-                        font-family: monospace !important;
-                        font-size: 16px !important;
-                        font-weight: 800 !important;
-                        letter-spacing: 1px !important;
-                        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
-                        box-sizing: border-box !important;
-                        text-decoration: none !important;
-                    }
-        
-                    /* 🌌 Tombol Kiri: LAUNCH TELEPORTATION (Cyan Neon) */
-                    div[data-testid="stColumn"]:nth-child(1) a[data-testid="stLinkButton"] {
-                        background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.3) 100%) !important;
-                        color: #00f0ff !important;
-                        border: 2px solid #06b6d4 !important;
-                        box-shadow: 0 0 15px rgba(6, 182, 212, 0.15) !important;
-                    }
-                    div[data-testid="stColumn"]:nth-child(1) a[data-testid="stLinkButton"]:hover {
-                        transform: translateY(-5px) scale(1.02) !important;
-                        background: #06b6d4 !important;
-                        color: #0f172a !important;
-                        box-shadow: 0 0 30px rgba(6, 182, 212, 0.6) !important;
-                    }
-        
-                    /* ❌ Tombol Kanan: CANCEL AND RETURN (Merah Crimson) */
-                    div[data-testid="stColumn"]:nth-child(2) div.stButton > button {
-                        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(185, 28, 28, 0.2) 100%) !important;
-                        color: #ef4444 !important;
-                        border: 2px solid #ef4444 !important;
-                        box-shadow: 0 0 15px rgba(239, 68, 68, 0.1) !important;
-                    }
-                    div[data-testid="stColumn"]:nth-child(2) div.stButton > button:hover {
-                        transform: translateY(-5px) scale(1.02) !important;
-                        background: #ef4444 !important;
-                        color: #ffffff !important;
-                        box-shadow: 0 0 30px rgba(239, 68, 68, 0.6) !important;
-                    }
-                </style>
-                """, 
-                unsafe_allow_html=True
-            )
-            
-            st.markdown("<h1 style='color: #00ff88; font-family: monospace; font-size: 36px; text-shadow: 0 0 20px rgba(0,255,136,0.6); text-align: center;'>⚡ PORTAL READY! ⚡</h1>", unsafe_allow_html=True)
-            st.markdown("<p style='color: #94a3b8; font-family: monospace; text-align: center; font-size: 14px; margin-bottom: 50px;'>Mekanisme sihir teleportasi aliansi telah dikonfigurasi sempurna. Silakan pilih langkah Anda:</p>", unsafe_allow_html=True)
-            
-            col_portal1, col_portal2 = st.columns(2)
-            
-            with col_portal1:
-                st.link_button("⚡ LAUNCH TELEPORTATION", url="https://streamlit.app", use_container_width=True)
-                
-            with col_portal2:
-                if st.button("❌ CANCEL & RETURN", use_container_width=True, key="btn_cancel_portal_main"):
-                    st.session_state.portal_guild_ready = False
-                    st.rerun()
-                    
-            # Mengunci aplikasi secara mutlak agar kode dashboard di bawahnya tidak ikut digambar!
-            st.stop()
+# =========================================================================
+# 🚀 KUNCI UTAMA: MEMAKSA HALAMAN PORTAL GAME JADI FULLSCREEN MANDIRI
+# =========================================================================
+if "portal_guild_ready" in st.session_state and st.session_state.portal_guild_ready:
+    st.markdown(
+        """
+        <style>
+            /* Mengubah total warna dasar aplikasi menjadi gelap game */
+            .main .block-container {
+                background-color: #0c1020 !important;
+                min-height: 100vh;
+                padding-top: 10% !important; /* Menggeser posisi konten ke tengah layar */
+            }
+            /* Menghilangkan sidebar bawaan secara total khusus di layar ini */
+            [data-testid="stSidebar"] { 
+                display: none !important; 
+            }
+            /* Menghilangkan header bawaan atas Streamlit */
+            [data-testid="stHeader"] { 
+                display: none !important; 
+            }
 
+            /* Menata ulang gaya tombol asli Streamlit agar berbentuk Kartu Pilihan Game */
+            div[data-testid="stColumn"] div.stButton > button,
+            div[data-testid="stColumn"] a[data-testid="stLinkButton"] {
+                min-height: 160px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: center !important;
+                align-items: center !important;
+                border-radius: 16px !important;
+                font-family: monospace !important;
+                font-size: 16px !important;
+                font-weight: 800 !important;
+                letter-spacing: 1px !important;
+                transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+                box-sizing: border-box !important;
+                text-decoration: none !important;
+            }
+
+            /* 🌌 Tombol Kiri: LAUNCH TELEPORTATION (Cyan Neon) */
+            div[data-testid="stColumn"]:nth-child(1) a[data-testid="stLinkButton"] {
+                background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.3) 100%) !important;
+                color: #00f0ff !important;
+                border: 2px solid #06b6d4 !important;
+                box-shadow: 0 0 15px rgba(6, 182, 212, 0.15) !important;
+            }
+            div[data-testid="stColumn"]:nth-child(1) a[data-testid="stLinkButton"]:hover {
+                transform: translateY(-5px) scale(1.02) !important;
+                background: #06b6d4 !important;
+                color: #0f172a !important;
+                box-shadow: 0 0 30px rgba(6, 182, 212, 0.6) !important;
+            }
+
+            /* ❌ Tombol Kanan: CANCEL AND RETURN (Merah Crimson) */
+            div[data-testid="stColumn"]:nth-child(2) div.stButton > button {
+                background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(185, 28, 28, 0.2) 100%) !important;
+                color: #ef4444 !important;
+                border: 2px solid #ef4444 !important;
+                box-shadow: 0 0 15px rgba(239, 68, 68, 0.1) !important;
+            }
+            div[data-testid="stColumn"]:nth-child(2) div.stButton > button:hover {
+                transform: translateY(-5px) scale(1.02) !important;
+                background: #ef4444 !important;
+                color: #ffffff !important;
+                box-shadow: 0 0 30px rgba(239, 68, 68, 0.6) !important;
+            }
+        </style>
+        """, 
+        unsafe_allow_html=True
+    )
+    
+    st.markdown("<h1 style='color: #00ff88; font-family: monospace; font-size: 36px; text-shadow: 0 0 20px rgba(0,255,136,0.6); text-align: center;'>⚡ PORTAL READY! ⚡</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #94a3b8; font-family: monospace; text-align: center; font-size: 14px; margin-bottom: 50px;'>Mekanisme sihir teleportasi aliansi telah dikonfigurasi sempurna. Silakan pilih langkah Anda:</p>", unsafe_allow_html=True)
+    
+    col_portal1, col_portal2 = st.columns(2)
+    
+    with col_portal1:
+        st.link_button("⚡ LAUNCH TELEPORTATION", url="https://streamlit.app", use_container_width=True)
+        
+    with col_portal2:
+        if st.button("❌ CANCEL & RETURN", use_container_width=True, key="btn_cancel_portal_main"):
+            st.session_state.portal_guild_ready = False
+            st.rerun()
+            
+    # Mengunci aplikasi secara mutlak agar kode dashboard di bawahnya tidak ikut digambar!
+    st.stop()
+    
 # =========================================================================
 # MENU UTAMA: GAYA RPG RESPONSIVE (PORTAL GUILD ONLY)
 # =========================================================================
