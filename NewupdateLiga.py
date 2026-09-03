@@ -1940,30 +1940,41 @@ elif selected_tab == "📝 Input Data":
             else pd.DataFrame()
         )
 
-        if wa_format_type == "📋 Format Laporan PPS":
+         if wa_format_type == "📋 Format Laporan PPS":
             st.markdown(
                 "<h5 style='color: #38bdf8;'>✨ Preview Format Laporan PPS (Harian"
                 " per Shift)</h5>",
                 unsafe_allow_html=True,
             )
 
-            # 🚀 TOMBOL PEMICU UTAMA: Mengendalikan penarikan data agar hemat limit API Google
-            if st.button("🔮 GENERATE LAPORAN HARIAN PPS", use_container_width=True, type="primary"):
+            # 🚀 TOMBOL PEMICU UTAMA: Dirombak total agar menyinkronkan KEDUA tabel (PSM & PPS) sekaligus
+            if st.button("🔮 GENERATE LAPORAN HARIAN PPS", use_container_width=True, key="btn_generate_pps_final", type="primary"):
                 
-                with st.spinner("🧙‍♂️ Sihir pembersih cache aktif... Menarik data segar dari Google Sheets"):
-                    # 1. Paksa Streamlit merobek foto memori lama (Cache Busting)
+                with st.spinner("🧙‍♂️ Ritual pembersihan cache massal... Menarik data segar dari Google Sheets"):
+                    # 1. Hancurkan benteng pertahanan cache ttl=60 Google Sheets Streamlit
                     st.cache_data.clear()
                     
-                    # 2. Panggil ulang fungsi database utama Anda untuk mengambil baris paling baru dari cloud
+                    # 2. Ambil paket data paling murni dan paling baru langsung dari awan Google Sheets
                     (p_df, p_pps_df, p_store_df, i_df, pers_df, si_df, sp_df, s_pps_df, s_store_df) = load_database()
                     
-                    # 3. Sinkronkan hasil segar ke dalam session state global aplikasi Anda
+                    # 3. KUNCI UTAMA: Suntikkan paksa data segar ke memori session_state global
+                    # Agar variabel pps_filtered_harian di bawah ikut berubah kosong secara detik itu juga!
                     st.session_state.sales_person_df = sp_df
                     st.session_state.sales_pps_df = s_pps_df
                     st.session_state.sales_item_df = si_df
                     st.session_state.sales_store_df = s_store_df
-                
-                st.toast("Laporan PPS Berhasil Diperbarui Secara Live!", icon="⚡")
+                    
+                    # 4. Paksa variabel filter harian PPS Anda membaca ulang baris data yang baru ditarik
+                    # (Kita tiru persis rumus filter tanggal harian PPS Anda yang ada di baris atas script Anda)
+                    if not s_pps_df.empty and "updated_at" in s_pps_df.columns:
+                        s_pps_df["clean_date"] = pd.to_datetime(s_pps_df["updated_at"], errors="coerce").dt.date
+                        # Overwrite variabel filter harian agar langsung sinkron dengan database riil
+                        pps_filtered_harian = s_pps_df[s_pps_df["clean_date"] == selected_wa_date]
+                    else:
+                        pps_filtered_harian = pd.DataFrame()
+                        
+                st.toast("Semua tabel (PSM & PPS) sukses disinkronkan secara live!", icon="⚡")
+                st.rerun() # Memicu render ulang agar teks st.code langsung berubah bersih saat itu juga
 
             # --- SISA KODE PROSES PEMBACAAN DATA DI BAWAHNYA TETAP SAMA ---
             periode_bulan = selected_wa_date.strftime("%B %Y")
