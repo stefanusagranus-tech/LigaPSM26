@@ -259,6 +259,31 @@ def get_period_date_bounds(p_id):
   today = waktu_wib.date()
   return today.replace(day=1), today
 
+# --- INISIALISASI GLOBAL PERIODS_DICT ---
+periods_dict = {}
+active_periods_df = (
+    st.session_state.get("periods_df", pd.DataFrame())
+    if not st.session_state.get("periods_df", pd.DataFrame()).empty
+    else (
+        periode_df
+        if "periode_df" in locals() and not periode_df.empty
+        else pd.DataFrame()
+    )
+)
+
+if not active_periods_df.empty and all(
+    col in active_periods_df.columns
+    for col in ["period_id", "period_name", "start_date", "end_date"]
+):
+  for _, row in active_periods_df.iterrows():
+    periods_dict[str(row["period_name"])] = str(row["period_id"])
+
+if not periods_dict and not active_periods_df.empty:
+  periods_dict = {
+      str(row["period_name"]): str(row["period_id"])
+      for _, row in active_periods_df.iterrows()
+  }
+
 # ==========================================
 # 3. WAKTU REALTIME GMT+7 (WIB)
 # ==========================================
