@@ -727,7 +727,7 @@ st.markdown(
 )
 
   # --- Context & User Role ---
-  current_user = st.session_state.get("username", "visitor")
+  current_user = st.session_state.get("username","visitor")
   user_lower = str(current_user).lower()
   is_admin = any(
       x in user_lower for x in ["admin", "chief", "cos", "lavitality"]
