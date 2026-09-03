@@ -569,213 +569,183 @@ if not st.session_state.logged_in:
   st.stop()
 
 # ==========================================================
-# 7. SIDEBAR DASHBOARD (MODERN STYLE WITH LOCAL LOGO)
+# 7. SIDEBAR DASHBOARD - GAYA CODINGLAB (BAGIAN 1)
 # ==========================================================
+import streamlit as st
+
+# Inisialisasi status buka/tutup sidebar di session_state
+if "sidebar_collapsed" not in st.session_state:
+    st.session_state.sidebar_collapsed = False
+
+# Fungsi untuk memicu perubahan ukuran sidebar saat tombol diklik
+def toggle_sidebar_size():
+    st.session_state.sidebar_collapsed = not st.session_state.sidebar_collapsed
+
+# Tentukan lebar sidebar berdasarkan statusnya
+sidebar_width = "80px" if st.session_state.sidebar_collapsed else "260px"
+
 st.sidebar.markdown(
-    """
+    f"""
     <style>
-        /* Mengubah latar belakang sidebar menjadi gelap modern */
-        [data-testid="stSidebar"] {
+        /* Mengatur transisi animasi perubahan lebar sidebar */
+        [data-testid="stSidebar"] {{
+            width: {sidebar_width} !important;
+            min-width: {sidebar_width} !important;
+            max-width: {sidebar_width} !important;
+            transition: width 0.3s ease-in-out !important;
             background-color: #1c1c1e;
-        }
+            overflow-x: hidden !important;
+        }}
         
+        /* Menyesuaikan pergeseran konten utama saat sidebar mengecil */
+        [data-testid="stAppViewContainer"] {{
+            padding-left: 0px !important;
+        }}
+
         /* Header Profil */
-        .sidebar-header {
+        .sidebar-header {{
             display: flex;
             align-items: center;
-            justify-content: space-between; /* Memberi ruang untuk tombol toggle collapse */
-            margin-bottom: 10px;
+            justify-content: space-between;
+            margin-bottom: 15px;
             padding: 5px 10px;
-        }
-        .profile-container {
+            white-space: nowrap;
+        }}
+        .profile-container {{
             display: flex;
             align-items: center;
             gap: 14px;
-        }
-        .sidebar-logo {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px; /* Kotak membulat modern mirip contoh Codinglab */
+            /* Menyembunyikan nama user jika sidebar mengecil */
+            display: {"none" if st.session_state.sidebar_collapsed else "flex"};
+        }}
+        .sidebar-logo {{
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
             object-fit: cover;
-            border: 2px solid #6366f1; /* Aksen Ungu */
-        }
-        
-        /* Tombol Toggle Collapse bergaya Codinglab */
-        .toggle-collapse-btn {
-            background-color: #6366f1;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
-            transition: transform 0.2s ease;
-        }
-        .toggle-collapse-btn:hover {
-            transform: scale(1.1);
-        }
-        
-        /* Teks Judul & Subtitel */
-        .store-title {
+            border: 2px solid #6366f1;
+        }}
+
+        /* Teks Judul Toko (Disembunyikan jika mengecil) */
+        .store-info-box {{
+            display: {"none" if st.session_state.sidebar_collapsed else "block"};
+            padding: 0 10px;
+        }}
+        .store-title {{
             color: #ffffff;
             font-size: 20px;
             font-weight: 700;
             margin-bottom: 2px;
             letter-spacing: 0.5px;
-            padding: 0 10px;
-        }
-        .store-subtitle {
+        }}
+        .store-subtitle {{
             color: #a1a1aa;
             font-size: 12px;
             font-weight: 500;
-            margin-top: 0px;
             margin-bottom: 20px;
-            padding: 0 10px;
-        }
-
-        /* Mengubah Tampilan Menu Radio Streamlit menjadi Tombol Navigasi Modern */
+        }}
+    </style>
+""",
+    unsafe_allow_html=True,
+)
+# ==========================================================
+# 7. SIDEBAR DASHBOARD - GAYA CODINGLAB (BAGIAN 2)
+# ==========================================================
+st.sidebar.markdown(
+    """
+    <style>
+        /* Mengubah struktur menu navigasi radio Streamlit */
         div[data-testid="stRadio"] > div {
             gap: 8px;
         }
         div[data-testid="stRadio"] label {
             background-color: transparent;
             color: #e4e4e7 !important;
-            padding: 10px 16px;
+            padding: 12px !important;
             border-radius: 8px;
-            border: none;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             width: 100%;
             cursor: pointer;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
         }
-        /* Efek Hover Menu Navigasi */
-        div[data-testid="stRadio"] label:hover {
-            background-color: rgba(255, 255, 255, 0.05);
-            color: #ffffff !important;
-        }
-        /* Efek Menu yang Sedang Aktif/Dipilih (Ungu Menonjol) */
+        
+        /* Efek saat menu aktif (Ungu Balok) */
         div[data-testid="stRadio"] [data-checked="true"] label {
             background-color: #6366f1 !important;
             color: #ffffff !important;
-            font-weight: 600;
             box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
-        /* Menyembunyikan bulatan radio asli Streamlit agar terlihat bersih */
         div[data-testid="stRadio"] [data-testid="stMarkdownVisibility"] {
             display: none;
-        }
-
-        /* Mengubah Gaya Tombol Komponen (Refresh & Logout) */
-        div.stButton > button {
-            background-color: #27272a;
-            color: #e4e4e7;
-            border: 1px solid #3f3f46;
-            border-radius: 8px;
-            padding: 10px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-        div.stButton > button:hover {
-            background-color: #3f3f46;
-            color: #ffffff;
-            border-color: #52525b;
-        }
-        /* Tombol Logout Spesifik */
-        .logout-btn button {
-            background-color: rgba(239, 68, 68, 0.1) !important;
-            color: #ef4444 !important;
-            border: 1px solid rgba(239, 68, 68, 0.2) !important;
-        }
-        .logout-btn button:hover {
-            background-color: #ef4444 !important;
-            color: #ffffff !important;
         }
     </style>
 """,
     unsafe_allow_html=True,
 )
 
-# 1. Mengatur pemanggilan file gambar JPG lokal Anda
 LOCAL_LOGO_PATH = "kgs_group_belgium_logo.jpg"
-
-# 2. Proses enkripsi gambar lokal agar terbaca dengan benar di elemen HTML
+import os, base64
 if os.path.exists(LOCAL_LOGO_PATH):
     with open(LOCAL_LOGO_PATH, "rb") as f:
         data = f.read()
-    encoded = base64.b64encode(data).decode()
-    logo_src = f"data:image/jpeg;base64,{encoded}"
+    logo_src = f"data:image/jpeg;base64,{base64.b64encode(data).decode()}"
 else:
-    # Gambar cadangan otomatis jika file lokal belum dimasukkan ke folder proyek
     logo_src = "https://flaticon.com"
 
 username = st.session_state.get("username", "Admin")
 
-# Tampilan Header Profil Lengkap dengan Fitur Collapse Otomatis
+# Tampilan Header Profil & Tombol panah pemicu mengecil
+col_side1, col_side2 = st.sidebar.columns([4, 1] if not st.session_state.sidebar_collapsed else)
+with col_side1:
+    if not st.session_state.sidebar_collapsed:
+        st.markdown(
+            f"""
+            <div class='profile-container'>
+                <img src='{logo_src}' class='sidebar-logo'>
+                <div style='display: flex; flex-direction: column;'>
+                    <span style='color: #a1a1aa; font-size: 11px;'>Selamat Datang,</span>
+                    <span style='color: #ffffff; font-size: 14px; font-weight: 600;'>{username}</span>
+                </div>
+            </div>
+        """, unsafe_allow_html=True
+        )
+    else:
+        st.markdown(f"<img src='{logo_src}' class='sidebar-logo'>", unsafe_allow_html=True)
+
+with col_side2:
+    # Tombol panah kustom untuk mengecilkan / melebarkan ukuran baris sidebar
+    arrow_icon = "▶" if st.session_state.sidebar_collapsed else "◀"
+    st.button(arrow_icon, on_click=toggle_sidebar_size, key="toggle_size_btn")
+
+# Render Informasi Toko
 st.sidebar.markdown(
     f"""
-    <div class='sidebar-header'>
-        <div class='profile-container'>
-            <img src='{logo_src}' class='sidebar-logo'>
-            <div style='display: flex; flex-direction: column;'>
-                <span style='color: #a1a1aa; font-size: 11px; font-weight: 500;'>Selamat Datang,</span>
-                <span style='color: #ffffff; font-size: 14px; font-weight: 600;'>{username}</span>
-            </div>
-        </div>
-        <button class='toggle-collapse-btn' onclick="window.parent.document.querySelector('.stSidebar button[kind=\\'headerNoPadding\\']').click();">◀</button>
+    <div class='store-info-box'>
+        <div class='store-title'>TOKO C383</div>
+        <div class='store-subtitle'>Report PSM dan Target PSM</div>
     </div>
-""",
-    unsafe_allow_html=True,
+""", unsafe_allow_html=True
 )
 
-st.sidebar.markdown(
-    "<div class='store-title'>TOKO C383</div>", unsafe_allow_html=True
-)
-st.sidebar.markdown(
-    "<div class='store-subtitle'>Report PSM dan Target PSM</div>",
-    unsafe_allow_html=True,
-)
+# Navigasi Menu Utama (Jika mengecil, otomatis hanya menampilkan karakter ikon pertamanya saja)
+if st.session_state.sidebar_collapsed:
+    menu_options = ["🏠", "📝", "➕", "⚙️"]
+    st.sidebar.markdown("<center><p style='color:#a1a1aa; font-size:12px;'>📌</p></center>", unsafe_allow_html=True)
+else:
+    menu_options = ["🏠 Menu Utama", "📝 Input Data", "➕ Edit Data (Admin)", "⚙️ Pengaturan & Master"]
+    st.sidebar.markdown("<p style='color:#a1a1aa; font-size:11px; font-weight:700; padding: 0 10px;'>📌 NAVIGASI MENU</p>", unsafe_allow_html=True)
 
-# ➔ Tombol Refresh Cache
-if st.sidebar.button("🔄 Refresh Data Cache", use_container_width=True):
-    st.cache_data.clear()
-    for key in list(st.session_state.keys()):
-        del st.session_state[key]
-    st.rerun()
-
-st.sidebar.markdown("<hr style='margin: 15px 0; border-color: #27272a;'>", unsafe_allow_html=True)
-
-st.sidebar.markdown(
-    "<p style='color:#a1a1aa; font-size:11px; font-weight:700; letter-spacing:1px;"
-    " margin-bottom:10px; padding: 0 10px;'>📌 NAVIGASI MENU</p>",
-    unsafe_allow_html=True,
-)
-
-# Pilihan Menu Navigasi
-menu_options = [
-    "🏠 Menu Utama",
-    "📝 Input Data",
-    "➕ Edit Data (Admin)",
-    "⚙️ Pengaturan & Master",
-]
-
-selected_tab = st.sidebar.radio(
-    "", menu_options, label_visibility="collapsed"
-)
-
-st.sidebar.markdown("<hr style='margin: 20px 0; border-color: #27272a;'>", unsafe_allow_html=True)
+selected_tab = st.sidebar.radio("", menu_options, label_visibility="collapsed")
 
 # Tombol Keluar / Logout
-st.sidebar.markdown("<div class='logout-btn'>", unsafe_allow_html=True)
-if st.sidebar.button("🚪 Keluar / Logout", use_container_width=True):
+st.sidebar.markdown("<hr style='margin: 15px 0; border-color: #27272a;'>", unsafe_allow_html=True)
+logout_text = "🚪" if st.session_state.sidebar_collapsed else "🚪 Keluar / Logout"
+if st.sidebar.button(logout_text, use_container_width=True, key="logout_sidebar"):
     st.session_state.logged_in = False
     st.session_state.username = ""
     st.rerun()
-st.sidebar.markdown("</div>", unsafe_allow_html=True)
-
 
 # ==========================================
 # 8. HEADER UTAMA (Tombol Menyatu di Banner)
