@@ -337,6 +337,23 @@ def check_login(input_username, input_password):
     return True
   return False
 
+# Tempatkan kode CSS ini di bagian paling atas aplikasi Anda (di bawah set_page_config jika ada)
+st.markdown(
+    """
+    <style>
+        /* Menghapus baris kosong header atas Streamlit */
+        [data-testid="stHeader"] {
+            display: none !important;
+        }
+        
+        /* Menyesuaikan posisi atas konten utama agar tidak terlalu menempel ke atas setelah header dihapus */
+        [data-testid="stAppViewContainer"] > section:nth-child(2) {
+            padding-top: 2rem !important;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 # ==========================================
 # 5. CUSTOM CSS (NEON DARK THEME + TAB FIX)
