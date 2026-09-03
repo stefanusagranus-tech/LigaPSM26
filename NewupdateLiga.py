@@ -983,7 +983,7 @@ if selected_tab == "🏠 Menu Utama":
             st.toast("🎒 Membuka Tas Perlengkapan Inventory...", icon="🛡️")
             # Tulis logika pindah halaman/tab Anda di sini
 
-    st.markdown("</div>", unsafe_allow_html=True
+    st.markdown("</div>", unsafe_allow_html=True)
     
 # =============================================================================
 # --- INPUT & RESET DATA ---
