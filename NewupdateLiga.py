@@ -949,25 +949,46 @@ if selected_tab == "🏠 Menu Utama":
     col_game1, col_game2 = st.columns(2)
 
     with col_game1:
-        # KARTU 1: ENTER GUILD
         st.markdown(
             """
             <div class='rpg-card-center-fixed'>
-                <div class='rpg-badge-fixed badge-Guild'>⚔️ Raid Mode</div>
+                <div class='rpg-badge-fixed badge-dungeon'>🛡️ Alliance Mode</div>
                 <div class='rpg-icon-center-fixed'>🏰</div>
                 <div class='rpg-title-fixed'>ENTER GUILD</div>
-                <div class='rpg-desc-fixed'>Masuk ke Dashboard Utama untuk memantau performa total, grafik target, dan analisis pencapaian PSM Toko secara menyeluruh.</div>
+                <div class='rpg-desc-fixed'>Masuk ke Markas Besar Guild untuk memantau papan pengumuman performa total, grafik target kelompok, dan analisis pencapaian bersama.</div>
             </div>
         """,
             unsafe_allow_html=True,
         )
-        # Tombol diletakkan sejajar di bawah kotak kartu HTML, tetapi diatur lebarnya penuh agar pas simetris
-        if st.button("Masuk Dashboard Utama ➔", use_container_width=True, key="btn_enter_guild_fixed"):
-            st.toast("🔮 Membuka Portal Menuju Guild Utama...", icon="🏰")
-            # Tulis logika pindah halaman/tab Anda di sini
+        
+        if st.button("Masuk Markas Guild ➔", use_container_width=True, key="btn_enter_dungeon_fixed"):
+            # 🚀 PROSES LOADING SCREEN FULLSCREEN (GUILD HALL)
+            placeholder = st.empty()
+            with placeholder.container():
+                st.markdown(
+                    """
+                    <div style='background-color: #0f172a; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
+                        <h1 style='color: #00f0ff; font-family: monospace; animation: blink 1.5s infinite; font-size: 28px;'>🏰 ENTERING GUILD HALL...</h1>
+                        <p style='color: #94a3b8; font-size: 14px; margin-top: 10px; font-family: monospace;'>Gathering alliance data and loading guild quest board...</p>
+                        <style>
+                            @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+                            [data-testid="stSidebar"] { display: none !important; }
+                        </style>
+                    </div>
+                """, unsafe_allow_html=True
+                )
+                
+                # Progress bar simulasi memuat markas Guild
+                progress_bar = st.progress(0)
+                for percent_complete in range(100):
+                    time.sleep(0.02) 
+                    progress_bar.progress(percent_complete + 1)
+            
+            placeholder.empty() 
+            # --- SELESAI LOADING: MASUKKAN LOGIKA PINDAH HALAMAN DI SINI ---
+            st.success("⚔️ Welcome to the Guild Hall, Hero!")
 
     with col_game2:
-        # KARTU 2: PREPARATION CAMP
         st.markdown(
             """
             <div class='rpg-card-center-fixed'>
@@ -979,9 +1000,32 @@ if selected_tab == "🏠 Menu Utama":
         """,
             unsafe_allow_html=True,
         )
+        
         if st.button("Buka Rapor Personil Toko ➔", use_container_width=True, key="btn_enter_prep_fixed"):
-            st.toast("🎒 Membuka Tas Perlengkapan Inventory...", icon="🛡️")
-            # Tulis logika pindah halaman/tab Anda di sini
+            # 🚀 PROSES LOADING SCREEN FULLSCREEN (PREPARATION CAMP)
+            placeholder = st.empty()
+            with placeholder.container():
+                st.markdown(
+                    """
+                    <div style='background-color: #0f172a; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
+                        <h1 style='color: #eab308; font-family: monospace; animation: blink 1.5s infinite; font-size: 28px;'>🎒 OPENING INVENTORY...</h1>
+                        <p style='color: #94a3b8; font-size: 14px; margin-top: 10px; font-family: monospace;'>Equipping gear and sorting personal records...</p>
+                        <style>
+                            @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+                            [data-testid="stSidebar"] { display: none !important; }
+                        </style>
+                    </div>
+                """, unsafe_allow_html=True
+                )
+                
+                progress_bar = st.progress(0)
+                for percent_complete in range(100):
+                    time.sleep(0.02)
+                    progress_bar.progress(percent_complete + 1)
+            
+            placeholder.empty()
+            # --- MASUKKAN LOGIKA PINDAH HALAMAN / MENYALAKAN TAB DI SINI ---
+            st.success("🛡️ Inventory Camp Opened!")
 
     st.markdown("</div>", unsafe_allow_html=True)
     
