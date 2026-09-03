@@ -821,15 +821,132 @@ st.markdown(
 # 9. MODUL TAB / SUB MENU
 # ==========================================
 
-# =============================================================================
-# --- INPUT & RESET DATA ---
-# =============================================================================
-if selected_tab == "🏠 Menu Utama":
+# =========================================================================
+# MENU UTAMA: GAYA PILIHAN GAME RPG (DUNGEON & PREPARATION)
+# =========================================================================
+if selected_tab == "Menu Utama":
+    # 1. Suntikkan CSS khusus untuk komponen kartu tombol game
     st.markdown(
-        "<h2 style='color: #00f0ff; text-shadow: 0 0 10px rgba(0,240,255,0.5);'>✏️"
-        " SELAMAT DATANG KAWAN SILAHKAN PILIH JALAN MU SENDIRI</h2>",
+        """
+        <style>
+            .rpg-container {
+                display: flex;
+                gap: 24px;
+                justify-content: center;
+                align-items: center;
+                margin-top: 40px;
+                padding: 10px;
+            }
+            .rpg-card {
+                background: linear-gradient(135deg, rgba(15, 23, 42, 0.6) 0%, rgba(30, 41, 59, 0.8) 100%);
+                border: 2px solid #38bdf8;
+                border-radius: 16px;
+                padding: 30px 24px;
+                width: 340px;
+                min-height: 220px;
+                text-align: center;
+                cursor: pointer;
+                transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+                box-shadow: 0 0 15px rgba(56, 189, 248, 0.1);
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                position: relative;
+                overflow: hidden;
+            }
+            /* Efek Hover ala Tombol Game (Membesar & Menyala Neon) */
+            .rpg-card:hover {
+                transform: translateY(-8px) scale(1.02);
+                border-color: #00f0ff;
+                box-shadow: 0 0 25px rgba(0, 240, 255, 0.4), inset 0 0 15px rgba(0, 240, 255, 0.1);
+            }
+            /* Dekorasi Badge Status di Pojok Atas Kartu */
+            .rpg-badge {
+                position: absolute;
+                top: 12px;
+                right: 12px;
+                font-size: 10px;
+                font-weight: 800;
+                padding: 3px 8px;
+                border-radius: 20px;
+                letter-spacing: 1px;
+                text-transform: uppercase;
+            }
+            .badge-dungeon {
+                background-color: rgba(239, 68, 68, 0.2);
+                color: #ef4444;
+                border: 1px solid #ef4444;
+            }
+            .badge-prep {
+                background-color: rgba(234, 179, 8, 0.2);
+                color: #eab308;
+                border: 1px solid #eab308;
+            }
+            .rpg-title {
+                color: #ffffff;
+                font-size: 22px;
+                font-weight: 800;
+                margin-bottom: 8px;
+                letter-spacing: 1px;
+                text-shadow: 0 0 8px rgba(255,255,255,0.2);
+            }
+            .rpg-desc {
+                color: #94a3b8;
+                font-size: 13px;
+                line-height: 1.5;
+                margin-bottom: 20px;
+            }
+        </style>
+    """,
         unsafe_allow_html=True,
     )
+
+    # Sub-judul pengantar sebelum masuk menu
+    st.markdown(
+        "<h3 style='color: #00f0ff; text-align: center; margin-top: 20px; font-weight:700;"
+        " text-shadow: 0 0 10px rgba(0,240,255,0.3);'>🕹️ SILAHKAN PILIH JALUR PETUALANGANMU</h3>",
+        unsafe_allow_html=True,
+    )
+
+    # 2. Membuat layout 2 Kolom menggunakan komponen Streamlit agar tombolnya bisa diklik beneran
+    col_game1, col_game2 = st.columns(2)
+
+    with col_game1:
+        # Desain Kartu Kiri (Dungeon Utama)
+        st.markdown(
+            """
+            <div class='rpg-card'>
+                <div class='rpg-badge badge-dungeon'>⚔️ Raid Mode</div>
+                <div>
+                    <div class='rpg-title'>🏰 ENTER DUNGEON</div>
+                    <div class='rpg-desc'>Masuk ke Dashboard Utama untuk memantau performa total, grafik target, dan analisis pencapaian PSM Toko secara menyeluruh.</div>
+                </div>
+            </div>
+        """,
+            unsafe_allow_html=True,
+        )
+        # Tombol aksi asli Streamlit sebagai shortcut jalan masuk
+        if st.button("Masuk Dashboard Utama ➔", use_container_width=True, key="btn_enter_dungeon"):
+            # Arahkan tindakan ke tab dashboard utama Anda di sini
+            st.info("Memasuki Dungeon Utama... (Arahkan fungsi pindah halaman di sini)")
+
+    with col_game2:
+        # Desain Kartu Kanan (Preparation / Report Staf)
+        st.markdown(
+            """
+            <div class='rpg-card'>
+                <div class='rpg-badge badge-prep'>🛡️ Solo Prep</div>
+                <div>
+                    <div class='rpg-title'>🎒 PREPARATION CAMP</div>
+                    <div class='rpg-desc'>Lihat tas penyimpanan (Inventory) rapor pribadi Anda. Cek pencapaian individu, target harian staf, dan statistik performa Anda sendiri.</div>
+                </div>
+            </div>
+        """,
+            unsafe_allow_html=True,
+        )
+        if st.button("Buka Rapor Personil Toko ➔", use_container_width=True, key="btn_enter_prep"):
+            # Arahkan tindakan ke halaman khusus report pribadi user
+            st.info("Membuka Tas Persiapan... (Arahkan fungsi pindah halaman di sini)")
 
 # =============================================================================
 # --- INPUT & RESET DATA ---
