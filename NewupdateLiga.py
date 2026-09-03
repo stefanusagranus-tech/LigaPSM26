@@ -947,8 +947,7 @@ if selected_tab == "🏠 Menu Utama":
             unsafe_allow_html=True,
         )
        
-       # 🚀 TOMBOL AKSI UTAMA & PROSES TRANSISI (VERSI 100% AMAN ANTI-BOCOR)
-               # 🚀 TOMBOL AKSI UTAMA & PROSES TRANSISI (VERSI 100% AMAN ANTI-BOCOR)
+       # 🚀 TOMBOL AKSI UTAMA & PROSES TRANSISI (VERSI KOMPONEN ASLI STREAMLIT - MUTLAK ANTI-BOCOR)
         if st.button("Masuk Markas Guild ➔", use_container_width=True, key="btn_enter_dungeon_fixed"):
             placeholder = st.empty()
             with placeholder.container():
@@ -973,33 +972,45 @@ if selected_tab == "🏠 Menu Utama":
                     time.sleep(0.01)
                     progress_bar.progress(percent_complete + 1)
                 
-                # --- LAYAR 2: GERBANG PORTAL UTUH (MENGHINDARI SIMBOL UNIK MERUSAK PARSER) ---
+                # --- LAYAR 2: PORTAL UTUH MENGGUNAKAN ELEMEN ASLI STREAMLIT ---
+                # Menyuntikkan CSS stabil untuk menggelapkan latar belakang konten utama tanpa merusak komponen
                 st.markdown(
                     """
-                    <div style='background-color: #0f172a; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center;'>
-                        <h1 style='color: #00ff88; font-family: monospace; font-size: 32px; text-shadow: 0 0 15px rgba(0,255,136,0.5); margin-bottom: 25px;'>PORTAL READY!</h1>
-                        
-                        <!-- Menggunakan teks alfabet biasa agar browser tidak salah membaca struktur link -->
-                        <a href='https://guildutamac383.streamlit.app/' target='_top' style='background-color: #38bdf8; color: #0f172a; padding: 14px 28px; font-weight: bold; font-family: monospace; font-size: 16px; border-radius: 10px; text-decoration: none; box-shadow: 0 0 15px rgba(56,189,248,0.6); display: inline-block; transition: 0.2s; margin-bottom: 20px;'>
-                            LAUNCH TELEPORTATION
-                        </a>
-                        
-                        <br>
-                        
-                        <a href='' onclick='window.location.reload(); return false;' style='background-color: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 10px 22px; font-weight: bold; font-family: monospace; font-size: 13px; border-radius: 8px; text-decoration: none; border: 1px solid rgba(239, 68, 68, 0.4); display: inline-block; transition: 0.2s;'>
-                            CANCEL AND RETURN
-                        </a>
-                        
-                        <p style='color: #94a3b8; font-size: 12px; margin-top: 25px; font-family: monospace;'>Klik tombol di atas untuk membuka gerbang Markas Guild.</p>
-                        <style>
-                            [data-testid="stSidebar"] { display: none !important; }
-                        </style>
-                    </div>
+                    <style>
+                        /* Mengubah warna latar belakang aplikasi menjadi gelap total saat portal ready */
+                        .main .block-container {
+                            background-color: #0f172a !important;
+                            min-height: 100vh;
+                        }
+                        [data-testid="stSidebar"] { display: none !important; }
+                        h1, p, div { text-align: center !important; }
+                    </style>
                     """, 
                     unsafe_allow_html=True
                 )
                 
-                # Mengunci dan menghentikan parser Python agar layar hitam menetap sempurna
+                # Menggunakan teks header asli Streamlit
+                st.markdown("<h1 style='color: #00ff88; font-family: monospace; font-size: 32px; text-shadow: 0 0 15px rgba(0,255,136,0.5); text-align: center; margin-top: 50px;'>PORTAL READY!</h1>", unsafe_allow_html=True)
+                st.markdown("<p style='color: #94a3b8; font-family: monospace; text-align: center;'>Gerbang teleportasi aliansi telah terbuka sempurna.</p>", unsafe_allow_html=True)
+                
+                st.markdown("<br><br>", unsafe_allow_html=True)
+                
+                # 🚀 JALUR UTAMA TELEPORTASI: Menggunakan komponen st.link_button asli Streamlit!
+                # Komponen ini dijamin 100% lolos proteksi iframe sandbox dan anti-bocor karena merupakan widget resmi.
+                st.link_button(
+                    "LAUNCH TELEPORTATION ➔", 
+                    url="https://streamlit.app", 
+                    use_container_width=True,
+                    type="primary"
+                )
+                
+                st.markdown("<br>", unsafe_allow_html=True)
+                
+                # 🛡️ JALUR KEMBALI: Menggunakan tombol asli Streamlit untuk memicu penyegaran halaman
+                if st.button("CANCEL AND RETURN", use_container_width=True, key="btn_cancel_portal"):
+                    st.rerun()
+                
+                # Mengunci jalannya kode agar layar menetap stabil
                 st.stop()
 
     with col_game2:
