@@ -743,7 +743,7 @@ if selected_tab == "📝 Input Data":
           " data (read-only)."
       )
     else:
-      # --- FILTER PERIODE KHUSUS TAB 1 ---
+      # --- FILTER PERIODE DARI SHEET PERIODE SESUAI TANGGAL BERJALAN & ROLE ---
       today_date = waktu_wib.date()
       tab1_periods_dict = {}
 
@@ -755,8 +755,15 @@ if selected_tab == "📝 Input Data":
           p_id = str(row["period_id"])
           p_name = str(row["period_name"])
           try:
-            p_start = pd.to_datetime(row["start_date"]).date()
-            p_end = pd.to_datetime(row["end_date"]).date()
+            p_start = pd.to_datetime(
+                row["start_date"], errors="coerce"
+            ).date()
+            p_end = pd.to_datetime(row["end_date"], errors="coerce"
+            ).date()
+
+            if pd.isna(p_start) or pd.isna(p_end):
+              continue
+
             if p_start > p_end:
               p_start, p_end = p_end, p_start
 
@@ -764,24 +771,21 @@ if selected_tab == "📝 Input Data":
             max_allowed_date = p_end + timedelta(days=2)
 
             if is_admin:
-              # Admin bisa melihat semua periode di tab 1
+              # Admin bebas melihat semua periode
               tab1_periods_dict[p_name] = p_id
             else:
-              # User biasa hanya melihat periode yang sesuai dengan tanggal berjalan (mencakup start s/d max_allowed_date)
+              # User biasa hanya melihat periode yang sesuai dengan tanggal berjalan s/d H+2
               if p_start <= today_date <= max_allowed_date:
                 tab1_periods_dict[p_name] = p_id
           except Exception:
             continue
 
-      # Fallback jika tidak ada periode aktif untuk user biasa
-      if not tab1_periods_dict:
-        if is_admin and not periods_df.empty:
-          tab1_periods_dict = {
-              row["period_name"]: row["period_id"]
-              for _, row in periods_df.iterrows()
-          }
-        else:
-          tab1_periods_dict = {}
+      # Jika tidak ada yang masuk filter, berikan fallback untuk admin
+      if not tab1_periods_dict and is_admin and not periods_df.empty:
+        tab1_periods_dict = {
+            str(row["period_name"]): str(row["period_id"])
+            for _, row in periods_df.iterrows()
+        }
 
       if not tab1_periods_dict:
         st.warning(
@@ -831,26 +835,19 @@ if selected_tab == "📝 Input Data":
               f" **{current_user}**"
           )
 
-        local_items_df = (
-            st.session_state.items_df.copy()
-            if "items_df" in st.session_state
-            and not st.session_state.items_df.empty
-            else (
-                items_df.copy()
-                if "items_df" in locals() and not items_df.empty
-                else pd.DataFrame()
-            )
-        )
-
-        if not local_items_df.empty and "period_id" in local_items_df.columns:
+        # --- AMBIL ITEM DARI SHEET MASTER_ITEM BERDASARKAN PERIOD_ID ---
+        if (
+            not master_items_df.empty
+            and "period_id" in master_items_df.columns
+        ):
           cleaned_df_period = (
-              local_items_df["period_id"]
+              master_items_df["period_id"]
               .astype(str)
               .str.replace(r"\.0$", "", regex=True)
               .str.strip()
           )
           cleaned_target_id = re.sub(r"\.0$", "", str(m_p_id)).strip()
-          filtered_items_df = local_items_df[
+          filtered_items_df = master_items_df[
               cleaned_df_period == cleaned_target_id
           ]
         else:
@@ -870,8 +867,8 @@ if selected_tab == "📝 Input Data":
 
         if not items_list:
           st.warning(
-              f"⚠️ Tidak ada daftar item produk yang terdaftar pada periode"
-              f" **{m_period_name}** (ID: {m_p_id})."
+              f"⚠️ Tidak ada daftar item produk dari **MASTER_ITEM** yang"
+              f" terdaftar pada periode **{m_period_name}** (ID: {m_p_id})."
           )
         else:
           st.markdown("---")
