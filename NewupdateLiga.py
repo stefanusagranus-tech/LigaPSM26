@@ -670,64 +670,64 @@ if selected_tab == "📝 Input Data":
       unsafe_allow_html=True,
   )
 
-# --- Custom CSS: Styling Tab Kapsul Transparan Neon (Floating) ---
-st.markdown(
-    """
-    <style>
-    /* Membuat tab-list menjadi floating / mengambang di atas */
-    div[data-baseweb="tab-list"] {
-        position: fixed !important;
-        top: 60px !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        z-index: 999999 !important;
-        gap: 8px;
-        background-color: rgba(15, 23, 42, 0.75) !important;
-        padding: 8px 16px !important;
-        border-radius: 50px;
-        border: 1px solid rgba(0, 240, 255, 0.4);
-        box-shadow: 0 4px 25px rgba(0, 240, 255, 0.3);
-        backdrop-filter: blur(12px);
-        max-width: 90vw;
-        overflow-x: auto;
-    }
-    
-    /* Beri jarak di atas konten utama agar tidak tertutup tab yang mengambang */
-    .stTabs {
-        margin-top: 50px;
-    }
+  # --- Custom CSS: Styling Tab Kapsul Transparan Neon (Floating) ---
+  st.markdown(
+      """
+      <style>
+      /* Membuat tab-list menjadi floating / mengambang di atas */
+      div[data-baseweb="tab-list"] {
+          position: fixed !important;
+          top: 60px !important;
+          left: 50% !important;
+          transform: translateX(-50%) !important;
+          z-index: 999999 !important;
+          gap: 8px;
+          background-color: rgba(15, 23, 42, 0.75) !important;
+          padding: 8px 16px !important;
+          border-radius: 50px;
+          border: 1px solid rgba(0, 240, 255, 0.4);
+          box-shadow: 0 4px 25px rgba(0, 240, 255, 0.3);
+          backdrop-filter: blur(12px);
+          max-width: 90vw;
+          overflow-x: auto;
+      }
+      
+      /* Beri jarak di atas konten utama agar tidak tertutup tab yang mengambang */
+      .stTabs {
+          margin-top: 50px;
+      }
 
-    div[data-baseweb="tab-list"] button[data-baseweb="tab"] {
-        background-color: rgba(255, 255, 255, 0.03) !important;
-        border: 1px solid rgba(0, 240, 255, 0.3) !important;
-        border-radius: 30px !important;
-        color: #ffffff !important; /* Warna teks diubah jadi putih */
-        padding: 6px 18px !important;
-        transition: all 0.3s ease-in-out !important;
-    }
-    div[data-baseweb="tab-list"] button[data-baseweb="tab"]:hover {
-        border-color: #00f0ff !important;
-        color: #00f0ff !important;
-        box-shadow: 0 0 10px rgba(0, 240, 255, 0.5) !important;
-        transform: translateY(-1px);
-    }
-    div[data-baseweb="tab-list"] button[aria-selected="true"] {
-        background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(0, 150, 255, 0.4)) !important;
-        border: 1px solid #00f0ff !important;
-        color: #ffffff !important;
-        font-weight: bold !important;
-        box-shadow: 0 0 15px rgba(0, 240, 255, 0.8), inset 0 0 8px rgba(0, 240, 255, 0.4) !important;
-    }
-    div[data-baseweb="tab-highlight"] {
-        display: none !important;
-    }
-    </style>
-""",
-    unsafe_allow_html=True,
-)
+      div[data-baseweb="tab-list"] button[data-baseweb="tab"] {
+          background-color: rgba(255, 255, 255, 0.03) !important;
+          border: 1px solid rgba(0, 240, 255, 0.3) !important;
+          border-radius: 30px !important;
+          color: #ffffff !important; /* Warna teks diubah jadi putih */
+          padding: 6px 18px !important;
+          transition: all 0.3s ease-in-out !important;
+      }
+      div[data-baseweb="tab-list"] button[data-baseweb="tab"]:hover {
+          border-color: #00f0ff !important;
+          color: #00f0ff !important;
+          box-shadow: 0 0 10px rgba(0, 240, 255, 0.5) !important;
+          transform: translateY(-1px);
+      }
+      div[data-baseweb="tab-list"] button[aria-selected="true"] {
+          background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(0, 150, 255, 0.4)) !important;
+          border: 1px solid #00f0ff !important;
+          color: #ffffff !important;
+          font-weight: bold !important;
+          box-shadow: 0 0 15px rgba(0, 240, 255, 0.8), inset 0 0 8px rgba(0, 240, 255, 0.4) !important;
+      }
+      div[data-baseweb="tab-highlight"] {
+          display: none !important;
+      }
+      </style>
+  """,
+      unsafe_allow_html=True,
+  )
 
   # --- Context & User Role ---
-  current_user = st.session_state.get("username","visitor")
+  current_user = st.session_state.get("username", "visitor")
   user_lower = str(current_user).lower()
   is_admin = any(
       x in user_lower for x in ["admin", "chief", "cos", "lavitality"]
@@ -743,7 +743,11 @@ st.markdown(
   person_df = st.session_state.get("person_df", pd.DataFrame()).copy()
 
   # ➔ PERBAIKAN: Mendefinisikan periods_dict secara mandiri agar tidak error NameError
-  if not periods_df.empty and "period_name" in periods_df.columns and "period_id" in periods_df.columns:
+  if (
+      not periods_df.empty
+      and "period_name" in periods_df.columns
+      and "period_id" in periods_df.columns
+  ):
     periods_dict = {
         row["period_name"]: row["period_id"] for _, row in periods_df.iterrows()
     }
@@ -777,6 +781,7 @@ st.markdown(
     today = datetime.now().date()
     return today.replace(day=1), today
 
+
   @st.dialog("🎉 Input Data Berhasil!")
   def show_success_popup(inserted_count, person_name, date_str):
     st.success(
@@ -790,6 +795,7 @@ st.markdown(
         """)
     if st.button("👍 Mantap, Tutup", use_container_width=True):
       st.rerun()
+
 
   # =========================================================================
   # SUB TAB 1: MULTI INPUT SALES PERSONIL
@@ -822,7 +828,8 @@ st.markdown(
             p_start = pd.to_datetime(
                 row["start_date"], errors="coerce"
             ).date()
-            p_end = pd.to_datetime(row["end_date"], errors="coerce"
+            p_end = pd.to_datetime(
+                row["end_date"], errors="coerce"
             ).date()
 
             if pd.isna(p_start) or pd.isna(p_end):
@@ -831,20 +838,16 @@ st.markdown(
             if p_start > p_end:
               p_start, p_end = p_end, p_start
 
-            # Batas maksimal input user biasa adalah H+2 dari end_date periode
             max_allowed_date = p_end + timedelta(days=2)
 
             if is_admin:
-              # Admin bebas melihat semua periode
               tab1_periods_dict[p_name] = p_id
             else:
-              # User biasa hanya melihat periode yang sesuai dengan tanggal berjalan s/d H+2
               if p_start <= today_date <= max_allowed_date:
                 tab1_periods_dict[p_name] = p_id
           except Exception:
             continue
 
-      # Jika tidak ada yang masuk filter, berikan fallback untuk admin
       if not tab1_periods_dict and is_admin and not periods_df.empty:
         tab1_periods_dict = {
             str(row["period_name"]): str(row["period_id"])
@@ -985,7 +988,9 @@ st.markdown(
                 else "P999"
             )
 
-            existing_df = st.session_state.get("sales_person_df", pd.DataFrame())
+            existing_df = st.session_state.get(
+                "sales_person_df", pd.DataFrame()
+            )
             current_max_id = 0
             if not existing_df.empty and "record_id" in existing_df.columns:
               numeric_ids = (
@@ -1035,7 +1040,7 @@ st.markdown(
                 st.error(f"❌ Terjadi kesalahan penyimpanan: {str(e)}")
             else:
               st.warning("⚠️ Tidak ada Qty produk yang diisi (semua bernilai 0).")
-                
+
   # =========================================================================
   # SUB TAB 2: INPUT SALES PPS
   # =========================================================================
@@ -1104,7 +1109,6 @@ st.markdown(
               ["Shift 1", "Shift 2", "Shift 3", "Full Shift"],
               key="pps_shift_dyn",
           )
-          # Opsi Nama Staf dapat dipilih oleh siapa saja
           staff_name = st.selectbox(
               "Nama Staf",
               all_personnel,
@@ -1329,8 +1333,6 @@ st.markdown(
       )
 
       periode_bulan = selected_wa_date.strftime("%B %Y")
-
-      # PERBAIKAN: Mengambil data PSM langsung dari sales_person_df
       sp_report_df = st.session_state.get(
           "sales_person_df", pd.DataFrame()
       ).copy()
