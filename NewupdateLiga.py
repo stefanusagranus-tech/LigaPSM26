@@ -727,7 +727,7 @@ if selected_tab == "📝 Input Data":
     if st.button("👍 Mantap, Tutup", use_container_width=True):
       st.rerun()
 
- # =========================================================================
+  # =========================================================================
   # SUB TAB 1: MULTI INPUT SALES PERSONIL
   # =========================================================================
   with tab1:
@@ -835,19 +835,25 @@ if selected_tab == "📝 Input Data":
               f" **{current_user}**"
           )
 
-        # --- AMBIL ITEM DARI SHEET MASTER_ITEM BERDASARKAN PERIOD_ID ---
+        # --- AMBIL ITEM DARI SHEET MASTER_ITEM (MENGGUNAKAN VARIABLE items_df) ---
+        current_items_df = (
+            items_df
+            if "items_df" in locals() and not items_df.empty
+            else st.session_state.get("items_df", pd.DataFrame())
+        )
+
         if (
-            not master_items_df.empty
-            and "period_id" in master_items_df.columns
+            not current_items_df.empty
+            and "period_id" in current_items_df.columns
         ):
           cleaned_df_period = (
-              master_items_df["period_id"]
+              current_items_df["period_id"]
               .astype(str)
               .str.replace(r"\.0$", "", regex=True)
               .str.strip()
           )
           cleaned_target_id = re.sub(r"\.0$", "", str(m_p_id)).strip()
-          filtered_items_df = master_items_df[
+          filtered_items_df = current_items_df[
               cleaned_df_period == cleaned_target_id
           ]
         else:
@@ -1543,7 +1549,7 @@ elif selected_tab == "➕Edit Data (admin only)":
   ])
 
 # SUB TAB 1: EDIT SALES PERSONIL
-  with tab_1:
+  with tab_m1:
     st.markdown(
         "<h4 style='color: #38bdf8;'>✏️ Edit Transaksi Sales (Koreksi"
         " Input)</h4>",
@@ -1649,7 +1655,7 @@ elif selected_tab == "➕Edit Data (admin only)":
             st.rerun()
 
   # SUB TAB 2: HAPUS & RESET
-  with tab_2:
+  with tab_m2:
     st.markdown(
         "<h4 style='color: #38bdf8;'>🗑️ Hapus Transaksi / Reset Sales"
         " Personil</h4>",
