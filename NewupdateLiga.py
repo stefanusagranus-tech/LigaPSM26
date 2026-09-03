@@ -1940,7 +1940,7 @@ elif selected_tab == "📝 Input Data":
             else pd.DataFrame()
         )
 
-         if wa_format_type == "📋 Format Laporan PPS":
+        if wa_format_type == "📋 Format Laporan PPS":
             st.markdown(
                 "<h5 style='color: #38bdf8;'>✨ Preview Format Laporan PPS (Harian"
                 " per Shift)</h5>",
