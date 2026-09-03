@@ -610,6 +610,9 @@ st.markdown(
 # =============================================================================
 # --- INPUT & RESET DATA ---
 # =============================================================================
+# =============================================================================
+# --- INPUT & RESET DATA ---
+# =============================================================================
 if selected_tab == "📝 Input Data":
   st.markdown(
       "<h2 style='color: #00f0ff; text-shadow: 0 0 10px rgba(0,240,255,0.5);'>✏️"
@@ -674,6 +677,14 @@ if selected_tab == "📝 Input Data":
   sp_df = st.session_state.get("sales_person_df", pd.DataFrame()).copy()
   pps_df_report = st.session_state.get("sales_pps_df", pd.DataFrame()).copy()
   person_df = st.session_state.get("person_df", pd.DataFrame()).copy()
+
+  # ➔ PERBAIKAN: Mendefinisikan periods_dict secara mandiri agar tidak error NameError
+  if not periods_df.empty and "period_name" in periods_df.columns and "period_id" in periods_df.columns:
+    periods_dict = {
+        row["period_name"]: row["period_id"] for _, row in periods_df.iterrows()
+    }
+  else:
+    periods_dict = {"Periode Utama": "P01"}
 
   # --- Render Option Menu Tabs ---
   tab1, tab2, tab3 = st.tabs([
