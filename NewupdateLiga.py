@@ -967,23 +967,32 @@ if selected_tab == "🏠 Menu Utama":
                     time.sleep(0.01)
                     progress_bar.progress(percent_complete + 1)
                 
-                # Screen 2: Gerbang Akhir Lolos Proteksi Iframe Streamlit Cloud
+                # 🚀 SCREEN 2: TAMPILAN PORTAL READY (DENGAN TOMBOL KEMBALI)
                 st.markdown(
                     """
                     <div style='background-color: #0f172a; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
-                        <h1 style='color: #00ff88; font-family: monospace; font-size: 32px; text-shadow: 0 0 15px rgba(0,255,136,0.5); margin-bottom: 20px;'>✔️ PORTAL READY!</h1>
+                        <h1 style='color: #00ff88; font-family: monospace; font-size: 32px; text-shadow: 0 0 15px rgba(0,255,136,0.5); margin-bottom: 25px;'>✔️ PORTAL READY!</h1>
                         
-                        <!-- Link HTML target_top menembus sandboxing secara mutlak -->
-                        <a href='https://streamlit.app' target='_top' style='background-color: #38bdf8; color: #0f172a; padding: 14px 28px; font-weight: bold; font-family: monospace; font-size: 16px; border-radius: 10px; text-decoration: none; box-shadow: 0 0 15px rgba(56,189,248,0.6); transition: 0.2s;'>
+                        <!-- 🌌 Tombol Utama: Teleportasi Ke Markas Guild -->
+                        <a href='https://streamlit.app' target='_top' style='background-color: #38bdf8; color: #0f172a; padding: 14px 28px; font-weight: bold; font-family: monospace; font-size: 16px; border-radius: 10px; text-decoration: none; box-shadow: 0 0 15px rgba(56,189,248,0.6); display: inline-block; transition: 0.2s; margin-bottom: 15px;'>
                             ▶ KETUK UNTUK TELEPORTASI
                         </a>
                         
-                        <p style='color: #94a3b8; font-size: 12px; margin-top: 15px; font-family: monospace;'>Klik tombol di atas untuk membuka gerbang Markas Guild.</p>
-                        <style>[data-testid="stSidebar"] { display: none !important; }</style>
+                        <!-- 🛡️ Tombol Alternatif: Batal & Kembali ke Menu Utama -->
+                        <a href='#' onclick='window.location.reload(); return false;' style='background-color: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 10px 20px; font-weight: bold; font-family: monospace; font-size: 13px; border-radius: 8px; text-decoration: none; border: 1px solid rgba(239, 68, 68, 0.4); display: inline-block; transition: 0.2s;'>
+                            ❌ BATAL & KEMBALI
+                        </a>
+                        
+                        <p style='color: #94a3b8; font-size: 13px; margin-top: 25px; font-family: monospace;'>Pilih salah satu jalur di atas untuk melanjutkan.</p>
+                        <style>
+                            [data-testid="stSidebar"] { display: none !important; }
+                        </style>
                     </div>
-                """, unsafe_allow_html=True
+                    """, 
+                    unsafe_allow_html=True
                 )
-                # Mengunci layar hitam agar tertahan di tombol portal sampai user mengetuknya
+                
+                # Mengunci layar agar tetap tertahan di portal sampai user memilih tindakan
                 while True:
                     time.sleep(1)
 
