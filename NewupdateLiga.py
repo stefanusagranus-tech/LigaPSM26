@@ -458,31 +458,31 @@ if "username" not in st.session_state:
   st.session_state.username = ""
 
 # =============================================================================
-# --- CSS UNIVERSAL UNTUK SEMUA TAB (VERSI LEBIH KUAT) ---
+# --- CSS UNIVERSAL TAB (VERSI PALING AMPUH / FORCE OVERRIDE) ---
 # =============================================================================
 st.markdown("""
     <style>
-        /* Mengubah warna teks pada seluruh tombol tab Streamlit */
-        button[data-baseweb="tab"] {
-            color: #b0c4de !important; /* Warna teks saat tidak aktif (terang & kontras) */
+        /* Memaksa seluruh teks di dalam tombol tab menjadi terang & kontras */
+        .stTabs [data-baseweb="tab-list"] button div, 
+        .stTabs [data-baseweb="tab-list"] button span,
+        .stTabs [data-baseweb="tab-list"] button p {
+            color: #b0c4de !important; /* Warna abu-abu kebiruan terang untuk tab tidak aktif */
         }
         
-        /* Mengubah warna teks pada tab yang sedang AKTIF */
-        button[data-baseweb="tab"][aria-selected="true"] {
-            color: #00ff88 !important; /* Warna hijau neon terang untuk tab aktif */
-        }
-        
-        /* Menebalkan teks tab aktif agar lebih jelas */
-        button[data-baseweb="tab"][aria-selected="true"] p {
+        /* Khusus untuk tab yang sedang AKTIF, ubah warnanya jadi hijau neon/merah menyala */
+        .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] div,
+        .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] span,
+        .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] p {
+            color: #00ff88 !important; /* Ganti #ff4b4b jika ingin warna merah */
             font-weight: 700 !important;
         }
 
         /* Menebalkan garis bawah/indikator tab aktif */
-        div[data-baseweb="tab-highlight"] {
+        .stTabs [data-baseweb="tab-list"] div[data-baseweb="tab-highlight"] {
             background-color: #00ff88 !important;
         }
     </style>
-""", unsafe_allow_html=True,)
+""", unsafe_allow_html=True)
 
 # ==========================================
 # 6. HALAMAN LOGIN
