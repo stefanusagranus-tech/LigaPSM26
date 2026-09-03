@@ -1740,7 +1740,7 @@ if selected_tab == "📝 Input Data":
                 st.code(wa_sueger_text, language="markdown")
 
 # --- EDIT DATA ---
-elif selected_tab == "➕Edit Data (admin only)":
+elif selected_tab == "➕ Edit Data (Admin)":
     st.markdown(
         "<h2 style='color: #00f0ff; text-shadow: 0 0 10px rgba(0,240,255,0.5);'>⚙️"
         " Edit Data Jika Terjadi Kesalahan Input </h2>",
@@ -2074,7 +2074,7 @@ elif selected_tab == "➕Edit Data (admin only)":
                         st.rerun()
               
 # --- TAB MASTER DATA & PENGATURAN ---
-elif selected_tab == "⚙️ Master Data & Pengaturan":
+elif selected_tab == ""⚙️ Pengaturan & Master":
     st.markdown(
         "<h2 style='color: #00f0ff; text-shadow: 0 0 10px rgba(0,240,255,0.5);'>⚙️"
         " Master Data & Pengaturan Sistem</h2>",
