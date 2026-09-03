@@ -822,45 +822,38 @@ st.markdown(
 # ==========================================
 
 # =========================================================================
-# MENU UTAMA: GAYA RPG RESPONSIVE (100% MUTLAK SIMETRIS & SEIMBANG)
+# MENU UTAMA: GAYA RPG RESPONSIVE (INDENTASI FIXED)
 # =========================================================================
 if selected_tab == "🏠 Menu Utama":
     # 1. Suntikkan CSS khusus untuk merapikan teks, ikon, dan tombol di dalam grid
     st.markdown(
         """
         <style>
-            /* Kontainer utama pembungkus luar */
             .rpg-grid-container {
                 width: 100%;
                 margin-top: 15px;
             }
-            
-            /* Kotak blok kartu game yang dijamin presisi di tengah */
             .rpg-card-center-fixed {
                 background: linear-gradient(135deg, rgba(15, 23, 42, 0.75) 0%, rgba(30, 41, 59, 0.95) 100%);
                 border: 2px solid #38bdf8;
                 border-radius: 16px;
                 padding: 24px;
-                margin-bottom: 15px; /* Jarak bawah saat merapat di layar HP */
+                margin-bottom: 15px;
                 min-height: 290px;
                 display: flex;
                 flex-direction: column;
-                justify-content: flex-start; /* Mengalir teratur dari atas ke bawah */
-                align-items: center;         /* 🎯 Vertikal center mutlak untuk ikon & teks */
-                text-align: center;           /* 🎯 Horizontal center mutlak untuk tulisan */
+                justify-content: flex-start;
+                align-items: center;
+                text-align: center;
                 position: relative;
                 transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
                 box-shadow: 0 0 15px rgba(56, 189, 248, 0.1);
             }
-            
-            /* Efek Hover Menyala Neon */
             .rpg-card-center-fixed:hover {
                 transform: translateY(-5px);
                 border-color: #00f0ff;
                 box-shadow: 0 0 25px rgba(0, 240, 255, 0.35);
             }
-            
-            /* Desain Ikon Besar Bernapas di Tengah */
             .rpg-icon-center-fixed {
                 font-size: 55px;
                 margin-top: 15px;
@@ -870,8 +863,6 @@ if selected_tab == "🏠 Menu Utama":
                 display: block;
                 width: 100%;
             }
-            
-            /* Lencana Mini Game di Pojok */
             .rpg-badge-fixed {
                 position: absolute;
                 top: 14px;
@@ -883,7 +874,7 @@ if selected_tab == "🏠 Menu Utama":
                 letter-spacing: 0.5px;
                 text-transform: uppercase;
             }
-            .badge-guild {
+            .badge-dungeon {
                 background-color: rgba(239, 68, 68, 0.15);
                 color: #ef4444;
                 border: 1px solid rgba(239, 68, 68, 0.4);
@@ -893,8 +884,6 @@ if selected_tab == "🏠 Menu Utama":
                 color: #eab308;
                 border: 1px solid rgba(234, 179, 8, 0.4);
             }
-            
-            /* Desain Judul & Deskripsi Bawah */
             .rpg-title-fixed {
                 color: #ffffff;
                 font-size: 20px;
@@ -908,8 +897,6 @@ if selected_tab == "🏠 Menu Utama":
                 line-height: 1.5;
                 margin-bottom: 15px;
             }
-
-            /* Desain Kustomisasi Tombol Bawaan Streamlit di bawah kotak agar presisi */
             div[data-testid="stColumn"] div.stButton > button {
                 background: rgba(56, 189, 248, 0.08) !important;
                 color: #38bdf8 !important;
@@ -925,7 +912,6 @@ if selected_tab == "🏠 Menu Utama":
                 color: #0f172a !important;
                 box-shadow: 0 0 15px rgba(56, 189, 248, 0.5) !important;
             }
-            
             @keyframes pulse-game {
                 0% { transform: scale(1); }
                 50% { transform: scale(1.06); }
@@ -942,13 +928,12 @@ if selected_tab == "🏠 Menu Utama":
         unsafe_allow_html=True,
     )
 
-    # Membungkus area ke dalam kontainer grid kustom
     st.markdown("<div class='rpg-grid-container'>", unsafe_allow_html=True)
 
-    # 🚀 Menggunakan st.columns bawaan agar pembagian kolom di Android/iOS diatur matang oleh Streamlit
+    # Membagi 2 kolom menggunakan komponen Streamlit
     col_game1, col_game2 = st.columns(2)
 
-   with col_game1:
+    with col_game1:
         st.markdown(
             """
             <div class='rpg-card-center-fixed'>
@@ -960,9 +945,7 @@ if selected_tab == "🏠 Menu Utama":
         """,
             unsafe_allow_html=True,
         )
-        
         if st.button("Masuk Markas Guild ➔", use_container_width=True, key="btn_enter_dungeon_fixed"):
-            # 🚀 1. PROSES LOADING SCREEN FULLSCREEN (GUILD HALL)
             placeholder = st.empty()
             with placeholder.container():
                 st.markdown(
@@ -977,33 +960,26 @@ if selected_tab == "🏠 Menu Utama":
                     </div>
                 """, unsafe_allow_html=True
                 )
-                
-                # Menjalankan Progress Bar
                 progress_bar = st.progress(0)
                 for percent_complete in range(100):
-                    time.sleep(0.01) # Kecepatan loading
+                    time.sleep(0.01)
                     progress_bar.progress(percent_complete + 1)
                 
-                # 🚀 2. TAMPILAN KETIKA SUKSES & LOGIKA REDIRECT KE URL UTAMA
-                # Suntikan script JavaScript window.location.href otomatis mengalihkan browser ke web utama Anda
                 st.markdown(
                     """
                     <div style='background-color: #0f172a; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
                         <h1 style='color: #00ff88; font-family: monospace; font-size: 32px; text-shadow: 0 0 15px rgba(0,255,136,0.5);'>✔️ SUCCESS!</h1>
                         <p style='color: #ffffff; font-size: 16px; margin-top: 10px; font-family: monospace;'>Teleporting to the Guild Hall...</p>
                         <style>[data-testid="stSidebar"] { display: none !important; }</style>
-                        
                         <script>
                             setTimeout(function(){
-                                window.location.href = 'https://guildutamac383.streamlit.app/';
-                            }, 1500); // Menunggu 1.5 detik lalu otomatis berpindah halaman web
+                                window.location.href = 'https://streamlit.app';
+                            }, 1500);
                         </script>
                     </div>
                 """, unsafe_allow_html=True
                 )
-                # Tahan python agar screen tidak langsung dihancurkan
                 time.sleep(2.0)
-            
             placeholder.empty()
             
     with col_game2:
