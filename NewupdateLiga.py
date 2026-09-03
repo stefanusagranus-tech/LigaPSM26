@@ -1059,11 +1059,11 @@ if selected_tab == "🏠 Menu Utama":
                     use_container_width=True
                 )
             
-        with col_portal2:
-            # Tombol Batalkan Aksi (Sekarang berbentuk Kotak Besar Keren)
-            if st.button("❌ CANCEL & RETURN", use_container_width=True, key="btn_cancel_portal_fixed"):
-                st.session_state.portal_guild_ready = False
-                st.rerun()
+            with col_portal2:
+                # Tombol Batalkan Aksi (Sekarang berbentuk Kotak Besar Keren)
+                if st.button("❌ CANCEL & RETURN", use_container_width=True, key="btn_cancel_portal_fixed"):
+                    st.session_state.portal_guild_ready = False
+                    st.rerun()
 
     with col_game2:
         st.markdown(
