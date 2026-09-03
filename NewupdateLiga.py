@@ -947,71 +947,74 @@ if selected_tab == "🏠 Menu Utama":
             unsafe_allow_html=True,
         )
        
-       # 🚀 TOMBOL AKSI UTAMA & PROSES TRANSISI (VERSI KOMPONEN ASLI STREAMLIT - MUTLAK ANTI-BOCOR)
-        if st.button("Masuk Markas Guild ➔", use_container_width=True, key="btn_enter_dungeon_fixed"):
-            placeholder = st.empty()
-            with placeholder.container():
-                # --- LAYAR LOADING 1: ANIMASI MEMUAT DATA ---
-                st.markdown(
-                    """
-                    <div style='background-color: #0f172a; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
-                        <h1 style='color: #00f0ff; font-family: monospace; animation: blink 1.5s infinite; font-size: 28px;'>ENTERING GUILD HALL...</h1>
-                        <p style='color: #94a3b8; font-size: 14px; margin-top: 10px; font-family: monospace;'>Gathering alliance data and loading guild quest board...</p>
-                        <style>
-                            @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-                            [data-testid="stSidebar"] { display: none !important; }
-                        </style>
-                    </div>
-                    """, 
-                    unsafe_allow_html=True
-                )
+             # Inisialisasi status portal di latar belakang jika belum terdaftar
+        if "portal_guild_ready" not in st.session_state:
+            st.session_state.portal_guild_ready = False
+
+        # 🚀 TOMBOL AKSI UTAMA & PROSES TRANSISI (VERSI SESSION STATE - BEBAS STUCK 100%)
+        if not st.session_state.portal_guild_ready:
+            if st.button("Masuk Markas Guild ➔", use_container_width=True, key="btn_enter_dungeon_fixed"):
+                placeholder = st.empty()
+                with placeholder.container():
+                    # --- LAYAR LOADING 1: ANIMASI MEMUAT DATA ---
+                    st.markdown(
+                        """
+                        <div style='background-color: #0f172a; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
+                            <h1 style='color: #00f0ff; font-family: monospace; animation: blink 1.5s infinite; font-size: 28px;'>ENTERING GUILD HALL...</h1>
+                            <p style='color: #94a3b8; font-size: 14px; margin-top: 10px; font-family: monospace;'>Gathering alliance data and loading guild quest board...</p>
+                            <style>
+                                @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+                                [data-testid="stSidebar"] { display: none !important; }
+                            </style>
+                        </div>
+                        """, 
+                        unsafe_allow_html=True
+                    )
+                    
+                    # Menggulir kemajuan progress bar bawaan
+                    progress_bar = st.progress(0)
+                    for percent_complete in range(100):
+                        time.sleep(0.01)
+                        progress_bar.progress(percent_complete + 1)
                 
-                # Menggulir kemajuan progress bar bawaan
-                progress_bar = st.progress(0)
-                for percent_complete in range(100):
-                    time.sleep(0.01)
-                    progress_bar.progress(percent_complete + 1)
-                
-                # --- LAYAR 2: PORTAL UTUH MENGGUNAKAN ELEMEN ASLI STREAMLIT ---
-                # Menyuntikkan CSS stabil untuk menggelapkan latar belakang konten utama tanpa merusak komponen
-                st.markdown(
-                    """
-                    <style>
-                        /* Mengubah warna latar belakang aplikasi menjadi gelap total saat portal ready */
-                        .main .block-container {
-                            background-color: #0f172a !important;
-                            min-height: 100vh;
-                        }
-                        [data-testid="stSidebar"] { display: none !important; }
-                        h1, p, div { text-align: center !important; }
-                    </style>
-                    """, 
-                    unsafe_allow_html=True
-                )
-                
-                # Menggunakan teks header asli Streamlit
-                st.markdown("<h1 style='color: #00ff88; font-family: monospace; font-size: 32px; text-shadow: 0 0 15px rgba(0,255,136,0.5); text-align: center; margin-top: 50px;'>PORTAL READY!</h1>", unsafe_allow_html=True)
-                st.markdown("<p style='color: #94a3b8; font-family: monospace; text-align: center;'>Gerbang teleportasi aliansi telah terbuka sempurna.</p>", unsafe_allow_html=True)
-                
-                st.markdown("<br><br>", unsafe_allow_html=True)
-                
-                # 🚀 JALUR UTAMA TELEPORTASI: Menggunakan komponen st.link_button asli Streamlit!
-                # Komponen ini dijamin 100% lolos proteksi iframe sandbox dan anti-bocor karena merupakan widget resmi.
-                st.link_button(
-                    "LAUNCH TELEPORTATION ➔", 
-                    url="https://streamlit.app", 
-                    use_container_width=True,
-                    type="primary"
-                )
-                
-                st.markdown("<br>", unsafe_allow_html=True)
-                
-                # 🛡️ JALUR KEMBALI: Menggunakan tombol asli Streamlit untuk memicu penyegaran halaman
-                if st.button("CANCEL AND RETURN", use_container_width=True, key="btn_cancel_portal"):
-                    st.rerun()
-                
-                # Mengunci jalannya kode agar layar menetap stabil
-                st.stop()
+                # Selesai loading, ubah status portal menjadi READY dan picu render ulang
+                placeholder.empty()
+                st.session_state.portal_guild_ready = True
+                st.rerun()
+        else:
+            # --- LAYAR 2: PORTAL UTUH MENGGUNAKAN ELEMEN RESMI STREAMLIT (SETELAH REDIRECT STATUS) ---
+            st.markdown(
+                """
+                <style>
+                    /* Mengubah latar belakang halaman aplikasi menjadi gelap game secara aman */
+                    .main .block-container {
+                        background-color: #0f172a !important;
+                        min-height: 100vh;
+                    }
+                    [data-testid="stSidebar"] { display: none !important; }
+                </style>
+                """, 
+                unsafe_allow_html=True
+            )
+            
+            # Teks Judul Menggunakan HTML Inline Garansi Bersih Anti-Bocor
+            st.markdown("<h1 style='color: #00ff88; font-family: monospace; font-size: 32px; text-shadow: 0 0 15px rgba(0,255,136,0.5); text-align: center; margin-top: 50px;'>PORTAL READY!</h1>", unsafe_allow_html=True)
+            st.markdown("<p style='color: #94a3b8; font-family: monospace; text-align: center; margin-bottom: 30px;'>Gerbang teleportasi aliansi telah terbuka sempurna.</p>", unsafe_allow_html=True)
+            
+            # 🚀 GERBANG TELEPORTASI RESMI: Menggunakan widget resmi st.link_button yang 100% anti bocor & anti patah
+            st.link_button(
+                "LAUNCH TELEPORTATION ➔", 
+                url="https://streamlit.app", 
+                use_container_width=True,
+                type="primary"
+            )
+            
+            st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+            
+            # 🛡️ JALUR KEMBALI: Jika user berubah pikiran, klik tombol ini untuk reset state kembali ke menu utama
+            if st.button("CANCEL AND RETURN", use_container_width=True, key="btn_cancel_portal_fixed"):
+                st.session_state.portal_guild_ready = False
+                st.rerun()
 
     with col_game2:
         st.markdown(
