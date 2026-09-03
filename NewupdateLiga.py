@@ -1020,7 +1020,7 @@ if selected_tab == "🏠 Menu Utama":
     col_game1, col_game2 = st.columns(2)
 
     # 🏰 KARTU 1: ENTER GUILD (FIXED TELEPORTASI PORTAL BERHASIL)
-    with col_game1:
+     with col_game1:
         st.markdown(
             """
             <div class='rpg-card-center-fixed'>
@@ -1039,19 +1039,18 @@ if selected_tab == "🏠 Menu Utama":
         if st.button("Masuk Markas Guild ➔", use_container_width=True, key="btn_enter_dungeon_fixed"):
             placeholder = st.empty()
             with placeholder.container():
-                # --- LAYAR LOADING: ANIMASI MAGIC FRACTAL PORTAL (FIXED BULAT SEMPURNA) ---
+                # Kode di bawah ini murni menggunakan string biasa (TANPA huruf f) agar lingkaran sihir bulat utuh
                 st.markdown(
                     """
                     <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
                         
-                        <!-- Struktur Lingkaran Sihir/Fractal Teleport -->
                         <div class="magic-portal-container">
                             <div class="magic-circle outer-circle"></div>
                             <div class="magic-circle middle-circle"></div>
                             <div class="magic-circle inner-circle">🏰</div>
                         </div>
                         
-                        <h1 style='color: #00f0ff; font-family: monospace; animation: blink 1.5s infinite; font-size: 24px; margin-top: 40px; letter-spacing: 2px;'>CONJURING TELEPORTATION PORTAL...</h1>
+                        <h1 style='color: #00f0ff; font-family: monospace; animation: blink 1.5s infinite; font-size: 24px; margin-top: 40px; letter-spacing: 2px;'>CONJURING PORTAL...</h1>
                         <p style='color: #64748b; font-size: 13px; margin-top: 5px; font-family: monospace;'>Channeling mana resources and stabilizing guild gate...</p>
                         
                         <style>
@@ -1059,7 +1058,6 @@ if selected_tab == "🏠 Menu Utama":
                             [data-testid="stSidebar"] { display: none !important; }
                             [data-testid="stHeader"] { display: none !important; }
                             
-                            /* Desain Induk Wadah Portal */
                             .magic-portal-container {
                                 position: relative;
                                 width: 160px;
@@ -1068,16 +1066,12 @@ if selected_tab == "🏠 Menu Utama":
                                 justify-content: center;
                                 align-items: center;
                             }
-                            
-                            /* Aturan Umum Lingkaran Sihir (Double braces untuk mengunci radius bulat) */
                             .magic-circle {
                                 position: absolute !important;
-                                border-radius: 50% !important;
+                                border-radius: 50% !important; /* Membuat bentuk lingkaran bulat mutlak */
                                 border-style: dashed;
                                 box-sizing: border-box;
                             }
-                            
-                            /* Lingkaran Luar (Berputar Searah Jarum Jam) */
                             .outer-circle {
                                 width: 160px !important;
                                 height: 160px !important;
@@ -1086,8 +1080,6 @@ if selected_tab == "🏠 Menu Utama":
                                 filter: drop-shadow(0 0 15px rgba(0, 240, 255, 0.4)) !important;
                                 animation: rotate-clockwise 6s infinite linear !important;
                             }
-                            
-                            /* Lingkaran Tengah (Berputar Terbalik Lambat) */
                             .middle-circle {
                                 width: 120px !important;
                                 height: 120px !important;
@@ -1096,13 +1088,11 @@ if selected_tab == "🏠 Menu Utama":
                                 filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.4)) !important;
                                 animation: rotate-counter 4s infinite linear !important;
                             }
-                            
-                            /* Lingkaran Inti (Pusat Energi Berpendar) */
                             .inner-circle {
                                 width: 70px !important;
                                 height: 70px !important;
                                 border: 2px solid #00ff88 !important;
-                                background: rgba(15, 23, 42, 0.8) !important;
+                                background: rgba(15, 23, 42, 0.9) !important;
                                 display: flex !important;
                                 justify-content: center !important;
                                 align-items: center !important;
@@ -1110,8 +1100,6 @@ if selected_tab == "🏠 Menu Utama":
                                 filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.6)) !important;
                                 animation: pulse-core 2s infinite ease-in-out !important;
                             }
-                            
-                            /* Logika Animasi Perputaran */
                             @keyframes rotate-clockwise {
                                 from { transform: rotate(0deg); }
                                 to { transform: rotate(360deg); }
@@ -1121,8 +1109,8 @@ if selected_tab == "🏠 Menu Utama":
                                 to { transform: rotate(0deg); }
                             }
                             @keyframes pulse-core {
-                                0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(0, 255, 136, 0.3)); }
-                                50% { transform: scale(1.08); filter: drop-shadow(0 0 25px rgba(0, 255, 136, 0.7)); }
+                                0%, 100% { transform: scale(1); }
+                                50% { transform: scale(1.08); }
                             }
                         </style>
                     </div>
@@ -1130,7 +1118,7 @@ if selected_tab == "🏠 Menu Utama":
                     unsafe_allow_html=True
                 )
                 
-                # ⏳ Penyetelan durasi loading berjalan perlahan (~4-5 detik)
+                # Progress bar berjalan lambat khidmat selama ~4 detik
                 progress_bar = st.progress(0)
                 for percent_complete in range(100):
                     time.sleep(0.04) 
