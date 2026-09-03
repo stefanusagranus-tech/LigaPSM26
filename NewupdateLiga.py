@@ -776,23 +776,6 @@ if st.sidebar.button("🚪 Keluar / Logout", use_container_width=True):
     st.rerun()
 st.sidebar.markdown("</div>", unsafe_allow_html=True)
 
-# Tempatkan kode CSS ini di bagian paling atas aplikasi Anda (di bawah set_page_config jika ada)
-st.markdown(
-    """
-    <style>
-        /* Menghapus baris kosong header atas Streamlit */
-        [data-testid="stHeader"] {
-            display: none !important;
-        }
-        
-        /* Menyesuaikan posisi atas konten utama agar tidak terlalu menempel ke atas setelah header dihapus */
-        [data-testid="stAppViewContainer"] > section:nth-child(2) {
-            padding-top: 2rem !important;
-        }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
 
 # ==========================================
 # 8. HEADER UTAMA
@@ -812,6 +795,25 @@ st.markdown(
 """,
     unsafe_allow_html=True,
 )
+
+# Tempatkan kode CSS ini di bagian paling atas aplikasi Anda (di bawah set_page_config jika ada)
+st.markdown(
+    """
+    <style>
+        /* Menghapus baris kosong header atas Streamlit */
+        [data-testid="stHeader"] {
+            display: none !important;
+        }
+        
+        /* Menyesuaikan posisi atas konten utama agar tidak terlalu menempel ke atas setelah header dihapus */
+        [data-testid="stAppViewContainer"] > section:nth-child(2) {
+            padding-top: 2rem !important;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 
 # ==========================================
 # 9. MODUL TAB / SUB MENU
