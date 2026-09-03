@@ -740,6 +740,12 @@ else:
     menu_options = ["🏠 Menu Utama", "📝 Input Data", "➕ Edit Data (Admin)", "⚙️ Pengaturan & Master"]
     st.sidebar.markdown("<p style='color:#a1a1aa; font-size:11px; font-weight:700; padding: 0 10px;'>📌 NAVIGASI MENU</p>", unsafe_allow_html=True)
 
+# 🚀 SISIPKAN KODE INI TEPAT SATU BARIS DI ATAS ST.SIDEBAR.RADIO ANDA:
+if "redirect_to_input" in st.session_state and st.session_state.redirect_to_input:
+    st.session_state["selected_tab"] = "📝 Input Data"
+    del st.session_state.redirect_to_input # Matikan saklar setelah berhasil digunakan
+
+# Ini adalah baris kode st.sidebar.radio Anda (Jangan dihapus, pastikan posisinya berada di bawah kode if di atas):
 selected_tab = st.sidebar.radio("", menu_options, key="selected_tab", label_visibility="collapsed")
 
 # Tombol Keluar / Logout
@@ -998,18 +1004,15 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 st.markdown("<div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'><h1 style='color: #fbbf24; font-family: monospace; font-size: 32px; text-shadow: 0 0 20px rgba(251,191,36,0.6);'>⚔️ WEAPON UPGRADED!</h1><p style='color: #ffffff; font-size: 15px; margin-top: 10px; font-family: monospace;'>Entering training ground with your sharpest sword...</p></div>", unsafe_allow_html=True)
                 time.sleep(1.2)
             
-            # 🚀 KUNCI PERBAIKAN FINAL NAVIGASI (MENEMBAK LANGSUNG KE PILIHAN VARIABEL ANDA)
+            # 🚀 KUNCI PERBAIKAN EMERGENSI: MENGGUNAKAN GERBANG ALIHAN AMAN (ANTI-TABRAKAN WIDGET)
             placeholder.empty()
-            st.session_state.portal_prep_ready = False  # Matikan layar camp
+            st.session_state.portal_prep_ready = False  # Menutup layar perkemahan
             
-            # Tembak langsung variabel selected_tab Anda agar komputer membaca jalur elif halaman input
-            st.session_state["selected_tab"] = "📝 Input Data"
-            
-            # Reset query param agar browser tahu posisi halaman saat ini
-            st.query_params["page"] = "📝 Input Data"
+            # Alih-alih menembak widget langsung, kita nyalakan saklar bantuan sementara
+            st.session_state.redirect_to_input = True
             
             st.rerun()
-
+            
     st.markdown("<div class='leave-camp-box'>", unsafe_allow_html=True)
     if st.button("🚪 KEMBALI KE BERANDA KOTA", use_container_width=True, key="btn_leave_camp"):
         st.session_state.portal_prep_ready = False
