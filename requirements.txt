@@ -1,6 +1,7 @@
 matplotlib
-streamlit>=1.30.0
+streamlit>=1.40.0
 pandas
 openpyxl
 plotly
 st-gsheets-connection>=0.1.0
+streamlit-option-menu
