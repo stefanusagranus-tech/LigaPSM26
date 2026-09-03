@@ -335,7 +335,7 @@ def check_login(input_username, input_password):
 
 
 # ==========================================
-# 5. CUSTOM CSS (NEON DARK THEME)
+# 5. CUSTOM CSS (NEON DARK THEME + TAB FIX)
 # ==========================================
 st.markdown(
     """
@@ -345,11 +345,14 @@ st.markdown(
         color: #f8fafc;
         font-family: 'Inter', sans-serif;
     }
+    
+    /* Label Widget Biasa (Kecuali yang di dalam tab) */
     label, p[data-testid="stWidgetLabel"], div[data-testid="stWidgetLabel"] label, label p {
         color: #38bdf8 !important;
         font-weight: 600 !important;
         font-size: 14px !important;
     }
+    
     div[data-baseweb="input"] input, 
     div[data-baseweb="select"] input,
     div[data-baseweb="select"] span {
@@ -447,6 +450,33 @@ st.markdown(
         color: #ffffff !important;
         box-shadow: 0 0 12px rgba(239, 68, 68, 0.5) !important;
     }
+
+    /* ========================================================================= */
+    /* FIX: WARNA TEKS TAB STREAMLIT (TIDAK AKTIF & AKTIF)                        */
+    /* ========================================================================= */
+    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"] {
+        color: #b0c4de !important; /* Warna teks tab tidak aktif (terang & jelas) */
+    }
+    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"] p,
+    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"] span {
+        color: #b0c4de !important;
+        font-weight: 500;
+    }
+    
+    /* Warna khusus tab yang sedang AKTIF */
+    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"][aria-selected="true"] {
+        color: #00ff88 !important; /* Hijau neon terang */
+    }
+    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"][aria-selected="true"] p,
+    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"][aria-selected="true"] span {
+        color: #00ff88 !important;
+        font-weight: 700 !important;
+    }
+
+    /* Garis bawah tab aktif */
+    .stTabs [data-baseweb="tab-list"] div[data-baseweb="tab-highlight"] {
+        background-color: #00ff88 !important;
+    }
 </style>
 """,
     unsafe_allow_html=True,
@@ -456,33 +486,6 @@ if "logged_in" not in st.session_state:
   st.session_state.logged_in = False
 if "username" not in st.session_state:
   st.session_state.username = ""
-
-# =============================================================================
-# --- CSS UNIVERSAL TAB (VERSI PALING AMPUH / FORCE OVERRIDE) ---
-# =============================================================================
-st.markdown("""
-    <style>
-        /* Memaksa seluruh teks di dalam tombol tab menjadi terang & kontras */
-        .stTabs [data-baseweb="tab-list"] button div, 
-        .stTabs [data-baseweb="tab-list"] button span,
-        .stTabs [data-baseweb="tab-list"] button p {
-            color: #b0c4de !important; /* Warna abu-abu kebiruan terang untuk tab tidak aktif */
-        }
-        
-        /* Khusus untuk tab yang sedang AKTIF, ubah warnanya jadi hijau neon/merah menyala */
-        .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] div,
-        .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] span,
-        .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] p {
-            color: #00ff88 !important; /* Ganti #ff4b4b jika ingin warna merah */
-            font-weight: 700 !important;
-        }
-
-        /* Menebalkan garis bawah/indikator tab aktif */
-        .stTabs [data-baseweb="tab-list"] div[data-baseweb="tab-highlight"] {
-            background-color: #00ff88 !important;
-        }
-    </style>
-""", unsafe_allow_html=True)
 
 # ==========================================
 # 6. HALAMAN LOGIN
