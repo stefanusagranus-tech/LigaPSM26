@@ -821,47 +821,44 @@ st.markdown(
 # 9. MODUL TAB / SUB MENU
 # ==========================================
 
-# =========================================================================
-# 🚀 KUNCI UTAMA: MEMAKSA HALAMAN PORTAL GAME JADI FULLSCREEN MANDIRI
-# =========================================================================
 if "portal_guild_ready" in st.session_state and st.session_state.portal_guild_ready:
     st.markdown(
         """
         <style>
-            /* Mengubah total warna dasar aplikasi menjadi gelap game */
+            /* 📱 KUNCI LAYOUT RAMPING & PRESISI UNTUK WEB, ANDROID, & IOS */
             .main .block-container {
                 background-color: #0c1020 !important;
-                min-height: 100vh;
-                padding-top: 10% !important; /* Menggeser posisi konten ke tengah layar */
+                min-height: 100vh !important;
+                max-width: 750px !important;    /* 🎯 Membatasi lebar maksimal agar selalu ramping */
+                margin: 0 auto !important;       /* 🎯 Memaksa wadah ramping berada tepat di tengah monitor */
+                padding-top: 12% !important;     /* Jarak proporsional dari atas layar */
+                padding-left: 20px !important;   /* Ruang aman sisi kiri di HP */
+                padding-right: 20px !important;  /* Ruang aman sisi kanan di HP */
             }
-            /* Menghilangkan sidebar bawaan secara total khusus di layar ini */
-            [data-testid="stSidebar"] { 
-                display: none !important; 
-            }
-            /* Menghilangkan header bawaan atas Streamlit */
-            [data-testid="stHeader"] { 
-                display: none !important; 
-            }
+            
+            /* Menghilangkan elemen bawaan Streamlit */
+            [data-testid="stSidebar"] { display: none !important; }
+            [data-testid="stHeader"] { display: none !important; }
 
-            /* Menata ulang gaya tombol asli Streamlit agar berbentuk Kartu Pilihan Game */
+            /* Menata ulang gaya tombol Streamlit agar berbentuk Kartu Pilihan Game */
             div[data-testid="stColumn"] div.stButton > button,
             div[data-testid="stColumn"] a[data-testid="stLinkButton"] {
-                min-height: 160px !important;
+                min-height: 150px !important;
                 display: flex !important;
                 flex-direction: column !important;
                 justify-content: center !important;
                 align-items: center !important;
                 border-radius: 16px !important;
                 font-family: monospace !important;
-                font-size: 16px !important;
+                font-size: 15px !important;
                 font-weight: 800 !important;
-                letter-spacing: 1px !important;
+                letter-spacing: 0.5px !important;
                 transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
                 box-sizing: border-box !important;
                 text-decoration: none !important;
             }
 
-            /* 🌌 Tombol Kiri: LAUNCH TELEPORTATION (Cyan Neon) */
+            /* Tombol Kiri: LAUNCH TELEPORTATION (Cyan Neon) */
             div[data-testid="stColumn"]:nth-child(1) a[data-testid="stLinkButton"] {
                 background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.3) 100%) !important;
                 color: #00f0ff !important;
@@ -875,7 +872,7 @@ if "portal_guild_ready" in st.session_state and st.session_state.portal_guild_re
                 box-shadow: 0 0 30px rgba(6, 182, 212, 0.6) !important;
             }
 
-            /* ❌ Tombol Kanan: CANCEL AND RETURN (Merah Crimson) */
+            /* Tombol Kanan: CANCEL AND RETURN (Merah Crimson) */
             div[data-testid="stColumn"]:nth-child(2) div.stButton > button {
                 background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(185, 28, 28, 0.2) 100%) !important;
                 color: #ef4444 !important;
@@ -893,20 +890,21 @@ if "portal_guild_ready" in st.session_state and st.session_state.portal_guild_re
         unsafe_allow_html=True
     )
     
-    st.markdown("<h1 style='color: #00ff88; font-family: monospace; font-size: 36px; text-shadow: 0 0 20px rgba(0,255,136,0.6); text-align: center;'>⚡ PORTAL READY! ⚡</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #94a3b8; font-family: monospace; text-align: center; font-size: 14px; margin-bottom: 50px;'>Mekanisme sihir teleportasi aliansi telah dikonfigurasi sempurna. Silakan pilih langkah Anda:</p>", unsafe_allow_html=True)
+    st.markdown("<h1 style='color: #00ff88; font-family: monospace; font-size: 32px; text-shadow: 0 0 20px rgba(0,255,136,0.6); text-align: center;'>⚡ PORTAL READY! ⚡</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #94a3b8; font-family: monospace; text-align: center; font-size: 13px; margin-bottom: 40px;'>Mekanisme sihir teleportasi aliansi telah dikonfigurasi sempurna. Silakan pilih langkah Anda:</p>", unsafe_allow_html=True)
     
+    # 📱 Menggunakan pembagian kolom responsif
     col_portal1, col_portal2 = st.columns(2)
     
     with col_portal1:
-        st.link_button("⚡ LAUNCH TELEPORTATION", url="https://guildutamac383streamlit.app", use_container_width=True)
+        st.link_button("⚡ LAUNCH TELEPORTATION", url="https://guildutamac383.streamlit.app", use_container_width=True)
         
     with col_portal2:
         if st.button("❌ CANCEL & RETURN", use_container_width=True, key="btn_cancel_portal_main"):
             st.session_state.portal_guild_ready = False
             st.rerun()
             
-    # Mengunci aplikasi secara mutlak agar kode dashboard di bawahnya tidak ikut digambar!
+    # Mengunci aplikasi secara mutlak agar kode di bawah tidak ikut dibaca
     st.stop()
     
 # =========================================================================
@@ -1041,7 +1039,7 @@ if selected_tab == "🏠 Menu Utama":
         if st.button("Masuk Markas Guild ➔", use_container_width=True, key="btn_enter_dungeon_fixed"):
             placeholder = st.empty()
             with placeholder.container():
-                # --- LAYAR LOADING: ANIMASI MAGIC FRACTAL PORTAL ---
+                # --- LAYAR LOADING: ANIMASI MAGIC FRACTAL PORTAL (FIXED BULAT SEMPURNA) ---
                 st.markdown(
                     """
                     <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
@@ -1054,7 +1052,7 @@ if selected_tab == "🏠 Menu Utama":
                         </div>
                         
                         <h1 style='color: #00f0ff; font-family: monospace; animation: blink 1.5s infinite; font-size: 24px; margin-top: 40px; letter-spacing: 2px;'>CONJURING TELEPORTATION PORTAL...</h1>
-                        <p style='color: #64748b; font-size: 13px; margin-top: 50px; font-family: monospace;'>Channeling mana resources and stabilizing guild gate...</p>
+                        <p style='color: #64748b; font-size: 13px; margin-top: 5px; font-family: monospace;'>Channeling mana resources and stabilizing guild gate...</p>
                         
                         <style>
                             @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
@@ -1071,46 +1069,46 @@ if selected_tab == "🏠 Menu Utama":
                                 align-items: center;
                             }
                             
-                            /* Aturan Umum Lingkaran Sihir */
+                            /* Aturan Umum Lingkaran Sihir (Double braces untuk mengunci radius bulat) */
                             .magic-circle {
-                                position: absolute;
-                                border-radius: 50%;
-                                border-style: dashed; /* Efek garis putus-putus ala pattern fractal */
-                                transition: all 0.5s ease;
+                                position: absolute !important;
+                                border-radius: 50% !important;
+                                border-style: dashed;
+                                box-sizing: border-box;
                             }
                             
                             /* Lingkaran Luar (Berputar Searah Jarum Jam) */
                             .outer-circle {
-                                width: 160px;
-                                height: 160px;
-                                border: 3px dashed #00f0ff;
-                                border-left-style: solid;
-                                filter: drop-shadow(0 0 15px rgba(0, 240, 255, 0.4));
-                                animation: rotate-clockwise 6s infinite linear;
+                                width: 160px !important;
+                                height: 160px !important;
+                                border: 3px dashed #00f0ff !important;
+                                border-left-style: solid !important;
+                                filter: drop-shadow(0 0 15px rgba(0, 240, 255, 0.4)) !important;
+                                animation: rotate-clockwise 6s infinite linear !important;
                             }
                             
                             /* Lingkaran Tengah (Berputar Terbalik Lambat) */
                             .middle-circle {
-                                width: 120px;
-                                height: 120px;
-                                border: 2px dotted #6366f1;
-                                border-right-style: solid;
-                                filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.4));
-                                animation: rotate-counter 4s infinite linear;
+                                width: 120px !important;
+                                height: 120px !important;
+                                border: 2px dotted #6366f1 !important;
+                                border-right-style: solid !important;
+                                filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.4)) !important;
+                                animation: rotate-counter 4s infinite linear !important;
                             }
                             
                             /* Lingkaran Inti (Pusat Energi Berpendar) */
                             .inner-circle {
-                                width: 70px;
-                                height: 70px;
-                                border: 2px solid #00ff88;
-                                background: rgba(15, 23, 42, 0.6);
-                                display: flex;
-                                justify-content: center;
-                                align-items: center;
-                                font-size: 30px;
-                                filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.6));
-                                animation: pulse-core 2s infinite ease-in-out;
+                                width: 70px !important;
+                                height: 70px !important;
+                                border: 2px solid #00ff88 !important;
+                                background: rgba(15, 23, 42, 0.8) !important;
+                                display: flex !important;
+                                justify-content: center !important;
+                                align-items: center !important;
+                                font-size: 30px !important;
+                                filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.6)) !important;
+                                animation: pulse-core 2s infinite ease-in-out !important;
                             }
                             
                             /* Logika Animasi Perputaran */
@@ -1123,8 +1121,8 @@ if selected_tab == "🏠 Menu Utama":
                                 to { transform: rotate(0deg); }
                             }
                             @keyframes pulse-core {
-                                0%, 100% { transform: scale(1); box-shadow: 0 0 10px rgba(0, 255, 136, 0.2); }
-                                50% { transform: scale(1.08); box-shadow: 0 0 25px rgba(0, 255, 136, 0.6); }
+                                0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(0, 255, 136, 0.3)); }
+                                50% { transform: scale(1.08); filter: drop-shadow(0 0 25px rgba(0, 255, 136, 0.7)); }
                             }
                         </style>
                     </div>
@@ -1132,10 +1130,10 @@ if selected_tab == "🏠 Menu Utama":
                     unsafe_allow_html=True
                 )
                 
-                # ⏳ PENYETELAN DURASI LOADING BAR (Dibuat lambat ~4-5 detik)
+                # ⏳ Penyetelan durasi loading berjalan perlahan (~4-5 detik)
                 progress_bar = st.progress(0)
                 for percent_complete in range(100):
-                    time.sleep(0.04) # Mengubah jeda spasi dari 0.01 menjadi 0.04 detik agar pengisian berjalan khidmat
+                    time.sleep(0.04) 
                     progress_bar.progress(percent_complete + 1)
             
             placeholder.empty()
