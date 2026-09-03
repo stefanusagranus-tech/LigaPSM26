@@ -973,7 +973,7 @@ if selected_tab == "🏠 Menu Utama":
                         <style>[data-testid="stSidebar"] { display: none !important; }</style>
                         <script>
                             setTimeout(function(){
-                                window.parent.location.href = 'https://guildutamac383.streamlit.app';
+                                window.parent.location.href = 'https://guildutamac383.streamlit.app/';
                             }, 1500);
                         </script>
                     </div>
