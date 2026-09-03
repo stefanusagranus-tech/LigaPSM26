@@ -696,10 +696,9 @@ else:
 
 username = st.session_state.get("username", "Admin")
 
-# Tampilan Header Profil & Tombol panah pemicu mengecil
-col_side1, col_side2 = st.sidebar.columns([4, 1] if not st.session_state.sidebar_collapsed else)
-with col_side1:
-    if not st.session_state.sidebar_collapsed:
+# --- Tampilan Header Profil & Tombol panah pemicu mengecil ---
+if not st.session_state.sidebar_collapsed:
+    with col_side1:
         st.markdown(
             f"""
             <div class='profile-container'>
@@ -711,14 +710,12 @@ with col_side1:
             </div>
         """, unsafe_allow_html=True
         )
-    else:
-        st.markdown(f"<img src='{logo_src}' class='sidebar-logo'>", unsafe_allow_html=True)
-
-with col_side2:
-    # Tombol panah kustom untuk mengecilkan / melebarkan ukuran baris sidebar
-    arrow_icon = "▶" if st.session_state.sidebar_collapsed else "◀"
-    st.button(arrow_icon, on_click=toggle_sidebar_size, key="toggle_size_btn")
-
+    with col_side2:
+        st.button("◀", on_click=toggle_sidebar_size, key="toggle_size_btn_open")
+else:
+    with col_side1:
+        st.markdown(f"<center><img src='{logo_src}' class='sidebar-logo' style='margin-bottom: 10px;'></center>", unsafe_allow_html=True)
+        st.button("▶", on_click=toggle_sidebar_size, key="toggle_size_btn_close", use_container_width=True)
 # Render Informasi Toko
 st.sidebar.markdown(
     f"""
