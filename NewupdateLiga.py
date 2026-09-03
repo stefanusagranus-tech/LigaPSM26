@@ -491,24 +491,6 @@ if "logged_in" not in st.session_state:
 if "username" not in st.session_state:
   st.session_state.username = ""
 
-# Tempatkan kode CSS ini di bagian paling atas aplikasi Anda (di bawah set_page_config jika ada)
-st.markdown(
-    """
-    <style>
-        /* Menghapus baris kosong header atas Streamlit */
-        [data-testid="stHeader"] {
-            display: none !important;
-        }
-        
-        /* Menyesuaikan posisi atas konten utama agar tidak terlalu menempel ke atas setelah header dihapus */
-        [data-testid="stAppViewContainer"] > section:nth-child(2) {
-            padding-top: 2rem !important;
-        }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
 # ==========================================
 # 6. HALAMAN LOGIN
 # ==========================================
@@ -793,7 +775,25 @@ if st.sidebar.button("🚪 Keluar / Logout", use_container_width=True):
     st.session_state.username = ""
     st.rerun()
 st.sidebar.markdown("</div>", unsafe_allow_html=True)
-    
+
+# Tempatkan kode CSS ini di bagian paling atas aplikasi Anda (di bawah set_page_config jika ada)
+st.markdown(
+    """
+    <style>
+        /* Menghapus baris kosong header atas Streamlit */
+        [data-testid="stHeader"] {
+            display: none !important;
+        }
+        
+        /* Menyesuaikan posisi atas konten utama agar tidak terlalu menempel ke atas setelah header dihapus */
+        [data-testid="stAppViewContainer"] > section:nth-child(2) {
+            padding-top: 2rem !important;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # ==========================================
 # 8. HEADER UTAMA
 # ==========================================
