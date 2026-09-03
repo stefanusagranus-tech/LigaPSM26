@@ -232,6 +232,33 @@ if "data_loaded" not in st.session_state:
   st.session_state.sales_store_df = s_store_df
   st.session_state.data_loaded = True
 
+# --- FUNGSI PEMBANTU BATAS TANGGAL PERIODE ---
+def get_period_date_bounds(p_id):
+  if not periods_df.empty and "period_id" in periods_df.columns:
+    p_match = periods_df[
+        periods_df["period_id"].astype(str).str.strip() == str(p_id).strip()
+    ]
+    if (
+        not p_match.empty
+        and "start_date" in p_match.columns
+        and "end_date" in p_match.columns
+    ):
+      try:
+        p_start = pd.to_datetime(
+            p_match.iloc[0]["start_date"], errors="coerce"
+        ).date()
+        p_end = pd.to_datetime(
+            p_match.iloc[0]["end_date"], errors="coerce"
+        ).date()
+        if not pd.isna(p_start) and not pd.isna(p_end):
+          if p_start > p_end:
+            p_start, p_end = p_end, p_start
+          return p_start, p_end
+      except Exception:
+        pass
+  today = waktu_wib.date()
+  return today.replace(day=1), today
+
 # ==========================================
 # 3. WAKTU REALTIME GMT+7 (WIB)
 # ==========================================
