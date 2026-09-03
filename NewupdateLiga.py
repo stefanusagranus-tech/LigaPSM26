@@ -1,6 +1,8 @@
 import time
 import re
 import math
+import os
+import base64
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import numpy as np
@@ -566,7 +568,7 @@ if not st.session_state.logged_in:
   st.stop()
 
 # ==========================================================
-# 7. SIDEBAR DASHBOARD WITH CUSTOM COLLAPSE TOGGLE
+# 7. SIDEBAR DASHBOARD (MODERN STYLE WITH LOCAL LOGO)
 # ==========================================================
 st.sidebar.markdown(
     """
@@ -580,7 +582,7 @@ st.sidebar.markdown(
         .sidebar-header {
             display: flex;
             align-items: center;
-            justify-content: space-between; /* Memberi ruang untuk tombol toggle */
+            justify-content: space-between; /* Memberi ruang untuk tombol toggle collapse */
             margin-bottom: 10px;
             padding: 5px 10px;
         }
@@ -592,7 +594,7 @@ st.sidebar.markdown(
         .sidebar-logo {
             width: 48px;
             height: 48px;
-            border-radius: 12px;
+            border-radius: 12px; /* Kotak membulat modern mirip contoh Codinglab */
             object-fit: cover;
             border: 2px solid #6366f1; /* Aksen Ungu */
         }
@@ -649,16 +651,19 @@ st.sidebar.markdown(
             width: 100%;
             cursor: pointer;
         }
+        /* Efek Hover Menu Navigasi */
         div[data-testid="stRadio"] label:hover {
             background-color: rgba(255, 255, 255, 0.05);
             color: #ffffff !important;
         }
+        /* Efek Menu yang Sedang Aktif/Dipilih (Ungu Menonjol) */
         div[data-testid="stRadio"] [data-checked="true"] label {
             background-color: #6366f1 !important;
             color: #ffffff !important;
             font-weight: 600;
             box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
+        /* Menyembunyikan bulatan radio asli Streamlit agar terlihat bersih */
         div[data-testid="stRadio"] [data-testid="stMarkdownVisibility"] {
             display: none;
         }
@@ -678,6 +683,7 @@ st.sidebar.markdown(
             color: #ffffff;
             border-color: #52525b;
         }
+        /* Tombol Logout Spesifik */
         .logout-btn button {
             background-color: rgba(239, 68, 68, 0.1) !important;
             color: #ef4444 !important;
@@ -692,15 +698,27 @@ st.sidebar.markdown(
     unsafe_allow_html=True,
 )
 
-LOGO_URL = "https://bing.net"
+# 1. Mengatur pemanggilan file gambar JPG lokal Anda
+LOCAL_LOGO_PATH = "kgs_group_belgium_logo.jpg"
+
+# 2. Proses enkripsi gambar lokal agar terbaca dengan benar di elemen HTML
+if os.path.exists(LOCAL_LOGO_PATH):
+    with open(LOCAL_LOGO_PATH, "rb") as f:
+        data = f.read()
+    encoded = base64.b64encode(data).decode()
+    logo_src = f"data:image/jpeg;base64,{encoded}"
+else:
+    # Gambar cadangan otomatis jika file lokal belum dimasukkan ke folder proyek
+    logo_src = "https://flaticon.com"
+
 username = st.session_state.get("username", "Admin")
 
-# Tampilan Header Profil lengkap dengan tombol collapse kustom (panah kiri ◀)
+# Tampilan Header Profil Lengkap dengan Fitur Collapse Otomatis
 st.sidebar.markdown(
     f"""
     <div class='sidebar-header'>
         <div class='profile-container'>
-            <img src='{LOGO_URL}' class='sidebar-logo'>
+            <img src='{logo_src}' class='sidebar-logo'>
             <div style='display: flex; flex-direction: column;'>
                 <span style='color: #a1a1aa; font-size: 11px; font-weight: 500;'>Selamat Datang,</span>
                 <span style='color: #ffffff; font-size: 14px; font-weight: 600;'>{username}</span>
@@ -722,10 +740,10 @@ st.sidebar.markdown(
 
 # ➔ Tombol Refresh Cache
 if st.sidebar.button("🔄 Refresh Data Cache", use_container_width=True):
-  st.cache_data.clear()
-  for key in list(st.session_state.keys()):
-    del st.session_state[key]
-  st.rerun()
+    st.cache_data.clear()
+    for key in list(st.session_state.keys()):
+        del st.session_state[key]
+    st.rerun()
 
 st.sidebar.markdown("<hr style='margin: 15px 0; border-color: #27272a;'>", unsafe_allow_html=True)
 
@@ -735,6 +753,7 @@ st.sidebar.markdown(
     unsafe_allow_html=True,
 )
 
+# Pilihan Menu Navigasi
 menu_options = [
     "🏠 Menu Utama",
     "📝 Input Data",
@@ -748,11 +767,12 @@ selected_tab = st.sidebar.radio(
 
 st.sidebar.markdown("<hr style='margin: 20px 0; border-color: #27272a;'>", unsafe_allow_html=True)
 
+# Tombol Keluar / Logout
 st.sidebar.markdown("<div class='logout-btn'>", unsafe_allow_html=True)
 if st.sidebar.button("🚪 Keluar / Logout", use_container_width=True):
-  st.session_state.logged_in = False
-  st.session_state.username = ""
-  st.rerun()
+    st.session_state.logged_in = False
+    st.session_state.username = ""
+    st.rerun()
 st.sidebar.markdown("</div>", unsafe_allow_html=True)
     
 # ==========================================
