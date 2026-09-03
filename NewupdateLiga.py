@@ -908,153 +908,57 @@ if "portal_guild_ready" in st.session_state and st.session_state.portal_guild_re
     st.stop()
 
 # =========================================================================
-# 🚀 LANGKAH 1B: PREPARATION CAMP (ANTI-OFFSIDE, POSISI MENEMPEL PRESISI)
+# 🚀 BAGIAN 1: TARUH DI PALING ATAS BERKAS (ANTI-BOCOR KODE BLACKSMITH)
 # =========================================================================
 if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_ready:
     st.markdown(
         """
         <style>
-            /* Mengunci tata letak agar ramping dan pas di Android, iOS, & PC */
-            .main .block-container {
-                background-color: #0b0f19 !important;
-                min-height: 100vh !important;
-                max-width: 800px !important;    
-                margin: 0 auto !important;       
-                padding-top: 5% !important;
-                padding-left: 20px !important;   
-                padding-right: 20px !important;  
-                box-sizing: border-box !important;
-            }
+            /* Layout Ramping & Presisi di Web PC, Android, & iOS */
+            .main .block-container { background-color: #0b0f19 !important; min-height: 100vh !important; max-width: 800px !important; margin: 0 auto !important; padding-top: 5% !important; padding-left: 20px !important; padding-right: 20px !important; box-sizing: border-box !important; }
             [data-testid="stSidebar"] { display: none !important; }
             [data-testid="stHeader"] { display: none !important; }
-
-            /* Mengunci seluruh kolom agar bertindak sebagai Flexbox tegak lurus */
-            div[data-testid="stColumn"] {
-                display: flex !important;
-                flex-direction: column !important;
-                justify-content: flex-start !important;
-                align-items: stretch !important;
-            }
-
-            /* Desain Kustom Kartu Pertama Anda yang Keren */
-            .camp-card {
-                background: linear-gradient(135deg, #131926 0%, #1e2638 100%);
-                border: 2px solid #b45309; 
-                border-bottom: none; /* Menghilangkan border bawah kartu agar menyatu dengan tombol */
-                border-radius: 12px 12px 0 0; /* Hanya membulatkan sudut atas kartu */
-                padding: 24px;
-                text-align: center;
-                position: relative;
-                box-shadow: 0 4px 15px rgba(180, 83, 9, 0.15);
-                transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-                flex-grow: 1; /* Memaksa semua tinggi kartu otomatis sejajar seimbang */
-            }
-
-            /* Desain Teks & Ikon RPG */
-            .camp-icon {
-                font-size: 45px;
-                margin-bottom: 12px;
-                filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.4));
-            }
-            .camp-title {
-                color: #fef08a; 
-                font-family: monospace;
-                font-size: 16px;
-                font-weight: 800;
-                margin-bottom: 8px;
-                letter-spacing: 1px;
-            }
-            .camp-desc {
-                color: #94a3b8;
-                font-family: monospace;
-                font-size: 12px;
-                line-height: 1.5;
-                margin-bottom: 5px;
-            }
-
-            /* 🚀 FIX UTAMA: Mengunci tombol agar menempel presisi di dasar bawah kartu tanpa celah */
-            div[data-testid="stColumn"] div.stButton {
-                margin: 0 !important;
-                padding: 0 !important;
-                display: block !important;
-                width: 100% !important;
-            }
+            div[data-testid="stColumn"] { display: flex !important; flex-direction: column !important; justify-content: flex-start !important; align-items: stretch !important; }
             
-            div[data-testid="stColumn"] div.stButton > button {
-                background: rgba(180, 83, 9, 0.15) !important;
-                color: #fef08a !important;
-                border: 2px solid #b45309 !important;
-                border-top: 1px solid rgba(180, 83, 9, 0.3) !important; /* Batas halus antara kartu dan tombol */
-                border-radius: 0 0 12px 12px !important; /* Membuat sudut bawah tombol membulat mengikuti kartu */
-                font-family: monospace !important;
-                font-size: 13px !important;
-                font-weight: 700 !important;
-                padding: 12px 0px !important;
-                width: 100% !important;
-                box-sizing: border-box !important;
-                margin: 0 !important;
-            }
+            /* Desain Kartu Pertama Anda yang Keren */
+            .camp-card { background: linear-gradient(135deg, #131926 0%, #1e2638 100%); border: 2px solid #b45309; border-bottom: none; border-radius: 12px 12px 0 0; padding: 24px; text-align: center; position: relative; box-shadow: 0 4px 15px rgba(180, 83, 9, 0.15); flex-grow: 1; }
+            .camp-icon { font-size: 45px; margin-bottom: 12px; filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.4)); }
+            .camp-title { color: #fef08a; font-family: monospace; font-size: 16px; font-weight: 800; margin-bottom: 8px; letter-spacing: 1px; }
+            .camp-desc { color: #94a3b8; font-family: monospace; font-size: 12px; line-height: 1.5; margin-bottom: 5px; }
             
-            div[data-testid="stColumn"] div.stButton > button:hover {
-                background: #b45309 !important;
-                color: #0b0f19 !important;
-                box-shadow: 0 4px 12px rgba(180, 83, 9, 0.4) !important;
-            }
-
-            /* Merapikan posisi tombol kembali di bawah */
-            .leave-camp-box div.stButton {
-                margin-top: 40px !important;
-            }
-            .leave-camp-box div.stButton > button {
-                border-radius: 10px !important;
-                border-top: 1px solid #b45309 !important;
-                background: rgba(239, 68, 68, 0.1) !important;
-                color: #ef4444 !important;
-                border: 1px solid rgba(239, 68, 68, 0.4) !important;
-            }
-            .leave-camp-box div.stButton > button:hover {
-                background: #ef4444 !important;
-                color: white !important;
-                box-shadow: 0 0 15px rgba(239, 68, 68, 0.5) !important;
-            }
+            /* Mengunci tombol agar menempel presisi di dasar bawah kartu tanpa celah */
+            div[data-testid="stColumn"] div.stButton { margin: 0 !important; padding: 0 !important; display: block !important; width: 100% !important; }
+            div[data-testid="stColumn"] div.stButton > button { background: rgba(180, 83, 9, 0.15) !important; color: #fef08a !important; border: 2px solid #b45309 !important; border-top: 1px solid rgba(180, 83, 9, 0.3) !important; border-radius: 0 0 12px 12px !important; font-family: monospace !important; font-size: 13px !important; font-weight: 700 !important; padding: 12px 0px !important; width: 100% !important; box-sizing: border-box !important; margin: 0 !important; }
+            div[data-testid="stColumn"] div.stButton > button:hover { background: #b45309 !important; color: #0b0f19 !important; box-shadow: 0 4px 12px rgba(180, 83, 9, 0.4) !important; }
+            
+            .leave-camp-box div.stButton { margin-top: 40px !important; }
+            .leave-camp-box div.stButton > button { border-radius: 10px !important; background: rgba(239, 68, 68, 0.1) !important; color: #ef4444 !important; border: 1px solid rgba(239, 68, 68, 0.4) !important; }
+            .leave-camp-box div.stButton > button:hover { background: #ef4444 !important; color: white !important; box-shadow: 0 0 15px rgba(239, 68, 68, 0.5) !important; }
+            
+            /* 🔮 CSS ANIMASI PANDAI BESI (DIKUNCI AMAN DI SINI AGAR TIDAK MUNTAH TEKS) */
+            @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+            .spark { position: absolute; border-radius: 50%; border: 2px solid #ef4444; box-sizing: border-box; }
+            .circle1 { width: 120px; height: 120px; animation: explode 1.6s infinite linear; filter: drop-shadow(0 0 10px #f97316); }
+            .circle2 { width: 140px; height: 140px; animation: explode 1.6s infinite linear; animation-delay: 0.8s; filter: drop-shadow(0 0 10px #ef4444); }
+            @keyframes strike { 0%, 100% { transform: scale(1) translateY(0); } 50% { transform: scale(0.9) translateY(8px); filter: drop-shadow(0 0 25px #fbbf24); } }
+            @keyframes explode { 0% { transform: scale(0.3); opacity: 1; border-style: solid; } 50% { border-style: dashed; } 100% { transform: scale(1.1); opacity: 0; border-style: dotted; } }
         </style>
         """, 
         unsafe_allow_html=True
     )
 
-    # Header Atas Halaman Camp
     st.markdown("<h1 style='color: #f59e0b; font-family: monospace; font-size: 32px; text-shadow: 0 0 15px rgba(245,158,11,0.4); text-align: center; margin-bottom: 5px;'>⛺ PREPARATION CAMP ⛺</h1>", unsafe_allow_html=True)
     st.markdown("<p style='color: #64748b; font-family: monospace; text-align: center; font-size: 13px;'>Persiapkan perlengkapan, cek papan misi, dan tingkatkan keahlian beladiri Anda sebelum melangkah keluar.</p>", unsafe_allow_html=True)
     
-    st.markdown("<div class='camp-grid'>", unsafe_allow_html=True)
-    
-    # Grid 3 Kolom Stabil Berdampingan
     col_camp1, col_camp2, col_camp3 = st.columns(3)
     
     with col_camp1:
-        st.markdown(
-            """
-            <div class='camp-card'>
-                <div class='camp-icon'>📜</div>
-                <div class='camp-title'>ANGGOTA GUILD</div>
-                <div class='camp-desc'>Buka gulungan piagam untuk memeriksa status level, poin atribut, dan rapor performa penjualan individu Anda.</div>
-            </div>
-        """, unsafe_allow_html=True
-        )
+        st.markdown("<div class='camp-card'><div class='camp-icon'>📜</div><div class='camp-title'>ANGGOTA GUILD</div><div class='camp-desc'>Buka gulungan piagam untuk memeriksa status level, poin atribut, dan rapor performa penjualan individu Anda.</div></div>", unsafe_allow_html=True)
         if st.button("Lihat Status ➔", use_container_width=True, key="btn_camp_status"):
-            st.session_state.current_camp_menu = "status"
-            st.rerun()
+            st.toast("Membuka Piagam Anggota...", icon="📜")
             
     with col_camp2:
-        st.markdown(
-            """
-            <div class='camp-card'>
-                <div class='camp-icon'>🎯</div>
-                <div class='camp-title'>QUIZ CAMPAIGN</div>
-                <div class='camp-desc'>Cek papan pengumuman untuk melihat quest musiman, tugas mingguan PSM, serta daily target buruan Anda.</div>
-            </div>
-        """, unsafe_allow_html=True
-        )
+        st.markdown("<div class='camp-card'><div class='camp-icon'>🎯</div><div class='camp-title'>QUIZ CAMPAIGN</div><div class='camp-desc'>Cek papan pengumuman untuk melihat quest musiman, tugas mingguan PSM, serta daily target buruan Anda.</div></div>", unsafe_allow_html=True)
         if st.button("Ambil Quest ➔", use_container_width=True, key="btn_camp_quest"):
             st.toast("Membuka Papan Misi...", icon="🎯")
             
@@ -1062,135 +966,53 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
     # ⚔️ KARTU 3: UPGRADE SKILL (EDISI RITUAL PENEMPAAN SENJATA 1-100)
     # =========================================================================
     with col_camp3:
-        st.markdown(
-            """
-            <div class='camp-card'>
-                <div class='camp-icon'>⚔️</div>
-                <div class='camp-title'>UPGRADE SKILL</div>
-                <div class='camp-desc'>Masuki ruang latihan untuk mengasah keahlian bertarung Anda (Shortcut penginputan data transaksi penjualan).</div>
-            </div>
-        """, unsafe_allow_html=True
-        )
+        st.markdown("<div class='camp-card'><div class='camp-icon'>⚔️</div><div class='camp-title'>UPGRADE SKILL</div><div class='camp-desc'>Masuki ruang latihan untuk mengasah keahlian bertarung Anda (Shortcut penginputan data transaksi penjualan).</div></div>", unsafe_allow_html=True)
         if st.button("Latih Skill ➔", use_container_width=True, key="btn_camp_skill"):
             placeholder = st.empty()
             with placeholder.container():
-                # --- LAYAR LOADING FULLSCREEN: ANIMASI BLACKSMITH FORGING ---
+                # --- LAYAR LOADING FULLSCREEN: BLACKSMITH FORGING (MURNI TANPA TAG STYLE YANG RAWAN BOCOR) ---
                 st.markdown(
                     """
                     <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
-                        
-                        <!-- Struktur Animasi Menempa Logam/Anvil Glow -->
-                        <div class="forge-container">
-                            <div class="anvil">⚒️</div>
+                        <div class="forge-container" style="position: relative; width: 150px; height: 150px; display: flex; justify-content: center; align-items: center;">
+                            <div class="anvil" style="font-size: 70px; z-index: 10; animation: strike 0.8s infinite ease-in-out;">⚒️</div>
                             <div class="spark circle1"></div>
                             <div class="spark circle2"></div>
                         </div>
-                        
                         <h1 style='color: #f97316; font-family: monospace; animation: blink 1.2s infinite; font-size: 26px; margin-top: 40px; letter-spacing: 2px; text-shadow: 0 0 15px rgba(249,115,22,0.5);'>FORGING YOUR SALES SKILL...</h1>
                         <p id="forge-status" style='color: #64748b; font-size: 13px; margin-top: 5px; font-family: monospace;'>Heating the metal and sharpening performance attributes...</p>
                         <p id="progress-text" style='color: #fbbf24; font-family: monospace; font-size: 18px; font-weight: bold; margin-top: 25px;'>FORGING PROGRESS: 0%</p>
-                        
-                        <style>
-                            @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-                            [data-testid="stSidebar"] { display: none !important; }
-                            [data-testid="stHeader"] { display: none !important; }
-                            
-                            .forge-container {
-                                position: relative;
-                                width: 150px;
-                                height: 150px;
-                                display: flex;
-                                justify-content: center;
-                                align-items: center;
-                            }
-                            .anvil {
-                                font-size: 70px;
-                                z-index: 10;
-                                filter: drop-shadow(0 0 15px rgba(249, 115, 22, 0.4));
-                                animation: strike 0.8s infinite ease-in-out;
-                            }
-                            
-                            /* Efek Percikan Api Pijar dari Tempaan Hammer */
-                            .spark {
-                                position: absolute;
-                                border-radius: 50%;
-                                border: 2px solid #ef4444;
-                                box-sizing: border-box;
-                            }
-                            .circle1 {
-                                width: 120px;
-                                height: 120px;
-                                animation: explode 1.6s infinite linear;
-                                filter: drop-shadow(0 0 10px #f97316);
-                            }
-                            .circle2 {
-                                width: 140px;
-                                height: 140px;
-                                animation: explode 1.6s infinite linear;
-                                animation-delay: 0.8s;
-                                filter: drop-shadow(0 0 10px #ef4444);
-                            }
-                            
-                            /* Logika Gerakan Menempa & Percikan Api */
-                            @keyframes strike {
-                                0%, 100% { transform: scale(1) translateY(0); }
-                                50% { transform: scale(0.9) translateY(8px); filter: drop-shadow(0 0 25px #fbbf24); }
-                            }
-                            @keyframes explode {
-                                0% { transform: scale(0.3); opacity: 1; border-style: solid; }
-                                50% { border-style: dashed; }
-                                100% { transform: scale(1.1); opacity: 0; border-style: dotted; }
-                            }
-                        </style>
                     </div>
-                    """, 
-                    unsafe_allow_html=True
+                    """, unsafe_allow_html=True
                 )
                 
-                # ⏳ PROSES BAR 1 - 100% DENGAN TEXT PERSENTASE DINAMIS
+                # Progress bar simulasi tempa berjalan mundur lambat khidmat
                 progress_bar = st.progress(0)
                 for percent_complete in range(100):
-                    time.sleep(0.04) # Durasi ritmis tempaan (~4 detik)
+                    time.sleep(0.04) 
                     current_percent = percent_complete + 1
                     progress_bar.progress(current_percent)
-                    
-                    # Mengubah teks persentase secara real-time di bawah bar
-                    st.markdown(
-                        f"""
-                        <script>
-                            window.parent.document.getElementById("progress-text").innerHTML = "FORGING PROGRESS: {current_percent}%";
-                            if ({current_percent} > 40 && {current_percent} < 80) {{
-                                window.parent.document.getElementById("forge-status").innerHTML = "Tempering blade core and structuring transaction logs...";
-                            }} else if ({current_percent} >= 80) {{
-                                window.parent.document.getElementById("forge-status").innerHTML = "Quenching weapon in holy water! Stabilization complete!";
-                            }}
-                        </script>
-                        """,
-                        unsafe_allow_html=True
-                    )
+                    st.markdown(f"<script>window.parent.document.getElementById('progress-text').innerHTML = 'FORGING PROGRESS: {current_percent}%'; if ({current_percent} > 40 && {current_percent} < 80) {{ window.parent.document.getElementById('forge-status').innerHTML = 'Tempering blade core and structuring transaction logs...'; }} else if ({current_percent} >= 80) {{ window.parent.document.getElementById('forge-status').innerHTML = 'Quenching weapon in holy water! Stabilization complete!'; }}</script>", unsafe_allow_html=True)
                 
-                # Tampilan Efek Sukses Singkat Sebelum Masuk Form
-                st.markdown(
-                    """
-                    <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
-                        <h1 style='color: #fbbf24; font-family: monospace; font-size: 32px; text-shadow: 0 0 20px rgba(251,191,36,0.6);'>⚔️ WEAPON UPGRADED!</h1>
-                        <p style='color: #ffffff; font-size: 15px; margin-top: 10px; font-family: monospace;'>Entering training ground with your sharpest sword...</p>
-                    </div>
-                    """, 
-                    unsafe_allow_html=True
-                )
-                time.sleep(1.5)
+                # Sukses Screen Pendek
+                st.markdown("<div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'><h1 style='color: #fbbf24; font-family: monospace; font-size: 32px; text-shadow: 0 0 20px rgba(251,191,36,0.6);'>⚔️ WEAPON UPGRADED!</h1><p style='color: #ffffff; font-size: 15px; margin-top: 10px; font-family: monospace;'>Entering training ground with your sharpest sword...</p></div>", unsafe_allow_html=True)
+                time.sleep(1.2)
             
-            # Hancurkan layar loading, eksekusi pemindahan halaman internal
             placeholder.empty()
             st.session_state.portal_prep_ready = False
             
-            # Alihkan tab menu ke halaman Input Data penjualan milik Anda
-            if "custom_sub_tabs" in st.session_state:
-                st.session_state["custom_sub_tabs"] = "⚡ Multi Input Sales"
-            else:
-                selected_tab = "📝 Input Data"
+            # 🚀 PEMUTUS JALUR FORCE REDIRECT UTAMA (ANTI-NYASAR KE BERANDA)
+            st.session_state["selected_tab"] = "📝 Input Data"
+            if "sb_select_period_tab1" in st.session_state:
+                st.session_state["sb_select_period_tab1"] = "📝 Input Data"
             st.rerun()
+
+    st.markdown("<div class='leave-camp-box'>", unsafe_allow_html=True)
+    if st.button("🚪 KEMBALI KE BERANDA KOTA", use_container_width=True, key="btn_leave_camp"):
+        st.session_state.portal_prep_ready = False
+        st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
+    st.stop()
 
 # =========================================================================
 # MENU UTAMA: GAYA RPG RESPONSIVE (PORTAL GUILD ONLY)
