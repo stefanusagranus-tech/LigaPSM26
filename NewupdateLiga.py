@@ -729,7 +729,7 @@ st.markdown(
 # ==========================================
 
 
-# =============================================================================
+ # =============================================================================
 # --- INPUT & RESET DATA ---
 # =============================================================================
 if selected_tab == "📝 Input Data":
@@ -739,6 +739,73 @@ if selected_tab == "📝 Input Data":
       unsafe_allow_html=True,
   )
 
+  # --- Custom CSS: Styling Tab Kapsul Transparan Neon (Floating Fix) ---
+st.markdown(
+    """
+    <style>
+    /* Memaksa elemen pembungkus tab utama agar mengambang sempurna di atas */
+    div.stTabs {
+        position: fixed !important;
+        top: 55px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        z-index: 999999 !important;
+        width: max-content !important;
+        max-width: 95vw !important;
+        pointer-events: none !important; /* Supaya klik di luar kapsul tetap tembus ke bawah jika perlu */
+    }
+
+    /* Mengaktifkan kembali interaksi klik khusus untuk isi tab list dan tombolnya */
+    div[data-baseweb="tab-list"], div.stTabs > div:first-child {
+        pointer-events: auto !important;
+        display: flex !important;
+        gap: 8px !important;
+        background-color: rgba(15, 23, 42, 0.85) !important;
+        padding: 8px 16px !important;
+        border-radius: 50px !important;
+        border: 1px solid rgba(0, 240, 255, 0.4) !important;
+        box-shadow: 0 4px 25px rgba(0, 240, 255, 0.4) !important;
+        backdrop-filter: blur(12px) !important;
+        overflow-x: auto !important;
+    }
+
+    /* Memberikan jarak kosong di bagian atas halaman utama agar konten tidak tertutup tab yang melayang */
+    section.main div.block-container {
+        padding-top: 100px !important;
+    }
+
+    /* Styling tombol tab */
+    div[data-baseweb="tab-list"] button[data-baseweb="tab"] {
+        background-color: rgba(255, 255, 255, 0.03) !important;
+        border: 1px solid rgba(0, 240, 255, 0.3) !important;
+        border-radius: 30px !important;
+        color: #ffffff !important;
+        padding: 6px 18px !important;
+        transition: all 0.3s ease-in-out !important;
+    }
+
+    div[data-baseweb="tab-list"] button[data-baseweb="tab"]:hover {
+        border-color: #00f0ff !important;
+        color: #00f0ff !important;
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.5) !important;
+        transform: translateY(-1px);
+    }
+
+    div[data-baseweb="tab-list"] button[aria-selected="true"] {
+        background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(0, 150, 255, 0.4)) !important;
+        border: 1px solid #00f0ff !important;
+        color: #ffffff !important;
+        font-weight: bold !important;
+        box-shadow: 0 0 15px rgba(0, 240, 255, 0.8), inset 0 0 8px rgba(0, 240, 255, 0.4) !important;
+    }
+
+    div[data-baseweb="tab-highlight"] {
+        display: none !important;
+    }
+    </style>
+""",
+    unsafe_allow_html=True,
+)
   # --- Context & User Role ---
   current_user = st.session_state.get("username", "visitor")
   user_lower = str(current_user).lower()
@@ -794,6 +861,7 @@ if selected_tab == "📝 Input Data":
     today = datetime.now().date()
     return today.replace(day=1), today
 
+
   @st.dialog("🎉 Input Data Berhasil!")
   def show_success_popup(inserted_count, person_name, date_str):
     st.success(
@@ -807,6 +875,7 @@ if selected_tab == "📝 Input Data":
         """)
     if st.button("👍 Mantap, Tutup", use_container_width=True):
       st.rerun()
+
 
   # =========================================================================
   # SUB TAB 1: MULTI INPUT SALES PERSONIL
@@ -824,6 +893,7 @@ if selected_tab == "📝 Input Data":
           " data (read-only)."
       )
     else:
+      # --- FILTER PERIODE DARI SHEET PERIODE SESUAI TANGGAL BERJALAN & ROLE ---
       today_date = waktu_wib.date()
       tab1_periods_dict = {}
 
@@ -838,7 +908,9 @@ if selected_tab == "📝 Input Data":
             p_start = pd.to_datetime(
                 row["start_date"], errors="coerce"
             ).date()
-            p_end = pd.to_datetime(row["end_date"], errors="coerce").date()
+            p_end = pd.to_datetime(
+                row["end_date"], errors="coerce"
+            ).date()
 
             if pd.isna(p_start) or pd.isna(p_end):
               continue
@@ -910,6 +982,7 @@ if selected_tab == "📝 Input Data":
               f" **{current_user}**"
           )
 
+        # --- AMBIL ITEM DARI SHEET MASTER_ITEM (MENGGUNAKAN VARIABLE items_df) ---
         current_items_df = (
             items_df
             if "items_df" in locals() and not items_df.empty
@@ -1594,7 +1667,6 @@ if selected_tab == "📝 Input Data":
           wa_sueger_text += f"_Belum ada catatan transaksi Sueger untuk Kasir {selected_kasir} bulan ini._\n"
 
         st.code(wa_sueger_text, language="markdown")
-
 
 # --- EDIT DATA ---
 elif selected_tab == "➕Edit Data (admin only)":
