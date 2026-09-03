@@ -1239,7 +1239,7 @@ if selected_tab == "🏠 Menu Utama":
             st.session_state.portal_guild_ready = True
             st.rerun()
         
-        with col_game2:
+    with col_game2:
         st.markdown(
             """
             <div class='rpg-card-center-fixed'>
