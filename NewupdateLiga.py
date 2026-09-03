@@ -982,37 +982,86 @@ if selected_tab == "🏠 Menu Utama":
                 st.session_state.portal_guild_ready = True
                 st.rerun()
         else:
-            # --- LAYAR 2: PORTAL UTUH MENGGUNAKAN ELEMEN RESMI STREAMLIT (SETELAH REDIRECT STATUS) ---
+            # --- LAYAR 2: HALAMAN PORTAL READY (DESAIN EXCLUSIVE GAME MENU) ---
             st.markdown(
                 """
                 <style>
                     /* Mengubah latar belakang halaman aplikasi menjadi gelap game secara aman */
                     .main .block-container {
-                        background-color: #0f172a !important;
+                        background-color: #0c1020 !important;
                         min-height: 100vh;
+                        padding-top: 60px !important;
                     }
                     [data-testid="stSidebar"] { display: none !important; }
+        
+                    /* Menata ulang gaya tombol asli Streamlit agar berbentuk Kartu Pilihan Game */
+                    div[data-testid="stColumn"] div.stButton > button,
+                    div[data-testid="stColumn"] a[data-testid="stLinkButton"] {
+                        min-height: 160px !important;
+                        display: flex !important;
+                        flex-direction: column !important;
+                        justify-content: center !important;
+                        align-items: center !important;
+                        border-radius: 16px !important;
+                        font-family: monospace !important;
+                        font-size: 16px !important;
+                        font-weight: 800 !important;
+                        letter-spacing: 1px !important;
+                        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+                        box-sizing: border-box !important;
+                        text-decoration: none !important;
+                    }
+        
+                    /* 🌌 Desain Spesifik Tombol Kiri: LAUNCH TELEPORTATION (Portal Dimensi Cyan) */
+                    div[data-testid="stColumn"]:nth-child(1) a[data-testid="stLinkButton"] {
+                        background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.3) 100%) !important;
+                        color: #00f0ff !important;
+                        border: 2px solid #06b6d4 !important;
+                        box-shadow: 0 0 15px rgba(6, 182, 212, 0.15) !important;
+                    }
+                    div[data-testid="stColumn"]:nth-child(1) a[data-testid="stLinkButton"]:hover {
+                        transform: translateY(-5px) scale(1.02) !important;
+                        background: #06b6d4 !important;
+                        color: #0f172a !important;
+                        box-shadow: 0 0 30px rgba(6, 182, 212, 0.6) !important;
+                    }
+        
+                    /* ❌ Desain Spesifik Tombol Kanan: CANCEL AND RETURN (Gerbang Pembatalan Merah) */
+                    div[data-testid="stColumn"]:nth-child(2) div.stButton > button {
+                        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(185, 28, 28, 0.2) 100%) !important;
+                        color: #ef4444 !important;
+                        border: 2px solid #ef4444 !important;
+                        box-shadow: 0 0 15px rgba(239, 68, 68, 0.1) !important;
+                    }
+                    div[data-testid="stColumn"]:nth-child(2) div.stButton > button:hover {
+                        transform: translateY(-5px) scale(1.02) !important;
+                        background: #ef4444 !important;
+                        color: #ffffff !important;
+                        box-shadow: 0 0 30px rgba(239, 68, 68, 0.6) !important;
+                    }
                 </style>
                 """, 
                 unsafe_allow_html=True
             )
             
-            # Teks Judul Menggunakan HTML Inline Garansi Bersih Anti-Bocor
-            st.markdown("<h1 style='color: #00ff88; font-family: monospace; font-size: 32px; text-shadow: 0 0 15px rgba(0,255,136,0.5); text-align: center; margin-top: 50px;'>PORTAL READY!</h1>", unsafe_allow_html=True)
-            st.markdown("<p style='color: #94a3b8; font-family: monospace; text-align: center; margin-bottom: 30px;'>Gerbang teleportasi aliansi telah terbuka sempurna.</p>", unsafe_allow_html=True)
+            # Elemen Judul Utama Tengah Layar
+            st.markdown("<h1 style='color: #00ff88; font-family: monospace; font-size: 36px; text-shadow: 0 0 20px rgba(0,255,136,0.6); text-align: center;'>⚡ PORTAL READY! ⚡</h1>", unsafe_allow_html=True)
+            st.markdown("<p style='color: #94a3b8; font-family: monospace; text-align: center; font-size: 14px; margin-bottom: 50px;'>Mekanisme sihir teleportasi aliansi telah dikonfigurasi sempurna. Silakan pilih langkah Anda:</p>", unsafe_allow_html=True)
             
-            # 🚀 GERBANG TELEPORTASI RESMI: Menggunakan widget resmi st.link_button yang 100% anti bocor & anti patah
-            st.link_button(
-                "LAUNCH TELEPORTATION ➔", 
-                url="https://streamlit.app", 
-                use_container_width=True,
-                type="primary"
-            )
+            # 🚀 Membagi Halaman Menjadi 2 Kolom Lebar Berdampingan
+            col_portal1, col_portal2 = st.columns(2)
             
-            st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+            with col_portal1:
+                # Tombol Teleportasi Utama (Sekarang berbentuk Kotak Besar Keren)
+                st.link_button(
+                    "⚡ LAUNCH TELEPORTATION", 
+                    url="https://guildutamac383.streamlit.app/", 
+                    use_container_width=True
+                )
             
-            # 🛡️ JALUR KEMBALI: Jika user berubah pikiran, klik tombol ini untuk reset state kembali ke menu utama
-            if st.button("CANCEL AND RETURN", use_container_width=True, key="btn_cancel_portal_fixed"):
+        with col_portal2:
+            # Tombol Batalkan Aksi (Sekarang berbentuk Kotak Besar Keren)
+            if st.button("❌ CANCEL & RETURN", use_container_width=True, key="btn_cancel_portal_fixed"):
                 st.session_state.portal_guild_ready = False
                 st.rerun()
 
