@@ -727,12 +727,53 @@ if selected_tab == "📝 Input Data":
     else:
         periods_dict = {"Periode Utama": "P01"}
 
-    # --- Render Option Menu Tabs (Standar Streamlit) ---
-    tab1, tab2, tab3 = st.tabs([
-        "⚡ Multi Input Sales",
-        "🎯 Input Sales PPS",
-        "📱 Salin Format WA",
-    ])
+    # =========================================================================
+    # RENDER CUSTOM RADIO MENU (PENGGANTI st.tabs YANG KERAS KEPALA)
+    # =========================================================================
+    st.markdown("""
+    <style>
+        div[data-testid="stRadio"] div[role="radiogroup"] {
+            display: flex;
+            gap: 10px;
+            flex-direction: row;
+        }
+        div[data-testid="stRadio"] div[role="radiogroup"] > label {
+            background-color: #1e293b !important;
+            border: 1px solid #334155 !important;
+            padding: 10px 20px !important;
+            border-radius: 8px !important;
+            color: #b0c4de !important;
+            font-weight: 600 !important;
+            cursor: pointer;
+            flex: 1;
+            text-align: center;
+            transition: all 0.25s ease-in-out;
+        }
+        div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
+            border-color: #38bdf8 !important;
+            background-color: #334155 !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+        }
+        div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"],
+        div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+            border: 1px solid #00f0ff !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.5) !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    active_sub_tab = st.radio(
+        "Pilih Menu Navigasi",
+        ["⚡ Multi Input Sales", "🎯 Input Sales PPS", "📱 Salin Format WA"],
+        horizontal=True,
+        label_visibility="collapsed",
+        key="custom_sub_tabs"
+    )
+    
+    st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
 
     # --- Helper Functions & Dialogs ---
     def get_period_date_bounds(p_id):
@@ -773,7 +814,7 @@ if selected_tab == "📝 Input Data":
     # =========================================================================
     # SUB TAB 1: MULTI INPUT SALES PERSONIL
     # =========================================================================
-    with tab1:
+    if active_sub_tab == "⚡ Multi Input Sales":
         st.markdown(
             "<h4 style='color: #00ff88; margin-top: 15px;'>⚡ Multi Input Sales"
             " Personil</h4>",
@@ -1015,7 +1056,7 @@ if selected_tab == "📝 Input Data":
     # =========================================================================
     # SUB TAB 2: INPUT SALES PPS
     # =========================================================================
-    with tab2:
+    elif active_sub_tab == "🎯 Input Sales PPS":
         st.markdown(
             "<h4 style='color: #00ff88; margin-top: 15px;'>🎯 Form Input Penjualan &"
             " Kinerja PPS</h4>",
@@ -1236,7 +1277,7 @@ if selected_tab == "📝 Input Data":
     # =========================================================================
     # SUB TAB 3: SALIN FORMAT WHATSAPP
     # =========================================================================
-    with tab3:
+    elif active_sub_tab == "📱 Salin Format WA":
         st.markdown(
             "<h4 style='color: #00ff88; margin-top: 15px;'>📱 Generator Format"
             " Laporan WhatsApp</h4>",
