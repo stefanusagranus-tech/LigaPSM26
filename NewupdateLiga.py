@@ -458,28 +458,31 @@ if "username" not in st.session_state:
   st.session_state.username = ""
 
 # =============================================================================
-# --- CSS UNIVERSAL UNTUK SEMUA TAB ---
+# --- CSS UNIVERSAL UNTUK SEMUA TAB (VERSI LEBIH KUAT) ---
 # =============================================================================
 st.markdown("""
     <style>
-        /* 1. Warna teks tab yang tidak aktif (supaya terang & kontras di dark mode) */
-        .stTabs [data-baseweb="tab-list"] button [data-testid="stMarkdownContainer"] p {
-            color: #b0c4de !important; /* Abu-abu kebiruan terang */
-            font-weight: 500;
+        /* Mengubah warna teks pada seluruh tombol tab Streamlit */
+        button[data-baseweb="tab"] {
+            color: #b0c4de !important; /* Warna teks saat tidak aktif (terang & kontras) */
         }
         
-        /* 2. Warna teks tab yang sedang AKTIF */
-        .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] [data-testid="stMarkdownContainer"] p {
-            color: #00ff88 !important; /* Hijau neon terang (bisa diganti #ff4b4b untuk merah) */
-            font-weight: 700;
+        /* Mengubah warna teks pada tab yang sedang AKTIF */
+        button[data-baseweb="tab"][aria-selected="true"] {
+            color: #00ff88 !important; /* Warna hijau neon terang untuk tab aktif */
+        }
+        
+        /* Menebalkan teks tab aktif agar lebih jelas */
+        button[data-baseweb="tab"][aria-selected="true"] p {
+            font-weight: 700 !important;
         }
 
-        /* 3. Menebalkan garis bawah/indikator tab aktif agar lebih jelas */
-        .stTabs [data-baseweb="tab-list"] div[data-baseweb="tab-highlight"] {
+        /* Menebalkan garis bawah/indikator tab aktif */
+        div[data-baseweb="tab-highlight"] {
             background-color: #00ff88 !important;
         }
     </style>
-""", unsafe_allow_html=True)
+""", unsafe_allow_html=True,)
 
 # ==========================================
 # 6. HALAMAN LOGIN
