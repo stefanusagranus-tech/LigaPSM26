@@ -572,6 +572,10 @@ if not st.session_state.logged_in:
 # 7. SIDEBAR DASHBOARD - GAYA CODINGLAB (BAGIAN 1)
 # ==========================================================
 
+# Inisialisasi status buka/tutup sidebar di session_state
+if "sidebar_collapsed" not in st.session_state:
+    st.session_state.sidebar_collapsed = False
+
 # Fungsi untuk memicu perubahan ukuran sidebar saat tombol diklik
 def toggle_sidebar_size():
     st.session_state.sidebar_collapsed = not st.session_state.sidebar_collapsed
