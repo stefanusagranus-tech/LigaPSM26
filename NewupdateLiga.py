@@ -1570,7 +1570,7 @@ elif selected_tab == "➕Edit Data (admin only)":
     )
     st.stop()
 
-  # --- AMBIL PERIODE DARI SHEET PERIODE UNTUK MENU EDIT ---
+  # --- AMBIL PERIODE & DATA SALES DARI SESSION STATE ---
   periods_df = (
       st.session_state.get("periods_df", pd.DataFrame())
       if not st.session_state.get("periods_df", pd.DataFrame()).empty
@@ -1581,6 +1581,8 @@ elif selected_tab == "➕Edit Data (admin only)":
       )
   )
 
+  sp_df = st.session_state.get("sales_person_df", pd.DataFrame())
+
   edit_periods_dict = {}
   if not periods_df.empty and all(
       col in periods_df.columns
@@ -1589,7 +1591,6 @@ elif selected_tab == "➕Edit Data (admin only)":
     for _, row in periods_df.iterrows():
       edit_periods_dict[str(row["period_name"])] = str(row["period_id"])
 
-  # Fallback jika dictionary kosong
   if not edit_periods_dict and not periods_df.empty:
     edit_periods_dict = {
         str(row["period_name"]): str(row["period_id"])
