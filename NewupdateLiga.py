@@ -883,7 +883,7 @@ if selected_tab == "🏠 Menu Utama":
                 letter-spacing: 0.5px;
                 text-transform: uppercase;
             }
-            .badge-dungeon {
+            .badge-guild {
                 background-color: rgba(239, 68, 68, 0.15);
                 color: #ef4444;
                 border: 1px solid rgba(239, 68, 68, 0.4);
@@ -949,21 +949,21 @@ if selected_tab == "🏠 Menu Utama":
     col_game1, col_game2 = st.columns(2)
 
     with col_game1:
-        # KARTU 1: ENTER DUNGEON
+        # KARTU 1: ENTER GUILD
         st.markdown(
             """
             <div class='rpg-card-center-fixed'>
-                <div class='rpg-badge-fixed badge-dungeon'>⚔️ Raid Mode</div>
+                <div class='rpg-badge-fixed badge-Guild'>⚔️ Raid Mode</div>
                 <div class='rpg-icon-center-fixed'>🏰</div>
-                <div class='rpg-title-fixed'>ENTER DUNGEON</div>
+                <div class='rpg-title-fixed'>ENTER GUILD</div>
                 <div class='rpg-desc-fixed'>Masuk ke Dashboard Utama untuk memantau performa total, grafik target, dan analisis pencapaian PSM Toko secara menyeluruh.</div>
             </div>
         """,
             unsafe_allow_html=True,
         )
         # Tombol diletakkan sejajar di bawah kotak kartu HTML, tetapi diatur lebarnya penuh agar pas simetris
-        if st.button("Masuk Dashboard Utama ➔", use_container_width=True, key="btn_enter_dungeon_fixed"):
-            st.toast("🔮 Membuka Portal Menuju Dungeon Utama...", icon="🏰")
+        if st.button("Masuk Dashboard Utama ➔", use_container_width=True, key="btn_enter_guild_fixed"):
+            st.toast("🔮 Membuka Portal Menuju Guild Utama...", icon="🏰")
             # Tulis logika pindah halaman/tab Anda di sini
 
     with col_game2:
