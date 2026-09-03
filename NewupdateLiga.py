@@ -1020,7 +1020,7 @@ if selected_tab == "🏠 Menu Utama":
     col_game1, col_game2 = st.columns(2)
 
     # 🏰 KARTU 1: ENTER GUILD (FIXED TELEPORTASI PORTAL BERHASIL)
-     with col_game1:
+    with col_game1:
         st.markdown(
             """
             <div class='rpg-card-center-fixed'>
