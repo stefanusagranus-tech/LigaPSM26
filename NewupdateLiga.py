@@ -729,944 +729,946 @@ st.markdown(
 # ==========================================
 
 
- # =============================================================================
+# =============================================================================
 # --- INPUT & RESET DATA ---
 # =============================================================================
 if selected_tab == "📝 Input Data":
-  st.markdown(
-      "<h2 style='color: #00f0ff; text-shadow: 0 0 10px rgba(0,240,255,0.5);'>✏️"
-      " Kelola & Input Data Penjualan</h2>",
-      unsafe_allow_html=True,
-  )
-
-  # --- Custom CSS: Styling Tab Kapsul Transparan Neon (Floating Fix) ---
-st.markdown(
-    """
-    <style>
-    /* Memaksa elemen pembungkus tab utama agar mengambang sempurna di atas */
-    div.stTabs {
-        position: fixed !important;
-        top: 55px !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        z-index: 999999 !important;
-        width: max-content !important;
-        max-width: 95vw !important;
-        pointer-events: none !important; /* Supaya klik di luar kapsul tetap tembus ke bawah jika perlu */
-    }
-
-    /* Mengaktifkan kembali interaksi klik khusus untuk isi tab list dan tombolnya */
-    div[data-baseweb="tab-list"], div.stTabs > div:first-child {
-        pointer-events: auto !important;
-        display: flex !important;
-        gap: 8px !important;
-        background-color: rgba(15, 23, 42, 0.85) !important;
-        padding: 8px 16px !important;
-        border-radius: 50px !important;
-        border: 1px solid rgba(0, 240, 255, 0.4) !important;
-        box-shadow: 0 4px 25px rgba(0, 240, 255, 0.4) !important;
-        backdrop-filter: blur(12px) !important;
-        overflow-x: auto !important;
-    }
-
-    /* Memberikan jarak kosong di bagian atas halaman utama agar konten tidak tertutup tab yang melayang */
-    section.main div.block-container {
-        padding-top: 100px !important;
-    }
-
-    /* Styling tombol tab */
-    div[data-baseweb="tab-list"] button[data-baseweb="tab"] {
-        background-color: rgba(255, 255, 255, 0.03) !important;
-        border: 1px solid rgba(0, 240, 255, 0.3) !important;
-        border-radius: 30px !important;
-        color: #ffffff !important;
-        padding: 6px 18px !important;
-        transition: all 0.3s ease-in-out !important;
-    }
-
-    div[data-baseweb="tab-list"] button[data-baseweb="tab"]:hover {
-        border-color: #00f0ff !important;
-        color: #00f0ff !important;
-        box-shadow: 0 0 10px rgba(0, 240, 255, 0.5) !important;
-        transform: translateY(-1px);
-    }
-
-    div[data-baseweb="tab-list"] button[aria-selected="true"] {
-        background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(0, 150, 255, 0.4)) !important;
-        border: 1px solid #00f0ff !important;
-        color: #ffffff !important;
-        font-weight: bold !important;
-        box-shadow: 0 0 15px rgba(0, 240, 255, 0.8), inset 0 0 8px rgba(0, 240, 255, 0.4) !important;
-    }
-
-    div[data-baseweb="tab-highlight"] {
-        display: none !important;
-    }
-    </style>
-""",
-    unsafe_allow_html=True,
-)
-  # --- Context & User Role ---
-  current_user = st.session_state.get("username", "visitor")
-  user_lower = str(current_user).lower()
-  is_admin = any(
-      x in user_lower for x in ["admin", "chief", "cos", "lavitality"]
-  )
-  is_visitor = "visitor" in user_lower
-
-  # --- DataFrames Normalization ---
-  periods_df = st.session_state.get("periods_df", pd.DataFrame()).copy()
-  periode_pps_df = st.session_state.get("periode_pps_df", pd.DataFrame()).copy()
-  si_df = st.session_state.get("sales_item_df", pd.DataFrame()).copy()
-  sp_df = st.session_state.get("sales_person_df", pd.DataFrame()).copy()
-  pps_df_report = st.session_state.get("sales_pps_df", pd.DataFrame()).copy()
-  person_df = st.session_state.get("person_df", pd.DataFrame()).copy()
-
-  # ➔ PERBAIKAN: Mendefinisikan periods_dict secara mandiri agar tidak error NameError
-  if (
-      not periods_df.empty
-      and "period_name" in periods_df.columns
-      and "period_id" in periods_df.columns
-  ):
-    periods_dict = {
-        row["period_name"]: row["period_id"] for _, row in periods_df.iterrows()
-    }
-  else:
-    periods_dict = {"Periode Utama": "P01"}
-
-  # --- Render Option Menu Tabs ---
-  tab1, tab2, tab3 = st.tabs([
-      "⚡ Multi Input Sales",
-      "🎯 Input Sales PPS",
-      "📱 Salin Format WA",
-  ])
-
-  # --- Helper Functions & Dialogs ---
-  def get_period_date_bounds(p_id):
-    if not periods_df.empty and "period_id" in periods_df.columns:
-      p_match = periods_df[periods_df["period_id"] == p_id]
-      if (
-          not p_match.empty
-          and "start_date" in p_match.columns
-          and "end_date" in p_match.columns
-      ):
-        try:
-          p_start = pd.to_datetime(p_match.iloc[0]["start_date"]).date()
-          p_end = pd.to_datetime(p_match.iloc[0]["end_date"]).date()
-          if p_start > p_end:
-            p_start, p_end = p_end, p_start
-          return p_start, p_end
-        except Exception:
-          pass
-    today = datetime.now().date()
-    return today.replace(day=1), today
-
-
-  @st.dialog("🎉 Input Data Berhasil!")
-  def show_success_popup(inserted_count, person_name, date_str):
-    st.success(
-        f"**{inserted_count} Item Penjualan** berhasil disimpan secara permanen"
-        " ke database!"
-    )
-    st.markdown(f"""
-        * **Personil:** `{person_name}`
-        * **Tanggal:** `{date_str}`
-        * **Status:** Synchronized to Google Sheets ✅
-        """)
-    if st.button("👍 Mantap, Tutup", use_container_width=True):
-      st.rerun()
-
-
-  # =========================================================================
-  # SUB TAB 1: MULTI INPUT SALES PERSONIL
-  # =========================================================================
-  with tab1:
     st.markdown(
-        "<h4 style='color: #00ff88; margin-top: 15px;'>⚡ Multi Input Sales"
-        " Personil</h4>",
+        "<h2 style='color: #00f0ff; text-shadow: 0 0 10px rgba(0,240,255,0.5);'>✏️"
+        " Kelola & Input Data Penjualan</h2>",
         unsafe_allow_html=True,
     )
 
-    if is_visitor:
-      st.error(
-          "🔒 **Akses Ditolak!** Akun **Visitor** hanya memiliki akses membaca"
-          " data (read-only)."
-      )
-    else:
-      # --- FILTER PERIODE DARI SHEET PERIODE SESUAI TANGGAL BERJALAN & ROLE ---
-      today_date = waktu_wib.date()
-      tab1_periods_dict = {}
-
-      if not periods_df.empty and all(
-          col in periods_df.columns
-          for col in ["period_id", "period_name", "start_date", "end_date"]
-      ):
-        for _, row in periods_df.iterrows():
-          p_id = str(row["period_id"])
-          p_name = str(row["period_name"])
-          try:
-            p_start = pd.to_datetime(
-                row["start_date"], errors="coerce"
-            ).date()
-            p_end = pd.to_datetime(
-                row["end_date"], errors="coerce"
-            ).date()
-
-            if pd.isna(p_start) or pd.isna(p_end):
-              continue
-
-            if p_start > p_end:
-              p_start, p_end = p_end, p_start
-
-            max_allowed_date = p_end + timedelta(days=2)
-
-            if is_admin:
-              tab1_periods_dict[p_name] = p_id
-            else:
-              if p_start <= today_date <= max_allowed_date:
-                tab1_periods_dict[p_name] = p_id
-          except Exception:
-            continue
-
-      if not tab1_periods_dict and is_admin and not periods_df.empty:
-        tab1_periods_dict = {
-            str(row["period_name"]): str(row["period_id"])
-            for _, row in periods_df.iterrows()
+    # --- Custom CSS: Styling Tab Kapsul Transparan Neon (Floating Fix) ---
+    st.markdown(
+        """
+        <style>
+        /* Memaksa elemen pembungkus tab utama agar mengambang sempurna di atas */
+        div.stTabs {
+            position: fixed !important;
+            top: 55px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            z-index: 999999 !important;
+            width: max-content !important;
+            max-width: 95vw !important;
+            pointer-events: none !important; /* Supaya klik di luar kapsul tetap tembus ke bawah jika perlu */
         }
 
-      if not tab1_periods_dict:
-        st.warning(
-            "⚠️ Tidak ada periode aktif yang sesuai dengan tanggal hari ini ("
-            + today_date.strftime("%d %B %Y")
-            + ") untuk melakukan input penjualan."
+        /* Mengaktifkan kembali interaksi klik khusus untuk isi tab list dan tombolnya */
+        div[data-baseweb="tab-list"], div.stTabs > div:first-child {
+            pointer-events: auto !important;
+            display: flex !important;
+            gap: 8px !important;
+            background-color: rgba(15, 23, 42, 0.85) !important;
+            padding: 8px 16px !important;
+            border-radius: 50px !important;
+            border: 1px solid rgba(0, 240, 255, 0.4) !important;
+            box-shadow: 0 4px 25px rgba(0, 240, 255, 0.4) !important;
+            backdrop-filter: blur(12px) !important;
+            overflow-x: auto !important;
+        }
+
+        /* Memberikan jarak kosong di bagian atas halaman utama agar konten tidak tertutup tab yang melayang */
+        section.main div.block-container {
+            padding-top: 100px !important;
+        }
+
+        /* Styling tombol tab */
+        div[data-baseweb="tab-list"] button[data-baseweb="tab"] {
+            background-color: rgba(255, 255, 255, 0.03) !important;
+            border: 1px solid rgba(0, 240, 255, 0.3) !important;
+            border-radius: 30px !important;
+            color: #ffffff !important;
+            padding: 6px 18px !important;
+            transition: all 0.3s ease-in-out !important;
+        }
+
+        div[data-baseweb="tab-list"] button[data-baseweb="tab"]:hover {
+            border-color: #00f0ff !important;
+            color: #00f0ff !important;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.5) !important;
+            transform: translateY(-1px);
+        }
+
+        div[data-baseweb="tab-list"] button[aria-selected="true"] {
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(0, 150, 255, 0.4)) !important;
+            border: 1px solid #00f0ff !important;
+            color: #ffffff !important;
+            font-weight: bold !important;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.8), inset 0 0 8px rgba(0, 240, 255, 0.4) !important;
+        }
+
+        div[data-baseweb="tab-highlight"] {
+            display: none !important;
+        }
+        </style>
+    """,
+        unsafe_allow_html=True,
+    )
+    
+    # --- Context & User Role ---
+    current_user = st.session_state.get("username", "visitor")
+    user_lower = str(current_user).lower()
+    is_admin = any(
+        x in user_lower for x in ["admin", "chief", "cos", "lavitality"]
+    )
+    is_visitor = "visitor" in user_lower
+
+    # --- DataFrames Normalization ---
+    periods_df = st.session_state.get("periods_df", pd.DataFrame()).copy()
+    periode_pps_df = st.session_state.get("periode_pps_df", pd.DataFrame()).copy()
+    si_df = st.session_state.get("sales_item_df", pd.DataFrame()).copy()
+    sp_df = st.session_state.get("sales_person_df", pd.DataFrame()).copy()
+    pps_df_report = st.session_state.get("sales_pps_df", pd.DataFrame()).copy()
+    person_df = st.session_state.get("person_df", pd.DataFrame()).copy()
+
+    # ➔ PERBAIKAN: Mendefinisikan periods_dict secara mandiri agar tidak error NameError
+    if (
+        not periods_df.empty
+        and "period_name" in periods_df.columns
+        and "period_id" in periods_df.columns
+    ):
+        periods_dict = {
+            row["period_name"]: row["period_id"] for _, row in periods_df.iterrows()
+        }
+    else:
+        periods_dict = {"Periode Utama": "P01"}
+
+    # --- Render Option Menu Tabs ---
+    tab1, tab2, tab3 = st.tabs([
+        "⚡ Multi Input Sales",
+        "🎯 Input Sales PPS",
+        "📱 Salin Format WA",
+    ])
+
+    # --- Helper Functions & Dialogs ---
+    def get_period_date_bounds(p_id):
+        if not periods_df.empty and "period_id" in periods_df.columns:
+            p_match = periods_df[periods_df["period_id"] == p_id]
+            if (
+                not p_match.empty
+                and "start_date" in p_match.columns
+                and "end_date" in p_match.columns
+            ):
+                try:
+                    p_start = pd.to_datetime(p_match.iloc[0]["start_date"]).date()
+                    p_end = pd.to_datetime(p_match.iloc[0]["end_date"]).date()
+                    if p_start > p_end:
+                        p_start, p_end = p_end, p_start
+                    return p_start, p_end
+                except Exception:
+                    pass
+        today = datetime.now().date()
+        return today.replace(day=1), today
+
+
+    @st.dialog("🎉 Input Data Berhasil!")
+    def show_success_popup(inserted_count, person_name, date_str):
+        st.success(
+            f"**{inserted_count} Item Penjualan** berhasil disimpan secara permanen"
+            " ke database!"
         )
-      else:
-        m_period_name = st.selectbox(
-            "Pilih Periode Transaksi",
-            list(tab1_periods_dict.keys()),
-            key="multi_period",
-        )
-        m_p_id = tab1_periods_dict[m_period_name]
-        p_start, p_end = get_period_date_bounds(m_p_id)
+        st.markdown(f"""
+            * **Personil:** `{person_name}`
+            * **Tanggal:** `{date_str}`
+            * **Status:** Synchronized to Google Sheets ✅
+            """)
+        if st.button("👍 Mantap, Tutup", use_container_width=True):
+            st.rerun()
 
-        today_val = waktu_wib.date()
-        default_val_m = (
-            p_start
-            if today_val < p_start
-            else (p_end if today_val > p_end else today_val)
-        )
 
-        m_date = st.date_input(
-            f"Tanggal Transaksi (Batas Periode: {p_start.strftime('%d/%m/%Y')} s/d"
-            f" {p_end.strftime('%d/%m/%Y')})",
-            value=default_val_m,
-            min_value=p_start,
-            max_value=p_end,
-            key="multi_date",
+    # =========================================================================
+    # SUB TAB 1: MULTI INPUT SALES PERSONIL
+    # =========================================================================
+    with tab1:
+        st.markdown(
+            "<h4 style='color: #00ff88; margin-top: 15px;'>⚡ Multi Input Sales"
+            " Personil</h4>",
+            unsafe_allow_html=True,
         )
 
-        all_personnel = (
-            person_df["person_name"].dropna().unique().tolist()
-            if not person_df.empty and "person_name" in person_df.columns
-            else [current_user]
-        )
-
-        if is_admin:
-          m_person = st.selectbox(
-              "Pilih Nama Personil / Staf", all_personnel, key="multi_person"
-          )
-        else:
-          m_person = current_user
-          st.info(
-              f"👤 Penginputan dikunci untuk akun pengguna aktif:"
-              f" **{current_user}**"
-          )
-
-        # --- AMBIL ITEM DARI SHEET MASTER_ITEM (MENGGUNAKAN VARIABLE items_df) ---
-        current_items_df = (
-            items_df
-            if "items_df" in locals() and not items_df.empty
-            else st.session_state.get("items_df", pd.DataFrame())
-        )
-
-        if (
-            not current_items_df.empty
-            and "period_id" in current_items_df.columns
-        ):
-          cleaned_df_period = (
-              current_items_df["period_id"]
-              .astype(str)
-              .str.replace(r"\.0$", "", regex=True)
-              .str.strip()
-          )
-          cleaned_target_id = re.sub(r"\.0$", "", str(m_p_id)).strip()
-          filtered_items_df = current_items_df[
-              cleaned_df_period == cleaned_target_id
-          ]
-        else:
-          filtered_items_df = pd.DataFrame()
-
-        items_list = (
-            filtered_items_df[["item_id", "item_name"]]
-            .drop_duplicates()
-            .to_dict("records")
-            if not filtered_items_df.empty
-            and all(
-                col in filtered_items_df.columns
-                for col in ["item_id", "item_name"]
+        if is_visitor:
+            st.error(
+                "🔒 **Akses Ditolak!** Akun **Visitor** hanya memiliki akses membaca"
+                " data (read-only)."
             )
-            else []
-        )
-
-        if not items_list:
-          st.warning(
-              f"⚠️ Tidak ada daftar item produk dari **MASTER_ITEM** yang"
-              f" terdaftar pada periode **{m_period_name}** (ID: {m_p_id})."
-          )
         else:
-          st.markdown("---")
-          with st.form(key=f"form_multi_input_{m_p_id}"):
-            st.markdown(
-                "##### 📦 Masukkan Jumlah Qty Penjualan Masing-Masing Produk:"
-            )
-            multi_input_values = {}
-            col_m1, col_m2 = st.columns(2)
+            # --- FILTER PERIODE DARI SHEET PERIODE SESUAI TANGGAL BERJALAN & ROLE ---
+            today_date = waktu_wib.date()
+            tab1_periods_dict = {}
 
-            for idx, item in enumerate(items_list):
-              target_col = col_m1 if (idx % 2 == 0) else col_m2
-              item_id_str, item_name_str = str(item["item_id"]), str(
-                  item["item_name"]
-              )
-              with target_col:
-                qty_val = st.number_input(
-                    f"📌 {item_name_str}",
+            if not periods_df.empty and all(
+                col in periods_df.columns
+                for col in ["period_id", "period_name", "start_date", "end_date"]
+            ):
+                for _, row in periods_df.iterrows():
+                    p_id = str(row["period_id"])
+                    p_name = str(row["period_name"])
+                    try:
+                        p_start = pd.to_datetime(
+                            row["start_date"], errors="coerce"
+                        ).date()
+                        p_end = pd.to_datetime(
+                            row["end_date"], errors="coerce"
+                        ).date()
+
+                        if pd.isna(p_start) or pd.isna(p_end):
+                            continue
+
+                        if p_start > p_end:
+                            p_start, p_end = p_end, p_start
+
+                        max_allowed_date = p_end + timedelta(days=2)
+
+                        if is_admin:
+                            tab1_periods_dict[p_name] = p_id
+                        else:
+                            if p_start <= today_date <= max_allowed_date:
+                                tab1_periods_dict[p_name] = p_id
+                    except Exception:
+                        continue
+
+            if not tab1_periods_dict and is_admin and not periods_df.empty:
+                tab1_periods_dict = {
+                    str(row["period_name"]): str(row["period_id"])
+                    for _, row in periods_df.iterrows()
+                }
+
+            if not tab1_periods_dict:
+                st.warning(
+                    "⚠️ Tidak ada periode aktif yang sesuai dengan tanggal hari ini ("
+                    + today_date.strftime("%d %B %Y")
+                    + ") untuk melakukan input penjualan."
+                )
+            else:
+                m_period_name = st.selectbox(
+                    "Pilih Periode Transaksi",
+                    list(tab1_periods_dict.keys()),
+                    key="multi_period",
+                )
+                m_p_id = tab1_periods_dict[m_period_name]
+                p_start, p_end = get_period_date_bounds(m_p_id)
+
+                today_val = waktu_wib.date()
+                default_val_m = (
+                    p_start
+                    if today_val < p_start
+                    else (p_end if today_val > p_end else today_val)
+                )
+
+                m_date = st.date_input(
+                    f"Tanggal Transaksi (Batas Periode: {p_start.strftime('%d/%m/%Y')} s/d"
+                    f" {p_end.strftime('%d/%m/%Y')})",
+                    value=default_val_m,
+                    min_value=p_start,
+                    max_value=p_end,
+                    key="multi_date",
+                )
+
+                all_personnel = (
+                    person_df["person_name"].dropna().unique().tolist()
+                    if not person_df.empty and "person_name" in person_df.columns
+                    else [current_user]
+                )
+
+                if is_admin:
+                    m_person = st.selectbox(
+                        "Pilih Nama Personil / Staf", all_personnel, key="multi_person"
+                    )
+                else:
+                    m_person = current_user
+                    st.info(
+                        f"👤 Penginputan dikunci untuk akun pengguna aktif:"
+                        f" **{current_user}**"
+                    )
+
+                # --- AMBIL ITEM DARI SHEET MASTER_ITEM (MENGGUNAKAN VARIABLE items_df) ---
+                current_items_df = (
+                    items_df
+                    if "items_df" in locals() and not items_df.empty
+                    else st.session_state.get("items_df", pd.DataFrame())
+                )
+
+                if (
+                    not current_items_df.empty
+                    and "period_id" in current_items_df.columns
+                ):
+                    cleaned_df_period = (
+                        current_items_df["period_id"]
+                        .astype(str)
+                        .str.replace(r"\.0$", "", regex=True)
+                        .str.strip()
+                    )
+                    cleaned_target_id = re.sub(r"\.0$", "", str(m_p_id)).strip()
+                    filtered_items_df = current_items_df[
+                        cleaned_df_period == cleaned_target_id
+                    ]
+                else:
+                    filtered_items_df = pd.DataFrame()
+
+                items_list = (
+                    filtered_items_df[["item_id", "item_name"]]
+                    .drop_duplicates()
+                    .to_dict("records")
+                    if not filtered_items_df.empty
+                    and all(
+                        col in filtered_items_df.columns
+                        for col in ["item_id", "item_name"]
+                    )
+                    else []
+                )
+
+                if not items_list:
+                    st.warning(
+                        f"⚠️ Tidak ada daftar item produk dari **MASTER_ITEM** yang"
+                        f" terdaftar pada periode **{m_period_name}** (ID: {m_p_id})."
+                    )
+                else:
+                    st.markdown("---")
+                    with st.form(key=f"form_multi_input_{m_p_id}"):
+                        st.markdown(
+                            "##### 📦 Masukkan Jumlah Qty Penjualan Masing-Masing Produk:"
+                        )
+                        multi_input_values = {}
+                        col_m1, col_m2 = st.columns(2)
+
+                        for idx, item in enumerate(items_list):
+                            target_col = col_m1 if (idx % 2 == 0) else col_m2
+                            item_id_str, item_name_str = str(item["item_id"]), str(
+                                item["item_name"]
+                            )
+                            with target_col:
+                                qty_val = st.number_input(
+                                    f"📌 {item_name_str}",
+                                    min_value=0,
+                                    step=1,
+                                    value=0,
+                                    key=f"multi_qty_{m_p_id}_{item_id_str}",
+                                )
+                                multi_input_values[item_id_str] = {
+                                    "item_name": item_name_str,
+                                    "qty": qty_val,
+                                }
+
+                        st.markdown("---")
+                        btn_save = st.form_submit_button(
+                            "💾 Simpan Semua Data Penjualan Multi-Input",
+                            use_container_width=True,
+                        )
+
+                    if btn_save:
+                        p_match = (
+                            person_df[person_df["person_name"] == m_person]
+                            if not person_df.empty
+                            else pd.DataFrame()
+                        )
+                        person_id_val = (
+                            str(p_match.iloc[0]["person_id"])
+                            if not p_match.empty and "person_id" in p_match.columns
+                            else "P999"
+                        )
+
+                        existing_df = st.session_state.get(
+                            "sales_person_df", pd.DataFrame()
+                        )
+                        current_max_id = 0
+                        if not existing_df.empty and "record_id" in existing_df.columns:
+                            numeric_ids = (
+                                existing_df["record_id"]
+                                .astype(str)
+                                .str.extract(r"(\d+)")[0]
+                                .dropna()
+                            )
+                            if not numeric_ids.empty:
+                                current_max_id = numeric_ids.astype(int).max()
+
+                        new_rows, inserted_count = [], 0
+                        for item_id, item_data in multi_input_values.items():
+                            if item_data["qty"] > 0:
+                                current_max_id += 1
+                                new_rows.append({
+                                    "record_id": f"SP{current_max_id:05d}",
+                                    "period_id": str(m_p_id),
+                                    "item_id": str(item_id),
+                                    "item_name": str(item_data["item_name"]),
+                                    "person_id": str(person_id_val),
+                                    "person_name": str(m_person),
+                                    "actual_qty": int(item_data["qty"]),
+                                    "updated_at": str(m_date),
+                                })
+                                inserted_count += 1
+
+                        if inserted_count > 0:
+                            try:
+                                with st.spinner("⏳ Menyimpan data ke Spreadsheet..."):
+                                    new_df = pd.DataFrame(new_rows)
+                                    st.session_state.sales_person_df = pd.concat(
+                                        [st.session_state.sales_person_df, new_df],
+                                        ignore_index=True,
+                                    )
+                                    sync_store_sales_from_personnel()
+                                    save_database(
+                                        st.session_state.sales_item_df,
+                                        st.session_state.sales_person_df,
+                                        st.session_state.sales_pps_df,
+                                        st.session_state.sales_store_df,
+                                    )
+                                show_success_popup(
+                                    inserted_count, m_person, m_date.strftime("%d/%m/%Y")
+                                )
+                            except Exception as e:
+                                st.error(f"❌ Terjadi kesalahan penyimpanan: {str(e)}")
+                        else:
+                            st.warning("⚠️ Tidak ada Qty produk yang diisi (semua bernilai 0).")
+
+    # =========================================================================
+    # SUB TAB 2: INPUT SALES PPS
+    # =========================================================================
+    with tab2:
+        st.markdown(
+            "<h4 style='color: #00ff88; margin-top: 15px;'>🎯 Form Input Penjualan &"
+            " Kinerja PPS</h4>",
+            unsafe_allow_html=True,
+        )
+        if is_visitor:
+            st.error(
+                "🔒 **Akses Ditolak!** Akun **Visitor** hanya memiliki akses membaca"
+                " data (read-only)."
+            )
+        else:
+
+            @st.dialog("🎉 Data PPS Berhasil Disimpan!")
+            def show_success_pps_dialog(
+                staff_val,
+                kasir_val,
+                date_str,
+                matched_pps_id,
+                syarat_pwp_val,
+                redeem_pwp_val,
+            ):
+                st.success(
+                    "✅ **Data Sales PPS** berhasil disimpan secara permanen ke"
+                    " database (SALES_PPS)!"
+                )
+                st.markdown(f"""
+                    * **ID Periode PPS:** `{matched_pps_id}`
+                    * **Staf / Personil:** `{staff_val}`
+                    * **Kasir:** `{kasir_val}`
+                    * **Tanggal:** `{date_str}`
+                    * **Syarat PWP:** `{syarat_pwp_val}` | **Redeem PWP:** `{redeem_pwp_val}`
+                    * **Status:** Synchronized to SALES_PPS ✅
+                    """)
+                if st.button(
+                    "👍 Oke, Lanjutkan / Tutup",
+                    use_container_width=True,
+                    key="btn_close_pps_dialog",
+                ):
+                    st.rerun()
+
+            all_personnel = (
+                person_df["person_name"].dropna().unique().tolist()
+                if not person_df.empty and "person_name" in person_df.columns
+                else [current_user]
+            )
+
+            default_staff_idx = (
+                all_personnel.index(current_user)
+                if current_user in all_personnel
+                else 0
+            )
+
+            with st.form(key="form_input_pps_dynamic"):
+                st.markdown(
+                    "##### 📋 Masukkan Detail Transaksi & Kinerja Program PPS:"
+                )
+                col_p1, col_p2 = st.columns(2)
+
+                with col_p1:
+                    shift_personil = st.selectbox(
+                        "Shift Personil",
+                        ["Shift 1", "Shift 2", "Shift 3", "Full Shift"],
+                        key="pps_shift_dyn",
+                    )
+                    staff_name = st.selectbox(
+                        "Nama Staf",
+                        all_personnel,
+                        index=default_staff_idx,
+                        key="pps_staff_dyn",
+                    )
+
+                with col_p2:
+                    kasir_name = st.selectbox(
+                        "Nama Kasir", all_personnel, key="pps_kasir_dyn"
+                    )
+                    tanggal_pps = st.date_input(
+                        "Tanggal Input PPS", value=waktu_wib.date(), key="pps_date_dyn"
+                    )
+
+                active_pps_id = "PPS_DEFAULT"
+                if not periode_pps_df.empty and all(
+                    col in periode_pps_df.columns
+                    for col in ["period_id", "start_date", "end_date"]
+                ):
+                    matched_row = periode_pps_df[
+                        (
+                            pd.to_datetime(periode_pps_df["start_date"]).dt.date
+                            <= tanggal_pps
+                        )
+                        & (
+                            pd.to_datetime(periode_pps_df["end_date"]).dt.date
+                            >= tanggal_pps
+                        )
+                    ]
+                    if not matched_row.empty:
+                        active_pps_id = str(matched_row.iloc[0]["period_id"])
+                        st.info(
+                            f"📅 Tanggal `{tanggal_pps.strftime('%d/%m/%Y')}` mendeteksi ID"
+                            f" Periode PPS: **{active_pps_id}**"
+                        )
+                    else:
+                        st.warning(
+                            f"⚠️ Tanggal tidak ada di `PERIODE_PPS`. Default:"
+                            f" `{active_pps_id}`"
+                        )
+
+                st.markdown("---")
+                st.markdown("##### 🛒 Detail Kolom Kinerja PPS:")
+
+                col_q1, col_q2, col_q3 = st.columns(3)
+                with col_q1:
+                    syarat_pwp = st.number_input(
+                        "Syarat PWP", min_value=0, step=1, value=0, key="pps_syarat_pwp_dyn"
+                    )
+                    redeem_pwp = st.number_input(
+                        "Redeem PWP", min_value=0, step=1, value=0, key="pps_redeem_pwp_dyn"
+                    )
+                with col_q2:
+                    qty_pwp = st.number_input(
+                        "Qty PWP", min_value=0, step=1, value=0, key="pps_qty_pwp_dyn"
+                    )
+                    qty_sg = st.number_input(
+                        "Qty SG (Serba Gratis)",
+                        min_value=0,
+                        step=1,
+                        value=0,
+                        key="pps_qty_sg_dyn",
+                    )
+                with col_q3:
+                    syarat_sueger = st.number_input(
+                        "Syarat Sueger",
+                        min_value=0,
+                        step=1,
+                        value=0,
+                        key="pps_syarat_sueger_dyn",
+                    )
+                    redeem_sueger = st.number_input(
+                        "Redeem Sueger",
+                        min_value=0,
+                        step=1,
+                        value=0,
+                        key="pps_redeem_sueger_dyn",
+                    )
+
+                cemilan_ceban = st.number_input(
+                    "Cemilan Ceban",
                     min_value=0,
                     step=1,
                     value=0,
-                    key=f"multi_qty_{m_p_id}_{item_id_str}",
+                    key="pps_cemilan_ceban_dyn",
                 )
-                multi_input_values[item_id_str] = {
-                    "item_name": item_name_str,
-                    "qty": qty_val,
+
+                st.markdown("---")
+                btn_save_pps = st.form_submit_button(
+                    "💾 Simpan Data ke SALES_PPS", use_container_width=True
+                )
+
+            if btn_save_pps:
+                existing_pps_df = st.session_state.get("sales_pps_df", pd.DataFrame())
+                current_max_pps_id = 0
+                if not existing_pps_df.empty and "record_id" in existing_pps_df.columns:
+                    numeric_ids = (
+                        existing_pps_df["record_id"]
+                        .astype(str)
+                        .str.extract(r"(\d+)")[0]
+                        .dropna()
+                    )
+                    if not numeric_ids.empty:
+                        current_max_pps_id = numeric_ids.astype(int).max()
+
+                current_max_pps_id += 1
+
+                new_pps_record = {
+                    "record_id": f"PPS{current_max_pps_id:05d}",
+                    "period_id": str(active_pps_id),
+                    "shift_personil": str(shift_personil),
+                    "staff_name": str(staff_name),
+                    "kasir_name": str(kasir_name),
+                    "syarat_pwp": int(syarat_pwp),
+                    "redeem_pwp": int(redeem_pwp),
+                    "qty_pwp": int(qty_pwp),
+                    "qty_sg": int(qty_sg),
+                    "syarat_sueger": int(syarat_sueger),
+                    "redeem_sueger": int(redeem_sueger),
+                    "cemilan_ceban": int(cemilan_ceban),
+                    "updated_at": str(tanggal_pps),
                 }
 
-            st.markdown("---")
-            btn_save = st.form_submit_button(
-                "💾 Simpan Semua Data Penjualan Multi-Input",
-                use_container_width=True,
-            )
+                try:
+                    with st.spinner("⏳ Menyimpan data ke sheet SALES_PPS..."):
+                        new_pps_df = pd.DataFrame([new_pps_record])
+                        if "sales_pps_df" not in st.session_state:
+                            st.session_state.sales_pps_df = pd.DataFrame()
 
-          if btn_save:
-            p_match = (
-                person_df[person_df["person_name"] == m_person]
-                if not person_df.empty
-                else pd.DataFrame()
-            )
-            person_id_val = (
-                str(p_match.iloc[0]["person_id"])
-                if not p_match.empty and "person_id" in p_match.columns
-                else "P999"
-            )
+                        st.session_state.sales_pps_df = pd.concat(
+                            [st.session_state.sales_pps_df, new_pps_df], ignore_index=True
+                        )
 
-            existing_df = st.session_state.get(
-                "sales_person_df", pd.DataFrame()
-            )
-            current_max_id = 0
-            if not existing_df.empty and "record_id" in existing_df.columns:
-              numeric_ids = (
-                  existing_df["record_id"]
-                  .astype(str)
-                  .str.extract(r"(\d+)")[0]
-                  .dropna()
-              )
-              if not numeric_ids.empty:
-                current_max_id = numeric_ids.astype(int).max()
+                        save_master_table("SALES_PPS", st.session_state.sales_pps_df)
+                        save_database(
+                            st.session_state.sales_item_df,
+                            st.session_state.sales_person_df,
+                            st.session_state.sales_pps_df,
+                            st.session_state.sales_store_df,
+                        )
 
-            new_rows, inserted_count = [], 0
-            for item_id, item_data in multi_input_values.items():
-              if item_data["qty"] > 0:
-                current_max_id += 1
-                new_rows.append({
-                    "record_id": f"SP{current_max_id:05d}",
-                    "period_id": str(m_p_id),
-                    "item_id": str(item_id),
-                    "item_name": str(item_data["item_name"]),
-                    "person_id": str(person_id_val),
-                    "person_name": str(m_person),
-                    "actual_qty": int(item_data["qty"]),
-                    "updated_at": str(m_date),
-                })
-                inserted_count += 1
+                    show_success_pps_dialog(
+                        staff_name,
+                        kasir_name,
+                        tanggal_pps.strftime("%d/%m/%Y"),
+                        active_pps_id,
+                        syarat_pwp,
+                        redeem_pwp,
+                    )
+                except Exception as e:
+                    st.error(f"❌ Gagal menyimpan data SALES_PPS: {str(e)}")
 
-            if inserted_count > 0:
-              try:
-                with st.spinner("⏳ Menyimpan data ke Spreadsheet..."):
-                  new_df = pd.DataFrame(new_rows)
-                  st.session_state.sales_person_df = pd.concat(
-                      [st.session_state.sales_person_df, new_df],
-                      ignore_index=True,
-                  )
-                  sync_store_sales_from_personnel()
-                  save_database(
-                      st.session_state.sales_item_df,
-                      st.session_state.sales_person_df,
-                      st.session_state.sales_pps_df,
-                      st.session_state.sales_store_df,
-                  )
-                show_success_popup(
-                    inserted_count, m_person, m_date.strftime("%d/%m/%Y")
-                )
-              except Exception as e:
-                st.error(f"❌ Terjadi kesalahan penyimpanan: {str(e)}")
-            else:
-              st.warning("⚠️ Tidak ada Qty produk yang diisi (semua bernilai 0).")
-
-  # =========================================================================
-  # SUB TAB 2: INPUT SALES PPS
-  # =========================================================================
-  with tab2:
-    st.markdown(
-        "<h4 style='color: #00ff88; margin-top: 15px;'>🎯 Form Input Penjualan &"
-        " Kinerja PPS</h4>",
-        unsafe_allow_html=True,
-    )
-    if is_visitor:
-      st.error(
-          "🔒 **Akses Ditolak!** Akun **Visitor** hanya memiliki akses membaca"
-          " data (read-only)."
-      )
-    else:
-
-      @st.dialog("🎉 Data PPS Berhasil Disimpan!")
-      def show_success_pps_dialog(
-          staff_val,
-          kasir_val,
-          date_str,
-          matched_pps_id,
-          syarat_pwp_val,
-          redeem_pwp_val,
-      ):
-        st.success(
-            "✅ **Data Sales PPS** berhasil disimpan secara permanen ke"
-            " database (SALES_PPS)!"
-        )
-        st.markdown(f"""
-            * **ID Periode PPS:** `{matched_pps_id}`
-            * **Staf / Personil:** `{staff_val}`
-            * **Kasir:** `{kasir_val}`
-            * **Tanggal:** `{date_str}`
-            * **Syarat PWP:** `{syarat_pwp_val}` | **Redeem PWP:** `{redeem_pwp_val}`
-            * **Status:** Synchronized to SALES_PPS ✅
-            """)
-        if st.button(
-            "👍 Oke, Lanjutkan / Tutup",
-            use_container_width=True,
-            key="btn_close_pps_dialog",
-        ):
-          st.rerun()
-
-      all_personnel = (
-          person_df["person_name"].dropna().unique().tolist()
-          if not person_df.empty and "person_name" in person_df.columns
-          else [current_user]
-      )
-
-      default_staff_idx = (
-          all_personnel.index(current_user)
-          if current_user in all_personnel
-          else 0
-      )
-
-      with st.form(key="form_input_pps_dynamic"):
+    # =========================================================================
+    # SUB TAB 3: SALIN FORMAT WHATSAPP
+    # =========================================================================
+    with tab3:
         st.markdown(
-            "##### 📋 Masukkan Detail Transaksi & Kinerja Program PPS:"
+            "<h4 style='color: #00ff88; margin-top: 15px;'>📱 Generator Format"
+            " Laporan WhatsApp</h4>",
+            unsafe_allow_html=True,
         )
-        col_p1, col_p2 = st.columns(2)
 
-        with col_p1:
-          shift_personil = st.selectbox(
-              "Shift Personil",
-              ["Shift 1", "Shift 2", "Shift 3", "Full Shift"],
-              key="pps_shift_dyn",
-          )
-          staff_name = st.selectbox(
-              "Nama Staf",
-              all_personnel,
-              index=default_staff_idx,
-              key="pps_staff_dyn",
-          )
-
-        with col_p2:
-          kasir_name = st.selectbox(
-              "Nama Kasir", all_personnel, key="pps_kasir_dyn"
-          )
-          tanggal_pps = st.date_input(
-              "Tanggal Input PPS", value=waktu_wib.date(), key="pps_date_dyn"
-          )
-
-        active_pps_id = "PPS_DEFAULT"
-        if not periode_pps_df.empty and all(
-            col in periode_pps_df.columns
-            for col in ["period_id", "start_date", "end_date"]
-        ):
-          matched_row = periode_pps_df[
-              (
-                  pd.to_datetime(periode_pps_df["start_date"]).dt.date
-                  <= tanggal_pps
-              )
-              & (
-                  pd.to_datetime(periode_pps_df["end_date"]).dt.date
-                  >= tanggal_pps
-              )
-          ]
-          if not matched_row.empty:
-            active_pps_id = str(matched_row.iloc[0]["period_id"])
-            st.info(
-                f"📅 Tanggal `{tanggal_pps.strftime('%d/%m/%Y')}` mendeteksi ID"
-                f" Periode PPS: **{active_pps_id}**"
+        col_f1, col_f2 = st.columns(2)
+        with col_f1:
+            wa_format_type = st.radio(
+                "Pilih Format Laporan:",
+                ["📋 Format Laporan PPS", "🥤 Format Laporan Sueger"],
+                key="wa_format_selector",
             )
-          else:
-            st.warning(
-                f"⚠️ Tanggal tidak ada di `PERIODE_PPS`. Default:"
-                f" `{active_pps_id}`"
+        with col_f2:
+            selected_wa_date = st.date_input(
+                "Pilih Tanggal Laporan",
+                value=waktu_wib.date(),
+                key="wa_report_date",
             )
 
-        st.markdown("---")
-        st.markdown("##### 🛒 Detail Kolom Kinerja PPS:")
+        date_str_formatted = selected_wa_date.strftime("%d-%m-%Y")
 
-        col_q1, col_q2, col_q3 = st.columns(3)
-        with col_q1:
-          syarat_pwp = st.number_input(
-              "Syarat PWP", min_value=0, step=1, value=0, key="pps_syarat_pwp_dyn"
-          )
-          redeem_pwp = st.number_input(
-              "Redeem PWP", min_value=0, step=1, value=0, key="pps_redeem_pwp_dyn"
-          )
-        with col_q2:
-          qty_pwp = st.number_input(
-              "Qty PWP", min_value=0, step=1, value=0, key="pps_qty_pwp_dyn"
-          )
-          qty_sg = st.number_input(
-              "Qty SG (Serba Gratis)",
-              min_value=0,
-              step=1,
-              value=0,
-              key="pps_qty_sg_dyn",
-          )
-        with col_q3:
-          syarat_sueger = st.number_input(
-              "Syarat Sueger",
-              min_value=0,
-              step=1,
-              value=0,
-              key="pps_syarat_sueger_dyn",
-          )
-          redeem_sueger = st.number_input(
-              "Redeem Sueger",
-              min_value=0,
-              step=1,
-              value=0,
-              key="pps_redeem_sueger_dyn",
-          )
+        if "sueger_generated" not in st.session_state:
+            st.session_state["sueger_generated"] = False
 
-        cemilan_ceban = st.number_input(
-            "Cemilan Ceban",
-            min_value=0,
-            step=1,
-            value=0,
-            key="pps_cemilan_ceban_dyn",
-        )
+        def reset_sueger_state():
+            st.session_state["sueger_generated"] = False
 
-        st.markdown("---")
-        btn_save_pps = st.form_submit_button(
-            "💾 Simpan Data ke SALES_PPS", use_container_width=True
-        )
-
-      if btn_save_pps:
-        existing_pps_df = st.session_state.get("sales_pps_df", pd.DataFrame())
-        current_max_pps_id = 0
-        if not existing_pps_df.empty and "record_id" in existing_pps_df.columns:
-          numeric_ids = (
-              existing_pps_df["record_id"]
-              .astype(str)
-              .str.extract(r"(\d+)")[0]
-              .dropna()
-          )
-          if not numeric_ids.empty:
-            current_max_pps_id = numeric_ids.astype(int).max()
-
-        current_max_pps_id += 1
-
-        new_pps_record = {
-            "record_id": f"PPS{current_max_pps_id:05d}",
-            "period_id": str(active_pps_id),
-            "shift_personil": str(shift_personil),
-            "staff_name": str(staff_name),
-            "kasir_name": str(kasir_name),
-            "syarat_pwp": int(syarat_pwp),
-            "redeem_pwp": int(redeem_pwp),
-            "qty_pwp": int(qty_pwp),
-            "qty_sg": int(qty_sg),
-            "syarat_sueger": int(syarat_sueger),
-            "redeem_sueger": int(redeem_sueger),
-            "cemilan_ceban": int(cemilan_ceban),
-            "updated_at": str(tanggal_pps),
-        }
-
-        try:
-          with st.spinner("⏳ Menyimpan data ke sheet SALES_PPS..."):
-            new_pps_df = pd.DataFrame([new_pps_record])
-            if "sales_pps_df" not in st.session_state:
-              st.session_state.sales_pps_df = pd.DataFrame()
-
-            st.session_state.sales_pps_df = pd.concat(
-                [st.session_state.sales_pps_df, new_pps_df], ignore_index=True
+        available_kasir = (
+            pps_df_report["kasir_name"].dropna().unique().tolist()
+            if not pps_df_report.empty and "kasir_name" in pps_df_report.columns
+            else (
+                person_df["person_name"].dropna().unique().tolist()
+                if not person_df.empty
+                else ["TIKA"]
             )
+        )
 
-            save_master_table("SALES_PPS", st.session_state.sales_pps_df)
-            save_database(
-                st.session_state.sales_item_df,
-                st.session_state.sales_person_df,
-                st.session_state.sales_pps_df,
-                st.session_state.sales_store_df,
+        if wa_format_type == "🥤 Format Laporan Sueger":
+            selected_kasir = st.selectbox(
+                "👤 Filter Berdasarkan Nama Kasir:",
+                available_kasir,
+                key="wa_filter_kasir_sueger",
+                on_change=reset_sueger_state,
             )
-
-          show_success_pps_dialog(
-              staff_name,
-              kasir_name,
-              tanggal_pps.strftime("%d/%m/%Y"),
-              active_pps_id,
-              syarat_pwp,
-              redeem_pwp,
-          )
-        except Exception as e:
-          st.error(f"❌ Gagal menyimpan data SALES_PPS: {str(e)}")
-
-  # =========================================================================
-  # SUB TAB 3: SALIN FORMAT WHATSAPP
-  # =========================================================================
-  with tab3:
-    st.markdown(
-        "<h4 style='color: #00ff88; margin-top: 15px;'>📱 Generator Format"
-        " Laporan WhatsApp</h4>",
-        unsafe_allow_html=True,
-    )
-
-    col_f1, col_f2 = st.columns(2)
-    with col_f1:
-      wa_format_type = st.radio(
-          "Pilih Format Laporan:",
-          ["📋 Format Laporan PPS", "🥤 Format Laporan Sueger"],
-          key="wa_format_selector",
-      )
-    with col_f2:
-      selected_wa_date = st.date_input(
-          "Pilih Tanggal Laporan",
-          value=waktu_wib.date(),
-          key="wa_report_date",
-      )
-
-    date_str_formatted = selected_wa_date.strftime("%d-%m-%Y")
-
-    if "sueger_generated" not in st.session_state:
-      st.session_state["sueger_generated"] = False
-
-    def reset_sueger_state():
-      st.session_state["sueger_generated"] = False
-
-    available_kasir = (
-        pps_df_report["kasir_name"].dropna().unique().tolist()
-        if not pps_df_report.empty and "kasir_name" in pps_df_report.columns
-        else (
-            person_df["person_name"].dropna().unique().tolist()
-            if not person_df.empty
-            else ["TIKA"]
-        )
-    )
-
-    if wa_format_type == "🥤 Format Laporan Sueger":
-      selected_kasir = st.selectbox(
-          "👤 Filter Berdasarkan Nama Kasir:",
-          available_kasir,
-          key="wa_filter_kasir_sueger",
-          on_change=reset_sueger_state,
-      )
-    else:
-      selected_kasir = None
-
-    pps_filtered_harian = (
-        pps_df_report[
-            pd.to_datetime(
-                pps_df_report["updated_at"], errors="coerce"
-            ).dt.date
-            == selected_wa_date
-        ]
-        if not pps_df_report.empty and "updated_at" in pps_df_report.columns
-        else pd.DataFrame()
-    )
-
-    if wa_format_type == "📋 Format Laporan PPS":
-      st.markdown(
-          "<h5 style='color: #38bdf8;'>✨ Preview Format Laporan PPS (Harian"
-          " per Shift)</h5>",
-          unsafe_allow_html=True,
-      )
-
-      periode_bulan = selected_wa_date.strftime("%B %Y")
-      sp_report_df = st.session_state.get(
-          "sales_person_df", pd.DataFrame()
-      ).copy()
-
-      if not sp_report_df.empty and "updated_at" in sp_report_df.columns:
-        sp_report_df["clean_date"] = pd.to_datetime(
-            sp_report_df["updated_at"], errors="coerce"
-        ).dt.date
-        psm_filtered = sp_report_df[
-            sp_report_df["clean_date"] == selected_wa_date
-        ]
-      else:
-        psm_filtered = pd.DataFrame()
-
-      if not psm_filtered.empty and "item_name" in psm_filtered.columns:
-        psm_filtered["actual_qty"] = pd.to_numeric(
-            psm_filtered["actual_qty"], errors="coerce"
-        ).fillna(0)
-        psm_grouped = (
-            psm_filtered.groupby("item_name")["actual_qty"].sum().reset_index()
-        )
-        psm_grouped = psm_grouped[psm_grouped["actual_qty"] > 0]
-
-        if not psm_grouped.empty:
-          total_qty_psm = int(psm_grouped["actual_qty"].sum())
-          list_psm_text = "".join([
-              f"\t• {r['item_name']} = {int(r['actual_qty'])}\n"
-              for _, r in psm_grouped.iterrows()
-          ])
         else:
-          list_psm_text = "\t• (Tidak ada penjualan PSM pada tanggal ini)\n"
-          total_qty_psm = 0
-      else:
-        list_psm_text = "\t• (Tidak ada penjualan PSM pada tanggal ini)\n"
-        total_qty_psm = 0
+            selected_kasir = None
 
-      wa_pps_text = (
-          "🌟 *REKAP LAPORAN HARIAN PPS* 🌟\n"
-          f"📅 Tanggal: {date_str_formatted}\n"
-          f"📦 *Periode*: {periode_bulan}\n\n"
-          "📦 *Report PSM*\n"
-          "   📌 *List item terjual dan qty jual*\n"
-          f"{list_psm_text}"
-          "   =============================================\n"
-          f"\tTOTAL PENJUALAN : {total_qty_psm}\n\n"
-          "🎯 *Detail Kinerja Program (PWP, SG, Ceban)*:\n"
-      )
-
-      if not pps_filtered_harian.empty:
-        for shift_name, group_df in pps_filtered_harian.groupby(
-            "shift_personil"
-        ):
-          kasir_str = " & ".join(
-              group_df["kasir_name"].dropna().unique().tolist()
-          )
-          staff_str = ", ".join(
-              group_df["staff_name"].dropna().unique().tolist()
-          )
-
-          tot_syarat_pwp = int(group_df["syarat_pwp"].sum())
-          tot_redeem_pwp = int(group_df["redeem_pwp"].sum())
-          tot_qty_pwp = int(group_df["qty_pwp"].sum())
-          tot_qty_sg = int(group_df["qty_sg"].sum())
-
-          tot_syarat_sueger = int(group_df["syarat_sueger"].sum())
-          tot_redeem_sueger = int(group_df["redeem_sueger"].sum())
-          tot_qty_sueger = int(
-              group_df.get("qty_sueger", group_df["redeem_sueger"]).sum()
-          )
-
-          sueger_ach_shift = (
-              f"{round((tot_redeem_sueger / tot_syarat_sueger) * 100, 1)}%"
-              if tot_syarat_sueger > 0
-              else ""
-          )
-          tot_ceban = int(group_df["cemilan_ceban"].sum())
-
-          wa_pps_text += (
-              f"   📌 *{shift_name}* (Staf: {staff_str} | Kasir: {kasir_str})\n"
-              f"      • PWP ➔ Syarat: {tot_syarat_pwp} | Redeem:"
-              f" {tot_redeem_pwp} | Qty: {tot_qty_pwp}\n"
-              f"      • Serba Gratis (SG) ➔ Qty: {tot_qty_sg}\n"
-              f"      • Sueger ➔ Qty: {tot_qty_sueger} | Syarat:"
-              f" {tot_syarat_sueger} | Redeem: {tot_redeem_sueger} | Ach%:"
-              f" {sueger_ach_shift}\n"
-              f"      • Cemilan Ceban ➔ Qty: {tot_ceban}\n\n"
-          )
-
-        sum_syarat_pwp = int(pps_filtered_harian["syarat_pwp"].sum())
-        sum_redeem_pwp = int(pps_filtered_harian["redeem_pwp"].sum())
-        sum_qty_pwp = int(pps_filtered_harian["qty_pwp"].sum())
-        sum_qty_sg = int(pps_filtered_harian["qty_sg"].sum())
-
-        sum_syarat_sueger = int(pps_filtered_harian["syarat_sueger"].sum())
-        sum_redeem_sueger = int(pps_filtered_harian["redeem_sueger"].sum())
-        sum_qty_sueger = int(
-            pps_filtered_harian.get(
-                "qty_sueger", pps_filtered_harian["redeem_sueger"]
-            ).sum()
-        )
-        sum_sueger_ach = (
-            f"{round((sum_redeem_sueger / sum_syarat_sueger) * 100, 1)}%"
-            if sum_syarat_sueger > 0
-            else ""
-        )
-        sum_ceban = int(pps_filtered_harian["cemilan_ceban"].sum())
-
-        wa_pps_text += (
-            "🎯 *SUMMARY PENJUALAN (PWP, SG, Ceban)*\n"
-            f"   📌 *TOTAL PENJUALAN TANGGAL {date_str_formatted}*\n"
-            f"      • PWP ➔ Syarat: {sum_syarat_pwp} | Redeem:"
-            f" {sum_redeem_pwp} | Qty: {sum_qty_pwp}\n"
-            f"      • Serba Gratis (SG) ➔ Qty: {sum_qty_sg}\n"
-            f"      • Sueger ➔ Qty: {sum_qty_sueger} | Syarat:"
-            f" {sum_syarat_sueger} | Redeem: {sum_redeem_sueger} | Ach%:"
-            f" {sum_sueger_ach}\n"
-            f"      • Cemilan Ceban ➔ Qty: {sum_ceban}\n\n"
-        )
-      else:
-        wa_pps_text += (
-            f"   _Belum ada data input PPS untuk tanggal {date_str_formatted}._\n\n"
-        )
-
-      wa_pps_text += "✅ *Status: Program PPS Berjalan Lancar & Termonitor*"
-      st.code(wa_pps_text, language="markdown")
-
-    elif wa_format_type == "🥤 Format Laporan Sueger":
-      st.markdown(
-          "<h5 style='color: #38bdf8;'>✨ Generator Laporan Sueger"
-          " Perorangan</h5>",
-          unsafe_allow_html=True,
-      )
-
-      if st.button(
-          "🚀 Generate Laporan Sueger",
-          on_click=lambda: st.session_state.update({"sueger_generated": True}),
-      ):
-        st.session_state["sueger_generated"] = True
-
-      if st.session_state.get("sueger_generated") and selected_kasir:
-        kode_toko, nama_toko = "C383", "Karang Satria"
-
-        pps_sueger_today_kasir = (
+        pps_filtered_harian = (
             pps_df_report[
-                (
-                    pd.to_datetime(
-                        pps_df_report["updated_at"], errors="coerce"
-                    ).dt.date
-                    == selected_wa_date
-                )
-                & (
-                    pps_df_report["kasir_name"].astype(str).str.lower()
-                    == str(selected_kasir).lower()
-                )
+                pd.to_datetime(
+                    pps_df_report["updated_at"], errors="coerce"
+                ).dt.date
+                == selected_wa_date
             ]
             if not pps_df_report.empty and "updated_at" in pps_df_report.columns
             else pd.DataFrame()
         )
 
-        if not pps_sueger_today_kasir.empty:
-          syarat_hari_ini = int(pps_sueger_today_kasir["syarat_sueger"].sum())
-          redeem_hari_ini = int(pps_sueger_today_kasir["redeem_sueger"].sum())
-          ach_hari_ini = (
-              round((redeem_hari_ini / syarat_hari_ini) * 100, 1)
-              if syarat_hari_ini > 0
-              else 0.0
-          )
-        else:
-          syarat_hari_ini, redeem_hari_ini, ach_hari_ini = 0, 0, 0.0
+        if wa_format_type == "📋 Format Laporan PPS":
+            st.markdown(
+                "<h5 style='color: #38bdf8;'>✨ Preview Format Laporan PPS (Harian"
+                " per Shift)</h5>",
+                unsafe_allow_html=True,
+            )
 
-        wa_sueger_text = (
-            f"KODE TOKO: {kode_toko}\n"
-            f"NAMA TOKO: {nama_toko}\n"
-            f"TANGGAL UPDATE: {date_str_formatted}\n"
-            f"NAMA KASIR: *{selected_kasir.upper()}*\n\n"
-            "🥤 *LAPORAN PENJUALAN SUEGER HARI INI* 🥤\n"
-            f"    *Tanggal {date_str_formatted}* (Kasir: {selected_kasir})\n"
-            f"      • Syarat Varian  : {syarat_hari_ini}\n"
-            f"      • Total Redeem   : {redeem_hari_ini}\n"
-            f"      • Pencapaian %   : {ach_hari_ini}%\n\n"
-        )
+            periode_bulan = selected_wa_date.strftime("%B %Y")
+            sp_report_df = st.session_state.get(
+                "sales_person_df", pd.DataFrame()
+            ).copy()
 
-        pps_sueger_monthly_kasir = (
-            pps_df_report[
-                (
-                    pd.to_datetime(
-                        pps_df_report["updated_at"], errors="coerce"
-                    ).dt.month
-                    == selected_wa_date.month
+            if not sp_report_df.empty and "updated_at" in sp_report_df.columns:
+                sp_report_df["clean_date"] = pd.to_datetime(
+                    sp_report_df["updated_at"], errors="coerce"
+                ).dt.date
+                psm_filtered = sp_report_df[
+                    sp_report_df["clean_date"] == selected_wa_date
+                ]
+            else:
+                psm_filtered = pd.DataFrame()
+
+            if not psm_filtered.empty and "item_name" in psm_filtered.columns:
+                psm_filtered["actual_qty"] = pd.to_numeric(
+                    psm_filtered["actual_qty"], errors="coerce"
+                ).fillna(0)
+                psm_grouped = (
+                    psm_filtered.groupby("item_name")["actual_qty"].sum().reset_index()
                 )
-                & (
-                    pd.to_datetime(
-                        pps_df_report["updated_at"], errors="coerce"
-                    ).dt.year
-                    == selected_wa_date.year
+                psm_grouped = psm_grouped[psm_grouped["actual_qty"] > 0]
+
+                if not psm_grouped.empty:
+                    total_qty_psm = int(psm_grouped["actual_qty"].sum())
+                    list_psm_text = "".join([
+                        f"\t• {r['item_name']} = {int(r['actual_qty'])}\n"
+                        for _, r in psm_grouped.iterrows()
+                    ])
+                else:
+                    list_psm_text = "\t• (Tidak ada penjualan PSM pada tanggal ini)\n"
+                    total_qty_psm = 0
+            else:
+                list_psm_text = "\t• (Tidak ada penjualan PSM pada tanggal ini)\n"
+                total_qty_psm = 0
+
+            wa_pps_text = (
+                "🌟 *REKAP LAPORAN HARIAN PPS* 🌟\n"
+                f"📅 Tanggal: {date_str_formatted}\n"
+                f"📦 *Periode*: {periode_bulan}\n\n"
+                "📦 *Report PSM*\n"
+                "   📌 *List item terjual dan qty jual*\n"
+                f"{list_psm_text}"
+                "   =============================================\n"
+                f"\tTOTAL PENJUALAN : {total_qty_psm}\n\n"
+                "🎯 *Detail Kinerja Program (PWP, SG, Ceban)*:\n"
+            )
+
+            if not pps_filtered_harian.empty:
+                for shift_name, group_df in pps_filtered_harian.groupby(
+                    "shift_personil"
+                ):
+                    kasir_str = " & ".join(
+                        group_df["kasir_name"].dropna().unique().tolist()
+                    )
+                    staff_str = ", ".join(
+                        group_df["staff_name"].dropna().unique().tolist()
+                    )
+
+                    tot_syarat_pwp = int(group_df["syarat_pwp"].sum())
+                    tot_redeem_pwp = int(group_df["redeem_pwp"].sum())
+                    tot_qty_pwp = int(group_df["qty_pwp"].sum())
+                    tot_qty_sg = int(group_df["qty_sg"].sum())
+
+                    tot_syarat_sueger = int(group_df["syarat_sueger"].sum())
+                    tot_redeem_sueger = int(group_df["redeem_sueger"].sum())
+                    tot_qty_sueger = int(
+                        group_df.get("qty_sueger", group_df["redeem_sueger"]).sum()
+                    )
+
+                    sueger_ach_shift = (
+                        f"{round((tot_redeem_sueger / tot_syarat_sueger) * 100, 1)}%"
+                        if tot_syarat_sueger > 0
+                        else ""
+                    )
+                    tot_ceban = int(group_df["cemilan_ceban"].sum())
+
+                    wa_pps_text += (
+                        f"   📌 *{shift_name}* (Staf: {staff_str} | Kasir: {kasir_str})\n"
+                        f"      • PWP ➔ Syarat: {tot_syarat_pwp} | Redeem:"
+                        f" {tot_redeem_pwp} | Qty: {tot_qty_pwp}\n"
+                        f"      • Serba Gratis (SG) ➔ Qty: {tot_qty_sg}\n"
+                        f"      • Sueger ➔ Qty: {tot_qty_sueger} | Syarat:"
+                        f" {tot_syarat_sueger} | Redeem: {tot_redeem_sueger} | Ach%:"
+                        f" {sueger_ach_shift}\n"
+                        f"      • Cemilan Ceban ➔ Qty: {tot_ceban}\n\n"
+                    )
+
+                sum_syarat_pwp = int(pps_filtered_harian["syarat_pwp"].sum())
+                sum_redeem_pwp = int(pps_filtered_harian["redeem_pwp"].sum())
+                sum_qty_pwp = int(pps_filtered_harian["qty_pwp"].sum())
+                sum_qty_sg = int(pps_filtered_harian["qty_sg"].sum())
+
+                sum_syarat_sueger = int(pps_filtered_harian["syarat_sueger"].sum())
+                sum_redeem_sueger = int(pps_filtered_harian["redeem_sueger"].sum())
+                sum_qty_sueger = int(
+                    pps_filtered_harian.get(
+                        "qty_sueger", pps_filtered_harian["redeem_sueger"]
+                    ).sum()
                 )
-                & (
-                    pd.to_datetime(
-                        pps_df_report["updated_at"], errors="coerce"
+                sum_sueger_ach = (
+                    f"{round((sum_redeem_sueger / sum_syarat_sueger) * 100, 1)}%"
+                    if sum_syarat_sueger > 0
+                    else ""
+                )
+                sum_ceban = int(pps_filtered_harian["cemilan_ceban"].sum())
+
+                wa_pps_text += (
+                    "🎯 *SUMMARY PENJUALAN (PWP, SG, Ceban)*\n"
+                    f"   📌 *TOTAL PENJUALAN TANGGAL {date_str_formatted}*\n"
+                    f"      • PWP ➔ Syarat: {sum_syarat_pwp} | Redeem:"
+                    f" {sum_redeem_pwp} | Qty: {sum_qty_pwp}\n"
+                    f"      • Serba Gratis (SG) ➔ Qty: {sum_qty_sg}\n"
+                    f"      • Sueger ➔ Qty: {sum_qty_sueger} | Syarat:"
+                    f" {sum_syarat_sueger} | Redeem: {sum_redeem_sueger} | Ach%:"
+                    f" {sum_sueger_ach}\n"
+                    f"      • Cemilan Ceban ➔ Qty: {sum_ceban}\n\n"
+                )
+            else:
+                wa_pps_text += (
+                    f"   _Belum ada data input PPS untuk tanggal {date_str_formatted}._\n\n"
+                )
+
+            wa_pps_text += "✅ *Status: Program PPS Berjalan Lancar & Termonitor*"
+            st.code(wa_pps_text, language="markdown")
+
+        elif wa_format_type == "🥤 Format Laporan Sueger":
+            st.markdown(
+                "<h5 style='color: #38bdf8;'>✨ Generator Laporan Sueger"
+                " Perorangan</h5>",
+                unsafe_allow_html=True,
+            )
+
+            if st.button(
+                "🚀 Generate Laporan Sueger",
+                on_click=lambda: st.session_state.update({"sueger_generated": True}),
+            ):
+                st.session_state["sueger_generated"] = True
+
+            if st.session_state.get("sueger_generated") and selected_kasir:
+                kode_toko, nama_toko = "C383", "Karang Satria"
+
+                pps_sueger_today_kasir = (
+                    pps_df_report[
+                        (
+                            pd.to_datetime(
+                                pps_df_report["updated_at"], errors="coerce"
+                            ).dt.date
+                            == selected_wa_date
+                        )
+                        & (
+                            pps_df_report["kasir_name"].astype(str).str.lower()
+                            == str(selected_kasir).lower()
+                        )
+                    ]
+                    if not pps_df_report.empty and "updated_at" in pps_df_report.columns
+                    else pd.DataFrame()
+                )
+
+                if not pps_sueger_today_kasir.empty:
+                    syarat_hari_ini = int(pps_sueger_today_kasir["syarat_sueger"].sum())
+                    redeem_hari_ini = int(pps_sueger_today_kasir["redeem_sueger"].sum())
+                    ach_hari_ini = (
+                        round((redeem_hari_ini / syarat_hari_ini) * 100, 1)
+                        if syarat_hari_ini > 0
+                        else 0.0
+                    )
+                else:
+                    syarat_hari_ini, redeem_hari_ini, ach_hari_ini = 0, 0, 0.0
+
+                wa_sueger_text = (
+                    f"KODE TOKO: {kode_toko}\n"
+                    f"NAMA TOKO: {nama_toko}\n"
+                    f"TANGGAL UPDATE: {date_str_formatted}\n"
+                    f"NAMA KASIR: *{selected_kasir.upper()}*\n\n"
+                    "🥤 *LAPORAN PENJUALAN SUEGER HARI INI* 🥤\n"
+                    f"    *Tanggal {date_str_formatted}* (Kasir: {selected_kasir})\n"
+                    f"      • Syarat Varian  : {syarat_hari_ini}\n"
+                    f"      • Total Redeem   : {redeem_hari_ini}\n"
+                    f"      • Pencapaian %   : {ach_hari_ini}%\n\n"
+                )
+
+                pps_sueger_monthly_kasir = (
+                    pps_df_report[
+                        (
+                            pd.to_datetime(
+                                pps_df_report["updated_at"], errors="coerce"
+                            ).dt.month
+                            == selected_wa_date.month
+                        )
+                        & (
+                            pd.to_datetime(
+                                pps_df_report["updated_at"], errors="coerce"
+                            ).dt.year
+                            == selected_wa_date.year
+                        )
+                        & (
+                            pd.to_datetime(
+                                pps_df_report["updated_at"], errors="coerce"
+                            ).dt.date
+                            <= selected_wa_date
+                        )
+                        & (
+                            pps_df_report["kasir_name"].astype(str).str.lower()
+                            == str(selected_kasir).lower()
+                        )
+                    ]
+                    if not pps_df_report.empty and "updated_at" in pps_df_report.columns
+                    else pd.DataFrame()
+                )
+
+                wa_sueger_text += (
+                    f"🥤 *SUMMARY LAPORAN PENJUALAN SUEGER (KASIR:"
+                    f" {selected_kasir.upper()})* 🥤\n"
+                    "🔹 TANGGAL / SYARAT / REDEEM / ACHIEVEMENT / KETERANGAN\n"
+                )
+
+                if not pps_sueger_monthly_kasir.empty:
+                    pps_sueger_monthly_kasir["tgl_dt"] = pd.to_datetime(
+                        pps_sueger_monthly_kasir["updated_at"]
                     ).dt.date
-                    <= selected_wa_date
-                )
-                & (
-                    pps_df_report["kasir_name"].astype(str).str.lower()
-                    == str(selected_kasir).lower()
-                )
-            ]
-            if not pps_df_report.empty and "updated_at" in pps_df_report.columns
-            else pd.DataFrame()
-        )
 
-        wa_sueger_text += (
-            f"🥤 *SUMMARY LAPORAN PENJUALAN SUEGER (KASIR:"
-            f" {selected_kasir.upper()})* 🥤\n"
-            "🔹 TANGGAL / SYARAT / REDEEM / ACHIEVEMENT / KETERANGAN\n"
-        )
+                    grouped_daily = (
+                        pps_sueger_monthly_kasir.groupby("tgl_dt")
+                        .agg({"syarat_sueger": "sum", "redeem_sueger": "sum"})
+                        .reset_index()
+                        .sort_values("tgl_dt")
+                    )
 
-        if not pps_sueger_monthly_kasir.empty:
-          pps_sueger_monthly_kasir["tgl_dt"] = pd.to_datetime(
-              pps_sueger_monthly_kasir["updated_at"]
-          ).dt.date
+                    for idx, row in enumerate(grouped_daily.itertuples(), start=1):
+                        tgl_fmt = row.tgl_dt.strftime("%d/%m/%y")
+                        syarat, redeem = int(row.syarat_sueger), int(row.redeem_sueger)
+                        ach = round((redeem / syarat) * 100, 1) if syarat > 0 else 0.0
+                        status_icon = "🟢 LULUS" if ach >= 50.0 else "🔴 TIDAK LULUS"
+                        wa_sueger_text += f"{idx}. {tgl_fmt} : {syarat} / {redeem} / {ach}% / {status_icon}\n"
 
-          grouped_daily = (
-              pps_sueger_monthly_kasir.groupby("tgl_dt")
-              .agg({"syarat_sueger": "sum", "redeem_sueger": "sum"})
-              .reset_index()
-              .sort_values("tgl_dt")
-          )
+                    tot_syarat = int(grouped_daily["syarat_sueger"].sum())
+                    tot_redeem = int(grouped_daily["redeem_sueger"].sum())
+                    tot_ach = (
+                        round((tot_redeem / tot_syarat) * 100, 1)
+                        if tot_syarat > 0
+                        else 0.0
+                    )
+                    tot_status = "🟢 LULUS" if tot_ach >= 50.0 else "🔴 TIDAK LULUS"
 
-          for idx, row in enumerate(grouped_daily.itertuples(), start=1):
-            tgl_fmt = row.tgl_dt.strftime("%d/%m/%y")
-            syarat, redeem = int(row.syarat_sueger), int(row.redeem_sueger)
-            ach = round((redeem / syarat) * 100, 1) if syarat > 0 else 0.0
-            status_icon = "🟢 LULUS" if ach >= 50.0 else "🔴 TIDAK LULUS"
-            wa_sueger_text += f"{idx}. {tgl_fmt} : {syarat} / {redeem} / {ach}% / {status_icon}\n"
+                    wa_sueger_text += (
+                        "==================\n"
+                        "📊 *SUMMARY TOTAL KESELURUHAN*:\n"
+                        f"   {tot_syarat} / {tot_redeem} / {tot_ach}% / {tot_status}\n"
+                    )
+                else:
+                    wa_sueger_text += f"_Belum ada catatan transaksi Sueger untuk Kasir {selected_kasir} bulan ini._\n"
 
-          tot_syarat = int(grouped_daily["syarat_sueger"].sum())
-          tot_redeem = int(grouped_daily["redeem_sueger"].sum())
-          tot_ach = (
-              round((tot_redeem / tot_syarat) * 100, 1)
-              if tot_syarat > 0
-              else 0.0
-          )
-          tot_status = "🟢 LULUS" if tot_ach >= 50.0 else "🔴 TIDAK LULUS"
+                st.code(wa_sueger_text, language="markdown")
 
-          wa_sueger_text += (
-              "==================\n"
-              "📊 *SUMMARY TOTAL KESELURUHAN*:\n"
-              f"   {tot_syarat} / {tot_redeem} / {tot_ach}% / {tot_status}\n"
-          )
-        else:
-          wa_sueger_text += f"_Belum ada catatan transaksi Sueger untuk Kasir {selected_kasir} bulan ini._\n"
-
-        st.code(wa_sueger_text, language="markdown")
 
 # --- EDIT DATA ---
 elif selected_tab == "➕Edit Data (admin only)":
