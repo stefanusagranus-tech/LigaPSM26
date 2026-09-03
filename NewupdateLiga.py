@@ -822,62 +822,57 @@ st.markdown(
 # ==========================================
 
 # =========================================================================
-# MENU UTAMA: GAYA RPG RESPONSIVE (IKON TENGAH - ANDROID / IOS READY)
+# MENU UTAMA: GAYA RPG RESPONSIVE (100% MUTLAK SIMETRIS & SEIMBANG)
 # =========================================================================
 if selected_tab == "🏠 Menu Utama":
-    # 1. Suntikkan CSS khusus yang responsif untuk Mobile (Android/iOS) dan PC
+    # 1. Suntikkan CSS khusus untuk merapikan teks, ikon, dan tombol di dalam grid
     st.markdown(
         """
         <style>
-            /* Kontainer utama yang otomatis membungkus ke bawah jika dibuka di HP */
-            .rpg-container-flex {
-                display: flex;
-                flex-wrap: wrap; /* 📱 Kunci responsif: otomatis menyusun ke bawah di layar kecil */
-                gap: 20px;
-                justify-content: center;
-                margin-top: 20px;
+            /* Kontainer utama pembungkus luar */
+            .rpg-grid-container {
                 width: 100%;
+                margin-top: 15px;
             }
             
-            /* Kotak blok kartu game */
-            .rpg-block-center {
-                flex: 1;
-                min-width: 280px; /* 📱 Batas minimal lebar agar pas di layar HP cerdas */
-                max-width: 400px;
+            /* Kotak blok kartu game yang dijamin presisi di tengah */
+            .rpg-card-center-fixed {
                 background: linear-gradient(135deg, rgba(15, 23, 42, 0.75) 0%, rgba(30, 41, 59, 0.95) 100%);
                 border: 2px solid #38bdf8;
                 border-radius: 16px;
                 padding: 24px;
-                min-height: 340px;
+                margin-bottom: 15px; /* Jarak bawah saat merapat di layar HP */
+                min-height: 290px;
                 display: flex;
                 flex-direction: column;
-                justify-content: space-between;
-                align-items: center; /* 🎯 Mengatur semua konten di dalamnya berada di tengah */
-                text-align: center;   /* 🎯 Membuat semua teks rata tengah */
+                justify-content: flex-start; /* Mengalir teratur dari atas ke bawah */
+                align-items: center;         /* 🎯 Vertikal center mutlak untuk ikon & teks */
+                text-align: center;           /* 🎯 Horizontal center mutlak untuk tulisan */
                 position: relative;
                 transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
                 box-shadow: 0 0 15px rgba(56, 189, 248, 0.1);
-                box-sizing: border-box;
             }
             
-            /* Efek Hover Nyala Neon (Sentuhan Jari di Mobile / Kursor di PC) */
-            .rpg-block-center:hover {
+            /* Efek Hover Menyala Neon */
+            .rpg-card-center-fixed:hover {
                 transform: translateY(-5px);
                 border-color: #00f0ff;
                 box-shadow: 0 0 25px rgba(0, 240, 255, 0.35);
             }
             
-            /* Desain Ikon Besar di Tengah */
-            .rpg-icon-center {
-                font-size: 55px; /* Ukuran besar mencolok di tengah */
-                margin-top: 20px;
+            /* Desain Ikon Besar Bernapas di Tengah */
+            .rpg-icon-center-fixed {
+                font-size: 55px;
+                margin-top: 15px;
                 margin-bottom: 10px;
                 filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.5));
-                animation: pulse 2s infinite ease-in-out;
+                animation: pulse-game 2s infinite ease-in-out;
+                display: block;
+                width: 100%;
             }
             
-            /* Lencana Status Game Mini di Pojok */
-            .rpg-badge-mini {
+            /* Lencana Mini Game di Pojok */
+            .rpg-badge-fixed {
                 position: absolute;
                 top: 14px;
                 right: 14px;
@@ -899,28 +894,23 @@ if selected_tab == "🏠 Menu Utama":
                 border: 1px solid rgba(234, 179, 8, 0.4);
             }
             
-            /* Desain Teks Bawah Judul */
-            .rpg-title-center {
+            /* Desain Judul & Deskripsi Bawah */
+            .rpg-title-fixed {
                 color: #ffffff;
                 font-size: 20px;
                 font-weight: 800;
-                margin-bottom: 6px;
+                margin-bottom: 8px;
                 letter-spacing: 1px;
-                text-shadow: 0 0 10px rgba(255,255,255,0.1);
             }
-            .rpg-desc-center {
+            .rpg-desc-fixed {
                 color: #94a3b8;
-                font-size: 12.5px;
+                font-size: 13px;
                 line-height: 1.5;
-                margin-bottom: 20px;
-                padding: 0 5px;
+                margin-bottom: 15px;
             }
 
-            /* Tombol Aksi Streamlit bawaan di dalam kartu */
-            .rpg-block-center div.stButton {
-                width: 100%;
-            }
-            .rpg-block-center div.stButton > button {
+            /* Desain Kustomisasi Tombol Bawaan Streamlit di bawah kotak agar presisi */
+            div[data-testid="stColumn"] div.stButton > button {
                 background: rgba(56, 189, 248, 0.08) !important;
                 color: #38bdf8 !important;
                 border: 1px solid #38bdf8 !important;
@@ -928,17 +918,17 @@ if selected_tab == "🏠 Menu Utama":
                 padding: 10px 0px !important;
                 font-weight: 700 !important;
                 transition: all 0.2s ease !important;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
             }
-            .rpg-block-center div.stButton > button:hover {
+            div[data-testid="stColumn"] div.stButton > button:hover {
                 background: #38bdf8 !important;
                 color: #0f172a !important;
                 box-shadow: 0 0 15px rgba(56, 189, 248, 0.5) !important;
             }
             
-            /* Animasi denyut halus pada ikon game */
-            @keyframes pulse {
+            @keyframes pulse-game {
                 0% { transform: scale(1); }
-                50% { transform: scale(1.05); }
+                50% { transform: scale(1.06); }
                 100% { transform: scale(1); }
             }
         </style>
@@ -952,49 +942,48 @@ if selected_tab == "🏠 Menu Utama":
         unsafe_allow_html=True,
     )
 
-    # Pembungkus fleksibel pengganti st.columns tradisional agar aman di Android & iOS
-    st.markdown("<div class='rpg-container-flex'>", unsafe_allow_html=True)
+    # Membungkus area ke dalam kontainer grid kustom
+    st.markdown("<div class='rpg-grid-container'>", unsafe_allow_html=True)
 
-    # 🏰 KARTU 1: ENTER DUNGEON
-    st.markdown(
-        """
-        <div class='rpg-block-center'>
-            <div class='rpg-badge-mini badge-dungeon'>⚔️ Raid Mode</div>
-            <div class='rpg-icon-center'>🏰</div>
-            <div>
-                <div class='rpg-title-center'>ENTER DUNGEON</div>
-                <div class='rpg-desc-center'>Masuk ke Dashboard Utama untuk memantau performa total, grafik target, dan analisis pencapaian PSM Toko secara menyeluruh.</div>
+    # 🚀 Menggunakan st.columns bawaan agar pembagian kolom di Android/iOS diatur matang oleh Streamlit
+    col_game1, col_game2 = st.columns(2)
+
+    with col_game1:
+        # KARTU 1: ENTER DUNGEON
+        st.markdown(
+            """
+            <div class='rpg-card-center-fixed'>
+                <div class='rpg-badge-fixed badge-dungeon'>⚔️ Raid Mode</div>
+                <div class='rpg-icon-center-fixed'>🏰</div>
+                <div class='rpg-title-fixed'>ENTER DUNGEON</div>
+                <div class='rpg-desc-fixed'>Masuk ke Dashboard Utama untuk memantau performa total, grafik target, dan analisis pencapaian PSM Toko secara menyeluruh.</div>
             </div>
-    """,
-        unsafe_allow_html=True,
-    )
-    if st.button("Masuk Dashboard Utama ➔", use_container_width=True, key="btn_enter_dungeon"):
-        st.toast("🔮 Membuka Portal Menuju Dungeon Utama...", icon="🏰")
-        # Masukkan logika aksi Anda di sini
-        
-    st.markdown("</div>", unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
+        # Tombol diletakkan sejajar di bawah kotak kartu HTML, tetapi diatur lebarnya penuh agar pas simetris
+        if st.button("Masuk Dashboard Utama ➔", use_container_width=True, key="btn_enter_dungeon_fixed"):
+            st.toast("🔮 Membuka Portal Menuju Dungeon Utama...", icon="🏰")
+            # Tulis logika pindah halaman/tab Anda di sini
 
-
-    # 🎒 KARTU 2: PREPARATION CAMP
-    st.markdown(
-        """
-        <div class='rpg-block-center'>
-            <div class='rpg-badge-mini badge-prep'>🛡️ Solo Prep</div>
-            <div class='rpg-icon-center'>🎒</div>
-            <div>
-                <div class='rpg-title-center'>PREPARATION CAMP</div>
-                <div class='rpg-desc-center'>Lihat tas penyimpanan (Inventory) rapor pribadi Anda. Cek pencapaian individu, target harian staf, dan statistik performa Anda sendiri.</div>
+    with col_game2:
+        # KARTU 2: PREPARATION CAMP
+        st.markdown(
+            """
+            <div class='rpg-card-center-fixed'>
+                <div class='rpg-badge-fixed badge-prep'>🛡️ Solo Prep</div>
+                <div class='rpg-icon-center-fixed'>🎒</div>
+                <div class='rpg-title-fixed'>PREPARATION CAMP</div>
+                <div class='rpg-desc-fixed'>Lihat tas penyimpanan (Inventory) rapor pribadi Anda. Cek pencapaian individu, target harian staf, dan statistik performa Anda sendiri.</div>
             </div>
-    """,
-        unsafe_allow_html=True,
-    )
-    if st.button("Buka Rapor Personil Toko ➔", use_container_width=True, key="btn_enter_prep"):
-        st.toast("🎒 Membuka Tas Perlengkapan Inventory...", icon="🛡️")
-        # Masukkan logika aksi Anda di sini
-        
-    st.markdown("</div>", unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
+        if st.button("Buka Rapor Personil Toko ➔", use_container_width=True, key="btn_enter_prep_fixed"):
+            st.toast("🎒 Membuka Tas Perlengkapan Inventory...", icon="🛡️")
+            # Tulis logika pindah halaman/tab Anda di sini
 
-    st.markdown("</div>", unsafe_allow_html=True) # Penutup rpg-container-flex
+    st.markdown("</div>", unsafe_allow_html=True
     
 # =============================================================================
 # --- INPUT & RESET DATA ---
