@@ -658,10 +658,8 @@ st.markdown(
 # ==========================================
 # 9. MODUL TAB / SUB MENU
 # ==========================================
-        
-# =============================================================================
-# --- INPUT & RESET DATA ---
-# =============================================================================
+
+
 # =============================================================================
 # --- INPUT & RESET DATA ---
 # =============================================================================
@@ -672,47 +670,61 @@ if selected_tab == "📝 Input Data":
       unsafe_allow_html=True,
   )
 
-  # --- Custom CSS: Styling Tab Kapsul Transparan Neon ---
-  st.markdown(
-      """
-        <style>
-        div[data-baseweb="tab-list"] {
-            gap: 8px;
-            background-color: rgba(15, 23, 42, 0.4);
-            padding: 8px;
-            border-radius: 50px;
-            border: 1px solid rgba(0, 240, 255, 0.3);
-            box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
-            backdrop-filter: blur(10px);
-        }
-        div[data-baseweb="tab-list"] button[data-baseweb="tab"] {
-            background-color: rgba(255, 255, 255, 0.03) !important;
-            border: 1px solid rgba(0, 240, 255, 0.3) !important;
-            border-radius: 30px !important;
-            color: #94a3b8 !important;
-            padding: 6px 18px !important;
-            transition: all 0.3s ease-in-out !important;
-        }
-        div[data-baseweb="tab-list"] button[data-baseweb="tab"]:hover {
-            border-color: #00f0ff !important;
-            color: #00f0ff !important;
-            box-shadow: 0 0 10px rgba(0, 240, 255, 0.5) !important;
-            transform: translateY(-1px);
-        }
-        div[data-baseweb="tab-list"] button[aria-selected="true"] {
-            background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(0, 150, 255, 0.4)) !important;
-            border: 1px solid #00f0ff !important;
-            color: #ffffff !important;
-            font-weight: bold !important;
-            box-shadow: 0 0 15px rgba(0, 240, 255, 0.8), inset 0 0 8px rgba(0, 240, 255, 0.4) !important;
-        }
-        div[data-baseweb="tab-highlight"] {
-            display: none !important;
-        }
-        </style>
-    """,
-      unsafe_allow_html=True,
-  )
+# --- Custom CSS: Styling Tab Kapsul Transparan Neon (Floating) ---
+st.markdown(
+    """
+    <style>
+    /* Membuat tab-list menjadi floating / mengambang di atas */
+    div[data-baseweb="tab-list"] {
+        position: fixed !important;
+        top: 60px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        z-index: 999999 !important;
+        gap: 8px;
+        background-color: rgba(15, 23, 42, 0.75) !important;
+        padding: 8px 16px !important;
+        border-radius: 50px;
+        border: 1px solid rgba(0, 240, 255, 0.4);
+        box-shadow: 0 4px 25px rgba(0, 240, 255, 0.3);
+        backdrop-filter: blur(12px);
+        max-width: 90vw;
+        overflow-x: auto;
+    }
+    
+    /* Beri jarak di atas konten utama agar tidak tertutup tab yang mengambang */
+    .stTabs {
+        margin-top: 50px;
+    }
+
+    div[data-baseweb="tab-list"] button[data-baseweb="tab"] {
+        background-color: rgba(255, 255, 255, 0.03) !important;
+        border: 1px solid rgba(0, 240, 255, 0.3) !important;
+        border-radius: 30px !important;
+        color: #ffffff !important; /* Warna teks diubah jadi putih */
+        padding: 6px 18px !important;
+        transition: all 0.3s ease-in-out !important;
+    }
+    div[data-baseweb="tab-list"] button[data-baseweb="tab"]:hover {
+        border-color: #00f0ff !important;
+        color: #00f0ff !important;
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.5) !important;
+        transform: translateY(-1px);
+    }
+    div[data-baseweb="tab-list"] button[aria-selected="true"] {
+        background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(0, 150, 255, 0.4)) !important;
+        border: 1px solid #00f0ff !important;
+        color: #ffffff !important;
+        font-weight: bold !important;
+        box-shadow: 0 0 15px rgba(0, 240, 255, 0.8), inset 0 0 8px rgba(0, 240, 255, 0.4) !important;
+    }
+    div[data-baseweb="tab-highlight"] {
+        display: none !important;
+    }
+    </style>
+""",
+    unsafe_allow_html=True,
+)
 
   # --- Context & User Role ---
   current_user = st.session_state.get("username", "visitor")
