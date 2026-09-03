@@ -696,26 +696,33 @@ else:
 
 username = st.session_state.get("username", "Admin")
 
-# --- Tampilan Header Profil & Tombol panah pemicu mengecil ---
 if not st.session_state.sidebar_collapsed:
-    with col_side1:
-        st.markdown(
-            f"""
-            <div class='profile-container'>
+    # 👐 Tampilan saat Sidebar TERBUKA LEBAR (Nama Profil + Tombol ◀ Berdampingan)
+    st.sidebar.markdown(
+        f"""
+        <div style='display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; padding: 5px 10px;'>
+            <div class='profile-container' style='display: flex; align-items: center; gap: 14px;'>
                 <img src='{logo_src}' class='sidebar-logo'>
                 <div style='display: flex; flex-direction: column;'>
                     <span style='color: #a1a1aa; font-size: 11px;'>Selamat Datang,</span>
                     <span style='color: #ffffff; font-size: 14px; font-weight: 600;'>{username}</span>
                 </div>
             </div>
-        """, unsafe_allow_html=True
-        )
-    with col_side2:
-        st.button("◀", on_click=toggle_sidebar_size, key="toggle_size_btn_open")
+        </div>
+    """, unsafe_allow_html=True
+    )
+    # Tombol Panah ditaruh di bawah profil agar posisinya pas dan stabil
+    st.sidebar.button("◀ Tutup Sidebar", on_click=toggle_sidebar_size, key="toggle_size_btn_open", use_container_width=True)
 else:
-    with col_side1:
-        st.markdown(f"<center><img src='{logo_src}' class='sidebar-logo' style='margin-bottom: 10px;'></center>", unsafe_allow_html=True)
-        st.button("▶", on_click=toggle_sidebar_size, key="toggle_size_btn_close", use_container_width=True)
+    # 📭 Tampilan saat Sidebar MENGECIL / CIUT (Logo + Tombol ▶ Tersusun ke Bawah)
+    st.sidebar.markdown(
+        f"""
+        <div style='display: flex; justify-content: center; align-items: center; margin-bottom: 10px; width: 100%;'>
+            <img src='{logo_src}' class='sidebar-logo' style='width: 45px; height: 45px; border-radius: 12px;'>
+        </div>
+    """, unsafe_allow_html=True
+    )
+    st.sidebar.button("▶", on_click=toggle_sidebar_size, key="toggle_size_btn_close", use_container_width=True)
 # Render Informasi Toko
 st.sidebar.markdown(
     f"""
