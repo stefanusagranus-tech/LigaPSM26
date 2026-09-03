@@ -14,7 +14,7 @@ import textwrap
 # (Harus ditaruh di baris paling awal dari perintah Streamlit!)
 # =========================================================
 st.set_page_config(
-    page_title="PSM Toko - Mobile Dashboard",
+    page_title="🛡️Guild Karang Satria",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
