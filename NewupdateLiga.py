@@ -946,10 +946,11 @@ if selected_tab == "🏠 Menu Utama":
         """,
             unsafe_allow_html=True,
         )
+        # 🚀 TOMBOL AKSI UTAMA & PROSES TRANSISI (ANTI BOCOR TOTAL)
         if st.button("Masuk Markas Guild ➔", use_container_width=True, key="btn_enter_dungeon_fixed"):
             placeholder = st.empty()
             with placeholder.container():
-                # Screen 1: Animasi Loading
+                # --- LAYAR LOADING 1: ANIMASI MEMUAT DATA ---
                 st.markdown(
                     """
                     <div style='background-color: #0f172a; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
@@ -960,30 +961,34 @@ if selected_tab == "🏠 Menu Utama":
                             [data-testid="stSidebar"] { display: none !important; }
                         </style>
                     </div>
-                """, unsafe_allow_html=True
+                    """, 
+                    unsafe_allow_html=True
                 )
+                
+                # Menggulir kemajuan progress bar bawaan
                 progress_bar = st.progress(0)
                 for percent_complete in range(100):
                     time.sleep(0.01)
                     progress_bar.progress(percent_complete + 1)
                 
-                # 🚀 SCREEN 2: TAMPILAN PORTAL READY (DENGAN TOMBOL KEMBALI)
+                # --- LAYAR 2: PORTAL UTUH (KARTU TELEPORTASI + TOMBOL KEMBALI SEKALIGUS) ---
+                # Semua elemen dibungkus dalam 1 blok tunggal tanpa celah bocor kode python
                 st.markdown(
                     """
-                    <div style='background-color: #0f172a; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
+                    <div style='background-color: #0f172a; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center;'>
                         <h1 style='color: #00ff88; font-family: monospace; font-size: 32px; text-shadow: 0 0 15px rgba(0,255,136,0.5); margin-bottom: 25px;'>✔️ PORTAL READY!</h1>
                         
-                        <!-- 🌌 Tombol Utama: Teleportasi Ke Markas Guild -->
-                        <a href='https://streamlit.app' target='_top' style='background-color: #38bdf8; color: #0f172a; padding: 14px 28px; font-weight: bold; font-family: monospace; font-size: 16px; border-radius: 10px; text-decoration: none; box-shadow: 0 0 15px rgba(56,189,248,0.6); display: inline-block; transition: 0.2s; margin-bottom: 15px;'>
+                        <a href='https://streamlit.app' target='_top' style='background-color: #38bdf8; color: #0f172a; padding: 14px 28px; font-weight: bold; font-family: monospace; font-size: 16px; border-radius: 10px; text-decoration: none; box-shadow: 0 0 15px rgba(56,189,248,0.6); display: inline-block; transition: 0.2s; margin-bottom: 20px;'>
                             ▶ KETUK UNTUK TELEPORTASI
                         </a>
                         
-                        <!-- 🛡️ Tombol Alternatif: Batal & Kembali ke Menu Utama -->
-                        <a href='#' onclick='window.location.reload(); return false;' style='background-color: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 10px 20px; font-weight: bold; font-family: monospace; font-size: 13px; border-radius: 8px; text-decoration: none; border: 1px solid rgba(239, 68, 68, 0.4); display: inline-block; transition: 0.2s;'>
+                        <br>
+                        
+                        <a href='' onclick='window.location.reload(); return false;' style='background-color: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 10px 22px; font-weight: bold; font-family: monospace; font-size: 13px; border-radius: 8px; text-decoration: none; border: 1px solid rgba(239, 68, 68, 0.4); display: inline-block; transition: 0.2s;'>
                             ❌ BATAL & KEMBALI
                         </a>
                         
-                        <p style='color: #94a3b8; font-size: 13px; margin-top: 25px; font-family: monospace;'>Pilih salah satu jalur di atas untuk melanjutkan.</p>
+                        <p style='color: #94a3b8; font-size: 12px; margin-top: 25px; font-family: monospace;'>Pilih gerbang di atas untuk mengeksekusi perintah.</p>
                         <style>
                             [data-testid="stSidebar"] { display: none !important; }
                         </style>
@@ -992,9 +997,8 @@ if selected_tab == "🏠 Menu Utama":
                     unsafe_allow_html=True
                 )
                 
-                # Mengunci layar agar tetap tertahan di portal sampai user memilih tindakan
-                while True:
-                    time.sleep(1)
+                # Penahan layar stabil tanpa loop tak terbatas (while True) yang merusak parser
+                st.stop()
 
     # 🎒 KARTU 2: PREPARATION CAMP (DIPESAN KHUSUS UNTUK KREASI DESAIN ANDA)
     with col_game2:
