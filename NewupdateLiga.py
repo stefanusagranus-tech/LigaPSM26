@@ -574,33 +574,6 @@ menu_options = [
 selected_tab = st.sidebar.radio(
     "", menu_options, label_visibility="collapsed"
 )
-st.sidebar.markdown("---")
-
-st.sidebar.markdown(
-    "<p style='color:#38bdf8; font-weight:bold; letter-spacing:1px;"
-    " margin-bottom:6px;'>🌟 FILTER PERIODE</p>",
-    unsafe_allow_html=True,
-)
-
-periods_df = st.session_state.periods_df
-if not periods_df.empty:
-  periods_dict = {
-      row["period_name"]: row["period_id"]
-      for _, row in periods_df.iterrows()
-  }
-else:
-  periods_dict = {"Periode Utama": "P01"}
-
-selected_period_name = st.sidebar.selectbox(
-    "",
-    ["Semua Periode (Overall)"] + list(periods_dict.keys()),
-    label_visibility="collapsed",
-)
-selected_period_id = (
-    None
-    if selected_period_name == "Semua Periode (Overall)"
-    else periods_dict[selected_period_name]
-)
 
 st.sidebar.markdown(
     "<hr style='margin: 15px 0; border-color: #334155;'>",
