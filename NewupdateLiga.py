@@ -457,6 +457,75 @@ if "logged_in" not in st.session_state:
 if "username" not in st.session_state:
   st.session_state.username = ""
 
+# =============================================================================
+# --- CUSTOM CSS: FLOATING TABS FIX (Diletakkan di Luar Kondisi agar Terbaca Global) ---
+# =============================================================================
+st.markdown(
+    """
+    <style>
+    /* Memaksa elemen pembungkus tab utama agar melayang sempurna di tengah atas */
+    div.stTabs {
+        position: fixed !important;
+        top: 60px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        z-index: 999999 !important;
+        width: max-content !important;
+        max-width: 95vw !important;
+        pointer-events: none !important;
+    }
+
+    /* Mengaktifkan kembali interaksi klik khusus untuk isi tab list dan tombolnya */
+    div[data-baseweb="tab-list"], div.stTabs > div:first-child {
+        pointer-events: auto !important;
+        display: flex !important;
+        gap: 8px !important;
+        background-color: rgba(15, 23, 42, 0.88) !important;
+        padding: 8px 16px !important;
+        border-radius: 50px !important;
+        border: 1px solid rgba(0, 240, 255, 0.4) !important;
+        box-shadow: 0 4px 25px rgba(0, 240, 255, 0.4) !important;
+        backdrop-filter: blur(12px) !important;
+        overflow-x: auto !important;
+    }
+
+    /* Memberikan jarak kosong di bagian atas halaman utama agar konten tidak tertutup tab */
+    section.main div.block-container {
+        padding-top: 110px !important;
+    }
+
+    /* Styling Tombol Tab */
+    div[data-baseweb="tab-list"] button[data-baseweb="tab"] {
+        background-color: rgba(255, 255, 255, 0.03) !important;
+        border: 1px solid rgba(0, 240, 255, 0.3) !important;
+        border-radius: 30px !important;
+        color: #ffffff !important;
+        padding: 6px 18px !important;
+        transition: all 0.3s ease-in-out !important;
+    }
+
+    div[data-baseweb="tab-list"] button[data-baseweb="tab"]:hover {
+        border-color: #00f0ff !important;
+        color: #00f0ff !important;
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.5) !important;
+        transform: translateY(-1px);
+    }
+
+    div[data-baseweb="tab-list"] button[aria-selected="true"] {
+        background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(0, 150, 255, 0.4)) !important;
+        border: 1px solid #00f0ff !important;
+        color: #ffffff !important;
+        font-weight: bold !important;
+        box-shadow: 0 0 15px rgba(0, 240, 255, 0.8), inset 0 0 8px rgba(0, 240, 255, 0.4) !important;
+    }
+
+    div[data-baseweb="tab-highlight"] {
+        display: none !important;
+    }
+    </style>
+""",
+    unsafe_allow_html=True,
+)
 
 # ==========================================
 # 6. HALAMAN LOGIN
@@ -670,62 +739,73 @@ if selected_tab == "📝 Input Data":
       unsafe_allow_html=True,
   )
 
-  # --- Custom CSS: Styling Tab Kapsul Transparan Neon (Floating) ---
-  st.markdown(
-      """
-      <style>
-      /* Membuat tab-list menjadi floating / mengambang di atas */
-      div[data-baseweb="tab-list"] {
-          position: fixed !important;
-          top: 60px !important;
-          left: 50% !important;
-          transform: translateX(-50%) !important;
-          z-index: 999999 !important;
-          gap: 8px;
-          background-color: rgba(15, 23, 42, 0.75) !important;
-          padding: 8px 16px !important;
-          border-radius: 50px;
-          border: 1px solid rgba(0, 240, 255, 0.4);
-          box-shadow: 0 4px 25px rgba(0, 240, 255, 0.3);
-          backdrop-filter: blur(12px);
-          max-width: 90vw;
-          overflow-x: auto;
-      }
-      
-      /* Beri jarak di atas konten utama agar tidak tertutup tab yang mengambang */
-      .stTabs {
-          margin-top: 50px;
-      }
+  # --- Custom CSS: Styling Tab Kapsul Transparan Neon (Floating Fix) ---
+st.markdown(
+    """
+    <style>
+    /* Memaksa elemen pembungkus tab utama agar mengambang sempurna di atas */
+    div.stTabs {
+        position: fixed !important;
+        top: 55px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        z-index: 999999 !important;
+        width: max-content !important;
+        max-width: 95vw !important;
+        pointer-events: none !important; /* Supaya klik di luar kapsul tetap tembus ke bawah jika perlu */
+    }
 
-      div[data-baseweb="tab-list"] button[data-baseweb="tab"] {
-          background-color: rgba(255, 255, 255, 0.03) !important;
-          border: 1px solid rgba(0, 240, 255, 0.3) !important;
-          border-radius: 30px !important;
-          color: #ffffff !important; /* Warna teks diubah jadi putih */
-          padding: 6px 18px !important;
-          transition: all 0.3s ease-in-out !important;
-      }
-      div[data-baseweb="tab-list"] button[data-baseweb="tab"]:hover {
-          border-color: #00f0ff !important;
-          color: #00f0ff !important;
-          box-shadow: 0 0 10px rgba(0, 240, 255, 0.5) !important;
-          transform: translateY(-1px);
-      }
-      div[data-baseweb="tab-list"] button[aria-selected="true"] {
-          background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(0, 150, 255, 0.4)) !important;
-          border: 1px solid #00f0ff !important;
-          color: #ffffff !important;
-          font-weight: bold !important;
-          box-shadow: 0 0 15px rgba(0, 240, 255, 0.8), inset 0 0 8px rgba(0, 240, 255, 0.4) !important;
-      }
-      div[data-baseweb="tab-highlight"] {
-          display: none !important;
-      }
-      </style>
-  """,
-      unsafe_allow_html=True,
-  )
+    /* Mengaktifkan kembali interaksi klik khusus untuk isi tab list dan tombolnya */
+    div[data-baseweb="tab-list"], div.stTabs > div:first-child {
+        pointer-events: auto !important;
+        display: flex !important;
+        gap: 8px !important;
+        background-color: rgba(15, 23, 42, 0.85) !important;
+        padding: 8px 16px !important;
+        border-radius: 50px !important;
+        border: 1px solid rgba(0, 240, 255, 0.4) !important;
+        box-shadow: 0 4px 25px rgba(0, 240, 255, 0.4) !important;
+        backdrop-filter: blur(12px) !important;
+        overflow-x: auto !important;
+    }
 
+    /* Memberikan jarak kosong di bagian atas halaman utama agar konten tidak tertutup tab yang melayang */
+    section.main div.block-container {
+        padding-top: 100px !important;
+    }
+
+    /* Styling tombol tab */
+    div[data-baseweb="tab-list"] button[data-baseweb="tab"] {
+        background-color: rgba(255, 255, 255, 0.03) !important;
+        border: 1px solid rgba(0, 240, 255, 0.3) !important;
+        border-radius: 30px !important;
+        color: #ffffff !important;
+        padding: 6px 18px !important;
+        transition: all 0.3s ease-in-out !important;
+    }
+
+    div[data-baseweb="tab-list"] button[data-baseweb="tab"]:hover {
+        border-color: #00f0ff !important;
+        color: #00f0ff !important;
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.5) !important;
+        transform: translateY(-1px);
+    }
+
+    div[data-baseweb="tab-list"] button[aria-selected="true"] {
+        background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(0, 150, 255, 0.4)) !important;
+        border: 1px solid #00f0ff !important;
+        color: #ffffff !important;
+        font-weight: bold !important;
+        box-shadow: 0 0 15px rgba(0, 240, 255, 0.8), inset 0 0 8px rgba(0, 240, 255, 0.4) !important;
+    }
+
+    div[data-baseweb="tab-highlight"] {
+        display: none !important;
+    }
+    </style>
+""",
+    unsafe_allow_html=True,
+)
   # --- Context & User Role ---
   current_user = st.session_state.get("username", "visitor")
   user_lower = str(current_user).lower()
