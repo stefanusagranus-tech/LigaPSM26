@@ -1522,7 +1522,7 @@ if selected_tab == "📝 Input Data":
 
         st.code(wa_sueger_text, language="markdown")
 
-# --- EDIT DATA  ---
+# --- EDIT DATA ---
 elif selected_tab == "➕Edit Data (admin only)":
   st.markdown(
       "<h2 style='color: #00f0ff; text-shadow: 0 0 10px rgba(0,240,255,0.5);'>⚙️"
@@ -1543,32 +1543,55 @@ elif selected_tab == "➕Edit Data (admin only)":
     )
     st.stop()
 
+  # --- AMBIL PERIODE DARI SHEET PERIODE UNTUK MENU EDIT ---
+  periods_df = (
+      st.session_state.get("periods_df", pd.DataFrame())
+      if not st.session_state.get("periods_df", pd.DataFrame()).empty
+      else (
+          periode_df
+          if "periode_df" in locals() and not periode_df.empty
+          else pd.DataFrame()
+      )
+  )
+
+  edit_periods_dict = {}
+  if not periods_df.empty and all(
+      col in periods_df.columns
+      for col in ["period_id", "period_name", "start_date", "end_date"]
+  ):
+    for _, row in periods_df.iterrows():
+      edit_periods_dict[str(row["period_name"])] = str(row["period_id"])
+
+  # Fallback jika dictionary kosong
+  if not edit_periods_dict and not periods_df.empty:
+    edit_periods_dict = {
+        str(row["period_name"]): str(row["period_id"])
+        for _, row in periods_df.iterrows()
+    }
+
   tab_m1, tab_m2 = st.tabs([
       "EDIT SALES PERSONIL",
       "HAPUS & RESET",
   ])
 
-# SUB TAB 1: EDIT SALES PERSONIL
+  # SUB TAB 1: EDIT SALES PERSONIL
   with tab_m1:
     st.markdown(
         "<h4 style='color: #38bdf8;'>✏️ Edit Transaksi Sales (Koreksi"
         " Input)</h4>",
         unsafe_allow_html=True,
     )
-    if not is_admin:
-      st.error(
-          "🔒 Akses Ditolak! Fitur edit transaksi ini hanya dapat diakses oleh"
-          " akun Admin / COS."
-      )
+    if not edit_periods_dict:
+      st.warning("⚠️ Tidak ada data periode yang tersedia di sheet PERIODE.")
     else:
       e_period_name = st.selectbox(
-          "Pilih Periode", list(periods_dict.keys()), key="edit_period"
+          "Pilih Periode", list(edit_periods_dict.keys()), key="edit_period"
       )
-      e_p_id = periods_dict[e_period_name]
+      e_p_id = edit_periods_dict[e_period_name]
       p_start, p_end = get_period_date_bounds(e_p_id)
 
       sp_sub = (
-          sp_df[sp_df["period_id"] == e_p_id].copy()
+          sp_df[sp_df["period_id"].astype(str) == str(e_p_id)].copy()
           if not sp_df.empty and "period_id" in sp_df.columns
           else pd.DataFrame()
       )
@@ -1661,19 +1684,16 @@ elif selected_tab == "➕Edit Data (admin only)":
         " Personil</h4>",
         unsafe_allow_html=True,
     )
-    if not is_admin:
-      st.error(
-          "🔒 Akses Ditolak! Fitur hapus/reset transaksi hanya dapat dilakukan"
-          " oleh akun Admin / COS."
-      )
+    if not edit_periods_dict:
+      st.warning("⚠️ Tidak ada data periode yang tersedia di sheet PERIODE.")
     else:
       d_period_name = st.selectbox(
-          "Pilih Periode", list(periods_dict.keys()), key="del_period"
+          "Pilih Periode", list(edit_periods_dict.keys()), key="del_period"
       )
-      d_p_id = periods_dict[d_period_name]
+      d_p_id = edit_periods_dict[d_period_name]
 
       sp_del_sub = (
-          sp_df[sp_df["period_id"] == d_p_id].copy()
+          sp_df[sp_df["period_id"].astype(str) == str(d_p_id)].copy()
           if not sp_df.empty and "period_id" in sp_df.columns
           else pd.DataFrame()
       )
@@ -1712,8 +1732,10 @@ elif selected_tab == "➕Edit Data (admin only)":
             st.session_state.sales_person_df = st.session_state.sales_person_df[
                 ~(
                     (
-                        st.session_state.sales_person_df["period_id"]
-                        == d_p_id
+                        st.session_state.sales_person_df["period_id"].astype(
+                            str
+                        )
+                        == str(d_p_id)
                     )
                     & (
                         st.session_state.sales_person_df["person_name"]
@@ -1753,8 +1775,10 @@ elif selected_tab == "➕Edit Data (admin only)":
             st.session_state.sales_person_df = st.session_state.sales_person_df[
                 ~(
                     (
-                        st.session_state.sales_person_df["period_id"]
-                        == d_p_id
+                        st.session_state.sales_person_df["period_id"].astype(
+                            str
+                        )
+                        == str(d_p_id)
                     )
                     & (
                         st.session_state.sales_person_df["person_name"]
@@ -1776,8 +1800,7 @@ elif selected_tab == "➕Edit Data (admin only)":
             )
             time.sleep(1.5)
             st.rerun()
-
-
+              
 # --- TAB MASTER DATA & PENGATURAN ---
 elif selected_tab == "⚙️ Master Data & Pengaturan":
   st.markdown(
