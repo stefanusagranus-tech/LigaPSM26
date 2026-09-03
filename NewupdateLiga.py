@@ -635,7 +635,7 @@ st.markdown(
 # ==========================================
         
 # --- TAB 06: INPUT & RESET DATA ---
-elif selected_tab == "06 · Input & Reset Data":
+if selected_tab == "Input & Reset Data":
   st.markdown(
       "<h2 style='color: #00f0ff; text-shadow: 0 0 10px rgba(0,240,255,0.5);'>✏️"
       " Kelola & Input Data Penjualan</h2>",
