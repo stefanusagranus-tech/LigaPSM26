@@ -486,7 +486,60 @@ if "logged_in" not in st.session_state:
 if "username" not in st.session_state:
   st.session_state.username = ""
 
+# =========================================================================
+    # RENDER CUSTOM RADIO MENU (DIJAMIN RATA & BERSIH)
+    # =========================================================================
+    st.markdown("""
+    <style>
+        /* Mengatur container radio agar sejajar dan memenuhi lebar */
+        div[data-testid="stRadio"] div[role="radiogroup"] {
+            display: flex;
+            gap: 12px;
+            flex-direction: row;
+            align-stretch: stretch;
+        }
+        
+        /* Mengatur styling dasar setiap kotak tombol */
+        div[data-testid="stRadio"] div[role="radiogroup"] > label {
+            background-color: #1e293b !important;
+            border: 1px solid #334155 !important.
+            padding: 12px 16px !important;
+            border-radius: 10px !important;
+            color: #b0c4de !important;
+            font-weight: 600 !important;
+            cursor: pointer;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 55px; /* Menyamakan tinggi minimal antar tombol */
+            transition: all 0.25s ease-in-out;
+        }
 
+        /* Menyembunyikan titik radio bawaan Streamlit agar bersih */
+        div[data-testid="stRadio"] div[role="radiogroup"] input[type="radio"] {
+            display: none !important;
+        }
+
+        /* Efek Hover */
+        div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
+            border-color: #38bdf8 !important;
+            background-color: #334155 !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+        }
+
+        /* Saat menu dipilih (Aktif) -> Warna Biru Neon */
+        div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"],
+        div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+            border: 1px solid #00f0ff !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.5) !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
 
 # ==========================================
 # 6. HALAMAN LOGIN
