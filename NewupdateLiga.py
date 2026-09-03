@@ -946,7 +946,9 @@ if selected_tab == "🏠 Menu Utama":
         """,
             unsafe_allow_html=True,
         )
-        # 🚀 TOMBOL AKSI UTAMA & PROSES TRANSISI (ANTI BOCOR TOTAL)
+       
+       # 🚀 TOMBOL AKSI UTAMA & PROSES TRANSISI (VERSI 100% AMAN ANTI-BOCOR)
+               # 🚀 TOMBOL AKSI UTAMA & PROSES TRANSISI (VERSI 100% AMAN ANTI-BOCOR)
         if st.button("Masuk Markas Guild ➔", use_container_width=True, key="btn_enter_dungeon_fixed"):
             placeholder = st.empty()
             with placeholder.container():
@@ -954,7 +956,7 @@ if selected_tab == "🏠 Menu Utama":
                 st.markdown(
                     """
                     <div style='background-color: #0f172a; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
-                        <h1 style='color: #00f0ff; font-family: monospace; animation: blink 1.5s infinite; font-size: 28px;'>🏰 ENTERING GUILD HALL...</h1>
+                        <h1 style='color: #00f0ff; font-family: monospace; animation: blink 1.5s infinite; font-size: 28px;'>ENTERING GUILD HALL...</h1>
                         <p style='color: #94a3b8; font-size: 14px; margin-top: 10px; font-family: monospace;'>Gathering alliance data and loading guild quest board...</p>
                         <style>
                             @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
@@ -971,24 +973,24 @@ if selected_tab == "🏠 Menu Utama":
                     time.sleep(0.01)
                     progress_bar.progress(percent_complete + 1)
                 
-                # --- LAYAR 2: PORTAL UTUH (KARTU TELEPORTASI + TOMBOL KEMBALI SEKALIGUS) ---
-                # Semua elemen dibungkus dalam 1 blok tunggal tanpa celah bocor kode python
+                # --- LAYAR 2: GERBANG PORTAL UTUH (MENGHINDARI SIMBOL UNIK MERUSAK PARSER) ---
                 st.markdown(
                     """
                     <div style='background-color: #0f172a; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center;'>
-                        <h1 style='color: #00ff88; font-family: monospace; font-size: 32px; text-shadow: 0 0 15px rgba(0,255,136,0.5); margin-bottom: 25px;'>✔️ PORTAL READY!</h1>
+                        <h1 style='color: #00ff88; font-family: monospace; font-size: 32px; text-shadow: 0 0 15px rgba(0,255,136,0.5); margin-bottom: 25px;'>PORTAL READY!</h1>
                         
-                        <a href='https://streamlit.app' target='_top' style='background-color: #38bdf8; color: #0f172a; padding: 14px 28px; font-weight: bold; font-family: monospace; font-size: 16px; border-radius: 10px; text-decoration: none; box-shadow: 0 0 15px rgba(56,189,248,0.6); display: inline-block; transition: 0.2s; margin-bottom: 20px;'>
-                            ▶ KETUK UNTUK TELEPORTASI
+                        <!-- Menggunakan teks alfabet biasa agar browser tidak salah membaca struktur link -->
+                        <a href='https://guildutamac383.streamlit.app/' target='_top' style='background-color: #38bdf8; color: #0f172a; padding: 14px 28px; font-weight: bold; font-family: monospace; font-size: 16px; border-radius: 10px; text-decoration: none; box-shadow: 0 0 15px rgba(56,189,248,0.6); display: inline-block; transition: 0.2s; margin-bottom: 20px;'>
+                            LAUNCH TELEPORTATION
                         </a>
                         
                         <br>
                         
                         <a href='' onclick='window.location.reload(); return false;' style='background-color: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 10px 22px; font-weight: bold; font-family: monospace; font-size: 13px; border-radius: 8px; text-decoration: none; border: 1px solid rgba(239, 68, 68, 0.4); display: inline-block; transition: 0.2s;'>
-                            ❌ BATAL & KEMBALI
+                            CANCEL AND RETURN
                         </a>
                         
-                        <p style='color: #94a3b8; font-size: 12px; margin-top: 25px; font-family: monospace;'>Pilih gerbang di atas untuk mengeksekusi perintah.</p>
+                        <p style='color: #94a3b8; font-size: 12px; margin-top: 25px; font-family: monospace;'>Klik tombol di atas untuk membuka gerbang Markas Guild.</p>
                         <style>
                             [data-testid="stSidebar"] { display: none !important; }
                         </style>
@@ -997,29 +999,9 @@ if selected_tab == "🏠 Menu Utama":
                     unsafe_allow_html=True
                 )
                 
-                # Penahan layar stabil tanpa loop tak terbatas (while True) yang merusak parser
+                # Mengunci dan menghentikan parser Python agar layar hitam menetap sempurna
                 st.stop()
 
-    # 🎒 KARTU 2: PREPARATION CAMP (DIPESAN KHUSUS UNTUK KREASI DESAIN ANDA)
-    with col_game2:
-        st.markdown(
-            """
-            <div class='rpg-card-center-fixed'>
-                <div class='rpg-badge-fixed badge-prep'>🛡️ Solo Prep</div>
-                <div class='rpg-icon-center-fixed'>🎒</div>
-                <div class='rpg-title-fixed'>PREPARATION CAMP</div>
-                <div class='rpg-desc-fixed'>Lihat tas penyimpanan (Inventory) rapor pribadi Anda. Cek pencapaian individu, target harian staf, dan statistik performa Anda sendiri.</div>
-            </div>
-        """,
-            unsafe_allow_html=True,
-        )
-        # Tombol aksi kosong pemicu awal, silakan tambahkan logika pemindah halaman internal versi Anda di bawahnya nanti!
-        if st.button("Buka Rapor Personil Toko ➔", use_container_width=True, key="btn_enter_prep_fixed"):
-            # ⬇️ TEMPATKAN KODE LOGIKA/DESAIN LAPORAN INDIVIDU ANDA DI BAWAH SINI ⬇️
-            st.info("Fitur Preparation Camp diaktifkan! Silakan sambungkan dengan komponen data kustom Anda.")
-
-    st.markdown("</div>", unsafe_allow_html=True)
-            
     with col_game2:
         st.markdown(
             """
