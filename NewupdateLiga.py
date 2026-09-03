@@ -1058,6 +1058,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         if st.button("Ambil Quest ➔", use_container_width=True, key="btn_camp_quest"):
             st.toast("Membuka Papan Misi...", icon="🎯")
             
+    # =========================================================================
+    # ⚔️ KARTU 3: UPGRADE SKILL (EDISI RITUAL PENEMPAAN SENJATA 1-100)
+    # =========================================================================
     with col_camp3:
         st.markdown(
             """
@@ -1069,15 +1072,125 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         """, unsafe_allow_html=True
         )
         if st.button("Latih Skill ➔", use_container_width=True, key="btn_camp_skill"):
-            st.toast("Membuka Ruang Latihan...", icon="⚔️")
-
-    st.markdown("<div class='leave-camp-box'>", unsafe_allow_html=True)
-    if st.button("🚪 KEMBALI KE BERANDA KOTA", use_container_width=True, key="btn_leave_camp"):
-        st.session_state.portal_prep_ready = False
-        st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
-        
-    st.stop()
+            placeholder = st.empty()
+            with placeholder.container():
+                # --- LAYAR LOADING FULLSCREEN: ANIMASI BLACKSMITH FORGING ---
+                st.markdown(
+                    """
+                    <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
+                        
+                        <!-- Struktur Animasi Menempa Logam/Anvil Glow -->
+                        <div class="forge-container">
+                            <div class="anvil">⚒️</div>
+                            <div class="spark circle1"></div>
+                            <div class="spark circle2"></div>
+                        </div>
+                        
+                        <h1 style='color: #f97316; font-family: monospace; animation: blink 1.2s infinite; font-size: 26px; margin-top: 40px; letter-spacing: 2px; text-shadow: 0 0 15px rgba(249,115,22,0.5);'>FORGING YOUR SALES SKILL...</h1>
+                        <p id="forge-status" style='color: #64748b; font-size: 13px; margin-top: 5px; font-family: monospace;'>Heating the metal and sharpening performance attributes...</p>
+                        <p id="progress-text" style='color: #fbbf24; font-family: monospace; font-size: 18px; font-weight: bold; margin-top: 25px;'>FORGING PROGRESS: 0%</p>
+                        
+                        <style>
+                            @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+                            [data-testid="stSidebar"] { display: none !important; }
+                            [data-testid="stHeader"] { display: none !important; }
+                            
+                            .forge-container {
+                                position: relative;
+                                width: 150px;
+                                height: 150px;
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                            }
+                            .anvil {
+                                font-size: 70px;
+                                z-index: 10;
+                                filter: drop-shadow(0 0 15px rgba(249, 115, 22, 0.4));
+                                animation: strike 0.8s infinite ease-in-out;
+                            }
+                            
+                            /* Efek Percikan Api Pijar dari Tempaan Hammer */
+                            .spark {
+                                position: absolute;
+                                border-radius: 50%;
+                                border: 2px solid #ef4444;
+                                box-sizing: border-box;
+                            }
+                            .circle1 {
+                                width: 120px;
+                                height: 120px;
+                                animation: explode 1.6s infinite linear;
+                                filter: drop-shadow(0 0 10px #f97316);
+                            }
+                            .circle2 {
+                                width: 140px;
+                                height: 140px;
+                                animation: explode 1.6s infinite linear;
+                                animation-delay: 0.8s;
+                                filter: drop-shadow(0 0 10px #ef4444);
+                            }
+                            
+                            /* Logika Gerakan Menempa & Percikan Api */
+                            @keyframes strike {
+                                0%, 100% { transform: scale(1) translateY(0); }
+                                50% { transform: scale(0.9) translateY(8px); filter: drop-shadow(0 0 25px #fbbf24); }
+                            }
+                            @keyframes explode {
+                                0% { transform: scale(0.3); opacity: 1; border-style: solid; }
+                                50% { border-style: dashed; }
+                                100% { transform: scale(1.1); opacity: 0; border-style: dotted; }
+                            }
+                        </style>
+                    </div>
+                    """, 
+                    unsafe_allow_html=True
+                )
+                
+                # ⏳ PROSES BAR 1 - 100% DENGAN TEXT PERSENTASE DINAMIS
+                progress_bar = st.progress(0)
+                for percent_complete in range(100):
+                    time.sleep(0.04) # Durasi ritmis tempaan (~4 detik)
+                    current_percent = percent_complete + 1
+                    progress_bar.progress(current_percent)
+                    
+                    # Mengubah teks persentase secara real-time di bawah bar
+                    st.markdown(
+                        f"""
+                        <script>
+                            window.parent.document.getElementById("progress-text").innerHTML = "FORGING PROGRESS: {current_percent}%";
+                            if ({current_percent} > 40 && {current_percent} < 80) {{
+                                window.parent.document.getElementById("forge-status").innerHTML = "Tempering blade core and structuring transaction logs...";
+                            }} else if ({current_percent} >= 80) {{
+                                window.parent.document.getElementById("forge-status").innerHTML = "Quenching weapon in holy water! Stabilization complete!";
+                            }}
+                        </script>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                
+                # Tampilan Efek Sukses Singkat Sebelum Masuk Form
+                st.markdown(
+                    """
+                    <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
+                        <h1 style='color: #fbbf24; font-family: monospace; font-size: 32px; text-shadow: 0 0 20px rgba(251,191,36,0.6);'>⚔️ WEAPON UPGRADED!</h1>
+                        <p style='color: #ffffff; font-size: 15px; margin-top: 10px; font-family: monospace;'>Entering training ground with your sharpest sword...</p>
+                    </div>
+                    """, 
+                    unsafe_allow_html=True
+                )
+                time.sleep(1.5)
+            
+            # Hancurkan layar loading, eksekusi pemindahan halaman internal
+            placeholder.empty()
+            st.session_state.portal_prep_ready = False
+            
+            # Alihkan tab menu ke halaman Input Data penjualan milik Anda
+            if "custom_sub_tabs" in st.session_state:
+                st.session_state["custom_sub_tabs"] = "⚡ Multi Input Sales"
+            else:
+                selected_tab = "📝 Input Data"
+            st.rerun()
 
 # =========================================================================
 # MENU UTAMA: GAYA RPG RESPONSIVE (PORTAL GUILD ONLY)
