@@ -452,29 +452,28 @@ st.markdown(
     }
 
     /* ========================================================================= */
-    /* FIX: WARNA TEKS TAB STREAMLIT (TIDAK AKTIF & AKTIF)                        */
+    /* JURUS PAMUNGKAS: FORCE COLOR TAB STREAMLIT                                */
     /* ========================================================================= */
-    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"] {
-        color: #b0c4de !important; /* Warna teks tab tidak aktif (terang & jelas) */
-    }
-    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"] p,
-    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"] span {
-        color: #b0c4de !important;
-        font-weight: 500;
+    
+    /* Targetkan seluruh elemen di dalam container tab */
+    div[data-baseweb="tab-list"] button {
+        background-color: transparent !important;
     }
     
-    /* Warna khusus tab yang sedang AKTIF */
-    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"][aria-selected="true"] {
-        color: #00ff88 !important; /* Hijau neon terang */
+    /* Memaksa warna teks SEMUA tab menjadi terang (#b0c4de) */
+    div[data-baseweb="tab-list"] button div[data-testid="stMarkdownContainer"] p {
+        color: #b0c4de !important;
+        font-weight: 500 !important;
     }
-    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"][aria-selected="true"] p,
-    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"][aria-selected="true"] span {
+
+    /* Memaksa warna teks tab yang sedang AKTIF menjadi hijau neon (#00ff88) */
+    div[data-baseweb="tab-list"] button[aria-selected="true"] div[data-testid="stMarkdownContainer"] p {
         color: #00ff88 !important;
         font-weight: 700 !important;
     }
 
-    /* Garis bawah tab aktif */
-    .stTabs [data-baseweb="tab-list"] div[data-baseweb="tab-highlight"] {
+    /* Garis bawah/indikator tab aktif */
+    div[data-baseweb="tab-highlight"] {
         background-color: #00ff88 !important;
     }
 </style>
@@ -486,6 +485,8 @@ if "logged_in" not in st.session_state:
   st.session_state.logged_in = False
 if "username" not in st.session_state:
   st.session_state.username = ""
+
+
 
 # ==========================================
 # 6. HALAMAN LOGIN
