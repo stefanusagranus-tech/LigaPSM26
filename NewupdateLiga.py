@@ -726,17 +726,18 @@ if selected_tab == "📝 Input Data":
         periods_dict = {"Periode Utama": "P01"}
 
     # =========================================================================
-    # RENDER CUSTOM RADIO MENU (RATA, BERSIH TANPA TITIK)
+    # RENDER CUSTOM RADIO MENU (TERPISAH ANTARA SIDEBAR & KONTEN UTAMA)
     # =========================================================================
     st.markdown("""
     <style>
-        div[data-testid="stRadio"] div[role="radiogroup"] {
+        /* CSS khusus untuk Sub-Tab (Menu Navigasi Horizontal di Konten Utama) */
+        div.block-container div[data-testid="stRadio"] div[role="radiogroup"] {
             display: flex;
             gap: 12px;
             flex-direction: row;
             align-stretch: stretch;
         }
-        div[data-testid="stRadio"] div[role="radiogroup"] > label {
+        div.block-container div[data-testid="stRadio"] div[role="radiogroup"] > label {
             background-color: #1e293b !important;
             border: 1px solid #334155 !important;
             padding: 12px 16px !important;
@@ -752,21 +753,37 @@ if selected_tab == "📝 Input Data":
             min-height: 55px;
             transition: all 0.25s ease-in-out;
         }
-        div[data-testid="stRadio"] div[role="radiogroup"] input[type="radio"] {
+        div.block-container div[data-testid="stRadio"] div[role="radiogroup"] input[type="radio"] {
             display: none !important;
         }
-        div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
+        div.block-container div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
             border-color: #38bdf8 !important;
             background-color: #334155 !important;
             color: #ffffff !important;
             box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
         }
-        div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"],
-        div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) {
+        div.block-container div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"],
+        div.block-container div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) {
             background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
             border: 1px solid #00f0ff !important;
             color: #ffffff !important;
             box-shadow: 0 0 15px rgba(0, 240, 255, 0.5) !important;
+        }
+
+        /* CSS khusus untuk Sidebar agar tetap vertikal rapi dan tidak berantakan */
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] {
+            flex-direction: column !important;
+            gap: 8px !important;
+        }
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] > label {
+            flex-direction: row !important;
+            justify-content: flex-start !important;
+            text-align: left !important;
+            min-height: auto !important;
+            padding: 8px 12px !important;
+        }
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] input[type="radio"] {
+            display: inline-block !important;
         }
     </style>
     """, unsafe_allow_html=True)
