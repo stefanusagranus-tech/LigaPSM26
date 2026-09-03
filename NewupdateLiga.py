@@ -2056,7 +2056,7 @@ elif selected_tab == "📝 Input Data":
                     )
 
                 sum_syarat_pwp = int(pps_filtered_harian["syarat_pwp"].sum())
-                sum_redeem_pwp = int(pps_filtered_parian["redeem_pwp"].sum())
+                sum_redeem_pwp = int(pps_filtered_harian["redeem_pwp"].sum())
                 sum_qty_pwp = int(pps_filtered_harian["qty_pwp"].sum())
                 sum_qty_sg = int(pps_filtered_harian["qty_sg"].sum())
 
