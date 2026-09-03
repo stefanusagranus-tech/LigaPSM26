@@ -946,53 +946,57 @@ if selected_tab == "🏠 Menu Utama":
         """,
             unsafe_allow_html=True,
         )
-       
-             # Inisialisasi status portal di latar belakang jika belum terdaftar
+        
+        # Menginisialisasi variabel state jika belum ada
         if "portal_guild_ready" not in st.session_state:
             st.session_state.portal_guild_ready = False
+            
+        if st.button("Masuk Markas Guild ➔", use_container_width=True, key="btn_enter_dungeon_fixed"):
+            placeholder = st.empty()
+            with placeholder.container():
+                st.markdown(
+                    """
+                    <div style='background-color: #0f172a; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
+                        <h1 style='color: #00f0ff; font-family: monospace; animation: blink 1.5s infinite; font-size: 28px;'>ENTERING GUILD HALL...</h1>
+                        <p style='color: #94a3b8; font-size: 14px; margin-top: 10px; font-family: monospace;'>Gathering alliance data and loading guild quest board...</p>
+                        <style>
+                            @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+                            [data-testid="stSidebar"] { display: none !important; }
+                        </style>
+                    </div>
+                """, unsafe_allow_html=True
+                )
+                progress_bar = st.progress(0)
+                for percent_complete in range(100):
+                    time.sleep(0.01)
+                    progress_bar.progress(percent_complete + 1)
+            
+            placeholder.empty()
+            st.session_state.portal_guild_ready = True
+            st.rerun()
 
-        # 🚀 TOMBOL AKSI UTAMA & PROSES TRANSISI (VERSI SESSION STATE - BEBAS STUCK 100%)
-        if not st.session_state.portal_guild_ready:
-            if st.button("Masuk Markas Guild ➔", use_container_width=True, key="btn_enter_dungeon_fixed"):
-                placeholder = st.empty()
-                with placeholder.container():
-                    # --- LAYAR LOADING 1: ANIMASI MEMUAT DATA ---
-                    st.markdown(
-                        """
-                        <div style='background-color: #0f172a; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
-                            <h1 style='color: #00f0ff; font-family: monospace; animation: blink 1.5s infinite; font-size: 28px;'>ENTERING GUILD HALL...</h1>
-                            <p style='color: #94a3b8; font-size: 14px; margin-top: 10px; font-family: monospace;'>Gathering alliance data and loading guild quest board...</p>
-                            <style>
-                                @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-                                [data-testid="stSidebar"] { display: none !important; }
-                            </style>
-                        </div>
-                        """, 
-                        unsafe_allow_html=True
-                    )
-                    
-                    # Menggulir kemajuan progress bar bawaan
-                    progress_bar = st.progress(0)
-                    for percent_complete in range(100):
-                        time.sleep(0.01)
-                        progress_bar.progress(percent_complete + 1)
-                
-                # Selesai loading, ubah status portal menjadi READY dan picu render ulang
-                placeholder.empty()
-                st.session_state.portal_guild_ready = True
-                st.rerun()
-        else:
-            # --- LAYAR 2: HALAMAN PORTAL READY (DESAIN EXCLUSIVE GAME MENU) ---
+       
+        # =========================================================================
+        # 🚀 KUNCI UTAMA: MEMAKSA HALAMAN PORTAL GAME JADI FULLSCREEN MANDIRI
+        # =========================================================================
+        if "portal_guild_ready" in st.session_state and st.session_state.portal_guild_ready:
             st.markdown(
                 """
                 <style>
-                    /* Mengubah latar belakang halaman aplikasi menjadi gelap game secara aman */
+                    /* Mengubah total warna dasar aplikasi menjadi gelap game */
                     .main .block-container {
                         background-color: #0c1020 !important;
                         min-height: 100vh;
-                        padding-top: 60px !important;
+                        padding-top: 10% !important; /* Menggeser posisi konten ke tengah layar */
                     }
-                    [data-testid="stSidebar"] { display: none !important; }
+                    /* Menghilangkan sidebar bawaan secara total khusus di layar ini */
+                    [data-testid="stSidebar"] { 
+                        display: none !important; 
+                    }
+                    /* Menghilangkan header bawaan atas Streamlit */
+                    [data-testid="stHeader"] { 
+                        display: none !important; 
+                    }
         
                     /* Menata ulang gaya tombol asli Streamlit agar berbentuk Kartu Pilihan Game */
                     div[data-testid="stColumn"] div.stButton > button,
@@ -1012,7 +1016,7 @@ if selected_tab == "🏠 Menu Utama":
                         text-decoration: none !important;
                     }
         
-                    /* 🌌 Desain Spesifik Tombol Kiri: LAUNCH TELEPORTATION (Portal Dimensi Cyan) */
+                    /* 🌌 Tombol Kiri: LAUNCH TELEPORTATION (Cyan Neon) */
                     div[data-testid="stColumn"]:nth-child(1) a[data-testid="stLinkButton"] {
                         background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.3) 100%) !important;
                         color: #00f0ff !important;
@@ -1026,7 +1030,7 @@ if selected_tab == "🏠 Menu Utama":
                         box-shadow: 0 0 30px rgba(6, 182, 212, 0.6) !important;
                     }
         
-                    /* ❌ Desain Spesifik Tombol Kanan: CANCEL AND RETURN (Gerbang Pembatalan Merah) */
+                    /* ❌ Tombol Kanan: CANCEL AND RETURN (Merah Crimson) */
                     div[data-testid="stColumn"]:nth-child(2) div.stButton > button {
                         background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(185, 28, 28, 0.2) 100%) !important;
                         color: #ef4444 !important;
@@ -1044,27 +1048,23 @@ if selected_tab == "🏠 Menu Utama":
                 unsafe_allow_html=True
             )
             
-            # Elemen Judul Utama Tengah Layar
             st.markdown("<h1 style='color: #00ff88; font-family: monospace; font-size: 36px; text-shadow: 0 0 20px rgba(0,255,136,0.6); text-align: center;'>⚡ PORTAL READY! ⚡</h1>", unsafe_allow_html=True)
             st.markdown("<p style='color: #94a3b8; font-family: monospace; text-align: center; font-size: 14px; margin-bottom: 50px;'>Mekanisme sihir teleportasi aliansi telah dikonfigurasi sempurna. Silakan pilih langkah Anda:</p>", unsafe_allow_html=True)
             
-            # 🚀 Membagi Halaman Menjadi 2 Kolom Lebar Berdampingan
             col_portal1, col_portal2 = st.columns(2)
             
             with col_portal1:
-                # Tombol Teleportasi Utama (Sekarang berbentuk Kotak Besar Keren)
-                st.link_button(
-                    "⚡ LAUNCH TELEPORTATION", 
-                    url="https://guildutamac383.streamlit.app/", 
-                    use_container_width=True
-                )
-            
+                st.link_button("⚡ LAUNCH TELEPORTATION", url="https://streamlit.app", use_container_width=True)
+                
             with col_portal2:
-                # Tombol Batalkan Aksi (Sekarang berbentuk Kotak Besar Keren)
-                if st.button("❌ CANCEL & RETURN", use_container_width=True, key="btn_cancel_portal_fixed"):
+                if st.button("❌ CANCEL & RETURN", use_container_width=True, key="btn_cancel_portal_main"):
                     st.session_state.portal_guild_ready = False
                     st.rerun()
-
+                    
+            # Mengunci aplikasi secara mutlak agar kode dashboard di bawahnya tidak ikut digambar!
+            st.stop()
+        
+        
     with col_game2:
         st.markdown(
             """
