@@ -908,7 +908,7 @@ if "portal_guild_ready" in st.session_state and st.session_state.portal_guild_re
     st.stop()
 
 # =========================================================================
-# 🚀 LANGKAH 1B: PREPARATION CAMP (KEMBALI KE DESAIN AWAL + FIX TOMBOL)
+# 🚀 LANGKAH 1B: PREPARATION CAMP (ANTI-OFFSIDE, POSISI MENEMPEL PRESISI)
 # =========================================================================
 if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_ready:
     st.markdown(
@@ -928,34 +928,26 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             [data-testid="stSidebar"] { display: none !important; }
             [data-testid="stHeader"] { display: none !important; }
 
-            /* Desain Kontainer Grid Pilihan Menu Game */
-            .camp-grid {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 16px;
-                justify-content: center;
-                margin-top: 30px;
-                width: 100%;
+            /* Mengunci seluruh kolom agar bertindak sebagai Flexbox tegak lurus */
+            div[data-testid="stColumn"] {
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: flex-start !important;
+                align-items: stretch !important;
             }
 
             /* Desain Kustom Kartu Pertama Anda yang Keren */
             .camp-card {
-                flex: 1;
-                min-width: 240px;
-                max-width: 360px;
                 background: linear-gradient(135deg, #131926 0%, #1e2638 100%);
                 border: 2px solid #b45309; 
-                border-radius: 12px;
+                border-bottom: none; /* Menghilangkan border bawah kartu agar menyatu dengan tombol */
+                border-radius: 12px 12px 0 0; /* Hanya membulatkan sudut atas kartu */
                 padding: 24px;
                 text-align: center;
                 position: relative;
                 box-shadow: 0 4px 15px rgba(180, 83, 9, 0.15);
                 transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            }
-            .camp-card:hover {
-                transform: translateY(-5px);
-                border-color: #fbbf24; 
-                box-shadow: 0 0 25px rgba(251, 191, 36, 0.35);
+                flex-grow: 1; /* Memaksa semua tinggi kartu otomatis sejajar seimbang */
             }
 
             /* Desain Teks & Ikon RPG */
@@ -977,27 +969,32 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 font-family: monospace;
                 font-size: 12px;
                 line-height: 1.5;
-                margin-bottom: 20px;
+                margin-bottom: 5px;
             }
 
-            /* 🚀 KUNCI PERBAIKAN: Menarik tombol asli Streamlit naik ke atas agar pas simetris di bawah kartu */
+            /* 🚀 FIX UTAMA: Mengunci tombol agar menempel presisi di dasar bawah kartu tanpa celah */
             div[data-testid="stColumn"] div.stButton {
-                margin-top: -24px !important; /* Menarik tombol ke atas menghilangkan celah kosong */
-                padding: 0 2px !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                display: block !important;
+                width: 100% !important;
             }
             
             div[data-testid="stColumn"] div.stButton > button {
-                background: rgba(180, 83, 9, 0.1) !important;
+                background: rgba(180, 83, 9, 0.15) !important;
                 color: #fef08a !important;
-                border: 1px solid #b45309 !important;
-                border-top: none !important; /* Menghilangkan border atas tombol agar menyatu mulus dengan kartu */
-                border-radius: 0 0 8px 8px !important; /* Membuat sudut bawah tombol membulat serasi */
+                border: 2px solid #b45309 !important;
+                border-top: 1px solid rgba(180, 83, 9, 0.3) !important; /* Batas halus antara kartu dan tombol */
+                border-radius: 0 0 12px 12px !important; /* Membuat sudut bawah tombol membulat mengikuti kartu */
                 font-family: monospace !important;
                 font-size: 13px !important;
                 font-weight: 700 !important;
-                padding: 10px 0px !important;
-                transition: all 0.2s ease !important;
+                padding: 12px 0px !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+                margin: 0 !important;
             }
+            
             div[data-testid="stColumn"] div.stButton > button:hover {
                 background: #b45309 !important;
                 color: #0b0f19 !important;
@@ -1008,18 +1005,30 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             .leave-camp-box div.stButton {
                 margin-top: 40px !important;
             }
+            .leave-camp-box div.stButton > button {
+                border-radius: 10px !important;
+                border-top: 1px solid #b45309 !important;
+                background: rgba(239, 68, 68, 0.1) !important;
+                color: #ef4444 !important;
+                border: 1px solid rgba(239, 68, 68, 0.4) !important;
+            }
+            .leave-camp-box div.stButton > button:hover {
+                background: #ef4444 !important;
+                color: white !important;
+                box-shadow: 0 0 15px rgba(239, 68, 68, 0.5) !important;
+            }
         </style>
         """, 
         unsafe_allow_html=True
     )
 
     # Header Atas Halaman Camp
-    st.markdown("<h1 style='color: #f59e0b; font-family: monospace; font-size: 32px; text-shadow: 0 0 15px rgba(245,158,11,0.4); text-align: center;'>⛺ PREPARATION CAMP ⛺</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='color: #f59e0b; font-family: monospace; font-size: 32px; text-shadow: 0 0 15px rgba(245,158,11,0.4); text-align: center; margin-bottom: 5px;'>⛺ PREPARATION CAMP ⛺</h1>", unsafe_allow_html=True)
     st.markdown("<p style='color: #64748b; font-family: monospace; text-align: center; font-size: 13px;'>Persiapkan perlengkapan, cek papan misi, dan tingkatkan keahlian beladiri Anda sebelum melangkah keluar.</p>", unsafe_allow_html=True)
     
     st.markdown("<div class='camp-grid'>", unsafe_allow_html=True)
     
-    # Grid 3 Kolom stabil asli pilihan Anda
+    # Grid 3 Kolom Stabil Berdampingan
     col_camp1, col_camp2, col_camp3 = st.columns(3)
     
     with col_camp1:
@@ -1033,7 +1042,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         """, unsafe_allow_html=True
         )
         if st.button("Lihat Status ➔", use_container_width=True, key="btn_camp_status"):
-            st.toast("Membuka Piagam Anggota...", icon="📜")
+            st.session_state.current_camp_menu = "status"
+            st.rerun()
             
     with col_camp2:
         st.markdown(
