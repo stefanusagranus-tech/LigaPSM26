@@ -824,7 +824,7 @@ st.markdown(
 # =========================================================================
 # MENU UTAMA: GAYA PILIHAN GAME RPG (DUNGEON & PREPARATION)
 # =========================================================================
-if selected_tab == "Menu Utama":
+if selected_tab == "🏠 Menu Utama":
     # 1. Suntikkan CSS khusus untuk komponen kartu tombol game
     st.markdown(
         """
