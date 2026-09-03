@@ -1947,6 +1947,25 @@ elif selected_tab == "📝 Input Data":
                 unsafe_allow_html=True,
             )
 
+            # 🚀 TOMBOL PEMICU UTAMA: Mengendalikan penarikan data agar hemat limit API Google
+            if st.button("🔮 GENERATE LAPORAN HARIAN PPS", use_container_width=True, type="primary"):
+                
+                with st.spinner("🧙‍♂️ Sihir pembersih cache aktif... Menarik data segar dari Google Sheets"):
+                    # 1. Paksa Streamlit merobek foto memori lama (Cache Busting)
+                    st.cache_data.clear()
+                    
+                    # 2. Panggil ulang fungsi database utama Anda untuk mengambil baris paling baru dari cloud
+                    (p_df, p_pps_df, p_store_df, i_df, pers_df, si_df, sp_df, s_pps_df, s_store_df) = load_database()
+                    
+                    # 3. Sinkronkan hasil segar ke dalam session state global aplikasi Anda
+                    st.session_state.sales_person_df = sp_df
+                    st.session_state.sales_pps_df = s_pps_df
+                    st.session_state.sales_item_df = si_df
+                    st.session_state.sales_store_df = s_store_df
+                
+                st.toast("Laporan PPS Berhasil Diperbarui Secara Live!", icon="⚡")
+
+            # --- SISA KODE PROSES PEMBACAAN DATA DI BAWAHNYA TETAP SAMA ---
             periode_bulan = selected_wa_date.strftime("%B %Y")
             sp_report_df = st.session_state.get(
                 "sales_person_df", pd.DataFrame()
@@ -2037,7 +2056,7 @@ elif selected_tab == "📝 Input Data":
                     )
 
                 sum_syarat_pwp = int(pps_filtered_harian["syarat_pwp"].sum())
-                sum_redeem_pwp = int(pps_filtered_harian["redeem_pwp"].sum())
+                sum_redeem_pwp = int(pps_filtered_parian["redeem_pwp"].sum())
                 sum_qty_pwp = int(pps_filtered_harian["qty_pwp"].sum())
                 sum_qty_sg = int(pps_filtered_harian["qty_sg"].sum())
 
