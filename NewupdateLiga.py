@@ -899,7 +899,7 @@ if "portal_guild_ready" in st.session_state and st.session_state.portal_guild_re
     col_portal1, col_portal2 = st.columns(2)
     
     with col_portal1:
-        st.link_button("⚡ LAUNCH TELEPORTATION", url="https://streamlit.app", use_container_width=True)
+        st.link_button("⚡ LAUNCH TELEPORTATION", url="https://guildutamac383streamlit.app", use_container_width=True)
         
     with col_portal2:
         if st.button("❌ CANCEL & RETURN", use_container_width=True, key="btn_cancel_portal_main"):
@@ -1035,28 +1035,107 @@ if selected_tab == "🏠 Menu Utama":
             unsafe_allow_html=True,
         )
         
-        # Menginisialisasi variabel state jika belum ada
         if "portal_guild_ready" not in st.session_state:
             st.session_state.portal_guild_ready = False
             
         if st.button("Masuk Markas Guild ➔", use_container_width=True, key="btn_enter_dungeon_fixed"):
             placeholder = st.empty()
             with placeholder.container():
+                # --- LAYAR LOADING: ANIMASI MAGIC FRACTAL PORTAL ---
                 st.markdown(
                     """
-                    <div style='background-color: #0f172a; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
-                        <h1 style='color: #00f0ff; font-family: monospace; animation: blink 1.5s infinite; font-size: 28px;'>ENTERING GUILD HALL...</h1>
-                        <p style='color: #94a3b8; font-size: 14px; margin-top: 10px; font-family: monospace;'>Gathering alliance data and loading guild quest board...</p>
+                    <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
+                        
+                        <!-- Struktur Lingkaran Sihir/Fractal Teleport -->
+                        <div class="magic-portal-container">
+                            <div class="magic-circle outer-circle"></div>
+                            <div class="magic-circle middle-circle"></div>
+                            <div class="magic-circle inner-circle">🏰</div>
+                        </div>
+                        
+                        <h1 style='color: #00f0ff; font-family: monospace; animation: blink 1.5s infinite; font-size: 24px; margin-top: 40px; letter-spacing: 2px;'>CONJURING TELEPORTATION PORTAL...</h1>
+                        <p style='color: #64748b; font-size: 13px; margin-top: 50px; font-family: monospace;'>Channeling mana resources and stabilizing guild gate...</p>
+                        
                         <style>
                             @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
                             [data-testid="stSidebar"] { display: none !important; }
+                            [data-testid="stHeader"] { display: none !important; }
+                            
+                            /* Desain Induk Wadah Portal */
+                            .magic-portal-container {
+                                position: relative;
+                                width: 160px;
+                                height: 160px;
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                            }
+                            
+                            /* Aturan Umum Lingkaran Sihir */
+                            .magic-circle {
+                                position: absolute;
+                                border-radius: 50%;
+                                border-style: dashed; /* Efek garis putus-putus ala pattern fractal */
+                                transition: all 0.5s ease;
+                            }
+                            
+                            /* Lingkaran Luar (Berputar Searah Jarum Jam) */
+                            .outer-circle {
+                                width: 160px;
+                                height: 160px;
+                                border: 3px dashed #00f0ff;
+                                border-left-style: solid;
+                                filter: drop-shadow(0 0 15px rgba(0, 240, 255, 0.4));
+                                animation: rotate-clockwise 6s infinite linear;
+                            }
+                            
+                            /* Lingkaran Tengah (Berputar Terbalik Lambat) */
+                            .middle-circle {
+                                width: 120px;
+                                height: 120px;
+                                border: 2px dotted #6366f1;
+                                border-right-style: solid;
+                                filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.4));
+                                animation: rotate-counter 4s infinite linear;
+                            }
+                            
+                            /* Lingkaran Inti (Pusat Energi Berpendar) */
+                            .inner-circle {
+                                width: 70px;
+                                height: 70px;
+                                border: 2px solid #00ff88;
+                                background: rgba(15, 23, 42, 0.6);
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                                font-size: 30px;
+                                filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.6));
+                                animation: pulse-core 2s infinite ease-in-out;
+                            }
+                            
+                            /* Logika Animasi Perputaran */
+                            @keyframes rotate-clockwise {
+                                from { transform: rotate(0deg); }
+                                to { transform: rotate(360deg); }
+                            }
+                            @keyframes rotate-counter {
+                                from { transform: rotate(360deg); }
+                                to { transform: rotate(0deg); }
+                            }
+                            @keyframes pulse-core {
+                                0%, 100% { transform: scale(1); box-shadow: 0 0 10px rgba(0, 255, 136, 0.2); }
+                                50% { transform: scale(1.08); box-shadow: 0 0 25px rgba(0, 255, 136, 0.6); }
+                            }
                         </style>
                     </div>
-                """, unsafe_allow_html=True
+                    """, 
+                    unsafe_allow_html=True
                 )
+                
+                # ⏳ PENYETELAN DURASI LOADING BAR (Dibuat lambat ~4-5 detik)
                 progress_bar = st.progress(0)
                 for percent_complete in range(100):
-                    time.sleep(0.01)
+                    time.sleep(0.04) # Mengubah jeda spasi dari 0.01 menjadi 0.04 detik agar pengisian berjalan khidmat
                     progress_bar.progress(percent_complete + 1)
             
             placeholder.empty()
