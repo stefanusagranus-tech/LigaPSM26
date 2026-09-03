@@ -1543,7 +1543,7 @@ elif selected_tab == "➕Edit Data (admin only)":
   ])
 
 # SUB TAB 1: EDIT SALES PERSONIL
-  with tab_in1:
+  with tab_1:
     st.markdown(
         "<h4 style='color: #38bdf8;'>✏️ Edit Transaksi Sales (Koreksi"
         " Input)</h4>",
@@ -1649,7 +1649,7 @@ elif selected_tab == "➕Edit Data (admin only)":
             st.rerun()
 
   # SUB TAB 2: HAPUS & RESET
-  with tab_in2:
+  with tab_2:
     st.markdown(
         "<h4 style='color: #38bdf8;'>🗑️ Hapus Transaksi / Reset Sales"
         " Personil</h4>",
