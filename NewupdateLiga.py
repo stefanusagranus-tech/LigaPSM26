@@ -948,7 +948,7 @@ if selected_tab == "🏠 Menu Utama":
     # 🚀 Menggunakan st.columns bawaan agar pembagian kolom di Android/iOS diatur matang oleh Streamlit
     col_game1, col_game2 = st.columns(2)
 
-    with col_game1:
+   with col_game1:
         st.markdown(
             """
             <div class='rpg-card-center-fixed'>
@@ -962,7 +962,7 @@ if selected_tab == "🏠 Menu Utama":
         )
         
         if st.button("Masuk Markas Guild ➔", use_container_width=True, key="btn_enter_dungeon_fixed"):
-            # 🚀 PROSES LOADING SCREEN FULLSCREEN (GUILD HALL)
+            # 🚀 1. PROSES LOADING SCREEN FULLSCREEN (GUILD HALL)
             placeholder = st.empty()
             with placeholder.container():
                 st.markdown(
@@ -978,16 +978,34 @@ if selected_tab == "🏠 Menu Utama":
                 """, unsafe_allow_html=True
                 )
                 
-                # Progress bar simulasi memuat markas Guild
+                # Menjalankan Progress Bar
                 progress_bar = st.progress(0)
                 for percent_complete in range(100):
-                    time.sleep(0.02) 
+                    time.sleep(0.01) # Kecepatan loading
                     progress_bar.progress(percent_complete + 1)
+                
+                # 🚀 2. TAMPILAN KETIKA SUKSES & LOGIKA REDIRECT KE URL UTAMA
+                # Suntikan script JavaScript window.location.href otomatis mengalihkan browser ke web utama Anda
+                st.markdown(
+                    """
+                    <div style='background-color: #0f172a; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
+                        <h1 style='color: #00ff88; font-family: monospace; font-size: 32px; text-shadow: 0 0 15px rgba(0,255,136,0.5);'>✔️ SUCCESS!</h1>
+                        <p style='color: #ffffff; font-size: 16px; margin-top: 10px; font-family: monospace;'>Teleporting to the Guild Hall...</p>
+                        <style>[data-testid="stSidebar"] { display: none !important; }</style>
+                        
+                        <script>
+                            setTimeout(function(){
+                                window.location.href = 'https://guildutamac383.streamlit.app/';
+                            }, 1500); // Menunggu 1.5 detik lalu otomatis berpindah halaman web
+                        </script>
+                    </div>
+                """, unsafe_allow_html=True
+                )
+                # Tahan python agar screen tidak langsung dihancurkan
+                time.sleep(2.0)
             
-            placeholder.empty() 
-            # --- SELESAI LOADING: MASUKKAN LOGIKA PINDAH HALAMAN DI SINI ---
-            st.success("⚔️ Welcome to the Guild Hall, Hero!")
-
+            placeholder.empty()
+            
     with col_game2:
         st.markdown(
             """
