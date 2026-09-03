@@ -822,10 +822,11 @@ st.markdown(
 # ==========================================
 
 # =========================================================================
-# MENU UTAMA: GAYA RPG RESPONSIVE (INDENTASI FIXED)
+# MENU UTAMA: GAYA RPG RESPONSIVE (PORTAL GUILD ONLY)
 # =========================================================================
 if selected_tab == "🏠 Menu Utama":
-    # 1. Suntikkan CSS khusus untuk merapikan teks, ikon, dan tombol di dalam grid
+    import time
+    
     st.markdown(
         """
         <style>
@@ -930,9 +931,9 @@ if selected_tab == "🏠 Menu Utama":
 
     st.markdown("<div class='rpg-grid-container'>", unsafe_allow_html=True)
 
-    # Membagi 2 kolom menggunakan komponen Streamlit
     col_game1, col_game2 = st.columns(2)
 
+    # 🏰 KARTU 1: ENTER GUILD (FIXED TELEPORTASI PORTAL BERHASIL)
     with col_game1:
         st.markdown(
             """
@@ -948,6 +949,7 @@ if selected_tab == "🏠 Menu Utama":
         if st.button("Masuk Markas Guild ➔", use_container_width=True, key="btn_enter_dungeon_fixed"):
             placeholder = st.empty()
             with placeholder.container():
+                # Screen 1: Animasi Loading
                 st.markdown(
                     """
                     <div style='background-color: #0f172a; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
@@ -965,22 +967,45 @@ if selected_tab == "🏠 Menu Utama":
                     time.sleep(0.01)
                     progress_bar.progress(percent_complete + 1)
                 
+                # Screen 2: Gerbang Akhir Lolos Proteksi Iframe Streamlit Cloud
                 st.markdown(
                     """
                     <div style='background-color: #0f172a; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
-                        <h1 style='color: #00ff88; font-family: monospace; font-size: 32px; text-shadow: 0 0 15px rgba(0,255,136,0.5);'>✔️ SUCCESS!</h1>
-                        <p style='color: #ffffff; font-size: 16px; margin-top: 10px; font-family: monospace;'>Teleporting to the Guild Hall...</p>
+                        <h1 style='color: #00ff88; font-family: monospace; font-size: 32px; text-shadow: 0 0 15px rgba(0,255,136,0.5); margin-bottom: 20px;'>✔️ PORTAL READY!</h1>
+                        
+                        <!-- Link HTML target_top menembus sandboxing secara mutlak -->
+                        <a href='https://streamlit.app' target='_top' style='background-color: #38bdf8; color: #0f172a; padding: 14px 28px; font-weight: bold; font-family: monospace; font-size: 16px; border-radius: 10px; text-decoration: none; box-shadow: 0 0 15px rgba(56,189,248,0.6); transition: 0.2s;'>
+                            ▶ KETUK UNTUK TELEPORTASI
+                        </a>
+                        
+                        <p style='color: #94a3b8; font-size: 12px; margin-top: 15px; font-family: monospace;'>Klik tombol di atas untuk membuka gerbang Markas Guild.</p>
                         <style>[data-testid="stSidebar"] { display: none !important; }</style>
-                        <script>
-                            setTimeout(function(){
-                                window.parent.location.href = 'https://guildutamac383.streamlit.app/';
-                            }, 1500);
-                        </script>
                     </div>
                 """, unsafe_allow_html=True
                 )
-                time.sleep(2.0)
-            placeholder.empty()
+                # Mengunci layar hitam agar tertahan di tombol portal sampai user mengetuknya
+                while True:
+                    time.sleep(1)
+
+    # 🎒 KARTU 2: PREPARATION CAMP (DIPESAN KHUSUS UNTUK KREASI DESAIN ANDA)
+    with col_game2:
+        st.markdown(
+            """
+            <div class='rpg-card-center-fixed'>
+                <div class='rpg-badge-fixed badge-prep'>🛡️ Solo Prep</div>
+                <div class='rpg-icon-center-fixed'>🎒</div>
+                <div class='rpg-title-fixed'>PREPARATION CAMP</div>
+                <div class='rpg-desc-fixed'>Lihat tas penyimpanan (Inventory) rapor pribadi Anda. Cek pencapaian individu, target harian staf, dan statistik performa Anda sendiri.</div>
+            </div>
+        """,
+            unsafe_allow_html=True,
+        )
+        # Tombol aksi kosong pemicu awal, silakan tambahkan logika pemindah halaman internal versi Anda di bawahnya nanti!
+        if st.button("Buka Rapor Personil Toko ➔", use_container_width=True, key="btn_enter_prep_fixed"):
+            # ⬇️ TEMPATKAN KODE LOGIKA/DESAIN LAPORAN INDIVIDU ANDA DI BAWAH SINI ⬇️
+            st.info("Fitur Preparation Camp diaktifkan! Silakan sambungkan dengan komponen data kustom Anda.")
+
+    st.markdown("</div>", unsafe_allow_html=True)
             
     with col_game2:
         st.markdown(
