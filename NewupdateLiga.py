@@ -2384,7 +2384,7 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
                     time.sleep(1.5)
                     st.rerun()
 
-    # SUB TAB 4: INPUT & PENGATURAN PERIODE PPS & SUEGER
+   # SUB TAB 4: INPUT & PENGATURAN PERIODE PPS & SUEGER
     elif selected_master_sub == "🎯 PPS & Sueger":
         st.markdown(
             "<h4 style='color: #c084fc;'>🎯 Input & Pengaturan Periode PPS &"
@@ -2397,14 +2397,71 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
                 "period_id", "start_date", "end_date", "period_name", "target_total", "status", "actual_qty"
             ])
 
-        sub_sue, sub_pps, sub_edit, sub_mon = st.tabs([
-            "➕ Tambah Sueger",
-            "➕ Tambah Periode PPS",
-            "✏️ Edit & Hapus Program",
-            "📊 Monitoring Periode",
-        ])
+        # =========================================================================
+        # CUSTOM RADIO MENU UNTUK SUB-TAB PPS & SUEGER (UNGU NEON & TEKS CYAN)
+        # =========================================================================
+        st.markdown("""
+        <style>
+            div.block-container div[data-testid="stRadio"] div[role="radiogroup"] {
+                display: flex;
+                gap: 8px;
+                flex-direction: row;
+                align-stretch: stretch;
+                flex-wrap: nowrap;
+            }
+            div.block-container div[data-testid="stRadio"] div[role="radiogroup"] > label {
+                background-color: #1e1b4b !important;
+                border: 1px solid #4c1d95 !important;
+                padding: 8px 10px !important;
+                border-radius: 10px !important;
+                color: #00f0ff !important;
+                font-weight: 600 !important;
+                font-size: 11px !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                cursor: pointer;
+                flex: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+                min-height: 48px;
+                transition: all 0.25s ease-in-out;
+            }
+            div.block-container div[data-testid="stRadio"] div[role="radiogroup"] input[type="radio"] {
+                display: none !important;
+            }
+            div.block-container div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
+                border-color: #00f0ff !important;
+                background-color: #312e81 !important;
+                box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+            }
+            div.block-container div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"],
+            div.block-container div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) {
+                background: linear-gradient(135deg, #7e22ce 0%, #581c87 100%) !important;
+                border: 1px solid #00f0ff !important;
+                color: #00f0ff !important;
+                box-shadow: 0 0 15px rgba(126, 34, 206, 0.7), 0 0 5px rgba(0, 240, 255, 0.5) !important;
+            }
+        </style>
+        """, unsafe_allow_html=True)
 
-        with sub_sue:
+        selected_pps_sub = st.radio(
+            "Pilih Sub Menu PPS & Sueger",
+            [
+                "➕ Tambah Sueger",
+                "➕ Tambah Periode PPS",
+                "✏️ Edit & Hapus Program",
+                "📊 Monitoring Periode"
+            ],
+            label_visibility="collapsed",
+            key="pps_sueger_sub_tab_radio"
+        )
+
+        st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+
+        if selected_pps_sub == "➕ Tambah Sueger":
             st.markdown("##### 📌 Form Input Program Sueger (Persentase)")
             with st.form("form_add_sueger_pure_only"):
                 col_s1, col_s2 = st.columns(2)
@@ -2448,7 +2505,7 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
                         except Exception as e:
                             st.error(f"❌ Gagal menyimpan program Sueger: {e}")
 
-        with sub_pps:
+        elif selected_pps_sub == "➕ Tambah Periode PPS":
             st.markdown("##### 📌 Form Input Periode PPS (Target Fisik & Pembulatan Otomatis)")
             with st.form("form_add_pps_pure_only"):
                 col_p1, col_p2 = st.columns(2)
@@ -2495,7 +2552,7 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
                         except Exception as e:
                             st.error(f"❌ Gagal menyimpan Periode PPS: {e}")
 
-        with sub_edit:
+        elif selected_pps_sub == "✏️ Edit & Hapus Program":
             st.markdown("##### ✏️ Kelola / Edit & Hapus Program PERIODE_PPS")
             edit_df = st.session_state.periode_pps_df.copy()
             
@@ -2573,122 +2630,76 @@ elif selected_tab == "⚙️ Master Data & Pengaturan":
                                     time.sleep(1.2)
                                     st.rerun()
 
-        with sub_mon:
+        elif selected_pps_sub == "📊 Monitoring Periode":
             st.markdown("##### 📊 Monitoring Data PERIODE_PPS")
             if not st.session_state.periode_pps_df.empty:
                 st.dataframe(st.session_state.periode_pps_df, use_container_width=True)
             else:
                 st.info("Belum ada data periode yang tercatat di tabel `PERIODE_PPS`.")
 
-    # SUB TAB 5: MASTER STATUS & SUMMARY (PSM)
+    # --- SUB TAB 5: STATUS SISTEM & KESEHATAN DATABASE ---
     elif selected_master_sub == "📊 Status & Summary":
         st.markdown(
-            "<h4 style='color: #00ff88;'>📊 Status Sistem & Summary Laporan</h4>",
+            "<h4 style='color: #00ff88;'>📊 Status & Kesehatan Sistem Database</h4>",
             unsafe_allow_html=True,
         )
-
+    
+        # 1. Metrik Utama Sistem
         c_s1, c_s2, c_s3 = st.columns(3)
         with c_s1:
             st.metric("🔗 Koneksi Database", "Terhubung (GSheets)")
         with c_s2:
-            st.metric(
-                "📦 Total Master Item", f"{len(st.session_state.items_df)} Item"
-            )
+            st.metric("📦 Total Master Item", f"{len(st.session_state.get('items_df', []))} Item")
         with c_s3:
-            st.metric(
-                "👥 Total Personil", f"{len(st.session_state.person_df)} Staf"
-            )
-
+            st.metric("👥 Total Personil", f"{len(st.session_state.get('person_df', []))} Staf")
+    
         st.markdown("---")
-        st.subheader("📋 Summary Laporan Penjualan")
-
-        mode_summary = st.radio(
-            "Pilih Jenis Laporan Summary:",
-            ["Harian (Hari Ini)", "Per Periode (Aktif)", "Bulanan (Bulan Ini)"],
-            horizontal=True,
+        
+        # 2. Status Detail Google Sheets & Cache Management
+        st.subheader("🛠️ Manajemen Koneksi & Cache Google Sheets")
+        st.info(
+            "💡 Halaman ini memantau status sinkronisasi data lokal aplikasi dengan Google Sheets "
+            "serta menyediakan tombol kontrol untuk memperbarui cache jika terjadi perubahan langsung pada spreadsheet."
         )
-
-        sp_data = st.session_state.sales_person_df.copy()
-        if not sp_data.empty and "actual_qty" in sp_data.columns:
-            sp_data["actual_qty"] = pd.to_numeric(
-                sp_data["actual_qty"], errors="coerce"
-            ).fillna(0)
-        else:
-            sp_data["actual_qty"] = 0
-
-        today_str = waktu_wib.strftime("%Y-%m-%d")
-        current_month_str = waktu_wib.strftime("%Y-%m")
-
-        if mode_summary == "Harian (Hari Ini)":
-            if "updated_at" in sp_data.columns:
-                filtered_sum = sp_data[
-                    sp_data["updated_at"].astype(str) == today_str
-                ]
-            else:
-                filtered_sum = pd.DataFrame()
-            title_sum = f"Laporan Harian ({waktu_wib.strftime('%d %B %Y')})"
-        elif mode_summary == "Per Periode (Aktif)":
-            if selected_period_id:
-                filtered_sum = sp_data[sp_data["period_id"] == selected_period_id]
-                title_sum = f"Laporan Periode ({selected_period_name})"
-            else:
-                filtered_sum = sp_data.copy()
-                title_sum = "Laporan Semua Periode"
-        else:
-            if "updated_at" in sp_data.columns:
-                filtered_sum = sp_data[
-                    sp_data["updated_at"].astype(str).str.startswith(current_month_str)
-                ]
-            else:
-                filtered_sum = pd.DataFrame()
-            title_sum = f"Laporan Bulanan ({waktu_wib.strftime('%B %Y')})"
-
-        tot_actual_sum = filtered_sum["actual_qty"].sum()
-        st.markdown(
-            f"##### 📌 {title_sum} — Total Sales: **{tot_actual_sum:,.0f} Pcs**"
-        )
-
-        sum_item = (
-            filtered_sum.groupby("item_name")["actual_qty"]
-            .sum()
-            .reset_index()
-            .sort_values(by="actual_qty", ascending=False)
-        )
-        st.dataframe(sum_item, use_container_width=True)
-
+    
+        col_db1, col_db2 = st.columns(2)
+        with col_db1:
+            st.markdown("##### 📌 Informasi Sinkronisasi")
+            st.write(f"- **Waktu Server (WIB):** `{waktu_wib.strftime('%Y-%m-%d %H:%M:%S')}`")
+            st.write(f"- **Status Sesi Aktif:** `Aktif & Aman`")
+            st.write(f"- **Mode Penyimpanan:** `Cloud (Google Sheets API)`")
+    
+        with col_db2:
+            st.markdown("##### 🔄 Kontrol Data & Cache")
+            if st.button("🧹 Bersihkan Cache & Muat Ulang Data", use_container_width=True):
+                try:
+                    # Membersihkan cache Streamlit yang terhubung ke database
+                    st.cache_data.clear()
+                    st.toast("✅ Cache berhasil dibersihkan! Data dimuat ulang.", icon="🔄")
+                    time.sleep(1.2)
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"❌ Gagal membersihkan cache: {e}")
+    
+            if st.button("📥 Paksa Tarik Data Terbaru (Sync)", use_container_width=True):
+                st.toast("🔄 Menyinkronkan ulang data dari Google Sheets...", icon="☁️")
+                time.sleep(1.2)
+                st.rerun()
+    
         st.markdown("---")
-        st.subheader("📲 Salin Laporan Format WhatsApp")
-        wa_report_text = f"*📊 REPORT PSM TOKO C383*\n"
-        wa_report_text += f"*Jenis Laporan:* {title_sum}\n"
-        wa_report_text += f"*Waktu Update:* {current_time_str}\n"
-        wa_report_text += (
-            f"--------------------------------------------------\n"
-        )
-
-        for idx, r in sum_item.iterrows():
-            wa_report_text += (
-                f"• *{r['item_name']}*: {int(r['actual_qty']):,} Pcs\n"
-            )
-
-        wa_report_text += (
-            f"--------------------------------------------------\n"
-        )
-        wa_report_text += f"*TOTAL SALES:* *{int(tot_actual_sum):,} Pcs*\n\n"
-        wa_report_text += f"_Laporan dihasilkan otomatis oleh System Sales PSM_"
-
-        st.code(wa_report_text, language="markdown")
-        st.caption(
-            "💡 Klik tombol salin/copy di pojok kanan atas kotak kode di atas"
-            " untuk menempelkannya langsung ke WhatsApp!"
-        )
-
-        st.markdown("---")
-        st.subheader("📥 Export & Download Laporan")
-        csv_data = sum_item.to_csv(index=False).encode("utf-8")
-        st.download_button(
-            label="📄 Download Laporan Data (CSV)",
-            data=csv_data,
-            file_name=f"Report_PSM_{mode_summary.replace(' ', '_')}.csv",
-            mime="text/csv",
-            use_container_width=True,
-        )
+        
+        # 3. Quick Table Preview (Opsional untuk memastikan data terbaca)
+        st.subheader("📋 Preview Tabel Master Aktif")
+        tab_prev1, tab_prev2 = st.tabs(["Master Items", "Periode Aktif"])
+        
+        with tab_prev1:
+            if "items_df" in st.session_state and not st.session_state.items_df.empty:
+                st.dataframe(st.session_state.items_df.head(10), use_container_width=True)
+            else:
+                st.info("Tidak ada data item master.")
+                
+        with tab_prev2:
+            if "periods_df" in st.session_state and not st.session_state.periods_df.empty:
+                st.dataframe(st.session_state.periods_df, use_container_width=True)
+            else:
+                st.info("Tidak ada data periode.")
