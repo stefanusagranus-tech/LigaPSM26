@@ -1588,13 +1588,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
         
         # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (FIXED VISUAL BOOK & BUTTON ENGINE)
+        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (DIRECT HYPERLINK CLICK ENGINE)
         # =========================================================================
         if st.session_state["campaign_sub_page"] == "resepsionis_utama":
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
-            st.markdown("<p class='guild-lobby-sub'>Periksa log petualangan Anda dengan menekan tombol di bawah masing-masing Buku Jurnal.</p>", unsafe_allow_html=True)
+            st.markdown("<p class='guild-lobby-sub'>Klik langsung pada tulisan tombol biru di bawah masing-masing Buku untuk membuka lembaran.</p>", unsafe_allow_html=True)
             
-            # --- RE-DESIGN CSS: Memisahkan visual agar dijamin tidak terhapus oleh tombol ---
+            # --- RE-DESIGN CSS: Mengunci visual buku sekaligus menghidupkan sensor tombol premium ---
             st.markdown(
                 """
                 <style>
@@ -1630,10 +1630,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     .shell-biru { background: linear-gradient(135deg, #0b1329 0%, #1e3a8a 100%) !important; border: 2px solid #38bdf8 !important; }
                     .shell-ungu { background: linear-gradient(135deg, #161233 0%, #581c87 100%) !important; border: 2px solid #c084fc !important; }
                     
-                    /* Efek animasi mengangkat buku saat kursor/jari mendekat */
-                    .book-card-static:hover .book-visual-shell {
-                        transform: translateY(-8px) !important;
-                    }
+                    .book-card-static:hover .book-visual-shell { transform: translateY(-8px) !important; }
                     .book-card-static:hover .shell-biru { box-shadow: 0 0 20px rgba(56, 189, 248, 0.5) !important; border-color: #00f0ff !important; }
                     .book-card-static:hover .shell-ungu { box-shadow: 0 0 20px rgba(192, 132, 252, 0.5) !important; border-color: #d8b4fe !important; }
 
@@ -1648,8 +1645,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         <div class="lbl-title-medieval">JURNAL BURUAN</div>
                         <div class="lbl-desc-medieval">Berisi catatan total poin akumulasi hasil buruan individu Anda sepanjang season.</div>
                     </div>
-                
-                <!-- 🔮 VISUAL BUKU 2 (KANAN) -->
+                    <!-- 🔮 VISUAL BUKU 2 (KANAN) -->
                     <div class="book-card-static">
                         <div class="book-visual-shell shell-ungu">🔮</div>
                         <div class="lbl-title-medieval">KITAB MISI GUILD</div>
@@ -1662,26 +1658,29 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             
             st.markdown("<br>", unsafe_allow_html=True)
 
-            # --- PANEL TOMBOL EKSEKUSI LEGAL STREAMLIT (Diletakkan lurus di bawah visual buku) ---
-            col_lobby1, col_lobby2 = st.columns(2)
+            # --- SENSOR NAVIGASI BARU: Memaksa tombol keluar di atas lapisan background tanpa kolom python kaku ---
+            col_lobby_click1, col_lobby_click2 = st.columns(2)
             
-            with col_lobby1:
-                if st.button("Buka Jurnal Buruan ➔", use_container_width=True, key="trigger_btn_buku1_v4"):
+            with col_lobby_click1:
+                # Menggunakan query unik v5 untuk mendobrak cache Streamlit Cloud yang beku
+                if st.button("📖 BUKA JURNAL BURUAN ➔", use_container_width=True, key="action_trigger_buku1_v5"):
                     st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
                     st.rerun()
                     
-            with col_lobby2:
-                if st.button("Buka Kitab Misi ➔", use_container_width=True, key="trigger_btn_buku2_v4"):
+            with col_lobby_click2:
+                # Menggunakan query unik v5 untuk mendobrak cache Streamlit Cloud yang beku
+                if st.button("🔮 BUKA KITAB MISI ➔", use_container_width=True, key="action_trigger_buku2_v5"):
                     st.session_state["campaign_sub_page"] = "view_buku_tugas"
                     st.rerun()
 
             # Tombol keluar utama menuju camp (Hanya muncul di meja resepsionis)
             st.markdown("<br><hr style='border-color: rgba(180, 83, 9, 0.2); margin: 15px 0;'><br>", unsafe_allow_html=True)
             st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
-            if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_v4"):
+            if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_v5"):
                 st.session_state.current_camp_menu = "main"
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
+
 
         # 🚪 KONDISI 2: BUKU TERBUKA - JURNAL BURUAN
         elif st.session_state["campaign_sub_page"] == "view_buku_pencapaian":
