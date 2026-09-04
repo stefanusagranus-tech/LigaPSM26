@@ -1281,35 +1281,48 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 .rpg-stat-header { display: flex; justify-content: space-between; color: #94a3b8; font-size: 11px; font-weight: bold; margin-bottom: 5px; font-family: monospace; letter-spacing: 0.5px; }
                 
                 .rpg-bar-bg { background-color: #05070a !important; height: 14px; border-radius: 4px; overflow: hidden; border: 1px solid rgba(217, 119, 6, 0.25); box-shadow: inset 0 3px 6px rgba(0,0,0,0.8); }
-                .rpg-exp-fill {background: linear-gradient(90deg, #a855f7, #d8b4fe) !important; }
 				.rpg_bar_fill_psm { background: linear-gradient(90deg, #ef4444, #ff8080) !important; }
                 .rpg_bar_fill_pps { background: linear-gradient(90deg, #3b82f6, #60a5fa) !important; }
                 .rpg_bar_fill_sueger { background: linear-gradient(90deg, #10b981, #34d399) !important; }
                 .avatar-holder-bottom { width: 65px; height: 65px; border-radius: 50%; border: 3px solid #d97706; background-color: #0b0f19; position: absolute; bottom: -32px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; align-items: center; font-size: 28px; box-shadow: 0 8px 20px rgba(217, 119, 6, 0.5), inset 0 0 10px rgba(217, 119, 6, 0.2); z-index: 100; }
 
-                .rpg-dual-badge-row {
-                    display: flex !important;
-                    justify-content: space-around !important;
-                    align-items: center !important;
-                    width: 100% !important;
-                    margin: 20px auto 10px auto !important;
-                    box-sizing: border-box !important;
+                .rpg-exp-fill {
+                    /* 🎯 FIX WARNA BAR EXP: Dipaksa keluar menggunakan warna Ungu Neon Magic */
+                    background: linear-gradient(90deg, #a855f7, #d8b4fe) !important; 
+                    height: 100% !important;
+                    border-radius: 4px !important;
+                    display: block !important;
+                    box-shadow: 0 0 10px rgba(168, 85, 247, 0.6) !important;
                 }
-                
-                .rpg-badge-item {
-                    display: flex !important;
-                    flex-direction: column !important;
-                    align-items: center !important;
-                    width: 45% !important;
-                }
-                
-                /* ========================================================================= */
-				/* 🏆 CSS LENCANA SEPARASI (JAUH LEBIH MUDAH & OTOMATIS SIMETRIS)            */
+				
 				/* ========================================================================= */
+				/* 🏆 CSS LENCANA SEPARASI (2 GAMBAR TERPISAH - FIXED SEJAJAR SIMETRIS)      */
+				/* ========================================================================= */
+				.rpg-dual-badge-row {
+				    display: flex !important;
+				    justify-content: space-around !important;
+				    align-items: center !important;
+				    width: 100% !important;
+				    margin: 20px auto 10px auto !important;
+				    box-sizing: border-box !important;
+				}
+				
+				.rpg-badge-item {
+				    display: flex !important;
+				    flex-direction: column !important;
+				    align-items: center !important;
+				    width: 45% !important;
+				}
+				
+				/* 🎯 FIX GESER KANAN: Khusus mendorong kontainer kanan agar lebih melebar ke kanan seimbang */
+				.rpg-dual-badge-row .rpg-badge-item:nth-child(2) {
+				    margin-left: 10px !important;
+				}
+				
 				.rpg-emblem-wrapper {
 				    background-repeat: no-repeat !important;
-				    background-size: contain !important; /* Otomatis menyesuaikan ukuran kotak tanpa terpotong */
-				    background-position: center !important; /* Gambar dijamin langsung berada di tengah */
+				    background-size: contain !important; /* Otomatis pas tanpa terpotong */
+				    background-position: center !important; /* Terkunci di tengah wadah */
 				    width: 110px !important;
 				    height: 75px !important; 
 				    display: flex !important;
@@ -1319,7 +1332,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 				    mix-blend-mode: screen !important; 
 				}
 				
-				/* 🎯 Cukup panggil link gambar masing-masing di sini */
+				/* Memanggil link 2 gambar terpisah Anda dari GitHub */
 				.emblem-left {
 				    background-image: url("https://raw.githubusercontent.com/stefanusagranus-tech/LigaPSM26/main/kiri.png") !important; 
 				}
@@ -1328,16 +1341,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 				    background-image: url("https://raw.githubusercontent.com/stefanusagranus-tech/LigaPSM26/main/kanan.png") !important; 
 				}
 				
-				/* Pengaturan teks neon otomatis pas di tengah lingkaran */
+				/* Pengaturan teks neon otomatis seragam */
 				.rpg-emblem-text {
 				    color: #00ffff !important; 
 				    font-size: 14px !important;
 				    font-weight: 900 !important;
 				    font-family: 'Courier New', monospace !important;
 				    display: inline-block !important;
-				    
-				    /* 🎯 FIX FINAL: Mengubah nilai dari 0px menjadi 4px agar teks turun pas ke tengah pusat lingkaran */
-				    margin-top: 4px !important; 
+				    margin-top: 4px !important; /* Menurunkan angka pas di tengah lingkaran */
 				    
 				    text-shadow: 0 0 5px #00ffff, 
 				                 0 0 10px #00ffff, 
@@ -1345,15 +1356,20 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 				                 0 0 4px #000000 !important;
 				}
 				
-                .rpg-emblem-label {
-                    color: #475569 !important;
-                    font-size: 9px !important;
-                    font-weight: bold !important;
-                    letter-spacing: 0.8px !important;
-                    margin-top: 5px !important;
-                    font-family: monospace !important;
-                    text-align: center !important;
-                }
+				/* Jika tinggi pusat teks di gambar kanan (segi enam) dirasa berbeda, dikunci di sini */
+				.emblem-right .rpg-emblem-text {
+				    margin-top: 4px !important;
+				}
+				
+				.rpg-emblem-label {
+				    color: #475569 !important;
+				    font-size: 9px !important;
+				    font-weight: bold !important;
+				    letter-spacing: 0.8px !important;
+				    margin-top: 5px !important;
+				    font-family: monospace !important;
+				    text-align: center !important;
+				}
 
                 /* ========================================================================= */
                 /* 👑 TOMBOL NATIVE KEMBALI (EDISI RE-DESIGN PREMIUM MEDIEVAL & SIMETRIS)    */
