@@ -1699,6 +1699,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             status_text_pwp = "🟢 QUEST COMPLETED" if qty_pwp_hari_ini >= daily_target_pps_pwp and daily_target_pps_pwp > 0 else "🔴 HUNTING IN PROGRESS"
             status_text_sg = "🟢 QUEST COMPLETED" if qty_sg_hari_ini >= daily_target_pps_sg and daily_target_pps_sg > 0 else "🔴 HUNTING IN PROGRESS"
             
+             # 🎯 FIX MUTLAK NAMEERROR PAPAN MISI: Membuat ulang variabel season bulanan agar terbaca di halaman ini
+            season_name_string = waktu_wib.strftime("%B %Y").upper()
+
             html_mission_board = f"""
             <div class="rpg-board-wrapper">
                 <div class="rpg-board-wood">
