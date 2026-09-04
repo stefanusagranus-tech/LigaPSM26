@@ -740,6 +740,19 @@ else:
     menu_options = ["🏠 Menu Utama", "📝 Input Data", "➕ Edit Data (Admin)", "⚙️ Pengaturan & Master"]
     st.sidebar.markdown("<p style='color:#a1a1aa; font-size:11px; font-weight:700; padding: 0 10px;'>📌 NAVIGASI MENU</p>", unsafe_allow_html=True)
 
+# 🚀 TAMBAHKAN SAKLAR PENGUNCI PERKEMAHAN INI TEPAT DI ATAS ST.SIDEBAR.RADIO ANDA:
+if st.session_state.get("current_camp_menu") == "quiz_campaign":
+    # Paksa agar navigasi utama mengalah dan mengunci sistem tetap di halaman Quiz Campaign
+    selected_tab = None 
+elif "redirect_to_input" in st.session_state and st.session_state.redirect_to_input:
+    st.session_state["selected_tab"] = "📝 Input Data"
+    del st.session_state.redirect_to_input
+
+# 🚀 SISIPKAN KODE INI TEPAT SATU BARIS DI ATAS ST.SIDEBAR.RADIO ANDA:
+if "redirect_to_input" in st.session_state and st.session_state.redirect_to_input:
+    st.session_state["selected_tab"] = "📝 Input Data"
+    del st.session_state.redirect_to_input # Matikan saklar setelah berhasil digunakan
+
 # 🚀 SISIPKAN KODE INI TEPAT SATU BARIS DI ATAS ST.SIDEBAR.RADIO ANDA:
 if "redirect_to_input" in st.session_state and st.session_state.redirect_to_input:
     st.session_state["selected_tab"] = "📝 Input Data"
@@ -1476,76 +1489,76 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.rerun()
         st.stop()
 
-        # =========================================================================
-        # 🚪 KONDISI A: HALAMAN LOBBY UTAMA - MEJA RESEPSIONIS (DIRECT CLICK ENGINE)
-        # =========================================================================
-        if st.session_state.get("campaign_sub_page", "resepsionis_utama") == "resepsionis_utama":
-            st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
-            st.markdown("<p class='guild-lobby-sub'>Klik/Sentuh langsung pada cover Buku Jurnal di bawah ini untuk membukanya.</p>", unsafe_allow_html=True)
-            
-            # Membagi ruang menjadi 2 kolom responsif untuk Android, iOS, dan PC
-            col_direct1, col_direct2 = st.columns(2)
-            
-            with col_direct1:
-                # 📘 BUKU 1: Diubah menjadi tombol klik bawaan Streamlit berbentuk full block
-                if st.button("📘\n\nJURNAL BURUAN\n\nKlik untuk Membuka Jurnal ➔", use_container_width=True, key="btn_direct_buku1"):
-                    st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
-                    st.rerun()
-                    
-            with col_direct2:
-                # 🔮 BUKU 2: Diubah menjadi tombol klik bawaan Streamlit berbentuk full block
-                if st.button("🔮\n\nKITAB MISI GUILD\n\nKlik untuk Membuka Kitab ➔", use_container_width=True, key="btn_direct_buku2"):
-                    st.session_state["campaign_sub_page"] = "view_buku_tugas"
-                    st.rerun()
+    # =========================================================================
+    # 🚪 KONDISI A: HALAMAN LOBBY UTAMA - MEJA RESEPSIONIS (DIRECT CLICK ENGINE)
+    # =========================================================================
+    if st.session_state.get("campaign_sub_page", "resepsionis_utama") == "resepsionis_utama":
+        st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
+        st.markdown("<p class='guild-lobby-sub'>Klik/Sentuh langsung pada cover Buku Jurnal di bawah ini untuk membukanya.</p>", unsafe_allow_html=True)
+        
+        # Membagi ruang menjadi 2 kolom responsif untuk Android, iOS, dan PC
+        col_direct1, col_direct2 = st.columns(2)
+        
+        with col_direct1:
+            # 📘 BUKU 1: Diubah menjadi tombol klik bawaan Streamlit berbentuk full block
+            if st.button("📘\n\nJURNAL BURUAN\n\nKlik untuk Membuka Jurnal ➔", use_container_width=True, key="btn_direct_buku1"):
+                st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
+                st.rerun()
+                
+        with col_direct2:
+            # 🔮 BUKU 2: Diubah menjadi tombol klik bawaan Streamlit berbentuk full block
+            if st.button("🔮\n\nKITAB MISI GUILD\n\nKlik untuk Membuka Kitab ➔", use_container_width=True, key="btn_direct_buku2"):
+                st.session_state["campaign_sub_page"] = "view_buku_tugas"
+                st.rerun()
 
-            # SUNTIKKAN STYLING KHUSUS UNTUK MENGUBAH TOMBOL BALOK MENJADI BENTUK KARTU BUKU 3D
-            st.markdown(
-                """
-                <style>
-                    /* Memaksa tombol Streamlit di dalam lobby berbentuk kotak buku vertikal */
-                    div[data-testid="stColumn"] div.stButton > button {
-                        min-height: 220px !important;
-                        border-radius: 8px 16px 16px 8px !important;
-                        font-family: monospace !important;
-                        font-size: 14px !important;
-                        font-weight: 800 !important;
-                        white-space: pre-line !important; /* Supaya teks enter (\n) berfungsi */
-                        line-height: 1.4 !important;
-                        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
-                        border-left: 8px solid rgba(0,0,0,0.4) !important;
-                    }
-                    
-                    /* Gaya khusus Buku Kiri (Jurnal Buruan) */
-                    div[data-testid="stColumn"]:nth-child(1) div.stButton > button {
-                        background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%) !important;
-                        color: #38bdf8 !important;
-                        border: 2px solid #38bdf8 !important;
-                        box-shadow: 5px 10px 20px rgba(0,0,0,0.5) !important;
-                    }
-                    div[data-testid="stColumn"]:nth-child(1) div.stButton > button:hover {
-                        transform: translateY(-8px) rotateY(-5deg) !important;
-                        border-color: #00f0ff !important;
-                        box-shadow: 0 0 25px rgba(0, 240, 255, 0.5) !important;
-                        color: #ffffff !important;
-                    }
-                    
-                    /* Gaya khusus Buku Kanan (Kitab Misi) */
-                    div[data-testid="stColumn"]:nth-child(2) div.stButton > button {
-                        background: linear-gradient(135deg, #1e1b4b 0%, #581c87 100%) !important;
-                        color: #c084fc !important;
-                        border: 2px solid #c084fc !important;
-                        box-shadow: 5px 10px 20px rgba(0,0,0,0.5) !important;
-                    }
-                    div[data-testid="stColumn"]:nth-child(2) div.stButton > button:hover {
-                        transform: translateY(-8px) rotateY(-5deg) !important;
-                        border-color: #d8b4fe !important;
-                        box-shadow: 0 0 25px rgba(168, 85, 247, 0.5) !important;
-                        color: #ffffff !important;
-                    }
-                </style>
-                """, 
-                unsafe_allow_html=True
-            )
+        # SUNTIKKAN STYLING KHUSUS UNTUK MENGUBAH TOMBOL BALOK MENJADI BENTUK KARTU BUKU 3D
+        st.markdown(
+            """
+            <style>
+                /* Memaksa tombol Streamlit di dalam lobby berbentuk kotak buku vertikal */
+                div[data-testid="stColumn"] div.stButton > button {
+                    min-height: 220px !important;
+                    border-radius: 8px 16px 16px 8px !important;
+                    font-family: monospace !important;
+                    font-size: 14px !important;
+                    font-weight: 800 !important;
+                    white-space: pre-line !important; /* Supaya teks enter (\n) berfungsi */
+                    line-height: 1.4 !important;
+                    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+                    border-left: 8px solid rgba(0,0,0,0.4) !important;
+                }
+                
+                /* Gaya khusus Buku Kiri (Jurnal Buruan) */
+                div[data-testid="stColumn"]:nth-child(1) div.stButton > button {
+                    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%) !important;
+                    color: #38bdf8 !important;
+                    border: 2px solid #38bdf8 !important;
+                    box-shadow: 5px 10px 20px rgba(0,0,0,0.5) !important;
+                }
+                div[data-testid="stColumn"]:nth-child(1) div.stButton > button:hover {
+                    transform: translateY(-8px) rotateY(-5deg) !important;
+                    border-color: #00f0ff !important;
+                    box-shadow: 0 0 25px rgba(0, 240, 255, 0.5) !important;
+                    color: #ffffff !important;
+                }
+                
+                /* Gaya khusus Buku Kanan (Kitab Misi) */
+                div[data-testid="stColumn"]:nth-child(2) div.stButton > button {
+                    background: linear-gradient(135deg, #1e1b4b 0%, #581c87 100%) !important;
+                    color: #c084fc !important;
+                    border: 2px solid #c084fc !important;
+                    box-shadow: 5px 10px 20px rgba(0,0,0,0.5) !important;
+                }
+                div[data-testid="stColumn"]:nth-child(2) div.stButton > button:hover {
+                    transform: translateY(-8px) rotateY(-5deg) !important;
+                    border-color: #d8b4fe !important;
+                    box-shadow: 0 0 25px rgba(168, 85, 247, 0.5) !important;
+                    color: #ffffff !important;
+                }
+            </style>
+            """, 
+            unsafe_allow_html=True
+        )
 
     
         # =========================================================================
