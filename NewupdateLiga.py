@@ -1570,21 +1570,18 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.markdown(
                 """
                 <div class="books-desk-grid">
-                    
                     <!-- BUKU KIRI: JURNAL BURUAN -->
                     <div class="book-interactive-card">
                         <div class="book-cover-3d cover-pencapaian">📘</div>
                         <div class="book-title-label">JURNAL BURUAN</div>
                         <div class="book-desc-label">Berisi catatan total poin akumulasi hasil buruan individu Anda sepanjang season.</div>
                     </div>
-                    
                     <!-- BUKU KANAN: KITAB MISI GUILD -->
                     <div class="book-interactive-card">
                         <div class="book-cover-3d cover-tugas">🔮</div>
                         <div class="book-title-label">KITAB MISI GUILD</div>
                         <div class="book-desc-label">Berisi lembar maklumat perintah harian, mingguan, serta status keberhasilan misi toko.</div>
                     </div>
-
                 </div>
                 """, 
                 unsafe_allow_html=True
