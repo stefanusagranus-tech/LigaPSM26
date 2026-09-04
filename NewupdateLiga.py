@@ -971,21 +971,37 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🔥 ATTACK (PENCAPAIAN PSM)</span><span>""" + str(test_qty_psm) + """ Qty</span></div>
                             <div class="rpg-bar-bg">
-                            <div class="rpg_bar_fill_psm" style="width: """ + str(test_percent_psm) + """; height: 100%; border-radius: 4px; display: block; background: linear-gradient(90deg, #ef4444, #ff8080) !important;"></div>
+                            <div class="rpg-bar-fill-psm" style="width: """ + str(test_percent_psm) + """; height: 100%; border-radius: 4px; display: block;"></div>
                             </div>
                         </div>
                         <!-- BAR pps -->
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🛡️ DEFENSE (PENJUALAN PPS)</span><span>""" + str(test_qty_pps) + """ Poin</span></div>
                             <div class="rpg-bar-bg">
-                            <div class="rpg_bar_fill_pps" style="width: """ + str(test_percent_pps) + """; height: 100%; border-radius: 4px; display: block;"></div>
+                            <div class="rpg-bar-fill-pps" style="width: """ + str(test_percent_pps) + """; height: 100%; border-radius: 4px; display: block;"></div>
                             </div>
                         </div>
                         <!-- BAR sueger -->
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🍃 AGILITY (PENJUALAN SUEGER)</span><span>""" + str(test_qty_sueger) + """ Qty</span></div>
                             <div class="rpg-bar-bg">
-                            <div class="rpg_bar_fill_sueger" style="width: """ + str(test_percent_sueger) + """; height: 100%; border-radius: 4px; display: block;"></div>
+                            <div class="rpg-bar-fill-sueger" style="width: """ + str(test_percent_sueger) + """; height: 100%; border-radius: 4px; display: block;"></div>
+                            </div>
+			<div class="rpg-dual-badge-row">
+                            <!-- LENCANA KIRI: Persentase Penjualan Sueger (Bulat) -->
+                            <div class="rpg-badge-item">
+                                <div class="rpg-emblem-wrapper emblem-left">
+                                    <span class="rpg-emblem-text">""" + str(test_percent_sueger) + """</span>
+                                </div>
+                                <div class="rpg-emblem-label">SUEGER ACHV</div>
+                            </div>
+                            <!-- LENCANA KANAN: Total Item Mencapai Target (Segi Enam) -->
+                            <div class="rpg-badge-item">
+                                <div class="rpg-emblem-wrapper emblem-right">
+                                    <!-- Gantilah angka '3' di bawah ini dengan variabel total item Anda jika ada -->
+                                    <span class="rpg-emblem-text">3</span>
+                                </div>
+                                <div class="rpg-emblem-label">TARGET ITEMS</div>
                             </div>
                         </div>
                         <div class="avatar-holder-bottom">👤</div>
@@ -1079,6 +1095,62 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 .rpg_bar_fill_pps { background: linear-gradient(90deg, #3b82f6, #60a5fa) !important; }
                 .rpg_bar_fill_sueger { background: linear-gradient(90deg, #10b981, #34d399) !important; }
                 .avatar-holder-bottom { width: 65px; height: 65px; border-radius: 50%; border: 3px solid #d97706; background-color: #0b0f19; position: absolute; bottom: -32px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; align-items: center; font-size: 28px; box-shadow: 0 8px 20px rgba(217, 119, 6, 0.5), inset 0 0 10px rgba(217, 119, 6, 0.2); z-index: 100; }
+
+                .rpg-dual-badge-row {
+                    display: flex !important;
+                    justify-content: space-around !important;
+                    align-items: center !important;
+                    width: 100% !important;
+                    margin: 20px auto 10px auto !important;
+                    box-sizing: border-box !important;
+                }
+                
+                .rpg-badge-item {
+                    display: flex !important;
+                    flex-direction: column !important;
+                    align-items: center !important;
+                    width: 45% !important;
+                }
+                
+                .rpg-emblem-wrapper {
+                    background-image: url("https://githubusercontent.com") !important; /* ⚠️ GANTI DENGAN URL GAMBAR DUA LENCANA ANDA */
+                    background-repeat: no-repeat !important;
+                    width: 110px !important;
+                    height: 65px !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    position: relative !important;
+                }
+                
+                .emblem-left {
+                    background-size: 220px 65px !important;
+                    background-position: left center !important;
+                }
+                
+                .emblem-right {
+                    background-size: 220px 65px !important;
+                    background-position: right center !important;
+                }
+                
+                .rpg-emblem-text {
+                    color: #ffffff !important;
+                    font-size: 13px !important;
+                    font-weight: 900 !important;
+                    font-family: 'Courier New', monospace !important;
+                    text-shadow: 0 0 8px rgba(168, 85, 247, 0.8), 0 0 3px #000000 !important;
+                    margin-top: -2px !important;
+                }
+                
+                .rpg-emblem-label {
+                    color: #475569 !important;
+                    font-size: 9px !important;
+                    font-weight: bold !important;
+                    letter-spacing: 0.8px !important;
+                    margin-top: 5px !important;
+                    font-family: monospace !important;
+                    text-align: center !important;
+                }
 
                 /* ========================================================================= */
                 /* 👑 TOMBOL NATIVE KEMBALI (EDISI RE-DESIGN PREMIUM MEDIEVAL & SIMETRIS)    */
