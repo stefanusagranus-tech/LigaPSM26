@@ -1012,86 +1012,63 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         test_qty_sueger = 28
         test_percent_sueger = 45
     
+        # 🚀 LANGKAH A: CORE HTML TEMPLATE (MENGGUNAKAN DUA TANDA PERSEN %% UNTUK CSS)
         html_core_template = """
         <div class="rpg-fullscreen-wrapper">
-        
+            
             <!-- A. JUDUL ATAS LISENSI -->
             <h2 class="rpg-header-title">📜 GUILD MEMBER LICENSE 📜</h2>
             <p class="rpg-header-sub">Sentuh gulungan kartu di bawah ini untuk melihat status pahlawan Anda.</p>
-        
+            
             <!-- B. CHECKBOX PEMICU PUTARAN 3D -->
             <input type="checkbox" id="card-trigger" style="display: none !important;">
-        
+            
             <!-- C. STRUKTUR UTAMA KARTU 3D FLIP -->
             <label class="flip-card-wrapper" for="card-trigger">
                 <div class="flip-card-inner">
-        
-                    <!-- 🎴 SISI BELAKANG KARTU -->
+                    
+                    <!-- 🎴 SISI BELAKANG KARTU (TAMPILAN AWAL SEBELUM DIKETUK) -->
                     <div class="card-face card-back-design">
                         <div class="magic-seal-back">🔮</div>
                         <h3 style="color: #b45309; font-size: 16px; font-weight: 800; margin: 0; letter-spacing: 2px; font-family: monospace;">UNVEIL STATUS</h3>
                         <p style="color: #475569; font-size: 11px; margin: 8px 0 0 0; font-family: monospace;">Tap to break the seal</p>
                     </div>
-        
-                    <!-- 👑 SISI DEPAN BINGKAI EMAS UTUH -->
+                    
+                    <!-- 👑 SISI DEPAN BINGKAI EMAS UTUH (FULL ATRIBUT MODUL PENJUALAN) -->
                     <div class="card-face card-front-design">
                         <div class="char-avatar-box">🛡️</div>
                         <div class="char-hero-name">RAFI</div>
                         <div class="char-hero-level-badge">RANK: MASTER • LEVEL %s</div>
-        
+                        
                         <!-- ⚔️ BAR 1: PENCAPAIAN PSM -->
                         <div class="rpg-stat-container">
-                            <div class="rpg-stat-header">
-                                <span>🔥 ATTACK (PENCAPAIAN PSM)</span>
-                                <span>%s Qty</span>
-                            </div>
-                            <div class="rpg-bar-bg">
-                                <div class="rpg-bar-fill-psm" style="width: %s%%%%;"></div>
-                            </div>
+                            <div class="rpg-stat-header"><span>🔥 ATTACK (PENCAPAIAN PSM)</span><span>%s Qty</span></div>
+                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-psm" style="width: %s%%;"></div></div>
                         </div>
-        
+                        
                         <!-- 🛡️ BAR 2: PENCAPAIAN PENJUALAN PPS -->
                         <div class="rpg-stat-container">
-                            <div class="rpg-stat-header">
-                                <span>🛡️ DEFENSE (PENJUALAN PPS)</span>
-                                <span>%s Poin</span>
-                            </div>
-                            <div class="rpg-bar-bg">
-                                <div class="rpg-bar-fill-pps" style="width: %s%%%%;"></div>
-                            </div>
+                            <div class="rpg-stat-header"><span>🛡️ DEFENSE (PENJUALAN PPS)</span><span>%s Poin</span></div>
+                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-pps" style="width: %s%%;"></div></div>
                         </div>
-        
+                        
                         <!-- 🍃 BAR 3: PENCAPAIAN PENJUALAN SUEGER -->
                         <div class="rpg-stat-container">
-                            <div class="rpg-stat-header">
-                                <span>🍃 AGILITY (PENJUALAN SUEGER)</span>
-                                <span>%s Qty</span>
-                            </div>
-                            <div class="rpg-bar-bg">
-                                <div class="rpg-bar-fill-sueger" style="width: %s%%%%;"></div>
-                            </div>
+                            <div class="rpg-stat-header"><span>🍃 AGILITY (PENJUALAN SUEGER)</span><span>%s Qty</span></div>
+                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-sueger" style="width: %s%%;"></div></div>
                         </div>
-        
+                        
                         <div class="avatar-holder-bottom">👤</div>
                     </div>
-        
+                    
                 </div>
             </label>
         </div>
-        """ % (
-            test_level,
-            test_qty_psm,
-            test_percent_psm,
-            test_qty_pps,
-            test_percent_pps,
-            test_qty_sueger,
-            test_percent_sueger,
-        )
-        
-        # Render template ke dalam aplikasi Streamlit
+        """ % (test_level, test_qty_psm, test_percent_psm, test_qty_pps, test_percent_pps, test_qty_sueger, test_percent_sueger)
+    
+        # Render template HTML ke aplikasi
         st.markdown(html_core_template, unsafe_allow_html=True)
-
-
+        st.markdown("<br>", unsafe_allow_html=True)
         
         # 🚀 LANGKAH B: CSS GLOBAL (termasuk style tombol kembali)
         css_private_style = """
