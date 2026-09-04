@@ -1041,60 +1041,61 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 }
 
                 # =========================================================================
-                # 🎴 3. SUNTIKKAN GAYA CSS KARTU 3D MEDIEVAL (FIXED & ANTI-ERROR)
+                # 🎴 3. SUNTIKKAN GAYA CSS KARTU 3D MEDIEVAL (FIXED STRUKTUR SEJAJAR ANTI-PECAH)
                 # =========================================================================
                 st.markdown(
-                    """
+                    f"""
                     <style>
                         /* Sembunyikan total header bawaan Streamlit agar halaman mandiri */
-                        [data-testid="stHeader"], header, .stAppHeader { 
+                        [data-testid="stHeader"], header, .stAppHeader {{ 
                             display: none !important; 
-                        }
+                        }}
                 
-                        .main .block-container { 
+                        /* FIX MUTLAK: Menggunakan double curly brackets dan merapatkan px */
+                        .main .block-container {{ 
                             background-color: #090d16 !important; 
                             min-height: 800px !important; 
                             max-width: 600px !important; 
                             margin: 0 auto !important; 
                             padding-top: 5% !important; 
                             box-sizing: border-box !important;
-                        }
+                        }}
                 
-                        .rpg-card-fullscreen-container { text-align: center; font-family: monospace; width: 100%; margin: 0 auto; }
-                        .rpg-header-title { color: #fbbf24 !important; font-size: 23px !important; text-shadow: 0 0 10px rgba(251,191,36,0.3) !important; margin: 0 0 5px 0 !important; font-weight: 900 !important; }
-                        .rpg-header-sub { color: #475569 !important; font-size: 11px !important; margin: 0 0 15px 0 !important; }
+                        .rpg-card-fullscreen-container {{ text-align: center; font-family: monospace; width: 100%; margin: 0 auto; }}
+                        .rpg-header-title {{ color: #fbbf24 !important; font-size: 23px !important; text-shadow: 0 0 10px rgba(251,191,36,0.3) !important; margin: 0 0 5px 0 !important; font-weight: 900 !important; }}
+                        .rpg-header-sub {{ color: #475569 !important; font-size: 11px !important; margin: 0 0 15px 0 !important; }}
                         
                         /* ENGINE UTAMA STRUKTUR KARTU FLIP */
-                        .flip-card-wrapper { background-color: transparent !important; width: 330px; height: 520px; perspective: 1000px; margin: 15px auto; cursor: pointer; display: block; }
-                        .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }
+                        .flip-card-wrapper {{ background-color: transparent !important; width: 330px; height: 520px; perspective: 1000px; margin: 15px auto; cursor: pointer; display: block; }}
+                        .flip-card-inner {{ position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }}
                         
                         /* Memicu rotasi putaran berantai dari luar label */
-                        #card-trigger:checked ~ .flip-card-wrapper .flip-card-inner { transform: rotateY(180deg) !important; }
+                        #card-trigger:checked ~ .flip-card-wrapper .flip-card-inner {{ transform: rotateY(180deg) !important; }}
                         
                         /* Memaksa kedua sisi kartu berwarna gelap gulita, melenyapkan kotak putih hantu */
-                        .card-face { position: absolute; width: 100%; height: 100%; background: linear-gradient(145deg, #111827 0%, #0b0f19 100%) !important; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 20px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 24px; }
+                        .card-face {{ position: absolute; width: 100%; height: 100%; background: linear-gradient(145deg, #111827 0%, #0b0f19 100%) !important; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 20px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 24px; }}
                         
-                        .card-back-design { border: 3px dashed #b45309 !important; box-shadow: 0 8px 25px rgba(0,0,0,0.5), inset 0 0 30px rgba(180, 83, 9, 0.2) !important; color: #b45309 !important; }
-                        .magic-seal-back { width: 110px; height: 110px; border: 2px dashed #b45309; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 45px; margin-bottom: 20px; }
+                        .card-back-design {{ border: 3px dashed #b45309 !important; box-shadow: 0 8px 25px rgba(0,0,0,0.5), inset 0 0 30px rgba(180, 83, 9, 0.2) !important; color: #b45309 !important; }}
+                        .magic-seal-back {{ width: 110px; height: 110px; border: 2px dashed #b45309; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 45px; margin-bottom: 20px; }}
                         
                         /* Bingkai ukir ganda emas */
-                        .card-front-design { border: 4px double #d97706 !important; box-shadow: 0 12px 35px rgba(217, 119, 6, 0.3), inset 0 0 25px rgba(217, 119, 6, 0.05) !important; color: white !important; transform: rotateY(180deg); justify-content: flex-start !important; padding-top: 35px !important; }
-                        .card-front-design::before { content: "⚜️"; position: absolute; top: 12px; font-size: 18px; color: #d97706; filter: drop-shadow(0 0 5px #d97706); }
+                        .card-front-design {{ border: 4px double #d97706 !important; box-shadow: 0 12px 35px rgba(217, 119, 6, 0.3), inset 0 0 25px rgba(217, 119, 6, 0.05) !important; color: white !important; transform: rotateY(180deg); justify-content: flex-start !important; padding-top: 35px !important; }}
+                        .card-front-design::before {{ content: "⚜️"; position: absolute; top: 12px; font-size: 18px; color: #d97706; filter: drop-shadow(0 0 5px #d97706); }}
                         
-                        .char-avatar-box { width: 65px; height: 65px; border-radius: 50%; border: 2px solid #d97706; background: #151d30; display: flex; justify-content: center; align-items: center; font-size: 30px; margin-bottom: 12px; box-shadow: 0 0 12px rgba(217, 119, 6, 0.4); }
+                        .char-avatar-box {{ width: 65px; height: 65px; border-radius: 50%; border: 2px solid #d97706; background: #151d30; display: flex; justify-content: center; align-items: center; font-size: 30px; margin-bottom: 12px; box-shadow: 0 0 12px rgba(217, 119, 6, 0.4); }}
                         
-                        .char-name-plate { background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%); border: 1px solid #d97706; border-radius: 6px; padding: 4px 25px; box-shadow: 0 0 10px rgba(217, 119, 6, 0.2); margin-bottom: 4px; }
+                        .char-name-plate {{ background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%); border: 1px solid #d97706; border-radius: 6px; padding: 4px 25px; box-shadow: 0 0 10px rgba(217, 119, 6, 0.2); margin-bottom: 4px; }}
                         
-                        .char-hero-name { color: #ffffff !important; font-size: 24px !important; font-weight: 900 !important; margin: 0 !important; letter-spacing: 2px !important; text-shadow: 0 0 8px rgba(255,255,255,0.2) !important; }
+                        .char-hero-name {{ color: #ffffff !important; font-size: 24px !important; font-weight: 900 !important; margin: 0 !important; letter-spacing: 2px !important; text-shadow: 0 0 8px rgba(255,255,255,0.2) !important; }}
                         
-                        .char-hero-level-badge { background: linear-gradient(90deg, rgba(180, 83, 9, 0.3), rgba(217, 119, 6, 0.15)); color: #fbbf24; font-size: 11px; font-weight: 800; padding: 4px 16px; border-radius: 4px; border: 1px solid #d97706; margin-bottom: 25px; letter-spacing: 0.8px; box-shadow: inset 0 0 5px rgba(0,0,0,0.5); }
+                        .char-hero-level-badge {{ background: linear-gradient(90deg, rgba(180, 83, 9, 0.3), rgba(217, 119, 6, 0.15)); color: #fbbf24; font-size: 11px; font-weight: 800; padding: 4px 16px; border-radius: 4px; border: 1px solid #d97706; margin-bottom: 25px; letter-spacing: 0.8px; box-shadow: inset 0 0 5px rgba(0,0,0,0.5); }}
                         
-                        .rpg-stat-container { width: 100%; margin-bottom: 14px; text-align: left; }
-                        .rpg-stat-header { display: flex; justify-content: space-between; color: #94a3b8; font-size: 11px; font-weight: bold; margin-bottom: 5px; font-family: monospace; letter-spacing: 0.5px; }
+                        .rpg-stat-container {{ width: 100%; margin-bottom: 14px; text-align: left; }}
+                        .rpg-stat-header {{ display: flex; justify-content: space-between; color: #94a3b8; font-size: 11px; font-weight: bold; margin-bottom: 5px; font-family: monospace; letter-spacing: 0.5px; }}
                         
-                        .rpg-bar-bg { background-color: #05070a !important; height: 14px; border-radius: 4px; overflow: hidden; border: 1px solid rgba(217, 119, 6, 0.25); box-shadow: inset 0 3px 6px rgba(0,0,0,0.8); }
+                        .rpg-bar-bg {{ background-color: #05070a !important; height: 14px; border-radius: 4px; overflow: hidden; border: 1px solid rgba(217, 119, 6, 0.25); box-shadow: inset 0 3px 6px rgba(0,0,0,0.8); }}
                         
-                        .avatar-holder-bottom { width: 65px; height: 65px; border-radius: 50%; border: 3px solid #d97706; background-color: #0b0f19; position: absolute; bottom: -32px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; align-items: center; font-size: 28px; box-shadow: 0 8px 20px rgba(217, 119, 6, 0.5), inset 0 0 10px rgba(217, 119, 6, 0.2); z-index: 100; }
+                        .avatar-holder-bottom {{ width: 65px; height: 65px; border-radius: 50%; border: 3px solid #d97706; background-color: #0b0f19; position: absolute; bottom: -32px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; align-items: center; font-size: 28px; box-shadow: 0 8px 20px rgba(217, 119, 6, 0.5), inset 0 0 10px rgba(217, 119, 6, 0.2); z-index: 100; }}
                     </style>
                     """,
                     unsafe_allow_html=True
