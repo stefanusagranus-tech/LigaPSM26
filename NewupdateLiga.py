@@ -917,42 +917,203 @@ if "portal_guild_ready" in st.session_state and st.session_state.portal_guild_re
 # 🚀 BAGIAN 1: TARUH DI PALING ATAS BERKAS (ANTI-BOCOR KODE BLACKSMITH)
 # =========================================================================
 if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_ready:
-    st.markdown(
-        """
-        <style>
-            /* Layout Ramping & Presisi di Web PC, Android, & iOS */
-            .main .block-container { background-color: #0b0f19 !important; min-height: 100vh !important; max-width: 800px !important; margin: 0 auto !important; padding-top: 5% !important; padding-left: 20px !important; padding-right: 20px !important; box-sizing: border-box !important; }
-            [data-testid="stSidebar"] { display: none !important; }
-            [data-testid="stHeader"] { display: none !important; }
-            div[data-testid="stColumn"] { display: flex !important; flex-direction: column !important; justify-content: flex-start !important; align-items: stretch !important; }
-            
-            /* Desain Kartu Pertama Anda yang Keren */
-            .camp-card { background: linear-gradient(135deg, #131926 0%, #1e2638 100%); border: 2px solid #b45309; border-bottom: none; border-radius: 12px 12px 0 0; padding: 24px; text-align: center; position: relative; box-shadow: 0 4px 15px rgba(180, 83, 9, 0.15); flex-grow: 1; }
-            .camp-icon { font-size: 45px; margin-bottom: 12px; filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.4)); }
-            .camp-title { color: #fef08a; font-family: monospace; font-size: 16px; font-weight: 800; margin-bottom: 8px; letter-spacing: 1px; }
-            .camp-desc { color: #94a3b8; font-family: monospace; font-size: 12px; line-height: 1.5; margin-bottom: 5px; }
-            
-            /* Mengunci tombol agar menempel presisi di dasar bawah kartu tanpa celah */
-            div[data-testid="stColumn"] div.stButton { margin: 0 !important; padding: 0 !important; display: block !important; width: 100% !important; }
-            div[data-testid="stColumn"] div.stButton > button { background: rgba(180, 83, 9, 0.15) !important; color: #fef08a !important; border: 2px solid #b45309 !important; border-top: 1px solid rgba(180, 83, 9, 0.3) !important; border-radius: 0 0 12px 12px !important; font-family: monospace !important; font-size: 13px !important; font-weight: 700 !important; padding: 12px 0px !important; width: 100% !important; box-sizing: border-box !important; margin: 0 !important; }
-            div[data-testid="stColumn"] div.stButton > button:hover { background: #b45309 !important; color: #0b0f19 !important; box-shadow: 0 4px 12px rgba(180, 83, 9, 0.4) !important; }
-            
-            .leave-camp-box div.stButton { margin-top: 40px !important; }
-            .leave-camp-box div.stButton > button { border-radius: 10px !important; background: rgba(239, 68, 68, 0.1) !important; color: #ef4444 !important; border: 1px solid rgba(239, 68, 68, 0.4) !important; }
-            .leave-camp-box div.stButton > button:hover { background: #ef4444 !important; color: white !important; box-shadow: 0 0 15px rgba(239, 68, 68, 0.5) !important; }
-            
-            /* 🔮 CSS ANIMASI PANDAI BESI (DIKUNCI AMAN DI SINI AGAR TIDAK MUNTAH TEKS) */
-            @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-            .spark { position: absolute; border-radius: 50%; border: 2px solid #ef4444; box-sizing: border-box; }
-            .circle1 { width: 120px; height: 120px; animation: explode 1.6s infinite linear; filter: drop-shadow(0 0 10px #f97316); }
-            .circle2 { width: 140px; height: 140px; animation: explode 1.6s infinite linear; animation-delay: 0.8s; filter: drop-shadow(0 0 10px #ef4444); }
-            @keyframes strike { 0%, 100% { transform: scale(1) translateY(0); } 50% { transform: scale(0.9) translateY(8px); filter: drop-shadow(0 0 25px #fbbf24); } }
-            @keyframes explode { 0% { transform: scale(0.3); opacity: 1; border-style: solid; } 50% { border-style: dashed; } 100% { transform: scale(1.1); opacity: 0; border-style: dotted; } }
-        </style>
-        """, 
-        unsafe_allow_html=True
-    )
+    # 1. Inisialisasi status menu camp di paling atas kontainer perkemahan
+    if "current_camp_menu" not in st.session_state:
+        st.session_state.current_camp_menu = "main"
 
+    # =========================================================================
+    # 📜 SUB-MENU 1: HALAMAN KARTU BERPUTAR 3D FLIP (SAAT DIKLIK LIHAT STATUS)
+    # =========================================================================
+    if st.session_state.current_camp_menu == "status":
+        st.markdown(
+            """
+            <style>
+                /* Layout Ramping Khusus Halaman Kartu Status */
+                .main .block-container {
+                    background-color: #090d16 !important;
+                    min-height: 100vh !important;
+                    max-width: 600px !important;
+                    margin: 0 auto !important;
+                    padding-top: 5% !important;
+                    box-sizing: border-box !important;
+                }
+                [data-testid="stSidebar"] { display: none !important; }
+                [data-testid="stHeader"] { display: none !important; }
+
+                /* 🔄 ENGINE UTAMA: 3D CARD FLIP CONTAINER */
+                .flip-card-wrapper {
+                    background-color: transparent;
+                    width: 320px;
+                    height: 460px;
+                    perspective: 1000px;
+                    margin: 20px auto;
+                    cursor: pointer;
+                    display: block;
+                }
+
+                .flip-card-inner {
+                    position: relative;
+                    width: 100%;
+                    height: 100%;
+                    text-align: center;
+                    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+                    transform-style: preserve-3d;
+                }
+
+                #card-trigger { display: none; }
+                #card-trigger:checked + .flip-card-inner {
+                    transform: rotateY(180deg);
+                }
+
+                .card-face {
+                    position: absolute;
+                    width: 100%;
+                    height: 100%;
+                    -webkit-backface-visibility: hidden;
+                    backface-visibility: hidden;
+                    border-radius: 20px;
+                    box-sizing: border-box;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                    padding: 25px;
+                }
+
+                /* 🎴 SISI BELAKANG */
+                .card-back-design {
+                    background: linear-gradient(135deg, #111625 0%, #080b12 100%);
+                    border: 3px dashed #b45309;
+                    box-shadow: 0 8px 25px rgba(0,0,0,0.5), inset 0 0 30px rgba(180, 83, 9, 0.2);
+                    color: #b45309;
+                }
+                
+                .magic-seal-back {
+                    width: 110px;
+                    height: 110px;
+                    border: 2px dashed #b45309;
+                    border-radius: 50%;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    font-size: 45px;
+                    margin-bottom: 20px;
+                    animation: seal-pulse 2.5s infinite ease-in-out;
+                }
+
+                /* 👑 BINGKAI DEPAN UTAMA EMAS */
+                .card-front-design {
+                    background: linear-gradient(145deg, #151d30 0%, #0f1524 100%);
+                    border: 4px double #d97706; 
+                    box-shadow: 0 12px 35px rgba(217, 119, 6, 0.2), inset 0 0 20px rgba(217, 119, 6, 0.05);
+                    color: white;
+                    transform: rotateY(180deg);
+                }
+
+                .card-front-design::before {
+                    content: "⚜️";
+                    position: absolute;
+                    top: 15px;
+                    font-size: 18px;
+                    color: #d97706;
+                    filter: drop-shadow(0 0 5px #d97706);
+                }
+                
+                .avatar-holder-bottom {
+                    width: 75px;
+                    height: 75px;
+                    border-radius: 50%;
+                    border: 3px solid #d97706;
+                    background-color: #0f1524;
+                    position: absolute;
+                    bottom: -35px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    font-size: 32px;
+                    box-shadow: 0 5px 15px rgba(217, 119, 6, 0.4);
+                    z-index: 100;
+                }
+
+                @keyframes seal-pulse {
+                    0%, 100% { transform: scale(1); opacity: 0.7; }
+                    50% { transform: scale(1.05); opacity: 1; filter: drop-shadow(0 0 18px #b45309); }
+                }
+
+                /* Gaya Khusus Tombol Pindah Halaman */
+                .action-button-box div.stButton > button {
+                    background: linear-gradient(135deg, rgba(217, 119, 6, 0.15) 0%, rgba(217, 119, 6, 0.3) 100%) !important;
+                    color: #fbbf24 !important;
+                    border: 2px solid #d97706 !important;
+                    border-radius: 12px !important;
+                    font-family: monospace !important;
+                    font-size: 14px !important;
+                    font-weight: bold !important;
+                    padding: 12px 0px !important;
+                    box-shadow: 0 0 15px rgba(217, 119, 6, 0.2) !important;
+                    letter-spacing: 1px !important;
+                }
+                .action-button-box div.stButton > button:hover {
+                    background: #d97706 !important;
+                    color: #090d16 !important;
+                    box-shadow: 0 0 25px rgba(217, 119, 6, 0.6) !important;
+                    transform: translateY(-2px) !important;
+                }
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+
+        st.markdown("<h2 style='color: #fbbf24; font-family: monospace; text-align: center; font-size: 24px; text-shadow: 0 0 10px rgba(251,191,36,0.3); margin-bottom: 0;'>📜 GUILD REGISTER LICENSE 📜</h2>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #475569; font-family: monospace; text-align: center; font-size: 12px; margin-bottom: 5px;'>Sentuh gulungan kartu di bawah ini untuk membuka segel mantra identitas.</p>", unsafe_allow_html=True)
+
+        # 🚀 STRUKTUR UTAMA ELEMEN INTERAKTIF 3D FLIP CARD HTML
+        st.markdown(
+            """
+            <label class="flip-card-wrapper" for="card-trigger">
+                <input type="checkbox" id="card-trigger">
+                <div class="flip-card-inner">
+                    <!-- 🎴 SISI BELAKANG -->
+                    <div class="card-face card-back-design">
+                        <div class="magic-seal-back">🔮</div>
+                        <h3 style="color: #b45309; font-family: monospace; font-size: 16px; font-weight: 800; margin: 0; letter-spacing: 2px;">UNVEIL STATUS</h3>
+                        <p style="color: #475569; font-family: monospace; font-size: 11px; margin-top: 8px;">Tap to break the seal</p>
+                    </div>
+                    
+                    <!-- 👑 SISI DEPAN UTAMA EMAS -->
+                    <div class="card-face card-front-design">
+                        <h2 style="color: #fbbf24; font-family: monospace; font-size: 22px; font-weight: 900; letter-spacing: 2px; margin-top: 20px; text-shadow: 0 0 10px rgba(251,191,36,0.3);">PORTAL OPENED</h2>
+                        <p style="color: #64748b; font-family: monospace; font-size: 12px; line-height: 1.6; padding: 0 10px; margin-top: 10px;">Segel pelindung pahlawan berhasil dihancurkan secara instan.</p>
+                        <p style="color: #d97706; font-family: monospace; font-size: 11px; font-weight: bold; margin-top: 15px; animation: blink 1.5s infinite;">▼ KLIK TOMBOL DI BAWAH UNTUK MEMBACA STATUS ▼</p>
+                        <div class="avatar-holder-bottom">👤</div>
+                    </div>
+                </div>
+            </label>
+            """,
+            unsafe_allow_html=True
+        )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # 🚀 TOMBOL AKSES MASUK KELUARAN PYTHON
+        st.markdown("<div class='action-button-box'>", unsafe_allow_html=True)
+        if st.button("👁️ BACA STATUS ATRIBUT RAFI", use_container_width=True, key="btn_read_stats_trigger"):
+            st.session_state.current_camp_menu = "view_stats"
+            st.rerun()
+            
+        st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+
+        if st.button("⬅️ KEMBALI KE KEMAH", use_container_width=True, key="btn_close_status"):
+            st.session_state.current_camp_menu = "main"
+            st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # =========================================================================
+    # ⚠️ KEMBALI KE STRUKTUR UTAMA CAMP AWAL (YANG SUDAH ADA DI FILE ANDA)
+    # =========================================================================
+    elif st.session_state.current_camp_menu == "main":
     st.markdown("<h1 style='color: #f59e0b; font-family: monospace; font-size: 32px; text-shadow: 0 0 15px rgba(245,158,11,0.4); text-align: center; margin-bottom: 5px;'>⛺ PREPARATION CAMP ⛺</h1>", unsafe_allow_html=True)
     st.markdown("<p style='color: #64748b; font-family: monospace; text-align: center; font-size: 13px;'>Persiapkan perlengkapan, cek papan misi, dan tingkatkan keahlian beladiri Anda sebelum melangkah keluar.</p>", unsafe_allow_html=True)
     
