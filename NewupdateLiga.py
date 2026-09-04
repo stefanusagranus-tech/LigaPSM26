@@ -1041,18 +1041,21 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 }
 
                 # =========================================================================
-                # 🎴 3. SUNTIKKAN GAYA CSS KARTU 3D MEDIEVAL (STRUKTUR MANDIRI ANTI-KUTIP BOCOR)
+                # 🔒 PAKSA TUTUP KEBOCORAN KUTIP DARI BARIS ATAS (JANGAN DIHAPUS BARIS INI)
+                # =========================================================================
+                """
+                
+                # =========================================================================
+                # 🎴 3. SUNTIKKAN GAYA CSS KARTU 3D MEDIEVAL (STRUKTUR TERISOLASI)
                 # =========================================================================
                 
-                # Kita buat string murni tanpa awalan f, menggunakan triple single-quote agar tidak tabrakan dengan tanda kutip dua di dalam HTML/CSS
-                css_medieval_rpg = '''
+                css_medieval_rpg = """
                 <style>
                     /* Sembunyikan total header bawaan Streamlit agar halaman mandiri */
                     [data-testid="stHeader"], header, .stAppHeader { 
                         display: none !important; 
                     }
                 
-                    /* Menggunakan kurung kurawal tunggal murni, tanpa spasi pada unit px */
                     .main .block-container { 
                         background-color: #090d16 !important; 
                         min-height: 800px !important; 
@@ -1066,20 +1069,16 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     .rpg-header-title { color: #fbbf24 !important; font-size: 23px !important; text-shadow: 0 0 10px rgba(251,191,36,0.3) !important; margin: 0 0 5px 0 !important; font-weight: 900 !important; }
                     .rpg-header-sub { color: #475569 !important; font-size: 11px !important; margin: 0 0 15px 0 !important; }
                     
-                    /* ENGINE UTAMA STRUKTUR KARTU FLIP */
                     .flip-card-wrapper { background-color: transparent !important; width: 330px; height: 520px; perspective: 1000px; margin: 15px auto; cursor: pointer; display: block; }
                     .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }
                     
-                    /* Memicu rotasi putaran berantai dari luar label */
                     #card-trigger:checked ~ .flip-card-wrapper .flip-card-inner { transform: rotateY(180deg) !important; }
                     
-                    /* Memaksa kedua sisi kartu berwarna gelap gulita, melenyapkan kotak putih hantu */
                     .card-face { position: absolute; width: 100%; height: 100%; background: linear-gradient(145deg, #111827 0%, #0b0f19 100%) !important; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 20px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 24px; }
                     
                     .card-back-design { border: 3px dashed #b45309 !important; box-shadow: 0 8px 25px rgba(0,0,0,0.5), inset 0 0 30px rgba(180, 83, 9, 0.2) !important; color: #b45309 !important; }
                     .magic-seal-back { width: 110px; height: 110px; border: 2px dashed #b45309; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 45px; margin-bottom: 20px; }
                     
-                    /* Bingkai ukir ganda emas */
                     .card-front-design { border: 4px double #d97706 !important; box-shadow: 0 12px 35px rgba(217, 119, 6, 0.3), inset 0 0 25px rgba(217, 119, 6, 0.05) !important; color: white !important; transform: rotateY(180deg); justify-content: flex-start !important; padding-top: 35px !important; }
                     .card-front-design::before { content: "⚜️"; position: absolute; top: 12px; font-size: 18px; color: #d97706; filter: drop-shadow(0 0 5px #d97706); }
                     
@@ -1098,11 +1097,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     
                     .avatar-holder-bottom { width: 65px; height: 65px; border-radius: 50%; border: 3px solid #d97706; background-color: #0b0f19; position: absolute; bottom: -32px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; align-items: center; font-size: 28px; box-shadow: 0 8px 20px rgba(217, 119, 6, 0.5), inset 0 0 10px rgba(217, 119, 6, 0.2); z-index: 100; }
                 </style>
-                '''
+                """
                 
-                # Eksekusi variabel string ke Streamlit
                 st.markdown(css_medieval_rpg, unsafe_allow_html=True)
-                
+
         # =========================================================================
         # E. TOMBOL NATIVE KEMBALI (EDISI RE-DESIGN PREMIUM MEDIEVAL & SIMETRIS)
         # =========================================================================
