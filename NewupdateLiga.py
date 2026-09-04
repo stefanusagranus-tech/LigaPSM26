@@ -759,22 +759,34 @@ if st.sidebar.button(logout_text, use_container_width=True, key="logout_sidebar"
 # ==========================================
 # 8. HEADER UTAMA (Tombol Menyatu di Banner)
 # ==========================================
-st.markdown(
-    f"""
-    <!-- Ditambahkan padding-left: 60px agar memberi ruang kosong untuk tombol pembuka di dalam banner -->
-    <div style='background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%); padding: 16px 24px 16px 60px; border-radius: 12px; border: 1px solid #38bdf8; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; position: relative;'>
-        <div>
-            <h2 style='margin:0; color:#ffffff; font-size: 24px;'>📊 PSM TOKO SALES MONITORING</h2>
-            <p style='margin:0; color:#38bdf8; font-size: 13px;'>Sistem Analisis & Optimasi Pencapaian Target Toko</p>
+# =============================================================================
+# 8. HEADER UTAMA (DIKUNCI AGAR TIDAK BOCOR KE PREPARATION CAMP ATAU STATUS CARD)
+# =============================================================================
+# 🚀 KUNCI FIX UTAMA: Periksa apakah user sedang membuka area game perkemahan atau tidak
+is_di_dalam_camp = ("portal_prep_ready" in st.session_state and st.session_state.portal_prep_ready) or \
+                   ("current_camp_menu" in st.session_state and st.session_state["current_camp_menu"] == "status")
+
+if is_di_dalam_camp:
+    # 🧙‍♂️ JIKA USER MEMASUKI PERKEMAHAN ATAU MELIHAT KARTU, BLOKIR KOTAK BIRU INI SECARA GAIB!
+    pass
+else:
+    # 🔔 KOTAK BIRU INI HANYA AKAN DIGAMBAR JIKA USER BERADA DI DASHBOARD UTAMA BIASA:
+    st.markdown(
+        f"""
+        <!-- Ditambahkan padding-left: 60px agar memberi ruang kosong untuk tombol pembuka di dalam banner -->
+        <div style='background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%); padding: 16px 24px 16px 60px; border-radius: 12px; border: 1px solid #38bdf8; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; position: relative;'>
+            <div>
+                <h2 style='margin:0; color:#ffffff; font-size: 24px;'>📊 PSM TOKO SALES MONITORING</h2>
+                <p style='margin:0; color:#38bdf8; font-size: 13px;'>Sistem Analisis & Optimasi Pencapaian Target Toko</p>
+            </div>
+            <div style='text-align: right;'>
+                <p style='margin:0; color:#94a3b8; font-size: 11px; font-weight:bold;'>WAKTU REALTIME SISTEM</p>
+                <p style='margin:0; color:#38bdf8; font-size: 14px; font-weight:bold;'>⏰ {current_time_str}</p>
+            </div>
         </div>
-        <div style='text-align: right;'>
-            <p style='margin:0; color:#94a3b8; font-size: 11px; font-weight:bold;'>WAKTU REALTIME SISTEM</p>
-            <p style='margin:0; color:#38bdf8; font-size: 14px; font-weight:bold;'>⏰ {current_time_str}</p>
-        </div>
-    </div>
-""",
-    unsafe_allow_html=True,
-)
+    """,
+        unsafe_allow_html=True,
+    )
 
 # Injeksi CSS presisi untuk memasukkan tombol ke dalam banner Anda
 st.markdown(
