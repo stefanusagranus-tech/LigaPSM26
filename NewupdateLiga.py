@@ -1144,110 +1144,109 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         )
 
         st.markdown("<h1 style='color: #f59e0b; font-family: monospace; font-size: 32px; text-shadow: 0 0 15px rgba(245,158,11,0.4); text-align: center; margin-bottom: 5px;'>⛺ PREPARATION CAMP ⛺</h1>", unsafe_allow_html=True)
+        col_camp1, col_camp2, col_camp3 = st.columns(3)
     
-    col_camp1, col_camp2, col_camp3 = st.columns(3)
-
-    #================
-    #Kartu nama anjay#
-    #================
-    with col_camp1:
-        st.markdown("<div class='camp-card'><div class='camp-icon'>📜</div><div class='camp-title'>ANGGOTA GUILD</div><div class='camp-desc'>Buka gulungan piagam untuk memeriksa status level, poin atribut, dan rapor performa penjualan individu Anda.</div></div>", unsafe_allow_html=True)
-        if st.button("Lihat Status ➔", use_container_width=True, key="btn_camp_status"):
-            placeholder = st.empty()
-            with placeholder.container():
-                # --- LAYAR LOADING FULLSCREEN: RITUAL PENCATATAN NAMA HERO (ANTI-STUCK) ---
-                st.markdown(
-                    """
-                    <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
-                        <div class="magic-portal-container" style="position: relative; width: 150px; height: 150px; display: flex; justify-content: center; align-items: center;">
-                            <!-- Efek Ring Sihir Emas Berpusing Pelan -->
-                            <svg width="160" height="160" viewBox="0 0 160 160" style="position: absolute;">
-                                <circle cx="80" cy="80" r="70" stroke="#d97706" stroke-width="2" stroke-dasharray="8, 6" fill="none" style="transform-origin: 80px 80px; animation: spin-clockwise 10s infinite linear;" />
-                                <circle cx="80" cy="80" r="50" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="3, 4" fill="none" style="transform-origin: 80px 80px; animation: spin-counter 6s infinite linear;" />
-                            </svg>
-                            <div style="font-size: 50px; filter: drop-shadow(0 0 12px #d97706); animation: pulse-core 2s infinite ease-in-out;">📜</div>
+        #================
+        #Kartu nama anjay#
+        #================
+        with col_camp1:
+            st.markdown("<div class='camp-card'><div class='camp-icon'>📜</div><div class='camp-title'>ANGGOTA GUILD</div><div class='camp-desc'>Buka gulungan piagam untuk memeriksa status level, poin atribut, dan rapor performa penjualan individu Anda.</div></div>", unsafe_allow_html=True)
+            if st.button("Lihat Status ➔", use_container_width=True, key="btn_camp_status"):
+                placeholder = st.empty()
+                with placeholder.container():
+                    # --- LAYAR LOADING FULLSCREEN: RITUAL PENCATATAN NAMA HERO (ANTI-STUCK) ---
+                    st.markdown(
+                        """
+                        <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
+                            <div class="magic-portal-container" style="position: relative; width: 150px; height: 150px; display: flex; justify-content: center; align-items: center;">
+                                <!-- Efek Ring Sihir Emas Berpusing Pelan -->
+                                <svg width="160" height="160" viewBox="0 0 160 160" style="position: absolute;">
+                                    <circle cx="80" cy="80" r="70" stroke="#d97706" stroke-width="2" stroke-dasharray="8, 6" fill="none" style="transform-origin: 80px 80px; animation: spin-clockwise 10s infinite linear;" />
+                                    <circle cx="80" cy="80" r="50" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="3, 4" fill="none" style="transform-origin: 80px 80px; animation: spin-counter 6s infinite linear;" />
+                                </svg>
+                                <div style="font-size: 50px; filter: drop-shadow(0 0 12px #d97706); animation: pulse-core 2s infinite ease-in-out;">📜</div>
+                            </div>
+                            <h1 style='color: #fbbf24; font-family: monospace; animation: blink 1.5s infinite; font-size: 22px; margin-top: 40px; letter-spacing: 2px; text-shadow: 0 0 15px rgba(251,191,36,0.4);'>RECORDING HERO NAME...</h1>
+                            <p style='color: #475569; font-size: 13px; margin-top: 5px; font-family: monospace;'>Reading spreadsheet registry and stabilizing guild roster...</p>
+                            <style>
+                                @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+                                [data-testid="stSidebar"] { display: none !important; }
+                                [data-testid="stHeader"] { display: none !important; }
+                                @keyframes spin-clockwise { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                                @keyframes spin-counter { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+                                @keyframes pulse-core { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+                            </style>
                         </div>
-                        <h1 style='color: #fbbf24; font-family: monospace; animation: blink 1.5s infinite; font-size: 22px; margin-top: 40px; letter-spacing: 2px; text-shadow: 0 0 15px rgba(251,191,36,0.4);'>RECORDING HERO NAME...</h1>
-                        <p style='color: #475569; font-size: 13px; margin-top: 5px; font-family: monospace;'>Reading spreadsheet registry and stabilizing guild roster...</p>
-                        <style>
-                            @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-                            [data-testid="stSidebar"] { display: none !important; }
-                            [data-testid="stHeader"] { display: none !important; }
-                            @keyframes spin-clockwise { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-                            @keyframes spin-counter { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
-                            @keyframes pulse-core { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
-                        </style>
-                    </div>
-                    """, 
-                    unsafe_allow_html=True
-                )
-                # Menjalankan bar simulasi pemuatan selama ~3 detik
-                progress_bar = st.progress(0)
-                for percent_complete in range(100):
-                    time.sleep(0.03) 
-                    progress_bar.progress(percent_complete + 1)
-            
-            placeholder.empty()
-            # Nyalakan status sub-menu dan segarkan halaman untuk menampilkan Back Card
-            st.session_state.current_camp_menu = "status"
-            st.rerun()
-            
-    with col_camp2:
-        st.markdown("<div class='camp-card'><div class='camp-icon'>🎯</div><div class='camp-title'>QUIZ CAMPAIGN</div><div class='camp-desc'>Cek papan pengumuman untuk melihat quest musiman, tugas mingguan PSM, serta daily target buruan Anda.</div></div>", unsafe_allow_html=True)
-        if st.button("Ambil Quest ➔", use_container_width=True, key="btn_camp_quest"):
-            st.toast("Membuka Papan Misi...", icon="🎯")
-            
-    # =========================================================================
-    # ⚔️ KARTU 3: UPGRADE SKILL (EDISI RITUAL PENEMPAAN SENJATA 1-100)
-    # =========================================================================
-    with col_camp3:
-        st.markdown("<div class='camp-card'><div class='camp-icon'>⚔️</div><div class='camp-title'>UPGRADE SKILL</div><div class='camp-desc'>Masuki ruang latihan untuk mengasah keahlian bertarung Anda (Shortcut penginputan data transaksi penjualan).</div></div>", unsafe_allow_html=True)
-        if st.button("Latih Skill ➔", use_container_width=True, key="btn_camp_skill"):
-            placeholder = st.empty()
-            with placeholder.container():
-                # --- LAYAR LOADING FULLSCREEN: BLACKSMITH FORGING (MURNI TANPA TAG STYLE YANG RAWAN BOCOR) ---
-                st.markdown(
-                    """
-                    <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
-                        <div class="forge-container" style="position: relative; width: 150px; height: 150px; display: flex; justify-content: center; align-items: center;">
-                            <div class="anvil" style="font-size: 70px; z-index: 10; animation: strike 0.8s infinite ease-in-out;">⚒️</div>
-                            <div class="spark circle1"></div>
-                            <div class="spark circle2"></div>
+                        """, 
+                        unsafe_allow_html=True
+                    )
+                    # Menjalankan bar simulasi pemuatan selama ~3 detik
+                    progress_bar = st.progress(0)
+                    for percent_complete in range(100):
+                        time.sleep(0.03) 
+                        progress_bar.progress(percent_complete + 1)
+                
+                placeholder.empty()
+                # Nyalakan status sub-menu dan segarkan halaman untuk menampilkan Back Card
+                st.session_state.current_camp_menu = "status"
+                st.rerun()
+                
+        with col_camp2:
+            st.markdown("<div class='camp-card'><div class='camp-icon'>🎯</div><div class='camp-title'>QUIZ CAMPAIGN</div><div class='camp-desc'>Cek papan pengumuman untuk melihat quest musiman, tugas mingguan PSM, serta daily target buruan Anda.</div></div>", unsafe_allow_html=True)
+            if st.button("Ambil Quest ➔", use_container_width=True, key="btn_camp_quest"):
+                st.toast("Membuka Papan Misi...", icon="🎯")
+                
+        # =========================================================================
+        # ⚔️ KARTU 3: UPGRADE SKILL (EDISI RITUAL PENEMPAAN SENJATA 1-100)
+        # =========================================================================
+        with col_camp3:
+            st.markdown("<div class='camp-card'><div class='camp-icon'>⚔️</div><div class='camp-title'>UPGRADE SKILL</div><div class='camp-desc'>Masuki ruang latihan untuk mengasah keahlian bertarung Anda (Shortcut penginputan data transaksi penjualan).</div></div>", unsafe_allow_html=True)
+            if st.button("Latih Skill ➔", use_container_width=True, key="btn_camp_skill"):
+                placeholder = st.empty()
+                with placeholder.container():
+                    # --- LAYAR LOADING FULLSCREEN: BLACKSMITH FORGING (MURNI TANPA TAG STYLE YANG RAWAN BOCOR) ---
+                    st.markdown(
+                        """
+                        <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
+                            <div class="forge-container" style="position: relative; width: 150px; height: 150px; display: flex; justify-content: center; align-items: center;">
+                                <div class="anvil" style="font-size: 70px; z-index: 10; animation: strike 0.8s infinite ease-in-out;">⚒️</div>
+                                <div class="spark circle1"></div>
+                                <div class="spark circle2"></div>
+                            </div>
+                            <h1 style='color: #f97316; font-family: monospace; animation: blink 1.2s infinite; font-size: 26px; margin-top: 40px; letter-spacing: 2px; text-shadow: 0 0 15px rgba(249,115,22,0.5);'>FORGING YOUR SALES SKILL...</h1>
+                            <p id="forge-status" style='color: #64748b; font-size: 13px; margin-top: 5px; font-family: monospace;'>Heating the metal and sharpening performance attributes...</p>
+                            <p id="progress-text" style='color: #fbbf24; font-family: monospace; font-size: 18px; font-weight: bold; margin-top: 25px;'>FORGING PROGRESS: 0%</p>
                         </div>
-                        <h1 style='color: #f97316; font-family: monospace; animation: blink 1.2s infinite; font-size: 26px; margin-top: 40px; letter-spacing: 2px; text-shadow: 0 0 15px rgba(249,115,22,0.5);'>FORGING YOUR SALES SKILL...</h1>
-                        <p id="forge-status" style='color: #64748b; font-size: 13px; margin-top: 5px; font-family: monospace;'>Heating the metal and sharpening performance attributes...</p>
-                        <p id="progress-text" style='color: #fbbf24; font-family: monospace; font-size: 18px; font-weight: bold; margin-top: 25px;'>FORGING PROGRESS: 0%</p>
-                    </div>
-                    """, unsafe_allow_html=True
-                )
+                        """, unsafe_allow_html=True
+                    )
+                    
+                    # Progress bar simulasi tempa berjalan mundur lambat khidmat
+                    progress_bar = st.progress(0)
+                    for percent_complete in range(100):
+                        time.sleep(0.04) 
+                        current_percent = percent_complete + 1
+                        progress_bar.progress(current_percent)
+                        st.markdown(f"<script>window.parent.document.getElementById('progress-text').innerHTML = 'FORGING PROGRESS: {current_percent}%'; if ({current_percent} > 40 && {current_percent} < 80) {{ window.parent.document.getElementById('forge-status').innerHTML = 'Tempering blade core and structuring transaction logs...'; }} else if ({current_percent} >= 80) {{ window.parent.document.getElementById('forge-status').innerHTML = 'Quenching weapon in holy water! Stabilization complete!'; }}</script>", unsafe_allow_html=True)
+                    
+                    # Sukses Screen Pendek
+                    st.markdown("<div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'><h1 style='color: #fbbf24; font-family: monospace; font-size: 32px; text-shadow: 0 0 20px rgba(251,191,36,0.6);'>⚔️ WEAPON UPGRADED!</h1><p style='color: #ffffff; font-size: 15px; margin-top: 10px; font-family: monospace;'>Entering training ground with your sharpest sword...</p></div>", unsafe_allow_html=True)
+                    time.sleep(1.2)
                 
-                # Progress bar simulasi tempa berjalan mundur lambat khidmat
-                progress_bar = st.progress(0)
-                for percent_complete in range(100):
-                    time.sleep(0.04) 
-                    current_percent = percent_complete + 1
-                    progress_bar.progress(current_percent)
-                    st.markdown(f"<script>window.parent.document.getElementById('progress-text').innerHTML = 'FORGING PROGRESS: {current_percent}%'; if ({current_percent} > 40 && {current_percent} < 80) {{ window.parent.document.getElementById('forge-status').innerHTML = 'Tempering blade core and structuring transaction logs...'; }} else if ({current_percent} >= 80) {{ window.parent.document.getElementById('forge-status').innerHTML = 'Quenching weapon in holy water! Stabilization complete!'; }}</script>", unsafe_allow_html=True)
+                # 🚀 KUNCI PERBAIKAN EMERGENSI: MENGGUNAKAN GERBANG ALIHAN AMAN (ANTI-TABRAKAN WIDGET)
+                placeholder.empty()
+                st.session_state.portal_prep_ready = False  # Menutup layar perkemahan
                 
-                # Sukses Screen Pendek
-                st.markdown("<div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'><h1 style='color: #fbbf24; font-family: monospace; font-size: 32px; text-shadow: 0 0 20px rgba(251,191,36,0.6);'>⚔️ WEAPON UPGRADED!</h1><p style='color: #ffffff; font-size: 15px; margin-top: 10px; font-family: monospace;'>Entering training ground with your sharpest sword...</p></div>", unsafe_allow_html=True)
-                time.sleep(1.2)
-            
-            # 🚀 KUNCI PERBAIKAN EMERGENSI: MENGGUNAKAN GERBANG ALIHAN AMAN (ANTI-TABRAKAN WIDGET)
-            placeholder.empty()
-            st.session_state.portal_prep_ready = False  # Menutup layar perkemahan
-            
-            # Alih-alih menembak widget langsung, kita nyalakan saklar bantuan sementara
-            st.session_state.redirect_to_input = True
-            
+                # Alih-alih menembak widget langsung, kita nyalakan saklar bantuan sementara
+                st.session_state.redirect_to_input = True
+                
+                st.rerun()
+                
+        st.markdown("<div class='leave-camp-box'>", unsafe_allow_html=True)
+        if st.button("🚪 KEMBALI KE BERANDA KOTA", use_container_width=True, key="btn_leave_camp"):
+            st.session_state.portal_prep_ready = False
             st.rerun()
-            
-    st.markdown("<div class='leave-camp-box'>", unsafe_allow_html=True)
-    if st.button("🚪 KEMBALI KE BERANDA KOTA", use_container_width=True, key="btn_leave_camp"):
-        st.session_state.portal_prep_ready = False
-        st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
-    st.stop()
+        st.markdown("</div>", unsafe_allow_html=True)
+        st.stop()
 
 # =========================================================================
 # MENU UTAMA: GAYA RPG RESPONSIVE (PORTAL GUILD ONLY)
