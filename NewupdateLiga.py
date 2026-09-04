@@ -1119,7 +1119,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         test_qty_pps = qty_pwp_season            # Mengisi angka teks 🛡️ DEFENSE (PWP)
         test_qty_sueger = total_agi_hero          # Mengisi angka teks 🍃 AGILITY (Sueger + Ceban)
 
-    
+		# 🎲 ATURAN RANDOM AVATAR KONSISTEN (ANTI-ACAK LIAR SAAT REFRESH)
+        # Daftar emoji pahlawan medieval RPG premium
+        list_avatar_rpg = ["🧙‍♂️", "🧝‍♂️", "⚔️", "🎯", "🛡️", "🦁", "🦅", "🐺", "👑", "💎", "🔮", "🔥"]
+        
+        # Gunakan rumus sisa bagi berdasarkan jumlah huruf nama kasir untuk mengunci 1 emoji unik
+        index_avatar = len(current_hero_name) % len(list_avatar_rpg)
+        random_hero_avatar = list_avatar_rpg[index_avatar]
+		
         # 👑 2. STRUKTUR UTAMA HTML KARTU (FIXED: HTML KEMBALI NORMAL & WARNA BAR MUNCUL)
         html_master_packet = """
         <div class="rpg-card-fullscreen-container">
@@ -1134,12 +1141,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         <h3 style="color: #b45309; font-size: 16px; font-weight: 800; margin: 0; letter-spacing: 2px; font-family: monospace;">UNVEIL STATUS</h3>
                         <p style="color: #475569; font-size: 11px; margin: 8px 0 0 0; font-family: monospace;">Tap to break the seal</p>
                     </div>
-                     <!-- 👑 SISI DEPAN BINGKAI EMAS UTUH -->
-                    <div class="card-face card-front-design">
-                        <div class="char-avatar-box">🛡️</div>
-                        <!-- 🎯 FIX NAMA HERO: Mengambil nama kasir yang sedang login aktif -->
-                        <div class="char-hero-name">""" + str(current_hero_name) + """</div>
-                        <!-- 🎯 FIX STRUKTUR TEXT LEVEL: Memperbaiki tanda petik yang bocor agar terbaca Python -->
+                    <!-- 👑 SISI DEPAN BINGKAI EMAS UTUH -->
+                    <div class="card-face card-front-design">    
+                        <!-- 🎯 AVATAR ATAS: Diisi otomatis dengan emoji RPG acak yang konsisten -->
+                        <div class="char-avatar-box">""" + str(random_hero_avatar) + """</div>
+                        <!-- 🎯 FIX FONT NAMA RESPONSIF: Mengecilkan font nama panjang agar tidak merusak bingkai emas -->
+                        <div class="char-hero-name" style="font-size: 16px !important; letter-spacing: 1px !important; margin: 5px 0 !important; white-space: normal !important; max-width: 280px; line-height: 1.2;">""" + str(current_hero_name) + """</div>
                         <div class="char-hero-level-badge">RANK: """ + str(hero_rank_title) + """ • LEVEL """ + str(test_level) + """</div>
                         <!-- BAR psm -->
                         <div class="rpg-stat-container">
