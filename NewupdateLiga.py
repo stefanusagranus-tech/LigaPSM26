@@ -1052,14 +1052,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         }
         
                         /* Memaksa area kontainer menyusut ramping di tengah berselimut latar gelap gulita */
-                        .main .block-container { 
+                        .main .block-container {{ 
                             background-color: #090d16 !important; 
-                            min-height: 100vh !important; 
+                            min-height: 800px !important; 
                             max-width: 600px !important; 
                             margin: 0 auto !important; 
                             padding-top: 5% !important; 
                             box-sizing: border-box !important;
-                        }
+                        }}
         
                         .rpg-card-fullscreen-container { text-align: center; font-family: monospace; width: 100%; margin: 0 auto; }
                         .rpg-header-title { color: #fbbf24 !important; font-size: 23px !important; text-shadow: 0 0 10px rgba(251,191,36,0.3) !important; margin: 0 0 5px 0 !important; font-weight: 900 !important; }
