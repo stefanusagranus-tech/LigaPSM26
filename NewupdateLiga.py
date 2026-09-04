@@ -1193,7 +1193,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                                 <div class="rpg-emblem-wrapper emblem-left">
                                     <span class="rpg-emblem-text">""" + str(test_percent_sueger) + """</span>
                                 </div>
-                                <div class="rpg-emblem-label">SUEGER ACHV</div>
+                                <div class="rpg-emblem-label">SUEGER</div>
                             </div>
                             <!-- LENCANA KANAN: Total Item Mencapai Target (Segi Enam) -->
                             <!-- 🎯 FIX MUTLAK: Ditambahkan style transform untuk menggeser seluruh komponen (bingkai + teks) ke kanan sebanyak 12px -->
@@ -1201,7 +1201,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                                 <div class="rpg-emblem-wrapper emblem-right">
                                     <span class="rpg-emblem-text">""" + str(count_item_success_season) + """</span>
                                 </div>
-                                <div class="rpg-emblem-label">ITEMS TERCAPAI</div>
+                                <div class="rpg-emblem-label">TERCAPAI</div>
                             </div>
                         </div>
                         <div class="avatar-holder-bottom">👤</div>
