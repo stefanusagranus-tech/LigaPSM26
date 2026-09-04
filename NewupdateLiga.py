@@ -1480,6 +1480,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 	# 🎯 JALUR D: MENU INTERAKTIF QUIZ CAMPAIGN (Buku Buruan & Papan Misi Guild)
 	# =========================================================================
     elif st.session_state.get("current_camp_menu") == "quiz_campaign":
+		
 		# 1. AMBIL INFORMASI USER LOGIN & DATA REAL-TIME
 		current_hero_name = st.session_state.get("username", "VISITOR").strip().upper()
 		user_lower = str(current_hero_name).lower()
