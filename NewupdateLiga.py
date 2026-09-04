@@ -1134,11 +1134,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         <h3 style="color: #b45309; font-size: 16px; font-weight: 800; margin: 0; letter-spacing: 2px; font-family: monospace;">UNVEIL STATUS</h3>
                         <p style="color: #475569; font-size: 11px; margin: 8px 0 0 0; font-family: monospace;">Tap to break the seal</p>
                     </div>
-                    <!-- 👑 SISI DEPAN BINGKAI EMAS UTUH -->
+                     <!-- 👑 SISI DEPAN BINGKAI EMAS UTUH -->
                     <div class="card-face card-front-design">
                         <div class="char-avatar-box">🛡️</div>
-                        <div class="char-hero-name">RAFI</div>
-                        <div class="char-hero-level-badge">"RANK:"+str(hero_rank_title)+"•LEVEL"+str(test_level)</div>
+                        <!-- 🎯 FIX NAMA HERO: Mengambil nama kasir yang sedang login aktif -->
+                        <div class="char-hero-name">""" + str(current_hero_name) + """</div>
+                        <!-- 🎯 FIX STRUKTUR TEXT LEVEL: Memperbaiki tanda petik yang bocor agar terbaca Python -->
+                        <div class="char-hero-level-badge">RANK: """ + str(hero_rank_title) + """ • LEVEL """ + str(test_level) + """</div>
                         <!-- BAR psm -->
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🔥 ATTACK (PENJUALAN SG)</span><span>""" + str(test_qty_psm) + """ Qty</span></div>
