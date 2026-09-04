@@ -1693,14 +1693,25 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
         elif st.session_state["campaign_sub_page"] == "misi_guild":
             
+            # 🎯 FIX MUTLAK NAMEERROR MASSAL: Membuat ulang seluruh variabel pelindung yang hilang
+            season_name_string = waktu_wib.strftime("%B %Y").upper()
+            
+            if 'qty_psm_hari_ini' not in locals(): qty_psm_hari_ini = 0
+            if 'daily_target_psm' not in locals(): daily_target_psm = 0
+            if 'qty_pwp_hari_ini' not in locals(): qty_pwp_hari_ini = 0
+            if 'daily_target_pps_pwp' not in locals(): daily_target_pps_pwp = 0
+            if 'qty_sg_hari_ini' not in locals(): qty_sg_hari_ini = 0
+            if 'daily_target_pps_sg' not in locals(): daily_target_pps_sg = 0
+            if 'target_pps_per_kasir_period' not in locals(): target_pps_per_kasir_period = 20
+            if 'qty_pwp_bulan_ini' not in locals(): qty_pwp_bulan_ini = 0
+            if 'qty_sg_bulan_ini' not in locals(): qty_sg_bulan_ini = 0
+            if 'sueger_achievement_percentage' not in locals(): sueger_achievement_percentage = 0.0
+            if 'count_item_success_season' not in locals(): count_item_success_season = 0
+            
             # --- EVALUASI STATUS LOGIKA HARIAN SECARA OTOMATIS (ATURAN INDIKATOR) ---
-            # Bandingkan penjualan hari ini milik kasir dengan target harian hasil rumus kalender
             status_text_psm = "🟢 QUEST COMPLETED" if qty_psm_hari_ini >= daily_target_psm and daily_target_psm > 0 else "🔴 HUNTING IN PROGRESS"
             status_text_pwp = "🟢 QUEST COMPLETED" if qty_pwp_hari_ini >= daily_target_pps_pwp and daily_target_pps_pwp > 0 else "🔴 HUNTING IN PROGRESS"
             status_text_sg = "🟢 QUEST COMPLETED" if qty_sg_hari_ini >= daily_target_pps_sg and daily_target_pps_sg > 0 else "🔴 HUNTING IN PROGRESS"
-            
-             # 🎯 FIX MUTLAK NAMEERROR PAPAN MISI: Membuat ulang variabel season bulanan agar terbaca di halaman ini
-            season_name_string = waktu_wib.strftime("%B %Y").upper()
 
             html_mission_board = f"""
             <div class="rpg-board-wrapper">
