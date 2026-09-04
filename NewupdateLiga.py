@@ -918,9 +918,12 @@ if "portal_guild_ready" in st.session_state and st.session_state.portal_guild_re
     # =========================================================================
     if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_ready:
     
-        # 🚀 PASTIKAN ADA KODE BARU INI DI BAWAH GARIS IF:
-        if "current_camp_menu" not in st.session_state:
+        # 🚀 KUNCI FIX UTAMA: Jika aplikasi baru dimuat atau tombol kembali diklik, pastikan menu kembali ke halaman utama ("main")
+        if "current_camp_menu" not in st.session_state or st.session_state.current_camp_menu is None:
             st.session_state.current_camp_menu = "main"
+    
+        # --- Di bawah baris pengaman ini, susunan if-elif halaman Anda tetap sama persis ---
+        if st.session_state.current_camp_menu == "status":
     
         # =========================================================================
         # 📜 SUB-MENU 1: HALAMAN KARTU BERPUTAR 3D FLIP (SAAT DIKLIK LIHAT STATUS)
@@ -1509,11 +1512,10 @@ if selected_tab == "🏠 Menu Utama":
                     time.sleep(0.04) 
                     progress_bar.progress(percent_complete + 1)
             
-             # 🚀 CUKUP GANTI 4 BARIS PALING BAWAH KODE ANDA MENJADI SEPERTI INI:
+            # 🚀 KUNCI PENGALIHAN UTAMA: Memaksa Streamlit membuka halaman 3 kartu utama tenda perkemahan
             placeholder.empty()
             
-            # KUNCI FIX NAVIGASI: Daftarkan tiket masuk sah agar halaman atas tahu harus menggambar menu kemah utama
-            st.session_state.current_camp_menu = "main" 
+            st.session_state.current_camp_menu = "main" # 🎯 Mengunci target ke menu utama perkemahan
             st.session_state.portal_prep_ready = True
             
             st.rerun()
