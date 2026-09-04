@@ -1051,11 +1051,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                             display: none !important; 
                         }
         
-                        /* Memaksa area kontainer menyusut ramping di tengah berselimut latar gelap gulita */
+                        /* 🚀 KUNCI FIX ABSOLUT BARIS 1057: Berikan SPASI antara angka dan unit px agar Python lulus tanpa error */
                         .main .block-container {{ 
                             background-color: #090d16 !important; 
-                            min-height: 800px !important; 
-                            max-width: 600px !important; 
+                            min-height: 800 px !important; 
+                            max-width: 600 px !important; 
                             margin: 0 auto !important; 
                             padding-top: 5% !important; 
                             box-sizing: border-box !important;
