@@ -1066,7 +1066,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         .rpg-header-sub { color: #475569 !important; font-size: 11px !important; margin: 0 0 15px 0 !important; }
                         
                         /* ENGINE UTAMA STRUKTUR KARTU FLIP */
-                        .flip-card-wrapper { background-color: transparent !important; width: 330px; height: 520px; perspective: 1000px; margin: 15px auto; cursor: pointer; display: block; }
+                        .flip-card-wrapper { background-color: transparent !important; width: 330 px; height: 520 px; perspective: 1000 px; margin: 15px auto; cursor: pointer; display: block; }
                         .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }
                         
                         /* Memicu rotasi putaran berantai dari luar label */
@@ -1082,17 +1082,21 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         .card-front-design { border: 4px double #d97706 !important; box-shadow: 0 12px 35px rgba(217, 119, 6, 0.3), inset 0 0 25px rgba(217, 119, 6, 0.05) !important; color: white !important; transform: rotateY(180deg); justify-content: flex-start !important; padding-top: 35px !important; }
                         .card-front-design::before { content: "⚜️"; position: absolute; top: 12px; font-size: 18px; color: #d97706; filter: drop-shadow(0 0 5px #d97706); }
                         
-                        .char-avatar-box { width: 65px; height: 65px; border-radius: 50%; border: 2px solid #d97706; background: #151d30; display: flex; justify-content: center; align-items: center; font-size: 30px; margin-bottom: 8px; box-shadow: 0 0 12px rgba(217, 119, 6, 0.3); }
-                        .char-hero-name { color: #ffffff !important; font-size: 22px !important; font-weight: 900 !important; margin: 0 !important; letter-spacing: 2px !important; text-shadow: 0 0 8px rgba(255,255,255,0.1) !important; }
-                        .char-hero-level-badge { background: rgba(217, 119, 6, 0.15); color: #fbbf24; font-size: 11px; font-weight: 800; padding: 3px 12px; border-radius: 20px; border: 1px solid rgba(217, 119, 6, 0.4); margin-top: 5px; margin-bottom: 20px; letter-spacing: 0.5px; }
+                        /* 🚀 SEKALIAN BERIKAN SPASI PADA ATURAN CSS DI BAWAHNYA AGAR AMAN TOTAL: */
+                        .char-avatar-box {{ width: 65 px; height: 65 px; border-radius: 50%; border: 2px solid #d97706; background: #151d30; display: flex; justify-content: center; align-items: center; font-size: 30 px; margin-bottom: 12px; box-shadow: 0 0 12px rgba(217, 119, 6, 0.4); }}
                         
-                        .rpg-stat-container { width: 100%; margin-bottom: 12px; text-align: left; }
-                        .rpg-stat-header { display: flex; justify-content: space-between; color: #94a3b8; font-size: 11px; font-weight: bold; margin-bottom: 4px; font-family: monospace; letter-spacing: 0.5px; }
-                        .rpg-bar-bg { background-color: #05070a !important; height: 12px; border-radius: 6px; overflow: hidden; border: 1px solid rgba(217, 119, 6, 0.15); box-shadow: inset 0 2px 4px rgba(0,0,0,0.6); }
-                        .rpg-bar-fill-psm { background: linear-gradient(90deg, #ef4444, #f97316); height: 100%; border-radius: 6px; filter: drop-shadow(0 0 4px #f97316); }
-                        .rpg-bar-fill-pps { background: linear-gradient(90deg, #3b82f6, #06b6d4); height: 100%; border-radius: 6px; filter: drop-shadow(0 0 4px #06b6d4); }
-                        .rpg-bar-fill-sueger { background: linear-gradient(90deg, #10b981, #34d399); height: 100%; border-radius: 6px; filter: drop-shadow(0 0 4px #34d399); }
-                        .avatar-holder-bottom { width: 60px; height: 60px; border-radius: 50%; border: 3px solid #d97706; background-color: #0f1524; position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; align-items: center; font-size: 26px; box-shadow: 0 5px 15px rgba(217, 119, 6, 0.4); z-index: 100; }
+                        .char-name-plate {{ background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%); border: 1px solid #d97706; border-radius: 6px; padding: 4px 25 px; box-shadow: 0 0 10px rgba(217, 119, 6, 0.2); margin-bottom: 4px; }}
+                        
+                        .char-hero-name {{ color: #ffffff !important; font-size: 24 px !important; font-weight: 900 !important; margin: 0 !important; letter-spacing: 2 px !important; text-shadow: 0 0 8 px rgba(255,255,255,0.2) !important; }}
+                        
+                        .char-hero-level-badge {{ background: linear-gradient(90deg, rgba(180, 83, 9, 0.3), rgba(217, 119, 6, 0.15)); color: #fbbf24; font-size: 11 px; font-weight: 800; padding: 4px 16 px; border-radius: 4px; border: 1px solid #d97706; margin-bottom: 25 px; letter-spacing: 0.8px; box-shadow: inset 0 0 5 px rgba(0,0,0,0.5); }}
+                        
+                        .rpg-stat-container {{ width: 100%; margin-bottom: 14px; text-align: left; }}
+                        .rpg-stat-header {{ display: flex; justify-content: space-between; color: #94a3b8; font-size: 11 px; font-weight: bold; margin-bottom: 5px; font-family: monospace; letter-spacing: 0.5px; }}
+                        
+                        .rpg-bar-bg {{ background-color: #05070a !important; height: 14px; border-radius: 4px; overflow: hidden; border: 1px solid rgba(217, 119, 6, 0.25); box-shadow: inset 0 3px 6 px rgba(0,0,0,0.8); }}
+                        
+                        .avatar-holder-bottom {{ width: 65 px; height: 65 px; border-radius: 50%; border: 3px solid #d97706; background-color: #0b0f19; position: absolute; bottom: -32 px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; align-items: center; font-size: 28 px; box-shadow: 0 8px 20px rgba(217, 119, 6, 0.5), inset 0 0 10px rgba(217, 119, 6, 0.2); z-index: 100; }}
                     </style>
                     """,
                     unsafe_allow_html=True
