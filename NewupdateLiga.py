@@ -936,10 +936,57 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         test_qty_sueger = 28
         test_percent_sueger = 45
     
-        # 🚀 FORMULA SAKTI: Menggunakan .format() dengan placeholder {0}, {1}, dst.
-        # Cara ini 100% aman karena CSS yang menggunakan tanda % tidak akan merusak compiler Python.
+        # 🪄 1. SUNTIKAN CSS GLOBAL (Memaksa dashboard toko hilang total & diganti latar kegelapan RPG)
+        st.markdown(
+            """
+            <style>
+                /* Sembunyikan Header bawaan Streamlit */
+                [data-testid="stHeader"] { display: none !important; }
+                
+                /* Sembunyikan Sidebar bawaan Streamlit agar tidak mengganggu layar penuh */
+                [data-testid="stSidebar"] { display: none !important; }
+                
+                /* Sembunyikan tombol menu pojok kanan atas */
+                #MainMenu { visibility: hidden; }
+                footer { visibility: hidden; }
+                
+                /* Paksa kontainer utama Streamlit menjadi hitam penuh dan rata tengah */
+                .main .block-container {
+                    background-color: #090d16 !important;
+                    min-height: 100vh !important;
+                    max-width: 100vw !important;
+                    margin: 0 !important;
+                    padding: 40px 20px !important;
+                    box-sizing: border-box !important;
+                }
+                
+                /* Gaya Tombol Navigasi Native Streamlit agar menyatu dengan tema kartu */
+                .stButton > button {
+                    background: rgba(180, 83, 9, 0.1) !important;
+                    color: #fbbf24 !important;
+                    border: 1px solid #b45309 !important;
+                    border-radius: 12px !important;
+                    font-family: monospace !important;
+                    font-size: 14px !important;
+                    font-weight: bold !important;
+                    padding: 12px 0px !important;
+                    letter-spacing: 0.5px !important;
+                    max-width: 330px !important;
+                    margin: 0 auto !important;
+                    display: block !important;
+                }
+                .stButton > button:hover {
+                    background: #b45309 !important;
+                    color: #090d16 !important;
+                    box-shadow: 0 0 20px rgba(180, 83, 9, 0.5) !important;
+                }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
+        # 🚀 2. FORMULA HTML KARTU (Menggunakan .format() murni)
         html_master_packet = """
-        <div style="text-align: center; font-family: monospace; width: 100%; max-width: 600px; margin: 0 auto;">
+        <div style="text-align: center; font-family: monospace; width: 100%; max-width: 600px; margin: 0 auto; background-color: #090d16;">
             
             <!-- A. JUDUL ATAS LISENSI -->
             <h2 style='color: #fbbf24; font-size: 23px; text-shadow: 0 0 10px rgba(251,191,36,0.3); margin: 0 0 5px 0;'>📜 GUILD MEMBER LICENSE 📜</h2>
@@ -990,12 +1037,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 </div>
             </label>
             
-            <!-- D. SUNTIKKAN GAYA CSS SECARA PRIVATE DI DALAM KONTAINER AGAR TIDAK BOCOR KELUAR -->
             <style>
-                [data-testid="stSidebar"] {{ display: none !important; }}
-                [data-testid="stHeader"] {{ display: none !important; }}
-                .main .block-container {{ background-color: #090d16 !important; min-height: 100vh !important; max-width: 600px !important; margin: 0 auto !important; padding-top: 5% !important; box-sizing: border-box !important; }}
-                
                 .flip-card-wrapper {{ background-color: transparent; width: 330px; height: 520px; perspective: 1000px; margin: 15px auto; cursor: pointer; display: block; }}
                 .flip-card-inner {{ position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }}
                 
@@ -1022,9 +1064,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 
                 @keyframes seal-pulse {{ 0%, 100% {{ transform: scale(1); opacity: 0.7; }} 50% {{ transform: scale(1.05); opacity: 1; filter: drop-shadow(0 0 18px #b45309); }} }}
                 @keyframes blink {{ 0%, 100% {{ opacity: 1; }} 50% {{ opacity: 0.4; }} }}
-                
-                .stButton > button {{ background: rgba(180, 83, 9, 0.1) !important; color: #fbbf24 !important; border: 1px solid #b45309 !important; border-radius: 12px !important; font-family: monospace !important; font-size: 14px !important; font-weight: bold !important; padding: 12px 0px !important; letter-spacing: 0.5px !important; }}
-                .stButton > button:hover {{ background: #b45309 !important; color: #090d16 !important; box-shadow: 0 0 20px rgba(180, 83, 9, 0.5) !important; }}
             </style>
         </div>
         """.format(
@@ -1034,24 +1073,19 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             qty_pps=test_qty_pps,
             pct_pps=test_percent_pps,
             qty_sueger=test_qty_sueger,
-            pct_sueger=test_percent_sueger,
+            pct_sueger=test_percent_sueger
         )
     
         # 👑 CETAK MASSAL PAKET HTML PRIVATE
         st.markdown(html_master_packet, unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<br><br>", unsafe_allow_html=True)
     
-        # E. TOMBOL NAVIGASI PULANG
-        if st.button(
-            "⬅️ KEMBALI KE KEMAH PERSIAPAN",
-            use_container_width=True,
-            key="btn_close_status",
-        ):
+        # E. TOMBOL NAVIGASI PULANG (Native Streamlit Button)
+        if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_close_status"):
             st.session_state["current_camp_menu"] = "main"
             st.rerun()
-    
+            
         st.stop()
-
 
         
     # 🛡️ JALUR B: HALAMAN UTAMA STATISTIK UTAMA (VIEW STATS)
