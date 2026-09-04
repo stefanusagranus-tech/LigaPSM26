@@ -1113,7 +1113,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 }
                 
                 .rpg-emblem-wrapper {
-                    background-image: url("https://githubusercontent.com") !important; /* ⚠️ GANTI DENGAN URL GAMBAR DUA LENCANA ANDA */
+                    background-image: url("https://githubusercontent.com") !important; https://github.com/stefanusagranus-tech/LigaPSM26/blob/main/badge%20logo.jpg.png
                     background-repeat: no-repeat !important;
                     width: 110px !important;
                     height: 65px !important;
