@@ -957,11 +957,51 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
     st.markdown("<p style='color: #64748b; font-family: monospace; text-align: center; font-size: 13px;'>Persiapkan perlengkapan, cek papan misi, dan tingkatkan keahlian beladiri Anda sebelum melangkah keluar.</p>", unsafe_allow_html=True)
     
     col_camp1, col_camp2, col_camp3 = st.columns(3)
-    
+
+    #================
+    #Kartu nama anjay#
+    #================
     with col_camp1:
         st.markdown("<div class='camp-card'><div class='camp-icon'>📜</div><div class='camp-title'>ANGGOTA GUILD</div><div class='camp-desc'>Buka gulungan piagam untuk memeriksa status level, poin atribut, dan rapor performa penjualan individu Anda.</div></div>", unsafe_allow_html=True)
         if st.button("Lihat Status ➔", use_container_width=True, key="btn_camp_status"):
-            st.toast("Membuka Piagam Anggota...", icon="📜")
+            placeholder = st.empty()
+            with placeholder.container():
+                # --- LAYAR LOADING FULLSCREEN: RITUAL PENCATATAN NAMA HERO (ANTI-STUCK) ---
+                st.markdown(
+                    """
+                    <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
+                        <div class="magic-portal-container" style="position: relative; width: 150px; height: 150px; display: flex; justify-content: center; align-items: center;">
+                            <!-- Efek Ring Sihir Emas Berpusing Pelan -->
+                            <svg width="160" height="160" viewBox="0 0 160 160" style="position: absolute;">
+                                <circle cx="80" cy="80" r="70" stroke="#d97706" stroke-width="2" stroke-dasharray="8, 6" fill="none" style="transform-origin: 80px 80px; animation: spin-clockwise 10s infinite linear;" />
+                                <circle cx="80" cy="80" r="50" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="3, 4" fill="none" style="transform-origin: 80px 80px; animation: spin-counter 6s infinite linear;" />
+                            </svg>
+                            <div style="font-size: 50px; filter: drop-shadow(0 0 12px #d97706); animation: pulse-core 2s infinite ease-in-out;">📜</div>
+                        </div>
+                        <h1 style='color: #fbbf24; font-family: monospace; animation: blink 1.5s infinite; font-size: 22px; margin-top: 40px; letter-spacing: 2px; text-shadow: 0 0 15px rgba(251,191,36,0.4);'>RECORDING HERO NAME...</h1>
+                        <p style='color: #475569; font-size: 13px; margin-top: 5px; font-family: monospace;'>Reading spreadsheet registry and stabilizing guild roster...</p>
+                        <style>
+                            @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+                            [data-testid="stSidebar"] { display: none !important; }
+                            [data-testid="stHeader"] { display: none !important; }
+                            @keyframes spin-clockwise { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                            @keyframes spin-counter { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+                            @keyframes pulse-core { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+                        </style>
+                    </div>
+                    """, 
+                    unsafe_allow_html=True
+                )
+                # Menjalankan bar simulasi pemuatan selama ~3 detik
+                progress_bar = st.progress(0)
+                for percent_complete in range(100):
+                    time.sleep(0.03) 
+                    progress_bar.progress(percent_complete + 1)
+            
+            placeholder.empty()
+            # Nyalakan status sub-menu dan segarkan halaman untuk menampilkan Back Card
+            st.session_state.current_camp_menu = "status"
+            st.rerun()
             
     with col_camp2:
         st.markdown("<div class='camp-card'><div class='camp-icon'>🎯</div><div class='camp-title'>QUIZ CAMPAIGN</div><div class='camp-desc'>Cek papan pengumuman untuk melihat quest musiman, tugas mingguan PSM, serta daily target buruan Anda.</div></div>", unsafe_allow_html=True)
