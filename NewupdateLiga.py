@@ -979,41 +979,55 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         st.markdown(html_master_packet, unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # 🎨 3. SUNTIKKAN GAYA CSS TERPISAH (STRIP MURNI TANPA f-string AGAR ANTI-BOCOR)
+         # 🎨 3. SUNTIKKAN GAYA CSS GLOBAL (FIXED MULTI-SELECTOR FULLSCREEN & ANTI-SIDEBAR BOCOR)
         st.markdown(
             """
             <style>
                 /* ========================================================================= */
-                /* 👑 SIHIR FULLSCREEN TOTAL: MENGHANCURKAN DASHBOARD UTAMA & KOTAK BIRU ATAS */
+                /* 👑 KING OF FULLSCREEN: BERSINARKAN SATU LAYAR PENUH MURNI GAMBAR 1 */
                 /* ========================================================================= */
                 
-                /* 1. Hancurkan total baris judul biru "PSM TOKO SALES MONITORING" beserta jam sistem */
-                div[data-testid="stVerticalBlock"] > div:first-child,
-                div.stContainer,
-                .stAppHeader,
+                /* 1. Paksa lipat dan hancurkan visual sidebar kiri beserta tombol burger tiga garis */
+                [data-testid="stSidebar"], 
+                [data-testid="stSidebarCollapsedControl"],
+                .stSidebar,
+                div[data-testid="stSidebarUserContent"],
+                button[title="Expand sidebar"] { 
+                    display: none !important; 
+                    width: 0px !important;
+                    visibility: hidden !important;
+                }
+                
+                /* 2. Tembak mati kotak header biru monitoring atas beserta jam sistem real-time */
+                [data-testid="stHeader"],
                 header,
-                [data-testid="stHeader"] {
+                .stAppHeader,
+                div[data-testid="stElementContainer"]:has(h1),
+                div.stBlock:first-child,
+                div[data-testid="stVerticalBlock"] > div:first-child,
+                .element-container:has(.stMarkdown h1) {
                     display: none !important;
                     height: 0px !important;
                     margin: 0 !important;
                     padding: 0 !important;
-                }
-                
-                /* 2. Sembunyikan garis pembatas atau judul cadangan bawaan di bagian atas canvas */
-                h1, h2, h3, h4, h5, h6 {
-                    margin-top: 0px !important;
+                    visibility: hidden !important;
                 }
 
-                /* 3. Memaksa latar belakang kanvas halaman melebur gelap gulita medieval */
+                /* 3. Ratakan lembar kerja utama agar melar penuh 100% memenuhi monitor PC / HP */
                 .main .block-container { 
                     background-color: #090d16 !important; 
                     min-height: 100vh !important; 
                     max-width: 600px !important; 
                     margin: 0 auto !important; 
-                    padding-top: 5% !important; 
+                    padding-top: 2% !important; 
                     box-sizing: border-box !important;
                 }
                 
+                /* 4. Bersihkan margin hantu Streamlit agar posisi judul Guild License naik seimbang */
+                div[data-testid="stVerticalBlock"] {
+                    gap: 0rem !important;
+                }
+
                 /* ========================================================================= */
                 /* 🎴 LAYOUT KOMPONEN KARTU 3D (TETAP SAMA SEPERTI YANG SUDAH SUKSES) */
                 /* ========================================================================= */
