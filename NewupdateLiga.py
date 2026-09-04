@@ -1560,13 +1560,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         )
     
         # =========================================================================
-        # 🚪 KONDISI A: HALAMAN LOBBY UTAMA - MEJA RESEPSIONIS (HTML GRID COVERS FIXED)
+        # 🚪 KONDISI A: HALAMAN LOBBY UTAMA - MEJA RESEPSIONIS (ALUR BARU ANTI-STUCK)
         # =========================================================================
         if st.session_state["campaign_sub_page"] == "resepsionis_utama":
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub'>Sentuh salah satu buku jurnal di bawah ini untuk memeriksa log petualangan Anda.</p>", unsafe_allow_html=True)
             
-            # 📚 GRID BUKU MURNI: Menggambar total visual 2 kartu buku berdampingan secara mandiri (Anti-Kerut)
+            # 📚 GRID BUKU MURNI HTML
             st.markdown(
                 """
                 <div class="books-desk-grid">
@@ -1589,22 +1589,23 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # 🎯 TOMBOL PEMICU ALUR: Diletakkan seimbang di bawah grid buku murni
+            # 🎯 TOMBOL PEMICU ALUR AMAN (ANTI-BENTROK DENGAN RERUN)
             col_trigger1, col_trigger2 = st.columns(2)
             with col_trigger1:
                 if st.button("Buka Jurnal Buruan ➔", use_container_width=True, key="action_trigger_buku_1"):
-                    st.markdown("<div style='background-color:#0c1020; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:999999; display:flex; flex-direction:column; justify-content:center; align-items:center;'><div style='font-size:60px; animation:open-anim 0.8s forwards;'>📖</div><h2 style='color:#38bdf8; font-family:monospace; font-size:18px; margin-top:25px;'>OPENING HUNTING JOURNAL...</h2><style>@keyframes open-anim { from { transform:scale(1) rotate(0); } to { transform:scale(1.3) rotateY(90deg); filter:opacity(0); } }</style></div>", unsafe_allow_html=True)
-                    time.sleep(0.8)
+                    # Kunci status halaman di memori terlebih dahulu agar aman
                     st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
+                    # Tampilkan animasi kilat tanpa menahan server dengan time.sleep
+                    st.markdown("<div style='background-color:#0c1020; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:999999; display:flex; flex-direction:column; justify-content:center; align-items:center;'><div style='font-size:60px; animation:open-anim 0.5s forwards;'>📖</div><h2 style='color:#38bdf8; font-family:monospace; font-size:18px; margin-top:25px;'>OPENING HUNTING JOURNAL...</h2><style>@keyframes open-anim { from { transform:scale(1) rotate(0); } to { transform:scale(1.2) rotateY(90deg); filter:opacity(0); } }</style></div>", unsafe_allow_html=True)
                     st.rerun()
+                    
             with col_trigger2:
                 if st.button("Buka Kitab Misi ➔", use_container_width=True, key="action_trigger_buku_2"):
-                    st.markdown("<div style='background-color:#0c1020; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:999999; display:flex; flex-direction:column; justify-content:center; align-items:center;'><div style='font-size:60px; animation:open-anim 0.8s forwards;'>📖</div><h2 style='color:#c084fc; font-family:monospace; font-size:18px; margin-top:25px;'>UNFOLDING QUEST SCROLL...</h2><style>@keyframes open-anim { from { transform:scale(1) rotate(0); } to { transform:scale(1.3) rotateY(90deg); filter:opacity(0); } }</style></div>", unsafe_allow_html=True)
-                    time.sleep(0.8)
+                    # Kunci status halaman di memori terlebih dahulu agar aman
                     st.session_state["campaign_sub_page"] = "view_buku_tugas"
+                    # Tampilkan animasi kilat tanpa menahan server dengan time.sleep
+                    st.markdown("<div style='background-color:#0c1020; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:999999; display:flex; flex-direction:column; justify-content:center; align-items:center;'><div style='font-size:60px; animation:open-anim 0.5s forwards;'>📖</div><h2 style='color:#c084fc; font-family:monospace; font-size:18px; margin-top:25px;'>UNFOLDING QUEST SCROLL...</h2><style>@keyframes open-anim { from { transform:scale(1) rotate(0); } to { transform:scale(1.2) rotateY(90deg); filter:opacity(0); } }</style></div>", unsafe_allow_html=True)
                     st.rerun()
-
-
         
         # =========================================================================
         # 🚪 KONDISI B: ANIMASI BUKU TERBUKA 1 - JURNAL PENCAPAIAN SENDIRI
