@@ -1138,15 +1138,16 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 }
                 
                 .rpg-emblem-text {
-				    color: #00ffff !important; /* 🌟 Warna dasar Cyan Neon terang untuk lencana kiri */
+				    color: #00ffff !important; /* Warna dasar Cyan Neon */
 				    font-size: 14px !important;
 				    font-weight: 900 !important;
 				    font-family: 'Courier New', monospace !important;
 				    
-				    /* 🎯 GESER MASUK BINGKAI: Didorong ke atas agar pas berada di tengah bulatan lencana */
-				    margin-top: -12px !important; 
+				    /* 🎯 FIX SEJAJAR: Mengubah dari -12px ke 2px agar teks turun pas ke tengah bulatan emas */
+				    margin-top: 2px !important; 
+				    display: inline-block !important;
 				    
-				    /* 🔥 EFFECT NEON GLOW: Membuat pendaran cahaya lampu neon ganda yang tebal */
+				    /* EFFECT NEON GLOW */
 				    text-shadow: 0 0 5px #00ffff, 
 				                 0 0 10px #00ffff, 
 				                 0 0 20px #00ffff, 
