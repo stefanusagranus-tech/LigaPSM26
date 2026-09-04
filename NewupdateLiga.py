@@ -1112,65 +1112,46 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     width: 45% !important;
                 }
                 
-                .rpg-emblem-wrapper {
-				    /* 👑 LINK RAW RESMI GITHUB ANDA */
-				    background-image: url(https://raw.githubusercontent.com/stefanusagranus-tech/LigaPSM26/main/badge_logo.jpg-removebg-preview__1_-removebg-preview.png) !important; 
+                /* ========================================================================= */
+				/* 🏆 CSS LENCANA SEPARASI (JAUH LEBIH MUDAH & OTOMATIS SIMETRIS)            */
+				/* ========================================================================= */
+				.rpg-emblem-wrapper {
 				    background-repeat: no-repeat !important;
+				    background-size: contain !important; /* Otomatis menyesuaikan ukuran kotak tanpa terpotong */
+				    background-position: center !important; /* Gambar dijamin langsung berada di tengah */
 				    width: 110px !important;
 				    height: 75px !important; 
 				    display: flex !important;
 				    align-items: center !important;
 				    justify-content: center !important;
 				    position: relative !important;
-				    
-				    /* 🎯 TRIK SAKTI: Menghapus latar belakang ungu gelap gambar agar otomatis transparan */
 				    mix-blend-mode: screen !important; 
 				}
-                
-                .emblem-left {
-                    background-size: 220px 65px !important;
-                    background-position: left center !important;
-                }
-                
-                .emblem-right {
-                    background-size: 220px 65px !important;
-                    background-position: right center !important;
-                }
-                
-                .rpg-emblem-text {
+				
+				/* 🎯 Cukup panggil link gambar masing-masing di sini */
+				.emblem-left {
+				    background-image: url("https://githubusercontent.com") !important; 
+				}
+				
+				.emblem-right {
+				    background-image: url("https://githubusercontent.com") !important; 
+				}
+				
+				/* Pengaturan teks neon otomatis seragam di tengah */
+				.rpg-emblem-text {
 				    color: #00ffff !important; 
 				    font-size: 14px !important;
 				    font-weight: 900 !important;
 				    font-family: 'Courier New', monospace !important;
 				    display: inline-block !important;
+				    margin-top: 0px !important; /* Mulai dari 0px, tinggal Anda sesuaikan sedikit jika kurang turun */
 				    
-				    /* 🎯 FIX SIMETRIS KIRI: Menurunkan angka 45% pas di tengah lingkaran */
-				    margin-top: 5px !important; 
-				    
-				    /* EFFECT NEON GLOW */
 				    text-shadow: 0 0 5px #00ffff, 
 				                 0 0 10px #00ffff, 
 				                 0 0 20px #00ffff, 
 				                 0 0 4px #000000 !important;
 				}
 				
-				/* Mengambil lencana BULAT sebelah KIRI (FIXED: Koordinat digeser ke kanan agar teks ke tengah) */
-				.emblem-left {
-				    background-size: 260px 105px !important; 
-				    background-position: -2px -12px !important; /* Diubah dari -5px ke -2px untuk menggeser teks ke tengah */
-				}
-				
-				/* Mengambil lencana SEGI ENAM sebelah KANAN */
-				.emblem-right {
-				    background-size: 260px 105px !important;
-				    background-position: -145px -12px !important; 
-				}
-				
-				/* 🎯 FIX SIMETRIS KANAN: Mengunci angka 3 tepat di tengah jangkar segi enam */
-				.emblem-right .rpg-emblem-text {
-				    margin-top: 11px !important;
-				}
-                
                 .rpg-emblem-label {
                     color: #475569 !important;
                     font-size: 9px !important;
