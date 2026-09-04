@@ -1521,36 +1521,53 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 .guild-lobby-title { text-align: center; color: #fbbf24 !important; font-family: monospace; font-size: 24px !important; font-weight: 900 !important; text-shadow: 0 0 12px rgba(251,191,36,0.4) !important; margin: 0 0 5px 0 !important; }
                 .guild-lobby-sub { text-align: center; color: #475569 !important; font-size: 11px !important; margin: 0 0 25px 0 !important; font-family: monospace; }
                 
-                /* Pengatur Gaya Tombol Buku Premium */
-                div[data-testid="stColumn"] div.stButton > button {
-                    min-height: 180px !important;
-                    border-radius: 8px 16px 16px 8px !important;
+                /* ========================================================================= */
+                /* 👑 FIX MUTLAK: TARGET SELECTOR TERBARU STREAMLIT UNTUK WUJUD KARTU BUKU   */
+                /* ========================================================================= */
+                div[data-testid="stColumn"] button[data-testid="stBaseButton-secondary"],
+                div[data-testid="stColumn"] button[data-testid="stBaseButton-primary"],
+                div[data-testid="stColumn"] .stButton button {
+                    min-height: 200px !important; /* Memaksa tinggi buku vertikal */
+                    border-radius: 6px 16px 16px 6px !important;
                     font-family: monospace !important;
                     font-size: 13px !important;
                     font-weight: 800 !important;
-                    white-space: pre-line !important;
-                    line-height: 1.4 !important;
-                    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
-                    border-left: 8px solid rgba(0,0,0,0.4) !important;
+                    white-space: pre-line !important; /* Mengaktifkan fungsi enter \n */
+                    line-height: 1.5 !important;
+                    border-left: 10px solid rgba(0,0,0,0.45) !important; /* Ketebalan punggung buku */
+                    display: block !important;
+                    width: 100% !important;
+                    transition: all 0.3s ease-in-out !important;
                 }
-                /* Buku Jurnal Buruan (Biru) */
-                div[data-testid="stColumn"]:nth-child(1) div.stButton > button {
-                    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%) !important;
-                    color: #38bdf8 !important; border: 2px solid #38bdf8 !important;
-                    box-shadow: 5px 10px 20px rgba(0,0,0,0.5) !important;
+                
+                /* 📘 DEKORASI BUKU 1: JURNAL BURUAN (KOLOM KIRI) */
+                div[data-testid="stColumn"]:nth-child(1) button {
+                    background: linear-gradient(135deg, #0b1329 0%, #1e3a8a 100%) !important;
+                    color: #38bdf8 !important;
+                    border: 2px solid #38bdf8 !important;
+                    box-shadow: 5px 12px 25px rgba(0,0,0,0.6) !important;
                 }
-                div[data-testid="stColumn"]:nth-child(1) div.stButton > button:hover {
-                    transform: translateY(-5px) !important; border-color: #00f0ff !important; box-shadow: 0 0 25px rgba(0, 240, 255, 0.5) !important; color: #ffffff !important;
+                div[data-testid="stColumn"]:nth-child(1) button:hover {
+                    transform: translateY(-6px) !important;
+                    border-color: #00f0ff !important;
+                    box-shadow: 0 0 25px rgba(0, 240, 255, 0.5) !important;
+                    color: #ffffff !important;
                 }
-                /* Kitab Misi Guild (Ungu) */
-                div[data-testid="stColumn"]:nth-child(2) div.stButton > button {
-                    background: linear-gradient(135deg, #1e1b4b 0%, #581c87 100%) !important;
-                    color: #c084fc !important; border: 2px solid #c084fc !important;
-                    box-shadow: 5px 10px 20px rgba(0,0,0,0.5) !important;
+                
+                /* 🔮 DEKORASI BUKU 2: KITAB MISI GUILD (KOLOM KANAN) */
+                div[data-testid="stColumn"]:nth-child(2) button {
+                    background: linear-gradient(135deg, #161233 0%, #581c87 100%) !important;
+                    color: #c084fc !important;
+                    border: 2px solid #c084fc !important;
+                    box-shadow: 5px 12px 25px rgba(0,0,0,0.6) !important;
                 }
-                div[data-testid="stColumn"]:nth-child(2) div.stButton > button:hover {
-                    transform: translateY(-5px) !important; border-color: #d8b4fe !important; box-shadow: 0 0 25px rgba(168, 85, 247, 0.5) !important; color: #ffffff !important;
+                div[data-testid="stColumn"]:nth-child(2) button:hover {
+                    transform: translateY(-6px) !important;
+                    border-color: #d8b4fe !important;
+                    box-shadow: 0 0 25px rgba(168, 85, 247, 0.5) !important;
+                    color: #ffffff !important;
                 }
+
 
                 /* Tampilan Buku Terbuka (Perkamen Kuno) */
                 .rpg-open-book-container { background: #f4eae1 !important; border: 4px solid #5c4033 !important; border-radius: 12px !important; box-shadow: 0 15px 35px rgba(0,0,0,0.6) !important; display: flex !important; min-height: 380px !important; position: relative !important; overflow: hidden !important; width: 100% !important; max-width: 580px !important; margin: 0 auto !important; }
