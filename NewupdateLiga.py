@@ -998,7 +998,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
     if "current_camp_menu" not in st.session_state:
         st.session_state["current_camp_menu"] = "main"
 
-   # =========================================================================
+    # =========================================================================
     # 📜 SUB-MENU 1: KARTU ANGGOTA GUILD (EDISI FULLSCREEN MURNI)
     # =========================================================================
     if st.session_state.get("current_camp_menu") == "status":
@@ -1012,7 +1012,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         test_qty_sueger = 28
         test_percent_sueger = 45
     
-        # 🚀 LANGKAH A: STRUKTUR CORE HTML
         html_core_template = """
         <div class="rpg-fullscreen-wrapper">
         
@@ -1047,7 +1046,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                                 <span>%s Qty</span>
                             </div>
                             <div class="rpg-bar-bg">
-                                <div class="rpg-bar-fill-psm" style="width: %s%%;"></div>
+                                <div class="rpg-bar-fill-psm" style="width: %s%%%%;"></div>
                             </div>
                         </div>
         
@@ -1058,7 +1057,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                                 <span>%s Poin</span>
                             </div>
                             <div class="rpg-bar-bg">
-                                <div class="rpg-bar-fill-pps" style="width: %s%%;"></div>
+                                <div class="rpg-bar-fill-pps" style="width: %s%%%%;"></div>
                             </div>
                         </div>
         
@@ -1069,7 +1068,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                                 <span>%s Qty</span>
                             </div>
                             <div class="rpg-bar-bg">
-                                <div class="rpg-bar-fill-sueger" style="width: %s%%;"></div>
+                                <div class="rpg-bar-fill-sueger" style="width: %s%%%%;"></div>
                             </div>
                         </div>
         
@@ -1079,7 +1078,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 </div>
             </label>
         </div>
-         """ % (
+        """ % (
             test_level,
             test_qty_psm,
             test_percent_psm,
@@ -1088,6 +1087,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             test_qty_sueger,
             test_percent_sueger,
         )
+        
+        # Render template ke dalam aplikasi Streamlit
+        st.markdown(html_core_template, unsafe_allow_html=True)
+
 
         
         # 🚀 LANGKAH B: CSS GLOBAL (termasuk style tombol kembali)
