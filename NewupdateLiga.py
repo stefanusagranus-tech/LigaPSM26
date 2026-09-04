@@ -1482,13 +1482,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
     elif st.session_state.get("current_camp_menu") == "quiz_campaign":
 		
 		# 1. AMBIL INFORMASI USER LOGIN & DATA REAL-TIME
-		current_hero_name = st.session_state.get("username", "VISITOR").strip().upper()
-		user_lower = str(current_hero_name).lower()
-		is_admin_or_cos = any(x in user_lower for x in ["admin", "chief", "cos", "lavitality"])
+        current_hero_name = st.session_state.get("username", "VISITOR").strip().upper()
+        user_lower = str(current_hero_name).lower()
+        is_admin_or_cos = any(x in user_lower for x in ["admin", "chief", "cos", "lavitality"])
 		
-		current_month_num = waktu_wib.month
-		current_year_num = waktu_wib.year
-		today_date_now = waktu_wib.date()
+        current_month_num = waktu_wib.month
+        current_year_num = waktu_wib.year
+        today_date_now = waktu_wib.date()
 
 		# Ambil database dari session state
 		db_sales_person = st.session_state.get("sales_person_df", pd.DataFrame()).copy()
