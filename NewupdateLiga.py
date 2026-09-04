@@ -1483,7 +1483,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         
         # Pastikan session state halaman internal buku sudah terdaftar
         if st.session_state.get("campaign_sub_page") not in ["resepsionis_utama", "view_buku_pencapaian", "view_buku_tugas"]:
-        st.session_state["campaign_sub_page"] = "resepsionis_utama"
+           st.session_state["campaign_sub_page"] = "resepsionis_utama"
 
         # =========================================================================
         # 🎨 1. SUNTIKKAN SISI CSS FULLSCREEN & LAYOUT 2 BUKU (RESPONSIF MOBILE)
