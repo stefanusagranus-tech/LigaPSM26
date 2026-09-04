@@ -948,7 +948,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         test_qty_sueger = 28
         test_percent_sueger = "45%"
     
-        # 👑 2. STRUKTUR UTAMA HTML KARTU (F-STRING STERIL TANPA PERSEN CSS)
+        # 👑 2. STRUKTUR UTAMA HTML KARTU (FIXED: WARNA BAR MUNCUL & TINGGI DINAMIS ANTI-BENTROK)
         html_master_packet = f"""
         <div class="rpg-card-fullscreen-container">
             <h2 class="rpg-header-title">📜 GUILD MEMBER LICENSE 📜</h2>
@@ -967,20 +967,29 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         <div class="char-avatar-box">🛡️</div>
                         <div class="char-hero-name">RAFI</div>
                         <div class="char-hero-level-badge">RANK: MASTER • LEVEL {test_level}</div>
-                        <!-- BAR psm -->
+                        
+                        <!-- BAR psm (FIXED: Ditambahkan div pengisi warna bar) -->
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🔥 ATTACK (PENCAPAIAN PSM)</span><span>{test_qty_psm} Qty</span></div>
-                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-psm" style="width: {test_percent_psm};"></div></div>
+                            <div class="rpg-bar-bg">
+                                <div class="rpg-bar-fill-psm" style="width: {test_percent_psm};"></div>
+                            </div>
                         </div>
-                        <!-- BAR pps -->
+                        
+                        <!-- BAR pps (FIXED: Ditambahkan div pengisi warna bar) -->
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🛡️ DEFENSE (PENJUALAN PPS)</span><span>{test_qty_pps} Poin</span></div>
-                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-pps" style="width: {test_percent_pps};"></div></div>
+                            <div class="rpg-bar-bg">
+                                <div class="rpg-bar-fill-pps" style="width: {test_percent_pps};"></div>
+                            </div>
                         </div>
-                        <!-- BAR sueger -->
+                        
+                        <!-- BAR sueger (FIXED: Ditambahkan div pengisi warna bar) -->
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🍃 AGILITY (PENJUALAN SUEGER)</span><span>{test_qty_sueger} Qty</span></div>
-                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-sueger" style="width: {test_percent_sueger};"></div></div>
+                            <div class="rpg-bar-bg">
+                                <div class="rpg-bar-fill-sueger" style="width: {test_percent_sueger};"></div>
+                            </div>
                         </div>
                         <div class="avatar-holder-bottom">👤</div>
                     </div>
@@ -988,6 +997,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             </label>
         </div>
         """
+
         st.markdown(html_master_packet, unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
         
@@ -1077,10 +1087,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 /* ========================================================================= */
                 .rpg-back-btn-box {
                     max-width: 330px !important;
-                    margin: 25px auto 0 auto !important; 
+                    margin: 55px auto 30px auto !important; /* FIXED: Dinaikkan ke 55px agar tidak menabrak avatar bawah kartu */
                     padding: 0 5px !important;
                     box-sizing: border-box !important;
                 }
+
                 
                 .rpg-back-btn-box div.stButton > button { 
                     background: linear-gradient(135deg, rgba(180, 83, 9, 0.15) 0%, rgba(180, 83, 9, 0.3) 100%) !important; 
