@@ -913,7 +913,7 @@ if "portal_guild_ready" in st.session_state and st.session_state.portal_guild_re
     # Mengunci aplikasi secara mutlak agar kode di bawah tidak ikut dibaca
     st.stop()
 
-   # =========================================================================
+# =========================================================================
 # 🚀 LANGKAH 1: NAVIGASI PREPARATION CAMP (MURNI & AMAN DARI LOGIKA BENTROK)
 # =========================================================================
 if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_ready:
@@ -922,98 +922,106 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
     if "current_camp_menu" not in st.session_state:
         st.session_state["current_camp_menu"] = "main"
 
-    # 🎴 JALUR A: HALAMAN KARTU BERPUTAR 3D (Hanya muncul jika tombol Lihat Status diklik)
+    # =========================================================================
+    # 📜 SUB-MENU 1: KARTU ANGGOTA GUILD (EDISI FIXED MASSAL ANTI-PECAH / ANTI-MUNTAH)
+    # =========================================================================
     if st.session_state["current_camp_menu"] == "status":
+        # 1. SUNTIKKAN GAYA CSS MURNI TANPA HURUF 'f' AGAR TIDAK MUNTAH TEKS
         st.markdown(
             """
             <style>
                 .main .block-container { background-color: #090d16 !important; min-height: 100vh !important; max-width: 600px !important; margin: 0 auto !important; padding-top: 5% !important; box-sizing: border-box !important; }
                 [data-testid="stSidebar"] { display: none !important; }
                 [data-testid="stHeader"] { display: none !important; }
-                .flip-card-wrapper { background-color: transparent; width: 320px; height: 460px; perspective: 1000px; margin: 20px auto; cursor: pointer; display: block; }
+                .flip-card-wrapper { background-color: transparent; width: 330px; height: 520px; perspective: 1000px; margin: 15px auto; cursor: pointer; display: block; }
                 .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }
-                #card-trigger { display: none; }
-                #card-trigger:checked + .flip-card-inner { transform: rotateY(180deg); }
-                .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 20px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 25px; }
-                .card-back-design { background: linear-gradient(135deg, #111625 0%, #080b12 100%); border: 3px dashed #b45309; box-shadow: 0 8px 25px rgba(0,0,0,0.5), inset 0 0 30px rgba(180, 83, 9, 0.2); color: #b45309; }
+                #card-trigger { display: none !important; }
+                #card-trigger:checked ~ .flip-card-wrapper .flip-card-inner { transform: rotateY(180deg) !important; }
+                .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 20px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 24px; }
+                .card-back-design { background: linear-gradient(135deg, #111625 0%, #080b12 100%) !important; border: 3px dashed #b45309 !important; box-shadow: 0 8px 25px rgba(0,0,0,0.5), inset 0 0 30px rgba(180, 83, 9, 0.2) !important; color: #b45309 !important; }
                 .magic-seal-back { width: 110px; height: 110px; border: 2px dashed #b45309; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 45px; margin-bottom: 20px; animation: seal-pulse 2.5s infinite ease-in-out; }
-                .card-front-design { background: linear-gradient(145deg, #151d30 0%, #0f1524 100%); border: 4px double #d97706; box-shadow: 0 12px 35px rgba(217, 119, 6, 0.2), inset 0 0 20px rgba(217, 119, 6, 0.05); color: white; transform: rotateY(180deg); }
-                .card-front-design::before { content: "⚜️"; position: absolute; top: 15px; font-size: 18px; color: #d97706; filter: drop-shadow(0 0 5px #d97706); }
-                .avatar-holder-bottom { width: 75px; height: 75px; border-radius: 50%; border: 3px solid #d97706; background-color: #0f1524; position: absolute; bottom: -35px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; align-items: center; font-size: 32px; box-shadow: 0 5px 15px rgba(217, 119, 6, 0.4); z-index: 100; }
+                .card-front-design { background: linear-gradient(145deg, #111827 0%, #0b0f19 100%) !important; border: 4px double #d97706 !important; box-shadow: 0 12px 35px rgba(217, 119, 6, 0.3), inset 0 0 25px rgba(217, 119, 6, 0.05) !important; color: white !important; transform: rotateY(180deg); justify-content: flex-start !important; padding-top: 35px !important; }
+                .card-front-design::before { content: "⚜️"; position: absolute; top: 12px; font-size: 18px; color: #d97706; filter: drop-shadow(0 0 5px #d97706); }
+                .char-avatar-box { width: 65px; height: 65px; border-radius: 50%; border: 2px solid #d97706; background: #151d30; display: flex; justify-content: center; align-items: center; font-size: 30px; margin-bottom: 8px; box-shadow: 0 0 12px rgba(217, 119, 6, 0.3); }
+                .char-hero-name { color: #ffffff !important; font-size: 22px; font-weight: 900; margin: 0; letter-spacing: 2px; text-shadow: 0 0 8px rgba(255,255,255,0.1); }
+                .char-hero-level-badge { background: rgba(217, 119, 6, 0.15); color: #fbbf24; font-size: 11px; font-weight: 800; padding: 3px 12px; border-radius: 20px; border: 1px solid rgba(217, 119, 6, 0.4); margin-top: 5px; margin-bottom: 20px; letter-spacing: 0.5px; }
+                .rpg-stat-container { width: 100%; margin-bottom: 12px; text-align: left; }
+                .rpg-stat-header { display: flex; justify-content: space-between; color: #94a3b8; font-size: 11px; font-weight: bold; margin-bottom: 4px; font-family: monospace; letter-spacing: 0.5px; }
+                .rpg-bar-bg { background-color: #05070a !important; height: 12px; border-radius: 6px; overflow: hidden; border: 1px solid rgba(217, 119, 6, 0.15); box-shadow: inset 0 2px 4px rgba(0,0,0,0.6); }
+                .rpg-bar-fill-psm { background: linear-gradient(90deg, #ef4444, #f97316); height: 100%; border-radius: 6px; filter: drop-shadow(0 0 4px #f97316); }
+                .rpg-bar-fill-pps { background: linear-gradient(90deg, #3b82f6, #06b6d4); height: 100%; border-radius: 6px; filter: drop-shadow(0 0 4px #06b6d4); }
+                .rpg-bar-fill-sueger { background: linear-gradient(90deg, #10b981, #34d399); height: 100%; border-radius: 6px; filter: drop-shadow(0 0 4px #34d399); }
+                .avatar-holder-bottom { width: 60px; height: 60px; border-radius: 50%; border: 3px solid #d97706; background-color: #0f1524; position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; align-items: center; font-size: 26px; box-shadow: 0 5px 15px rgba(217, 119, 6, 0.4); z-index: 100; }
                 @keyframes seal-pulse { 0%, 100% { transform: scale(1); opacity: 0.7; } 50% { transform: scale(1.05); opacity: 1; filter: drop-shadow(0 0 18px #b45309); } }
-                .action-button-box div.stButton > button { background: linear-gradient(135deg, rgba(217, 119, 6, 0.15) 0%, rgba(217, 119, 6, 0.3) 100%) !important; color: #fbbf24 !important; border: 2px solid #d97706 !important; border-radius: 12px !important; font-family: monospace !important; font-size: 14px !important; font-weight: bold !important; padding: 12px 0px !important; box-shadow: 0 0 15px rgba(217, 119, 6, 0.2) !important; letter-spacing: 1px !important; }
-                .action-button-box div.stButton > button:hover { background: #d97706 !important; color: #090d16 !important; box-shadow: 0 0 25px rgba(217, 119, 6, 0.6) !important; transform: translateY(-2px) !important; }
+                .rpg-back-btn-box div.stButton > button { background: rgba(180, 83, 9, 0.1) !important; color: #fbbf24 !important; border: 1px solid #b45309 !important; border-radius: 12px !important; font-family: monospace !important; font-size: 14px !important; font-weight: bold !important; padding: 12px 0px !important; box-spacing: 0.5px !important; }
+                .rpg-back-btn-box div.stButton > button:hover { background: #b45309 !important; color: #090d16 !important; box-shadow: 0 0 20px rgba(180, 83, 9, 0.5) !important; }
             </style>
             """,
             unsafe_allow_html=True
         )
-        st.markdown("<h2 style='color: #fbbf24; font-family: monospace; text-align: center; font-size: 24px; text-shadow: 0 0 10px rgba(251,191,36,0.3); margin-bottom: 0;'>📜 GUILD REGISTER LICENSE 📜</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #475569; font-family: monospace; text-align: center; font-size: 12px; margin-bottom: 5px;'>Sentuh gulungan kartu di bawah ini untuk membuka segel mantra identitas.</p>", unsafe_allow_html=True)
 
-                # 🧪 AREA TESTING DATA DUMMY (SILAKAN COBA INPUT ANGKA BEBAS DI SINI)
+        st.markdown("<h2 style='color: #fbbf24; font-family: monospace; text-align: center; font-size: 23px; text-shadow: 0 0 10px rgba(251,191,36,0.3); margin-bottom: 0;'>📜 GUILD MEMBER LICENSE 📜</h2>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #475569; font-family: monospace; text-align: center; font-size: 11px; margin-bottom: 5px;'>Sentuh gulungan kartu di bawah ini untuk melihat status pahlawan Anda.</p>", unsafe_allow_html=True)
+
+        # 🧪 VARIABEL DATA TESTING - DIKUNCI AMAN DI LEVEL PYTHON MURNI
         test_level = 14
         test_qty_psm = 42
-        test_percent_psm = 70      # Bar progress dalam persen (0-100)
-        
+        test_percent_psm = 70
         test_qty_pps = 115
         test_percent_pps = 85
-        
         test_qty_sueger = 28
         test_percent_sueger = 45
 
-        # 🚀 FIX KARTU 3D & ATRIBUT BAR (MENGGANTI PORTAL OPENED & MENANGGULANGI MACET)
-        st.markdown(
-            f"""
-            <!-- 1. Kunci Utama Anti-Macet: Checkbox dipisah berdiri sendiri di bagian terluar -->
-            <input type="checkbox" id="card-trigger" style="display: none;">
-            
-            <label class="flip-card-wrapper" for="card-trigger">
-                <div class="flip-card-inner">
-                    
-                    <!-- 🎴 SISI BELAKANG KARTU (TAMPILAN AWAL) -->
-                    <div class="card-face card-back-design">
-                        <div class="magic-seal-back">🔮</div>
-                        <h3 style="color: #b45309; font-family: monospace; font-size: 16px; font-weight: 800; margin: 0; letter-spacing: 2px;">UNVEIL STATUS</h3>
-                        <p style="color: #475569; font-family: monospace; font-size: 11px; margin-top: 8px;">Tap to break the seal</p>
-                    </div>
-                    
-                    <!-- 👑 SISI DEPAN BINGKAI EMAS UTUH (FULL ATRIBUT MODUL PENJUALAN PREMIUM) -->
-                    <div class="card-face card-front-design">
-                        <div class="char-avatar-box">🛡️</div>
-                        <div class="char-hero-name">RAFI</div>
-                        <div class="char-hero-level-badge">RANK: MASTER • LEVEL {test_level}</div>
-                        
-                        <!-- ⚔️ BAR 1: PENCAPAIAN PSM -->
-                        <div class="rpg-stat-container">
-                            <div class="rpg-stat-header"><span>🔥 ATTACK (PENCAPAIAN PSM)</span><span>{test_qty_psm} Qty</span></div>
-                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-psm" style="width: {test_percent_psm}%;"></div></div>
-                        </div>
-                        
-                        <!-- 🛡️ BAR 2: PENCAPAIAN PENJUALAN PPS -->
-                        <div class="rpg-stat-container">
-                            <div class="rpg-stat-header"><span>🛡️ DEFENSE (PENJUALAN PPS)</span><span>{test_qty_pps} Poin</span></div>
-                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-pps" style="width: {test_percent_pps}%;"></div></div>
-                        </div>
-                        
-                        <!-- 🍃 BAR 3: PENCAPAIAN PENJUALAN SUEGER -->
-                        <div class="rpg-stat-container">
-                            <div class="rpg-stat-header"><span>🍃 AGILITY (PENJUALAN SUEGER)</span><span>{test_qty_sueger} Qty</span></div>
-                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-sueger" style="width: {test_percent_sueger}%;"></div></div>
-                        </div>
-                        
-                        <!-- Dudukan bulat ungu bawaan layout asli gambar Anda -->
-                        <div class="avatar-holder-bottom">👤</div>
-                    </div>
-                    
+        # 🚀 STRUKTUR HTML KARTU 3D - DIGABUNG MENGGUNAKAN METODE PERSENTASE AMAN (%) AGAR TIDAK PECAH
+        html_card_template = """
+        <input type="checkbox" id="card-trigger" style="display: none;">
+        
+        <label class="flip-card-wrapper" for="card-trigger">
+            <div class="flip-card-inner">
+                
+                <!-- 🎴 SISI BELAKANG (TAP TO UNVEIL) -->
+                <div class="card-face card-back-design">
+                    <div class="magic-seal-back">🔮</div>
+                    <h3 style="color: #b45309; font-family: monospace; font-size: 16px; font-weight: 800; margin: 0; letter-spacing: 2px;">UNVEIL STATUS</h3>
+                    <p style="color: #475569; font-family: monospace; font-size: 11px; margin-top: 8px;">Tap to break the seal</p>
                 </div>
-            </label>
-            """,
-            unsafe_allow_html=True
-        )
+                
+                <!-- 👑 SISI DEPAN BINGKAI EMAS UTUH (FULL ATRIBUT MODUL PENJUALAN PREMIUM) -->
+                <div class="card-face card-front-design">
+                    <div class="char-avatar-box">🛡️</div>
+                    <div class="char-hero-name">RAFI</div>
+                    <div class="char-hero-level-badge">RANK: MASTER • LEVEL %s</div>
+                    
+                    <!-- ⚔️ BAR 1: PENCAPAIAN PSM -->
+                    <div class="rpg-stat-container">
+                        <div class="rpg-stat-header"><span>🔥 ATTACK (PENCAPAIAN PSM)</span><span>%s Qty</span></div>
+                        <div class="rpg-bar-bg"><div class="rpg-bar-fill-psm" style="width: %s%%;"></div></div>
+                    </div>
+                    
+                    <!-- 🛡️ BAR 2: PENCAPAIAN PENJUALAN PPS -->
+                    <div class="rpg-stat-container">
+                        <div class="rpg-stat-header"><span>🛡️ DEFENSE (PENJUALAN PPS)</span><span>%s Poin</span></div>
+                        <div class="rpg-bar-bg"><div class="rpg-bar-fill-pps" style="width: %s%%;"></div></div>
+                    </div>
+                    
+                    <!-- 🍃 BAR 3: PENCAPAIAN PENJUALAN SUEGER -->
+                    <div class="rpg-stat-container">
+                        <div class="rpg-stat-header"><span>🍃 AGILITY (PENJUALAN SUEGER)</span><span>%s Qty</span></div>
+                        <div class="rpg-bar-bg"><div class="rpg-bar-fill-sueger" style="width: %s%%;"></div></div>
+                    </div>
+                    
+                    <div class="avatar-holder-bottom">👤</div>
+                </div>
+                
+            </div>
+        </label>
+        """ % (test_level, test_qty_psm, test_percent_psm, test_qty_pps, test_percent_pps, test_qty_sueger, test_percent_sueger)
+
+        # Cetak kode HTML yang sudah dijamin steril dan bersih
+        st.markdown(html_card_template, unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # 🚪 TOMBOL TUNGGAL PENUTUP HALAMAN (TOMBOL LAMA BACA ATRIBUT DIHAPUS)
         st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
         if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_close_status"):
             st.session_state["current_camp_menu"] = "main"
