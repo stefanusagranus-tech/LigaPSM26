@@ -922,9 +922,6 @@ if "portal_guild_ready" in st.session_state and st.session_state.portal_guild_re
         if "current_camp_menu" not in st.session_state or st.session_state.current_camp_menu is None:
             st.session_state.current_camp_menu = "main"
     
-        # --- Di bawah baris pengaman ini, susunan if-elif halaman Anda tetap sama persis ---
-        if st.session_state.current_camp_menu == "status":
-    
         # =========================================================================
         # 📜 SUB-MENU 1: HALAMAN KARTU BERPUTAR 3D FLIP (SAAT DIKLIK LIHAT STATUS)
         # =========================================================================
