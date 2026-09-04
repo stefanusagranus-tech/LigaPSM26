@@ -987,7 +987,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                             <div class="rpg-bar-bg">
                             <div class="rpg_bar_fill_sueger" style="width: """ + str(test_percent_sueger) + """; height: 100%; border-radius: 4px; display: block;"></div>
                             </div>
-			<div class="rpg-dual-badge-row">
+						<div class="rpg-dual-badge-row">
                             <!-- LENCANA KIRI: Persentase Penjualan Sueger (Bulat) -->
                             <div class="rpg-badge-item">
                                 <div class="rpg-emblem-wrapper emblem-left">
