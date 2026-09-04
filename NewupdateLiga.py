@@ -971,7 +971,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🔥 ATTACK (PENCAPAIAN PSM)</span><span>""" + str(test_qty_psm) + """ Qty</span></div>
                             <div class="rpg-bar-bg">
-                            <div class="rpg-bar-fill-psm" style="width: """ + str(test_percent_psm) + """; height: 100%; border-radius: 4px; display: block;"></div>
+                            <div class="rpg-bar-fill-psm" style="width: """ + str(test_percent_psm) + """; height: 100%; border-radius: 4px; display: block; background: linear-gradient(90deg, #ef4444, #ff8080) !important;"></div>
                             </div>
                         </div>
                         <!-- BAR pps -->
