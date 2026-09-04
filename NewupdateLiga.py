@@ -1162,12 +1162,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         <div class="char-hero-level-badge">RANK: """ + str(hero_rank_title) + """ • LEVEL """ + str(test_level) + """</div>
 						<div class="rpg-exp-container">
                             <div class="rpg-exp-header">
-                                <span>✨ SEASON EXP (PSM BULAN INI)</span>
-                                <span>""" + str(qty_psm_current_season) + """ / 150 Pcs</span>
-                            </div>
+                            <div class="rpg-stat-header"><span>✨ SEASON EXP (PSM BULAN INI)</span><span>""" + str(qty_psm_current_season) + """ / 150 Pcs</span>
                             <div class="rpg-exp-bg">
-                                <!-- 🎯 FIX: Ditambahkan warna gradasi ungu neon langsung di style inline -->
-                                <div class="rpg-exp-fill" style="width: """ + str(test_percent_exp) + """; height: 100%; display: block; background: linear-gradient(90deg, #a855f7, #d8b4fe) !important; box-shadow: 0 0 8px rgba(168, 85, 247, 0.6) !important;"></div>
+                            <div class="rpg-bar-exp-fill" style="width: """ + str(test_percent_exp) + """; height: 100%; display: block; background: linear-gradient(90deg, #a855f7, #d8b4fe) !important; box-shadow: 0 0 8px rgba(168, 85, 247, 0.6) !important;"></div>
                             </div>
                         </div>
                         <!-- BAR SG-->
