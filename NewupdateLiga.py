@@ -1154,17 +1154,18 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                                 <span>""" + str(qty_psm_current_season) + """ / 150 Pcs</span>
                             </div>
                             <div class="rpg-exp-bg">
-                                <div class="rpg-exp-fill" style="width: """ + str(test_percent_exp) + """;"></div>
+                                <!-- 🎯 FIX: Ditambahkan warna gradasi ungu neon langsung di style inline -->
+                                <div class="rpg-exp-fill" style="width: """ + str(test_percent_exp) + """; height: 100%; display: block; background: linear-gradient(90deg, #a855f7, #d8b4fe) !important; box-shadow: 0 0 8px rgba(168, 85, 247, 0.6) !important;"></div>
                             </div>
                         </div>
-                        <!-- BAR psm -->
+                        <!-- BAR SG-->
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🔥 ATTACK (PENJUALAN SG)</span><span>""" + str(test_qty_psm) + """ Qty</span></div>
                             <div class="rpg-bar-bg">
                             <div class="rpg_bar_fill_psm" style="width: """ + str(test_percent_psm) + """; height: 100%; border-radius: 4px; display: block;"></div>
                             </div>
                         </div>
-                        <!-- BAR pps -->
+                        <!-- BAR PWP -->
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🛡️ DEFENSE (PENJUALAN PWP)</span><span>""" + str(test_qty_pps) + """ Poin</span></div>
                             <div class="rpg-bar-bg">
@@ -1191,7 +1192,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                                     <!-- Gantilah angka '3' di bawah ini dengan variabel total item Anda jika ada -->
                                     <span class="rpg-emblem-text">""" + str(count_item_success_season) + """</span>
                                 </div>
-                                <div class="rpg-emblem-label">ITEMS TERCAPAI</div>
+                                <div class="rpg-emblem-label" style="margin-left: 10px !important;">ITEMS TERCAPAI</div>
                             </div>
                         </div>
                         <div class="avatar-holder-bottom">👤</div>
