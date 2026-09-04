@@ -1643,6 +1643,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             # Hitung total kumulatif buruan sampingan
             total_side_hunts = qty_sueger_bulan_ini + qty_ceban_bulan_ini
             
+            # 🎯 FIX MUTLAK NAMEERROR: Membuat ulang variabel nama season bulanan yang terhapus
+            season_name_string = waktu_wib.strftime("%B %Y").upper()
+
             html_hunt_book = f"""
             <div class="rpg-book-wrapper">
                 <div class="rpg-book-container">
