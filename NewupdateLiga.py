@@ -1051,7 +1051,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                             display: none !important; 
                         }
         
-                        /* 🚀 KUNCI FIX ABSOLUT BARIS 1057: Berikan SPASI antara angka dan unit px agar Python lulus tanpa error */
+                        /* KUNCI FIX ABSOLUT BARIS 1057: Berikan SPASI antara angka dan unit px agar Python lulus tanpa error */
                         .main .block-container {{ 
                             background-color: #090d16 !important; 
                             min-height: 800 px !important; 
