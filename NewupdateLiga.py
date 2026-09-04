@@ -1141,14 +1141,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         <div class="char-hero-level-badge">"RANK: " + str(hero_rank_title) + " • LEVEL " + str(test_level)</div>
                         <!-- BAR psm -->
                         <div class="rpg-stat-container">
-                            <div class="rpg-stat-header"><span>🔥 ATTACK (PENCAPAIAN PSM)</span><span>""" + str(test_qty_psm) + """ Qty</span></div>
+                            <div class="rpg-stat-header"><span>🔥 ATTACK (PENJUALAN SG)</span><span>""" + str(test_qty_psm) + """ Qty</span></div>
                             <div class="rpg-bar-bg">
                             <div class="rpg_bar_fill_psm" style="width: """ + str(test_percent_psm) + """; height: 100%; border-radius: 4px; display: block;"></div>
                             </div>
                         </div>
                         <!-- BAR pps -->
                         <div class="rpg-stat-container">
-                            <div class="rpg-stat-header"><span>🛡️ DEFENSE (PENJUALAN PPS)</span><span>""" + str(test_qty_pps) + """ Poin</span></div>
+                            <div class="rpg-stat-header"><span>🛡️ DEFENSE (PENJUALAN PWP)</span><span>""" + str(test_qty_pps) + """ Poin</span></div>
                             <div class="rpg-bar-bg">
                             <div class="rpg_bar_fill_pps" style="width: """ + str(test_percent_pps) + """; height: 100%; border-radius: 4px; display: block;"></div>
                             </div>
