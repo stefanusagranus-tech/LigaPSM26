@@ -917,7 +917,8 @@ if "portal_guild_ready" in st.session_state and st.session_state.portal_guild_re
     # 🚀 BAGIAN 1: TARUH DI PALING ATAS BERKAS (ANTI-BOCOR KODE BLACKSMITH)
     # =========================================================================
     if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_ready:
-        # 1. Inisialisasi status menu camp di paling atas kontainer perkemahan
+    
+        # 🚀 PASTIKAN ADA KODE BARU INI DI BAWAH GARIS IF:
         if "current_camp_menu" not in st.session_state:
             st.session_state.current_camp_menu = "main"
     
@@ -1108,8 +1109,37 @@ if "portal_guild_ready" in st.session_state and st.session_state.portal_guild_re
             if st.button("⬅️ KEMBALI KE KEMAH", use_container_width=True, key="btn_close_status"):
                 st.session_state.current_camp_menu = "main"
                 st.rerun()
-            st.markdown("</div>", unsafe_allow_html=True)
+            
+            # 🚀 SISIPKAN SATU BARIS INI TEPAT DI SINI AGAR TIDAK MENUMPUK:
+            st.stop()
     
+    # 🚀 SISIPKAN POTONGAN KODE BARU INI TEPAT DI ATAS ELIF MAIN ANDA:
+    elif st.session_state.current_camp_menu == "view_stats":
+        st.markdown(
+            """
+            <style>
+                .main .block-container { 
+                    background-color: #090d16 !important; 
+                    min-height: 100vh !important; 
+                    max-width: 650px !important; 
+                    margin: 0 auto !important; 
+                    padding-top: 5% !important; 
+                }
+                [data-testid="stSidebar"] { display: none !important; }
+                [data-testid="stHeader"] { display: none !important; }
+            </style>
+            """, 
+            unsafe_allow_html=True
+        )
+        st.markdown("<h2 style='color: #d97706; font-family: monospace; text-align: center; text-shadow: 0 0 10px rgba(217,119,6,0.4);'>🛡️ HERO STATUS MENU 🛡️</h2>", unsafe_allow_html=True)
+        st.info("Halaman view statistik utama berhasil dikunci! Desain isian atribut bar dan ornamen emas menyusul sesuai pesanan Anda berikutnya.")
+        
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        if st.button("⬅️ KEMBALI KE GULUNGAN KARTU", use_container_width=True, key="btn_back_to_card"):
+            st.session_state.current_camp_menu = "status"
+            st.rerun()
+        st.stop()
+        
     # =========================================================================
     # ⛺ MENU UTAMA CAMP UTUH (PASTIKAN INDENTASI MASUK 4 SPASI / 1 TAB)
     # =========================================================================
