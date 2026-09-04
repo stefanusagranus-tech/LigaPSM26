@@ -1119,7 +1119,18 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         
         # Pemotongan aliran halaman utama secara resmi
         st.stop()
-
+        
+        st.markdown(
+            """
+            <style>
+                /* Memaksa warna gradasi bar stat muncul kembali */
+                .rpg-bar-fill-psm { background: linear-gradient(90deg, #ef4444, #ff8080) !important; height: 100%; border-radius: 4px; }
+                .rpg-bar-fill-pps { background: linear-gradient(90deg, #3b82f6, #60a5fa) !important; height: 100%; border-radius: 4px; }
+                .rpg-bar-fill-sueger { background: linear-gradient(90deg, #10b981, #34d399) !important; height: 100%; border-radius: 4px; }
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
         
     # 🛡️ JALUR B: HALAMAN UTAMA STATISTIK UTAMA (VIEW STATS)
     elif st.session_state["current_camp_menu"] == "view_stats":
