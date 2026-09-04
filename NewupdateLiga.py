@@ -1588,34 +1588,111 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
         
         # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (CUKUP PERBAIKI BAGIAN TOMBOL INI)
+        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (ULTIMATE FIXED CARD ENGINE)
         # =========================================================================
         if st.session_state["campaign_sub_page"] == "resepsionis_utama":
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
-            st.markdown("<p class='guild-lobby-sub'>Klik langsung pada tombol kartu Buku di bawah ini untuk memeriksa catatan.</p>", unsafe_allow_html=True)
+            st.markdown("<p class='guild-lobby-sub'>Sentuh/Klik pada kartu Buku di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
             
-            # Membagi ruang menjadi 2 kolom responsif
+            # 🎨 MURNI SUNTIKKAN STYLING STRUKTUR CONTAINER BUKU PREMIUM BULAT-TEBAL
+            st.markdown(
+                """
+                <style>
+                    .books-desk-grid-fixed {
+                        display: flex !important;
+                        justify-content: space-between !important;
+                        align-items: center !important;
+                        width: 100% !important;
+                        margin: 20px auto !important;
+                        box-sizing: border-box !important;
+                        gap: 15px !important;
+                    }
+                    .book-interactive-card-fixed {
+                        display: flex !important;
+                        flex-direction: column !important;
+                        align-items: center !important;
+                        width: 48% !important;
+                        box-sizing: border-box !important;
+                        text-align: center !important;
+                    }
+                    .book-cover-3d-fixed {
+                        width: 110px !important;
+                        height: 155px !important;
+                        border-radius: 4px 12px 12px 4px !important;
+                        display: flex !important;
+                        justify-content: center !important;
+                        align-items: center !important;
+                        font-size: 38px !important;
+                        box-shadow: 5px 10px 25px rgba(0,0,0,0.6) !important;
+                        border-left: 8px solid rgba(0,0,0,0.4) !important;
+                    }
+                    .cover-pencapaian-fixed {
+                        background: linear-gradient(135deg, #0b1329 0%, #1e3a8a 100%) !important;
+                        border: 2px solid #38bdf8 !important;
+                    }
+                    .cover-tugas-fixed {
+                        background: linear-gradient(135deg, #161233 0%, #581c87 100%) !important;
+                        border: 2px solid #c084fc !important;
+                    }
+                    .book-title-label-fixed {
+                        color: #f8fafc !important;
+                        font-family: monospace !important;
+                        font-size: 13px !important;
+                        font-weight: 800 !important;
+                        margin-top: 12px !important;
+                        letter-spacing: 0.5px !important;
+                    }
+                    .book-desc-label-fixed {
+                        color: #475569 !important;
+                        font-family: monospace !important;
+                        font-size: 9px !important;
+                        margin-top: 5px !important;
+                        line-height: 1.3 !important;
+                        min-height: 36px !important;
+                    }
+                </style>
+                
+                <div class="books-desk-grid-fixed">
+                    <!-- BUKU KIRI VISUAL -->
+                    <div class="book-interactive-card-fixed">
+                        <div class="book-cover-3d-fixed cover-pencapaian-fixed">📘</div>
+                        <div class="book-title-label-fixed">JURNAL BURUAN</div>
+                        <div class="book-desc-label-fixed">Berisi catatan total poin akumulasi hasil buruan individu Anda sepanjang season.</div>
+                    </div>
+                    <!-- BUKU KANAN VISUAL -->
+                    <div class="book-interactive-card-fixed">
+                        <div class="book-cover-3d-fixed cover-tugas-fixed">🔮</div>
+                        <div class="book-title-label-fixed">KITAB MISI GUILD</div>
+                        <div class="book-desc-label-fixed">Berisi lembar maklumat perintah harian, mingguan, serta status keberhasilan misi toko.</div>
+                    </div>
+                </div>
+                """, 
+                unsafe_allow_html=True
+            )
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            # 🎯 PEMICU TRIGGER STREAMLIT SECARA LEGAL (Diletakkan di bawah untuk melemparkan fungsi klik)
             col_lobby1, col_lobby2 = st.columns(2)
             
             with col_lobby1:
-                # 🎯 FIX TOMBOL 1: Satukan simbol emoji ke dalam tombol Streamlit dengan key baru
-                if st.button("📘\n\nJURNAL BURUAN\n\n[ Ketuk Untuk Membuka ] ➔", use_container_width=True, key="btn_lobby_buku1_final"):
+                if st.button("Buka Jurnal Buruan ➔", use_container_width=True, key="btn_lobby_buku1_final_v2"):
                     st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
                     st.rerun()
                     
             with col_lobby2:
-                # 🎯 FIX TOMBOL 2: Satukan simbol emoji ke dalam tombol Streamlit dengan key baru
-                if st.button("🔮\n\nKITAB MISI GUILD\n\n[ Ketuk Untuk Membuka ] ➔", use_container_width=True, key="btn_lobby_buku2_final"):
+                if st.button("Buka Kitab Misi ➔", use_container_width=True, key="btn_lobby_buku2_final_v2"):
                     st.session_state["campaign_sub_page"] = "view_buku_tugas"
                     st.rerun()
 
             # Tombol keluar utama menuju camp (Hanya muncul di meja resepsionis)
             st.markdown("<br><hr style='border-color: rgba(180, 83, 9, 0.2); margin: 15px 0;'><br>", unsafe_allow_html=True)
             st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
-            if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_fixed"):
+            if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_final_v2"):
                 st.session_state.current_camp_menu = "main"
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
+
 
         # 🚪 KONDISI 2: BUKU TERBUKA - JURNAL BURUAN
         elif st.session_state["campaign_sub_page"] == "view_buku_pencapaian":
