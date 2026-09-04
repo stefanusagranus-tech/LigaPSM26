@@ -1588,35 +1588,34 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
         
         # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (FINAL OVERLAY CLICK ENGINE)
+        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (FIXED VISUAL BOOK & BUTTON ENGINE)
         # =========================================================================
         if st.session_state["campaign_sub_page"] == "resepsionis_utama":
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
-            st.markdown("<p class='guild-lobby-sub'>Sentuh atau klik langsung pada gambar Buku di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
+            st.markdown("<p class='guild-lobby-sub'>Periksa log petualangan Anda dengan menekan tombol di bawah masing-masing Buku Jurnal.</p>", unsafe_allow_html=True)
             
-            # --- SUNTIKKAN GAYA CSS OVERLAY (MENYULAP TOMBOL MENJADI KACA TRANSPARAN DI ATAS BUKU) ---
+            # --- RE-DESIGN CSS: Memisahkan visual agar dijamin tidak terhapus oleh tombol ---
             st.markdown(
                 """
                 <style>
-                    .desk-grid-overlay {
+                    .desk-grid-clean {
                         display: flex !important;
                         justify-content: space-between !important;
-                        align-items: center !important;
+                        align-items: flex-start !important;
                         width: 100% !important;
-                        margin: 20px auto !important;
+                        margin: 20px auto 10px auto !important;
                         box-sizing: border-box !important;
                         gap: 20px !important;
                     }
-                    .book-box-wrapper-fixed {
+                    .book-card-static {
                         width: 48% !important;
-                        position: relative !important; /* Membuat pembungkus menjadi jangkar posisi */
                         display: flex !important;
                         flex-direction: column !important;
                         align-items: center !important;
                         box-sizing: border-box !important;
                         text-align: center !important;
                     }
-                    .book-visual-core {
+                    .book-visual-shell {
                         width: 110px !important;
                         height: 155px !important;
                         border-radius: 4px 12px 12px 4px !important;
@@ -1626,78 +1625,63 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         font-size: 38px !important;
                         box-shadow: 5px 10px 25px rgba(0,0,0,0.6) !important;
                         border-left: 8px solid rgba(0,0,0,0.4) !important;
-                        pointer-events: none !important; /* Agar klik tembus ke tombol di belakangnya */
+                        transition: all 0.3s ease-in-out !important;
                     }
-                    .c-biru { background: linear-gradient(135deg, #0b1329 0%, #1e3a8a 100%) !important; border: 2px solid #38bdf8 !important; }
-                    .c-ungu { background: linear-gradient(135deg, #161233 0%, #581c87 100%) !important; border: 2px solid #c084fc !important; }
+                    .shell-biru { background: linear-gradient(135deg, #0b1329 0%, #1e3a8a 100%) !important; border: 2px solid #38bdf8 !important; }
+                    .shell-ungu { background: linear-gradient(135deg, #161233 0%, #581c87 100%) !important; border: 2px solid #c084fc !important; }
                     
-                    .lbl-t-fixed { color: #f8fafc !important; font-family: monospace !important; font-size: 13px !important; font-weight: 800 !important; margin-top: 12px !important; letter-spacing: 0.5px !important; }
-                    .lbl-d-fixed { color: #475569 !important; font-family: monospace !important; font-size: 9px !important; margin-top: 5px !important; line-height: 1.3 !important; min-height: 36px !important; }
+                    /* Efek animasi mengangkat buku saat kursor/jari mendekat */
+                    .book-card-static:hover .book-visual-shell {
+                        transform: translateY(-8px) !important;
+                    }
+                    .book-card-static:hover .shell-biru { box-shadow: 0 0 20px rgba(56, 189, 248, 0.5) !important; border-color: #00f0ff !important; }
+                    .book-card-static:hover .shell-ungu { box-shadow: 0 0 20px rgba(192, 132, 252, 0.5) !important; border-color: #d8b4fe !important; }
 
-                    /* 🎯 TRIK SAKTI: Memaksa tombol Streamlit menjadi kaca transparan penuh di atas buku */
-                    .book-box-wrapper-fixed div.stButton {
-                        position: absolute !important;
-                        top: 0 !important; left: 0 !important;
-                        width: 100% !important;
-                        height: 100% !important;
-                        z-index: 50 !important;
-                        opacity: 0.01 !important; /* Dibuat hampir tidak terlihat tapi sensor kliknya super luas */
-                    }
-                    .book-box-wrapper-fixed div.stButton > button {
-                        width: 100% !important;
-                        height: 100% !important;
-                        min-height: 230px !important;
-                        cursor: pointer !important;
-                    }
+                    .lbl-title-medieval { color: #f8fafc !important; font-family: monospace !important; font-size: 14px !important; font-weight: 800 !important; margin-top: 15px !important; letter-spacing: 0.5px !important; }
+                    .lbl-desc-medieval { color: #475569 !important; font-family: monospace !important; font-size: 10px !important; margin-top: 6px !important; line-height: 1.4 !important; min-height: 42px !important; }
                 </style>
+                
+                <div class="desk-grid-clean">
+                    <!-- 📘 VISUAL BUKU 1 (KIRI) -->
+                    <div class="book-card-static">
+                        <div class="book-visual-shell shell-biru">📘</div>
+                        <div class="lbl-title-medieval">JURNAL BURUAN</div>
+                        <div class="lbl-desc-medieval">Berisi catatan total poin akumulasi hasil buruan individu Anda sepanjang season.</div>
+                    </div>
+                    
+                    <!-- 🔮 VISUAL BUKU 2 (KANAN) -->
+                    <div class="book-card-static">
+                        <div class="book-visual-shell shell-ungu">🔮</div>
+                        <div class="lbl-title-medieval">KITAB MISI GUILD</div>
+                        <div class="lbl-desc-medieval">Berisi lembar maklumat perintah harian, mingguan, serta status keberhasilan misi toko.</div>
+                    </div>
+                </div>
                 """,
                 unsafe_allow_html=True
             )
+            
+            st.markdown("<br>", unsafe_allow_html=True)
 
-            # --- SUSUNAN STRUKTUR GRAPHIC GAME DENGAN SENSOR KLIK INTEGRASI ---
+            # --- PANEL TOMBOL EKSEKUSI LEGAL STREAMLIT (Diletakkan lurus di bawah visual buku) ---
             col_lobby1, col_lobby2 = st.columns(2)
             
             with col_lobby1:
-                # Blok Buku Kiri: Jurnal Buruan
-                st.markdown(
-                    """
-                    <div class="book-box-wrapper-fixed">
-                        <div class="book-visual-core c-biru">📘</div>
-                        <div class="lbl-t-fixed">JURNAL BURUAN</div>
-                        <div class="lbl-d-fixed">Berisi catatan total poin akumulasi hasil buruan individu Anda sepanjang season.</div>
-                    </div>
-                    """, unsafe_allow_html=True
-                )
-                # Tombol Kaca Rahasia (Ditempel pas di atas gambar buku kiri)
-                if st.button("BUKA1", use_container_width=True, key="trigger_overlay_buku1_final"):
+                if st.button("Buka Jurnal Buruan ➔", use_container_width=True, key="trigger_btn_buku1_v4"):
                     st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
                     st.rerun()
                     
             with col_lobby2:
-                # Blok Buku Kanan: Kitab Misi Guild
-                st.markdown(
-                    """
-                    <div class="book-box-wrapper-fixed">
-                        <div class="book-visual-core c-ungu">🔮</div>
-                        <div class="lbl-t-fixed">KITAB MISI GUILD</div>
-                        <div class="lbl-d-fixed">Berisi lembar maklumat perintah harian, mingguan, serta status keberhasilan misi toko.</div>
-                    </div>
-                    """, unsafe_allow_html=True
-                )
-                # Tombol Kaca Rahasia (Ditempel pas di atas gambar buku kanan)
-                if st.button("BUKA2", use_container_width=True, key="trigger_overlay_buku2_final"):
+                if st.button("Buka Kitab Misi ➔", use_container_width=True, key="trigger_btn_buku2_v4"):
                     st.session_state["campaign_sub_page"] = "view_buku_tugas"
                     st.rerun()
 
             # Tombol keluar utama menuju camp (Hanya muncul di meja resepsionis)
             st.markdown("<br><hr style='border-color: rgba(180, 83, 9, 0.2); margin: 15px 0;'><br>", unsafe_allow_html=True)
             st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
-            if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_v3"):
+            if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_v4"):
                 st.session_state.current_camp_menu = "main"
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
-
-
 
         # 🚪 KONDISI 2: BUKU TERBUKA - JURNAL BURUAN
         elif st.session_state["campaign_sub_page"] == "view_buku_pencapaian":
