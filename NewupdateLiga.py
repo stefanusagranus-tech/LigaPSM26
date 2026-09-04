@@ -1111,11 +1111,39 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         st.markdown("</div>", unsafe_allow_html=True)
 
     # =========================================================================
-    # ⚠️ KEMBALI KE STRUKTUR UTAMA CAMP AWAL (YANG SUDAH ADA DI FILE ANDA)
+    # ⛺ MENU UTAMA CAMP UTUH (PASTIKAN INDENTASI MASUK 4 SPASI / 1 TAB)
     # =========================================================================
     elif st.session_state.current_camp_menu == "main":
-    st.markdown("<h1 style='color: #f59e0b; font-family: monospace; font-size: 32px; text-shadow: 0 0 15px rgba(245,158,11,0.4); text-align: center; margin-bottom: 5px;'>⛺ PREPARATION CAMP ⛺</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #64748b; font-family: monospace; text-align: center; font-size: 13px;'>Persiapkan perlengkapan, cek papan misi, dan tingkatkan keahlian beladiri Anda sebelum melangkah keluar.</p>", unsafe_allow_html=True)
+        st.markdown(
+            """
+            <style>
+                .main .block-container { background-color: #0b0f19 !important; min-height: 100vh !important; max-width: 800px !important; margin: 0 auto !important; padding-top: 5% !important; padding-left: 20px !important; padding-right: 20px !important; box-sizing: border-box !important; }
+                [data-testid="stSidebar"] { display: none !important; }
+                [data-testid="stHeader"] { display: none !important; }
+                div[data-testid="stColumn"] { display: flex !important; flex-direction: column !important; justify-content: flex-start !important; align-items: stretch !important; }
+                .camp-card { background: linear-gradient(135deg, #131926 0%, #1e2638 100%); border: 2px solid #b45309; border-bottom: none; border-radius: 12px 12px 0 0; padding: 24px; text-align: center; position: relative; box-shadow: 0 4px 15px rgba(180, 83, 9, 0.15); flex-grow: 1; }
+                .camp-card-full { background: linear-gradient(135deg, #131926 0%, #1e2638 100%); border: 2px solid #b45309; border-bottom: none; border-radius: 12px 12px 0 0; padding: 24px; text-align: center; position: relative; box-shadow: 0 4px 15px rgba(180, 83, 9, 0.15); width: 100%; box-sizing: border-box; margin-top: 20px; }
+                .camp-icon { font-size: 45px; margin-bottom: 12px; filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.4)); }
+                .camp-title { color: #fef08a; font-family: monospace; font-size: 16px; font-weight: 800; margin-bottom: 8px; letter-spacing: 1px; }
+                .camp-desc { color: #94a3b8; font-family: monospace; font-size: 12px; line-height: 1.5; margin-bottom: 5px; }
+                div.stButton { margin: 0 !important; padding: 0 !important; display: block !important; width: 100% !important; }
+                div.stButton > button { background: rgba(180, 83, 9, 0.15) !important; color: #fef08a !important; border: 2px solid #b45309 !important; border-top: 1px solid rgba(180, 83, 9, 0.3) !important; border-radius: 0 0 12px 12px !important; font-family: monospace !important; font-size: 13px !important; font-weight: 700 !important; padding: 12px 0px !important; width: 100% !important; box-sizing: border-box !important; margin: 0 !important; }
+                div.stButton > button:hover { background: #b45309 !important; color: #0b0f19 !important; box-shadow: 0 4px 12px rgba(180, 83, 9, 0.4) !important; }
+                .leave-camp-box div.stButton { margin-top: 40px !important; }
+                .leave-camp-box div.stButton > button { border-radius: 10px !important; background: rgba(239, 68, 68, 0.1) !important; color: #ef4444 !important; border: 1px solid rgba(239, 68, 68, 0.4) !important; }
+                .leave-camp-box div.stButton > button:hover { background: #ef4444 !important; color: white !important; box-shadow: 0 0 15px rgba(239, 68, 68, 0.5) !important; }
+                @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+                .spark { position: absolute; border-radius: 50%; border: 2px solid #ef4444; box-sizing: border-box; }
+                .circle1 { width: 120px; height: 120px; animation: explode 1.6s infinite linear; filter: drop-shadow(0 0 10px #f97316); }
+                .circle2 { width: 140px; height: 140px; animation: explode 1.6s infinite linear; animation-delay: 0.8s; filter: drop-shadow(0 0 10px #ef4444); }
+                @keyframes strike { 0%, 100% { transform: scale(1) translateY(0); } 50% { transform: scale(0.9) translateY(8px); filter: drop-shadow(0 0 25px #fbbf24); } }
+                @keyframes explode { 0% { transform: scale(0.3); opacity: 1; border-style: solid; } 50% { border-style: dashed; } 100% { transform: scale(1.1); opacity: 0; border-style: dotted; } }
+            </style>
+            """, 
+            unsafe_allow_html=True
+        )
+
+        st.markdown("<h1 style='color: #f59e0b; font-family: monospace; font-size: 32px; text-shadow: 0 0 15px rgba(245,158,11,0.4); text-align: center; margin-bottom: 5px;'>⛺ PREPARATION CAMP ⛺</h1>", unsafe_allow_html=True)
     
     col_camp1, col_camp2, col_camp3 = st.columns(3)
 
