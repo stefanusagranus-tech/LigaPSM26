@@ -1610,7 +1610,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
         # 🚪 KONDISI B: ANIMASI BUKU TERBUKA 1 - JURNAL PENCAPAIAN SENDIRI
         # =========================================================================
-        elif st.session_state["campaign_sub_page"] == "view_buku_pencapaian":
+        elif st.session_state["campaign_sub_page"] == "view_Jurnal_Buruan":
             st.markdown("<h2 class='guild-lobby-title'>📖 PERSONAL HUNTING LOG </h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub'>Data tiruan steril siap dikoneksikan ke database Google Sheets Anda nanti.</p>", unsafe_allow_html=True)
             
@@ -1647,7 +1647,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
         # 🚪 KONDISI C: ANIMASI BUKU TERBUKA 2 - KITAB DAFTAR TUGAS / MISI TOKO
         # =========================================================================
-        elif st.session_state["campaign_sub_page"] == "view_buku_tugas":
+        elif st.session_state["campaign_sub_page"] == "view_Kitab_Misi":
             st.markdown("<h2 class='guild-lobby-title'>📜 GUILD MISSION SCROLL </h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub'>Daftar rincian misi harian, mingguan, dan evaluasi status target.</p>", unsafe_allow_html=True)
             
