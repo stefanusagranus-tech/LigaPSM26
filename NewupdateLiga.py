@@ -1509,8 +1509,13 @@ if selected_tab == "🏠 Menu Utama":
                     time.sleep(0.04) 
                     progress_bar.progress(percent_complete + 1)
             
+             # 🚀 CUKUP GANTI 4 BARIS PALING BAWAH KODE ANDA MENJADI SEPERTI INI:
             placeholder.empty()
+            
+            # KUNCI FIX NAVIGASI: Daftarkan tiket masuk sah agar halaman atas tahu harus menggambar menu kemah utama
+            st.session_state.current_camp_menu = "main" 
             st.session_state.portal_prep_ready = True
+            
             st.rerun()
 
     
