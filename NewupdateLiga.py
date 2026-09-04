@@ -971,21 +971,21 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🔥 ATTACK (PENCAPAIAN PSM)</span><span>""" + str(test_qty_psm) + """ Qty</span></div>
                             <div class="rpg-bar-bg">
-                            <div class="rpg-bar-fill-psm" style="width: """ + str(test_percent_psm) + """; height: 100%; border-radius: 4px; display: block;"></div>
+                            <div class="rpg_bar_fill_psm" style="width: """ + str(test_percent_psm) + """; height: 100%; border-radius: 4px; display: block;"></div>
                             </div>
                         </div>
                         <!-- BAR pps -->
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🛡️ DEFENSE (PENJUALAN PPS)</span><span>""" + str(test_qty_pps) + """ Poin</span></div>
                             <div class="rpg-bar-bg">
-                            <div class="rpg-bar-fill-pps" style="width: """ + str(test_percent_pps) + """; height: 100%; border-radius: 4px; display: block;"></div>
+                            <div class="rpg_bar_fill_pps" style="width: """ + str(test_percent_pps) + """; height: 100%; border-radius: 4px; display: block;"></div>
                             </div>
                         </div>
                         <!-- BAR sueger -->
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🍃 AGILITY (PENJUALAN SUEGER)</span><span>""" + str(test_qty_sueger) + """ Qty</span></div>
                             <div class="rpg-bar-bg">
-                            <div class="rpg-bar-fill-sueger" style="width: """ + str(test_percent_sueger) + """; height: 100%; border-radius: 4px; display: block;"></div>
+                            <div class="rpg_bar_fill-sueger" style="width: """ + str(test_percent_sueger) + """; height: 100%; border-radius: 4px; display: block;"></div>
                             </div>
 			<div class="rpg-dual-badge-row">
                             <!-- LENCANA KIRI: Persentase Penjualan Sueger (Bulat) -->
@@ -1113,15 +1113,16 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 }
                 
                 .rpg-emblem-wrapper {
-                    background-image: url("https://githubusercontent.com") !important; https://github.com/stefanusagranus-tech/LigaPSM26/blob/main/badge%20logo.jpg.png
-                    background-repeat: no-repeat !important;
-                    width: 110px !important;
-                    height: 65px !important;
-                    display: flex !important;
-                    align-items: center !important;
-                    justify-content: center !important;
-                    position: relative !important;
-                }
+				    /* 👑 LINK RAW RESMI GITHUB ANDA YANG SUDAH AKTIF */
+				    background-image: url("https://raw.githubusercontent.com/stefanusagranus-tech/LigaPSM26/main/badge%20logo.jpg.png") !important; 
+				    background-repeat: no-repeat !important;
+				    width: 110px !important;
+				    height: 65px !important;
+				    display: flex !important;
+				    align-items: center !important;
+				    justify-content: center !important;
+				    position: relative !important;
+				}
                 
                 .emblem-left {
                     background-size: 220px 65px !important;
