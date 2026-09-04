@@ -1588,13 +1588,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
         
         # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (DIRECT HYPERLINK CLICK ENGINE)
+        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (CAMP STYLE BUTTON ENGINE - ANTI-GAGAL)
         # =========================================================================
         if st.session_state["campaign_sub_page"] == "resepsionis_utama":
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
-            st.markdown("<p class='guild-lobby-sub'>Klik langsung pada tulisan tombol biru di bawah masing-masing Buku untuk membuka lembaran.</p>", unsafe_allow_html=True)
+            st.markdown("<p class='guild-lobby-sub'>Pilih gulungan jurnal di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
             
-            # --- RE-DESIGN CSS: Mengunci visual buku sekaligus menghidupkan sensor tombol premium ---
+            # --- SUNTIKKAN STYLING VISUAL BUKU STATIS (MURNI GAMBAR & HOVER NYALA) ---
             st.markdown(
                 """
                 <style>
@@ -1636,6 +1636,30 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
                     .lbl-title-medieval { color: #f8fafc !important; font-family: monospace !important; font-size: 14px !important; font-weight: 800 !important; margin-top: 15px !important; letter-spacing: 0.5px !important; }
                     .lbl-desc-medieval { color: #475569 !important; font-family: monospace !important; font-size: 10px !important; margin-top: 6px !important; line-height: 1.4 !important; min-height: 42px !important; }
+                    
+                    /* 🎯 MASTER STYLING: Menyetel tombol agar persis seperti kotak perkemahan cokelat emas */
+                    div[data-testid="stColumn"] div.stButton > button {
+                        background-color: #1e1b18 !important;
+                        color: #fbbf24 !important;
+                        border: 1px solid rgba(251, 191, 36, 0.3) !important;
+                        border-radius: 4px !important;
+                        padding: 10px 15px !important;
+                        font-family: monospace !important;
+                        font-size: 12px !important;
+                        font-weight: bold !important;
+                        letter-spacing: 1px !important;
+                        transition: all 0.2s ease-in-out !important;
+                        min-height: auto !important; /* Reset tinggi buku tebal kemarin */
+                        width: 100% !important;
+                        border-left: 1px solid rgba(251, 191, 36, 0.3) !important; /* Reset ketebalan punggung buku */
+                    }
+                    div[data-testid="stColumn"] div.stButton > button:hover {
+                        background-color: #2d241e !important;
+                        border-color: #fbbf24 !important;
+                        color: #ffffff !important;
+                        box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2) !important;
+                        transform: translateY(0) !important; /* Reset gerak tombol */
+                    }
                 </style>
                 
                 <div class="desk-grid-clean">
@@ -1645,6 +1669,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         <div class="lbl-title-medieval">JURNAL BURUAN</div>
                         <div class="lbl-desc-medieval">Berisi catatan total poin akumulasi hasil buruan individu Anda sepanjang season.</div>
                     </div>
+                    
                     <!-- 🔮 VISUAL BUKU 2 (KANAN) -->
                     <div class="book-card-static">
                         <div class="book-visual-shell shell-ungu">🔮</div>
@@ -1658,25 +1683,25 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             
             st.markdown("<br>", unsafe_allow_html=True)
 
-            # --- SENSOR NAVIGASI BARU: Memaksa tombol keluar di atas lapisan background tanpa kolom python kaku ---
-            col_lobby_click1, col_lobby_click2 = st.columns(2)
+            # --- PANEL TOMBOL KOTAK COKELAT EMAS (CAMP STYLE) ---
+            col_lobby1, col_lobby2 = st.columns(2)
             
-            with col_lobby_click1:
-                # Menggunakan query unik v5 untuk mendobrak cache Streamlit Cloud yang beku
-                if st.button("📖 BUKA JURNAL BURUAN ➔", use_container_width=True, key="action_trigger_buku1_v5"):
+            with col_lobby1:
+                # Tombol bergaya "Lihat Status →"
+                if st.button("Buka Jurnal Buruan ➔", use_container_width=True, key="btn_camp_style_buku1"):
                     st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
                     st.rerun()
                     
-            with col_lobby_click2:
-                # Menggunakan query unik v5 untuk mendobrak cache Streamlit Cloud yang beku
-                if st.button("🔮 BUKA KITAB MISI ➔", use_container_width=True, key="action_trigger_buku2_v5"):
+            with col_lobby2:
+                # Tombol bergaya "Ambil Quest →"
+                if st.button("Buka Kitab Misi ➔", use_container_width=True, key="btn_camp_style_buku2"):
                     st.session_state["campaign_sub_page"] = "view_buku_tugas"
                     st.rerun()
 
             # Tombol keluar utama menuju camp (Hanya muncul di meja resepsionis)
             st.markdown("<br><hr style='border-color: rgba(180, 83, 9, 0.2); margin: 15px 0;'><br>", unsafe_allow_html=True)
             st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
-            if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_v5"):
+            if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_camp_style"):
                 st.session_state.current_camp_menu = "main"
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
