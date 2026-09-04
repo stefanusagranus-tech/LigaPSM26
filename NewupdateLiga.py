@@ -1148,6 +1148,15 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         <!-- 🎯 FIX FONT NAMA RESPONSIF: Mengecilkan font nama panjang agar tidak merusak bingkai emas -->
                         <div class="char-hero-name" style="font-size: 16px !important; letter-spacing: 1px !important; margin: 5px 0 !important; white-space: normal !important; max-width: 280px; line-height: 1.2;">""" + str(current_hero_name) + """</div>
                         <div class="char-hero-level-badge">RANK: """ + str(hero_rank_title) + """ • LEVEL """ + str(test_level) + """</div>
+						<div class="rpg-exp-container">
+                            <div class="rpg-exp-header">
+                                <span>✨ SEASON EXP (PSM BULAN INI)</span>
+                                <span>""" + str(qty_psm_current_season) + """ / 150 Pcs</span>
+                            </div>
+                            <div class="rpg-exp-bg">
+                                <div class="rpg-exp-fill" style="width: """ + str(test_percent_exp) + """;"></div>
+                            </div>
+                        </div>
                         <!-- BAR psm -->
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🔥 ATTACK (PENJUALAN SG)</span><span>""" + str(test_qty_psm) + """ Qty</span></div>
@@ -1272,7 +1281,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 .rpg-stat-header { display: flex; justify-content: space-between; color: #94a3b8; font-size: 11px; font-weight: bold; margin-bottom: 5px; font-family: monospace; letter-spacing: 0.5px; }
                 
                 .rpg-bar-bg { background-color: #05070a !important; height: 14px; border-radius: 4px; overflow: hidden; border: 1px solid rgba(217, 119, 6, 0.25); box-shadow: inset 0 3px 6px rgba(0,0,0,0.8); }
-                .rpg_bar_fill_psm { background: linear-gradient(90deg, #ef4444, #ff8080) !important; }
+                .rpg-exp-fill {background: linear-gradient(90deg, #a855f7, #d8b4fe) !important; }
+				.rpg_bar_fill_psm { background: linear-gradient(90deg, #ef4444, #ff8080) !important; }
                 .rpg_bar_fill_pps { background: linear-gradient(90deg, #3b82f6, #60a5fa) !important; }
                 .rpg_bar_fill_sueger { background: linear-gradient(90deg, #10b981, #34d399) !important; }
                 .avatar-holder-bottom { width: 65px; height: 65px; border-radius: 50%; border: 3px solid #d97706; background-color: #0b0f19; position: absolute; bottom: -32px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; align-items: center; font-size: 28px; box-shadow: 0 8px 20px rgba(217, 119, 6, 0.5), inset 0 0 10px rgba(217, 119, 6, 0.2); z-index: 100; }
