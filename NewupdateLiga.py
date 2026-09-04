@@ -948,8 +948,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         test_qty_sueger = 28
         test_percent_sueger = "45%"
     
-        # 👑 2. STRUKTUR UTAMA HTML KARTU (EDIT LANGSUNG PADA KOMPONEN UTAMA - WARNA BAR FIXED)
-        html_master_packet = f"""
+        # 👑 2. STRUKTUR UTAMA HTML KARTU (FIXED: HTML KEMBALI NORMAL & WARNA BAR MUNCUL)
+        html_master_packet = """
         <div class="rpg-card-fullscreen-container">
             <h2 class="rpg-header-title">📜 GUILD MEMBER LICENSE 📜</h2>
             <p class="rpg-header-sub">Sentuh gulungan kartu di bawah ini untuk melihat status pahlawan Anda.</p>
@@ -966,24 +966,27 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     <div class="card-face card-front-design">
                         <div class="char-avatar-box">🛡️</div>
                         <div class="char-hero-name">RAFI</div>
-                        <div class="char-hero-level-badge">RANK: MASTER • LEVEL {test_level}</div>
-                        
-                        <!-- BAR psm (FIXED: Variabel Python terbaca sempurna oleh f-string) -->
+                        <div class="char-hero-level-badge">RANK: MASTER • LEVEL """ + str(test_level) + """</div>
+                        <!-- BAR psm -->
                         <div class="rpg-stat-container">
-                            <div class="rpg-stat-header"><span>🔥 ATTACK (PENCAPAIAN PSM)</span><span>{test_qty_psm} Qty</span></div>
-                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-psm" style="width: {test_percent_psm}; height: 100%; border-radius: 4px;"></div></div>
+                            <div class="rpg-stat-header"><span>🔥 ATTACK (PENCAPAIAN PSM)</span><span>""" + str(test_qty_psm) + """ Qty</span></div>
+                            <div class="rpg-bar-bg">
+                            <div class="rpg-bar-fill-psm" style="width: """ + str(test_percent_psm) + """; height: 100%; border-radius: 4px; display: block;"></div>
+                            </div>
                         </div>
-                        
-                        <!-- BAR pps (FIXED: Variabel Python terbaca sempurna oleh f-string) -->
+                        <!-- BAR pps -->
                         <div class="rpg-stat-container">
-                            <div class="rpg-stat-header"><span>🛡️ DEFENSE (PENJUALAN PPS)</span><span>{test_qty_pps} Poin</span></div>
-                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-pps" style="width: {test_percent_pps}; height: 100%; border-radius: 4px;"></div></div>
+                            <div class="rpg-stat-header"><span>🛡️ DEFENSE (PENJUALAN PPS)</span><span>""" + str(test_qty_pps) + """ Poin</span></div>
+                            <div class="rpg-bar-bg">
+                            <div class="rpg-bar-fill-pps" style="width: """ + str(test_percent_pps) + """; height: 100%; border-radius: 4px; display: block;"></div>
+                            </div>
                         </div>
-                        
-                        <!-- BAR sueger (FIXED: Variabel Python terbaca sempurna oleh f-string) -->
+                        <!-- BAR sueger -->
                         <div class="rpg-stat-container">
-                            <div class="rpg-stat-header"><span>🍃 AGILITY (PENJUALAN SUEGER)</span><span>{test_qty_sueger} Qty</span></div>
-                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-sueger" style="width: {test_percent_sueger}; height: 100%; border-radius: 4px;"></div></div>
+                            <div class="rpg-stat-header"><span>🍃 AGILITY (PENJUALAN SUEGER)</span><span>""" + str(test_qty_sueger) + """ Qty</span></div>
+                            <div class="rpg-bar-bg">
+                            <div class="rpg-bar-fill-sueger" style="width: """ + str(test_percent_sueger) + """; height: 100%; border-radius: 4px; display: block;"></div>
+                            </div>
                         </div>
                         <div class="avatar-holder-bottom">👤</div>
                     </div>
