@@ -983,7 +983,40 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         st.markdown(
             """
             <style>
-                .main .block-container { background-color: #090d16 !important; min-height: 100vh !important; max-width: 600px !important; margin: 0 auto !important; padding-top: 5% !important; box-sizing: border-box !important; }
+                /* ========================================================================= */
+                /* 👑 SIHIR FULLSCREEN TOTAL: MENGHANCURKAN DASHBOARD UTAMA & KOTAK BIRU ATAS */
+                /* ========================================================================= */
+                
+                /* 1. Hancurkan total baris judul biru "PSM TOKO SALES MONITORING" beserta jam sistem */
+                div[data-testid="stVerticalBlock"] > div:first-child,
+                div.stContainer,
+                .stAppHeader,
+                header,
+                [data-testid="stHeader"] {
+                    display: none !important;
+                    height: 0px !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                }
+                
+                /* 2. Sembunyikan garis pembatas atau judul cadangan bawaan di bagian atas canvas */
+                h1, h2, h3, h4, h5, h6 {
+                    margin-top: 0px !important;
+                }
+
+                /* 3. Memaksa latar belakang kanvas halaman melebur gelap gulita medieval */
+                .main .block-container { 
+                    background-color: #090d16 !important; 
+                    min-height: 100vh !important; 
+                    max-width: 600px !important; 
+                    margin: 0 auto !important; 
+                    padding-top: 5% !important; 
+                    box-sizing: border-box !important;
+                }
+                
+                /* ========================================================================= */
+                /* 🎴 LAYOUT KOMPONEN KARTU 3D (TETAP SAMA SEPERTI YANG SUDAH SUKSES) */
+                /* ========================================================================= */
                 .rpg-card-fullscreen-container { text-align: center; font-family: monospace; width: 100%; margin: 0 auto; }
                 .rpg-header-title { color: #fbbf24 !important; font-size: 23px !important; text-shadow: 0 0 10px rgba(251,191,36,0.3) !important; margin: 0 0 5px 0 !important; font-weight: 900 !important; }
                 .rpg-header-sub { color: #475569 !important; font-size: 11px !important; margin: 0 0 15px 0 !important; }
