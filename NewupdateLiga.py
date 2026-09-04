@@ -985,7 +985,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🍃 AGILITY (PENJUALAN SUEGER)</span><span>""" + str(test_qty_sueger) + """ Qty</span></div>
                             <div class="rpg-bar-bg">
-                            <div class="rpg_bar_fill-sueger" style="width: """ + str(test_percent_sueger) + """; height: 100%; border-radius: 4px; display: block;"></div>
+                            <div class="rpg_bar_fill_sueger" style="width: """ + str(test_percent_sueger) + """; height: 100%; border-radius: 4px; display: block;"></div>
                             </div>
 			<div class="rpg-dual-badge-row">
                             <!-- LENCANA KIRI: Persentase Penjualan Sueger (Bulat) -->
@@ -1113,15 +1113,18 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 }
                 
                 .rpg-emblem-wrapper {
-				    /* 👑 LINK RAW RESMI GITHUB ANDA YANG SUDAH AKTIF */
-				    background-image: url("https://raw.githubusercontent.com/stefanusagranus-tech/LigaPSM26/main/badge%20logo.jpg.png") !important; 
+				    /* 👑 LINK RAW RESMI GITHUB ANDA */
+				    background-image: url("https://githubusercontent.com") !important; 
 				    background-repeat: no-repeat !important;
 				    width: 110px !important;
-				    height: 65px !important;
+				    height: 75px !important; 
 				    display: flex !important;
 				    align-items: center !important;
 				    justify-content: center !important;
 				    position: relative !important;
+				    
+				    /* 🎯 TRIK SAKTI: Menghapus latar belakang ungu gelap gambar agar otomatis transparan */
+				    mix-blend-mode: screen !important; 
 				}
                 
                 .emblem-left {
@@ -1135,13 +1138,20 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 }
                 
                 .rpg-emblem-text {
-                    color: #ffffff !important;
-                    font-size: 13px !important;
-                    font-weight: 900 !important;
-                    font-family: 'Courier New', monospace !important;
-                    text-shadow: 0 0 8px rgba(168, 85, 247, 0.8), 0 0 3px #000000 !important;
-                    margin-top: -2px !important;
-                }
+				    color: #00ffff !important; /* 🌟 Warna dasar Cyan Neon terang untuk lencana kiri */
+				    font-size: 14px !important;
+				    font-weight: 900 !important;
+				    font-family: 'Courier New', monospace !important;
+				    
+				    /* 🎯 GESER MASUK BINGKAI: Didorong ke atas agar pas berada di tengah bulatan lencana */
+				    margin-top: -12px !important; 
+				    
+				    /* 🔥 EFFECT NEON GLOW: Membuat pendaran cahaya lampu neon ganda yang tebal */
+				    text-shadow: 0 0 5px #00ffff, 
+				                 0 0 10px #00ffff, 
+				                 0 0 20px #00ffff, 
+				                 0 0 4px #000000 !important;
+				}
                 
                 .rpg-emblem-label {
                     color: #475569 !important;
