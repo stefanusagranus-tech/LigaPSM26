@@ -1114,7 +1114,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 
                 .rpg-emblem-wrapper {
 				    /* 👑 LINK RAW RESMI GITHUB ANDA */
-				    background-image: url(https://raw.githubusercontent.com/stefanusagranus-tech/LigaPSM26/main/badge%20logo.jpg.png) !important; 
+				    background-image: url(https://raw.githubusercontent.com/stefanusagranus-tech/LigaPSM26/main/badge_logo.jpg-removebg-preview__1_-removebg-preview.png) !important; 
 				    background-repeat: no-repeat !important;
 				    width: 110px !important;
 				    height: 75px !important; 
