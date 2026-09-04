@@ -1669,7 +1669,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         <div class="lbl-title-medieval">JURNAL BURUAN</div>
                         <div class="lbl-desc-medieval">Berisi catatan total poin akumulasi hasil buruan individu Anda sepanjang season.</div>
                     </div>
-                    
                     <!-- 🔮 VISUAL BUKU 2 (KANAN) -->
                     <div class="book-card-static">
                         <div class="book-visual-shell shell-ungu">🔮</div>
