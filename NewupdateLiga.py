@@ -967,7 +967,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         <div class="char-avatar-box">🛡️</div>
                         <div class="char-hero-name">RAFI</div>
                         <div class="char-hero-level-badge">RANK: MASTER • LEVEL """ + str(test_level) + """</div>
-                        
                         <!-- BAR psm -->
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🔥 ATTACK (PENCAPAIAN PSM)</span><span>""" + str(test_qty_psm) + """ Qty</span></div>
@@ -975,7 +974,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                             <div class="rpg-bar-fill-psm" style="width: """ + str(test_percent_psm) + """; height: 100%; border-radius: 4px; display: block;"></div>
                             </div>
                         </div>
-                        
                         <!-- BAR pps -->
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🛡️ DEFENSE (PENJUALAN PPS)</span><span>""" + str(test_qty_pps) + """ Poin</span></div>
@@ -983,7 +981,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                             <div class="rpg-bar-fill-pps" style="width: """ + str(test_percent_pps) + """; height: 100%; border-radius: 4px; display: block;"></div>
                             </div>
                         </div>
-                        
                         <!-- BAR sueger -->
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🍃 AGILITY (PENJUALAN SUEGER)</span><span>""" + str(test_qty_sueger) + """ Qty</span></div>
