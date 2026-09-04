@@ -948,7 +948,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         test_qty_sueger = 28
         test_percent_sueger = "45%"
     
-        # 👑 2. STRUKTUR UTAMA HTML KARTU (F-STRING STERIL TANPA PERSEN CSS)
+        # 👑 2. STRUKTUR UTAMA HTML KARTU (EDIT LANGSUNG PADA KOMPONEN UTAMA - WARNA BAR FIXED)
         html_master_packet = f"""
         <div class="rpg-card-fullscreen-container">
             <h2 class="rpg-header-title">📜 GUILD MEMBER LICENSE 📜</h2>
@@ -967,20 +967,23 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         <div class="char-avatar-box">🛡️</div>
                         <div class="char-hero-name">RAFI</div>
                         <div class="char-hero-level-badge">RANK: MASTER • LEVEL {test_level}</div>
-                        <!-- BAR psm -->
+                        
+                        <!-- BAR psm (FIXED: Variabel Python terbaca sempurna oleh f-string) -->
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🔥 ATTACK (PENCAPAIAN PSM)</span><span>{test_qty_psm} Qty</span></div>
-                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-psm" style="width: {test_percent_psm};"></div></div>
+                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-psm" style="width: {test_percent_psm}; height: 100%; border-radius: 4px;"></div></div>
                         </div>
-                        <!-- BAR pps -->
+                        
+                        <!-- BAR pps (FIXED: Variabel Python terbaca sempurna oleh f-string) -->
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🛡️ DEFENSE (PENJUALAN PPS)</span><span>{test_qty_pps} Poin</span></div>
-                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-pps" style="width: {test_percent_pps};"></div></div>
+                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-pps" style="width: {test_percent_pps}; height: 100%; border-radius: 4px;"></div></div>
                         </div>
-                        <!-- BAR sueger -->
+                        
+                        <!-- BAR sueger (FIXED: Variabel Python terbaca sempurna oleh f-string) -->
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🍃 AGILITY (PENJUALAN SUEGER)</span><span>{test_qty_sueger} Qty</span></div>
-                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-sueger" style="width: {test_percent_sueger};"></div></div>
+                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-sueger" style="width: {test_percent_sueger}; height: 100%; border-radius: 4px;"></div></div>
                         </div>
                         <div class="avatar-holder-bottom">👤</div>
                     </div>
