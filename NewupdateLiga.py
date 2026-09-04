@@ -1130,11 +1130,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 				
 				/* 🎯 Cukup panggil link gambar masing-masing di sini */
 				.emblem-left {
-				    background-image: url("https://githubusercontent.com") !important; 
+				    background-image: url("https://raw.githubusercontent.com/stefanusagranus-tech/LigaPSM26/main/kiri.png") !important; 
 				}
 				
 				.emblem-right {
-				    background-image: url("https://githubusercontent.com") !important; 
+				    background-image: url("https://raw.githubusercontent.com/stefanusagranus-tech/LigaPSM26/main/kanan.png") !important; 
 				}
 				
 				/* Pengaturan teks neon otomatis seragam di tengah */
