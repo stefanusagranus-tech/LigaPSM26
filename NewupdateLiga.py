@@ -948,56 +948,42 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         test_qty_sueger = 28
         test_percent_sueger = "45%"
     
-        # 👑 KUNCI VISUAL KARTU 3D (HANYA GANTI BAGIAN STRING UTAMANYA INI SAJA)
+        # 👑 2. STRUKTUR UTAMA HTML KARTU (F-STRING STERIL TANPA PERSEN CSS)
         html_master_packet = f"""
         <div class="rpg-card-fullscreen-container">
-            
-            <!-- A. JUDUL ATAS LISENSI -->
             <h2 class="rpg-header-title">📜 GUILD MEMBER LICENSE 📜</h2>
             <p class="rpg-header-sub">Sentuh gulungan kartu di bawah ini untuk melihat status pahlawan Anda.</p>
-            
-            <!-- B. CHECKBOX PEMICU PUTARAN 3D -->
             <input type="checkbox" id="card-trigger" style="display: none !important;">
-            
-            <!-- C. STRUKTUR UTAMA KARTU 3D FLIP -->
             <label class="flip-card-wrapper" for="card-trigger">
                 <div class="flip-card-inner">
-                    
-                    <!-- 🎴 SISI BELAKANG KARTU (TAMPILAN AWAL SEBELUM DIKETUK) -->
+                    <!-- 🎴 SISI BELAKANG KARTU -->
                     <div class="card-face card-back-design">
                         <div class="magic-seal-back">🔮</div>
                         <h3 style="color: #b45309; font-size: 16px; font-weight: 800; margin: 0; letter-spacing: 2px; font-family: monospace;">UNVEIL STATUS</h3>
                         <p style="color: #475569; font-size: 11px; margin: 8px 0 0 0; font-family: monospace;">Tap to break the seal</p>
                     </div>
-                    
-                    <!-- 👑 SISI DEPAN BINGKAI EMAS UTUH (FULL ATRIBUT MODUL PENJUALAN) -->
+                    <!-- 👑 SISI DEPAN BINGKAI EMAS UTUH -->
                     <div class="card-face card-front-design">
                         <div class="char-avatar-box">🛡️</div>
                         <div class="char-hero-name">RAFI</div>
                         <div class="char-hero-level-badge">RANK: MASTER • LEVEL {test_level}</div>
-                        
-                        <!-- ⚔️ BAR 1: PENCAPAIAN PSM -->
+                        <!-- BAR psm -->
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🔥 ATTACK (PENCAPAIAN PSM)</span><span>{test_qty_psm} Qty</span></div>
                             <div class="rpg-bar-bg"><div class="rpg-bar-fill-psm" style="width: {test_percent_psm};"></div></div>
                         </div>
-                        
-                        <!-- 🛡️ BAR 2: PENCAPAIAN PENJUALAN PPS -->
+                        <!-- BAR pps -->
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🛡️ DEFENSE (PENJUALAN PPS)</span><span>{test_qty_pps} Poin</span></div>
                             <div class="rpg-bar-bg"><div class="rpg-bar-fill-pps" style="width: {test_percent_pps};"></div></div>
                         </div>
-                        
-                        <!-- 🍃 BAR 3: PENCAPAIAN PENJUALAN SUEGER -->
+                        <!-- BAR sueger -->
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🍃 AGILITY (PENJUALAN SUEGER)</span><span>{test_qty_sueger} Qty</span></div>
                             <div class="rpg-bar-bg"><div class="rpg-bar-fill-sueger" style="width: {test_percent_sueger};"></div></div>
                         </div>
-                        
-                        <!-- Bulatan avatar bawah meniru pola asset gambar emas nomor 1 Anda -->
                         <div class="avatar-holder-bottom">👤</div>
                     </div>
-                    
                 </div>
             </label>
         </div>
@@ -1005,6 +991,84 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         st.markdown(html_master_packet, unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
         
+         # 🎨 3. SUNTIKKAN GAYA CSS GLOBAL (FIXED MULTI-SELECTOR FULLSCREEN & ANTI-SIDEBAR BOCOR)
+        st.markdown(
+            """
+            <style>
+                /* ========================================================================= */
+                /* 👑 KING OF FULLSCREEN: BERSINARKAN SATU LAYAR PENUH MURNI GAMBAR 1 */
+                /* ========================================================================= */
+                
+                /* 1. Paksa lipat dan hancurkan visual sidebar kiri beserta tombol burger tiga garis */
+                [data-testid="stSidebar"], 
+                [data-testid="stSidebarCollapsedControl"],
+                .stSidebar,
+                div[data-testid="stSidebarUserContent"],
+                button[title="Expand sidebar"] { 
+                    display: none !important; 
+                    width: 0px !important;
+                    visibility: hidden !important;
+                }
+                
+                /* 2. Tembak mati kotak header biru monitoring atas beserta jam sistem real-time */
+                [data-testid="stHeader"],
+                header,
+                .stAppHeader,
+                div[data-testid="stElementContainer"]:has(h1),
+                div.stBlock:first-child,
+                div[data-testid="stVerticalBlock"] > div:first-child,
+                .element-container:has(.stMarkdown h1) {
+                    display: none !important;
+                    height: 0px !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    visibility: hidden !important;
+                }
+
+                /* 3. Ratakan lembar kerja utama agar melar penuh 100% memenuhi monitor PC / HP */
+                .main .block-container { 
+                    background-color: #090d16 !important; 
+                    min-height: 100vh !important; 
+                    max-width: 600px !important; 
+                    margin: 0 auto !important; 
+                    padding-top: 2% !important; 
+                    box-sizing: border-box !important;
+                }
+                
+                /* 4. Bersihkan margin hantu Streamlit agar posisi judul Guild License naik seimbang */
+                div[data-testid="stVerticalBlock"] {
+                    gap: 0rem !important;
+                }
+
+                /* ========================================================================= */
+                /* 🎴 LAYOUT KOMPONEN KARTU 3D (TETAP SAMA SEPERTI YANG SUDAH SUKSES) */
+                /* ========================================================================= */
+                .rpg-card-fullscreen-container { text-align: center; font-family: monospace; width: 100%; margin: 0 auto; }
+                .rpg-header-title { color: #fbbf24 !important; font-size: 23px !important; text-shadow: 0 0 10px rgba(251,191,36,0.3) !important; margin: 0 0 5px 0 !important; font-weight: 900 !important; }
+                .rpg-header-sub { color: #475569 !important; font-size: 11px !important; margin: 0 0 15px 0 !important; }
+                .flip-card-wrapper { background-color: transparent !important; width: 330px; height: 520px; perspective: 1000px; margin: 15px auto; cursor: pointer; display: block; }
+                .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }
+                #card-trigger:checked ~ .flip-card-wrapper .flip-card-inner { transform: rotateY(180deg) !important; }
+                .card-face { position: absolute; width: 100%; height: 100%; background: linear-gradient(145deg, #111827 0%, #0b0f19 100%) !important; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 20px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 24px; }
+                .card-back-design { border: 3px dashed #b45309 !important; box-shadow: 0 8px 25px rgba(0,0,0,0.5), inset 0 0 30px rgba(180, 83, 9, 0.2) !important; color: #b45309 !important; }
+                .magic-seal-back { width: 110px; height: 110px; border: 2px dashed #b45309; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 45px; margin-bottom: 20px; }
+                .card-front-design { border: 4px double #d97706 !important; box-shadow: 0 12px 35px rgba(217, 119, 6, 0.3), inset 0 0 25px rgba(217, 119, 6, 0.05) !important; color: white !important; transform: rotateY(180deg); justify-content: flex-start !important; padding-top: 35px !important; }
+                .card-front-design::before { content: "⚜️"; position: absolute; top: 12px; font-size: 18px; color: #d97706; filter: drop-shadow(0 0 5px #d97706); }
+                .char-avatar-box { width: 65px; height: 65px; border-radius: 50%; border: 2px solid #d97706; background: #151d30; display: flex; justify-content: center; align-items: center; font-size: 30px; margin-bottom: 8px; box-shadow: 0 0 12px rgba(217, 119, 6, 0.3); }
+                .char-hero-name { color: #ffffff !important; font-size: 22px; font-weight: 900; margin: 0; letter-spacing: 2px; text-shadow: 0 0 8px rgba(255,255,255,0.1); }
+                .char-hero-level-badge { background: rgba(217, 119, 6, 0.15); color: #fbbf24; font-size: 11px; font-weight: 800; padding: 3px 12px; border-radius: 20px; border: 1px solid rgba(217, 119, 6, 0.4); margin-top: 5px; margin-bottom: 20px; letter-spacing: 0.5px; }
+                .rpg-stat-container { width: 100%; margin-bottom: 12px; text-align: left; }
+                .rpg-stat-header { display: flex; justify-content: space-between; color: #94a3b8; font-size: 11px; font-weight: bold; margin-bottom: 4px; font-family: monospace; letter-spacing: 0.5px; }
+                .rpg-bar-bg { background-color: #05070a !important; height: 12px; border-radius: 6px; overflow: hidden; border: 1px solid rgba(217, 119, 6, 0.15); box-shadow: inset 0 2px 4px rgba(0,0,0,0.6); }
+                .rpg-bar-fill-psm { background: linear-gradient(90deg, #ef4444, #f97316); height: 100%; border-radius: 6px; filter: drop-shadow(0 0 4px #f97316); }
+                .rpg-bar-fill-pps { background: linear-gradient(90deg, #3b82f6, #06b6d4); height: 100%; border-radius: 6px; filter: drop-shadow(0 0 4px #06b6d4); }
+                .rpg-bar-fill-sueger { background: linear-gradient(90deg, #10b981, #34d399); height: 100%; border-radius: 6px; filter: drop-shadow(0 0 4px #34d399); }
+                .avatar-holder-bottom { width: 60px; height: 60px; border-radius: 50%; border: 3px solid #d97706; background-color: #0f1524; position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; align-items: center; font-size: 26px; box-shadow: 0 5px 15px rgba(217, 119, 6, 0.4); z-index: 100; }
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+
         # =========================================================================
         # E. TOMBOL NATIVE KEMBALI (EDISI RE-DESIGN PREMIUM MEDIEVAL & SIMETRIS)
         # =========================================================================
