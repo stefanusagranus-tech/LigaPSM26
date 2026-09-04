@@ -1001,7 +1001,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                                     <!-- Gantilah angka '3' di bawah ini dengan variabel total item Anda jika ada -->
                                     <span class="rpg-emblem-text">3</span>
                                 </div>
-                                <div class="rpg-emblem-label">TARGET ITEMS</div>
+                                <div class="rpg-emblem-label">ITEMS TERCAPAI</div>
                             </div>
                         </div>
                         <div class="avatar-holder-bottom">👤</div>
