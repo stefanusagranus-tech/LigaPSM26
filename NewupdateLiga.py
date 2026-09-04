@@ -1476,97 +1476,86 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.rerun()
         st.stop()
 
-    # =========================================================================
-    # 🎯 JALUR D: MENU INTERAKTIF QUIZ CAMPAIGN (EDISI RESEPSIONIS GUILD UTAM)
-    # =========================================================================
-    elif st.session_state.get("current_camp_menu") == "quiz_campaign":
-        
-        # Pastikan session state halaman internal buku sudah terdaftar
-        if st.session_state.get("campaign_sub_page") not in ["resepsionis_utama", "view_buku_pencapaian", "view_buku_tugas"]:
-           st.session_state["campaign_sub_page"] = "resepsionis_utama"
-
         # =========================================================================
-        # 🎨 1. SUNTIKKAN SISI CSS FULLSCREEN & LAYOUT 2 BUKU (RESPONSIF MOBILE)
+        # 🚪 KONDISI A: HALAMAN LOBBY UTAMA - MEJA RESEPSIONIS (DIRECT CLICK ENGINE)
         # =========================================================================
-        st.markdown(
-            """
-            <style>
-                /* 📱 KUNCI LAYOUT RAMPING UNTUK WEB, ANDROID, & IOS */
-                [data-testid="stSidebar"], 
-                [data-testid="stSidebarCollapsedControl"],
-                .stSidebar,
-                button[title="Expand sidebar"] { 
-                    display: none !important; 
-                    width: 0px !important;
-                }
-                
-                [data-testid="stHeader"], header, .stAppHeader,
-                div[data-testid="stElementContainer"]:has(h1),
-                div.stBlock:first-child,
-                div[data-testid="stVerticalBlock"] > div:first-child {
-                    display: none !important;
-                    height: 0px !important;
-                    margin: 0 !important;
-                }
+        if st.session_state.get("campaign_sub_page", "resepsionis_utama") == "resepsionis_utama":
+            st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
+            st.markdown("<p class='guild-lobby-sub'>Klik/Sentuh langsung pada cover Buku Jurnal di bawah ini untuk membukanya.</p>", unsafe_allow_html=True)
+            
+            # Membagi ruang menjadi 2 kolom responsif untuk Android, iOS, dan PC
+            col_direct1, col_direct2 = st.columns(2)
+            
+            with col_direct1:
+                # 📘 BUKU 1: Diubah menjadi tombol klik bawaan Streamlit berbentuk full block
+                if st.button("📘\n\nJURNAL BURUAN\n\nKlik untuk Membuka Jurnal ➔", use_container_width=True, key="btn_direct_buku1"):
+                    st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
+                    st.rerun()
+                    
+            with col_direct2:
+                # 🔮 BUKU 2: Diubah menjadi tombol klik bawaan Streamlit berbentuk full block
+                if st.button("🔮\n\nKITAB MISI GUILD\n\nKlik untuk Membuka Kitab ➔", use_container_width=True, key="btn_direct_buku2"):
+                    st.session_state["campaign_sub_page"] = "view_buku_tugas"
+                    st.rerun()
 
-                .main .block-container { 
-                    background-color: #090d16 !important; 
-                    min-height: 100vh !important; 
-                    max-width: 650px !important; 
-                    margin: 0 auto !important; 
-                    padding-top: 5% !important; 
-                    box-sizing: border-box !important;
-                }
-                
-                div[data-testid="stVerticalBlock"] { gap: 0rem !important; }
+            # SUNTIKKAN STYLING KHUSUS UNTUK MENGUBAH TOMBOL BALOK MENJADI BENTUK KARTU BUKU 3D
+            st.markdown(
+                """
+                <style>
+                    /* Memaksa tombol Streamlit di dalam lobby berbentuk kotak buku vertikal */
+                    div[data-testid="stColumn"] div.stButton > button {
+                        min-height: 220px !important;
+                        border-radius: 8px 16px 16px 8px !important;
+                        font-family: monospace !important;
+                        font-size: 14px !important;
+                        font-weight: 800 !important;
+                        white-space: pre-line !important; /* Supaya teks enter (\n) berfungsi */
+                        line-height: 1.4 !important;
+                        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+                        border-left: 8px solid rgba(0,0,0,0.4) !important;
+                    }
+                    
+                    /* Gaya khusus Buku Kiri (Jurnal Buruan) */
+                    div[data-testid="stColumn"]:nth-child(1) div.stButton > button {
+                        background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%) !important;
+                        color: #38bdf8 !important;
+                        border: 2px solid #38bdf8 !important;
+                        box-shadow: 5px 10px 20px rgba(0,0,0,0.5) !important;
+                    }
+                    div[data-testid="stColumn"]:nth-child(1) div.stButton > button:hover {
+                        transform: translateY(-8px) rotateY(-5deg) !important;
+                        border-color: #00f0ff !important;
+                        box-shadow: 0 0 25px rgba(0, 240, 255, 0.5) !important;
+                        color: #ffffff !important;
+                    }
+                    
+                    /* Gaya khusus Buku Kanan (Kitab Misi) */
+                    div[data-testid="stColumn"]:nth-child(2) div.stButton > button {
+                        background: linear-gradient(135deg, #1e1b4b 0%, #581c87 100%) !important;
+                        color: #c084fc !important;
+                        border: 2px solid #c084fc !important;
+                        box-shadow: 5px 10px 20px rgba(0,0,0,0.5) !important;
+                    }
+                    div[data-testid="stColumn"]:nth-child(2) div.stButton > button:hover {
+                        transform: translateY(-8px) rotateY(-5deg) !important;
+                        border-color: #d8b4fe !important;
+                        box-shadow: 0 0 25px rgba(168, 85, 247, 0.5) !important;
+                        color: #ffffff !important;
+                    }
+                </style>
+                """, 
+                unsafe_allow_html=True
+            )
 
-                /* 📚 DESAIN ANTARMUKA MEJA RESEPSIONIS GUILD */
-                .guild-lobby-title { text-align: center; color: #fbbf24 !important; font-family: monospace; font-size: 24px !important; font-weight: 900 !important; text-shadow: 0 0 12px rgba(251,191,36,0.4) !important; margin: 0 0 5px 0 !important; }
-                .guild-lobby-sub { text-align: center; color: #475569 !important; font-size: 11px !important; margin: 0 0 25px 0 !important; font-family: monospace; }
-                
-                /* 🗂️ GRID 2 BUKU SEJAJAR */
-                .books-desk-grid { display: flex !important; justify-content: space-around !important; align-items: center !important; width: 100% !important; margin: 20px auto !important; box-sizing: border-box !important; }
-                
-                /* 📖 CARD TOMBOL BUKU */
-                .book-interactive-card { display: flex !important; flex-direction: column !important; align-items: center !important; width: 46% !important; cursor: pointer !important; }
-                
-                /* 📘 COVER BUKU 3D DENGAN EFEK AMBANG BATAS GLOW */
-                .book-cover-3d { width: 120px; height: 165px; border-radius: 4px 12px 12px 4px; position: relative; display: flex; justify-content: center; align-items: center; font-size: 40px; box-shadow: 5px 10px 25px rgba(0,0,0,0.5); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); border-left: 6px solid rgba(0,0,0,0.3); }
-                
-                /* Warna Spesifik Cover Buku */
-                .cover-pencapaian { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); border: 2px solid #38bdf8; }
-                .cover-tugas { background: linear-gradient(135deg, #1e1b4b 0%, #581c87 100%); border: 2px solid #c084fc; }
-                
-                /* Efek Hover Mengangkat Buku Saat Disentuh Kursor / Jari */
-                .book-interactive-card:hover .book-cover-3d { transform: translateY(-10px) rotateY(-10deg); box-shadow: 10px 20px 30px rgba(0,0,0,0.7); }
-                .book-interactive-card:hover .cover-pencapaian { border-color: #00f0ff; box-shadow: 0 0 20px rgba(0, 240, 255, 0.4); }
-                .book-interactive-card:hover .cover-tugas { border-color: #d8b4fe; box-shadow: 0 0 20px rgba(168, 85, 247, 0.4); }
-                
-                .book-title-label { color: #f8fafc !important; font-family: monospace !important; font-size: 13px !important; font-weight: 800 !important; text-align: center !important; margin-top: 12px !important; letter-spacing: 0.5px !important; }
-                .book-desc-label { color: #475569 !important; font-family: monospace !important; font-size: 9px !important; text-align: center !important; margin-top: 4px !important; line-height: 1.3 !important; }
-
-                /* 📖 GAYA ANIMASI BUKU TERBUKA (PERKAMEN KUNO KEMBAR) */
-                .rpg-open-book-container { background: #f4eae1 !important; border: 4px solid #5c4033 !important; border-radius: 12px !important; box-shadow: 0 15px 35px rgba(0,0,0,0.6) !important; display: flex !important; min-height: 380px !important; position: relative !important; overflow: hidden !important; width: 100% !important; max-width: 580px !important; margin: 0 auto !important; }
-                .rpg-open-book-container::before { content: "" !important; position: absolute !important; top: 0 !important; left: 50% !important; width: 2px !important; height: 100% !important; background: linear-gradient(90deg, rgba(0,0,0,0.15), rgba(0,0,0,0.3), rgba(0,0,0,0.15)) !important; box-shadow: 0 0 10px rgba(0,0,0,0.4) !important; z-index: 5 !important; }
-                .rpg-book-page { width: 50% !important; padding: 24px 18px !important; box-sizing: border-box !important; display: flex !important; flex-direction: column !important; justify-content: flex-start !important; color: #2b1d0c !important; font-family: 'Courier New', monospace !important; }
-                .open-page-title { text-align: center !important; font-size: 15px !important; font-weight: 900 !important; margin: 0 0 2px 0 !important; color: #854d0e !important; }
-                .open-page-sub { text-align: center !important; font-size: 10px !important; color: #a1a1aa !important; margin: 0 0 10px 0 !important; font-style: italic !important; }
-                .open-book-divider { border-bottom: 2px double #854d0e !important; margin-bottom: 15px !important; width: 100% !important; }
-                .open-stat-row { display: flex !important; justify-content: space-between !important; font-size: 11px !important; font-weight: bold !important; margin-bottom: 12px !important; border-bottom: 1px dashed rgba(133,77,14,0.15) !important; padding-bottom: 4px !important; }
-                .open-page-footer { margin-top: auto !important; font-size: 9px !important; color: #78716c !important; text-align: center !important; font-weight: bold !important; }
-            </style>
-            """, 
-            unsafe_allow_html=True
-        )
     
         # =========================================================================
-        # 🚪 KONDISI A: HALAMAN LOBBY UTAMA - MEJA RESEPSIONIS (ALUR BARU ANTI-STUCK)
+        # 🚪 KONDISI A: HALAMAN LOBBY UTAMA - MEJA RESEPSIONIS (FIXED REDIRECT ENGINE)
         # =========================================================================
         if st.session_state["campaign_sub_page"] == "resepsionis_utama":
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub'>Sentuh salah satu buku jurnal di bawah ini untuk memeriksa log petualangan Anda.</p>", unsafe_allow_html=True)
             
-            # 📚 GRID BUKU MURNI HTML
+            # 📚 GRID BUKU INTEGRASI TUNGGAL (Menggabungkan Visual Card & Sensor Tombol)
             st.markdown(
                 """
                 <div class="books-desk-grid">
@@ -1589,23 +1578,24 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # 🎯 TOMBOL PEMICU ALUR AMAN (ANTI-BENTROK DENGAN RERUN)
-            col_trigger1, col_trigger2 = st.columns(2)
-            with col_trigger1:
-                if st.button("Buka Jurnal Buruan ➔", use_container_width=True, key="action_trigger_buku_1"):
-                    # Kunci status halaman di memori terlebih dahulu agar aman
-                    st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
-                    # Tampilkan animasi kilat tanpa menahan server dengan time.sleep
-                    st.markdown("<div style='background-color:#0c1020; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:999999; display:flex; flex-direction:column; justify-content:center; align-items:center;'><div style='font-size:60px; animation:open-anim 0.5s forwards;'>📖</div><h2 style='color:#38bdf8; font-family:monospace; font-size:18px; margin-top:25px;'>OPENING HUNTING JOURNAL...</h2><style>@keyframes open-anim { from { transform:scale(1) rotate(0); } to { transform:scale(1.2) rotateY(90deg); filter:opacity(0); } }</style></div>", unsafe_allow_html=True)
-                    st.rerun()
-                    
-            with col_trigger2:
-                if st.button("Buka Kitab Misi ➔", use_container_width=True, key="action_trigger_buku_2"):
-                    # Kunci status halaman di memori terlebih dahulu agar aman
-                    st.session_state["campaign_sub_page"] = "view_buku_tugas"
-                    # Tampilkan animasi kilat tanpa menahan server dengan time.sleep
-                    st.markdown("<div style='background-color:#0c1020; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:999999; display:flex; flex-direction:column; justify-content:center; align-items:center;'><div style='font-size:60px; animation:open-anim 0.5s forwards;'>📖</div><h2 style='color:#c084fc; font-family:monospace; font-size:18px; margin-top:25px;'>UNFOLDING QUEST SCROLL...</h2><style>@keyframes open-anim { from { transform:scale(1) rotate(0); } to { transform:scale(1.2) rotateY(90deg); filter:opacity(0); } }</style></div>", unsafe_allow_html=True)
-                    st.rerun()
+            # 🎯 RE-DESIGN TOMBOL SENSOR KLIK: Diletakkan di dalam form mandiri agar state terlempar ke server
+            with st.container():
+                col_btn_click1, col_btn_click2 = st.columns(2)
+                with col_btn_click1:
+                    if st.button("Buka Jurnal Buruan ➔", use_container_width=True, key="action_trigger_buku_1"):
+                        # Kunci memori halaman tujuan
+                        st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
+                        # Picu flash transisi pembukaan lembar kertas
+                        st.markdown("<div style='background-color:#0c1020; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:999999; display:flex; flex-direction:column; justify-content:center; align-items:center;'><div style='font-size:60px; animation:open-anim 0.4s forwards;'>📖</div><h2 style='color:#38bdf8; font-family:monospace; font-size:18px; margin-top:25px;'>OPENING HUNTING JOURNAL...</h2><style>@keyframes open-anim { from { transform:scale(1) rotate(0); } to { transform:scale(1.2) rotateY(90deg); filter:opacity(0); } }</style></div>", unsafe_allow_html=True)
+                        st.rerun()
+                with col_btn_click2:
+                    if st.button("Buka Kitab Misi ➔", use_container_width=True, key="action_trigger_buku_2"):
+                        # Kunci memori halaman tujuan
+                        st.session_state["campaign_sub_page"] = "view_buku_tugas"
+                        # Picu flash transisi pembukaan lembar kertas
+                        st.markdown("<div style='background-color:#0c1020; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:999999; display:flex; flex-direction:column; justify-content:center; align-items:center;'><div style='font-size:60px; animation:open-anim 0.4s forwards;'>📖</div><h2 style='color:#c084fc; font-family:monospace; font-size:18px; margin-top:25px;'>UNFOLDING QUEST SCROLL...</h2><style>@keyframes open-anim { from { transform:scale(1) rotate(0); } to { transform:scale(1.2) rotateY(90deg); filter:opacity(0); } }</style></div>", unsafe_allow_html=True)
+                        st.rerun()
+
         
         # =========================================================================
         # 🚪 KONDISI B: ANIMASI BUKU TERBUKA 1 - JURNAL PENCAPAIAN SENDIRI
