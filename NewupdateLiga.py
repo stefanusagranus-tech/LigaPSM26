@@ -948,7 +948,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         test_qty_sueger = 28
         test_percent_sueger = "45%"
     
-        # 👑 2. STRUKTUR UTAMA HTML KARTU (FIXED: WARNA BAR MUNCUL & TINGGI DINAMIS ANTI-BENTROK)
+        # 👑 2. STRUKTUR UTAMA HTML KARTU (F-STRING STERIL TANPA PERSEN CSS)
         html_master_packet = f"""
         <div class="rpg-card-fullscreen-container">
             <h2 class="rpg-header-title">📜 GUILD MEMBER LICENSE 📜</h2>
@@ -967,29 +967,20 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         <div class="char-avatar-box">🛡️</div>
                         <div class="char-hero-name">RAFI</div>
                         <div class="char-hero-level-badge">RANK: MASTER • LEVEL {test_level}</div>
-                        
-                        <!-- BAR psm (FIXED: Ditambahkan div pengisi warna bar) -->
+                        <!-- BAR psm -->
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🔥 ATTACK (PENCAPAIAN PSM)</span><span>{test_qty_psm} Qty</span></div>
-                            <div class="rpg-bar-bg">
-                                <div class="rpg-bar-fill-psm" style="width: {test_percent_psm};"></div>
-                            </div>
+                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-psm" style="width: {test_percent_psm};"></div></div>
                         </div>
-                        
-                        <!-- BAR pps (FIXED: Ditambahkan div pengisi warna bar) -->
+                        <!-- BAR pps -->
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🛡️ DEFENSE (PENJUALAN PPS)</span><span>{test_qty_pps} Poin</span></div>
-                            <div class="rpg-bar-bg">
-                                <div class="rpg-bar-fill-pps" style="width: {test_percent_pps};"></div>
-                            </div>
+                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-pps" style="width: {test_percent_pps};"></div></div>
                         </div>
-                        
-                        <!-- BAR sueger (FIXED: Ditambahkan div pengisi warna bar) -->
+                        <!-- BAR sueger -->
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🍃 AGILITY (PENJUALAN SUEGER)</span><span>{test_qty_sueger} Qty</span></div>
-                            <div class="rpg-bar-bg">
-                                <div class="rpg-bar-fill-sueger" style="width: {test_percent_sueger};"></div>
-                            </div>
+                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-sueger" style="width: {test_percent_sueger};"></div></div>
                         </div>
                         <div class="avatar-holder-bottom">👤</div>
                     </div>
@@ -997,7 +988,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             </label>
         </div>
         """
-
         st.markdown(html_master_packet, unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
         
