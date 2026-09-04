@@ -991,7 +991,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         st.markdown(html_master_packet, unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
         
-         # 🎨 3. SUNTIKKAN GAYA CSS GLOBAL (FIXED MULTI-SELECTOR FULLSCREEN & ANTI-SIDEBAR BOCOR)
+        # 🎨 3. SUNTIKKAN GAYA CSS GLOBAL (FIXED MULTI-SELECTOR FULLSCREEN & ANTI-SIDEBAR BOCOR)
         st.markdown(
             """
             <style>
@@ -1043,7 +1043,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 # =========================================================================
                 # 🔒 PAKSA TUTUP KEBOCORAN KUTIP DARI BARIS ATAS (JANGAN DIHAPUS BARIS INI)
                 # =========================================================================
-                """
+                """)
                 
                 # =========================================================================
                 # 🎴 3. SUNTIKKAN GAYA CSS KARTU 3D MEDIEVAL (STRUKTUR TERISOLASI)
