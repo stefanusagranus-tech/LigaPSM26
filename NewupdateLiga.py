@@ -939,14 +939,186 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
     # =========================================================================
     if st.session_state.get("current_camp_menu") == "status":
     
-        # 🧪 1. VARIABEL DATA TESTING (DIBERI SIMBOL % LANGSUNG DI PYTHON AGAR AMAN)
-        test_level = 14
-        test_qty_psm = 42
-        test_percent_psm = "70%"      # Mengunci teks persen langsung agar HTML tidak pecah
-        test_qty_pps = 115
-        test_percent_pps = "85%"
-        test_qty_sueger = 28
-        test_percent_sueger = "45%"
+        # =========================================================================
+        # 🧪 1. DETEKSI AKUN HERO & SEASON BULANAN RIIL (ANTI-CRASH)
+        # =========================================================================
+        # Mengambil username login aktif (Nama Asli Kasir)
+        current_hero_name = st.session_state.get("username", "VISITOR").strip().upper()
+        
+        # Deteksi Waktu Sekarang & Kunci Nama Season Bulanan (Contoh: "SEPTEMBER 2026")
+        current_month_num = waktu_wib.month
+        current_year_num = waktu_wib.year
+        season_name_string = waktu_wib.strftime("%B %Y").upper()
+
+        # Ambil salinan database ter-update dari session_state
+        db_sales_person = st.session_state.get("sales_person_df", pd.DataFrame()).copy()
+        db_sales_pps = st.session_state.get("sales_pps_df", pd.DataFrame()).copy()
+        db_periods_pps = st.session_state.get("periods_pps_df", pd.DataFrame()).copy()
+        db_sales_item = st.session_state.get("sales_item_df", pd.DataFrame()).copy()
+
+        # -------------------------------------------------------------------------
+        # 👑 A. HITUNG PANGKAT (RANK) & LEVEL BERDASARKAN TOTAL DATA SEPANJANG MASA
+        # -------------------------------------------------------------------------
+        total_qty_psm_all_time = 0
+        if not db_sales_person.empty and "person_name" in db_sales_person.columns and "actual_qty" in db_sales_person.columns:
+            # Saring data khusus pahlawan yang sedang login
+            hero_all_time_df = db_sales_person[db_sales_person["person_name"].astype(str).str.strip().str.upper() == current_hero_name]
+            if not hero_all_time_df.empty:
+                total_qty_psm_all_time = pd.to_numeric(hero_all_time_df["actual_qty"], errors="coerce").fillna(0).sum()
+
+        # Formula Penentuan Pangkat / Title Berdasarkan Total Pencapaian PSM Semua Bulan
+        if total_qty_psm_all_time < 100:
+            hero_rank_title = "NOVICE"
+        elif total_qty_psm_all_time < 300:
+            hero_rank_title = "ELITE"
+        elif total_qty_psm_all_time < 600:
+            hero_rank_title = "MASTER"
+        else:
+            hero_rank_title = "LEGEND"
+
+        # Formula Level Dinamis: Setiap kelipatan 15 pcs menaikkan level
+        hero_calculated_level = int(math.floor(total_qty_psm_all_time / 15)) + 1
+        if hero_calculated_level < 1:
+            hero_calculated_level = 1
+
+        # -------------------------------------------------------------------------
+        # 📦 B. HITUNG BAR EXP (PENJUALAN PSM KHUSUS BULAN SEKARANG / SEASON AKTIF)
+        # -------------------------------------------------------------------------
+        qty_psm_current_season = 0
+        if not db_sales_person.empty and "updated_at" in db_sales_person.columns:
+            db_sales_person["datetime_parsed"] = pd.to_datetime(db_sales_person["updated_at"], errors="coerce")
+            season_hero_df = db_sales_person[
+                (db_sales_person["person_name"].astype(str).str.strip().str.upper() == current_hero_name) &
+                (db_sales_person["datetime_parsed"].dt.month == current_month_num) &
+                (db_sales_person["datetime_parsed"].dt.year == current_year_num)
+            ]
+            if not season_hero_df.empty:
+                qty_psm_current_season = int(pd.to_numeric(season_hero_df["actual_qty"], errors="coerce").fillna(0).sum())
+
+        # Hitung Persentase Isi Bar EXP (Target Bulanan Naik Level = 150 Pcs)
+        target_exp_limit = 150
+        percent_exp_calc = min(int((qty_psm_current_season / target_exp_limit) * 100), 100)
+        test_percent_exp = f"{percent_exp_calc}%"
+
+        # -------------------------------------------------------------------------
+        # ⚡ C. HITUNG TARGET MAKSIMAL PPS PER KASIR (PENGUNCI BATAS 100% ATK & DEF)
+        # -------------------------------------------------------------------------
+        target_pps_per_kasir = 20  # Angka cadangan default jika database kosong
+        if not db_periods_pps.empty and "target_total" in db_periods_pps.columns and "start_date" in db_periods_pps.columns:
+            db_periods_pps["start_dt"] = pd.to_datetime(db_periods_pps["start_date"], errors="coerce")
+            active_pps_period = db_periods_pps[db_periods_pps["start_dt"].dt.month == current_month_num]
+            if not active_pps_period.empty:
+                try:
+                    global_target_toko = pd.to_numeric(active_pps_period.iloc[0]["target_total"], errors="coerce")
+                    if pd.isna(global_target_toko) or global_target_toko <= 0:
+                        global_target_toko = 180
+                    target_pps_per_kasir = int(math.ceil(global_target_toko / 9))
+                except Exception:
+                    target_pps_per_kasir = 20
+
+        if target_pps_per_kasir <= 0:
+            target_pps_per_kasir = 20
+
+        # -------------------------------------------------------------------------
+        # 🔥 D. HITUNG BAR ATK (SERBA GRATIS) & 🛡️ BAR DEF (PWP) KHUSUS BULAN SEKARANG
+        # -------------------------------------------------------------------------
+        qty_sg_season = 0
+        qty_pwp_season = 0
+        qty_sueger_season = 0
+        qty_ceban_season = 0
+        total_syarat_sueger_season = 0
+        total_redeem_sueger_season = 0
+
+        if not db_sales_pps.empty and "kasir_name" in db_sales_pps.columns and "updated_at" in db_sales_pps.columns:
+            db_sales_pps["datetime_parsed"] = pd.to_datetime(db_sales_pps["updated_at"], errors="coerce")
+            # ATURAN 1: Filter murni menggunakan KASIR_NAME
+            pps_hero_season_df = db_sales_pps[
+                (db_sales_pps["kasir_name"].astype(str).str.strip().str.upper() == current_hero_name) &
+                (db_sales_pps["datetime_parsed"].dt.month == current_month_num) &
+                (db_sales_pps["datetime_parsed"].dt.year == current_year_num)
+            ]
+            
+            if not pps_hero_season_df.empty:
+                qty_sg_season = int(pd.to_numeric(pps_hero_season_df["qty_sg"], errors="coerce").fillna(0).sum())
+                qty_pwp_season = int(pd.to_numeric(pps_hero_season_df["qty_pwp"], errors="coerce").fillna(0).sum())
+                qty_sueger_season = int(pd.to_numeric(pps_hero_season_df.get("qty_sueger", pps_hero_season_df["redeem_sueger"]), errors="coerce").fillna(0).sum())
+                qty_ceban_season = int(pd.to_numeric(pps_hero_season_df["cemilan_ceban"], errors="coerce").fillna(0).sum())
+                
+                total_syarat_sueger_season = pd.to_numeric(pps_hero_season_df["syarat_sueger"], errors="coerce").fillna(0).sum()
+                total_redeem_sueger_season = pd.to_numeric(pps_hero_season_df["redeem_sueger"], errors="coerce").fillna(0).sum()
+
+        # Hitung Persentase Isian Warna Bar ATK & DEF (Dibagi Target PPS Per Kasir)
+        percent_atk_calc = min(int((qty_sg_season / target_pps_per_kasir) * 100), 100)
+        percent_def_calc = min(int((qty_pwp_season / target_pps_per_kasir) * 100), 100)
+        
+        test_percent_psm = f"{percent_atk_calc}%"   # Mengisi Bar ATK (Serba Gratis)
+        test_percent_pps = f"{percent_def_calc}%"   # Mengisi Bar DEF (PWP)
+
+        # -------------------------------------------------------------------------
+        # 🍃 E. HITUNG BAR AGI (SUEGER + CEBAN) BERDASARKAN SKALA TERTINGGI TOKO
+        # -------------------------------------------------------------------------
+        total_agi_hero = qty_sueger_season + qty_ceban_season
+        max_agi_leaderboard = 50  # Standar aman jika staf lain masih 0
+        
+        if not db_sales_pps.empty and "updated_at" in db_sales_pps.columns:
+            # Cari tahu siapa kasir dengan kombinasi sueger+ceban tertinggi bulan ini di Toko C383
+            db_sales_pps["total_agi_calc"] = pd.to_numeric(db_sales_pps.get("qty_sueger", db_sales_pps["redeem_sueger"]), errors="coerce").fillna(0) + \
+                                             pd.to_numeric(db_sales_pps["cemilan_ceban"], errors="coerce").fillna(0)
+            
+            # Kelompokkan data khusus bulan berjalan saat ini
+            db_sales_pps["datetime_parsed"] = pd.to_datetime(db_sales_pps["updated_at"], errors="coerce")
+            filtered_monthly_pps = db_sales_pps[
+                (db_sales_pps["datetime_parsed"].dt.month == current_month_num) & 
+                (db_sales_pps["datetime_parsed"].dt.year == current_year_num)
+            ]
+            
+            if not filtered_monthly_pps.empty and "kasir_name" in filtered_monthly_pps.columns:
+                grouped_staf_agi = filtered_monthly_pps.groupby("kasir_name")["total_agi_calc"].sum()
+                if not grouped_staf_agi.empty:
+                    max_agi_leaderboard = int(grouped_staf_agi.max())
+
+        if max_agi_leaderboard <= 0:
+            max_agi_leaderboard = 50
+
+        percent_agi_calc = min(int((total_agi_hero / max_agi_leaderboard) * 100), 100)
+        test_percent_sueger = f"{percent_agi_calc}%"  # Mengisi Bar AGI
+
+        # -------------------------------------------------------------------------
+        # 🔮 F. HITUNG STRUKTUR DATA UTAMA UNTUK 2 LENCANA KRISTAL BAWAH KARTU
+        # -------------------------------------------------------------------------
+        # LENCANA KIRI: Rata-rata Achievement Persentase Penjualan Sueger
+        sueger_achievement_percentage = 0.0
+        if total_syarat_sueger_season > 0:
+            sueger_achievement_percentage = round((total_redeem_sueger_season / total_syarat_sueger_season) * 100, 1)
+        
+        # Tentukan Warna Cahaya Lampu Neon Kristal Kiri secara Otomatis (Std 50% target)
+        neon_color_left_badge = "#00ffff" if sueger_achievement_percentage >= 50.0 else "#ff0055"
+        text_badge_sueger_display = f"{sueger_achievement_percentage}%"
+
+        # LENCANA KANAN: Jumlah Jenis Item PSM yang Penjualannya Mencapai Target Toko Bulan Ini
+        count_item_success_season = 0
+        if not db_sales_person.empty and not db_sales_item.empty and "season_hero_df" in locals():
+            if not season_hero_df.empty and "item_id" in season_hero_df.columns and "actual_qty" in season_hero_df.columns:
+                # Saring Qty jualan item per produk milik kasir aktif bulan ini
+                hero_items_grouped = season_hero_df.groupby("item_id")["actual_qty"].sum().reset_index()
+                
+                for _, i_row in hero_items_grouped.iterrows():
+                    i_id = str(i_row["item_id"]).strip()
+                    i_qty = pd.to_numeric(i_row["actual_qty"], errors="coerce")
+                    
+                    # Cocokkan dengan target kelompok kasir di sales_item_df
+                    match_item_target = db_sales_item[db_sales_item["item_id"].astype(str).str.strip() == i_id]
+                    if not match_item_target.empty:
+                        target_k_minimum = pd.to_numeric(match_item_target.iloc[0].get("target_kasir", 0), errors="coerce")
+                        if i_qty >= target_k_minimum and target_k_minimum > 0:
+                            count_item_success_season += 1
+
+        # Alihkan variabel nama lama agar otomatis terhubung ke komponen HTML utama Anda
+        test_level = hero_calculated_level
+        test_qty_psm = qty_sg_season             # Mengisi angka teks 🔥 ATTACK (Serba Gratis)
+        test_qty_pps = qty_pwp_season            # Mengisi angka teks 🛡️ DEFENSE (PWP)
+        test_qty_sueger = total_agi_hero          # Mengisi angka teks 🍃 AGILITY (Sueger + Ceban)
+
     
         # 👑 2. STRUKTUR UTAMA HTML KARTU (FIXED: HTML KEMBALI NORMAL & WARNA BAR MUNCUL)
         html_master_packet = """
@@ -966,7 +1138,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     <div class="card-face card-front-design">
                         <div class="char-avatar-box">🛡️</div>
                         <div class="char-hero-name">RAFI</div>
-                        <div class="char-hero-level-badge">RANK: MASTER • LEVEL """ + str(test_level) + """</div>
+                        <div class="char-hero-level-badge">"RANK: " + str(hero_rank_title) + " • LEVEL " + str(test_level)</div>
                         <!-- BAR psm -->
                         <div class="rpg-stat-container">
                             <div class="rpg-stat-header"><span>🔥 ATTACK (PENCAPAIAN PSM)</span><span>""" + str(test_qty_psm) + """ Qty</span></div>
@@ -999,7 +1171,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                             <div class="rpg-badge-item">
                                 <div class="rpg-emblem-wrapper emblem-right">
                                     <!-- Gantilah angka '3' di bawah ini dengan variabel total item Anda jika ada -->
-                                    <span class="rpg-emblem-text">3</span>
+                                    <span class="rpg-emblem-text">""" + str(count_item_success_season) + """</span>
                                 </div>
                                 <div class="rpg-emblem-label">ITEMS TERCAPAI</div>
                             </div>
