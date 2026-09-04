@@ -1560,50 +1560,49 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         )
     
         # =========================================================================
-        # 🚪 KONDISI A: HALAMAN LOBBY UTAMA - MEJA RESEPSIONIS (TAMPILAN DI AWAL)
+        # 🚪 KONDISI A: HALAMAN LOBBY UTAMA - MEJA RESEPSIONIS (FIXED: CARD BUKU 3D)
         # =========================================================================
         if st.session_state["campaign_sub_page"] == "resepsionis_utama":
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub'>Pilih salah satu buku di bawah ini untuk menginspeksi log jurnal perjalanan Anda.</p>", unsafe_allow_html=True)
             
-            # Buat susunan 2 Buku Menggunakan Kolom Native Streamlit agar Responsif di HP
-            col_bk1, col_nav_gap, col_bk2 = st.columns([1, 0.1, 1])
+            # Membagi ruang menjadi 2 kolom simetris untuk Android, iOS, dan PC web
+            col_bk1, col_bk2 = st.columns(2)
             
             with col_bk1:
-                # 📘 BUKU 1: LIHAT PENCAPAIAN SENDIRI
+                # 📘 BUKU 1: VISUAL CARD + TOMBOL JURNAL BURUAN
                 st.markdown(
                     """
-                    <div class="book-interactive-card">
+                    <div class="book-interactive-card" style="width: 100% !important; margin-bottom: 10px;">
                         <div class="book-cover-3d cover-pencapaian">📘</div>
                         <div class="book-title-label">JURNAL BURUAN</div>
-                        <div class="book-desc-label">Berisi catatan total poin akumulasi hasil buruan individu Anda sepanjang season.</div>
+                        <div class="book-desc-label" style="min-height: 36px;">Berisi catatan total poin akumulasi hasil buruan individu Anda sepanjang season.</div>
                     </div>
                     """, unsafe_allow_html=True
                 )
                 if st.button("Buka Jurnal Buruan ➔", use_container_width=True, key="action_trigger_buku_1"):
-                    # 🧙‍♂️ ANGINA SIHIR ANIMASI BUKU TERBUKA
                     st.markdown("<div style='background-color:#0c1020; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:999999; display:flex; flex-direction:column; justify-content:center; align-items:center;'><div style='font-size:60px; animation:open-anim 0.8s forwards;'>📖</div><h2 style='color:#38bdf8; font-family:monospace; font-size:18px; margin-top:25px;'>OPENING HUNTING JOURNAL...</h2><style>@keyframes open-anim { from { transform:scale(1) rotate(0); } to { transform:scale(1.3) rotateY(90deg); filter:opacity(0); } }</style></div>", unsafe_allow_html=True)
                     time.sleep(0.8)
                     st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
                     st.rerun()
                     
             with col_bk2:
-                # 🔮 BUKU 2: LIHAT TUGAS / MISI GUILD
+                # 🔮 BUKU 2: VISUAL CARD + TOMBOL KITAB MISI GUILD
                 st.markdown(
                     """
-                    <div class="book-interactive-card">
+                    <div class="book-interactive-card" style="width: 100% !important; margin-bottom: 10px;">
                         <div class="book-cover-3d cover-tugas">🔮</div>
                         <div class="book-title-label">KITAB MISI GUILD</div>
-                        <div class="book-desc-label">Berisi lembar maklumat perintah harian, mingguan, serta status keberhasilan misi toko.</div>
+                        <div class="book-desc-label" style="min-height: 36px;">Berisi lembar maklumat perintah harian, mingguan, serta status keberhasilan misi toko.</div>
                     </div>
                     """, unsafe_allow_html=True
                 )
                 if st.button("Buka Kitab Misi ➔", use_container_width=True, key="action_trigger_buku_2"):
-                    # 🧙‍♂️ ANGINA SIHIR ANIMASI BUKU TERBUKA
                     st.markdown("<div style='background-color:#0c1020; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:999999; display:flex; flex-direction:column; justify-content:center; align-items:center;'><div style='font-size:60px; animation:open-anim 0.8s forwards;'>📖</div><h2 style='color:#c084fc; font-family:monospace; font-size:18px; margin-top:25px;'>UNFOLDING QUEST SCROLL...</h2><style>@keyframes open-anim { from { transform:scale(1) rotate(0); } to { transform:scale(1.3) rotateY(90deg); filter:opacity(0); } }</style></div>", unsafe_allow_html=True)
                     time.sleep(0.8)
                     st.session_state["campaign_sub_page"] = "view_buku_tugas"
                     st.rerun()
+
         
         # =========================================================================
         # 🚪 KONDISI B: ANIMASI BUKU TERBUKA 1 - JURNAL PENCAPAIAN SENDIRI
