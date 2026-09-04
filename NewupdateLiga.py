@@ -1065,7 +1065,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         .rpg-header-title { color: #fbbf24 !important; font-size: 23px !important; text-shadow: 0 0 10px rgba(251,191,36,0.3) !important; margin: 0 0 5px 0 !important; font-weight: 900 !important; }
                         .rpg-header-sub { color: #475569 !important; font-size: 11px !important; margin: 0 0 15px 0 !important; }
                         
-                        /* ENGINE UTAMA STRUKTUR KARTU 3D FLIP */
+                        /* ENGINE UTAMA STRUKTUR KARTU FLIP */
                         .flip-card-wrapper { background-color: transparent !important; width: 330px; height: 520px; perspective: 1000px; margin: 15px auto; cursor: pointer; display: block; }
                         .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }
                         
