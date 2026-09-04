@@ -1138,20 +1138,37 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 }
                 
                 .rpg-emblem-text {
-				    color: #00ffff !important; /* Warna dasar Cyan Neon */
+				    color: #00ffff !important; 
 				    font-size: 14px !important;
 				    font-weight: 900 !important;
 				    font-family: 'Courier New', monospace !important;
-				    
-				    /* 🎯 FIX SEJAJAR: Mengubah dari -12px ke 2px agar teks turun pas ke tengah bulatan emas */
-				    margin-top: 2px !important; 
 				    display: inline-block !important;
+				    
+				    /* 🎯 FIX SIMETRIS KIRI: Menurunkan angka 45% pas di tengah lingkaran */
+				    margin-top: 5px !important; 
 				    
 				    /* EFFECT NEON GLOW */
 				    text-shadow: 0 0 5px #00ffff, 
 				                 0 0 10px #00ffff, 
 				                 0 0 20px #00ffff, 
 				                 0 0 4px #000000 !important;
+				}
+				
+				/* Mengambil lencana BULAT sebelah KIRI (FIXED: Koordinat digeser ke kanan agar teks ke tengah) */
+				.emblem-left {
+				    background-size: 260px 105px !important; 
+				    background-position: -2px -12px !important; /* Diubah dari -5px ke -2px untuk menggeser teks ke tengah */
+				}
+				
+				/* Mengambil lencana SEGI ENAM sebelah KANAN */
+				.emblem-right {
+				    background-size: 260px 105px !important;
+				    background-position: -145px -12px !important; 
+				}
+				
+				/* 🎯 FIX SIMETRIS KANAN: Mengunci angka 3 tepat di tengah jangkar segi enam */
+				.emblem-right .rpg-emblem-text {
+				    margin-top: 11px !important;
 				}
                 
                 .rpg-emblem-label {
