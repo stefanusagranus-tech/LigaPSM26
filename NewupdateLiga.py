@@ -950,39 +950,77 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         st.markdown("<h2 style='color: #fbbf24; font-family: monospace; text-align: center; font-size: 24px; text-shadow: 0 0 10px rgba(251,191,36,0.3); margin-bottom: 0;'>📜 GUILD REGISTER LICENSE 📜</h2>", unsafe_allow_html=True)
         st.markdown("<p style='color: #475569; font-family: monospace; text-align: center; font-size: 12px; margin-bottom: 5px;'>Sentuh gulungan kartu di bawah ini untuk membuka segel mantra identitas.</p>", unsafe_allow_html=True)
 
+                # 🧪 AREA TESTING DATA DUMMY (SILAKAN COBA INPUT ANGKA BEBAS DI SINI)
+        test_level = 14
+        test_qty_psm = 42
+        test_percent_psm = 70      # Bar progress dalam persen (0-100)
+        
+        test_qty_pps = 115
+        test_percent_pps = 85
+        
+        test_qty_sueger = 28
+        test_percent_sueger = 45
+
+        # 🚀 FIX KARTU 3D & ATRIBUT BAR (MENGGANTI PORTAL OPENED & MENANGGULANGI MACET)
         st.markdown(
-            """
+            f"""
+            <!-- 1. Kunci Utama Anti-Macet: Checkbox dipisah berdiri sendiri di bagian terluar -->
+            <input type="checkbox" id="card-trigger" style="display: none;">
+            
             <label class="flip-card-wrapper" for="card-trigger">
-                <input type="checkbox" id="card-trigger">
                 <div class="flip-card-inner">
+                    
+                    <!-- 🎴 SISI BELAKANG KARTU (TAMPILAN AWAL) -->
                     <div class="card-face card-back-design">
                         <div class="magic-seal-back">🔮</div>
                         <h3 style="color: #b45309; font-family: monospace; font-size: 16px; font-weight: 800; margin: 0; letter-spacing: 2px;">UNVEIL STATUS</h3>
                         <p style="color: #475569; font-family: monospace; font-size: 11px; margin-top: 8px;">Tap to break the seal</p>
                     </div>
+                    
+                    <!-- 👑 SISI DEPAN BINGKAI EMAS UTUH (FULL ATRIBUT MODUL PENJUALAN PREMIUM) -->
                     <div class="card-face card-front-design">
-                        <h2 style="color: #fbbf24; font-family: monospace; font-size: 22px; font-weight: 900; letter-spacing: 2px; margin-top: 20px; text-shadow: 0 0 10px rgba(251,191,36,0.3);">PORTAL OPENED</h2>
-                        <p style="color: #64748b; font-family: monospace; font-size: 12px; line-height: 1.6; padding: 0 10px; margin-top: 10px;">Segel pelindung pahlawan berhasil dihancurkan secara instan.</p>
-                        <p style="color: #d97706; font-family: monospace; font-size: 11px; font-weight: bold; margin-top: 15px; animation: blink 1.5s infinite;">▼ KLIK TOMBOL DI BAWAH UNTUK MEMBACA STATUS ▼</p>
+                        <div class="char-avatar-box">🛡️</div>
+                        <div class="char-hero-name">RAFI</div>
+                        <div class="char-hero-level-badge">RANK: MASTER • LEVEL {test_level}</div>
+                        
+                        <!-- ⚔️ BAR 1: PENCAPAIAN PSM -->
+                        <div class="rpg-stat-container">
+                            <div class="rpg-stat-header"><span>🔥 ATTACK (PENCAPAIAN PSM)</span><span>{test_qty_psm} Qty</span></div>
+                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-psm" style="width: {test_percent_psm}%;"></div></div>
+                        </div>
+                        
+                        <!-- 🛡️ BAR 2: PENCAPAIAN PENJUALAN PPS -->
+                        <div class="rpg-stat-container">
+                            <div class="rpg-stat-header"><span>🛡️ DEFENSE (PENJUALAN PPS)</span><span>{test_qty_pps} Poin</span></div>
+                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-pps" style="width: {test_percent_pps}%;"></div></div>
+                        </div>
+                        
+                        <!-- 🍃 BAR 3: PENCAPAIAN PENJUALAN SUEGER -->
+                        <div class="rpg-stat-container">
+                            <div class="rpg-stat-header"><span>🍃 AGILITY (PENJUALAN SUEGER)</span><span>{test_qty_sueger} Qty</span></div>
+                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-sueger" style="width: {test_percent_sueger}%;"></div></div>
+                        </div>
+                        
+                        <!-- Dudukan bulat ungu bawaan layout asli gambar Anda -->
                         <div class="avatar-holder-bottom">👤</div>
                     </div>
+                    
                 </div>
             </label>
             """,
             unsafe_allow_html=True
         )
+
         st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown("<div class='action-button-box'>", unsafe_allow_html=True)
-        if st.button("👁️ BACA STATUS ATRIBUT RAFI", use_container_width=True, key="btn_read_stats_trigger"):
-            st.session_state["current_camp_menu"] = "view_stats"
-            st.rerun()
-        st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
-        if st.button("⬅️ KEMBALI KE KEMAH", use_container_width=True, key="btn_close_status"):
+
+        # 🚪 TOMBOL TUNGGAL PENUTUP HALAMAN (TOMBOL LAMA BACA ATRIBUT DIHAPUS)
+        st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
+        if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_close_status"):
             st.session_state["current_camp_menu"] = "main"
             st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
         st.stop()
-
+        
     # 🛡️ JALUR B: HALAMAN UTAMA STATISTIK UTAMA (VIEW STATS)
     elif st.session_state["current_camp_menu"] == "view_stats":
         st.markdown(
