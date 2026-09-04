@@ -1137,14 +1137,16 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 				    background-image: url("https://raw.githubusercontent.com/stefanusagranus-tech/LigaPSM26/main/kanan.png") !important; 
 				}
 				
-				/* Pengaturan teks neon otomatis seragam di tengah */
+				/* Pengaturan teks neon otomatis pas di tengah lingkaran */
 				.rpg-emblem-text {
 				    color: #00ffff !important; 
 				    font-size: 14px !important;
 				    font-weight: 900 !important;
 				    font-family: 'Courier New', monospace !important;
 				    display: inline-block !important;
-				    margin-top: 0px !important; /* Mulai dari 0px, tinggal Anda sesuaikan sedikit jika kurang turun */
+				    
+				    /* 🎯 FIX FINAL: Mengubah nilai dari 0px menjadi 4px agar teks turun pas ke tengah pusat lingkaran */
+				    margin-top: 4px !important; 
 				    
 				    text-shadow: 0 0 5px #00ffff, 
 				                 0 0 10px #00ffff, 
