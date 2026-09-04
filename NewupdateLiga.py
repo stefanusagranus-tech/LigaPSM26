@@ -1162,9 +1162,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         <div class="char-hero-level-badge">RANK: """ + str(hero_rank_title) + """ • LEVEL """ + str(test_level) + """</div>
 						<div class="rpg-exp-container">
                             <div class="rpg-exp-header">
-                            <div class="rpg-stat-header"><span>✨ SEASON EXP (PSM BULAN INI)</span><span>""" + str(qty_psm_current_season) + """ Qty</span></div>
+                            <div class="rpg-stat-header"><span>✨EXP (PSM BULAN INI)</span><span>""" + str(qty_psm_current_season) + """ Qty</span></div>
                             <div class="rpg-bar-bg">
-                            <div class="rpg-bar-exp-fill" style="width: """ + str(test_percent_exp) + """; height: 100%; display: block; background: linear-gradient(90deg, #a855f7, #d8b4fe) !important; box-shadow: 0 0 8px rgba(168, 85, 247, 0.6) !important;"></div>
+                            <div class="rpg-exp-fill" style="width: """ + str(test_percent_exp) + """; height: 100%; display: block; background: linear-gradient(90deg, #a855f7, #d8b4fe) !important; box-shadow: 0 0 8px rgba(168, 85, 247, 0.6) !important;"></div>
                             </div>
                         </div>
                         <!-- BAR SG-->
@@ -1196,12 +1196,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                                 <div class="rpg-emblem-label">SUEGER ACHV</div>
                             </div>
                             <!-- LENCANA KANAN: Total Item Mencapai Target (Segi Enam) -->
-                            <div class="rpg-badge-item">
+                            <!-- 🎯 FIX MUTLAK: Ditambahkan style transform untuk menggeser seluruh komponen (bingkai + teks) ke kanan sebanyak 12px -->
+                            <div class="rpg-badge-item" style="transform: translateX(12px) !important;">
                                 <div class="rpg-emblem-wrapper emblem-right">
-                                    <!-- Gantilah angka '3' di bawah ini dengan variabel total item Anda jika ada -->
                                     <span class="rpg-emblem-text">""" + str(count_item_success_season) + """</span>
                                 </div>
-                                <div class="rpg-emblem-label" style="margin-left: 10px !important;">ITEMS TERCAPAI</div>
+                                <div class="rpg-emblem-label">ITEMS TERCAPAI</div>
                             </div>
                         </div>
                         <div class="avatar-holder-bottom">👤</div>
@@ -1294,6 +1294,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 				.rpg_bar_fill_psm { background: linear-gradient(90deg, #ef4444, #ff8080) !important; }
                 .rpg_bar_fill_pps { background: linear-gradient(90deg, #3b82f6, #60a5fa) !important; }
                 .rpg_bar_fill_sueger { background: linear-gradient(90deg, #10b981, #34d399) !important; }
+				.rpg-exp-fill {background: linear-gradient(90deg, #a855f7, #d8b4fe) !important; }
                 .avatar-holder-bottom { width: 65px; height: 65px; border-radius: 50%; border: 3px solid #d97706; background-color: #0b0f19; position: absolute; bottom: -32px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; align-items: center; font-size: 28px; box-shadow: 0 8px 20px rgba(217, 119, 6, 0.5), inset 0 0 10px rgba(217, 119, 6, 0.2); z-index: 100; }
 
                 .rpg-exp-fill {
