@@ -1570,21 +1570,25 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # 👑 NAVIGATION STRUKTUR INTERNAL: JALUR NAVIGASI UTAMA BERURUTAN (FIXED)
         # =========================================================================
         
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (TAMPIL DI AWAL)
+        # =========================================================================
+        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (CUKUP PERBAIKI BAGIAN TOMBOL INI)
+        # =========================================================================
         if st.session_state["campaign_sub_page"] == "resepsionis_utama":
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub'>Klik langsung pada tombol kartu Buku di bawah ini untuk memeriksa catatan.</p>", unsafe_allow_html=True)
             
-            # Buat susunan 2 kolom responsif
+            # Membagi ruang menjadi 2 kolom responsif
             col_lobby1, col_lobby2 = st.columns(2)
             
             with col_lobby1:
-                if st.button("📘\n\nJURNAL BURUAN\n\nKlik Untuk Membuka Jurnal ➔", use_container_width=True, key="btn_lobby_buku1"):
+                # 🎯 FIX TOMBOL 1: Satukan simbol emoji ke dalam tombol Streamlit dengan key baru
+                if st.button("📘\n\nJURNAL BURUAN\n\n[ Ketuk Untuk Membuka ] ➔", use_container_width=True, key="btn_lobby_buku1_final"):
                     st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
                     st.rerun()
                     
             with col_lobby2:
-                if st.button("🔮\n\nKITAB MISI GUILD\n\nKlik Untuk Membuka Kitab ➔", use_container_width=True, key="btn_lobby_buku2"):
+                # 🎯 FIX TOMBOL 2: Satukan simbol emoji ke dalam tombol Streamlit dengan key baru
+                if st.button("🔮\n\nKITAB MISI GUILD\n\n[ Ketuk Untuk Membuka ] ➔", use_container_width=True, key="btn_lobby_buku2_final"):
                     st.session_state["campaign_sub_page"] = "view_buku_tugas"
                     st.rerun()
 
