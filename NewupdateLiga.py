@@ -936,11 +936,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         test_qty_sueger = 28
         test_percent_sueger = 45
     
-        # 🚀 FORMULA SAKTI: Semua teks judul, gaya CSS, dan HTML dikunci di dalam satu variabel murni
-        # Menggunakan format pengikat angka kuno (%s) agar kurung kurawal CSS tidak akan pernah bisa dimuntahkan Python
-        html_master_packet = (
-            """
-        <div style="text-align: center; font-family: monospace; width: 100%%; max-width: 600px; margin: 0 auto;">
+        # 🚀 FORMULA SAKTI: Menggunakan .format() dengan placeholder {0}, {1}, dst.
+        # Cara ini 100% aman karena CSS yang menggunakan tanda % tidak akan merusak compiler Python.
+        html_master_packet = """
+        <div style="text-align: center; font-family: monospace; width: 100%; max-width: 600px; margin: 0 auto;">
             
             <!-- A. JUDUL ATAS LISENSI -->
             <h2 style='color: #fbbf24; font-size: 23px; text-shadow: 0 0 10px rgba(251,191,36,0.3); margin: 0 0 5px 0;'>📜 GUILD MEMBER LICENSE 📜</h2>
@@ -964,24 +963,24 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     <div class="card-face card-front-design">
                         <div class="char-avatar-box">🛡️</div>
                         <div class="char-hero-name">RAFI</div>
-                        <div class="char-hero-level-badge">RANK: MASTER • LEVEL %s</div>
+                        <div class="char-hero-level-badge">RANK: MASTER • LEVEL {level}</div>
                         
                         <!-- ⚔️ BAR 1: PENCAPAIAN PSM -->
                         <div class="rpg-stat-container">
-                            <div class="rpg-stat-header"><span>🔥 ATTACK (PENCAPAIAN PSM)</span><span>%s Qty</span></div>
-                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-psm" style="width: %s%%;"></div></div>
+                            <div class="rpg-stat-header"><span>🔥 ATTACK (PENCAPAIAN PSM)</span><span>{qty_psm} Qty</span></div>
+                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-psm" style="width: {pct_psm}%;"></div></div>
                         </div>
                         
                         <!-- 🛡️ BAR 2: PENCAPAIAN PENJUALAN PPS -->
                         <div class="rpg-stat-container">
-                            <div class="rpg-stat-header"><span>🛡️ DEFENSE (PENJUALAN PPS)</span><span>%s Poin</span></div>
-                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-pps" style="width: %s%%;"></div></div>
+                            <div class="rpg-stat-header"><span>🛡️ DEFENSE (PENJUALAN PPS)</span><span>{qty_pps} Poin</span></div>
+                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-pps" style="width: {pct_pps}%;"></div></div>
                         </div>
                         
                         <!-- 🍃 BAR 3: PENCAPAIAN PENJUALAN SUEGER -->
                         <div class="rpg-stat-container">
-                            <div class="rpg-stat-header"><span>🍃 AGILITY (PENJUALAN SUEGER)</span><span>%s Qty</span></div>
-                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-sueger" style="width: %s%%;"></div></div>
+                            <div class="rpg-stat-header"><span>🍃 AGILITY (PENJUALAN SUEGER)</span><span>{qty_sueger} Qty</span></div>
+                            <div class="rpg-bar-bg"><div class="rpg-bar-fill-sueger" style="width: {pct_sueger}%;"></div></div>
                         </div>
                         
                         <!-- Bulatan ungu bawah bawaan layout asli gambar Anda -->
@@ -993,59 +992,56 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             
             <!-- D. SUNTIKKAN GAYA CSS SECARA PRIVATE DI DALAM KONTAINER AGAR TIDAK BOCOR KELUAR -->
             <style>
-                [data-testid="stSidebar"] { display: none !important; }
-                [data-testid="stHeader"] { display: none !important; }
-                .main .block-container { background-color: #090d16 !important; min-height: 100vh !important; max-width: 600px !important; margin: 0 auto !important; padding-top: 5% !important; box-sizing: border-box !important; }
+                [data-testid="stSidebar"] {{ display: none !important; }}
+                [data-testid="stHeader"] {{ display: none !important; }}
+                .main .block-container {{ background-color: #090d16 !important; min-height: 100vh !important; max-width: 600px !important; margin: 0 auto !important; padding-top: 5% !important; box-sizing: border-box !important; }}
                 
-                .flip-card-wrapper { background-color: transparent; width: 330px; height: 520px; perspective: 1000px; margin: 15px auto; cursor: pointer; display: block; }
-                .flip-card-inner { position: relative; width: 100%%; height: 100%%; text-align: center; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }
+                .flip-card-wrapper {{ background-color: transparent; width: 330px; height: 520px; perspective: 1000px; margin: 15px auto; cursor: pointer; display: block; }}
+                .flip-card-inner {{ position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }}
                 
-                #card-trigger:checked ~ .flip-card-wrapper .flip-card-inner { transform: rotateY(180deg) !important; }
+                #card-trigger:checked ~ .flip-card-wrapper .flip-card-inner {{ transform: rotateY(180deg) !important; }}
                 
-                .card-face { position: absolute; width: 100%%; height: 100%%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 20px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 24px; }
-                .card-back-design { background: linear-gradient(135deg, #111625 0%, #080b12 100%%) !important; border: 3px dashed #b45309 !important; box-shadow: 0 8px 25px rgba(0,0,0,0.5), inset 0 0 30px rgba(180, 83, 9, 0.2) !important; color: #b45309 !important; }
-                .magic-seal-back { width: 110px; height: 110px; border: 2px dashed #b45309; border-radius: 50%%; display: flex; justify-content: center; align-items: center; font-size: 45px; margin-bottom: 20px; animation: seal-pulse 2.5s infinite ease-in-out; }
+                .card-face {{ position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 20px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 24px; }}
+                .card-back-design {{ background: linear-gradient(135deg, #111625 0%, #080b12 100%) !important; border: 3px dashed #b45309 !important; box-shadow: 0 8px 25px rgba(0,0,0,0.5), inset 0 0 30px rgba(180, 83, 9, 0.2) !important; color: #b45309 !important; }}
+                .magic-seal-back {{ width: 110px; height: 110px; border: 2px dashed #b45309; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 45px; margin-bottom: 20px; animation: seal-pulse 2.5s infinite ease-in-out; }}
                 
-                .card-front-design { background: linear-gradient(145deg, #111827 0%%, #0b0f19 100%%) !important; border: 4px double #d97706 !important; box-shadow: 0 12px 35px rgba(217, 119, 6, 0.3), inset 0 0 25px rgba(217, 119, 6, 0.05) !important; color: white !important; transform: rotateY(180deg); justify-content: flex-start !important; padding-top: 35px !important; }
-                .card-front-design::before { content: "⚜️"; position: absolute; top: 12px; font-size: 18px; color: #d97706; filter: drop-shadow(0 0 5px #d97706); }
+                .card-front-design {{ background: linear-gradient(145deg, #111827 0%, #0b0f19 100%) !important; border: 4px double #d97706 !important; box-shadow: 0 12px 35px rgba(217, 119, 6, 0.3), inset 0 0 25px rgba(217, 119, 6, 0.05) !important; color: white !important; transform: rotateY(180deg); justify-content: flex-start !important; padding-top: 35px !important; }}
+                .card-front-design::before {{ content: "⚜️"; position: absolute; top: 12px; font-size: 18px; color: #d97706; filter: drop-shadow(0 0 5px #d97706); }}
                 
-                .char-avatar-box { width: 65px; height: 65px; border-radius: 50%%; border: 2px solid #d97706; background: #151d30; display: flex; justify-content: center; align-items: center; font-size: 30px; margin-bottom: 8px; box-shadow: 0 0 12px rgba(217, 119, 6, 0.3); }
-                .char-hero-name { color: #ffffff !important; font-size: 22px; font-weight: 900; margin: 0; letter-spacing: 2px; text-shadow: 0 0 8px rgba(255,255,255,0.1); }
-                .char-hero-level-badge { background: rgba(217, 119, 6, 0.15); color: #fbbf24; font-size: 11px; font-weight: 800; padding: 3px 12px; border-radius: 20px; border: 1px solid rgba(217, 119, 6, 0.4); margin-top: 5px; margin-bottom: 20px; letter-spacing: 0.5px; }
+                .char-avatar-box {{ width: 65px; height: 65px; border-radius: 50%; border: 2px solid #d97706; background: #151d30; display: flex; justify-content: center; align-items: center; font-size: 30px; margin-bottom: 8px; box-shadow: 0 0 12px rgba(217, 119, 6, 0.3); }}
+                .char-hero-name {{ color: #ffffff !important; font-size: 22px; font-weight: 900; margin: 0; letter-spacing: 2px; text-shadow: 0 0 8px rgba(255,255,255,0.1); }}
+                .char-hero-level-badge {{ background: rgba(217, 119, 6, 0.15); color: #fbbf24; font-size: 11px; font-weight: 800; padding: 3px 12px; border-radius: 20px; border: 1px solid rgba(217, 119, 6, 0.4); margin-top: 5px; margin-bottom: 20px; letter-spacing: 0.5px; }}
                 
-                .rpg-stat-container { width: 100%%; margin-bottom: 12px; text-align: left; }
-                .rpg-stat-header { display: flex; justify-content: space-between; color: #94a3b8; font-size: 11px; font-weight: bold; margin-bottom: 4px; font-family: monospace; letter-spacing: 0.5px; }
-                .rpg-bar-bg { background-color: #05070a !important; height: 12px; border-radius: 6px; overflow: hidden; border: 1px solid rgba(217, 119, 6, 0.15); box-shadow: inset 0 2px 4px rgba(0,0,0,0.6); }
-                .rpg-bar-fill-psm { background: linear-gradient(90deg, #ef4444, #f97316); height: 100%%; border-radius: 6px; filter: drop-shadow(0 0 4px #f97316); }
-                .rpg-bar-fill-pps { background: linear-gradient(90deg, #3b82f6, #06b6d4); height: 100%%; border-radius: 6px; filter: drop-shadow(0 0 4px #06b6d4); }
-                .rpg-bar-fill-sueger { background: linear-gradient(90deg, #10b981, #34d399); height: 100%%; border-radius: 6px; filter: drop-shadow(0 0 4px #34d399); }
-                .avatar-holder-bottom { width: 60px; height: 60px; border-radius: 50%%; border: 3px solid #d97706; background-color: #0f1524; position: absolute; bottom: -30px; left: 50%%; transform: translateX(-50%%); display: flex; justify-content: center; align-items: center; font-size: 26px; box-shadow: 0 5px 15px rgba(217, 119, 6, 0.4); z-index: 100; }
+                .rpg-stat-container {{ width: 100%; margin-bottom: 12px; text-align: left; }}
+                .rpg-stat-header {{ display: flex; justify-content: space-between; color: #94a3b8; font-size: 11px; font-weight: bold; margin-bottom: 4px; font-family: monospace; letter-spacing: 0.5px; }}
+                .rpg-bar-bg {{ background-color: #05070a !important; height: 12px; border-radius: 6px; overflow: hidden; border: 1px solid rgba(217, 119, 6, 0.15); box-shadow: inset 0 2px 4px rgba(0,0,0,0.6); }}
+                .rpg-bar-fill-psm {{ background: linear-gradient(90deg, #ef4444, #f97316); height: 100%; border-radius: 6px; filter: drop-shadow(0 0 4px #f97316); }}
+                .rpg-bar-fill-pps {{ background: linear-gradient(90deg, #3b82f6, #06b6d4); height: 100%; border-radius: 6px; filter: drop-shadow(0 0 4px #06b6d4); }}
+                .rpg-bar-fill-sueger {{ background: linear-gradient(90deg, #10b981, #34d399); height: 100%; border-radius: 6px; filter: drop-shadow(0 0 4px #34d399); }}
+                .avatar-holder-bottom {{ width: 60px; height: 60px; border-radius: 50%; border: 3px solid #d97706; background-color: #0f1524; position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; align-items: center; font-size: 26px; box-shadow: 0 5px 15px rgba(217, 119, 6, 0.4); z-index: 100; }}
                 
-                @keyframes seal-pulse { 0%%, 100%% { transform: scale(1); opacity: 0.7; } 50%% { transform: scale(1.05); opacity: 1; filter: drop-shadow(0 0 18px #b45309); } }
-                @keyframes blink { 0%%, 100%% { opacity: 1; } 50%% { opacity: 0.4; } }
+                @keyframes seal-pulse {{ 0%, 100% {{ transform: scale(1); opacity: 0.7; }} 50% {{ transform: scale(1.05); opacity: 1; filter: drop-shadow(0 0 18px #b45309); }} }}
+                @keyframes blink {{ 0%, 100% {{ opacity: 1; }} 50% {{ opacity: 0.4; }} }}
                 
-                /* GAYA TOMBOL NAVIGASI AGAR KONSISTEN DI TINGKAT GLOBAL BROWSER */
-                .stButton > button { background: rgba(180, 83, 9, 0.1) !important; color: #fbbf24 !important; border: 1px solid #b45309 !important; border-radius: 12px !important; font-family: monospace !important; font-size: 14px !important; font-weight: bold !important; padding: 12px 0px !important; letter-spacing: 0.5px !important; }
-                .stButton > button:hover { background: #b45309 !important; color: #090d16 !important; box-shadow: 0 0 20px rgba(180, 83, 9, 0.5) !important; }
+                .stButton > button {{ background: rgba(180, 83, 9, 0.1) !important; color: #fbbf24 !important; border: 1px solid #b45309 !important; border-radius: 12px !important; font-family: monospace !important; font-size: 14px !important; font-weight: bold !important; padding: 12px 0px !important; letter-spacing: 0.5px !important; }}
+                .stButton > button:hover {{ background: #b45309 !important; color: #090d16 !important; box-shadow: 0 0 20px rgba(180, 83, 9, 0.5) !important; }}
             </style>
         </div>
-        """
-            % (
-                test_level,
-                test_qty_psm,
-                test_percent_psm,
-                test_qty_pps,
-                test_percent_pps,
-                test_qty_sueger,
-                test_percent_sueger,
-            )
+        """.format(
+            level=test_level,
+            qty_psm=test_qty_psm,
+            pct_psm=test_percent_psm,
+            qty_pps=test_qty_pps,
+            pct_pps=test_percent_pps,
+            qty_sueger=test_qty_sueger,
+            pct_sueger=test_percent_sueger,
         )
     
         # 👑 CETAK MASSAL PAKET HTML PRIVATE
         st.markdown(html_master_packet, unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
     
-        # E. TOMBOL NAVIGASI PULANG (DIKONDISIKAN SECARA NATIVE OLEH STREAMLIT)
+        # E. TOMBOL NAVIGASI PULANG
         if st.button(
             "⬅️ KEMBALI KE KEMAH PERSIAPAN",
             use_container_width=True,
@@ -1055,6 +1051,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.rerun()
     
         st.stop()
+
 
         
     # 🛡️ JALUR B: HALAMAN UTAMA STATISTIK UTAMA (VIEW STATS)
