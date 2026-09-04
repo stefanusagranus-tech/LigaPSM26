@@ -981,23 +981,35 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         if hero_calculated_level < 1:
             hero_calculated_level = 1
 
-        # -------------------------------------------------------------------------
-        # 📦 B. HITUNG BAR EXP (PENJUALAN PSM KHUSUS BULAN SEKARANG / SEASON AKTIF)
+         # -------------------------------------------------------------------------
+        # 📦 B. HITUNG BAR EXP (MURNI QUANTITY JUAL PSM BULAN BERJALAN / SEPTEMBER)
         # -------------------------------------------------------------------------
         qty_psm_current_season = 0
-        if not db_sales_person.empty and "updated_at" in db_sales_person.columns:
-            db_sales_person["datetime_parsed"] = pd.to_datetime(db_sales_person["updated_at"], errors="coerce")
-            season_hero_df = db_sales_person[
-                (db_sales_person["person_name"].astype(str).str.strip().str.upper() == current_hero_name) &
-                (db_sales_person["datetime_parsed"].dt.month == current_month_num) &
-                (db_sales_person["datetime_parsed"].dt.year == current_year_num)
-            ]
-            if not season_hero_df.empty:
-                qty_psm_current_season = int(pd.to_numeric(season_hero_df["actual_qty"], errors="coerce").fillna(0).sum())
+        if not db_sales_person.empty and "updated_at" in db_sales_person.columns and "actual_qty" in db_sales_person.columns:
+            try:
+                # Konversi kolom tanggal menjadi tipe datetime agar bisa dibaca bulannya
+                db_sales_person["datetime_parsed"] = pd.to_datetime(db_sales_person["updated_at"], errors="coerce")
+                
+                # Saring data murni: Berdasarkan NAMA HERO + BULAN SEKARANG + TAHUN SEKARANG
+                season_hero_df = db_sales_person[
+                    (db_sales_person["person_name"].astype(str).str.strip().str.upper() == current_hero_name) &
+                    (db_sales_person["datetime_parsed"].dt.month == current_month_num) &
+                    (db_sales_person["datetime_parsed"].dt.year == current_year_num)
+                ]
+                
+                if not season_hero_df.empty:
+                    # Ambil total akumulasi Qty penjualan produk PSM bulan ini
+                    qty_psm_current_season = int(pd.to_numeric(season_hero_df["actual_qty"], errors="coerce").fillna(0).sum())
+            except Exception:
+                qty_psm_current_season = 0
 
         # Hitung Persentase Isi Bar EXP (Target Bulanan Naik Level = 150 Pcs)
         target_exp_limit = 150
-        percent_exp_calc = min(int((qty_psm_current_season / target_exp_limit) * 100), 100)
+        if qty_psm_current_season > 0:
+            percent_exp_calc = min(int((qty_psm_current_season / target_exp_limit) * 100), 100)
+        else:
+            percent_exp_calc = 2 # Berikan 2% minimum agar bar warna ungunya kelihatan sedikit di awal
+            
         test_percent_exp = f"{percent_exp_calc}%"
 
         # -------------------------------------------------------------------------
