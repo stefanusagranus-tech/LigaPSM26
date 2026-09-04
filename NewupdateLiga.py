@@ -1477,401 +1477,223 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         st.stop()
 
     # =========================================================================
-    # 🎯 JALUR D: MENU INTERAKTIF QUIZ CAMPAIGN (Buku Buruan & Papan Misi Guild)
+    # 🎯 JALUR D: MENU INTERAKTIF QUIZ CAMPAIGN (EDISI RESEPSIONIS GUILD UTAM)
     # =========================================================================
     elif st.session_state.get("current_camp_menu") == "quiz_campaign":
         
-        # 1. AMBIL INFORMASI USER LOGIN & DATA REAL-TIME
-        current_hero_name = st.session_state.get("username", "VISITOR").strip().upper()
-        user_lower = str(current_hero_name).lower()
-        is_admin_or_cos = any(x in user_lower for x in ["admin", "chief", "cos", "lavitality"])
-        
-        current_month_num = waktu_wib.month
-        current_year_num = waktu_wib.year
-        today_date_now = waktu_wib.date()
+        # Pastikan session state halaman internal buku sudah terdaftar
+        if "campaign_sub_page" not in st.session_state:
+            st.session_state["campaign_sub_page"] = "resepsionis_utama"
 
-        # Ambil database dari session state
-        db_sales_person = st.session_state.get("sales_person_df", pd.DataFrame()).copy()
-        db_sales_pps = st.session_state.get("sales_pps_df", pd.DataFrame()).copy()
-        db_periods_pps = st.session_state.get("periods_pps_df", pd.DataFrame()).copy()
-        db_sales_item = st.session_state.get("sales_item_df", pd.DataFrame()).copy()
-        db_periods_general = st.session_state.get("periods_df", pd.DataFrame()).copy()
-        db_person_master = st.session_state.get("person_df", pd.DataFrame()).copy()
+        # =========================================================================
+        # 🎨 1. SUNTIKKAN SISI CSS FULLSCREEN & LAYOUT 2 BUKU (RESPONSIF MOBILE)
+        # =========================================================================
+        st.markdown(
+            """
+            <style>
+                /* 📱 KUNCI LAYOUT RAMPING UNTUK WEB, ANDROID, & IOS */
+                [data-testid="stSidebar"], 
+                [data-testid="stSidebarCollapsedControl"],
+                .stSidebar,
+                button[title="Expand sidebar"] { 
+                    display: none !important; 
+                    width: 0px !important;
+                }
+                
+                [data-testid="stHeader"], header, .stAppHeader,
+                div[data-testid="stElementContainer"]:has(h1),
+                div.stBlock:first-child,
+                div[data-testid="stVerticalBlock"] > div:first-child {
+                    display: none !important;
+                    height: 0px !important;
+                    margin: 0 !important;
+                }
 
-        # 2. FILTER NAMA HERO BERDASARKAN HAK AKSES (ATURAN FILTER PRIVASI)
-        all_heroes_list = db_person_master["person_name"].dropna().unique().tolist() if not db_person_master.empty else [current_hero_name]
-        
-        if is_admin_or_cos:
-            # Admin/COS bisa memilih melihat rapor siapapun, aktual admin diset 0 otomatis nanti
-            selected_campaign_hero = st.selectbox("🔮 GOD MODE: INTIP RAPOR PAHLAWAN", all_heroes_list, index=all_heroes_list.index(current_hero_name) if current_hero_name in all_heroes_list else 0)
-            is_viewing_as_admin_role = (selected_campaign_hero == "ADMIN")
-        else:
-            # Kasir biasa dikunci mati hanya bisa melihat dirinya sendiri
-            selected_campaign_hero = current_hero_name
-            is_viewing_as_admin_role = False
+                .main .block-container { 
+                    background-color: #090d16 !important; 
+                    min-height: 100vh !important; 
+                    max-width: 650px !important; 
+                    margin: 0 auto !important; 
+                    padding-top: 5% !important; 
+                    box-sizing: border-box !important;
+                }
+                
+                div[data-testid="stVerticalBlock"] { gap: 0rem !important; }
 
-        # 3. MESIN KALKULASI TARGET HARIAN DINAMIS BERDASARKAN KALENDER SHEET
-        # A. Hitung Hari Periode PPS (PWP & SG) -> Target Personil dibagi 15 hari
-        days_in_pps_period = 15
-        target_pps_toko_global = 180
-        if not db_periods_pps.empty and "start_date" in db_periods_pps.columns and "end_date" in db_periods_pps.columns:
-            db_periods_pps["start_dt"] = pd.to_datetime(db_periods_pps["start_date"], errors="coerce")
-            active_pps_row = db_periods_pps[db_periods_pps["start_dt"].dt.month == current_month_num]
-            if not active_pps_row.empty:
-                target_pps_toko_global = pd.to_numeric(active_pps_row.iloc[0].get("target_total", 180), errors="coerce")
-                try:
-                    p_start = pd.to_datetime(active_pps_row.iloc[0]["start_date"]).date()
-                    p_end = pd.to_datetime(active_pps_row.iloc[0]["end_date"]).date()
-                    days_in_pps_period = (p_end - p_start).days + 1
-                except Exception:
-                    days_in_pps_period = 15
+                /* 📚 DESAIN ANTARMUKA MEJA RESEPSIONIS GUILD */
+                .guild-lobby-title { text-align: center; color: #fbbf24 !important; font-family: monospace; font-size: 24px !important; font-weight: 900 !important; text-shadow: 0 0 12px rgba(251,191,36,0.4) !important; margin: 0 0 5px 0 !important; }
+                .guild-lobby-sub { text-align: center; color: #475569 !important; font-size: 11px !important; margin: 0 0 25px 0 !important; font-family: monospace; }
+                
+                /* 🗂️ GRID 2 BUKU SEJAJAR */
+                .books-desk-grid { display: flex !important; justify-content: space-around !important; align-items: center !important; width: 100% !important; margin: 20px auto !important; box-sizing: border-box !important; }
+                
+                /* 📖 CARD TOMBOL BUKU */
+                .book-interactive-card { display: flex !important; flex-direction: column !important; align-items: center !important; width: 46% !important; cursor: pointer !important; }
+                
+                /* 📘 COVER BUKU 3D DENGAN EFEK AMBANG BATAS GLOW */
+                .book-cover-3d { width: 120px; height: 165px; border-radius: 4px 12px 12px 4px; position: relative; display: flex; justify-content: center; align-items: center; font-size: 40px; box-shadow: 5px 10px 25px rgba(0,0,0,0.5); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); border-left: 6px solid rgba(0,0,0,0.3); }
+                
+                /* Warna Spesifik Cover Buku */
+                .cover-pencapaian { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); border: 2px solid #38bdf8; }
+                .cover-tugas { background: linear-gradient(135deg, #1e1b4b 0%, #581c87 100%); border: 2px solid #c084fc; }
+                
+                /* Efek Hover Mengangkat Buku Saat Disentuh Kursor / Jari */
+                .book-interactive-card:hover .book-cover-3d { transform: translateY(-10px) rotateY(-10deg); box-shadow: 10px 20px 30px rgba(0,0,0,0.7); }
+                .book-interactive-card:hover .cover-pencapaian { border-color: #00f0ff; box-shadow: 0 0 20px rgba(0, 240, 255, 0.4); }
+                .book-interactive-card:hover .cover-tugas { border-color: #d8b4fe; box-shadow: 0 0 20px rgba(168, 85, 247, 0.4); }
+                
+                .book-title-label { color: #f8fafc !important; font-family: monospace !important; font-size: 13px !important; font-weight: 800 !important; text-align: center !important; margin-top: 12px !important; letter-spacing: 0.5px !important; }
+                .book-desc-label { color: #475569 !important; font-family: monospace !important; font-size: 9px !important; text-align: center !important; margin-top: 4px !important; line-height: 1.3 !important; }
 
-        target_pps_per_kasir_period = int(math.ceil(target_pps_toko_global / 9))
-        # Rumus PPS Harian: Target Personil dibagi durasi hari periode (15 hari)
-        daily_target_pps_pwp = round(target_pps_per_kasir_period / days_in_pps_period, 1)
-        daily_target_pps_sg = round(target_pps_per_kasir_period / days_in_pps_period, 1)
-
-        # B. Hitung Hari Periode PSM -> (Target Toko / 9 Personil) dibagi jumlah hari periode berjalan (7 / 8 hari)
-        days_in_psm_period = 7 # Cadangan standar
-        target_psm_toko_global = 90
-        if not db_periods_general.empty and "start_date" in db_periods_general.columns and "end_date" in db_periods_general.columns:
-            db_periods_general["start_dt"] = pd.to_datetime(db_periods_general["start_date"], errors="coerce")
-            active_psm_row = db_periods_general[db_periods_general["start_dt"].dt.month == current_month_num]
-            if not active_psm_row.empty:
-                try:
-                    p_start = pd.to_datetime(active_psm_row.iloc[0]["start_date"]).date()
-                    p_end = pd.to_datetime(active_psm_row.iloc[0]["end_date"]).date()
-                    days_in_psm_period = (p_end - p_start).days + 1
-                except Exception:
-                    days_in_psm_period = 7
+                /* 📖 GAYA ANIMASI BUKU TERBUKA (PERKAMEN KUNO KEMBAR) */
+                .rpg-open-book-container { background: #f4eae1 !important; border: 4px solid #5c4033 !important; border-radius: 12px !important; box-shadow: 0 15px 35px rgba(0,0,0,0.6) !important; display: flex !important; min-height: 380px !important; position: relative !important; overflow: hidden !important; width: 100% !important; max-width: 580px !important; margin: 0 auto !important; }
+                .rpg-open-book-container::before { content: "" !important; position: absolute !important; top: 0 !important; left: 50% !important; width: 2px !important; height: 100% !important; background: linear-gradient(90deg, rgba(0,0,0,0.15), rgba(0,0,0,0.3), rgba(0,0,0,0.15)) !important; box-shadow: 0 0 10px rgba(0,0,0,0.4) !important; z-index: 5 !important; }
+                .rpg-book-page { width: 50% !important; padding: 24px 18px !important; box-sizing: border-box !important; display: flex !important; flex-direction: column !important; justify-content: flex-start !important; color: #2b1d0c !important; font-family: 'Courier New', monospace !important; }
+                .open-page-title { text-align: center !important; font-size: 15px !important; font-weight: 900 !important; margin: 0 0 2px 0 !important; color: #854d0e !important; }
+                .open-page-sub { text-align: center !important; font-size: 10px !important; color: #a1a1aa !important; margin: 0 0 10px 0 !important; font-style: italic !important; }
+                .open-book-divider { border-bottom: 2px double #854d0e !important; margin-bottom: 15px !important; width: 100% !important; }
+                .open-stat-row { display: flex !important; justify-content: space-between !important; font-size: 11px !important; font-weight: bold !important; margin-bottom: 12px !important; border-bottom: 1px dashed rgba(133,77,14,0.15) !important; padding-bottom: 4px !important; }
+                .open-page-footer { margin-top: auto !important; font-size: 9px !important; color: #78716c !important; text-align: center !important; font-weight: bold !important; }
+            </style>
+            """, 
+            unsafe_allow_html=True
+        )
+    
+        # =========================================================================
+        # 🚪 KONDISI A: HALAMAN LOBBY UTAMA - MEJA RESEPSIONIS (TAMPILAN DI AWAL)
+        # =========================================================================
+        if st.session_state["campaign_sub_page"] == "resepsionis_utama":
+            st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
+            st.markdown("<p class='guild-lobby-sub'>Pilih salah satu buku di bawah ini untuk menginspeksi log jurnal perjalanan Anda.</p>", unsafe_allow_html=True)
+            
+            # Buat susunan 2 Buku Menggunakan Kolom Native Streamlit agar Responsif di HP
+            col_bk1, col_nav_gap, col_bk2 = st.columns([1, 0.1, 1])
+            
+            with col_bk1:
+                # 📘 BUKU 1: LIHAT PENCAPAIAN SENDIRI
+                st.markdown(
+                    """
+                    <div class="book-interactive-card">
+                        <div class="book-cover-3d cover-pencapaian">📘</div>
+                        <div class="book-title-label">JURNAL BURUAN</div>
+                        <div class="book-desc-label">Berisi catatan total poin akumulasi hasil buruan individu Anda sepanjang season.</div>
+                    </div>
+                    """, unsafe_allow_html=True
+                )
+                if st.button("Buka Jurnal Buruan ➔", use_container_width=True, key="action_trigger_buku_1"):
+                    # 🧙‍♂️ ANGINA SIHIR ANIMASI BUKU TERBUKA
+                    st.markdown("<div style='background-color:#0c1020; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:999999; display:flex; flex-direction:column; justify-content:center; align-items:center;'><div style='font-size:60px; animation:open-anim 0.8s forwards;'>📖</div><h2 style='color:#38bdf8; font-family:monospace; font-size:18px; margin-top:25px;'>OPENING HUNTING JOURNAL...</h2><style>@keyframes open-anim { from { transform:scale(1) rotate(0); } to { transform:scale(1.3) rotateY(90deg); filter:opacity(0); } }</style></div>", unsafe_allow_html=True)
+                    time.sleep(0.8)
+                    st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
+                    st.rerun()
                     
-        # Ambil total akumulasi target toko bulan ini dari master sales item
-        if not db_sales_item.empty and "target_qty" in db_sales_item.columns:
-            target_psm_toko_global = pd.to_numeric(db_sales_item["target_qty"], errors="coerce").fillna(0).sum()
-
-        target_psm_per_kasir_period = int(math.ceil(target_psm_toko_global / 9))
-        # Rumus PSM Harian Sesuai Pesanan: (Target Toko / 9) / Jumlah Hari Periode Berjalan (7 atau 8 hari)
-        daily_target_psm = round(target_psm_per_kasir_period / days_in_psm_period, 1)
-
-        # 4. AMBIL DATA AKTUAL (JIKA AKUN ADMIN, PAKSA NILAI MENJADI 0 KAKU)
-        qty_psm_hari_ini = 0
-        qty_pwp_hari_ini = 0
-        qty_sg_hari_ini = 0
-        qty_sueger_hari_ini = 0
-
-        qty_psm_bulan_ini = 0
-        qty_pwp_bulan_ini = 0
-        qty_sg_bulan_ini = 0
-        qty_sueger_bulan_ini = 0
-        qty_ceban_bulan_ini = 0
-
-        if not is_viewing_as_admin_role:
-            # Hitung Aktual Penjualan Real-Time milik kasir aktif dari Google Sheets
-            if not db_sales_person.empty and "updated_at" in db_sales_person.columns:
-                db_sales_person["dt_parsed"] = pd.to_datetime(db_sales_person["updated_at"], errors="coerce").dt.date
-                # Hari ini
-                df_psm_today = db_sales_person[(db_sales_person["person_name"] == selected_campaign_hero) & (db_sales_person["dt_parsed"] == today_date_now)]
-                qty_psm_hari_ini = int(df_psm_today["actual_qty"].sum()) if not df_psm_today.empty else 0
-                # Bulan ini (September)
-                df_psm_month = db_sales_person[(db_sales_person["person_name"] == selected_campaign_hero) & (pd.to_datetime(db_sales_person["updated_at"]).dt.month == current_month_num)]
-                qty_psm_bulan_ini = int(df_psm_month["actual_qty"].sum()) if not df_psm_month.empty else 0
-
-            if not db_sales_pps.empty and "updated_at" in db_sales_pps.columns:
-                db_sales_pps["dt_parsed"] = pd.to_datetime(db_sales_pps["updated_at"], errors="coerce").dt.date
-                # Hari ini (Berdasarkan Kasir Name)
-                df_pps_today = db_sales_pps[(db_sales_pps["kasir_name"] == selected_campaign_hero) & (db_sales_pps["dt_parsed"] == today_date_now)]
-                if not df_pps_today.empty:
-                    qty_pwp_hari_ini = int(df_pps_today["qty_pwp"].sum())
-                    qty_sg_hari_ini = int(df_pps_today["qty_sg"].sum())
-                    qty_sueger_hari_ini = int(df_pps_today.get("qty_sueger", df_pps_today["redeem_sueger"]).sum())
-                
-                # Bulan ini (September)
-                df_pps_month = db_sales_pps[(db_sales_pps["kasir_name"] == selected_campaign_hero) & (pd.to_datetime(db_sales_pps["updated_at"]).dt.month == current_month_num)]
-                if not df_pps_month.empty:
-                    qty_pwp_bulan_ini = int(df_pps_month["qty_pwp"].sum())
-                    qty_sg_bulan_ini = int(df_pps_month["qty_sg"].sum())
-                    qty_sueger_bulan_ini = int(df_pps_month.get("qty_sueger", df_pps_month["redeem_sueger"]).sum())
-                    qty_ceban_bulan_ini = int(df_pps_month["cemilan_ceban"].sum())
-        # =========================================================================
-        # 👑 5. NAVIGATION SUB-TABS: SAKLAR PERPINDAHAN MODE MEDIEVAL
-        # =========================================================================
-        st.markdown(
-            """
-            <style>
-                .campaign-nav-container {
-                    display: flex !important;
-                    justify-content: center !important;
-                    gap: 15px !important;
-                    width: 100% !important;
-                    max-width: 500px !important;
-                    margin: 0 auto 25px auto !important;
-                }
-                .campaign-nav-btn {
-                    flex: 1 !important;
-                    padding: 10px 5px !important;
-                    font-family: monospace !important;
-                    font-size: 13px !important;
-                    font-weight: bold !important;
-                    text-align: center !important;
-                    border-radius: 8px !important;
-                    cursor: pointer !important;
-                    transition: all 0.2s ease-in-out !important;
-                }
-            </style>
-            """, 
-            unsafe_allow_html=True
-        )
-
-        # Render 2 Tombol Navigasi Atas Menggunakan Kolom Streamlit agar Responsif di HP
-        col_nav1, col_nav2 = st.columns(2)
-        with col_nav1:
-            if st.button("📖 BUKU HASIL BURUAN", use_container_width=True, key="tab_btn_buku", type="primary" if st.session_state["campaign_sub_page"] == "buku_buruan" else "secondary"):
-                st.session_state["campaign_sub_page"] = "buku_buruan"
-                st.rerun()
-        with col_nav2:
-            if st.button("📜 PAPAN MISI GUILD", use_container_width=True, key="tab_btn_papan", type="primary" if st.session_state["campaign_sub_page"] == "misi_guild" else "secondary"):
-                st.session_state["campaign_sub_page"] = "misi_guild"
-                st.rerun()
-
-        st.markdown("<hr style='border-color: rgba(180, 83, 9, 0.2); margin: 10px 0 25px 0;'>", unsafe_allow_html=True)
-
-        # =========================================================================
-        # 📖 A. HALAMAN VISUAL: BUKU HASIL BURUAN (HUNT RECORD BOOK)
-        # =========================================================================
-        if st.session_state["campaign_sub_page"] == "buku_buruan":
-            
-            # Hitung total kumulatif buruan sampingan
-            total_side_hunts = qty_sueger_bulan_ini + qty_ceban_bulan_ini
-            
-            # 🎯 FIX MUTLAK NAMEERROR: Membuat ulang variabel nama season bulanan yang terhapus
-            season_name_string = waktu_wib.strftime("%B %Y").upper()
-
-            html_hunt_book = f"""
-            <div class="rpg-book-wrapper">
-                <div class="rpg-book-container">
-                    <!-- 📖 HALAMAN KIRI: BURUAN UTAMA -->
-                    <div class="rpg-book-page page-left">
-                        <h3 class="book-page-title">⚔️ MAIN HUNTS</h3>
-                        <p class="book-page-subtitle">Rekap Pencapaian Utama</p>
-                        <div class="book-divider"></div>
-                        <div class="book-stat-row">
-                            <span class="book-stat-label">🔥 TOTAL ATTACK (PSM)</span>
-                            <span class="book-stat-value">{qty_psm_bulan_ini} Pcs</span>
-                        </div>
-                        <div class="book-stat-row">
-                            <span class="book-stat-label">🛡️ TOTAL DEFENSE (PPS)</span>
-                            <span class="book-stat-value">{qty_pwp_bulan_ini + qty_sg_ini if 'qty_sg_ini' in locals() else qty_pwp_bulan_ini} Poin</span>
-                        </div>
-                        <p class="book-page-footer">Page 1 • Season {season_name_string}</p>
+            with col_bk2:
+                # 🔮 BUKU 2: LIHAT TUGAS / MISI GUILD
+                st.markdown(
+                    """
+                    <div class="book-interactive-card">
+                        <div class="book-cover-3d cover-tugas">🔮</div>
+                        <div class="book-title-label">KITAB MISI GUILD</div>
+                        <div class="book-desc-label">Berisi lembar maklumat perintah harian, mingguan, serta status keberhasilan misi toko.</div>
                     </div>
-                    <!-- 📖 HALAMAN KANAN: BURUAN SAMPINGAN -->
-                    <div class="rpg-book-page page-right">
-                        <h3 class="book-page-title">🍃 SIDE HUNTS</h3>
-                        <p class="book-page-subtitle">Rekap Atribut Tambahan</p>
-                        <div class="book-divider"></div>
-                        <div class="book-stat-row">
-                            <span class="book-stat-label">🍹 ELIXIR SUEGER</span>
-                            <span class="book-stat-value">{qty_sueger_bulan_ini} Qty</span>
-                        </div>
-                        <div class="book-stat-row">
-                            <span class="book-stat-label">🍪 CEBAN SNACK</span>
-                            <span class="book-stat-value">{qty_ceban_bulan_ini} Qty</span>
-                        </div>
-                        <div class="book-divider" style="margin-top: 15px;"></div>
-                        <div class="book-stat-row" style="font-weight: 900; color: #854d0e;">
-                            <span>🏆 COMBINED SIDE QTY</span>
-                            <span>{total_side_hunts} Pcs</span>
-                        </div>
-                        <p class="book-page-footer">Page 2 • Toko C383</p>
-                    </div>
+                    """, unsafe_allow_html=True
+                )
+                if st.button("Buka Kitab Misi ➔", use_container_width=True, key="action_trigger_buku_2"):
+                    # 🧙‍♂️ ANGINA SIHIR ANIMASI BUKU TERBUKA
+                    st.markdown("<div style='background-color:#0c1020; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:999999; display:flex; flex-direction:column; justify-content:center; align-items:center;'><div style='font-size:60px; animation:open-anim 0.8s forwards;'>📖</div><h2 style='color:#c084fc; font-family:monospace; font-size:18px; margin-top:25px;'>UNFOLDING QUEST SCROLL...</h2><style>@keyframes open-anim { from { transform:scale(1) rotate(0); } to { transform:scale(1.3) rotateY(90deg); filter:opacity(0); } }</style></div>", unsafe_allow_html=True)
+                    time.sleep(0.8)
+                    st.session_state["campaign_sub_page"] = "view_buku_tugas"
+                    st.rerun()
+        
+        # =========================================================================
+        # 🚪 KONDISI B: ANIMASI BUKU TERBUKA 1 - JURNAL PENCAPAIAN SENDIRI
+        # =========================================================================
+        elif st.session_state["campaign_sub_page"] == "view_buku_pencapaian":
+            st.markdown("<h2 class='guild-lobby-title'>📖 PERSONAL HUNTING LOG </h2>", unsafe_allow_html=True)
+            st.markdown("<p class='guild-lobby-sub'>Data tiruan steril siap dikoneksikan ke database Google Sheets Anda nanti.</p>", unsafe_allow_html=True)
+            
+            html_open_pencapaian = """
+            <div class="rpg-open-book-container">
+                <!-- 📄 HALAMAN KIRI: STATISTIK PETUALANGAN -->
+                <div class="rpg-book-page">
+                    <h3 class="open-page-title">⚔️ MAIN HUNTS</h3>
+                    <p class="open-page-subtitle">Rapor Hasil Tempur</p>
+                    <div class="open-book-divider"></div>
+                    <div class="open-stat-row"><span>🔥 ATTACK (PSM)</span><span style="color:#854d0e;">42 Qty</span></div>
+                    <div class="open-stat-row"><span>🛡️ DEFENSE (PPS)</span><span style="color:#854d0e;">115 Poin</span></div>
+                    <p class="open-page-footer">Page 1 • Active Season</p>
+                </div>
+                <!-- 📄 HALAMAN KANAN: PROFIL EXTRA -->
+                <div class="rpg-book-page">
+                    <h3 class="open-page-title">🍃 SIDE QUESTS</h3>
+                    <p class="open-page-subtitle">Rapor Suplemen Toko</p>
+                    <div class="open-book-divider"></div>
+                    <div class="open-stat-row"><span>🍹 SUEGER DRINK</span><span style="color:#854d0e;">28 Qty</span></div>
+                    <div class="open-stat-row"><span>🍪 CEBAN SNACK</span><span style="color:#854d0e;">14 Qty</span></div>
+                    <p class="open-page-footer">Page 2 • Toko C383</p>
                 </div>
             </div>
             """
-            st.markdown(html_hunt_book, unsafe_allow_html=True)
-        # =========================================================================
-        # 📜 B. HALAMAN VISUAL: PAPAN MISI GUILD (GUILD MISSION BOARD)
-        # =========================================================================
-        elif st.session_state["campaign_sub_page"] == "misi_guild":
+            st.markdown(html_open_pencapaian, unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
             
-            # 🎯 FIX MUTLAK NAMEERROR MASSAL: Membuat ulang seluruh variabel pelindung yang hilang
-            season_name_string = waktu_wib.strftime("%B %Y").upper()
-            
-            if 'qty_psm_hari_ini' not in locals(): qty_psm_hari_ini = 0
-            if 'daily_target_psm' not in locals(): daily_target_psm = 0
-            if 'qty_pwp_hari_ini' not in locals(): qty_pwp_hari_ini = 0
-            if 'daily_target_pps_pwp' not in locals(): daily_target_pps_pwp = 0
-            if 'qty_sg_hari_ini' not in locals(): qty_sg_hari_ini = 0
-            if 'daily_target_pps_sg' not in locals(): daily_target_pps_sg = 0
-            if 'target_pps_per_kasir_period' not in locals(): target_pps_per_kasir_period = 20
-            if 'qty_pwp_bulan_ini' not in locals(): qty_pwp_bulan_ini = 0
-            if 'qty_sg_bulan_ini' not in locals(): qty_sg_bulan_ini = 0
-            if 'sueger_achievement_percentage' not in locals(): sueger_achievement_percentage = 0.0
-            if 'count_item_success_season' not in locals(): count_item_success_season = 0
-            
-            # --- EVALUASI STATUS LOGIKA HARIAN SECARA OTOMATIS (ATURAN INDIKATOR) ---
-            status_text_psm = "🟢 QUEST COMPLETED" if qty_psm_hari_ini >= daily_target_psm and daily_target_psm > 0 else "🔴 HUNTING IN PROGRESS"
-            status_text_pwp = "🟢 QUEST COMPLETED" if qty_pwp_hari_ini >= daily_target_pps_pwp and daily_target_pps_pwp > 0 else "🔴 HUNTING IN PROGRESS"
-            status_text_sg = "🟢 QUEST COMPLETED" if qty_sg_hari_ini >= daily_target_pps_sg and daily_target_pps_sg > 0 else "🔴 HUNTING IN PROGRESS"
+            # Tombol kembali khusus internal buku
+            if st.button("⬅️ TUTUP BUKU JURNAL", use_container_width=True, key="btn_close_inner_buku1"):
+                st.session_state["campaign_sub_page"] = "resepsionis_utama"
+                st.rerun()
 
-            html_mission_board = f"""
-            <div class="rpg-board-wrapper">
-                <div class="rpg-board-wood">
-                    <div class="rpg-board-paper">
-                        <h3 class="board-main-title">📜 GUILD BULLETIN QUESTS 📜</h3>
-                        <p class="board-main-subtitle">Target Season Aktif: {season_name_string}</p>
-                        <div class="board-rope-divider"></div>
-                        <!-- ⚔️ DEKLARASI MISI 1: DAILY QUEST -->
-                        <div class="quest-item-box">
-                            <div class="quest-badge-type">⚡ DAILY QUEST (KASIR HARIAN)</div>
-                            <div class="quest-row">
-                                <span>🔥 ATTACK (SERBA GRATIS)</span>
-                                <span>Target: {daily_target_pps_sg} Pcs | Akt: {qty_sg_hari_ini} Pcs</span>
-                            </div>
-                            <div class="quest-status-bar"><span class="status-lbl">{status_text_sg}</span></div>
-                            <div class="quest-row" style="margin-top: 10px;">
-                                <span>🛡️ DEFENSE (PWP)</span>
-                                <span>Target: {daily_target_pps_pwp} Pcs | Akt: {qty_pwp_hari_ini} Pcs</span>
-                            </div>
-                            <div class="quest-status-bar"><span class="status-lbl">{status_text_pwp}</span></div>
-                            <div class="quest-row" style="margin-top: 10px;">
-                                <span>📦 CRITICAL STRIKE (PSM)</span>
-                                <span>Target: {daily_target_psm} Pcs | Akt: {qty_psm_hari_ini} Pcs</span>
-                            </div>
-                            <div class="quest-status-bar"><span class="status-lbl">{status_text_psm}</span></div>
-                        </div>
-                        <!-- ⚔️ DEKLARASI MISI 2: SEASONAL QUEST -->
-                        <div class="quest-item-box" style="margin-top: 20px; border-color: #b45309;">
-                            <div class="quest-badge-type" style="background: #b45309;">🏆 SEASONAL QUEST (1 BULAN PENUH)</div>
-                            <div class="quest-row">
-                                <span>👑 TARGET TOTAL PROGRAM PPS</span>
-                                <span>Target: {target_pps_per_kasir_period} Pcs | Akt: {qty_pwp_bulan_ini + qty_sg_bulan_ini} Pcs</span>
-                            </div>
-                            <div class="quest-row" style="margin-top: 6px;">
-                                <span>🍹 TARGET RATA-RATA SUEGER</span>
-                                <span>Standar: 50.0% | Akt: {sueger_achievement_percentage}%</span>
-                            </div>
-                        </div>
-                    </div>
+        # =========================================================================
+        # 🚪 KONDISI C: ANIMASI BUKU TERBUKA 2 - KITAB DAFTAR TUGAS / MISI TOKO
+        # =========================================================================
+        elif st.session_state["campaign_sub_page"] == "view_buku_tugas":
+            st.markdown("<h2 class='guild-lobby-title'>📜 GUILD MISSION SCROLL </h2>", unsafe_allow_html=True)
+            st.markdown("<p class='guild-lobby-sub'>Daftar rincian misi harian, mingguan, dan evaluasi status target.</p>", unsafe_allow_html=True)
+            
+            html_open_tugas = """
+            <div class="rpg-open-book-container">
+                <!-- 📄 HALAMAN KIRI: MISI HARIAN -->
+                <div class="rpg-book-page">
+                    <h3 class="open-page-title">⚡ DAILY QUESTS</h3>
+                    <p class="open-page-subtitle">Maklumat Tugas Hari Ini</p>
+                    <div class="open-book-divider"></div>
+                    <div class="open-stat-row"><span>🔥 TARGET SG</span><span style="color:#16a34a;">2.3 Pcs (DONE)</span></div>
+                    <div class="open-stat-row"><span>🛡️ TARGET PWP</span><span style="color:#16a34a;">1.4 Pcs (DONE)</span></div>
+                    <div class="open-stat-row"><span>📦 TARGET PSM</span><span style="color:#dc2626;">3.5 Pcs (HUNTING)</span></div>
+                    <p class="open-page-footer">Page 1 • Daily Bulletin</p>
+                </div>
+                <!-- 📄 HALAMAN KANAN: MISI BERKALA -->
+                <div class="rpg-book-page">
+                    <h3 class="open-page-title">🏆 SEASON QUESTS</h3>
+                    <p class="open-page-subtitle">Misi Skala Besar</p>
+                    <div class="open-book-divider"></div>
+                    <div class="open-stat-row"><span>⚔️ WEEKLY PSM</span><span style="color:#854d0e;">38 Pcs</span></div>
+                    <div class="open-stat-row"><span>🛡️ PERIOD PWP</span><span style="color:#854d0e;">20 Pcs</span></div>
+                    <p class="open-page-footer">Page 2 • Guild Orders</p>
                 </div>
             </div>
             """
-            st.markdown(html_mission_board, unsafe_allow_html=True)
+            st.markdown(html_open_tugas, unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            # Tombol kembali khusus internal buku
+            if st.button("⬅️ TUTUP KITAB MISI", use_container_width=True, key="btn_close_inner_buku2"):
+                st.session_state["campaign_sub_page"] = "resepsionis_utama"
+                st.rerun()
 
         # =========================================================================
-        # 🎨 6. SUNTIKKAN SISI CSS INDEPENDEN UNTUK BUKU & PAPAN PENGUMUMAN GUILD
+        # 🚪 BUTTON EXIT UTAMA: TOMBOL KEMBALI KEMAH PREPARATION DARI MEJA RECEPTION
         # =========================================================================
-        st.markdown(
-            """
-            <style>
-                /* 📱 CORE ENGINE RESPONSIVE ANTI-PECAH UNTUK WEB PC, ANDROID, & IOS */
-                .rpg-book-wrapper, .rpg-board-wrapper {
-                    width: 100% !important;
-                    max-width: 580px !important;
-                    margin: 0 auto !important;
-                    box-sizing: border-box !important;
-                }
-                
-                /* 📖 DESAIN BUKU HASIL BURUAN KUNO KIRI-KANAN SIMETRIS */
-                .rpg-book-container {
-                    background: #f4eae1 !important;
-                    border: 4px solid #5c4033 !important;
-                    border-radius: 12px !important;
-                    box-shadow: 0 15px 35px rgba(0,0,0,0.6), inset 0 0 40px rgba(92, 64, 51, 0.15) !important;
-                    display: flex !important;
-                    min-height: 380px !important;
-                    position: relative !important;
-                    overflow: hidden !important;
-                }
-                /* Garis bayangan lipatan buku tepat di tengah-tengah */
-                .rpg-book-container::before {
-                    content: "" !important;
-                    position: absolute !important;
-                    top: 0 !important; left: 50% !important;
-                    width: 2px !important; height: 100% !important;
-                    background: linear-gradient(90deg, rgba(0,0,0,0.15), rgba(0,0,0,0.3), rgba(0,0,0,0.15)) !important;
-                    box-shadow: 0 0 10px rgba(0,0,0,0.4) !important;
-                    z-index: 5 !important;
-                }
-                .rpg-book-page {
-                    width: 50% !important;
-                    padding: 24px 20px !important;
-                    box-sizing: border-box !important;
-                    display: flex !important;
-                    flex-direction: column !important;
-                    justify-content: flex-start !important;
-                    color: #2b1d0c !important;
-                    font-family: 'Courier New', monospace !important;
-                }
-                .book-page-title { text-align: center !important; font-size: 16px !important; font-weight: 900 !important; margin: 0 0 2px 0 !important; color: #854d0e !important; }
-                .book-page-subtitle { text-align: center !important; font-size: 10px !important; color: #a1a1aa !important; margin: 0 0 10px 0 !important; font-style: italic !important; }
-                .book-divider { border-bottom: 2px double #854d0e !important; margin-bottom: 15px !important; width: 100% !important; }
-                .book-stat-row { display: flex !important; justify-content: space-between !important; font-size: 11px !important; font-weight: bold !important; margin-bottom: 12px !important; border-bottom: 1px dashed rgba(133,77,14,0.15) !important; padding-bottom: 4px !important; }
-                .book-stat-label { color: #5c4033 !important; }
-                .book-stat-value { color: #854d0e !important; font-weight: 900 !important; }
-                .book-page-footer { margin-top: auto !important; font-size: 9px !important; color: #78716c !important; text-align: center !important; font-weight: bold !important; }
-
-                /* 📜 DESAIN PAPAN PENGUMUMAN MISI KAYU JATI GUILD */
-                .rpg-board-wood {
-                    background: linear-gradient(135deg, #1e1b18 0%, #12100e 100%) !important;
-                    border: 5px solid #2b2421 !important;
-                    border-radius: 14px !important;
-                    padding: 12px !important;
-                    box-shadow: 0 20px 40px rgba(0,0,0,0.7) !important;
-                }
-                .rpg-board-paper {
-                    background: #f7e7ce !important; /* Warna kertas perkamen tempel kekuningan */
-                    border: 2px dashed #b45309 !important;
-                    border-radius: 8px !important;
-                    padding: 24px 20px !important;
-                    box-sizing: border-box !important;
-                    color: #1e1b18 !important;
-                    font-family: monospace !important;
-                }
-                .board-main-title { text-align: center !important; color: #7c2d12 !important; font-size: 18px !important; font-weight: 900 !important; margin: 0 0 4px 0 !important; letter-spacing: 1px !important; }
-                .board-main-subtitle { text-align: center !important; font-size: 11px !important; color: #7c2d12 !important; margin: 0 0 12px 0 !important; font-weight: bold !important; }
-                .board-rope-divider { border-bottom: 2px dashed #7c2d12 !important; margin-bottom: 20px !important; }
-                
-                .quest-item-box {
-                    background: rgba(254, 243, 199, 0.5) !important;
-                    border: 2px solid #d97706 !important;
-                    border-radius: 8px !important;
-                    padding: 14px !important;
-                    position: relative !important;
-                    box-sizing: border-box !important;
-                }
-                .quest-badge-type {
-                    position: absolute !important;
-                    top: -10px !important; left: 12px !important;
-                    background: #d97706 !important;
-                    color: white !important;
-                    font-size: 9px !important;
-                    font-weight: 800 !important;
-                    padding: 2px 8px !important;
-                    border-radius: 4px !important;
-                    letter-spacing: 0.5px !important;
-                }
-                .quest-row { display: flex !important; justify-content: space-between !important; font-size: 12px !important; font-weight: 800 !important; color: #451a03 !important; }
-                .quest-status-bar { text-align: left !important; font-size: 10px !important; font-weight: 900 !important; margin-top: 4px !important; }
-                
-                /* Mengubah warna teks status misi secara dinamis */
-                .quest-status-bar:has(.status-lbl:contains("🟢")) { color: #16a34a !important; }
-                .quest-status-bar:has(.status-lbl:contains("🔴")) { color: #dc2626 !important; }
-            </style>
-            """, 
-            unsafe_allow_html=True
-        )
-
-        # =========================================================================
-        # 🚪 7. BUTTON EXIT: TOMBOL KEMBALI KEMAH PREPARATION PREMIUM
-        # =========================================================================
-        st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
-        if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_camp"):
-            st.session_state.current_camp_menu = "main"
-            st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
+        if st.session_state["campaign_sub_page"] == "resepsionis_utama":
+            st.markdown("<br><hr style='border-color: rgba(180, 83, 9, 0.2); margin: 15px 0;'><br>", unsafe_allow_html=True)
+            st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
+            if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby"):
+                st.session_state.current_camp_menu = "main"
+                st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
         
         st.stop()
-    
+
+
     # ⛺ JALUR C: BERANDA UTAMA 3 KARTU CAMP (YANG HARUSNYA MUNCUL DI AWAL)
     elif st.session_state["current_camp_menu"] == "main":
         st.markdown(
@@ -1954,9 +1776,71 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         with col_camp2:
             st.markdown("<div class='camp-card'><div class='camp-icon'>🎯</div><div class='camp-title'>QUIZ CAMPAIGN</div><div class='camp-desc'>Cek papan pengumuman untuk melihat quest musiman, tugas mingguan PSM, serta daily target buruan Anda.</div></div>", unsafe_allow_html=True)
             if st.button("Ambil Quest ➔", use_container_width=True, key="btn_camp_quest"):
+                placeholder_loading = st.empty()
+                with placeholder_loading.container():
+                    # 🧙‍♂️ RITUAL LOADING FULLSCREEN: LINGKARAN SIHIR + PENCATATAN BUKU GAIB
+                    st.markdown(
+                        """
+                        <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
+                            <!-- LINGKARAN SIHIR VEKTOR BERPENDAR NEON -->
+                            <div class="magic-circle-container" style="position: relative; width: 200px; height: 100px; display: flex; justify-content: center; align-items: center;">
+                                <svg width="200" height="200" viewBox="0 0 200 200" style="position: absolute; top: -50px;">
+                                    <circle cx="100" cy="100" r="90" class="vector-glow" stroke="#00f0ff" stroke-width="3" stroke-dasharray="15, 10" fill="none" />
+                                    <circle cx="100" cy="100" r="65" class="vector-glow-inner" stroke="#a855f7" stroke-width="2" stroke-dasharray="4, 6" fill="none" />
+                                    <polygon points="100,25 165,140 35,140" stroke="#fbbf24" stroke-width="1.5" fill="none" class="vector-glow" style="transform-origin: 100px 100px; animation: spin-clockwise 12s infinite linear;" />
+                                </svg>
+                                <!-- EMOJI BUKU BERPUTAR DI TENGAH SEGITIGA SIHIR -->
+                                <div class="magic-core-book" style="position: absolute; font-size: 55px; filter: drop-shadow(0 0 15px #00f0ff); animation: pulse-book 1.5s infinite ease-in-out; z-index: 10;">📖</div>
+                            </div>
+                            <!-- TEKS ANIMASI PENCATATAN DATA -->
+                            <h1 id="txt-magic-title" style='color: #00f0ff; font-family: monospace; animation: blink-text 1.2s infinite; font-size: 22px; margin-top: 70px; letter-spacing: 2px; text-shadow: 0 0 15px rgba(0,240,255,0.5); text-align: center;'>LOGGING ADVENTURE DATA...</h1>
+                            <p id="txt-magic-sub" style='color: #64748b; font-size: 13px; margin-top: 5px; font-family: monospace; text-align: center; max-width: 320px; padding: 0 15px;'>Opening the heavy leather journal and engraving your guild performance...</p>
+                            <!-- GAUNG GAYA ANIMASI CSS -->
+                            <style>
+                                @keyframes spin-clockwise { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                                .vector-glow { transform-origin: 100px 100px; animation: spin-clockwise 10s infinite linear; filter: drop-shadow(0 0 12px #00f0ff); }
+                                .vector-glow-inner { transform-origin: 100px 100px; animation: spin-clockwise 6s infinite linear; reverse; filter: drop-shadow(0 0 10px #a855f7); }
+                                @keyframes pulse-book { 0%, 100% { transform: scale(1) rotateY(0deg); } 50% { transform: scale(1.15) rotateY(180deg); } }
+                                @keyframes blink-text { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+                            </style>
+                        </div>
+                        """, 
+                        unsafe_allow_html=True
+                    )
+                    
+                    # Jeda khidmat simulasi prapencatatan mantra (3 detik)
+                    progress_bar = st.progress(0)
+                    for percent_complete in range(100):
+                        time.sleep(0.02)
+                        progress_bar.progress(percent_complete + 1)
+                        if percent_complete == 40:
+                            st.markdown("<script>window.parent.document.getElementById('txt-magic-title').innerHTML = 'SYNCHRONIZING REWARD LOGS...'; window.parent.document.getElementById('txt-magic-sub').innerHTML = 'Inking down total item counts and verifying sueger elixirs...';</script>", unsafe_allow_html=True)
+                        elif percent_complete == 80:
+                            st.markdown("<script>window.parent.document.getElementById('txt-magic-title').innerHTML = 'STABILIZING MANA CONNECTIONS...'; window.parent.document.getElementById('txt-magic-sub').innerHTML = 'Polishing crystal emblems and locking privacy gates...';</script>", unsafe_allow_html=True)
+                    
+                    # 🔔 LAYAR KEDUA: PENGUMUMAN SELAMAT DATANG DI RESEPSIONIS GUILD
+                    st.markdown(
+                        """
+                        <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
+                            <div style='font-size: 70px; filter: drop-shadow(0 0 20px #fbbf24); animation: welcome-bounce 1s infinite alternate;'>🛎️</div>
+                            <h1 style='color: #fbbf24; font-family: monospace; font-size: 26px; margin-top: 30px; letter-spacing: 2px; text-shadow: 0 0 20px rgba(251,191,36,0.6); text-align: center; padding: 0 10px;'>SELAMAT DATANG DI RESEPSIONIS GUILD</h1>
+                            <p style='color: #ffffff; font-size: 14px; margin-top: 10px; font-family: monospace; text-align: center; font-style: italic;'>Silakan pilih buku panduan di meja resepsionis untuk melanjutkan tugas.</p>
+                            <style>
+                                @keyframes welcome-bounce { from { transform: translateY(0); } to { transform: translateY(-12px); } }
+                            </style>
+                        </div>
+                        """, 
+                        unsafe_allow_html=True
+                    )
+                    time.sleep(1.8) # Jeda waktu agar pengguna bisa membaca tulisan selamat datang
+                
+                placeholder_loading.empty()
+                
+                # Mengaktifkan gerbang alihan menuju halaman 2 Buku Resepsionis
                 st.session_state.current_camp_menu = "quiz_campaign"
-                st.session_state["campaign_sub_page"] = "buku_buruan" # Default halaman pertama
+                st.session_state["campaign_sub_page"] = "resepsionis_utama"
                 st.rerun()
+
                 
         # =========================================================================
         # ⚔️ KARTU 3: UPGRADE SKILL (EDISI RITUAL PENEMPAAN SENJATA 1-100)
