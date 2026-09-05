@@ -1588,61 +1588,53 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
         
         # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (STRUKTUR MURNI PREPARATION CAMP STYLE)
+        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (PREMIUM INSIDE-BUTTON DESIGN)
         # =========================================================================
         if st.session_state["campaign_sub_page"] == "resepsionis_utama":
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub'>Pilih gulungan jurnal di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
             
-            # --- 1. RENDER GRID STRUKTUR DATA UTAMA (2 KOLOM BERSIH) ---
+            # --- RENDER 2 KOLOM TOMBOL RAKSASA DENGAN ISI TEXT VERTIKAL PREMIUM ---
             col_lobby1, col_lobby2 = st.columns(2)
             
-            # 📘 KOLOM 1: JURNAL BURUAN (LAPORAN PRIBADI)
+            # 📘 KOTAK 1: JURNAL BURUAN (REPORT PRIBADI)
             with col_lobby1:
-                # Blok Kontainer Atas untuk Visual Emoji, Judul, dan Deskripsi
-                st.markdown(
-                    """
-                    <div class="camp-card">
-                        <div class="camp-icon">📘</div>
-                        <div class="camp-title">JURNAL BURUAN</div>
-                        <div class="camp-desc">
-                            Buka gulungan piagam pribadi untuk memeriksa akumulasi poin hasil buruan, 
-                            level pahlawan, serta rapor performa penjualan individu Anda.
-                        </div>
-                    </div>
-                    """, 
-                    unsafe_allow_html=True
+                # Menyusun teks bertingkat di dalam tombol menggunakan kombinasi \n dan spasi pelurus
+                isi_jurnal_buruan = (
+                    "📘\n\n"
+                    "✨ JURNAL BURUAN INDIVIDU ✨\n"
+                    "──────────────────────────────\n"
+                    "Buka gulungan piagam pribadi untuk memeriksa\n"
+                    "akumulasi poin hasil buruan, tingkat level pahlawan,\n"
+                    "serta rapor performa penjualan harian Anda.\n\n"
+                    "➔ LIHAT STATUS PAHLAWAN"
                 )
-                # Tombol Alas Pilihan Berwarna Cokelat Emas Asli Camp Style
-                if st.button("Lihat Status ➔", use_container_width=True, key="btn_lobby_buku_buruan_camp_clone"):
+                
+                if st.button(isi_jurnal_buruan, use_container_width=True, key="btn_lobby_buku_buruan_inside_premium"):
                     st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
                     st.rerun()
                     
-            # 🔮 KOLOM 2: KITAB MISI GUILD (TUGAS ALIANSI)
+            # 🔮 KOTAK 2: KITAB MISI GUILD (AMBIL QUIZ & QUEST)
             with col_lobby2:
-                # Blok Kontainer Atas untuk Visual Emoji, Judul, dan Deskripsi
-                st.markdown(
-                    """
-                    <div class="camp-card">
-                        <div class="camp-icon">🔮</div>
-                        <div class="camp-title">KITAB MISI GUILD</div>
-                        <div class="camp-desc">
-                            Cek papan pengumuman maklumat aliansi untuk melihat quest musiman, 
-                            tugas mingguan PSM, serta daily target buruan toko Anda.
-                        </div>
-                    </div>
-                    """, 
-                    unsafe_allow_html=True
+                # Mengganti ikon menjadi kombinasi Kitab Misi dan Pedang Beradu (⚔️) untuk Quiz Campaign
+                isi_kitab_misi = (
+                    "🔮 ⚔️\n\n"
+                    "✨ KITAB MISI & QUIZ CAMPAIGN ✨\n"
+                    "──────────────────────────────\n"
+                    "Cek papan pengumuman maklumat aliansi untuk\n"
+                    "melihat daftar quest musiman, tugas mingguan PSM,\n"
+                    "serta target buruan harian toko Anda.\n\n"
+                    "➔ AMBIL QUEST & MULAI BERTARUNG"
                 )
-                # Tombol Alas Pilihan Berwarna Cokelat Emas Asli Camp Style
-                if st.button("Ambil Quest ➔", use_container_width=True, key="btn_lobby_buku_misi_camp_clone"):
+                
+                if st.button(isi_kitab_misi, use_container_width=True, key="btn_lobby_buku_misi_inside_premium"):
                     st.session_state["campaign_sub_page"] = "view_buku_tugas"
                     st.rerun()
 
-            # --- 2. TOMBOL KELUAR UTAMA DI BAGIAN BAWAH MURNI CAMP STYLE ---
+            # Tombol keluar utama kembali ke Camp Persiapan di bagian paling bawah
             st.markdown("<br><hr style='border-color: rgba(180, 83, 9, 0.2); margin: 15px 0;'><br>", unsafe_allow_html=True)
             st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
-            if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_camp_style_fixed"):
+            if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_camp_style_final"):
                 st.session_state.current_camp_menu = "main"
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
