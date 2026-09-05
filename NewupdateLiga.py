@@ -1588,10 +1588,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
         
         # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (RE-INTEGRATED LOGIC ENGINE)
+        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (ANTI-LOGIC LOCKOUT ENGINE)
         # =========================================================================
-        # Menghidupkan kembali gerbang 'if' utama agar baris 'elif' di bawahnya tidak error
-        if st.session_state.get("campaign_sub_page", "resepsionis_utama") == "resepsionis_utama":
+        # 🎯 FORCE RESET: Jika state kosong, hilang, atau salah jalan, paksa kembali ke resepsionis
+        if "campaign_sub_page" not in st.session_state or st.session_state["campaign_sub_page"] not in ["resepsionis_utama", "view_buku_pencapaian", "view_buku_tugas"]:
+            st.session_state["campaign_sub_page"] = "resepsionis_utama"
+
+        # Gerbang pengecekan lobi utama
+        if st.session_state["campaign_sub_page"] == "resepsionis_utama":
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub'>Pilih gulungan jurnal di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
             
@@ -1605,7 +1609,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     st.markdown("<h4 style='text-align: center; color: #fef08a; font-family: monospace; font-weight: bold;'>JURNAL BURUAN</h4>", unsafe_allow_html=True)
                     st.markdown("<p style='text-align: center; color: #94a3b8; font-family: monospace; font-size: 13px; min-height: 70px;'>Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin, level pahlawan, dan rekap hasil buruan harian.</p>", unsafe_allow_html=True)
                     
-                    if st.button("Lihat Status ➔", use_container_width=True, key="btn_lobby_buruan_fixed_final"):
+                    if st.button("Lihat Status ➔", use_container_width=True, key="btn_lobby_buruan_final_lock"):
                         st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
                         st.rerun()
                     
@@ -1616,14 +1620,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     st.markdown("<h4 style='text-align: center; color: #fef08a; font-family: monospace; font-weight: bold;'>KITAB MISI GUILD</h4>", unsafe_allow_html=True)
                     st.markdown("<p style='text-align: center; color: #94a3b8; font-family: monospace; font-size: 13px; min-height: 70px;'>Cek papan pengumuman maklumat aliansi untuk melihat quest musiman, tugas mingguan PSM, serta daily target buruan toko Anda.</p>", unsafe_allow_html=True)
                     
-                    if st.button("Ambil Quest ➔", use_container_width=True, key="btn_lobby_misi_fixed_final"):
+                    if st.button("Ambil Quest ➔", use_container_width=True, key="btn_lobby_misi_final_lock"):
                         st.session_state["campaign_sub_page"] = "view_buku_tugas"
                         st.rerun()
 
             # Tombol keluar utama kembali ke Camp Persiapan
             st.markdown("<br><hr style='border-color: rgba(180, 83, 9, 0.2); margin: 15px 0;'><br>", unsafe_allow_html=True)
             st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
-            if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_fixed_final"):
+            if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_final_lock"):
                 st.session_state.current_camp_menu = "main"
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
