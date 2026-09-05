@@ -2005,7 +2005,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     st.session_state["book_page_number"] += 1
                     st.rerun()
 
-        ==============================================================================================
+        #==============================================================================================#
         # 🚪 KONDISI 3: BUKU TERBUKA - KITAB MISI GUILD
         elif st.session_state["campaign_sub_page"] == "view_buku_tugas":
             st.markdown("<h2 class='guild-lobby-title'> 📜 KITAB MISI GUILD </h2>", unsafe_allow_html=True)
