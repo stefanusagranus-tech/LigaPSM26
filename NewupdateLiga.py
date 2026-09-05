@@ -1627,31 +1627,30 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # 👑 NAVIGATION STRUKTUR INTERNAL: JALUR NAVIGASI UTAMA BERURUTAN (FIXED)
         # =========================================================================
          
-        # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (BAGIAN 1 - PYTHON & HTML COMPONENT)
+              # =========================================================================
+        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (MASTER URL ENGINE - RUNNING FIXED)
         # =========================================================================
         if st.session_state.get("campaign_sub_page", "resepsionis_utama") == "resepsionis_utama":
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub'>Pilih gulungan jurnal di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
             
-            # --- 🎯 ENGINE PENANGKAP KLIK (MURNI PYTHON) ---
+            # --- 🎯 DETEKTOR UTAMA PYTHON (Membaca Parameter Tembakan Browser) ---
             query_click = st.query_params.get("book_click")
             if query_click == "jurnal_buruan":
                 st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
-                st.query_params.clear()
+                st.query_params.clear() # Bersihkan URL
                 st.rerun()
             elif query_click == "kitab_misi":
                 st.session_state["campaign_sub_page"] = "view_buku_tugas"
                 st.query_params.clear()
                 st.rerun()
 
-            # --- 📦 KONTEN UTAMA DUA BUKU (HTML MURNI) ---
+            # --- 📦 VISUAL KARTU BUKU (Memicu Transisi URL Browser Utama) ---
             HTML_CONTENT = """
             <div class="rpg-book-grid-container">
                 <!-- 📘 BUKU 1: JURNAL BURUAN -->
-                <form id="form_buku1" method="get" action="" class="book-form-card">
-                    <input type="hidden" name="book_click" value="jurnal_buruan">
-                    <button type="button" class="book-inner-submit b1-theme" onclick="playFlipAnimation('form_buku1', this)">
+                <div class="book-form-card">
+                    <button type="button" class="book-inner-submit b1-theme" onclick="navigateParent('jurnal_buruan', this)">
                         <div class="book-page-flip"></div>
                         <div class="book-content-wrapper">
                             <div class="book-emoji-large anim-float-buku">📘</div>
@@ -1660,12 +1659,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                             <div class="book-action-arrow">➔ Buka Buku</div>
                         </div>
                     </button>
-                </form>
+                </div>
                 
                 <!-- 🔮 BUKU 2: KITAB MISI GUILD -->
-                <form id="form_buku2" method="get" action="" class="book-form-card">
-                    <input type="hidden" name="book_click" value="kitab_misi">
-                    <button type="button" class="book-inner-submit b2-theme" onclick="playFlipAnimation('form_buku2', this)">
+                <div class="book-form-card">
+                    <button type="button" class="book-inner-submit b2-theme" onclick="navigateParent('kitab_misi', this)">
                         <div class="book-page-flip"></div>
                         <div class="book-content-wrapper">
                             <div class="book-emoji-large anim-float-pedang">⚔️</div>
@@ -1674,94 +1672,53 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                             <div class="book-action-arrow">➔ Buka Kitab</div>
                         </div>
                     </button>
-                </form>
+                </div>
             </div>
             """
-            # --- 🎨 PAKET CSS ANIMASI DAN JS TRANSAKSI (GABUNGAN AMAN) ---
+
+            # --- 🎨 KUNCI MASTER: SCRIPT NAVIGASI JAVASCRIPT INDEPENDEN ---
             CSS_AND_JS = """
             <style>
                 body { background-color: transparent; margin: 0; padding: 0; font-family: monospace; overflow: hidden; }
-                .rpg-book-grid-container {
-                    display: flex; justify-content: space-between; align-items: stretch;
-                    gap: 20px; width: 100%; max-width: 650px; margin: 15px auto;
-                    box-sizing: border-box; perspective: 1000px;
-                }
+                .rpg-book-grid-container { display: flex; justify-content: space-between; align-items: stretch; gap: 20px; width: 100%; max-width: 650px; margin: 15px auto; box-sizing: border-box; perspective: 1000px; }
                 .book-form-card { width: 48%; box-sizing: border-box; }
-                .book-inner-submit {
-                    width: 100%; min-height: 240px; border-radius: 6px 20px 20px 6px;
-                    font-family: monospace; border-left: 14px solid rgba(0,0,0,0.55);
-                    display: flex; flex-direction: column; padding: 0;
-                    box-sizing: border-box; cursor: pointer; transition: all 0.3s ease;
-                    position: relative; overflow: hidden; transform-style: preserve-3d;
-                }
-                .book-content-wrapper {
-                    padding: 20px 15px; width: 100%; height: 100%; display: flex;
-                    flex-direction: column; align-items: center; box-sizing: border-box;
-                    flex-grow: 1; z-index: 2;
-                }
-                .book-page-flip {
-                    position: absolute; top: 0; right: 0; width: 100%; height: 100%;
-                    background: #f4eae1; border: 2px solid #5c4033; box-sizing: border-box;
-                    border-radius: 0 20px 20px 0; transform-origin: left center;
-                    transform: rotateY(0deg); opacity: 0; z-index: 10; transition: none;
-                }
-                .b1-theme {
-                    background: linear-gradient(135deg, #0b1329 0%, #1e3a8a 100%); color: #38bdf8;
-                    border: 2px solid #38bdf8; box-shadow: 5px 15px 30px rgba(0,0,0,0.6), inset -6px 0 15px rgba(0,0,0,0.4);
-                }
-                .b1-theme:hover {
-                    transform: translateY(-6px) rotate(-0.5deg); border-color: #00f0ff;
-                    box-shadow: 0 0 25px rgba(0, 240, 255, 0.4), inset -6px 0 15px rgba(0,0,0,0.2);
-                }
-                .b2-theme {
-                    background: linear-gradient(135deg, #161233 0%, #581c87 100%); color: #c084fc;
-                    border: 2px solid #c084fc; box-shadow: 5px 15px 30px rgba(0,0,0,0.6), inset -6px 0 15px rgba(0,0,0,0.4);
-                }
-                .b2-theme:hover {
-                    transform: translateY(-6px) rotate(0.5deg); border-color: #d8b4fe;
-                    box-shadow: 0 0 25px rgba(168, 85, 247, 0.4), inset -6px 0 15px rgba(0,0,0,0.2);
-                }
+                .book-inner-submit { width: 100%; min-height: 240px; border-radius: 6px 20px 20px 6px; font-family: monospace; border-left: 14px solid rgba(0,0,0,0.55); display: flex; flex-direction: column; padding: 0; box-sizing: border-box; cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden; transform-style: preserve-3d; }
+                .book-content-wrapper { padding: 20px 15px; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; flex-grow: 1; z-index: 2; }
+                .book-page-flip { position: absolute; top: 0; right: 0; width: 100%; height: 100%; background: #f4eae1; border: 2px solid #5c4033; box-sizing: border-box; border-radius: 0 20px 20px 0; transform-origin: left center; transform: rotateY(0deg); opacity: 0; z-index: 10; transition: none; }
+                .b1-theme { background: linear-gradient(135deg, #0b1329 0%, #1e3a8a 100%); color: #38bdf8; border: 2px solid #38bdf8; box-shadow: 5px 15px 30px rgba(0,0,0,0.6), inset -6px 0 15px rgba(0,0,0,0.4); }
+                .b1-theme:hover { transform: translateY(-6px) rotate(-0.5deg); border-color: #00f0ff; box-shadow: 0 0 25px rgba(0, 240, 255, 0.4), inset -6px 0 15px rgba(0,0,0,0.2); }
+                .b2-theme { background: linear-gradient(135deg, #161233 0%, #581c87 100%); color: #c084fc; border: 2px solid #c084fc; box-shadow: 5px 15px 30px rgba(0,0,0,0.6), inset -6px 0 15px rgba(0,0,0,0.4); }
+                .b2-theme:hover { transform: translateY(-6px) rotate(0.5deg); border-color: #d8b4fe; box-shadow: 0 0 25px rgba(168, 85, 247, 0.4), inset -6px 0 15px rgba(0,0,0,0.2); }
                 .book-emoji-large { font-size: 45px; margin-bottom: 10px; line-height: 1; }
                 .book-title-bold { font-size: 14px; font-weight: 900; letter-spacing: 1px; margin-bottom: 12px; }
                 .book-desc-small { font-size: 10.5px; opacity: 0.85; line-height: 1.4; flex-grow: 1; }
                 .book-action-arrow { font-size: 11px; margin-top: 15px; font-weight: bold; opacity: 0.7; }
-                
-                /* 👑 ANIMASI ELEMENT INTERSTELAR BERGERAK */
                 .anim-float-buku { animation: floatBook 2.5s infinite ease-in-out; filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.3)); }
-                @keyframes floatBook {
-                    0%, 100% { transform: translateY(0); }
-                    50% { transform: translateY(-6px); filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.6)); }
-                }
+                @keyframes floatBook { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.6)); } }
                 .anim-float-pedang { animation: pulsePedang 3s infinite ease-in-out; filter: drop-shadow(0 0 8px rgba(192, 132, 252, 0.3)); }
-                @keyframes pulsePedang {
-                    0%, 100% { transform: scale(1) rotate(0deg); }
-                    50% { transform: scale(1.08) rotate(3deg); filter: drop-shadow(0 0 18px rgba(192, 132, 252, 0.7)); }
-                }
+                @keyframes pulsePedang { 0%, 100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.08) rotate(3deg); filter: drop-shadow(0 0 18px rgba(192, 132, 252, 0.7)); } }
                 .anim-flipping-active { animation: bookShine 0.5s forwards !important; }
                 .anim-page-active { opacity: 1 !important; animation: pageTurn 0.55s cubic-bezier(0.4, 0, 0.2, 1) forwards !important; }
                 @keyframes pageTurn { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(-180deg); } }
-                @keyframes bookShine {
-                    0% { filter: brightness(1); }
-                    50% { filter: brightness(1.6) contrast(1.2); transform: scale(0.98); }
-                    100% { filter: brightness(0); transform: scale(1.05); }
-                }
+                @keyframes bookShine { 0% { filter: brightness(1); } 50% { filter: brightness(1.6) contrast(1.2); transform: scale(0.98); } 100% { filter: brightness(0); transform: scale(1.05); } }
             </style>
 
             <script>
-                function playFlipAnimation(formId, buttonEl) {
+                function navigateParent(targetVal, buttonEl) {
                     const page = buttonEl.querySelector('.book-page-flip');
                     buttonEl.classList.add('anim-flipping-active');
                     if(page) page.classList.add('anim-page-active');
-                    setTimeout(() => { document.getElementById(formId).submit(); }, 520);
+                    
+                    setTimeout(() => {
+                        // FIX TERTINGGI: Menembak URL utama browser secara paksa melewati pembatas Iframe Sandbox
+                        const currentUrl = window.parent.location.origin + window.parent.location.pathname;
+                        window.parent.location.href = currentUrl + '?book_click=' + targetVal;
+                    }, 520);
                 }
             </script>
             """
-
-            # --- 🛠️ 3. EKSEKUSI PENGGABUNGAN & CETAK KE STREAMLIT ---
-            # Menggabungkan Konten HTML (Bagian 1) dan CSS/JS (Bagian 2) ke dalam satu wadah murni
             st.components.v1.html(HTML_CONTENT + CSS_AND_JS, height=270, scrolling=False)
 
-            # Tombol keluar utama menuju camp persiapan (Bawaan asli Streamlit)
             st.markdown("<br><hr style='border-color: rgba(180, 83, 9, 0.2); margin: 15px 0;'><br>", unsafe_allow_html=True)
             st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
             if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_camp_style_fixed"):
@@ -1771,36 +1728,75 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
 
         # =========================================================================
-        # 📘 KONDISI 2: BUKU PENCAPAIAN / REPORT PRIBADI (SUDAH AMAN & BERIKUTNYA)
+        # 📘 KONDISI 2: BUKU PENCAPAIAN / REPORT PRIBADI (PERKAMEN KUNO TERBUKA)
         # =========================================================================
-        if st.session_state["campaign_sub_page"] == "view_buku_pencapaian":
-            st.markdown("<h2 class='guild-lobby-title'> 📖 JURNAL BURUAN </h2>", unsafe_allow_html=True)
-            st.markdown("<p class='guild-lobby-sub'>Lembar rekapitulasi poin hasil perburuan individu Anda.</p>", unsafe_allow_html=True)
+        elif st.session_state["campaign_sub_page"] == "view_buku_pencapaian":
             
-            html_open_pencapaian = """
-            <div class="rpg-open-book-container">
-                <div class="rpg-book-page">
-                    <h3 class="open-page-title">⚔️ MAIN HUNTS</h3>
-                    <p class="open-page-subtitle">Rapor Hasil Tempur</p>
-                    <div class="open-book-divider"></div>
-                    <div class="open-stat-row"><span>🔥 ATTACK (PSM)</span><span style="color:#854d0e;">42 Qty</span></div>
-                    <div class="open-stat-row"><span>🛡️ DEFENSE (PPS)</span><span style="color:#854d0e;">115 Poin</span></div>
-                    <p class="open-page-footer">Page 1 • Active Season</p>
+            # --- 🏛️ VISUAL STRUKTUR ARSIP BUKU MEMBELAH DUA ---
+            st.markdown(
+                """
+                <div class="rpg-open-book-container">
+                    <!-- 📖 LEMBARAN SEBELAH KIRI (STATUS HERO) -->
+                    <div class="rpg-book-page">
+                        <div class="open-page-title">⚜️ PAHLAWAN STATUS ⚜️</div>
+                        <div class="open-page-sub">Catatan Karakter Individu</div>
+                        <div class="open-book-divider"></div>
+                        
+                        <!-- Baris Statistik Karakter (Silakan sesuaikan isi variabelnya nanti) -->
+                        <div class="open-stat-row">
+                            <span>NAMA PAHLAWAN</span>
+                            <span style="color: #b45309;">ADVENTURER</span>
+                        </div>
+                        <div class="open-stat-row">
+                            <span>LEVEL LEVEL</span>
+                            <span style="color: #16a34a;">LV. 85</span>
+                        </div>
+                        <div class="open-stat-row">
+                            <span>KELAS HERO</span>
+                            <span style="color: #2563eb;">GUILD ELITE</span>
+                        </div>
+                        <div class="open-stat-row">
+                            <span>STATUS MISI</span>
+                            <span style="color: #ea580c;">AKTIF</span>
+                        </div>
+                        
+                        <div class="open-page-footer">- Halaman 1 -</div>
+                    </div>
+                    
+                    <!-- 📖 LEMBARAN SEBELAH KANAN (LOG BURUAN POIN) -->
+                    <div class="rpg-book-page">
+                        <div class="open-page-title">⚔️ REKAP BURUAN ⚔️</div>
+                        <div class="open-page-sub">Akumulasi Poin Pen penjualan</div>
+                        <div class="open-book-divider"></div>
+                        
+                        <!-- Baris Hasil Performa Statistik Toko -->
+                        <div class="open-stat-row">
+                            <span>TOTAL BURUAN</span>
+                            <span style="color: #b45309;">1,240 Pts</span>
+                        </div>
+                        <div class="open-stat-row">
+                            <span>TARGET BULANAN</span>
+                            <span style="color: #71717a;">1,500 Pts</span>
+                        </div>
+                        <div class="open-stat-row">
+                            <span>SISA TARGET</span>
+                            <span style="color: #dc2626;">260 Pts</span>
+                        </div>
+                        <div class="open-stat-row">
+                            <span>RANKING ALIANSI</span>
+                            <span style="color: #ca8a04;">#RANK 4</span>
+                        </div>
+                        
+                        <div class="open-page-footer">- Halaman 2 -</div>
+                    </div>
                 </div>
-                <div class="rpg-book-page">
-                    <h3 class="open-page-title">🍃 SIDE QUESTS</h3>
-                    <p class="open-page-subtitle">Rapor Suplemen Toko</p>
-                    <div class="open-book-divider"></div>
-                    <div class="open-stat-row"><span>🍹 SUEGER DRINK</span><span style="color:#854d0e;">28 Qty</span></div>
-                    <div class="open-stat-row"><span>🍪 CEBAN SNACK</span><span style="color:#854d0e;">14 Qty</span></div>
-                    <p class="open-page-footer">Page 2 • Toko C383</p>
-                </div>
-            </div>
-            """
-            st.markdown(html_open_pencapaian, unsafe_allow_html=True)
+                """,
+                unsafe_allow_html=True
+            )
+            
+            # --- ⬅️ AKSES TOMBOL TUTUP BUKU (Kembali ke Meja Resepsionis Utama) ---
             st.markdown("<br>", unsafe_allow_html=True)
-            
-            if st.button("⬅️ TUTUP BUKU JURNAL", use_container_width=True, key="btn_close_inner_buku1_fixed"):
+            if st.button("📖 TUTUP & KEMBALI KE MEJA DESK", use_container_width=True, key="btn_close_book_pencapaian"):
                 st.session_state["campaign_sub_page"] = "resepsionis_utama"
                 st.rerun()
 
