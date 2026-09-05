@@ -610,7 +610,17 @@ def show_login_page():
           st.rerun()
         else:
           st.error("Username atau Password salah!")
+# =========================================================================
+# 🛡️ SUNTIKAN MEMORI UTAMA (WAJIB ADA AGAR VARIABEL LOGGED_IN TERDAFTAR)
+# =========================================================================
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
 
+if "username" not in st.session_state:
+    st.session_state.username = ""
+
+if "campaign_sub_page" not in st.session_state:
+    st.session_state["campaign_sub_page"] = "resepsionis_utama"
 
 if not st.session_state.logged_in:
   show_login_page()
