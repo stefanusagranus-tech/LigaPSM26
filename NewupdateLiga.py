@@ -1598,33 +1598,89 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub'>Pilih gulungan jurnal di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
             
-            # --- 🎯 STRUKTUR TATA LETAK 2 KOLOM KEMBAR IDENTIK SEPERTI CAMP ---
+            # --- 🎨 1. SUNTIKKAN STYLING PREMIUM CAMP CARD SECARA EKSPLISIT ---
+            st.markdown(
+                """
+                <style>
+                    /* Kontainer Utama Kartu Camp */
+                    .camp-card {
+                        background: linear-gradient(135deg, #131926 0%, #1e2638 100%) !important;
+                        border: 2px solid #b45309 !important;
+                        border-radius: 12px !important;
+                        padding: 24px !important;
+                        text-align: center !important;
+                        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5) !important;
+                        margin-bottom: 12px !important;
+                        display: flex !important;
+                        flex-direction: column !important;
+                        align-items: center !important;
+                        justify-content: center !important;
+                        min-height: 200px !important; /* Menjaga tinggi kotak kiri-kanan tetap seimbang */
+                    }
+                    
+                    /* Desain Ukuran Emoji Atas */
+                    .camp-icon {
+                        font-size: 45px !important;
+                        margin-bottom: 12px !important;
+                        filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.3)) !important;
+                    }
+                    
+                    /* Judul Utama Kartu (Emas Monospace) */
+                    .camp-title {
+                        color: #fef08a !important;
+                        font-family: monospace !important;
+                        font-size: 16px !important;
+                        font-weight: 800 !important;
+                        margin-bottom: 8px !important;
+                        letter-spacing: 1px !important;
+                    }
+                    
+                    /* Deskripsi Petunjuk Catatan */
+                    .camp-desc {
+                        color: #94a3b8 !important;
+                        font-family: monospace !important;
+                        font-size: 12px !important;
+                        line-height: 1.5 !important;
+                    }
+                </style>
+                """,
+                unsafe_allow_html=True
+            )
+
+            # --- 🎯 2. RENDER STRUKTUR TATA LETAK 2 KOLOM KEMBAR IDENTIK ---
             col_lobby1, col_lobby2 = st.columns(2)
             
-           # 📘 KOLOM KIRI: JURNAL BURUAN (REPORT PRIBADI)
+            # 📘 KOLOM KIRI: JURNAL BURUAN (REPORT PRIBADI)
             with col_lobby1:
-                # Perbaikan total: String HTML dan parameter disatukan rapi di dalam kurung markdown
                 st.markdown(
                     """
                     <div class="camp-card">
                         <div class="camp-icon">📘</div>
                         <div class="camp-title">JURNAL BURUAN</div>
-                        <div class="camp-desc">
-                            Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin, 
-                            level pahlawan, dan rekap hasil buruan harian Anda sepanjang season berjalan.
-                        </div>
+                        <div class="camp-desc">Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin, level pahlawan, dan rekap hasil buruan harian Anda sepanjang season.</div>
                     </div>
                     """,
                     unsafe_allow_html=True
                 )
-
-            # Tombol keluar utama kembali ke Camp Persiapan (Ditaruh di bawah columns)
-            st.markdown("<br><hr style='border-color: rgba(180, 83, 9, 0.2); margin: 15px 0;'><br>", unsafe_allow_html=True)
-            st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
-            if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_camp_style_fixed"):
-                st.session_state.current_camp_menu = "main"
-                st.rerun()
-            st.markdown("</div>", unsafe_allow_html=True)
+                if st.button("Lihat Status ➔", use_container_width=True, key="btn_lobby_buruan_camp_style_fixed"):
+                    st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
+                    st.rerun()
+                    
+            # 🔮 KOLOM KANAN: KITAB MISI GUILD (AMBIL QUEST)
+            with col_lobby2:
+                st.markdown(
+                    """
+                    <div class="camp-card">
+                        <div class="camp-icon">🔮</div>
+                        <div class="camp-title">KITAB MISI GUILD</div>
+                        <div class="camp-desc">Cek papan pengumuman maklumat aliansi untuk melihat quest musiman, tugas mingguan PSM, serta daily target buruan toko Anda.</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+                if st.button("Ambil Quest ➔", use_container_width=True, key="btn_lobby_misi_camp_style_fixed"):
+                    st.session_state["campaign_sub_page"] = "view_buku_tugas"
+                    st.rerun()
 
 
         # =========================================================================
