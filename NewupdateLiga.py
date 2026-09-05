@@ -1527,25 +1527,30 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 /* ========================================================================= */
                 /* 👑 FIX MUTLAK: TARGET SELECTOR TOMBOL BUKU VERTIKAL PURE STREAMLIT        */
                 /* ========================================================================= */
-                div[data-testid="stColumn"] button[data-testid="stBaseButton-secondary"],
-                div[data-testid="stColumn"] button[data-testid="stBaseButton-primary"],
-                div[data-testid="stColumn"] .stButton button {
-                    min-height: 240px !important; 
-                    max-width: 220px !important;  
-                    width: 220px !important;
+                div[data-testid="stColumn"] button[key="btn_buku_buruan_pure_css"],
+                div[data-testid="stColumn"] button[key="btn_buku_misi_pure_css"] {
+                    /* Mengunci tinggi buku vertikal yang ideal dan simetris */
+                    min-height: 250px !important; 
+                    height: 250px !important;
+                    max-width: 210px !important;  
+                    width: 210px !important;
                     margin: 0 auto !important;    
                     border-radius: 6px 20px 20px 6px !important;
                     font-family: monospace !important;
                     border-left: 14px solid rgba(0,0,0,0.55) !important; /* Punggung Buku */
                     
-                    /* SEKTOR KUNCI: Memaksa teks HTML di dalam tombol tersusun tegak ke bawah */
+                    /* SEKTOR KUNCI: Mengaktifkan Enter \n & Menyusun Konten dari Atas ke Bawah */
+                    white-space: pre-line !important; 
                     display: flex !important;
                     flex-direction: column !important;
-                    justify-content: flex-start !important;
+                    justify-content: space-between !important; /* Dorong teks panah otomatis ke paling bawah */
                     align-items: center !important;
                     text-align: center !important;
-                    padding: 20px 15px !important;
+                    padding: 22px 14px !important;
                     box-sizing: border-box !important;
+                    font-size: 11px !important;
+                    font-weight: 600 !important;
+                    line-height: 1.4 !important;
                     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
                 }
 
@@ -1556,76 +1561,33 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     filter: none !important;
                 }
                 
-                                /* ========================================================================= */
-                /* 👑 STYLE UTAMA: MENGUNCI WUJUD BALOK BUKU MENYATU YANG KAMU SUKAI         */
-                /* ========================================================================= */
-                div[data-testid="stColumn"] button[key="btn_lobby_buruan_premium_pure"],
-                div[data-testid="stColumn"] button[key="btn_lobby_misi_premium_pure"],
-                div[data-testid="stColumn"] .stButton button {
-                    min-height: 250px !important;
-                    max-width: 220px !important;
-                    width: 220px !important;
-                    margin: 0 auto !important;
-                    border-radius: 6px 20px 20px 6px !important;
-                    font-family: monospace !important;
-                    border-left: 14px solid rgba(0,0,0,0.55) !important; /* Jilid Punggung Buku */
-                    display: flex !important;
-                    flex-direction: column !important;
-                    justify-content: flex-start !important;
-                    align-items: center !important;
-                    text-align: center !important;
-                    padding: 22px 15px !important;
-                    box-sizing: border-box !important;
-                    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
-                }
-                
-                /* 📘 TEMA WARNA BUKU 1 (JURNAL BURUAN) */
-                div[data-testid="stColumn"]:nth-child(1) button[key="btn_lobby_buruan_premium_pure"] {
+                /* 📘 TEMA WARNA BUKU 1 (JURNAL BURUAN - KOLOM KIRI) */
+                div[data-testid="stColumn"]:nth-child(1) button[key="btn_buku_buruan_pure_css"] {
                     background: linear-gradient(135deg, #0b1329 0%, #1e3a8a 100%) !important;
                     color: #38bdf8 !important;
                     border: 2px solid #38bdf8 !important;
                     box-shadow: 5px 15px 30px rgba(0,0,0,0.6), inset -6px 0 15px rgba(0,0,0,0.4) !important;
                 }
-                div[data-testid="stColumn"]:nth-child(1) button[key="btn_lobby_buruan_premium_pure"]:hover {
+                div[data-testid="stColumn"]:nth-child(1) button[key="btn_buku_buruan_pure_css"]:hover {
                     transform: translateY(-8px) rotate(-1deg) !important; /* Efek mengambang miring */
                     border-color: #00f0ff !important;
                     box-shadow: 0 0 25px rgba(0, 240, 255, 0.5), inset -6px 0 15px rgba(0,0,0,0.2) !important;
                     color: #ffffff !important;
                 }
                 
-                /* 🔮 TEMA WARNA BUKU 2 (KITAB MISI GUILD) */
-                div[data-testid="stColumn"]:nth-child(2) button[key="btn_lobby_misi_premium_pure"] {
+                /* 🔮 TEMA WARNA BUKU 2 (KITAB MISI GUILD - KOLOM KANAN) */
+                div[data-testid="stColumn"]:nth-child(2) button[key="btn_buku_misi_pure_css"] {
                     background: linear-gradient(135deg, #161233 0%, #581c87 100%) !important;
                     color: #c084fc !important;
                     border: 2px solid #c084fc !important;
                     box-shadow: 5px 15px 30px rgba(0,0,0,0.6), inset -6px 0 15px rgba(0,0,0,0.4) !important;
                 }
-                div[data-testid="stColumn"]:nth-child(2) button[key="btn_lobby_misi_premium_pure"]:hover {
-                    transform: translateY(-8px) rotate(1deg) !important; /* Efek mengambang miring */
+                div[data-testid="stColumn"]:nth-child(2) button[key="btn_buku_misi_pure_css"]:hover {
+                    transform: translateY(-8px) rotate(1deg) !important;
                     border-color: #d8b4fe !important;
                     box-shadow: 0 0 25px rgba(168, 85, 247, 0.5), inset -6px 0 15px rgba(0,0,0,0.2) !important;
                     color: #ffffff !important;
                 }
-
-                /* Pengaturan Struktur Teks Dalam Badan Buku */
-                .book-main-emoji { font-size: 45px !important; margin-bottom: 12px !important; line-height: 1 !important; }
-                .book-main-title { font-size: 14px !important; font-weight: 900 !important; letter-spacing: 1px !important; margin-bottom: 12px !important; color: inherit !important; }
-                .book-main-desc { font-size: 11px !important; opacity: 0.85 !important; line-height: 1.5 !important; flex-grow: 1 !important; padding: 0 5px !important; color: inherit !important; font-weight: normal !important; }
-                .book-main-arrow { font-size: 11px !important; margin-top: auto !important; font-weight: bold !important; opacity: 0.7 !important; color: inherit !important; padding-top: 15px; }
-
-
-                /* Modifikasi tombol bawah agar proporsional sebagai kaki buku */
-                div[data-testid="stColumn"] .stButton button {
-                    min-height: 40px !important;
-                    height: 40px !important;
-                    max-width: 220px !important;
-                    width: 220px !important;
-                    margin: 0 auto !important;
-                    font-size: 12px !important;
-                    font-weight: bold !important;
-                    border-radius: 6px !important;
-                }
-
 
                 /* Tampilan Buku Terbuka (Perkamen Kuno) */
                 .rpg-open-book-container { background: #f4eae1 !important; border: 4px solid #5c4033 !important; border-radius: 12px !important; box-shadow: 0 15px 35px rgba(0,0,0,0.6) !important; display: flex !important; min-height: 380px !important; position: relative !important; overflow: hidden !important; width: 100% !important; max-width: 580px !important; margin: 0 auto !important; }
