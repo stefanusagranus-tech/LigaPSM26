@@ -1652,22 +1652,24 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             
             # 📘 KOLOM KIRI: JURNAL BURUAN
             with col_lobby1:
+                # 🎣 PANCINGAN 1: Tombol umpan di awal agar Streamlit memprioritaskan render layout bawah
+                st.button("PANCING_1", key="btn_pancingan_lobby1")
+                
+                # Render visual kotak kartu HTML di bawah pancingan
                 st.markdown(
                     """
                     <div class="camp-card">
                         <div class="camp-icon">📘</div>
                         <div class="camp-title">JURNAL BURUAN</div>
                         <div class="camp-desc">Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin, level pahlawan, dan rekap hasil buruan harian Anda sepanjang season.</div>
-                        <!-- Tombol digambar langsung di dalam HTML agar urutannya terkunci mati di paling bawah -->
-                        <a href="?page=view_buku_pencapaian" target="_self" class="camp-html-btn">Lihat Status ➔</a>
                     </div>
                     """,
                     unsafe_allow_html=True
                 )
-                # Sinkronisasi state jika mendeteksi parameter URL (opsional, jika sistem navigasimu memakai query params)
-                if st.query_params.get("page") == "view_buku_pencapaian":
+                
+                # Tombol aksi asli yang akan dieksekusi pengguna
+                if st.button("Lihat Status ➔", use_container_width=True, key="btn_lobby_buruan_camp_style_fixed"):
                     st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
-                    st.query_params.clear()
                     st.rerun()
                     
             # 🔮 KOLOM KANAN: KITAB MISI GUILD (AMBIL QUEST)
