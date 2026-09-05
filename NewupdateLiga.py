@@ -1630,50 +1630,125 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub'>Pilih gulungan jurnal di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
             
-            # --- 🎯 RENDER LAYOUT 2 BUKU VERTIKAL PREMIUM (HTML BINDING FIXED) ---
-            col_lobby1, col_lobby2 = st.columns(2)
+            # --- 🎯 STRUKTUR REKAP FORM KLIK BUKU (MURNI PYTHON STREAMLIT) ---
+            query_click = st.query_params.get("active_book")
+            if query_click == "jurnal_buruan":
+                st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
+                st.query_params.clear()
+                st.rerun()
+            elif query_click == "kitab_misi":
+                st.session_state["campaign_sub_page"] = "view_buku_tugas"
+                st.query_params.clear()
+                st.rerun()
+
+            # --- 👑 ENGINE FORM HTML MURNI: KEMBALI KE DESAIN BUKU MENYATU PERTAMA ---
+            html_premium_books = """
+            <div class="rpg-pure-book-grid">
+                <!-- 📘 BUKU 1: JURNAL BURUAN -->
+                <form method="get" action="" class="book-standalone-form">
+                    <input type="hidden" name="active_book" value="jurnal_buruan">
+                    <button type="submit" class="pure-book-trigger b1-gradient-theme">
+                        <div class="book-main-emoji">📘</div>
+                        <div class="book-main-title">JURNAL BURUAN</div>
+                        <div class="book-main-desc">Akses arsip report pribadi Anda untuk memeriksa akumulasi poin hasil buruan, level pahlawan, dan rekap performa harian Anda.</div>
+                        <div class="book-main-arrow">➔ Buka Buku</div>
+                    </button>
+                </form>
+                
+                <!-- 🔮 BUKU 2: KITAB MISI GUILD -->
+                <form method="get" action="" class="book-standalone-form">
+                    <input type="hidden" name="active_book" value="kitab_misi">
+                    <button type="submit" class="pure-book-trigger b2-gradient-theme">
+                        <div class="book-main-emoji">🔮 ⚔️</div>
+                        <div class="book-main-title">KITAB MISI GUILD</div>
+                        <div class="book-main-desc">Cek papan pengumuman maklumat aliansi untuk memantau target pencapaian toko harian, quest mingguan PSM, dan target kuis berkala.</div>
+                        <div class="book-main-arrow">➔ Buka Kitab</div>
+                    </button>
+                </form>
+            </div>
+
+            <style>
+                body { background-color: transparent; margin: 0; padding: 0; font-family: monospace; }
+                .rpg-pure-book-grid {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: stretch;
+                    gap: 20px;
+                    width: 100%;
+                    max-width: 650px;
+                    margin: 20px auto;
+                    box-sizing: border-box;
+                }
+                .book-standalone-form {
+                    width: 48%;
+                    box-sizing: border-box;
+                }
+                
+                /* 👑 STYLE UTAMA: MENGUNCI WUJUD BALOK BUKU MENYATU PERTAMA */
+                .pure-book-trigger {
+                    width: 100%;
+                    min-height: 240px;
+                    border-radius: 6px 20px 20px 6px;
+                    font-family: monospace;
+                    border-left: 14px solid rgba(0,0,0,0.55); /* Ketebalan Punggung Buku */
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: flex-start;
+                    align-items: center;
+                    text-align: center;
+                    padding: 22px 15px;
+                    box-sizing: border-box;
+                    cursor: pointer;
+                    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+                }
+                
+                /* Gradasi Warna Buku 1 (Jurnal Buruan) */
+                .b1-gradient-theme {
+                    background: linear-gradient(135deg, #0b1329 0%, #1e3a8a 100%);
+                    color: #38bdf8;
+                    border: 2px solid #38bdf8;
+                    box-shadow: 5px 15px 30px rgba(0,0,0,0.6), inset -6px 0 15px rgba(0,0,0,0.4);
+                }
+                .b1-gradient-theme:hover {
+                    transform: translateY(-8px) rotate(-1deg);
+                    border-color: #00f0ff;
+                    box-shadow: 0 0 25px rgba(0, 240, 255, 0.5), inset -6px 0 15px rgba(0,0,0,0.2);
+                    color: #ffffff;
+                }
+                
+                /* Gradasi Warna Buku 2 (Kitab Misi) */
+                .b2-gradient-theme {
+                    background: linear-gradient(135deg, #161233 0%, #581c87 100%);
+                    color: #c084fc;
+                    border: 2px solid #c084fc;
+                    box-shadow: 5px 15px 30px rgba(0,0,0,0.6), inset -6px 0 15px rgba(0,0,0,0.4);
+                }
+                .b2-theme-btn-pure:hover, .b2-gradient-theme:hover {
+                    transform: translateY(-8px) rotate(1deg);
+                    border-color: #d8b4fe;
+                    box-shadow: 0 0 25px rgba(168, 85, 247, 0.5), inset -6px 0 15px rgba(0,0,0,0.2);
+                    color: #ffffff;
+                }
+
+                /* Pengaturan Teks dan Ukuran di Dalam Buku */
+                .book-main-emoji { font-size: 45px; margin-bottom: 12px; line-height: 1; }
+                .book-main-title { font-size: 14px; font-weight: 900; letter-spacing: 1px; margin-bottom: 12px; }
+                .book-main-desc { font-size: 11px; opacity: 0.85; line-height: 1.5; flex-grow: 1; padding: 0 5px; }
+                .book-main-arrow { font-size: 11px; margin-top: 15px; font-weight: bold; opacity: 0.7; }
+            </style>
+            """
             
-            # 📘 KOLOM KIRI: JURNAL BURUAN (REPORT PRIBADI)
-            with col_lobby1:
-                # Gambar visual isi buku menggunakan markdown agar HTML murni terjemah sempurna
-                st.markdown(
-                    """
-                    <div class="book-card-display b1-theme-box">
-                        <div class="book-emoji-large">📘</div>
-                        <div class="book-title-bold">JURNAL BURUAN</div>
-                        <div class="book-desc-small">Akses arsip report pribadi Anda untuk memeriksa akumulasi poin hasil buruan, level pahlawan, dan rekap performa harian Anda.</div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-                # Tombol Streamlit murni sebagai pemicu klik, ditaruh pas di bawah wadah teks
-                if st.button("Buka Jurnal Buruan ➔", use_container_width=True, key="btn_lobby_buruan_pure_fixed"):
-                    st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
-                    st.rerun()
-                    
-            # 🔮 KOLOM KANAN: KITAB MISI GUILD (AMBIL QUEST)
-            with col_lobby2:
-                st.markdown(
-                    """
-                    <div class="book-card-display b2-theme-box">
-                        <div class="book-emoji-large">🔮 ⚔️</div>
-                        <div class="book-title-bold">KITAB MISI GUILD</div>
-                        <div class="book-desc-small">Cek papan pengumuman maklumat aliansi untuk memantau target pencapaian toko harian, quest mingguan PSM, dan target kuis berkala.</div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-                if st.button("Buka Kitab Misi ➔", use_container_width=True, key="btn_lobby_misi_pure_fixed"):
-                    st.session_state["campaign_sub_page"] = "view_buku_tugas"
-                    st.rerun()
+            # Render visual buku menyu murni menggunakan html component independen
+            st.components.v1.html(html_premium_books, height=270, scrolling=False)
 
             # Tombol keluar utama kembali ke Camp Persiapan
             st.markdown("<br><hr style='border-color: rgba(180, 83, 9, 0.2); margin: 15px 0;'><br>", unsafe_allow_html=True)
             st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
-            if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_pure_streamlit"):
+            if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_pure_premium_style"):
                 st.session_state.current_camp_menu = "main"
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
+
 
         # =========================================================================
         # 📘 KONDISI 2: BUKU PENCAPAIAN / REPORT PRIBADI (PERKAMEN KUNO TERBUKA)
