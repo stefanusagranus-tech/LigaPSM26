@@ -1608,9 +1608,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     <div class="camp-card">
                         <div class="camp-icon">📘</div>
                         <div class="camp-title">JURNAL BURUAN</div>
-                        <div class="camp-desc">
-                            Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin, 
-                            level pahlawan, dan rekap hasil buruan harian Anda sepanjang season.
+                        <div class="camp-desc"> Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin, level pahlawan, dan rekap hasil buruan harian Anda sepanjang season.</div>
                         </div>
                     </div>
                     """, 
