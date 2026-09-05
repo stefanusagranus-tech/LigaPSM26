@@ -1588,113 +1588,61 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
         
         # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (CAMP STYLE - SAFE CONTAINER IMPLEMENTATION)
+        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (STRUKTUR MURNI PREPARATION CAMP STYLE)
         # =========================================================================
         if st.session_state["campaign_sub_page"] == "resepsionis_utama":
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub'>Pilih gulungan jurnal di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
             
-            # --- SUNTIKKAN STYLING CSS UNTUK WADAH KOTAK KARTU ---
-            st.markdown(
-                """
-                <style>
-                    /* Hias kontainer agar berbentuk kotak kartu premium seperti Preparation Camp */
-                    .reception-custom-box {
-                        background: linear-gradient(135deg, #131926 0%, #1e2638 100%) !important;
-                        border: 2px solid #b45309 !important;
-                        border-radius: 12px !important;
-                        padding: 25px 20px !important;
-                        text-align: center !important;
-                        box-shadow: 0 8px 20px rgba(0,0,0,0.5) !important;
-                        margin-bottom: 15px !important;
-                        display: flex !important;
-                        flex-direction: column !important;
-                        align-items: center !important;
-                        justify-content: center !important;
-                        min-height: 200px !important;
-                    }
-                    
-                    .box-emoji {
-                        font-size: 45px !important;
-                        margin-bottom: 10px !important;
-                    }
-                    
-                    .box-title {
-                        color: #fef08a !important;
-                        font-family: monospace !important;
-                        font-size: 16px !important;
-                        font-weight: 800 !important;
-                        margin-bottom: 8px !important;
-                        letter-spacing: 1px !important;
-                    }
-                    
-                    .box-desc {
-                        color: #94a3b8 !important;
-                        font-family: monospace !important;
-                        font-size: 12px !important;
-                        line-height: 1.5 !important;
-                    }
-
-                    /* Modifikasi tombol bawah agar warnanya menyatu dengan tema */
-                    div[data-testid="stColumn"] button {
-                        background: rgba(180, 83, 9, 0.2) !important;
-                        color: #fbbf24 !important;
-                        border: 1px solid #b45309 !important;
-                        font-family: monospace !important;
-                        font-weight: bold !important;
-                        padding: 10px 0 !important;
-                        transition: all 0.2s ease !important;
-                    }
-                    div[data-testid="stColumn"] button:hover {
-                        background: #b45309 !important;
-                        color: #0b0f19 !important;
-                        box-shadow: 0 4px 12px rgba(180, 83, 9, 0.4) !important;
-                    }
-                </style>
-                """, 
-                unsafe_allow_html=True
-            )
-            
-            # --- RENDER STRUKTUR LAYOUT DUA KOLOM ---
+            # --- 1. RENDER GRID STRUKTUR DATA UTAMA (2 KOLOM BERSIH) ---
             col_lobby1, col_lobby2 = st.columns(2)
             
-            # 📘 KARTU KIRI: JURNAL BURUAN
+            # 📘 KOLOM 1: JURNAL BURUAN (LAPORAN PRIBADI)
             with col_lobby1:
+                # Blok Kontainer Atas untuk Visual Emoji, Judul, dan Deskripsi
                 st.markdown(
                     """
-                    <div class="reception-custom-box">
-                        <div class="box-emoji">📘</div>
-                        <div class="box-title">JURNAL BURUAN</div>
-                        <div class="box-desc">Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin, level pahlawan, dan rekap hasil buruan harian.</div>
+                    <div class="camp-card">
+                        <div class="camp-icon">📘</div>
+                        <div class="camp-title">JURNAL BURUAN</div>
+                        <div class="camp-desc">
+                            Buka gulungan piagam pribadi untuk memeriksa akumulasi poin hasil buruan, 
+                            level pahlawan, serta rapor performa penjualan individu Anda.
+                        </div>
                     </div>
                     """, 
                     unsafe_allow_html=True
                 )
-                # Tombol standar Streamlit ditaruh normal di bawah kotak HTML kustom
-                if st.button("Buka Jurnal Buruan ➔", use_container_width=True, key="btn_lobby_buku_buruan_safe"):
+                # Tombol Alas Pilihan Berwarna Cokelat Emas Asli Camp Style
+                if st.button("Lihat Status ➔", use_container_width=True, key="btn_lobby_buku_buruan_camp_clone"):
                     st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
                     st.rerun()
                     
-            # 🔮 KARTU KANAN: KITAB MISI GUILD
+            # 🔮 KOLOM 2: KITAB MISI GUILD (TUGAS ALIANSI)
             with col_lobby2:
+                # Blok Kontainer Atas untuk Visual Emoji, Judul, dan Deskripsi
                 st.markdown(
                     """
-                    <div class="reception-custom-box">
-                        <div class="box-emoji">🔮</div>
-                        <div class="box-title">KITAB MISI GUILD</div>
-                        <div class="box-desc">Akses papan maklumat tugas aliansi untuk memantau sisa target toko harian, target mingguan, serta status misi berkala.</div>
+                    <div class="camp-card">
+                        <div class="camp-icon">🔮</div>
+                        <div class="camp-title">KITAB MISI GUILD</div>
+                        <div class="camp-desc">
+                            Cek papan pengumuman maklumat aliansi untuk melihat quest musiman, 
+                            tugas mingguan PSM, serta daily target buruan toko Anda.
+                        </div>
                     </div>
                     """, 
                     unsafe_allow_html=True
                 )
-                if st.button("Buka Kitab Misi ➔", use_container_width=True, key="btn_lobby_buku_misi_safe"):
+                # Tombol Alas Pilihan Berwarna Cokelat Emas Asli Camp Style
+                if st.button("Ambil Quest ➔", use_container_width=True, key="btn_lobby_buku_misi_camp_clone"):
                     st.session_state["campaign_sub_page"] = "view_buku_tugas"
                     st.rerun()
 
-            # Tombol keluar utama menuju camp
+            # --- 2. TOMBOL KELUAR UTAMA DI BAGIAN BAWAH MURNI CAMP STYLE ---
             st.markdown("<br><hr style='border-color: rgba(180, 83, 9, 0.2); margin: 15px 0;'><br>", unsafe_allow_html=True)
             st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
-            if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_camp_style"):
+            if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_camp_style_fixed"):
                 st.session_state.current_camp_menu = "main"
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
