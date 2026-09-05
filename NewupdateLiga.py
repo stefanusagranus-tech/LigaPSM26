@@ -1658,25 +1658,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # 👑 NAVIGATION STRUKTUR INTERNAL: JALUR NAVIGASI UTAMA BERURUTAN (FIXED)
         # =========================================================================
          
-        # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (TRANSPARENT FORM ENGINE - FIXED)
+               # =========================================================================
+        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (NATIVE BUTTON ENGINE - FIXED & RUNNING)
         # =========================================================================
         if st.session_state.get("campaign_sub_page", "resepsionis_utama") == "resepsionis_utama":
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub'>Pilih gulungan jurnal di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
             
-            # --- 🎯 ENGINE PENANGKAP REKAP FORM KLIK BUKU ---
-            query_click = st.query_params.get("active_book")
-            if query_click == "jurnal_buruan":
-                st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
-                st.query_params.clear()
-                st.rerun()
-            elif query_click == "kitab_misi":
-                st.session_state["campaign_sub_page"] = "view_buku_tugas"
-                st.query_params.clear()
-                st.rerun()
-
-            # --- 🎨 SUNTIKKAN STYLING PREMIUM KHUSUS WADAH CONTAINER BUKU ---
+            # --- 🎨 SUNTIKKAN STYLING PREMIUM KHUSUS WADAH CONTAINER & TOMBOL BUKU ---
             st.markdown(
                 """
                 <style>
@@ -1691,7 +1680,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         flex-direction: column !important;
                         align-items: center !important;
                         justify-content: flex-start !important;
-                        min-height: 230px !important; /* Paksa tinggi buku tegak vertikal */
+                        min-height: 245px !important; /* Paksa tinggi buku tegak vertikal */
                         max-width: 210px !important;  /* Paksa lebar simetris */
                         margin: 0 auto !important;
                         box-sizing: border-box !important;
@@ -1704,12 +1693,43 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     div[data-testid="stColumn"]:nth-child(2) div[data-testid="ststContainer"] { 
                         border-left: 14px solid #7e22ce !important; 
                     }
+
+                    /* 👑 BENTENG PELINDUNG: Memaksa st.button di dalam kotak agar menciut pas mengikuti lebar kartu */
+                    .custom-rpg-btn-wrapper {
+                        width: 100% !important;
+                        margin-top: 15px !important;
+                    }
+                    .custom-rpg-btn-wrapper div.stButton {
+                        width: 100% !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                    }
+                    .custom-rpg-btn-wrapper div.stButton > button {
+                        background: rgba(180, 83, 9, 0.2) !important;
+                        color: #fbbf24 !important;
+                        border: 1px solid #b45309 !important;
+                        border-radius: 6px !important;
+                        font-family: monospace !important;
+                        font-weight: bold !important;
+                        font-size: 12px !important;
+                        padding: 10px 0 !important;
+                        width: 100% !important;
+                        min-height: auto !important;
+                        height: auto !important;
+                        box-shadow: none !important;
+                        transition: all 0.2s ease !important;
+                    }
+                    .custom-rpg-btn-wrapper div.stButton > button:hover {
+                        background: #b45309 !important;
+                        color: #0b0f19 !important;
+                        box-shadow: 0 4px 12px rgba(180, 83, 9, 0.4) !important;
+                    }
                 </style>
                 """, 
                 unsafe_allow_html=True
             )
             
-            # --- 🎯 LAYOUT 2 KOLOM MURNI SEJAJAR ---
+            # --- 🎯 LAYOUT 2 KOLOM MURNI SEJAJAR KIRI-KANAN ---
             col_lobby1, col_lobby2 = st.columns(2)
             
             # 📘 KOLOM KIRI: JURNAL BURUAN
@@ -1719,14 +1739,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     st.markdown("<h4 style='text-align: center; color: #fef08a; font-family: monospace; font-weight: bold; margin: 5px 0 10px 0; font-size: 14px;'>JURNAL BURUAN</h4>", unsafe_allow_html=True)
                     st.markdown("<p style='text-align: center; color: #94a3b8; font-family: monospace; font-size: 11px; line-height: 1.5; flex-grow: 1; margin: 0;'>Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin, level pahlawan, dan rekap hasil buruan harian Anda.</p>", unsafe_allow_html=True)
                     
-                    # 👑 SULAP UTAMA: Form HTML murni bertindak sebagai alas tombol klik transparan
-                    html_btn1 = """
-                    <form method="get" action="" style="width:100%; margin-top:15px;">
-                        <input type="hidden" name="active_book" value="jurnal_buruan">
-                        <button type="submit" style="width:100%; background:rgba(180,83,9,0.2); color:#fbbf24; border:1px solid #b45309; padding:8px 0; border-radius:6px; font-family:monospace; font-weight:bold; font-size:12px; cursor:pointer;">Lihat Status ➔</button>
-                    </form>
-                    """
-                    st.components.v1.html(html_btn1, height=42, scrolling=False)
+                    # Menggunakan tombol asli Streamlit yang dibungkus kelas pelindung kustom agar anti-gepeng & lancar diklik
+                    st.markdown('<div class="custom-rpg-btn-wrapper">', unsafe_allow_html=True)
+                    if st.button("Lihat Status ➔", use_container_width=True, key="btn_lobby_buruan_native_fixed"):
+                        st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
+                        st.rerun()
+                    st.markdown('</div>', unsafe_allow_html=True)
                     
             # 🔮 KOLOM KANAN: KITAB MISI GUILD
             with col_lobby2:
@@ -1735,23 +1753,19 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     st.markdown("<h4 style='text-align: center; color: #fef08a; font-family: monospace; font-weight: bold; margin: 5px 0 10px 0; font-size: 14px;'>KITAB MISI GUILD</h4>", unsafe_allow_html=True)
                     st.markdown("<p style='text-align: center; color: #94a3b8; font-family: monospace; font-size: 11px; line-height: 1.5; flex-grow: 1; margin: 0;'>Cek papan pengumuman maklumat aliansi untuk melihat quest musiman, tugas mingguan PSM, serta daily target buruan toko Anda.</p>", unsafe_allow_html=True)
                     
-                    html_btn2 = """
-                    <form method="get" action="" style="width:100%; margin-top:15px;">
-                        <input type="hidden" name="active_book" value="kitab_misi">
-                        <button type="submit" style="width:100%; background:rgba(180,83,9,0.2); color:#fbbf24; border:1px solid #b45309; padding:8px 0; border-radius:6px; font-family:monospace; font-weight:bold; font-size:12px; cursor:pointer;">Ambil Quest ➔</button>
-                    </form>
-                    """
-                    st.components.v1.html(html_btn2, height=42, scrolling=False)
+                    st.markdown('<div class="custom-rpg-btn-wrapper">', unsafe_allow_html=True)
+                    if st.button("Ambil Quest ➔", use_container_width=True, key="btn_lobby_misi_native_fixed"):
+                        st.session_state["campaign_sub_page"] = "view_buku_tugas"
+                        st.rerun()
+                    st.markdown('</div>', unsafe_allow_html=True)
 
             # Tombol keluar utama kembali ke Camp Persiapan (Menggunakan st.button asli bawaanmu)
             st.markdown("<br><hr style='border-color: rgba(180, 83, 9, 0.2); margin: 15px 0;'><br>", unsafe_allow_html=True)
             st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
-            if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_chameleon_fixed"):
+            if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_native_fixed_hub"):
                 st.session_state.current_camp_menu = "main"
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
-
-
 
         # =========================================================================
         # 📘 KONDISI 2: BUKU PENCAPAIAN / REPORT PRIBADI (PERKAMEN KUNO TERBUKA)
