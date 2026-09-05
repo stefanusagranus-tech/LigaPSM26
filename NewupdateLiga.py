@@ -1973,88 +1973,93 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             # Cetak susunan halaman HTML ke layar Streamlit
             st.markdown(html_content_pages, unsafe_allow_html=True)
 
-                        # --- 🎮 3. CONTROL CENTER: ENGINE NAVIGASI TOMBOL ALAS KAKI BUKU (INLINE INJECTION) ---
+            # --- 🎮 3. CONTROL CENTER: ENGINE NAVIGATION FORM HTML MURNI (SIDE-BY-SIDE FIXED) ---
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # 🎨 SUNTIKKAN BAJU VISUAL KHUSUS UNTUK MENGHANCURKAN STRUKTUR KOLOM TERTUMPUK UNIVERSAL
-            st.markdown(
-                """
-                <style>
-                    /* 👑 BENTENG UTAMA: Memaksa area tombol agar wajib berjejer horizontal lurus kiri-kanan */
-                    .rpg-navigation-flex-bar {
-                        display: flex !important;
-                        flex-direction: row !important; /* Kunci mati posisi horizontal */
-                        justify-content: space-between !important;
-                        align-items: center !important;
-                        gap: 15px !important; /* Jarak renggang antara tombol kiri & kanan */
-                        width: 100% !important;
-                        max-width: 580px !important; /* PRESISI: Sejajar rata air dengan lebar buku terbuka */
-                        margin: 0 auto !important; /* Mengunci posisi pas di tengah halaman */
-                        box-sizing: border-box !important;
-                    }
-                    
-                    /* Tembak bungkus internal Streamlit agar melebar pas membagi dua area (48% - 48%) */
-                    .rpg-navigation-flex-bar > div {
-                        width: 48% !important;
-                        flex: 1 1 0% !important;
-                        box-sizing: border-box !important;
-                    }
-                    
-                    /* SULAP TOMBOL ASLI: Mengubah warna neon biru universal menjadi cokelat emas perkamen kuno */
-                    .rpg-navigation-flex-bar button[key^="btn_nav_pack_"] {
-                        width: 100% !important;
-                        max-width: 100% !important;
-                        min-height: 42px !important;
-                        height: 42px !important;
-                        background: #854d0e !important; 
-                        color: #f4eae1 !important;
-                        border: 2px solid #5c4033 !important;
-                        border-radius: 6px !important;
-                        font-family: monospace !important;
-                        font-size: 11.5px !important;
-                        font-weight: bold !important;
-                        margin: 0 !important;
-                        padding: 0 10px !important;
-                        box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
-                        transition: all 0.2s ease-in-out !important;
-                    }
-                    
-                    .rpg-navigation-flex-bar button[key^="btn_nav_pack_"]:hover {
-                        background: #5c4033 !important;
-                        box-shadow: 0 6px 15px rgba(92,64,51,0.6) !important;
-                        color: #ffffff !important;
-                    }
-                </style>
-                """,
-                unsafe_allow_html=True
-            )
+            # 🎯 1. AMBIL VALUE KLIK DARI SUBMIT FORM NAVIGASI
+            query_nav = st.query_params.get("book_nav")
+            if query_nav == "go_back_lobby":
+                st.session_state["campaign_sub_page"] = "resepsionis_utama"
+                st.query_params.clear()
+                st.rerun()
+            elif query_nav == "prev_page":
+                st.session_state["book_page_number"] -= 1
+                st.query_params.clear()
+                st.rerun()
+            elif query_nav == "next_page":
+                st.session_state["book_page_number"] += 1
+                st.query_params.clear()
+                st.rerun()
+            elif query_nav == "reset_page":
+                st.session_state["book_page_number"] = 1
+                st.query_params.clear()
+                st.rerun()
 
-            # 🛠️ EKSEKUSI PENYUNTIKAN TOMBOL NATIVE KE DALAM BINGKAI FLEXBOX HORIZONTAL
-            st.markdown('<div class="rpg-navigation-flex-bar">', unsafe_allow_html=True)
-            
-            # SLOT TOMBOL KIRI (Menggunakan st.container kustom untuk mengunci pendaran elemen)
-            with st.container():
-                if current_page == 1:
-                    if st.button("📖 TUTUP JURNAL", use_container_width=True, key="btn_nav_pack_exit_lobby"):
-                        st.session_state["campaign_sub_page"] = "resepsionis_utama"
-                        st.rerun()
-                else:
-                    if st.button("⬅️ SEBELUMNYA", use_container_width=True, key="btn_nav_pack_back_step"):
-                        st.session_state["book_page_number"] -= 1
-                        st.rerun()
+            # 🎯 2. RACIK TOMBOL DINAMIS BERDASARKAN HALAMAN AKTIF
+            left_btn_html = ""
+            right_btn_html = ""
 
-            # SLOT TOMBOL KANAN
-            with st.container():
-                if current_page == 3:
-                    if st.button("↺ KE AWAL (HAL 1)", use_container_width=True, key="btn_nav_pack_reset_to_one"):
-                        st.session_state["book_page_number"] = 1
-                        st.rerun()
-                else:
-                    if st.button("BERIKUTNYA ➔", use_container_width=True, key="btn_nav_pack_next_step"):
-                        st.session_state["book_page_number"] += 1
-                        st.rerun()
-                        
+            # Pengondisian Tombol Kiri
+            if current_page == 1:
+                left_btn_html = '<form method="get" action="" class="rpg-nav-form"><input type="hidden" name="book_nav" value="go_back_lobby"><button type="submit" class="rpg-html-nav-btn">📖 TUTUP JURNAL</button></form>'
+            else:
+                left_btn_html = '<form method="get" action="" class="rpg-nav-form"><input type="hidden" name="book_nav" value="prev_page"><button type="submit" class="rpg-html-nav-btn">⬅️ SEBELUMNYA</button></form>'
+
+            # Pengondisian Tombol Kanan
+            if current_page == 3:
+                right_btn_html = '<form method="get" action="" class="rpg-nav-form"><input type="hidden" name="book_nav" value="reset_page"><button type="submit" class="rpg-html-nav-btn">↺ KE HAL 1</button></form>'
+            else:
+                right_btn_html = '<form method="get" action="" class="rpg-nav-form"><input type="hidden" name="book_nav" value="next_page"><button type="submit" class="rpg-html-nav-btn">BERIKUTNYA ➔</button></form>'
+
+            # 🎯 3. CETAK STRUKTUR FLEXBOX HORIZONTAL SEJAJAR (100% KEBAL CSS SIDEBAR/UNIVERSAL)
+            html_navigation_bar = f"""
+            <div class="rpg-html-nav-container">
+                {left_btn_html}
+                {right_btn_html}
+            </div>
+
+            <style>
+                .rpg-html-nav-container {{
+                    display: flex !important;
+                    flex-direction: row !important; /* MUTLAK: Mengunci posisi kiri-kanan */
+                    justify-content: space-between !important;
+                    align-items: center !important;
+                    gap: 15px !important;
+                    width: 100% !important;
+                    max-width: 580px !important; /* Presisi sejajar lebar buku terbuka */
+                    margin: 0 auto !important;
+                    box-sizing: border-box !important;
+                }}
+                .rpg-nav-form {{
+                    width: 48% !important; /* Membagi dua sisi secara adil */
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    box-sizing: border-box !important;
+                }}
+                .rpg-html-nav-btn {{
+                    width: 100% !important;
+                    min-height: 42px !important;
+                    height: 42px !important;
+                    background: #854d0e !important; /* Warna Cokelat Emas Perkamen */
+                    color: #f4eae1 !important;
+                    border: 2px solid #5c4033 !important;
+                    border-radius: 6px !important;
+                    font-family: monospace !important;
+                    font-weight: bold !important;
+                    font-size: 11.5px !important;
+                    cursor: pointer !important;
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+                    transition: all 0.2s ease-in-out !important;
+                    box-sizing: border-box !important;
+                }}
+                .rpg-html-nav-btn:hover {{
+                    background: #5c4033 !important;
+                    box-shadow: 0 6px 15px rgba(92,64,51,0.5) !important;
+                }}
+            </style>
+            """
             st.markdown('</div>', unsafe_allow_html=True)
+
 
 
         # =========================================================================
