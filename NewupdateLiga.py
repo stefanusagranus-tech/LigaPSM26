@@ -1588,44 +1588,29 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
         
         # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (CAMP STYLE BUTTON ENGINE - KUNCI MATI)
+        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (CAMP STYLE BUTTON ENGINE - ANTI-HILANG)
         # =========================================================================
         if st.session_state["campaign_sub_page"] == "resepsionis_utama":
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub'>Pilih gulungan jurnal di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
             
-            # --- SUNTIKKAN ENGINE CSS UNTUK MEMAKSA STRUKTUR BUKU VERTIKAL SEJAJAR ---
+            # --- SUNTIKKAN STYLING CSS BERSIH MENGGUNAKAN SELECTOR ELEMENT ---
             st.markdown(
                 """
                 <style>
-                    /* 🎯 PAKSA SUB-KOLOM STREAMLIT BERDAMPINGAN KIRI-KANAN */
-                    div[data-testid="stHorizontalBlock"]:has(button[key="btn_camp_style_buku1"]) {
-                        display: flex !important;
-                        flex-direction: row !important;
-                        justify-content: center !important;
-                        align-items: flex-start !important;
-                        gap: 30px !important;
-                        width: 100% !important;
-                        max-width: 550px !important;
-                        margin: 30px auto 10px auto !important;
-                    }
-                    
-                    /* Atur ulang lebar pembungkus kolom agar pas 50:50 */
-                    div[data-testid="stHorizontalBlock"]:has(button[key="btn_camp_style_buku1"]) > div[data-testid="stColumn"] {
-                        width: 45% !important;
-                        min-width: 160px !important;
-                        flex: 1 !important;
+                    /* 🎯 TARGETKAN BUTTON SECARA PRESISI TANPA MERUSAK STRUKTUR KOLOM HARIAN */
+                    div[data-testid="stColumn"] button {
                         display: flex !important;
                         flex-direction: column !important;
+                        justify-content: center !important;
                         align-items: center !important;
-                    }
-
-                    /* 🎯 KUNCI DIMENSI TOMBOL AGAR BERBENTUK BUKU VERTIKAL */
-                    div[data-testid="stColumn"] button[key="btn_camp_style_buku1"],
-                    div[data-testid="stColumn"] button[key="btn_camp_style_buku2"] {
+                        
+                        /* Paksa ukuran balok vertikal buku */
                         height: 220px !important;
-                        width: 150px !important;
-                        max-width: 150px !important;
+                        width: 145px !important;
+                        max-width: 145px !important;
+                        margin: 0 auto !important; /* Kunci di tengah-tengah kolom */
+                        
                         border-radius: 4px 18px 18px 4px !important;
                         font-family: monospace !important;
                         font-size: 13px !important;
@@ -1633,49 +1618,44 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         letter-spacing: 0.5px !important;
                         white-space: pre-line !important;
                         line-height: 1.4 !important;
-                        display: flex !important;
-                        flex-direction: column !important;
-                        justify-content: center !important;
-                        align-items: center !important;
                         padding: 15px !important;
                         box-sizing: border-box !important;
-                        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
-                        margin: 0 auto !important;
+                        transition: all 0.3s ease-in-out !important;
                     }
                     
-                    /* 📘 BUKU 1: JURNAL BURUAN (DESAIN WARNA) */
-                    div[data-testid="stColumn"] button[key="btn_camp_style_buku1"] {
+                    /* JURNAL BURUAN (BIRU DEEP) */
+                    div[data-testid="stColumn"]:nth-child(1) button {
                         background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%) !important;
                         color: #38bdf8 !important;
                         border: 2px solid #38bdf8 !important;
-                        border-left: 12px solid #0284c7 !important; /* Jilid Buku */
+                        border-left: 12px solid #0284c7 !important; /* Ketebalan jilid buku */
                         box-shadow: 0 12px 25px rgba(0,0,0,0.6), inset -5px 0 15px rgba(0,0,0,0.4) !important;
                     }
                     
-                    /* 🔮 BUKU 2: KITAB MISI GUILD (DESAIN WARNA) */
-                    div[data-testid="stColumn"] button[key="btn_camp_style_buku2"] {
+                    /* KITAB MISI GUILD (UNGU DEEP) */
+                    div[data-testid="stColumn"]:nth-child(2) button {
                         background: linear-gradient(135deg, #1e1b4b 0%, #581c87 100%) !important;
                         color: #c084fc !important;
                         border: 2px solid #c084fc !important;
-                        border-left: 12px solid #7e22ce !important; /* Jilid Buku */
+                        border-left: 12px solid #7e22ce !important; /* Ketebalan jilid buku */
                         box-shadow: 0 12px 25px rgba(0,0,0,0.6), inset -5px 0 15px rgba(0,0,0,0.4) !important;
                     }
                     
-                    /* EFEK HOVER ANIMASI MENGANGKAT */
-                    div[data-testid="stColumn"] button[key="btn_camp_style_buku1"]:hover {
+                    /* EFEK HOVER KETIKA DIK DEKATI */
+                    div[data-testid="stColumn"]:nth-child(1) button:hover {
                         transform: translateY(-8px) rotate(-1deg) !important;
                         border-color: #00f0ff !important;
                         color: #ffffff !important;
                         box-shadow: 0 18px 30px rgba(0, 240, 255, 0.4), inset -5px 0 15px rgba(0,0,0,0.2) !important;
                     }
-                    div[data-testid="stColumn"] button[key="btn_camp_style_buku2"]:hover {
+                    div[data-testid="stColumn"]:nth-child(2) button:hover {
                         transform: translateY(-8px) rotate(1deg) !important;
                         border-color: #d8b4fe !important;
                         color: #ffffff !important;
                         box-shadow: 0 18px 30px rgba(168, 85, 247, 0.4), inset -5px 0 15px rgba(0,0,0,0.2) !important;
                     }
 
-                    /* Deskripsi Teks Keterangan di Bawah Buku */
+                    /* Desain Teks Keterangan di Bawah Buku */
                     .lbl-desc-clean-medieval { 
                         color: #64748b !important; 
                         font-family: monospace !important; 
@@ -1691,29 +1671,30 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 unsafe_allow_html=True
             )
             
-            # --- RENDER KODE UTAMA DENGAN TOMBOL NATIVE YANG BERBARIS ---
+            # --- RENDER ULANG DENGAN NATIVE STRUM GRID AMAN ---
             col_lobby1, col_lobby2 = st.columns(2)
             
             with col_lobby1:
-                # Memasukkan teks langsung menggunakan baris baru \n agar terbaca tanpa script eksternal
-                if st.button("📘\n\nJURNAL\nBURUAN\n\n➔ Buka", use_container_width=True, key="btn_camp_style_buku1"):
+                # Mengatur susunan kata vertikal di dalam tombol bawaan
+                if st.button("📘\n\nJURNAL\nBURUAN\n\n➔ Buka", use_container_width=True, key="btn_lobby_buku_buruan"):
                     st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
                     st.rerun()
                 st.markdown('<div class="lbl-desc-clean-medieval">Berisi catatan total poin akumulasi hasil buruan individu Anda sepanjang season.</div>', unsafe_allow_html=True)
             
             with col_lobby2:
-                if st.button("🔮\n\nKITAB\nMISI\n\n➔ Buka", use_container_width=True, key="btn_camp_style_buku2"):
+                if st.button("🔮\n\nKITAB\nMISI\n\n➔ Buka", use_container_width=True, key="btn_lobby_buku_misi"):
                     st.session_state["campaign_sub_page"] = "view_buku_tugas"
                     st.rerun()
                 st.markdown('<div class="lbl-desc-clean-medieval">Berisi lembar maklumat perintah harian, mingguan, serta status keberhasilan misi toko.</div>', unsafe_allow_html=True)
 
-            # Tombol keluar utama menuju camp
+            # Tombol keluar utama menuju camp persiapannya
             st.markdown("<br><hr style='border-color: rgba(180, 83, 9, 0.2); margin: 15px 0;'><br>", unsafe_allow_html=True)
             st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
             if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_camp_style"):
                 st.session_state.current_camp_menu = "main"
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
+
 
 
         # 🚪 KONDISI 2: BUKU TERBUKA - JURNAL BURUAN
