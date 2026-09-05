@@ -1804,7 +1804,68 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 st.session_state.current_camp_menu = "main"
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
+
+        # =========================================================================
+        # 📘 KONDISI 2: JURNAL BURUAN INDIVIDU (BAGIAN 1 - AUDIO-VISUAL ENGINE)
+        # =========================================================================
+        elif st.session_state["campaign_sub_page"] == "view_buku_pencapaian":
             
+            # Inisialisasi nomor halaman internal jika belum terdaftar di memori
+            if "book_page_number" not in st.session_state:
+                st.session_state["book_page_number"] = 1
+                
+            # --- 🎨 SUNTIKKAN SISI CSS UNTUK ANIMASI DAN LOGIKA TABEL SCROLL ---
+            st.markdown(
+                """
+                <style>
+                    /* Efek Animasi Transisi Halaman Membuka & Berganti (Setiap Klik) */
+                    .rpg-open-book-animated {
+                        animation: bookPageTurnFlip 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+                        transform-origin: center center;
+                    }
+                    @keyframes bookPageTurnFlip {
+                        0% { transform: scaleX(0.7) scale(0.98); opacity: 0.5; filter: brightness(0.7); }
+                        100% { transform: scaleX(1) scale(1); opacity: 1; filter: brightness(1); }
+                    }
+                    
+                    /* 👑 AKALI TABEL SUEGER: Membuat area scroll harian otomatis di halaman 4 */
+                    .sueger-daily-scroll-box {
+                        max-height: 180px !important;
+                        overflow-y: auto !important;
+                        padding-right: 5px !important;
+                        width: 100% !important;
+                    }
+                    
+                    /* Mempercantik scrollbar bertema perkamen kuno */
+                    .sueger-daily-scroll-box::-webkit-scrollbar { width: 5px !important; }
+                    .sueger-daily-scroll-box::-webkit-scrollbar-track { background: rgba(133,77,14,0.05) !important; }
+                    .sueger-daily-scroll-box::-webkit-scrollbar-thumb { background: #854d0e !important; border-radius: 4px !important; }
+                    
+                    /* Penyelaras jarak bantalan dalam halaman perkamen agar tidak terlalu mepet tepi */
+                    .rpg-book-page {
+                        padding: 20px 22px !important;
+                    }
+                    
+                    /* Penjinak Tombol Navigasi Bawah Buku agar sewarna Emas Cokelat Perkamen */
+                    div[data-testid="stColumn"] button[key^="btn_nav_page_"] {
+                        background: #854d0e !important;
+                        color: #f4eae1 !important;
+                        border: 2px solid #5c4033 !important;
+                        font-family: monospace !important;
+                        font-weight: bold !important;
+                        font-size: 12px !important;
+                        border-radius: 6px !important;
+                        transition: all 0.2s ease !important;
+                    }
+                    div[data-testid="stColumn"] button[key^="btn_nav_page_"]:hover {
+                        background: #5c4033 !important;
+                        box-shadow: 0 4px 10px rgba(92,64,51,0.5) !important;
+                    }
+                </style>
+                """,
+                unsafe_allow_html=True
+            )
+    
             # --- 🛠️ ENGINE GENERATOR DATA & NOMOR HALAMAN ---
             current_page = st.session_state["book_page_number"]
             username_hero = st.session_state.get("username", "admin")
