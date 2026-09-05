@@ -1973,20 +1973,40 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             # Cetak susunan halaman HTML ke layar Streamlit
             st.markdown(html_content_pages, unsafe_allow_html=True)
 
-            # --- 🎮 3. CONTROL CENTER: ENGINE NAVIGASI TOMBOL ALAS KAKI BUKU (NATIVE SIDE-BY-SIDE) ---
+                        # --- 🎮 3. CONTROL CENTER: ENGINE NAVIGASI TOMBOL ALAS KAKI BUKU (INLINE INJECTION) ---
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # 🎨 SUNTIKKAN TAMENG PENGHANCUR CSS UNIVERSAL KHUSUS UNTUK TOMBOL NAVIGASI INI
+            # 🎨 SUNTIKKAN BAJU VISUAL KHUSUS UNTUK MENGHANCURKAN STRUKTUR KOLOM TERTUMPUK UNIVERSAL
             st.markdown(
                 """
                 <style>
-                    /* Targetkan secara spesifik tombol navigasi berdasarkan prefix key-nya */
-                    div[data-testid="stColumn"] button[key^="btn_nav_pack_"] {
+                    /* 👑 BENTENG UTAMA: Memaksa area tombol agar wajib berjejer horizontal lurus kiri-kanan */
+                    .rpg-navigation-flex-bar {
+                        display: flex !important;
+                        flex-direction: row !important; /* Kunci mati posisi horizontal */
+                        justify-content: space-between !important;
+                        align-items: center !important;
+                        gap: 15px !important; /* Jarak renggang antara tombol kiri & kanan */
+                        width: 100% !important;
+                        max-width: 580px !important; /* PRESISI: Sejajar rata air dengan lebar buku terbuka */
+                        margin: 0 auto !important; /* Mengunci posisi pas di tengah halaman */
+                        box-sizing: border-box !important;
+                    }
+                    
+                    /* Tembak bungkus internal Streamlit agar melebar pas membagi dua area (48% - 48%) */
+                    .rpg-navigation-flex-bar > div {
+                        width: 48% !important;
+                        flex: 1 1 0% !important;
+                        box-sizing: border-box !important;
+                    }
+                    
+                    /* SULAP TOMBOL ASLI: Mengubah warna neon biru universal menjadi cokelat emas perkamen kuno */
+                    .rpg-navigation-flex-bar button[key^="btn_nav_pack_"] {
                         width: 100% !important;
                         max-width: 100% !important;
                         min-height: 42px !important;
                         height: 42px !important;
-                        background: #854d0e !important; /* Warna Cokelat Emas Perkamen */
+                        background: #854d0e !important; 
                         color: #f4eae1 !important;
                         border: 2px solid #5c4033 !important;
                         border-radius: 6px !important;
@@ -1995,67 +2015,46 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         font-weight: bold !important;
                         margin: 0 !important;
                         padding: 0 10px !important;
-                        box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
                         transition: all 0.2s ease-in-out !important;
                     }
                     
-                    div[data-testid="stColumn"] button[key^="btn_nav_pack_"]:hover {
+                    .rpg-navigation-flex-bar button[key^="btn_nav_pack_"]:hover {
                         background: #5c4033 !important;
-                        box-shadow: 0 6px 15px rgba(92,64,51,0.5) !important;
+                        box-shadow: 0 6px 15px rgba(92,64,51,0.6) !important;
                         color: #ffffff !important;
-                    }
-                    
-                    /* Hancurkan paksa kaku tata letak vertikal bertumpuk bawaan tema universal */
-                    div[data-testid="stHorizontalBlock"]:has(button[key^="btn_nav_pack_"]) {
-                        display: flex !important;
-                        flex-direction: row !important; /* Kunci mati wajib berjejer horizontal kiri-kanan */
-                        justify-content: space-between !important;
-                        align-items: center !important;
-                        gap: 15px !important;
-                        width: 100% !important;
-                        max-width: 580px !important; /* Sejajarkan rata air dengan lebar buku terbuka */
-                        margin: 0 auto !important;
-                    }
-                    
-                    div[data-testid="stHorizontalBlock"]:has(button[key^="btn_nav_pack_"]) div[data-testid="stColumn"] {
-                        width: 48% !important;
-                        flex: 1 1 0% !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
                     }
                 </style>
                 """,
                 unsafe_allow_html=True
             )
 
-            # Buat baris kolom murni bawaan Streamlit dengan gap horizontal rapat
-            col_nav1, col_nav2 = st.columns(2, gap="small")
-
-            with col_nav1:
-                # HALAMAN 1: Berfungsi sebagai Tombol EXIT Utama
+            # 🛠️ EKSEKUSI PENYUNTIKAN TOMBOL NATIVE KE DALAM BINGKAI FLEXBOX HORIZONTAL
+            st.markdown('<div class="rpg-navigation-flex-bar">', unsafe_allow_html=True)
+            
+            # SLOT TOMBOL KIRI (Menggunakan st.container kustom untuk mengunci pendaran elemen)
+            with st.container():
                 if current_page == 1:
-                    if st.button("📖 TUTUP JURNAL & KEMBALI", use_container_width=True, key="btn_nav_pack_exit_lobby"):
+                    if st.button("📖 TUTUP JURNAL", use_container_width=True, key="btn_nav_pack_exit_lobby"):
                         st.session_state["campaign_sub_page"] = "resepsionis_utama"
                         st.rerun()
-                # HALAMAN 2 atau 3: Berfungsi sebagai Tombol KEMBALI Halaman Sebelumnya
                 else:
-                    if st.button("⬅️ HALAMAN SEBELUMNYA", use_container_width=True, key="btn_nav_pack_back_step"):
+                    if st.button("⬅️ SEBELUMNYA", use_container_width=True, key="btn_nav_pack_back_step"):
                         st.session_state["book_page_number"] -= 1
                         st.rerun()
 
-            with col_nav2:
-                # HALAMAN TERAKHIR: Berfungsi memutar balik alur navigasi ke Halaman Pertama
+            # SLOT TOMBOL KANAN
+            with st.container():
                 if current_page == 3:
-                    if st.button("↺ KEMBALI KE AWAL (HAL 1)", use_container_width=True, key="btn_nav_pack_reset_to_one"):
+                    if st.button("↺ KE AWAL (HAL 1)", use_container_width=True, key="btn_nav_pack_reset_to_one"):
                         st.session_state["book_page_number"] = 1
                         st.rerun()
-                # HALAMAN 1 atau 2: Berfungsi sebagai Tombol LANJUT ke halaman berikutnya
                 else:
-                    if st.button("HALAMAN BERIKUTNYA ➔", use_container_width=True, key="btn_nav_pack_next_step"):
+                    if st.button("BERIKUTNYA ➔", use_container_width=True, key="btn_nav_pack_next_step"):
                         st.session_state["book_page_number"] += 1
                         st.rerun()
-
-
+                        
+            st.markdown('</div>', unsafe_allow_html=True)
 
 
         # =========================================================================
