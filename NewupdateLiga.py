@@ -1588,113 +1588,106 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
         
         # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (CAMP STYLE DESIGN - PURE PYTHON & CSS)
+        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (CAMP STYLE - SAFE CONTAINER IMPLEMENTATION)
         # =========================================================================
         if st.session_state["campaign_sub_page"] == "resepsionis_utama":
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub'>Pilih gulungan jurnal di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
             
-            # --- SUNTIKKAN STYLING PREMIUM UNTUK MENYULAP TOMBOL MENJADI KARTU CAMP ---
+            # --- SUNTIKKAN STYLING CSS UNTUK WADAH KOTAK KARTU ---
             st.markdown(
                 """
                 <style>
-                    /* Atur tata letak kolom bawaan Streamlit agar pas kiri-kanan */
-                    div[data-testid="stHorizontalBlock"]:has(button[key="btn_lobby_buku_buruan_fixed"]) {
-                        gap: 20px !important;
-                        margin-top: 25px !important;
-                    }
-                    
-                    /* SUNTIKAN UTAMA: Sulap tombol Streamlit menjadi kotak kartu besar */
-                    div[data-testid="stColumn"] button[key="btn_lobby_buku_buruan_fixed"],
-                    div[data-testid="stColumn"] button[key="btn_lobby_buku_misi_fixed"] {
+                    /* Hias kontainer agar berbentuk kotak kartu premium seperti Preparation Camp */
+                    .reception-custom-box {
                         background: linear-gradient(135deg, #131926 0%, #1e2638 100%) !important;
                         border: 2px solid #b45309 !important;
                         border-radius: 12px !important;
-                        padding: 30px 20px !important;
-                        min-height: 250px !important;
-                        width: 100% !important;
-                        display: flex !important;
-                        flex-direction: column !important;
-                        justify-content: center !important;
-                        align-items: center !important;
+                        padding: 25px 20px !important;
                         text-align: center !important;
                         box-shadow: 0 8px 20px rgba(0,0,0,0.5) !important;
-                        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
-                        white-space: normal !important; /* Izinkan teks turun ke bawah */
+                        margin-bottom: 15px !important;
+                        display: flex !important;
+                        flex-direction: column !important;
+                        align-items: center !important;
+                        justify-content: center !important;
+                        min-height: 200px !important;
                     }
                     
-                    /* Efek Hover saat tombol didekati kursor */
-                    div[data-testid="stColumn"] button[key="btn_lobby_buku_buruan_fixed"]:hover,
-                    div[data-testid="stColumn"] button[key="btn_lobby_buku_misi_fixed"]:hover {
-                        transform: translateY(-5px) !important;
-                        border-color: #fbbf24 !important;
-                        box-shadow: 0 12px 25px rgba(180, 83, 9, 0.4) !important;
-                    }
-                    
-                    /* Styling komponen teks di dalam tombol */
-                    .btn-inner-emoji {
+                    .box-emoji {
                         font-size: 45px !important;
-                        margin-bottom: 12px !important;
-                        display: block !important;
-                        line-height: 1 !important;
+                        margin-bottom: 10px !important;
                     }
-                    .btn-inner-title {
+                    
+                    .box-title {
                         color: #fef08a !important;
                         font-family: monospace !important;
                         font-size: 16px !important;
                         font-weight: 800 !important;
-                        letter-spacing: 1px !important;
-                        display: block !important;
                         margin-bottom: 8px !important;
+                        letter-spacing: 1px !important;
                     }
-                    .btn-inner-desc {
+                    
+                    .box-desc {
                         color: #94a3b8 !important;
                         font-family: monospace !important;
-                        font-size: 11.5px !important;
+                        font-size: 12px !important;
                         line-height: 1.5 !important;
-                        display: block !important;
-                        margin-bottom: 15px !important;
                     }
-                    .btn-inner-action {
+
+                    /* Modifikasi tombol bawah agar warnanya menyatu dengan tema */
+                    div[data-testid="stColumn"] button {
+                        background: rgba(180, 83, 9, 0.2) !important;
                         color: #fbbf24 !important;
+                        border: 1px solid #b45309 !important;
+                        font-family: monospace !important;
                         font-weight: bold !important;
-                        font-size: 13px !important;
-                        letter-spacing: 0.5px !important;
-                        border-top: 1px dashed rgba(180, 83, 9, 0.4) !important;
-                        padding-top: 10px !important;
-                        width: 100% !important;
-                        display: block !important;
+                        padding: 10px 0 !important;
+                        transition: all 0.2s ease !important;
+                    }
+                    div[data-testid="stColumn"] button:hover {
+                        background: #b45309 !important;
+                        color: #0b0f19 !important;
+                        box-shadow: 0 4px 12px rgba(180, 83, 9, 0.4) !important;
                     }
                 </style>
                 """, 
                 unsafe_allow_html=True
             )
             
-            # --- RENDER STRUKTUR TOMBOL ASLI STREAMLIT (KIRI-KANAN) ---
+            # --- RENDER STRUKTUR LAYOUT DUA KOLOM ---
             col_lobby1, col_lobby2 = st.columns(2)
             
-            # 📘 KARTU TOMBOL 1: JURNAL BURUAN
+            # 📘 KARTU KIRI: JURNAL BURUAN
             with col_lobby1:
-                # Kita susun struktur layout teks dan emoji langsung menggunakan format HTML di dalam fungsi button
-                button_text_1 = """
-                <span class="btn-inner-emoji">📘</span>
-                <span class="btn-inner-title">JURNAL BURUAN</span>
-                <span class="btn-inner-desc">Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin, level pahlawan, dan rekap hasil buruan harian.</span>
-                <span class="btn-inner-action">Buka Jurnal Buruan ➔</span>
-                """
-                if st.button(button_text_1, use_container_width=True, key="btn_lobby_buku_buruan_fixed"):
+                st.markdown(
+                    """
+                    <div class="reception-custom-box">
+                        <div class="box-emoji">📘</div>
+                        <div class="box-title">JURNAL BURUAN</div>
+                        <div class="box-desc">Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin, level pahlawan, dan rekap hasil buruan harian.</div>
+                    </div>
+                    """, 
+                    unsafe_allow_html=True
+                )
+                # Tombol standar Streamlit ditaruh normal di bawah kotak HTML kustom
+                if st.button("Buka Jurnal Buruan ➔", use_container_width=True, key="btn_lobby_buku_buruan_safe"):
                     st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
                     st.rerun()
                     
-            # 🔮 KARTU TOMBOL 2: KITAB MISI GUILD
+            # 🔮 KARTU KANAN: KITAB MISI GUILD
             with col_lobby2:
-                button_text_2 = """
-                <span class="btn-inner-emoji">🔮</span>
-                <span class="btn-inner-title">KITAB MISI GUILD</span>
-                <span class="btn-inner-desc">Akses papan maklumat tugas aliansi untuk memantau sisa target toko harian, target mingguan, serta status misi berkala.</span>
-                <span class="btn-inner-action">Buka Kitab Misi ➔</span>
-                """
-                if st.button(button_text_2, use_container_width=True, key="btn_lobby_buku_misi_fixed"):
+                st.markdown(
+                    """
+                    <div class="reception-custom-box">
+                        <div class="box-emoji">🔮</div>
+                        <div class="box-title">KITAB MISI GUILD</div>
+                        <div class="box-desc">Akses papan maklumat tugas aliansi untuk memantau sisa target toko harian, target mingguan, serta status misi berkala.</div>
+                    </div>
+                    """, 
+                    unsafe_allow_html=True
+                )
+                if st.button("Buka Kitab Misi ➔", use_container_width=True, key="btn_lobby_buku_misi_safe"):
                     st.session_state["campaign_sub_page"] = "view_buku_tugas"
                     st.rerun()
 
@@ -1705,6 +1698,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 st.session_state.current_camp_menu = "main"
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
+
 
         # 🚪 KONDISI 2: BUKU TERBUKA - JURNAL BURUAN
         elif st.session_state["campaign_sub_page"] == "view_buku_pencapaian":
