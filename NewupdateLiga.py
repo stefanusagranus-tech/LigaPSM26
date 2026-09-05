@@ -1588,159 +1588,115 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
         
         # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (100% PURE HTML & JS - CLEAN INTEGRATION)
+        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (CAMP STYLE DESIGN - PURE PYTHON & CSS)
         # =========================================================================
         if st.session_state["campaign_sub_page"] == "resepsionis_utama":
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub'>Pilih gulungan jurnal di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
             
-            # --- 1. ENGINE PENANGKAP KLIK JAVASCRIPT ---
+            # --- SUNTIKKAN STYLING PREMIUM UNTUK MENYULAP TOMBOL MENJADI KARTU CAMP ---
             st.markdown(
                 """
-                <script>
-                    window.addEventListener('message', function(e) {
-                        if (e.data.type === 'RECEPTION_CLICK') {
-                            const targetBtn = window.parent.document.querySelector('button[key="' + e.data.buttonId + '"]');
-                            if (targetBtn) {
-                                targetBtn.click();
-                            }
-                        }
-                    });
-                </script>
-                """,
+                <style>
+                    /* Atur tata letak kolom bawaan Streamlit agar pas kiri-kanan */
+                    div[data-testid="stHorizontalBlock"]:has(button[key="btn_lobby_buku_buruan_fixed"]) {
+                        gap: 20px !important;
+                        margin-top: 25px !important;
+                    }
+                    
+                    /* SUNTIKAN UTAMA: Sulap tombol Streamlit menjadi kotak kartu besar */
+                    div[data-testid="stColumn"] button[key="btn_lobby_buku_buruan_fixed"],
+                    div[data-testid="stColumn"] button[key="btn_lobby_buku_misi_fixed"] {
+                        background: linear-gradient(135deg, #131926 0%, #1e2638 100%) !important;
+                        border: 2px solid #b45309 !important;
+                        border-radius: 12px !important;
+                        padding: 30px 20px !important;
+                        min-height: 250px !important;
+                        width: 100% !important;
+                        display: flex !important;
+                        flex-direction: column !important;
+                        justify-content: center !important;
+                        align-items: center !important;
+                        text-align: center !important;
+                        box-shadow: 0 8px 20px rgba(0,0,0,0.5) !important;
+                        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+                        white-space: normal !important; /* Izinkan teks turun ke bawah */
+                    }
+                    
+                    /* Efek Hover saat tombol didekati kursor */
+                    div[data-testid="stColumn"] button[key="btn_lobby_buku_buruan_fixed"]:hover,
+                    div[data-testid="stColumn"] button[key="btn_lobby_buku_misi_fixed"]:hover {
+                        transform: translateY(-5px) !important;
+                        border-color: #fbbf24 !important;
+                        box-shadow: 0 12px 25px rgba(180, 83, 9, 0.4) !important;
+                    }
+                    
+                    /* Styling komponen teks di dalam tombol */
+                    .btn-inner-emoji {
+                        font-size: 45px !important;
+                        margin-bottom: 12px !important;
+                        display: block !important;
+                        line-height: 1 !important;
+                    }
+                    .btn-inner-title {
+                        color: #fef08a !important;
+                        font-family: monospace !important;
+                        font-size: 16px !important;
+                        font-weight: 800 !important;
+                        letter-spacing: 1px !important;
+                        display: block !important;
+                        margin-bottom: 8px !important;
+                    }
+                    .btn-inner-desc {
+                        color: #94a3b8 !important;
+                        font-family: monospace !important;
+                        font-size: 11.5px !important;
+                        line-height: 1.5 !important;
+                        display: block !important;
+                        margin-bottom: 15px !important;
+                    }
+                    .btn-inner-action {
+                        color: #fbbf24 !important;
+                        font-weight: bold !important;
+                        font-size: 13px !important;
+                        letter-spacing: 0.5px !important;
+                        border-top: 1px dashed rgba(180, 83, 9, 0.4) !important;
+                        padding-top: 10px !important;
+                        width: 100% !important;
+                        display: block !important;
+                    }
+                </style>
+                """, 
                 unsafe_allow_html=True
             )
             
-            # 🎯 KUNCI UTAMA: Membungkus tombol bayangan ke kontainer kosong terisolasi agar tidak bocor ke luar layout
-            hidden_container = st.empty()
-            with hidden_container.container():
-                if st.button("", key="hidden_trigger_buku1"):
+            # --- RENDER STRUKTUR TOMBOL ASLI STREAMLIT (KIRI-KANAN) ---
+            col_lobby1, col_lobby2 = st.columns(2)
+            
+            # 📘 KARTU TOMBOL 1: JURNAL BURUAN
+            with col_lobby1:
+                # Kita susun struktur layout teks dan emoji langsung menggunakan format HTML di dalam fungsi button
+                button_text_1 = """
+                <span class="btn-inner-emoji">📘</span>
+                <span class="btn-inner-title">JURNAL BURUAN</span>
+                <span class="btn-inner-desc">Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin, level pahlawan, dan rekap hasil buruan harian.</span>
+                <span class="btn-inner-action">Buka Jurnal Buruan ➔</span>
+                """
+                if st.button(button_text_1, use_container_width=True, key="btn_lobby_buku_buruan_fixed"):
                     st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
                     st.rerun()
                     
-                if st.button("", key="hidden_trigger_buku2"):
+            # 🔮 KARTU TOMBOL 2: KITAB MISI GUILD
+            with col_lobby2:
+                button_text_2 = """
+                <span class="btn-inner-emoji">🔮</span>
+                <span class="btn-inner-title">KITAB MISI GUILD</span>
+                <span class="btn-inner-desc">Akses papan maklumat tugas aliansi untuk memantau sisa target toko harian, target mingguan, serta status misi berkala.</span>
+                <span class="btn-inner-action">Buka Kitab Misi ➔</span>
+                """
+                if st.button(button_text_2, use_container_width=True, key="btn_lobby_buku_misi_fixed"):
                     st.session_state["campaign_sub_page"] = "view_buku_tugas"
                     st.rerun()
-                
-                # Gunakan CSS khusus untuk melenyapkan wujud tombol hantu di pojok kiri secara mutlak
-                st.markdown(
-                    """
-                    <style>
-                        button[key="hidden_trigger_buku1"],
-                        button[key="hidden_trigger_buku2"],
-                        div:has(> button[key="hidden_trigger_buku1"]),
-                        div:has(> button[key="hidden_trigger_buku2"]) {
-                            display: none !important;
-                            opacity: 0 !important;
-                            visibility: hidden !important;
-                            width: 0px !important;
-                            height: 0px !important;
-                            padding: 0 !important;
-                            margin: 0 !important;
-                        }
-                    </style>
-                    """,
-                    unsafe_allow_html=True
-                )
-
-            # --- 2. MAKLUMAT COMPONENT HTML & CSS MURNI UNTUK DESAIN KARTU ---
-            html_design_packet = """
-            <div class="lobby-html-grid">
-                <!-- 📘 KARTU BUKU 1 -->
-                <div class="html-card">
-                    <div class="html-book-icon">📘</div>
-                    <h4 class="html-card-title">JURNAL BURUAN</h4>
-                    <p class="html-card-desc">Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin, level pahlawan, dan rekap hasil buruan harian.</p>
-                    <button class="html-action-btn" onclick="sendClick('hidden_trigger_buku1')">Buka Jurnal Buruan ➔</button>
-                </div>
-                
-                <!-- 🔮 KARTU BUKU 2 -->
-                <div class="html-card">
-                    <div class="html-book-icon">🔮</div>
-                    <h4 class="html-card-title">KITAB MISI GUILD</h4>
-                    <p class="html-card-desc">Akses papan maklumat tugas aliansi untuk memantau sisa target toko harian, target mingguan, serta status misi berkala.</p>
-                    <button class="html-action-btn" onclick="sendClick('hidden_trigger_buku2')">Buka Kitab Misi ➔</button>
-                </div>
-            </div>
-
-            <style>
-                body { background-color: transparent; margin: 0; padding: 0; font-family: monospace; }
-                .lobby-html-grid {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: stretch;
-                    gap: 20px;
-                    width: 100%;
-                    box-sizing: border-box;
-                    padding: 10px 5px;
-                }
-                .html-card {
-                    background: linear-gradient(135deg, #131926 0%, #1e2638 100%);
-                    border: 2px solid #b45309;
-                    border-radius: 12px;
-                    width: 48%;
-                    box-sizing: border-box;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    text-align: center;
-                    box-shadow: 0 8px 20px rgba(0,0,0,0.6);
-                    overflow: hidden;
-                }
-                .html-book-icon {
-                    font-size: 48px;
-                    margin: 24px 0 10px 0;
-                    filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.3));
-                    animation: float 3s infinite ease-in-out;
-                }
-                .html-card-title {
-                    color: #fef08a;
-                    font-size: 15px;
-                    font-weight: 800;
-                    margin: 0 0 10px 0;
-                    letter-spacing: 1px;
-                }
-                .html-card-desc {
-                    color: #94a3b8;
-                    font-size: 11.5px;
-                    line-height: 1.5;
-                    margin: 0 0 20px 0;
-                    padding: 0 15px;
-                    flex-grow: 1;
-                }
-                .html-action-btn {
-                    background: rgba(180, 83, 9, 0.15);
-                    color: #fef08a;
-                    border: none;
-                    border-top: 1px solid rgba(180, 83, 9, 0.4);
-                    font-family: monospace;
-                    font-size: 13px;
-                    font-weight: bold;
-                    padding: 14px 0;
-                    width: 100%;
-                    cursor: pointer;
-                    transition: all 0.25s ease;
-                }
-                .html-action-btn:hover {
-                    background: #b45309;
-                    color: #0b0f19;
-                    box-shadow: 0 -4px 15px rgba(180, 83, 9, 0.3);
-                }
-                @keyframes float {
-                    0%, 100% { transform: translateY(0); }
-                    50% { transform: translateY(-6px); }
-                }
-            </style>
-
-            <script>
-                function sendClick(id) {
-                    window.parent.postMessage({type: 'RECEPTION_CLICK', buttonId: id}, '*');
-                }
-            </script>
-            """
-            
-            # Cetak paket komponen HTML kustom
-            components.html(html_design_packet, height=315, scrolling=False)
 
             # Tombol keluar utama menuju camp
             st.markdown("<br><hr style='border-color: rgba(180, 83, 9, 0.2); margin: 15px 0;'><br>", unsafe_allow_html=True)
@@ -1749,8 +1705,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 st.session_state.current_camp_menu = "main"
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
-
-
 
         # 🚪 KONDISI 2: BUKU TERBUKA - JURNAL BURUAN
         elif st.session_state["campaign_sub_page"] == "view_buku_pencapaian":
