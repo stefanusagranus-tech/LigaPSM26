@@ -1634,12 +1634,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub'>Pilih gulungan jurnal di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
             
-            # --- 🎯 RENDER STRUKTUR LAYOUT DUA BUKU VERTIKAL (INJECTOR ENGINE) ---
+                        # --- 🎯 RENDER STRUKTUR LAYOUT DUA BUKU VERTIKAL (SINGLE LINE ENGINE) ---
             col_lobby1, col_lobby2 = st.columns(2)
             
             # 📘 KOLOM KIRI: BUKU JURNAL BURUAN
             with col_lobby1:
-                # Berikan teks pancingan pendek (akan ditimpa oleh HTML murni di bawah)
                 if st.button("LOAD_B1", use_container_width=True, key="btn_lobby_buruan_vertical_premium"):
                     st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
                     st.rerun()
@@ -1650,36 +1649,18 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     st.session_state["campaign_sub_page"] = "view_buku_tugas"
                     st.rerun()
 
-            # --- 👑 SUNTIKAN JAVASCRIPT: MENERJEMAHKAN HTML MURNI KE DALAM BADAN BUKU ---
+            # --- 👑 SUNTIKAN JAVASCRIPT: SATU BARIS LURUS TANPA ENTER ANTI-BENTROK ---
             st.markdown(
                 """
                 <script>
-                    // Mengambil elemen tombol buku kiri berdasarkan key uniknya
-                    const buku1 = window.parent.document.querySelector('button[key="btn_lobby_buruan_vertical_premium"]');
-                    if(buku1) {
-                        buku1.innerHTML = `
-                            <div class="book-emoji-large">📘</div>
-                            <div class="book-title-bold">JURNAL BURUAN</div>
-                            <div class="book-desc-small">Akses arsip report pribadi Anda untuk memeriksa akumulasi poin hasil buruan, level pahlawan, dan rekap performa harian Anda.</div>
-                            <div class="book-action-arrow">➔ Buka Buku</div>
-                        `;
-                    }
-                    
-                    // Mengambil elemen tombol buku kanan berdasarkan key uniknya
-                    const buku2 = window.parent.document.querySelector('button[key="btn_lobby_misi_vertical_premium"]');
-                    if(buku2) {
-                        buku2.innerHTML = `
-                            <div class="book-emoji-large">🔮 ⚔️</div>
-                            <div class="book-title-bold">KITAB MISI GUILD</div>
-                            <div class="book-desc-small">Cek papan pengumuman maklumat aliansi untuk memantau target pencapaian toko harian, quest mingguan PSM, dan target quiz berkala.</div>
-                            <div class="book-action-arrow">➔ Buka Kitab</div>
-                        `;
-                    }
+                    const b1 = window.parent.document.querySelector('button[key="btn_lobby_buruan_vertical_premium"]');
+                    if(b1) { b1.innerHTML = '<div class="book-emoji-large">📘</div><div class="book-title-bold">JURNAL BURUAN</div><div class="book-desc-small">Akses arsip report pribadi Anda untuk memeriksa akumulasi poin hasil buruan, level pahlawan, dan rekap performa harian Anda.</div><div class="book-action-arrow">➔ Buka Buku</div>'; }       
+                    const b2 = window.parent.document.querySelector('button[key="btn_lobby_misi_vertical_premium"]');
+                    if(b2) { b2.innerHTML = '<div class="book-emoji-large">🔮 ⚔️</div><div class="book-title-bold">KITAB MISI GUILD</div><div class="book-desc-small">Cek papan pengumuman maklumat aliansi untuk memantau target pencapaian toko harian, quest mingguan PSM, dan target quiz berkala.</div><div class="book-action-arrow">➔ Buka Kitab</div>'; }
                 </script>
                 """,
                 unsafe_allow_html=True
             )
-
 
             # Tombol keluar utama kembali ke Camp Persiapan (Tetap bersih di bawah)
             st.markdown("<br><hr style='border-color: rgba(180, 83, 9, 0.2); margin: 15px 0;'><br>", unsafe_allow_html=True)
