@@ -339,9 +339,9 @@ def check_login(input_username, input_password):
 
 
 
-# ==========================================
-# 5. CUSTOM CSS (NEON DARK THEME + TAB FIX)
-# ==========================================
+# =========================================================================
+# 5. CUSTOM CSS (NEON DARK THEME + TAB FIX + BOOK LOBBY ENGINE - OPTIMIZED)
+# =========================================================================
 st.markdown(
     """
 <style>
@@ -431,7 +431,10 @@ st.markdown(
         box-shadow: 0 0 18px rgba(56, 189, 248, 0.6) !important;
         color: #ffffff !important;
     }
-    div.stButton > button, div.stFormSubmitButton > button {
+
+    /* 🛡️ MODIFIKASI STANDAR: Tombol universal bawaanmu (Kecuali tombol lobi buku) */
+    div.stButton > button:not([key*="pure_css"]), 
+    div.stFormSubmitButton > button {
         background-color: #080c14 !important;
         color: #ffffff !important;
         border: 2px solid #00f0ff !important;
@@ -439,12 +442,16 @@ st.markdown(
         font-weight: bold !important;
         box-shadow: 0 0 10px rgba(0, 240, 255, 0.3) !important;
         transition: all 0.3s ease !important;
+        height: auto;
+        min-height: auto;
     }
-    div.stButton > button:hover, div.stFormSubmitButton > button:hover {
+    div.stButton > button:not([key*="pure_css"]):hover, 
+    div.stFormSubmitButton > button:hover {
         background-color: #00f0ff !important;
         color: #080c14 !important;
         box-shadow: 0 0 20px rgba(0, 240, 255, 0.8) !important;
     }
+    
     [data-testid="stSidebar"] div[data-testid="stButton"] > button {
         background-color: #0f172a !important;
         color: #ef4444 !important;
@@ -457,27 +464,73 @@ st.markdown(
     }
 
     /* ========================================================================= */
-    /* JURUS PAMUNGKAS: FORCE COLOR TAB STREAMLIT                                */
+    /* 👑 JURUS BARU: FORCE DEKORASI BUKU VERTIKAL (MENGHANCURKAN GEMBOK)        */
     /* ========================================================================= */
+    div[data-testid="stColumn"] button[key="btn_buku_buruan_pure_css"],
+    div[data-testid="stColumn"] button[key="btn_buku_misi_pure_css"] {
+        min-height: 250px !important; 
+        height: 250px !important;
+        max-width: 210px !important;  
+        width: 210px !important;
+        margin: 0 auto !important;    
+        border-radius: 6px 20px 20px 6px !important;
+        border-left: 14px solid rgba(0,0,0,0.55) !important; /* Punggung Buku */
+        
+        white-space: pre-line !important; 
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important; 
+        align-items: center !important;
+        text-align: center !important;
+        padding: 22px 14px !important;
+        box-sizing: border-box !important;
+        font-family: monospace !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        line-height: 1.4 !important;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+    }
     
-    /* Targetkan seluruh elemen di dalam container tab */
+    /* Warna khusus Buku Kiri */
+    div[data-testid="stColumn"] button[key="btn_buku_buruan_pure_css"] {
+        background: linear-gradient(135deg, #0b1329 0%, #1e3a8a 100%) !important;
+        color: #38bdf8 !important;
+        border: 2px solid #38bdf8 !important;
+        box-shadow: 5px 15px 30px rgba(0,0,0,0.6), inset -6px 0 15px rgba(0,0,0,0.4) !important;
+    }
+    div[data-testid="stColumn"] button[key="btn_buku_buruan_pure_css"]:hover {
+        transform: translateY(-8px) rotate(-1deg) !important;
+        border-color: #00f0ff !important;
+        box-shadow: 0 0 25px rgba(0, 240, 255, 0.5), inset -6px 0 15px rgba(0,0,0,0.2) !important;
+        color: #ffffff !important;
+    }
+    
+    /* Warna khusus Buku Kanan */
+    div[data-testid="stColumn"] button[key="btn_buku_misi_pure_css"] {
+        background: linear-gradient(135deg, #161233 0%, #581c87 100%) !important;
+        color: #c084fc !important;
+        border: 2px solid #c084fc !important;
+        box-shadow: 5px 15px 30px rgba(0,0,0,0.6), inset -6px 0 15px rgba(0,0,0,0.4) !important;
+    }
+    div[data-testid="stColumn"] button[key="btn_buku_misi_pure_css"]:hover {
+        transform: translateY(-8px) rotate(1deg) !important;
+        border-color: #d8b4fe !important;
+        box-shadow: 0 0 25px rgba(168, 85, 247, 0.5), inset -6px 0 15px rgba(0,0,0,0.2) !important;
+        color: #ffffff !important;
+    }
+
+    /* FORCE COLOR TAB STREAMLIT */
     div[data-baseweb="tab-list"] button {
         background-color: transparent !important;
     }
-    
-    /* Memaksa warna teks SEMUA tab menjadi terang (#b0c4de) */
     div[data-baseweb="tab-list"] button div[data-testid="stMarkdownContainer"] p {
         color: #b0c4de !important;
         font-weight: 500 !important;
     }
-
-    /* Memaksa warna teks tab yang sedang AKTIF menjadi hijau neon (#00ff88) */
     div[data-baseweb="tab-list"] button[aria-selected="true"] div[data-testid="stMarkdownContainer"] p {
         color: #00ff88 !important;
         font-weight: 700 !important;
     }
-
-    /* Garis bawah/indikator tab aktif */
     div[data-baseweb="tab-highlight"] {
         background-color: #00ff88 !important;
     }
@@ -485,11 +538,6 @@ st.markdown(
 """,
     unsafe_allow_html=True,
 )
-
-if "logged_in" not in st.session_state:
-  st.session_state.logged_in = False
-if "username" not in st.session_state:
-  st.session_state.username = ""
 
 # ==========================================
 # 6. HALAMAN LOGIN
@@ -1524,7 +1572,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 .guild-lobby-title { text-align: center; color: #fbbf24 !important; font-family: monospace; font-size: 24px !important; font-weight: 900 !important; text-shadow: 0 0 12px rgba(251,191,36,0.4) !important; margin: 0 0 5px 0 !important; }
                 .guild-lobby-sub { text-align: center; color: #475569 !important; font-size: 11px !important; margin: 0 0 25px 0 !important; font-family: monospace; }
                 
-                                /* ========================================================================= */
+                /* ========================================================================= */
                 /* 👑 FIX MUTLAK: PENGHANCHUR GEMBOK CSS UNIVERSAL (OVERRIDER ENGINE)       */
                 /* ========================================================================= */
                 /* Kita tembak langsung menggunakan ID atribut internal Streamlit agar super kuat */
