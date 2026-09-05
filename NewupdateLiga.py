@@ -1649,18 +1649,42 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     st.session_state["campaign_sub_page"] = "view_buku_tugas"
                     st.rerun()
 
-            # --- 👑 SUNTIKAN JAVASCRIPT: SATU BARIS LURUS TANPA ENTER ANTI-BENTROK ---
+            # --- 👑 SUNTIKAN JAVASCRIPT: ENGINE MUTATION OBSERVER (ANTI-DELAY & PASTI MUNCUL) ---
             st.markdown(
                 """
                 <script>
-                    const b1 = window.parent.document.querySelector('button[key="btn_lobby_buruan_vertical_premium"]');
-                    if(b1) { b1.innerHTML = '<div class="book-emoji-large">📘</div><div class="book-title-bold">JURNAL BURUAN</div><div class="book-desc-small">Akses arsip report pribadi Anda untuk memeriksa akumulasi poin hasil buruan, level pahlawan, dan rekap performa harian Anda.</div><div class="book-action-arrow">➔ Buka Buku</div>'; }       
-                    const b2 = window.parent.document.querySelector('button[key="btn_lobby_misi_vertical_premium"]');
-                    if(b2) { b2.innerHTML = '<div class="book-emoji-large">🔮 ⚔️</div><div class="book-title-bold">KITAB MISI GUILD</div><div class="book-desc-small">Cek papan pengumuman maklumat aliansi untuk memantau target pencapaian toko harian, quest mingguan PSM, dan target quiz berkala.</div><div class="book-action-arrow">➔ Buka Kitab</div>'; }
+                    (function() {
+                        function injectBookContent() {
+                            const b1 = window.parent.document.querySelector('button[key="btn_lobby_buruan_vertical_premium"]');
+                            if (b1 && !b1.querySelector('.book-title-bold')) { 
+                                b1.innerHTML = '<div class="book-emoji-large">📘</div><div class="book-title-bold">JURNAL BURUAN</div><div class="book-desc-small">Akses arsip report pribadi Anda untuk memeriksa akumulasi poin hasil buruan, level pahlawan, dan rekap performa harian Anda.</div><div class="book-action-arrow">➔ Buka Buku</div>'; 
+                            }
+                            
+                            const b2 = window.parent.document.querySelector('button[key="btn_lobby_misi_vertical_premium"]');
+                            if (b2 && !b2.querySelector('.book-title-bold')) { 
+                                b2.innerHTML = '<div class="book-emoji-large">🔮 ⚔️</div><div class="book-title-bold">KITAB MISI GUILD</div><div class="book-desc-small">Cek papan pengumuman maklumat aliansi untuk memantau target pencapaian toko harian, quest mingguan PSM, dan target quiz berkala.</div><div class="book-action-arrow">➔ Buka Kitab</div>'; 
+                            }
+                        }
+
+                        // Jalankan deteksi berkala setiap 50ms untuk memastikan tombol langsung tertembak begitu muncul
+                        const bookObserver = new MutationObserver((mutations) => {
+                            injectBookContent();
+                        });
+
+                        // Mulai mengawasi seluruh halaman utama Streamlit
+                        bookObserver.observe(window.parent.document.body, {
+                            childList: true,
+                            subtree: true
+                        });
+
+                        // Eksekusi cadangan instan untuk browser cepat
+                        injectBookContent();
+                    })();
                 </script>
                 """,
                 unsafe_allow_html=True
             )
+
 
             # Tombol keluar utama kembali ke Camp Persiapan (Tetap bersih di bawah)
             st.markdown("<br><hr style='border-color: rgba(180, 83, 9, 0.2); margin: 15px 0;'><br>", unsafe_allow_html=True)
