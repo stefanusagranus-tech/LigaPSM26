@@ -1650,7 +1650,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             # --- 🎯 2. RENDER STRUKTUR TATA LETAK 2 KOLOM KEMBAR IDENTIK ---
             col_lobby1, col_lobby2 = st.columns(2)
             
-            # 📘 KOLOM KIRI: JURNAL BURUAN (REPORT PRIBADI)
+            # 📘 KOLOM KIRI: JURNAL BURUAN
             with col_lobby1:
                 st.markdown(
                     """
@@ -1658,12 +1658,16 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         <div class="camp-icon">📘</div>
                         <div class="camp-title">JURNAL BURUAN</div>
                         <div class="camp-desc">Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin, level pahlawan, dan rekap hasil buruan harian Anda sepanjang season.</div>
+                        <!-- Tombol digambar langsung di dalam HTML agar urutannya terkunci mati di paling bawah -->
+                        <a href="?page=view_buku_pencapaian" target="_self" class="camp-html-btn">Lihat Status ➔</a>
                     </div>
                     """,
                     unsafe_allow_html=True
                 )
-                if st.button("Lihat Status ➔", use_container_width=True, key="btn_lobby_buruan_camp_style_fixed"):
+                # Sinkronisasi state jika mendeteksi parameter URL (opsional, jika sistem navigasimu memakai query params)
+                if st.query_params.get("page") == "view_buku_pencapaian":
                     st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
+                    st.query_params.clear()
                     st.rerun()
                     
             # 🔮 KOLOM KANAN: KITAB MISI GUILD (AMBIL QUEST)
