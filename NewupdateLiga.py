@@ -1634,33 +1634,51 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub'>Pilih gulungan jurnal di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
             
-            # --- 🎯 RENDER ULANG STRUKTUR LAYOUT DUA BUKU VERTIKAL MURNI ---
+            # --- 🎯 RENDER STRUKTUR LAYOUT DUA BUKU VERTIKAL (INJECTOR ENGINE) ---
             col_lobby1, col_lobby2 = st.columns(2)
             
             # 📘 KOLOM KIRI: BUKU JURNAL BURUAN
             with col_lobby1:
-                # Membungkus struktur teks ke HTML bertingkat di dalam satu parameter string tombol
-                buku1_content = (
-                    '<span class="book-emoji-large">📘</span>'
-                    '<span class="book-title-bold">JURNAL BURUAN</span>'
-                    '<span class="book-desc-small">Akses arsip report pribadi Anda untuk memeriksa akumulasi poin hasil buruan, level pahlawan, dan rekap performa harian Anda.</span>'
-                    '<span class="book-action-arrow">➔ Buka Buku</span>'
-                )
-                if st.button(buku1_content, use_container_width=True, key="btn_lobby_buruan_vertical_premium"):
+                # Berikan teks pancingan pendek (akan ditimpa oleh HTML murni di bawah)
+                if st.button("LOAD_B1", use_container_width=True, key="btn_lobby_buruan_vertical_premium"):
                     st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
                     st.rerun()
                     
             # 🔮 KOLOM KANAN: BUKU KITAB MISI GUILD
             with col_lobby2:
-                buku2_content = (
-                    '<span class="book-emoji-large">🔮 ⚔️</span>'
-                    '<span class="book-title-bold">KITAB MISI GUILD</span>'
-                    '<span class="book-desc-small">Cek papan maklumat aliansi untuk memantau target pencapaian toko harian, quest mingguan PSM, dan target quiz berkala.</span>'
-                    '<span class="book-action-arrow">➔ Buka Kitab</span>'
-                )
-                if st.button(buku2_content, use_container_width=True, key="btn_lobby_misi_vertical_premium"):
+                if st.button("LOAD_B2", use_container_width=True, key="btn_lobby_misi_vertical_premium"):
                     st.session_state["campaign_sub_page"] = "view_buku_tugas"
                     st.rerun()
+
+            # --- 👑 SUNTIKAN JAVASCRIPT: MENERJEMAHKAN HTML MURNI KE DALAM BADAN BUKU ---
+            st.markdown(
+                """
+                <script>
+                    // Mengambil elemen tombol buku kiri berdasarkan key uniknya
+                    const buku1 = window.parent.document.querySelector('button[key="btn_lobby_buruan_vertical_premium"]');
+                    if(buku1) {
+                        buku1.innerHTML = `
+                            <div class="book-emoji-large">📘</div>
+                            <div class="book-title-bold">JURNAL BURUAN</div>
+                            <div class="book-desc-small">Akses arsip report pribadi Anda untuk memeriksa akumulasi poin hasil buruan, level pahlawan, dan rekap performa harian Anda.</div>
+                            <div class="book-action-arrow">➔ Buka Buku</div>
+                        `;
+                    }
+                    
+                    // Mengambil elemen tombol buku kanan berdasarkan key uniknya
+                    const buku2 = window.parent.document.querySelector('button[key="btn_lobby_misi_vertical_premium"]');
+                    if(buku2) {
+                        buku2.innerHTML = `
+                            <div class="book-emoji-large">🔮 ⚔️</div>
+                            <div class="book-title-bold">KITAB MISI GUILD</div>
+                            <div class="book-desc-small">Cek papan pengumuman maklumat aliansi untuk memantau target pencapaian toko harian, quest mingguan PSM, dan target quiz berkala.</div>
+                            <div class="book-action-arrow">➔ Buka Kitab</div>
+                        `;
+                    }
+                </script>
+                """,
+                unsafe_allow_html=True
+            )
 
 
             # Tombol keluar utama kembali ke Camp Persiapan (Tetap bersih di bawah)
