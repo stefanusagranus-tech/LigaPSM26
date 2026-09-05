@@ -1603,17 +1603,23 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             
            # 📘 KOLOM KIRI: JURNAL BURUAN (REPORT PRIBADI)
             with col_lobby1:
-                # FIX: Menyatukan parameter unsafe_allow_html di dalam tanda kurung secara benar
+                # Perbaikan total: String HTML dan parameter disatukan rapi di dalam kurung markdown
                 st.markdown(
                     """
                     <div class="camp-card">
                         <div class="camp-icon">📘</div>
                         <div class="camp-title">JURNAL BURUAN</div>
-                        <div class="camp-desc">Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin, level pahlawan, dan rekap hasil buruan harian Anda sepanjang season.</div>
+                        <div class="camp-desc">
+                            Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin, 
+                            level pahlawan, dan rekap hasil buruan harian Anda sepanjang season berjalan.
+                        </div>
                     </div>
                     """,
                     unsafe_allow_html=True
                 )
+                if st.button("Lihat Status ➔", use_container_width=True, key="btn_lobby_buruan_camp_style_fixed"):
+                    st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
+                    st.rerun()
 
             # Tombol keluar utama kembali ke Camp Persiapan (Ditaruh di bawah columns)
             st.markdown("<br><hr style='border-color: rgba(180, 83, 9, 0.2); margin: 15px 0;'><br>", unsafe_allow_html=True)
