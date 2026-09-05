@@ -1598,7 +1598,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub'>Pilih gulungan jurnal di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
             
-                        # --- 🎨 1. SUNTIKKAN STYLING PREVENTIF UNTUK MERENDER KEDUA KARTU ---
+            # --- 🎨 1. SUNTIKKAN STYLING PREVENTIF + ATURAN KECILKAN TOMBOL ---
             st.markdown(
                 """
                 <style>
@@ -1624,10 +1624,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         text-align: center !important;
                         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5) !important;
                         margin-bottom: 12px !important;
-                        /* FIX MUTLAK: Menggunakan block agar layout kolom kedua tidak ambles/hilang */
                         display: block !important; 
                         box-sizing: border-box !important;
-                        min-height: 215px !important; /* Mengunci tinggi kotak agar sejajar rata air */
+                        min-height: 200px !important; /* Mengunci tinggi kotak agar sejajar rata air */
                     }
                     
                     .camp-icon {
@@ -1655,6 +1654,19 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         line-height: 1.5 !important;
                         text-align: center !important;
                         display: block !important;
+                    }
+
+                    /* 🎯 SEKTOR KUAT: MENYUSUTKAN UKURAN TOMBOL BAWAAN AGAR FLEKSIBEL & PROPORSIAL */
+                    div[data-testid="stColumn"] button[key="btn_lobby_buruan_camp_style_fixed"],
+                    div[data-testid="stColumn"] button[key="btn_lobby_misi_camp_style_fixed"] {
+                        min-height: 45px !important; /* Susutkan dari raksasa menjadi ukuran alas tipis */
+                        height: 45px !important;     /* Batasi tinggi maksimal tombol */
+                        padding: 6px 12px !important; /* Kurangi bantalan dalam agar teks tidak tenggelam */
+                        font-family: monospace !important;
+                        font-size: 13px !important;
+                        font-weight: bold !important;
+                        border-radius: 8px !important;
+                        margin-top: 5px !important;
                     }
                 </style>
                 """,
