@@ -1598,10 +1598,23 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub'>Pilih gulungan jurnal di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
             
-            # --- 🎨 1. SUNTIKKAN STYLING PREMIUM CAMP CARD SECARA EKSPLISIT ---
+                        # --- 🎨 1. SUNTIKKAN STYLING PREVENTIF UNTUK MERENDER KEDUA KARTU ---
             st.markdown(
                 """
                 <style>
+                    /* Lenyapkan tombol pancingan agar tidak terlihat oleh user */
+                    button[key="btn_pancingan_lobby1"],
+                    button[key="btn_pancingan_lobby2"],
+                    div:has(> button[key="btn_pancingan_lobby1"]),
+                    div:has(> button[key="btn_pancingan_lobby2"]) {
+                        display: none !important;
+                        opacity: 0 !important;
+                        visibility: hidden !important;
+                        height: 0px !important;
+                        padding: 0 !important;
+                        margin: 0 !important;
+                    }
+
                     /* Kontainer Utama Kartu Camp */
                     .camp-card {
                         background: linear-gradient(135deg, #131926 0%, #1e2638 100%) !important;
@@ -1611,21 +1624,19 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         text-align: center !important;
                         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5) !important;
                         margin-bottom: 12px !important;
-                        display: flex !important;
-                        flex-direction: column !important;
-                        align-items: center !important;
-                        justify-content: center !important;
-                        min-height: 200px !important; /* Menjaga tinggi kotak kiri-kanan tetap seimbang */
+                        /* FIX MUTLAK: Menggunakan block agar layout kolom kedua tidak ambles/hilang */
+                        display: block !important; 
+                        box-sizing: border-box !important;
+                        min-height: 215px !important; /* Mengunci tinggi kotak agar sejajar rata air */
                     }
                     
-                    /* Desain Ukuran Emoji Atas */
                     .camp-icon {
                         font-size: 45px !important;
                         margin-bottom: 12px !important;
-                        filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.3)) !important;
+                        display: block !important;
+                        text-align: center !important;
                     }
                     
-                    /* Judul Utama Kartu (Emas Monospace) */
                     .camp-title {
                         color: #fef08a !important;
                         font-family: monospace !important;
@@ -1633,29 +1644,29 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         font-weight: 800 !important;
                         margin-bottom: 8px !important;
                         letter-spacing: 1px !important;
+                        text-align: center !important;
+                        display: block !important;
                     }
                     
-                    /* Deskripsi Petunjuk Catatan */
                     .camp-desc {
                         color: #94a3b8 !important;
                         font-family: monospace !important;
                         font-size: 12px !important;
                         line-height: 1.5 !important;
+                        text-align: center !important;
+                        display: block !important;
                     }
                 </style>
                 """,
                 unsafe_allow_html=True
             )
 
-            # --- 🎯 2. RENDER STRUKTUR TATA LETAK 2 KOLOM KEMBAR IDENTIK ---
+            # --- 🎯 2. STRUCTURE GENERATOR DENGAN TRIK PANCINGAN KAMU ---
             col_lobby1, col_lobby2 = st.columns(2)
             
             # 📘 KOLOM KIRI: JURNAL BURUAN
             with col_lobby1:
-                # 🎣 PANCINGAN 1: Tombol umpan di awal agar Streamlit memprioritaskan render layout bawah
                 st.button("PANCING_1", key="btn_pancingan_lobby1")
-                
-                # Render visual kotak kartu HTML di bawah pancingan
                 st.markdown(
                     """
                     <div class="camp-card">
@@ -1666,14 +1677,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     """,
                     unsafe_allow_html=True
                 )
-                
-                # Tombol aksi asli yang akan dieksekusi pengguna
                 if st.button("Lihat Status ➔", use_container_width=True, key="btn_lobby_buruan_camp_style_fixed"):
                     st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
                     st.rerun()
                     
-            # 🔮 KOLOM KANAN: KITAB MISI GUILD (AMBIL QUEST)
+            # 🔮 KOLOM KANAN: KITAB MISI GUILD
             with col_lobby2:
+                st.button("PANCING_2", key="btn_pancingan_lobby2")
                 st.markdown(
                     """
                     <div class="camp-card">
@@ -1687,6 +1697,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 if st.button("Ambil Quest ➔", use_container_width=True, key="btn_lobby_misi_camp_style_fixed"):
                     st.session_state["campaign_sub_page"] = "view_buku_tugas"
                     st.rerun()
+
 
 
         # =========================================================================
