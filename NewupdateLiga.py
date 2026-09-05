@@ -1603,9 +1603,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             
            # 📘 KOLOM KIRI: JURNAL BURUAN (REPORT PRIBADI)
             with col_lobby1:
-                if st.button("Lihat Status ➔", use_container_width=True, key="btn_lobby_buruan_camp_style_fixed"):
-                                    st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
-                                    st.rerun()
                 # Perbaikan total: String HTML dan parameter disatukan rapi di dalam kurung markdown
                 st.markdown(
                     """
