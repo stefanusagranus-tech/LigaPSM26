@@ -1610,8 +1610,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 with st.container(border=True):
                     st.markdown("<h1 style='text-align: center; margin: 0;'>📘</h1>", unsafe_allow_html=True)
                     st.markdown("<h4 style='text-align: center; color: #fef08a; font-family: monospace; font-weight: bold;'>JURNAL BURUAN</h4>", unsafe_allow_html=True)
-                    st.markdown("<p style='text-align: center; color: #94a3b8; font-family: monospace; font-size: 13px; min-height: 70px;'>Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin, level pahlawan, dan rekap hasil buruan harian.</p>", unsafe_allow_html=True)
-                    
+                    st.markdown("<p style='text-align: center; color: #94a3b8; font-family: monospace; font-size: 13px; min-height: 70px;'>Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin, level pahlawan, dan rekap hasil buruan harian.</p>", unsafe_allow_html=True)                    
                     if st.button("Lihat Status ➔", use_container_width=True, key="btn_lobby_buruan_darurat_safe"):
                         st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
                         st.rerun()
@@ -1619,10 +1618,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             # 🔮 KOTAK 2: KITAB MISI GUILD
             with col_lobby2:
                 with st.container(border=True):
-                    st.markdown("<h1 style='text-align: center; margin: 0;'>🔮 ⚔️</h1>", unsafe_allow_html=True)
-                    st.markdown("<h4 style='text-align: center; color: #fef08a; font-family: monospace; font-weight: bold;'>KITAB MISI GUILD</h4>", unsafe_allow_html=True)
-                    st.markdown("<p style='text-align: center; color: #94a3b8; font-family: monospace; font-size: 13px; min-height: 70px;'>Cek papan pengumuman maklumat aliansi untuk melihat quest musiman, tugas mingguan PSM, serta daily target buruan toko Anda.</p>", unsafe_allow_html=True)
-                    
+                    st.markdown("<br><h1 style='text-align: center; margin: 0;'>🔮 ⚔️</h1>", unsafe_allow_html=True)
+                    st.markdown("<br><h4 style='text-align: center; color: #fef08a; font-family: monospace; font-weight: bold;'>KITAB MISI GUILD</h4>", unsafe_allow_html=True)
+                    st.markdown("<br><p style='text-align: center; color: #94a3b8; font-family: monospace; font-size: 13px; min-height: 70px;'>Cek papan pengumuman maklumat aliansi untuk melihat quest musiman, tugas mingguan PSM, serta daily target buruan toko Anda.</p>", unsafe_allow_html=True)
                     if st.button("Ambil Quest ➔", use_container_width=True, key="btn_lobby_misi_darurat_safe"):
                         st.session_state["campaign_sub_page"] = "view_buku_tugas"
                         st.rerun()
