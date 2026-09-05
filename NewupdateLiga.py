@@ -1597,130 +1597,54 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # 👑 NAVIGATION STRUKTUR INTERNAL: JALUR NAVIGASI UTAMA BERURUTAN (FIXED)
         # =========================================================================
          
+               # =========================================================================
+        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (CLEAN INTEGRATED BOOK SYSTEM)
         # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (PURE PREPARATION CAMP STYLE)
-        # =========================================================================
-        # 🎯 KUNCI MASTER: Memaksa halaman lobi terbuka jika status memori tersangkut/kosong
-        if "campaign_sub_page" not in st.session_state or st.session_state["campaign_sub_page"] == "":
-            st.session_state["campaign_sub_page"] = "resepsionis_utama"
-
-        if st.session_state["campaign_sub_page"] == "resepsionis_utama":
+        if st.session_state.get("campaign_sub_page", "resepsionis_utama") == "resepsionis_utama":
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub'>Pilih gulungan jurnal di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
             
-            # --- 🎨 1. SUNTIKKAN STYLING PREVENTIF + ATURAN KECILKAN TOMBOL ---
-            st.markdown(
-                """
-                <style>
-                    /* Lenyapkan tombol pancingan agar tidak terlihat oleh user */
-                    button[key="btn_pancingan_lobby1"],
-                    button[key="btn_pancingan_lobby2"],
-                    div:has(> button[key="btn_pancingan_lobby1"]),
-                    div:has(> button[key="btn_pancingan_lobby2"]) {
-                        display: none !important;
-                        opacity: 0 !important;
-                        visibility: hidden !important;
-                        height: 0px !important;
-                        padding: 0 !important;
-                        margin: 0 !important;
-                    }
-
-                    /* Kontainer Utama Kartu Camp */
-                    .camp-card {
-                        background: linear-gradient(135deg, #131926 0%, #1e2638 100%) !important;
-                        border: 2px solid #b45309 !important;
-                        border-radius: 12px !important;
-                        padding: 24px !important;
-                        text-align: center !important;
-                        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5) !important;
-                        margin-bottom: 12px !important;
-                        display: block !important; 
-                        box-sizing: border-box !important;
-                        min-height: 200px !important; /* Mengunci tinggi kotak agar sejajar rata air */
-                    }
-                    
-                    .camp-icon {
-                        font-size: 45px !important;
-                        margin-bottom: 12px !important;
-                        display: block !important;
-                        text-align: center !important;
-                    }
-                    
-                    .camp-title {
-                        color: #fef08a !important;
-                        font-family: monospace !important;
-                        font-size: 16px !important;
-                        font-weight: 800 !important;
-                        margin-bottom: 8px !important;
-                        letter-spacing: 1px !important;
-                        text-align: center !important;
-                        display: block !important;
-                    }
-                    
-                    .camp-desc {
-                        color: #94a3b8 !important;
-                        font-family: monospace !important;
-                        font-size: 12px !important;
-                        line-height: 1.5 !important;
-                        text-align: center !important;
-                        display: block !important;
-                    }
-
-                    /* 🎯 SEKTOR KUAT: MENYUSUTKAN UKURAN TOMBOL BAWAAN AGAR FLEKSIBEL & PROPORSIAL */
-                    div[data-testid="stColumn"] button[key="btn_lobby_buruan_camp_style_fixed"],
-                    div[data-testid="stColumn"] button[key="btn_lobby_misi_camp_style_fixed"] {
-                        min-height: 45px !important; /* Susutkan dari raksasa menjadi ukuran alas tipis */
-                        height: 45px !important;     /* Batasi tinggi maksimal tombol */
-                        padding: 6px 12px !important; /* Kurangi bantalan dalam agar teks tidak tenggelam */
-                        font-family: monospace !important;
-                        font-size: 13px !important;
-                        font-weight: bold !important;
-                        border-radius: 8px !important;
-                        margin-top: 5px !important;
-                    }
-                </style>
-                """,
-                unsafe_allow_html=True
-            )
-
-            # --- 🎯 2. STRUCTURE GENERATOR DENGAN TRIK PANCINGAN KAMU ---
+            # --- 🎯 LAYOUT 2 KOLOM MURNI TANPA PANCINGAN / TANPA ELEMEN TUMPUK ---
             col_lobby1, col_lobby2 = st.columns(2)
             
-            # 📘 KOLOM KIRI: JURNAL BURUAN
+            # 📘 KOLOM KIRI: JURNAL BURUAN (Langsung Berbentuk Buku Biru Vertikal)
             with col_lobby1:
-                st.button("PANCING_1", key="btn_pancingan_lobby1")
-                st.markdown(
-                    """
-                    <div class="camp-card">
-                        <div class="camp-icon">📘</div>
-                        <div class="camp-title">JURNAL BURUAN</div>
-                        <div class="camp-desc">Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin, level pahlawan, dan rekap hasil buruan harian Anda sepanjang season.</div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
+                # Memanfaatkan fungsionalitas pre-line \n yang sudah aktif di CSS kamu
+                teks_buku_buruan = (
+                    "📘\n\n"
+                    "JURNAL BURUAN\n"
+                    "───────────────────\n"
+                    "Akses lembar arsip report\n"
+                    "pribadi Anda untuk meninjau\n"
+                    "akumulasi poin & level pahlawan.\n\n"
+                    "➔ Buka Catatan"
                 )
-                if st.button("Lihat Status ➔", use_container_width=True, key="btn_lobby_buruan_camp_style_fixed"):
+                if st.button(teks_buku_buruan, use_container_width=True, key="btn_lobby_buruan_camp_style_fixed"):
                     st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
                     st.rerun()
                     
-            # 🔮 KOLOM KANAN: KITAB MISI GUILD
+            # 🔮 KOLOM KANAN: KITAB MISI GUILD (Langsung Berbentuk Buku Ungu Vertikal)
             with col_lobby2:
-                st.button("PANCING_2", key="btn_pancingan_lobby2")
-                st.markdown(
-                    """
-                    <div class="camp-card">
-                        <div class="camp-icon">🔮</div>
-                        <div class="camp-title">KITAB MISI GUILD</div>
-                        <div class="camp-desc">Cek papan pengumuman maklumat aliansi untuk melihat quest musiman, tugas mingguan PSM, serta daily target buruan toko Anda.</div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
+                teks_kitab_misi = (
+                    "🔮 ⚔️\n\n"
+                    "KITAB MISI GUILD\n"
+                    "───────────────────\n"
+                    "Cek papan maklumat aliansi\n"
+                    "untuk melihat quest musiman\n"
+                    "dan daily target buruan toko.\n\n"
+                    "➔ Ambil Quest"
                 )
-                if st.button("Ambil Quest ➔", use_container_width=True, key="btn_lobby_misi_camp_style_fixed"):
+                if st.button(teks_kitab_misi, use_container_width=True, key="btn_lobby_misi_camp_style_fixed"):
                     st.session_state["campaign_sub_page"] = "view_buku_tugas"
                     st.rerun()
 
-
+            # Tombol keluar utama kembali ke Camp Persiapan (Tetap bersih di bawah)
+            st.markdown("<br><hr style='border-color: rgba(180, 83, 9, 0.2); margin: 15px 0;'><br>", unsafe_allow_html=True)
+            st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
+            if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_camp_style_fixed"):
+                st.session_state.current_camp_menu = "main"
+                st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
 
         # =========================================================================
         # 📘 KONDISI 2: BUKU PENCAPAIAN / REPORT PRIBADI (SUDAH AMAN & BERIKUTNYA)
