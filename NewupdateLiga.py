@@ -1628,7 +1628,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
             
-        # 🚪 KONDISI 2: BUKU TERBUKA - JURNAL BURUAN
+        # =========================================================================
+        # 📘 KONDISI 2: BUKU PENCAPAIAN / REPORT PRIBADI (SUDAH AMAN & BERIKUTNYA)
+        # =========================================================================
         elif st.session_state["campaign_sub_page"] == "view_buku_pencapaian":
             st.markdown("<h2 class='guild-lobby-title'> 📖 JURNAL BURUAN </h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub'>Lembar rekapitulasi poin hasil perburuan individu Anda.</p>", unsafe_allow_html=True)
