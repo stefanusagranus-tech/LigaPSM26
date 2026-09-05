@@ -1760,7 +1760,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.markdown("</div>", unsafe_allow_html=True)
 
         # =========================================================================
-        # 📘 KONDISI 2: JURNAL BURUAN INDIVIDU (BAGIAN 1 - WOODEN DESK HTML ENGINE)
+        # 📘 KONDISI 2: JURNAL BURUAN INDIVIDU (BAGIAN 1 - WOODEN DESK & NAV TOP)
         # =========================================================================
         elif st.session_state["campaign_sub_page"] == "view_buku_pencapaian":
             
@@ -1775,56 +1775,51 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 "target_capai": "1,500 Pts", "ranking": "#RANK 4"
             }
 
-            # --- 🎯 2. TOMBOL PEMICU RAHASIA STREAMLIT (MESIN NAVIGASI INTERNAL MEMORI) ---
-            # Kita buat tombol asli agar perpindahan halaman 100% sukses tanpa logout
-            if st.button("HIDDEN_NAV_PREV", key="secret_desk_nav_prev"):
-                st.session_state["book_page_number"] -= 1
-                st.rerun()
-                
-            if st.button("HIDDEN_NAV_NEXT", key="secret_desk_nav_next"):
-                st.session_state["book_page_number"] += 1
-                st.rerun()
-                
-            if st.button("HIDDEN_NAV_EXIT", key="secret_desk_nav_exit"):
-                st.session_state["campaign_sub_page"] = "resepsionis_utama"
-                st.session_state["book_page_number"] = 1
-                st.rerun()
-                
-            if st.button("HIDDEN_NAV_RESET", key="secret_desk_nav_reset"):
-                st.session_state["book_page_number"] = 1
-                st.rerun()
-
-            # Lenyapkan wujud tombol pemicu rahasia di atas agar area atas bersih total dari spanduk neon
+            # --- 🎨 2. SUNTIKKAN STYLING PREMIUM TEMA MEJA KAYU GUILD ---
             st.markdown(
                 """
                 <style>
-                    button[key^="secret_desk_nav_"],
-                    div:has(> button[key^="secret_desk_nav_"]) {
-                        display: none !important; opacity: 0 !important; visibility: hidden !important;
-                        width: 0px !important; height: 0px !important; padding: 0 !important; margin: 0 !important;
-                        position: absolute !important;
+                    /* 🚪 KUNCI POLOS TOMBOL: Menyulap st.button asli menjadi papan kayu medieval */
+                    div[data-testid="stColumn"] button[key^="btn_desk_nav_"],
+                    div[data-testid="stVerticalBlockBorderWrapper"] button[key^="btn_desk_nav_"],
+                    .stButton button[key^="btn_desk_nav_"] {
+                        width: 100% !important;
+                        max-width: 580px !important; /* Presisi sejajar sempurna dengan lebar buku */
+                        margin: 0 auto !important;
+                        min-height: 44px !important;
+                        height: 44px !important;
+                        background: linear-gradient(135deg, #5c4033 0%, #3d2b1f 100%) !important;
+                        color: #fef08a !important; /* Teks Emas Menyala */
+                        border: 2px solid #b45309 !important; /* Bingkai Emas Cokelat */
+                        border-radius: 8px !important;
+                        font-family: monospace !important;
+                        font-weight: 900 !important;
+                        font-size: 13px !important;
+                        letter-spacing: 1px !important;
+                        box-shadow: 0 8px 20px rgba(0,0,0,0.6) !important;
+                        transition: all 0.2s ease-in-out !important;
+                    }
+                    div[data-testid="stColumn"] button[key^="btn_desk_nav_"]:hover {
+                        background: #b45309 !important;
+                        color: #0b0f19 !important;
+                        box-shadow: 0 0 15px rgba(180, 83, 9, 0.6) !important;
+                        transform: translateY(-2px) !important;
+                    }
+                    div[data-testid="stColumn"] button[key^="btn_desk_nav_"]:active,
+                    div[data-testid="stColumn"] button[key^="btn_desk_nav_"]:focus {
+                        background: #5c4033 !important; color: #fef08a !important; filter: none !important;
                     }
                     
                     /* 👑 BINGKAI STRUKTUR BUKU TERBUKA KUNO */
                     .rpg-open-book-container {
-                        background: #f4eae1 !important; 
-                        border: 4px solid #5c4033 !important; 
-                        border-radius: 12px !important; 
-                        box-shadow: 0 15px 35px rgba(0,0,0,0.7) !important; 
-                        display: flex !important; 
-                        min-height: 380px !important; 
-                        max-height: 380px !important; 
-                        position: relative !important; 
-                        overflow: hidden !important; 
-                        width: 100% !important; 
-                        max-width: 580px !important; 
-                        margin: 25px auto !important; /* 🎯 PAKSA TURUN: Beri jarak renggang dari papan atas */
+                        background: #f4eae1 !important; border: 4px solid #5c4033 !important; border-radius: 12px !important; 
+                        box-shadow: 0 15px 35px rgba(0,0,0,0.7) !important; display: flex !important; 
+                        min-height: 380px !important; max-height: 380px !important; position: relative !important; 
+                        overflow: hidden !important; width: 100% !important; max-width: 580px !important; margin: 15px auto !important;
                     }
                     .rpg-open-book-container::before { 
                         content: "" !important; position: absolute !important; top: 0 !important; left: 50% !important; 
-                        width: 2px !important; height: 100% !important; 
-                        background: linear-gradient(90deg, rgba(0,0,0,0.15), rgba(0,0,0,0.3), rgba(0,0,0,0.15)) !important; 
-                        box-shadow: 0 0 10px rgba(0,0,0,0.4) !important; z-index: 5 !important; 
+                        width: 2px !important; height: 100% !important; background: linear-gradient(90deg, rgba(0,0,0,0.15), rgba(0,0,0,0.3), rgba(0,0,0,0.15)) !important; box-shadow: 0 0 10px rgba(0,0,0,0.4) !important; z-index: 5 !important; 
                     }
                     .rpg-book-page { 
                         width: 50% !important; padding: 22px 18px !important; box-sizing: border-box !important; 
@@ -1854,32 +1849,72 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 unsafe_allow_html=True
             )
 
-            # --- 🏛️ 3. PAPAN UTAMA 1: TOMBOL NAVIGASI ATAS (MURNI HTML IFRAME - BEBAS CSS GLOBAL) ---
-            nav_top_text = "📖 TUTUP JURNAL & KEMBALI KE MEJA DESK" if current_page == 1 else "⬅️ LOG PREVIOUS PAGE (HALAMAN SEBELUMNYA)"
-            target_top_key = "secret_desk_nav_exit" if current_page == 1 else "secret_desk_nav_prev"
-            
-            html_papan_atas = f"""
-            <button type="button" class="rpg-wooden-desk-btn" onclick="triggerParentClick('{target_top_key}')">{nav_top_text}</button>
-            <style>
-                body {{ background: transparent; margin: 0; padding: 0; overflow: hidden; }}
-                .rpg-wooden-desk-btn {{
-                    width: 100% !important; height: 44px !important;
-                    background: linear-gradient(135deg, #5c4033 0%, #3d2b1f 100%) !important;
-                    color: #fef08a !important; border: 2px solid #b45309 !important; border-radius: 8px !important;
-                    font-family: monospace !important; font-weight: 900 !important; font-size: 13px !important;
-                    letter-spacing: 1px !important; cursor: pointer !important; box-shadow: 0 6px 15px rgba(0,0,0,0.5) !important;
-                    transition: all 0.2s ease-in-out !important; box-sizing: border-box !important;
-                }}
-                .rpg-wooden-desk-btn:hover {{ background: #b45309 !important; color: #0b0f19 !important; box-shadow: 0 0 15px rgba(180, 83, 9, 0.6) !important; }}
-            </style>
-            <script>
-                function triggerParentClick(triggerKey) {{
-                    const secretBtn = window.parent.document.querySelector('button[key="' + triggerKey + '"]');
-                    if (secretBtn) {{ secretBtn.click(); }}
-                }}
-            </script>
-            """
-            st.components.v1.html(html_papan_atas, height=48, scrolling=False)
+                       # --- 🏛️ 3. PAPAN UTAMA 1: TOMBOL NAVIGASI DI ATAS BUKU (NATIVE & POLOS COKREK) ---
+            st.markdown(
+                """
+                <style>
+                    /* 👑 BENTENG PENGHANCUR CSS GLOBAL NEON BIRU */
+                    div[data-testid="stVerticalBlock"] div.stButton > button[key^="btn_desk_nav_"],
+                    div[data-testid="stElementContainer"] button[data-testid^="stBaseButton-"][key^="btn_desk_nav_"],
+                    button[class*="st-emotion-cache-"][key^="btn_desk_nav_"] {
+                        
+                        /* 🎯 SEKTOR 1: Paksa wajib menciut pas sejajar lebar buku terbuka */
+                        width: 100% !important;
+                        max-width: 580px !important; 
+                        min-height: 44px !important;
+                        height: 44px !important;
+                        margin: 0 auto 20px auto !important; /* Sentralisasi tengah + beri jarak ke bawah buku */
+                        
+                        /* Reset paksa layout row bawaan universal agar tulisan emas tegak di tengah */
+                        display: flex !important;
+                        justify-content: center !important;
+                        align-items: center !important;
+                        flex-direction: row !important;
+                        
+                        /* Sulap casing menjadi Papan Meja Kayu Oak Tua Premium */
+                        background: linear-gradient(135deg, #5c4033 0%, #3d2b1f 100%) !important;
+                        color: #fef08a !important; /* Teks Emas Menyala */
+                        border: 2px solid #b45309 !important; /* Bingkai Emas Cokelat */
+                        border-radius: 8px !important;
+                        
+                        font-family: monospace !important;
+                        font-weight: 900 !important;
+                        font-size: 12.5px !important;
+                        letter-spacing: 1px !important;
+                        box-shadow: 0 8px 20px rgba(0,0,0,0.6) !important;
+                        transition: all 0.2s ease-in-out !important;
+                    }
+                    
+                    /* Efek Hover Papan Meja Kayu Lokal */
+                    button[key^="btn_desk_nav_"]:hover {
+                        background: #b45309 !important;
+                        color: #0b0f19 !important;
+                        box-shadow: 0 0 18px rgba(180, 83, 9, 0.7) !important;
+                        transform: translateY(-2px) !important;
+                    }
+                    
+                    /* Matikan sisa filter kedap-kedip neon biru saat diklik ksatria */
+                    button[key^="btn_desk_nav_"]:active,
+                    button[key^="btn_desk_nav_"]:focus {
+                        background: #5c4033 !important;
+                        color: #fef08a !important;
+                        filter: none !important;
+                    }
+                </style>
+                """,
+                unsafe_allow_html=True
+            )
+
+            # Tombol asli andalanmu berjalan murni dengan proteksi baju baru
+            if current_page == 1:
+                if st.button("📖 TUTUP JURNAL & KEMBALI KE MEJA DESK", use_container_width=True, key="btn_desk_nav_exit"):
+                    st.session_state["campaign_sub_page"] = "resepsionis_utama"
+                    st.session_state["book_page_number"] = 1
+                    st.rerun()
+            else:
+                if st.button("⬅️ LOG PREVIOUS PAGE (HALAMAN SEBELUMNYA)", use_container_width=True, key="btn_desk_nav_prev"):
+                    st.session_state["book_page_number"] -= 1
+                    st.rerun()
 
 
             # --- 🏛️ 4. ENGINE GENERATOR ISI KONTEN PERKAMEN (TENGAH MEJA) ---
