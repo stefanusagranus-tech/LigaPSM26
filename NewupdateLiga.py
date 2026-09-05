@@ -1806,87 +1806,109 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.markdown("</div>", unsafe_allow_html=True)
 
         # =========================================================================
-        # 📘 KONDISI 2: JURNAL BURUAN INDIVIDU (BAGIAN 1 - AUDIO-VISUAL ENGINE)
+        # 📘 KONDISI 2: JURNAL BURUAN INDIVIDU (BAGIAN 1 - WOODEN DESK & NAV TOP)
         # =========================================================================
         elif st.session_state["campaign_sub_page"] == "view_buku_pencapaian":
             
-            # Inisialisasi nomor halaman internal jika belum terdaftar di memori
-            if "book_page_number" not in st.session_state:
-                st.session_state["book_page_number"] = 1
-                
-            # --- 🎨 SUNTIKKAN SISI CSS UNTUK ANIMASI DAN LOGIKA TABEL SCROLL ---
+            # --- 🛠️ 1. INITIALISASI NOMOR HALAMAN & VARIABEL DATA ---
+            current_page = st.session_state.get("book_page_number", 1)
+            username_hero = st.session_state.get("username", "admin")
+
+            # Database Data Statistik
+            data_stats = {
+                "level": "LV. 85", "pwp": "2,450,000", "sg": "1,200,000", "sueger": "3,150,000",
+                "cemilan": "450,000", "achievement": "92.5%", "qty_psm": "1,240 Pts",
+                "target_capai": "1,500 Pts", "ranking": "#RANK 4"
+            }
+
+            # --- 🎨 2. SUNTIKKAN STYLING PREMIUM TEMA MEJA KAYU GUILD ---
             st.markdown(
                 """
                 <style>
-                    /* Efek Animasi Transisi Halaman Membuka & Berganti (Setiap Klik) */
-                    .rpg-open-book-animated {
-                        animation: bookPageTurnFlip 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-                        transform-origin: center center;
-                    }
-                    @keyframes bookPageTurnFlip {
-                        0% { transform: scaleX(0.7) scale(0.98); opacity: 0.5; filter: brightness(0.7); }
-                        100% { transform: scaleX(1) scale(1); opacity: 1; filter: brightness(1); }
-                    }
-                    
-                    /* 👑 AKALI TABEL SUEGER: Membuat area scroll harian otomatis di halaman 4 */
-                    .sueger-daily-scroll-box {
-                        max-height: 180px !important;
-                        overflow-y: auto !important;
-                        padding-right: 5px !important;
+                    /* 🚪 KUNCI POLOS TOMBOL: Menyulap st.button asli menjadi papan kayu medieval */
+                    div[data-testid="stColumn"] button[key^="btn_desk_nav_"],
+                    div[data-testid="stVerticalBlockBorderWrapper"] button[key^="btn_desk_nav_"],
+                    .stButton button[key^="btn_desk_nav_"] {
                         width: 100% !important;
+                        max-width: 580px !important; /* Presisi sejajar sempurna dengan lebar buku */
+                        margin: 0 auto !important;
+                        min-height: 44px !important;
+                        height: 44px !important;
+                        background: linear-gradient(135deg, #5c4033 0%, #3d2b1f 100%) !important;
+                        color: #fef08a !important; /* Teks Emas Menyala */
+                        border: 2px solid #b45309 !important; /* Bingkai Emas Cokelat */
+                        border-radius: 8px !important;
+                        font-family: monospace !important;
+                        font-weight: 900 !important;
+                        font-size: 13px !important;
+                        letter-spacing: 1px !important;
+                        box-shadow: 0 8px 20px rgba(0,0,0,0.6) !important;
+                        transition: all 0.2s ease-in-out !important;
+                    }
+                    div[data-testid="stColumn"] button[key^="btn_desk_nav_"]:hover {
+                        background: #b45309 !important;
+                        color: #0b0f19 !important;
+                        box-shadow: 0 0 15px rgba(180, 83, 9, 0.6) !important;
+                        transform: translateY(-2px) !important;
+                    }
+                    div[data-testid="stColumn"] button[key^="btn_desk_nav_"]:active,
+                    div[data-testid="stColumn"] button[key^="btn_desk_nav_"]:focus {
+                        background: #5c4033 !important; color: #fef08a !important; filter: none !important;
                     }
                     
-                    /* Mempercantik scrollbar bertema perkamen kuno */
+                    /* 👑 BINGKAI STRUKTUR BUKU TERBUKA KUNO */
+                    .rpg-open-book-container {
+                        background: #f4eae1 !important; border: 4px solid #5c4033 !important; border-radius: 12px !important; 
+                        box-shadow: 0 15px 35px rgba(0,0,0,0.7) !important; display: flex !important; 
+                        min-height: 380px !important; max-height: 380px !important; position: relative !important; 
+                        overflow: hidden !important; width: 100% !important; max-width: 580px !important; margin: 15px auto !important;
+                    }
+                    .rpg-open-book-container::before { 
+                        content: "" !important; position: absolute !important; top: 0 !important; left: 50% !important; 
+                        width: 2px !important; height: 100% !important; background: linear-gradient(90deg, rgba(0,0,0,0.15), rgba(0,0,0,0.3), rgba(0,0,0,0.15)) !important; box-shadow: 0 0 10px rgba(0,0,0,0.4) !important; z-index: 5 !important; 
+                    }
+                    .rpg-book-page { 
+                        width: 50% !important; padding: 22px 18px !important; box-sizing: border-box !important; 
+                        display: flex !important; flex-direction: column !important; justify-content: flex-start !important; 
+                        color: #2b1d0c !important; font-family: 'Courier New', monospace !important; 
+                    }
+                    .open-page-title { text-align: center !important; font-size: 14px !important; font-weight: 900 !important; margin: 0 0 2px 0 !important; color: #854d0e !important; letter-spacing: 0.5px !important; }
+                    .open-page-sub { text-align: center !important; font-size: 10px !important; color: #78716c !important; margin: 0 0 10px 0 !important; font-style: italic !important; }
+                    .open-book-divider { border-bottom: 2px double #854d0e !important; margin-bottom: 12px !important; width: 100% !important; }
+                    .open-stat-row { 
+                        display: flex !important; justify-content: space-between !important; font-size: 10.5px !important; 
+                        font-weight: bold !important; margin-bottom: 10px !important; border-bottom: 1px dashed rgba(133,77,14,0.15) !important; padding-bottom: 4px !important; 
+                    }
+                    .open-page-footer { margin-top: auto !important; font-size: 9px !important; color: #78716c !important; text-align: center !important; font-weight: bold !important; }
+                    .sueger-daily-scroll-box { max-height: 220px !important; overflow-y: auto !important; padding-right: 5px !important; width: 100% !important; }
                     .sueger-daily-scroll-box::-webkit-scrollbar { width: 5px !important; }
                     .sueger-daily-scroll-box::-webkit-scrollbar-track { background: rgba(133,77,14,0.05) !important; }
                     .sueger-daily-scroll-box::-webkit-scrollbar-thumb { background: #854d0e !important; border-radius: 4px !important; }
                     
-                    /* Penyelaras jarak bantalan dalam halaman perkamen agar tidak terlalu mepet tepi */
-                    .rpg-book-page {
-                        padding: 20px 22px !important;
-                    }
-                    
-                    /* Penjinak Tombol Navigasi Bawah Buku agar sewarna Emas Cokelat Perkamen */
-                    div[data-testid="stColumn"] button[key^="btn_nav_page_"] {
-                        background: #854d0e !important;
-                        color: #f4eae1 !important;
-                        border: 2px solid #5c4033 !important;
-                        font-family: monospace !important;
-                        font-weight: bold !important;
-                        font-size: 12px !important;
-                        border-radius: 6px !important;
-                        transition: all 0.2s ease !important;
-                    }
-                    div[data-testid="stColumn"] button[key^="btn_nav_page_"]:hover {
-                        background: #5c4033 !important;
-                        box-shadow: 0 4px 10px rgba(92,64,51,0.5) !important;
+                    .rpg-open-book-animated { animation: bookOpenFold 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; transform-origin: center center; }
+                    @keyframes bookOpenFold {
+                        0% { transform: scaleX(0.7) scale(0.98); opacity: 0.5; filter: brightness(0.7); }
+                        100% { transform: scaleX(1) scale(1); opacity: 1; filter: brightness(1); }
                     }
                 </style>
                 """,
                 unsafe_allow_html=True
             )
-    
-            # --- 🛠️ ENGINE GENERATOR DATA & NOMOR HALAMAN ---
-            current_page = st.session_state["book_page_number"]
-            username_hero = st.session_state.get("username", "admin")
 
-            # DATA VARIABEL UTAMA (Silakan ganti/hubungkan dengan database/spreadsheet-mu nanti)
-            data_stats = {
-                "level": "LV. 85",
-                "pwp": "2,450,000",
-                "sg": "1,200,000",
-                "sueger": "3,150,000",
-                "cemilan": "450,000",
-                "achievement": "92.5%",
-                "qty_psm": "1,240 Pts",
-                "target_capai": "1,500 Pts",
-                "ranking": "#RANK 4"
-            }
-
-            # --- 📖 STRUKTUR RENDER KONTEN BERDASARKAN PROGRES HALAMAN ---
+            # --- 🏛️ 3. PAPAN UTAMA 1: TOMBOL NAVIGASI DI ATAS BUKU (NATIVE & POLOS) ---
+            if current_page == 1:
+                if st.button("📖 TUTUP JURNAL & KEMBALI KE MEJA DESK", use_container_width=True, key="btn_desk_nav_exit"):
+                    st.session_state["campaign_sub_page"] = "resepsionis_utama"
+                    st.session_state["book_page_number"] = 1
+                    st.rerun()
+            else:
+                if st.button("⬅️ LOG PREVIOUS PAGE (HALAMAN SEBELUMNYA)", use_container_width=True, key="btn_desk_nav_prev"):
+                    st.session_state["book_page_number"] -= 1
+                    st.rerun()
+            # --- 🏛️ 4. ENGINE GENERATOR ISI KONTEN PERKAMEN (TENGAH MEJA) ---
             html_content_pages = ""
 
-            # 🚪 HALAMAN 1 (STATUS PAHLAWAN) & HALAMAN 2 (REKAP REPORT)
+            # 🚪 KONDISI A: TAMPILAN HALAMAN 1 & 2 (Rapat Tanpa Celah Enter)
             if current_page == 1:
                 html_content_pages = (
                     '<div class="rpg-open-book-container rpg-open-book-animated">'
@@ -1917,11 +1939,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     '</div>'
                 )
 
-            # 💎 HALAMAN 3 (DETAIL ITEM YANG TERCAPAI)
+            # 💎 KONDISI B: TAMPILAN HALAMAN 3 (DETAIL ITEM YANG TERCAPAI)
             elif current_page == 2:
                 html_content_pages = (
                     '<div class="rpg-open-book-container rpg-open-book-animated">'
-                    '<!-- 📖 LEMBARAN KIRI: DETAIL ITEM PART 1 -->'
+                    '<!-- 📖 LEMBARAN KIRI: DETAIL ITEM TERCAPAI -->'
                     '<div class="rpg-book-page">'
                     '<div class="open-page-title">💎 DETAIL ITEM TERCAPAI 💎</div>'
                     '<div class="open-page-sub">Rincian Quest Berhasil</div>'
@@ -1932,36 +1954,35 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     '<div class="open-stat-row"><span>🍪 CEBAN COOKIES</span><span style="color:#71717a;">BELUM AKTIF</span></div>'
                     '<div class="open-page-footer">- Halaman 3 -</div>'
                     '</div>'
-                    '<!-- 📖 LEMBARAN KANAN: KOSONG/CATATAN TAMBAHAN -->'
+                    '<!-- 📖 LEMBARAN KANAN: CATATAN ALIANSI -->'
                     '<div class="rpg-book-page">'
                     '<div class="open-page-title">📜 CATATAN ALIANSI 📜</div>'
                     '<div class="open-page-sub">Maklumat Tambahan Petualang</div>'
                     '<div class="open-book-divider"></div>'
                     '<p style="font-size:11px; color:#5c4033; line-height:1.6; text-align:center; font-style:italic; margin:0;">'
-                    '"Pertahankan ritme penjualan penjualan Anda! Sisa poin buruan harian akan diakumulasikan otomatis pada saat pergantian shift malam guild pusat."'
+                    '"Pertahankan ritme penjualan Anda! Sisa poin buruan harian akan diakumulasikan otomatis pada saat pergantian shift malam guild pusat."'
                     '</p>'
                     '<div class="open-page-footer" style="margin-top:auto;">- Halaman 4 -</div>'
                     '</div>'
                     '</div>'
                 )
 
-            # 📅 HALAMAN 4 (REPORT HARIAN SUEGER - AUTO GENERATED SCROLL LIST)
+            # 📅 KONDISI C: TAMPILAN HALAMAN 4 (LOG HARIAN SUEGER - AUTO GENERATED LOOP)
             elif current_page == 3:
-                # Menghasilkan baris tanggal secara otomatis menggunakan loop Python murni
+                # Loop Python otomatis menggambar baris tanggal 1 sampai akhir bulan (30 hari)
                 baris_tanggal_html = ""
-                for tgl in range(1, 31): # Otomatis menggambar tanggal 1 sampai 30
-                    # Contoh nilai tiruan harian (nanti bisa dihubungkan ke array database-mu)
+                for tgl in range(1, 31):
                     nilai_harian = f"Rp {100000 + (tgl * 5000):,}"
                     baris_tanggal_html += f'<div class="open-stat-row"><span>Tanggal {tgl:02d}</span><span style="color:#0d9488;">{nilai_harian}</span></div>'
 
                 html_content_pages = (
                     '<div class="rpg-open-book-container rpg-open-book-animated">'
-                    '<!-- 📖 LEMBARAN KIRI: LOG HARIAN SUEGER -->'
+                    '<!-- 📖 LEMBARAN UTAMA CHASSIS: LOG HARIAN SUEGER SAKU -->'
                     '<div class="rpg-book-page" style="width:100% !important; max-width:100% !important;">'
                     '<div class="open-page-title">🍹 LOG HARIAN SUEGER 🍹</div>'
                     '<div class="open-page-sub">Arsip Penjualan Otomatis Tanggal 01 s/d Akhir Bulan</div>'
                     '<div class="open-book-divider"></div>'
-                    '<!-- 👑 SCROLL ENGINE: Mengunci area baris agar bisa di-scroll ke bawah dan anti-meluber -->'
+                    '<!-- SCROLL BOX: Mengunci area log agar bisa digulir ke bawah dan anti-meluber -->'
                     '<div class="sueger-daily-scroll-box">'
                     f'{baris_tanggal_html}'
                     '</div>'
@@ -1970,165 +1991,21 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     '</div>'
                 )
 
-            # Cetak susunan halaman HTML ke layar Streamlit
+            # Cetak visual lembaran perkamen tepat di tengah meja kayu
             st.markdown(html_content_pages, unsafe_allow_html=True)
 
-            # --- 🎮 3. CONTROL CENTER: ENGINE NAVIGATION NATIVE FLEXBOX (SIDE-BY-SIDE FIXED) ---
-            st.markdown("<br>", unsafe_allow_html=True)
-            
-            # 🎨 SUNTIKKAN SIHIR CSS UNTUK MENGHANCURKAN STRUKTUR VERTIKAL ST.BUTTON UNIVERSAL
-            st.markdown(
-                """
-                <style>
-                    /* 👑 BENTENG UTAMA: Memaksa area tombol agar wajib berjejer horizontal lurus kiri-kanan */
-                    .rpg-nav-flex-container {
-                        display: flex !important;
-                        flex-direction: row !important; /* MUTLAK: Mengunci posisi horizontal kiri-kanan */
-                        justify-content: space-between !important;
-                        align-items: center !important;
-                        gap: 15px !important; /* Jarak renggang antar tombol */
-                        width: 100% !important;
-                        max-width: 580px !important; /* PRESISI: Sejajar rata air dengan lebar buku terbuka */
-                        margin: 0 auto !important; /* Kunci posisi pas di tengah halaman */
-                        box-sizing: border-box !important;
-                    }
-                    
-                    /* Tembak wadah kontainer internal Streamlit khusus tombol navigasi ini agar berukuran pas */
-                    .rpg-nav-flex-container div[data-testid="stElementContainer"] {
-                        width: 48% !important; /* Membagi dua area secara adil horizontal */
-                        margin: 0 !important;
-                        padding: 0 !important;
-                        box-sizing: border-box !important;
-                        display: block !important;
-                    }
-                    
-                    /* SULAP UTAMA TOMBOL: Mengubah warna neon biru universal menjadi cokelat emas perkamen kuno */
-                    .rpg-nav-flex-container button[key^="btn_nav_pack_"] {
-                        width: 100% !important;
-                        max-width: 100% !important;
-                        min-height: 42px !important;
-                        height: 42px !important;
-                        background: #854d0e !important; 
-                        color: #f4eae1 !important;
-                        border: 2px solid #5c4033 !important;
-                        border-radius: 6px !important;
-                        font-family: monospace !important;
-                        font-size: 11.5px !important;
-                        font-weight: bold !important;
-                        margin: 0 !important;
-                        padding: 0 10px !important;
-                        box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
-                        transition: all 0.2s ease-in-out !important;
-                    }
-                    
-                    .rpg-nav-flex-container button[key^="btn_nav_pack_"]:hover {
-                        background: #5c4033 !important;
-                        box-shadow: 0 6px 15px rgba(92,64,51,0.6) !important;
-                        color: #ffffff !important;
-                    }
-                    
-                    /* Hilangkan efek kedap-kedip gosong hitam bawaan universal saat tombol diklik */
-                    .rpg-nav-flex-container button[key^="btn_nav_pack_"]:active,
-                    .rpg-nav-flex-container button[key^="btn_nav_pack_"]:focus {
-                        background: #5c4033 !important;
-                        color: #ffffff !important;
-                        filter: none !important;
-                    }
-                </style>
-                """,
-                unsafe_allow_html=True
-            )
-
-            # 🛠️ EKSEKUSI PENYUNTIKAN TOMBOL NATIVE KE DALAM BINGKAI FLEXBOX HORIZONTAL
-            st.markdown('<div class="rpg-nav-flex-container">', unsafe_allow_html=True)
-            
-            # --- SLOT TOMBOL KIRI ---
-            if current_page == 1:
-                if st.button("📖 TUTUP JURNAL", use_container_width=True, key="btn_nav_pack_exit_lobby"):
-                    st.session_state["campaign_sub_page"] = "resepsionis_utama"
-                    st.session_state["book_page_number"] = 1
-                    st.rerun()
-            else:
-                if st.button("⬅️ SEBELUMNYA", use_container_width=True, key="btn_nav_pack_back_step"):
-                    st.session_state["book_page_number"] -= 1
-                    st.rerun()
-
-            # --- SLOT TOMBOL KANAN ---
+            # --- 🏛️ 5. PAPAN UTAMA 2: TOMBOL NAVIGASI KANAN DI BAWAH BUKU (NATIVE & POLOS) ---
+            # Jika berada di halaman terakhir (Page 3), tombol berubah fungsi memutar alur ke awal
             if current_page == 3:
-                if st.button("↺ KE AWAL (HAL 1)", use_container_width=True, key="btn_nav_pack_reset_to_one"):
+                if st.button("↺ KEMBALI KE AWAL REPORT (HALAMAN 1)", use_container_width=True, key="btn_desk_nav_reset"):
                     st.session_state["book_page_number"] = 1
                     st.rerun()
             else:
-                if st.button("BERIKUTNYA ➔", use_container_width=True, key="btn_nav_pack_next_step"):
+                if st.button("HALAMAN BERIKUTNYA (BUKA LEMBARAN LAIN) ➔", use_container_width=True, key="btn_desk_nav_next"):
                     st.session_state["book_page_number"] += 1
                     st.rerun()
-                        
-            st.markdown('</div>', unsafe_allow_html=True)
 
-
-
-        # =========================================================================
-        # 📘 KONDISI 2: JURNAL BURUAN INDIVIDU (BAGIAN 1 - AUDIO-VISUAL ENGINE)
-        # =========================================================================
-        elif st.session_state["campaign_sub_page"] == "view_buku_pencapaian":
-            
-            # Inisialisasi nomor halaman internal jika belum terdaftar di memori
-            if "book_page_number" not in st.session_state:
-                st.session_state["book_page_number"] = 1
-                
-            # --- 🎨 SUNTIKKAN SISI CSS UNTUK ANIMASI DAN LOGIKA TABEL SCROLL ---
-            st.markdown(
-                """
-                <style>
-                    /* Efek Animasi Transisi Halaman Membuka & Berganti (Setiap Klik) */
-                    .rpg-open-book-animated {
-                        animation: bookPageTurnFlip 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-                        transform-origin: center center;
-                    }
-                    @keyframes bookPageTurnFlip {
-                        0% { transform: scaleX(0.7) scale(0.98); opacity: 0.5; filter: brightness(0.7); }
-                        100% { transform: scaleX(1) scale(1); opacity: 1; filter: brightness(1); }
-                    }
-                    
-                    /* 👑 AKALI TABEL SUEGER: Membuat area scroll harian otomatis di halaman 4 */
-                    .sueger-daily-scroll-box {
-                        max-height: 180px !important;
-                        overflow-y: auto !important;
-                        padding-right: 5px !important;
-                        width: 100% !important;
-                    }
-                    
-                    /* Mempercantik scrollbar bertema perkamen kuno */
-                    .sueger-daily-scroll-box::-webkit-scrollbar { width: 5px !important; }
-                    .sueger-daily-scroll-box::-webkit-scrollbar-track { background: rgba(133,77,14,0.05) !important; }
-                    .sueger-daily-scroll-box::-webkit-scrollbar-thumb { background: #854d0e !important; border-radius: 4px !important; }
-                    
-                    /* Penyelaras jarak bantalan dalam halaman perkamen agar tidak terlalu mepet tepi */
-                    .rpg-book-page {
-                        padding: 20px 22px !important;
-                    }
-                    
-                    /* Penjinak Tombol Navigasi Bawah Buku agar sewarna Emas Cokelat Perkamen */
-                    div[data-testid="stColumn"] button[key^="btn_nav_page_"] {
-                        background: #854d0e !important;
-                        color: #f4eae1 !important;
-                        border: 2px solid #5c4033 !important;
-                        font-family: monospace !important;
-                        font-weight: bold !important;
-                        font-size: 12px !important;
-                        border-radius: 6px !important;
-                        transition: all 0.2s ease !important;
-                    }
-                    div[data-testid="stColumn"] button[key^="btn_nav_page_"]:hover {
-                        background: #5c4033 !important;
-                        box-shadow: 0 4px 10px rgba(92,64,51,0.5) !important;
-                    }
-                </style>
-                """,
-                unsafe_allow_html=True
-            )
-
-
+        ==============================================================================================
         # 🚪 KONDISI 3: BUKU TERBUKA - KITAB MISI GUILD
         elif st.session_state["campaign_sub_page"] == "view_buku_tugas":
             st.markdown("<h2 class='guild-lobby-title'> 📜 KITAB MISI GUILD </h2>", unsafe_allow_html=True)
