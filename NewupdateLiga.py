@@ -479,6 +479,53 @@ st.markdown(
     /* Garis bawah/indikator tab aktif */
     div[data-baseweb="tab-highlight"] {
         background-color: #00ff88 !important;
+
+    /* ========================================================================= */
+    /* 🪵 OVERRIDER UTAMA: SULAP TOMBOL JURNAL MENJADI PAPAN MEJA KAYU SEJAJAR    */
+    /* ========================================================================= */
+    /* Menggunakan selector spesifik ID Streamlit tingkat tinggi agar 100% gembok universal hancur */
+    div[data-testid="stColumn"] button[data-testid^="stBaseButton-"][key^="btn_desk_nav_"],
+    div[data-testid="stElementContainer"] button[data-testid^="stBaseButton-"][key^="btn_desk_nav_"],
+    button[key^="btn_desk_nav_"] {
+        /* 🎯 SEKTOR KUNCI: Paksa menciut pas sejajar rata air dengan lebar buku terbuka */
+        width: 100% !important;
+        max-width: 580px !important; 
+        min-height: 44px !important;
+        height: 44px !important;
+        margin: 0 auto !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        
+        /* Ganti total warna neon biru menjadi tema Meja Kayu Oak Tua Guild */
+        background: linear-gradient(135deg, #5c4033 0%, #3d2b1f 100%) !important;
+        color: #fef08a !important; /* Teks Emas Menyala */
+        border: 2px solid #b45309 !important; /* Bingkai Emas Cokelat */
+        border-radius: 8px !important;
+        
+        font-family: monospace !important;
+        font-weight: 900 !important;
+        font-size: 12.5px !important;
+        letter-spacing: 1px !important;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.6) !important;
+        transition: all 0.2s ease-in-out !important;
+    }
+    
+    /* Efek Hover Papan Meja Kayu */
+    button[key^="btn_desk_nav_"]:hover {
+        background: #b45309 !important;
+        color: #0b0f19 !important;
+        box-shadow: 0 0 18px rgba(180, 83, 9, 0.7) !important;
+        transform: translateY(-2px) !important;
+    }
+    
+    /* Singkirkan sisa pendaran neon biru bawaan universal saat tombol diklik ksatria */
+    button[key^="btn_desk_nav_"]:active,
+    button[key^="btn_desk_nav_"]:focus {
+        background: #5c4033 !important;
+        color: #fef08a !important;
+        box-shadow: none !important;
+        filter: none !important;
     }
 </style>
 """,
