@@ -1603,6 +1603,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             
            # 📘 KOLOM KIRI: JURNAL BURUAN (REPORT PRIBADI)
             with col_lobby1:
+                if st.button("Lihat Status ➔", use_container_width=True, key="btn_lobby_buruan_camp_style_fixed"):
+                                    st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
+                                    st.rerun()
                 # Perbaikan total: String HTML dan parameter disatukan rapi di dalam kurung markdown
                 st.markdown(
                     """
@@ -1617,9 +1620,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     """,
                     unsafe_allow_html=True
                 )
-                if st.button("Lihat Status ➔", use_container_width=True, key="btn_lobby_buruan_camp_style_fixed"):
-                    st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
-                    st.rerun()
 
             # Tombol keluar utama kembali ke Camp Persiapan (Ditaruh di bawah columns)
             st.markdown("<br><hr style='border-color: rgba(180, 83, 9, 0.2); margin: 15px 0;'><br>", unsafe_allow_html=True)
