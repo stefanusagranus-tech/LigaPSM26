@@ -1588,21 +1588,19 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
         
         # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (100% PURE HTML & JS COMPONENT)
+        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (100% PURE HTML & JS - BEBAS ERROR)
         # =========================================================================
         if st.session_state["campaign_sub_page"] == "resepsionis_utama":
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub'>Pilih gulungan jurnal di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
             
-            # --- 1. ENGINE PENANGKAP KLIK DARI COMPONENT HTML ---
-            # Skrip ini bertugas menangkap sinyal rahasia dari tombol HTML di bawah
+            # --- 1. ENGINE PENANGKAP KLIK JAVASCRIPT ---
             st.markdown(
                 """
                 <script>
                     window.addEventListener('message', function(e) {
                         if (e.data.type === 'RECEPTION_CLICK') {
-                            // Cari tombol rahasia Streamlit untuk memicu rerun
-                            const targetBtn = window.parent.document.getElementById(e.data.buttonId);
+                            const targetBtn = window.parent.document.querySelector('button[key="' + e.data.buttonId + '"]');
                             if (targetBtn) {
                                 targetBtn.click();
                             }
@@ -1613,19 +1611,34 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 unsafe_allow_html=True
             )
             
-            # Tombol bayangan (hidden) asli Streamlit yang akan ditembak oleh JavaScript di atas
-            if st.button("TRIGGER_B1", key="hidden_trigger_buku1", label_visibility="collapsed"):
+            # 🎯 FIX MUTLAK: Menggunakan parameter standar st.button untuk menghindari TypeError
+            if st.button("", key="hidden_trigger_buku1"):
                 st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
                 st.rerun()
                 
-            if st.button("TRIGGER_B2", key="hidden_trigger_buku2", label_visibility="collapsed"):
+            if st.button("", key="hidden_trigger_buku2"):
                 st.session_state["campaign_sub_page"] = "view_buku_tugas"
                 st.rerun()
                 
-            # Sembunyikan dua tombol trigger bayangan di atas agar tidak merusak pemandangan
-            st.markdown("<style>button[key^='hidden_trigger_'] { display:none !important; height:0px; }</style>", unsafe_allow_html=True)
+            # Sembunyikan tombol pemicu asli agar tidak merusak tampilan lobi
+            st.markdown(
+                """
+                <style>
+                    div:has(> button[key="hidden_trigger_buku1"]),
+                    div:has(> button[key="hidden_trigger_buku2"]),
+                    button[key="hidden_trigger_buku1"],
+                    button[key="hidden_trigger_buku2"] {
+                        display: none !important;
+                        height: 0px !important;
+                        padding: 0 !important;
+                        margin: 0 !important;
+                    }
+                </style>
+                """, 
+                unsafe_allow_html=True
+            )
 
-            # --- 2. MAKLUMAT HTML & CSS MURNI UNTUK DESAIN KARTU BUKU ---
+            # --- 2. MAKLUMAT COMPONENT HTML & CSS MURNI UNTUK DESAIN KARTU ---
             html_design_packet = """
             <div class="lobby-html-grid">
                 <!-- 📘 KARTU BUKU 1 -->
@@ -1688,7 +1701,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     line-height: 1.5;
                     margin: 0 0 20px 0;
                     padding: 0 15px;
-                    flex-grow: 1; /* Dorong tombol ke bawah agar sejajar murni */
+                    flex-grow: 1;
                 }
                 .html-action-btn {
                     background: rgba(180, 83, 9, 0.15);
@@ -1716,16 +1729,15 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             <script>
                 function sendClick(id) {
-                    // Kirim sinyal tembakan ke parent window (Streamlit)
                     window.parent.postMessage({type: 'RECEPTION_CLICK', buttonId: id}, '*');
                 }
             </script>
             """
             
-            # Cetak paket komponen HTML murni ke layar aplikasi
-            components.html(html_design_packet, height=310, scrolling=False)
+            # Render komponen HTML kustom murni
+            components.html(html_design_packet, height=315, scrolling=False)
 
-            # Tombol keluar utama menuju camp persiapannya di paling bawah (tetap bawaan streamlit)
+            # Tombol keluar utama menuju camp
             st.markdown("<br><hr style='border-color: rgba(180, 83, 9, 0.2); margin: 5px 0;'><br>", unsafe_allow_html=True)
             st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
             if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_camp_style"):
