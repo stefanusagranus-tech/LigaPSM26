@@ -1675,16 +1675,25 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 st.session_state["campaign_sub_page"] = "view_buku_tugas"
                 st.rerun()
                 
-            # Lenyapkan wujud tombol pemicu rahasia di atas secara mutlak agar tidak merusak pemandangan
+            # Lenyapkan wujud tombol pemicu rahasia secara mutlak menggunakan selector DOM bertingkat
             st.markdown(
                 """
                 <style>
+                    /* Targetkan bungkus luar dan dalam dari tombol rahasia secara bersamaan */
+                    div[data-testid="stButton"]:has(button[key="secret_trigger_buruan"]),
+                    div[data-testid="stButton"]:has(button[key="secret_trigger_misi"]),
                     button[key="secret_trigger_buruan"],
                     button[key="secret_trigger_misi"],
-                    div:has(> button[key="secret_trigger_buruan"]),
-                    div:has(> button[key="secret_trigger_misi"]) {
-                        display: none !important; opacity: 0 !important; visibility: hidden !important;
-                        width: 0px !important; height: 0px !important; padding: 0 !important; margin: 0 !important;
+                    div[data-testid="stVerticalBlockBorderWrapper"]:has(button[key^="secret_trigger_"]) {
+                        display: none !important;
+                        opacity: 0 !important;
+                        visibility: hidden !important;
+                        width: 0px !important;
+                        height: 0px !important;
+                        padding: 0 !important;
+                        margin: 0 !important;
+                        position: absolute !important;
+                        pointer-events: none !important;
                     }
                 </style>
                 """,
