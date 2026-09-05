@@ -1588,7 +1588,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
         
         # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (100% PURE HTML & JS - BEBAS ERROR)
+        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (100% PURE HTML & JS - CLEAN INTEGRATION)
         # =========================================================================
         if st.session_state["campaign_sub_page"] == "resepsionis_utama":
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
@@ -1611,32 +1611,37 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 unsafe_allow_html=True
             )
             
-            # 🎯 FIX MUTLAK: Menggunakan parameter standar st.button untuk menghindari TypeError
-            if st.button("", key="hidden_trigger_buku1"):
-                st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
-                st.rerun()
+            # 🎯 KUNCI UTAMA: Membungkus tombol bayangan ke kontainer kosong terisolasi agar tidak bocor ke luar layout
+            hidden_container = st.empty()
+            with hidden_container.container():
+                if st.button("", key="hidden_trigger_buku1"):
+                    st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
+                    st.rerun()
+                    
+                if st.button("", key="hidden_trigger_buku2"):
+                    st.session_state["campaign_sub_page"] = "view_buku_tugas"
+                    st.rerun()
                 
-            if st.button("", key="hidden_trigger_buku2"):
-                st.session_state["campaign_sub_page"] = "view_buku_tugas"
-                st.rerun()
-                
-            # Sembunyikan tombol pemicu asli agar tidak merusak tampilan lobi
-            st.markdown(
-                """
-                <style>
-                    div:has(> button[key="hidden_trigger_buku1"]),
-                    div:has(> button[key="hidden_trigger_buku2"]),
-                    button[key="hidden_trigger_buku1"],
-                    button[key="hidden_trigger_buku2"] {
-                        display: none !important;
-                        height: 0px !important;
-                        padding: 0 !important;
-                        margin: 0 !important;
-                    }
-                </style>
-                """, 
-                unsafe_allow_html=True
-            )
+                # Gunakan CSS khusus untuk melenyapkan wujud tombol hantu di pojok kiri secara mutlak
+                st.markdown(
+                    """
+                    <style>
+                        button[key="hidden_trigger_buku1"],
+                        button[key="hidden_trigger_buku2"],
+                        div:has(> button[key="hidden_trigger_buku1"]),
+                        div:has(> button[key="hidden_trigger_buku2"]) {
+                            display: none !important;
+                            opacity: 0 !important;
+                            visibility: hidden !important;
+                            width: 0px !important;
+                            height: 0px !important;
+                            padding: 0 !important;
+                            margin: 0 !important;
+                        }
+                    </style>
+                    """,
+                    unsafe_allow_html=True
+                )
 
             # --- 2. MAKLUMAT COMPONENT HTML & CSS MURNI UNTUK DESAIN KARTU ---
             html_design_packet = """
@@ -1734,16 +1739,17 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             </script>
             """
             
-            # Render komponen HTML kustom murni
+            # Cetak paket komponen HTML kustom
             components.html(html_design_packet, height=315, scrolling=False)
 
             # Tombol keluar utama menuju camp
-            st.markdown("<br><hr style='border-color: rgba(180, 83, 9, 0.2); margin: 5px 0;'><br>", unsafe_allow_html=True)
+            st.markdown("<br><hr style='border-color: rgba(180, 83, 9, 0.2); margin: 15px 0;'><br>", unsafe_allow_html=True)
             st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
             if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_camp_style"):
                 st.session_state.current_camp_menu = "main"
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
+
 
 
         # 🚪 KONDISI 2: BUKU TERBUKA - JURNAL BURUAN
