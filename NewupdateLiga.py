@@ -1588,137 +1588,151 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
         
         # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (CAMP STYLE DESIGN - RESOLVED)
+        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (100% PURE HTML & JS COMPONENT)
         # =========================================================================
         if st.session_state["campaign_sub_page"] == "resepsionis_utama":
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub'>Pilih gulungan jurnal di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
             
-            # --- SUNTIKKAN STYLING CSS UNTUK KARTU RESEPSIONIS (MENGIKUTI GAYA CAMP) ---
+            # --- 1. ENGINE PENANGKAP KLIK DARI COMPONENT HTML ---
+            # Skrip ini bertugas menangkap sinyal rahasia dari tombol HTML di bawah
             st.markdown(
                 """
-                <style>
-                    /* Bersihkan layout kolom agar flexbox bekerja sempurna */
-                    div[data-testid="stColumn"] { 
-                        display: flex !important; 
-                        flex-direction: column !important; 
-                        justify-content: flex-start !important; 
-                        align-items: stretch !important; 
-                    }
-                    
-                    /* Komponen Kartu Buku Atas */
-                    .reception-card { 
-                        background: linear-gradient(135deg, #131926 0%, #1e2638 100%); 
-                        border: 2px solid #b45309; 
-                        border-bottom: none; 
-                        border-radius: 12px 12px 0 0; 
-                        padding: 24px; 
-                        text-align: center; 
-                        position: relative; 
-                        box-shadow: 0 4px 15px rgba(180, 83, 9, 0.15); 
-                        flex-grow: 1; 
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: center;
-                        align-items: center;
-                    }
-                    .reception-icon { 
-                        font-size: 45px; 
-                        margin-bottom: 12px; 
-                        filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.4)); 
-                    }
-                    .reception-title { 
-                        color: #fef08a; 
-                        font-family: monospace; 
-                        font-size: 16px; 
-                        font-weight: 800; 
-                        margin-bottom: 8px; 
-                        letter-spacing: 1px; 
-                    }
-                    .reception-desc { 
-                        color: #94a3b8; 
-                        font-family: monospace; 
-                        font-size: 12px; 
-                        line-height: 1.5; 
-                        margin-bottom: 5px; 
-                    }
-                    
-                    /* Memaksa tombol di bawahnya menempel sempurna tanpa jarak hantu */
-                    div[data-testid="stColumn"] div.stButton { 
-                        margin: 0 !important; 
-                        padding: 0 !important; 
-                        display: block !important; 
-                        width: 100% !important; 
-                    }
-                    
-                    /* Modifikasi tombol agar pas menjadi alas kartu berwarna cokelat emas */
-                    div[data-testid="stColumn"] div.stButton > button { 
-                        background: rgba(180, 83, 9, 0.15) !important; 
-                        color: #fef08a !important; 
-                        border: 2px solid #b45309 !important; 
-                        border-top: 1px solid rgba(180, 83, 9, 0.3) !important; 
-                        border-radius: 0 0 12px 12px !important; 
-                        font-family: monospace !important; 
-                        font-size: 13px !important; 
-                        font-weight: 700 !important; 
-                        padding: 12px 0px !important; 
-                        width: 100% !important; 
-                        box-sizing: border-box !important; 
-                        margin: 0 !important; 
-                        min-height: auto !important; /* Reset tinggi buku vertikal lama */
-                    }
-                    div[data-testid="stColumn"] div.stButton > button:hover { 
-                        background: #b45309 !important; 
-                        color: #0b0f19 !important; 
-                        box-shadow: 0 4px 12px rgba(180, 83, 9, 0.4) !important; 
-                    }
-                </style>
-                """, 
+                <script>
+                    window.addEventListener('message', function(e) {
+                        if (e.data.type === 'RECEPTION_CLICK') {
+                            // Cari tombol rahasia Streamlit untuk memicu rerun
+                            const targetBtn = window.parent.document.getElementById(e.data.buttonId);
+                            if (targetBtn) {
+                                targetBtn.click();
+                            }
+                        }
+                    });
+                </script>
+                """,
                 unsafe_allow_html=True
             )
             
-            # --- RENDER STRUKTUR GRID 2 KOLOM KARTU CAMP STYLE ---
-            col_lobby1, col_lobby2 = st.columns(2)
-            
-            # 📘 KARTU KIRI: JURNAL BURUAN
-            with col_lobby1:
-                st.markdown(
-                    """
-                    <div class='reception-card'>
-                        <div class='reception-icon'>📘</div>
-                        <div class='reception-title'>JURNAL BURUAN</div>
-                        <div class='reception-desc'>Berisi catatan total poin akumulasi hasil buruan individu Anda sepanjang season berjalan saat ini.</div>
-                    </div>
-                    """, 
-                    unsafe_allow_html=True
-                )
-                if st.button("Buka Jurnal Buruan ➔", use_container_width=True, key="btn_camp_style_buku1"):
-                    st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
-                    st.rerun()
-                    
-            # 🔮 KARTU KANAN: KITAB MISI GUILD
-            with col_lobby2:
-                st.markdown(
-                    """
-                    <div class='reception-card'>
-                        <div class='reception-icon'>🔮</div>
-                        <div class='reception-title'>KITAB MISI GUILD</div>
-                        <div class='reception-desc'>Berisi lembar maklumat perintah target harian, mingguan, serta status keberhasilan misi toko.</div>
-                    </div>
-                    """, 
-                    unsafe_allow_html=True
-                )
-                if st.button("Buka Kitab Misi ➔", use_container_width=True, key="btn_camp_style_buku2"):
-                    st.session_state["campaign_sub_page"] = "view_buku_tugas"
-                    st.rerun()
+            # Tombol bayangan (hidden) asli Streamlit yang akan ditembak oleh JavaScript di atas
+            if st.button("TRIGGER_B1", key="hidden_trigger_buku1", label_visibility="collapsed"):
+                st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
+                st.rerun()
+                
+            if st.button("TRIGGER_B2", key="hidden_trigger_buku2", label_visibility="collapsed"):
+                st.session_state["campaign_sub_page"] = "view_buku_tugas"
+                st.rerun()
+                
+            # Sembunyikan dua tombol trigger bayangan di atas agar tidak merusak pemandangan
+            st.markdown("<style>button[key^='hidden_trigger_'] { display:none !important; height:0px; }</style>", unsafe_allow_html=True)
 
-            # Tombol keluar utama kembali ke Camp Persiapan di bagian paling bawah
-            st.markdown("<br><hr style='border-color: rgba(180, 83, 9, 0.2); margin: 15px 0;'><br>", unsafe_allow_html=True)
+            # --- 2. MAKLUMAT HTML & CSS MURNI UNTUK DESAIN KARTU BUKU ---
+            html_design_packet = """
+            <div class="lobby-html-grid">
+                <!-- 📘 KARTU BUKU 1 -->
+                <div class="html-card">
+                    <div class="html-book-icon">📘</div>
+                    <h4 class="html-card-title">JURNAL BURUAN</h4>
+                    <p class="html-card-desc">Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin, level pahlawan, dan rekap hasil buruan harian.</p>
+                    <button class="html-action-btn" onclick="sendClick('hidden_trigger_buku1')">Buka Jurnal Buruan ➔</button>
+                </div>
+                
+                <!-- 🔮 KARTU BUKU 2 -->
+                <div class="html-card">
+                    <div class="html-book-icon">🔮</div>
+                    <h4 class="html-card-title">KITAB MISI GUILD</h4>
+                    <p class="html-card-desc">Akses papan maklumat tugas aliansi untuk memantau sisa target toko harian, target mingguan, serta status misi berkala.</p>
+                    <button class="html-action-btn" onclick="sendClick('hidden_trigger_buku2')">Buka Kitab Misi ➔</button>
+                </div>
+            </div>
+
+            <style>
+                body { background-color: transparent; margin: 0; padding: 0; font-family: monospace; }
+                .lobby-html-grid {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: stretch;
+                    gap: 20px;
+                    width: 100%;
+                    box-sizing: border-box;
+                    padding: 10px 5px;
+                }
+                .html-card {
+                    background: linear-gradient(135deg, #131926 0%, #1e2638 100%);
+                    border: 2px solid #b45309;
+                    border-radius: 12px;
+                    width: 48%;
+                    box-sizing: border-box;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    text-align: center;
+                    box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+                    overflow: hidden;
+                }
+                .html-book-icon {
+                    font-size: 48px;
+                    margin: 24px 0 10px 0;
+                    filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.3));
+                    animation: float 3s infinite ease-in-out;
+                }
+                .html-card-title {
+                    color: #fef08a;
+                    font-size: 15px;
+                    font-weight: 800;
+                    margin: 0 0 10px 0;
+                    letter-spacing: 1px;
+                }
+                .html-card-desc {
+                    color: #94a3b8;
+                    font-size: 11.5px;
+                    line-height: 1.5;
+                    margin: 0 0 20px 0;
+                    padding: 0 15px;
+                    flex-grow: 1; /* Dorong tombol ke bawah agar sejajar murni */
+                }
+                .html-action-btn {
+                    background: rgba(180, 83, 9, 0.15);
+                    color: #fef08a;
+                    border: none;
+                    border-top: 1px solid rgba(180, 83, 9, 0.4);
+                    font-family: monospace;
+                    font-size: 13px;
+                    font-weight: bold;
+                    padding: 14px 0;
+                    width: 100%;
+                    cursor: pointer;
+                    transition: all 0.25s ease;
+                }
+                .html-action-btn:hover {
+                    background: #b45309;
+                    color: #0b0f19;
+                    box-shadow: 0 -4px 15px rgba(180, 83, 9, 0.3);
+                }
+                @keyframes float {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-6px); }
+                }
+            </style>
+
+            <script>
+                function sendClick(id) {
+                    // Kirim sinyal tembakan ke parent window (Streamlit)
+                    window.parent.postMessage({type: 'RECEPTION_CLICK', buttonId: id}, '*');
+                }
+            </script>
+            """
+            
+            # Cetak paket komponen HTML murni ke layar aplikasi
+            components.html(html_design_packet, height=310, scrolling=False)
+
+            # Tombol keluar utama menuju camp persiapannya di paling bawah (tetap bawaan streamlit)
+            st.markdown("<br><hr style='border-color: rgba(180, 83, 9, 0.2); margin: 5px 0;'><br>", unsafe_allow_html=True)
             st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
             if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_camp_style"):
                 st.session_state.current_camp_menu = "main"
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
+
 
         # 🚪 KONDISI 2: BUKU TERBUKA - JURNAL BURUAN
         elif st.session_state["campaign_sub_page"] == "view_buku_pencapaian":
