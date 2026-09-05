@@ -1659,137 +1659,126 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
          
         # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (PREMIUM BOOK INTEGRATED ENGINE)
+        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (PURE NATIVE RADIO BOOK ENGINE)
         # =========================================================================
         if st.session_state.get("campaign_sub_page", "resepsionis_utama") == "resepsionis_utama":
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub'>Pilih gulungan jurnal di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
             
-            # --- 🎯 1. ENGINE PEMICU RAHASIA STREAMLIT (TERISOLASI DALAM POP-UP GAIB) ---
-            # Kita bungkus tombol pemicu asli ke dalam popover terisolasi agar 100% lenyap dari layar
-            with st.popover("SECRET_GUILD_VAULT", use_container_width=True):
-                if st.button("HIDDEN_B1", key="secret_trigger_buruan"):
-                    st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
-                    st.rerun()
-                    
-                if st.button("HIDDEN_B2", key="secret_trigger_misi"):
-                    st.session_state["campaign_sub_page"] = "view_buku_tugas"
-                    st.rerun()
-            
-            # Padamkan wujud luar dari kotak tombol popover pembungkusnya agar area atas bersih total
+            # --- 🎨 SUNTIKKAN SIHIR VISUAL BUKU PREMIUM LANGSUNG KE DALAM ST.RADIO ---
             st.markdown(
                 """
                 <style>
-                    /* Lenyapkan tombol popover gaib pembungkus di atas secara mutlak */
-                    div[data-testid="stPopover"],
-                    button:has(p:contains("SECRET_GUILD_VAULT")),
-                    div:has(> button[key="secret_trigger_buruan"]) {
-                        display: none !important;
-                        opacity: 0 !important;
-                        visibility: hidden !important;
-                        width: 0px !important;
-                        height: 0px !important;
-                        padding: 0 !important;
-                        margin: 0 !important;
-                        position: absolute !important;
-                        pointer-events: none !important;
+                    /* Paksa grup pilihan radio agar berjejer kiri-kanan secara simetris */
+                    div[data-testid="stRadio"] div[role="radiogroup"] {
+                        display: flex !important;
+                        flex-direction: row !important;
+                        justify-content: space-between !important;
+                        align-items: stretch !important;
+                        gap: 20px !important;
+                        width: 100% !important;
+                        max-width: 650px !important;
+                        margin: 20px auto !important;
+                        box-sizing: border-box !important;
                     }
+                    
+                    /* 👑 MAHKOTA TRICK: Menyulap kotak pilihan radio menjadi wujud buku menyatu yang kamu sukai */
+                    div[data-testid="stRadio"] div[role="radiogroup"] > label {
+                        width: 48% !important;
+                        min-height: 250px !important;
+                        border-radius: 6px 20px 20px 6px !important;
+                        font-family: monospace !important;
+                        box-sizing: border-box !important;
+                        cursor: pointer !important;
+                        display: flex !important;
+                        flex-direction: column !important;
+                        justify-content: flex-start !important;
+                        align-items: center !important;
+                        text-align: center !important;
+                        padding: 24px 15px !important;
+                        margin: 0 !important;
+                        box-shadow: 5px 15px 30px rgba(0,0,0,0.6) !important;
+                        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+                    }
+                    
+                    /* 📘 TEMA VISUAL BUKU 1: JURNAL BURUAN (KOTAK KIRI) */
+                    div[data-testid="stRadio"] div[role="radiogroup"] > label:nth-child(1) {
+                        background: linear-gradient(135deg, #0b1329 0%, #1e3a8a 100%) !important;
+                        color: #38bdf8 !important;
+                        border: 2px solid #38bdf8 !important;
+                        border-left: 14px solid #0284c7 !important; /* Jilid Punggung Buku */
+                    }
+                    div[data-testid="stRadio"] div[role="radiogroup"] > label:nth-child(1):hover {
+                        transform: translateY(-8px) rotate(-1deg) !important; /* Efek mengambang miring */
+                        border-color: #00f0ff !important;
+                        box-shadow: 0 0 25px rgba(0, 240, 255, 0.5), inset -6px 0 15px rgba(0,0,0,0.2) !important;
+                    }
+                    
+                    /* 🔮 TEMA VISUAL BUKU 2: KITAB MISI GUILD (KOTAK KANAN) */
+                    div[data-testid="stRadio"] div[role="radiogroup"] > label:nth-child(2) {
+                        background: linear-gradient(135deg, #161233 0%, #581c87 100%) !important;
+                        color: #c084fc !important;
+                        border: 2px solid #c084fc !important;
+                        border-left: 14px solid #7e22ce !important; /* Jilid Punggung Buku */
+                    }
+                    div[data-testid="stRadio"] div[role="radiogroup"] > label:nth-child(2):hover {
+                        transform: translateY(-8px) rotate(1deg) !important;
+                        border-color: #d8b4fe !important;
+                        box-shadow: 0 0 25px rgba(168, 85, 247, 0.5), inset -6px 0 15px rgba(0,0,0,0.2) !important;
+                    }
+
+                    /* Suntikkan struktur teks berbaris ke bawah di dalam kotak radio */
+                    .rpg-radio-emoji { font-size: 45px !important; margin-bottom: 12px !important; line-height: 1 !important; display: block; }
+                    .rpg-radio-title { font-size: 14px !important; font-weight: 900 !important; letter-spacing: 1px !important; margin-bottom: 12px !important; display: block; color: inherit !important; }
+                    .rpg-radio-desc { font-size: 11px !important; opacity: 0.85 !important; line-height: 1.5 !important; font-weight: normal !important; flex-grow: 1 !important; display: block; color: inherit !important; }
+                    .rpg-radio-arrow { font-size: 11px !important; margin-top: auto !important; font-weight: bold !important; opacity: 0.7 !important; display: block; color: inherit !important; padding-top: 15px; }
+                    
+                    /* Bersihkan sisa garis sisa widget radio bawaan agar tidak mengganggu */
+                    div[data-testid="stRadio"] > label { display: none !important; }
                 </style>
-                """,
+                """, 
                 unsafe_allow_html=True
             )
-
-            # --- 📦 2. KONTEN HTML MURNI: KEMBALI KE DESAIN BUKU MENYATU PERTAMA ---
-            HTML_PREMIUM_BOOKS = """
-            <div class="rpg-pure-book-grid">
-                <!-- 📘 BUKU 1: JURNAL BURUAN -->
-                <div class="book-standalone-card b1-gradient-theme" onclick="triggerStreamlitClick('secret_trigger_buruan')">
-                    <div class="book-main-emoji anim-float-buku">📘</div>
-                    <div class="book-main-title">JURNAL BURUAN</div>
-                    <div class="book-main-desc">Akses arsip report pribadi Anda untuk memeriksa akumulasi poin hasil buruan, level pahlawan, dan rekap performa harian Anda.</div>
-                    <div class="book-main-arrow">➔ Buka Buku</div>
-                </div>
-                
-                <!-- 🔮 BUKU 2: KITAB MISI GUILD -->
-                <div class="book-standalone-card b2-gradient-theme" onclick="triggerStreamlitClick('secret_trigger_misi')">
-                    <div class="book-main-emoji anim-float-pedang">🔮 ⚔️</div>
-                    <div class="book-main-title">KITAB MISI GUILD</div>
-                    <div class="book-main-desc">Cek papan pengumuman maklumat aliansi untuk memantau target pencapaian toko harian, quest mingguan PSM, dan target kuis berkala.</div>
-                    <div class="book-main-arrow">➔ Buka Kitab</div>
-                </div>
-            </div>
-
-            <style>
-                body { background-color: transparent; margin: 0; padding: 0; font-family: monospace; overflow: hidden; }
-                .rpg-pure-book-grid {
-                    display: flex; justify-content: space-between; align-items: stretch;
-                    gap: 20px; width: 100%; max-width: 650px; margin: 15px auto; box-sizing: border-box;
-                }
-                
-                /* 👑 STYLE UTAMA: KEMBALI KE WUJUD BALOK BUKU MENYATU PERTAMA */
-                .book-standalone-card {
-                    width: 48%; min-height: 240px; border-radius: 6px 20px 20px 6px;
-                    font-family: monospace; border-left: 14px solid rgba(0,0,0,0.55);
-                    display: flex; flex-direction: column; justify-content: flex-start; align-items: center;
-                    text-align: center; padding: 22px 15px; box-sizing: border-box;
-                    cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-                }
-                
-                /* Gradasi Warna Buku 1 */
-                .b1-gradient-theme {
-                    background: linear-gradient(135deg, #0b1329 0%, #1e3a8a 100%); color: #38bdf8;
-                    border: 2px solid #38bdf8; box-shadow: 5px 15px 30px rgba(0,0,0,0.6), inset -6px 0 15px rgba(0,0,0,0.4);
-                }
-                .b1-gradient-theme:hover {
-                    transform: translateY(-8px) rotate(-1deg); border-color: #00f0ff;
-                    box-shadow: 0 0 25px rgba(0, 240, 255, 0.5), inset -6px 0 15px rgba(0,0,0,0.2); color: #ffffff;
-                }
-                
-                /* Gradasi Warna Buku 2 */
-                .b2-gradient-theme {
-                    background: linear-gradient(135deg, #161233 0%, #581c87 100%); color: #c084fc;
-                    border: 2px solid #c084fc; box-shadow: 5px 15px 30px rgba(0,0,0,0.6), inset -6px 0 15px rgba(0,0,0,0.4);
-                }
-                .b2-gradient-theme:hover {
-                    transform: translateY(-8px) rotate(1deg); border-color: #d8b4fe;
-                    box-shadow: 0 0 25px rgba(168, 85, 247, 0.5), inset -6px 0 15px rgba(0,0,0,0.2); color: #ffffff;
-                }
-
-                /* Komponen Teks Dalam Buku */
-                .book-main-emoji { font-size: 45px; margin-bottom: 12px; line-height: 1; }
-                .book-main-title { font-size: 14px; font-weight: 900; letter-spacing: 1px; margin-bottom: 12px; }
-                .book-main-desc { font-size: 11px; opacity: 0.85; line-height: 1.5; flex-grow: 1; padding: 0 5px; }
-                .book-main-arrow { font-size: 11px; margin-top: 15px; font-weight: bold; opacity: 0.7; }
-
-                /* 👑 ANIMASI IKON MENGAMBANG BIAR MAKIN HIDUP */
-                .anim-float-buku { animation: floatBook 2.5s infinite ease-in-out; }
-                @keyframes floatBook { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-                .anim-float-pedang { animation: pulsePedang 3s infinite ease-in-out; }
-                @keyframes pulsePedang { 0%, 100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.06) rotate(2deg); } }
-            </style>
-
-            <script>
-                function triggerStreamlitClick(triggerKey) {
-                    // JEMBATAN SIHIR: Mencari tombol rahasia Streamlit di luar Iframe, lalu menekannya secara gaib
-                    const secretBtn = window.parent.document.querySelector('button[key="' + triggerKey + '"]');
-                    if (secretBtn) {
-                        secretBtn.click();
-                    }
-                }
-            </script>
-            """
             
-            # Cetak komponen HTML murni independen (Visual menyatu pertama favoritmu)
-            st.components.v1.html(HTML_PREMIUM_BOOKS, height=275, scrolling=False)
+            # --- 📦 PROSES INPUT SELECTION (MURNI NATIVE STREAMLIT RADIO) ---
+            # Kita bungkus teks murni HTML ke dalam pilihan radio agar terjemah sempurna
+            buku_kiri_html = (
+                "<span class='rpg-radio-emoji'>📘</span>"
+                "<span class='rpg-radio-title'>JURNAL BURUAN</span>"
+                "<span class='rpg-radio-desc'>Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin hasil buruan, tingkat level pahlawan, dan rekap performa penjualan harian Anda.</span>"
+                "<span class='rpg-radio-arrow'>➔ Buka Buku</span>"
+            )
+            
+            buku_kanan_html = (
+                "<span class='rpg-radio-emoji'>🔮 ⚔️</span>"
+                "<span class='rpg-radio-title'>KITAB MISI GUILD</span>"
+                "<span class='rpg-radio-desc'>Cek papan pengumuman maklumat aliansi untuk memantau target pencapaian toko harian, daftar quest mingguan PSM, serta target kuis berkala.</span>"
+                "<span class='rpg-radio-arrow'>➔ Buka Kitab</span>"
+            )
+            
+            # Jalankan mesin widget radio asli tanpa indeks default (-1 / None agar tidak langsung terklik otomatis)
+            pilihan_buku = st.radio(
+                "SELECT_BOOK_VAL",
+                options=[buku_kiri_html, buku_kanan_html],
+                index=None,
+                key="rpg_book_radio_selector"
+            )
+            
+            # --- 🎯 ENGINE TRANSISI NAVIGASI (INSTAN KLIK & BERPINDAH) ---
+            if pilihan_buku == buku_kiri_html:
+                st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
+                st.rerun()
+            elif pilihan_buku == buku_kanan_html:
+                st.session_state["campaign_sub_page"] = "view_buku_tugas"
+                st.rerun()
 
-            # Tombol keluar utama kembali ke Camp Persiapan
+            # Tombol keluar utama kembali ke Camp Persiapan (Bersih di paling bawah)
             st.markdown("<br><hr style='border-color: rgba(180, 83, 9, 0.2); margin: 15px 0;'><br>", unsafe_allow_html=True)
             st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
-            if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_pure_premium_style"):
+            if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_radio_fixed"):
                 st.session_state.current_camp_menu = "main"
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
-
 
         # =========================================================================
         # 📘 KONDISI 2: BUKU PENCAPAIAN / REPORT PRIBADI (PERKAMEN KUNO TERBUKA)
