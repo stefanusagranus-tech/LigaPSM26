@@ -1665,26 +1665,25 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub'>Pilih gulungan jurnal di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
             
-            # --- 🎯 1. TOMBOL PEMICU RAHASIA STREAMLIT (UNTUK MESIN PERPINDAHAN HALAMAN) ---
-            # Kita buat tombol asli agar perpindahan halaman lancar jaya 100%
-            if st.button("HIDDEN_B1", key="secret_trigger_buruan"):
-                st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
-                st.rerun()
-                
-            if st.button("HIDDEN_B2", key="secret_trigger_misi"):
-                st.session_state["campaign_sub_page"] = "view_buku_tugas"
-                st.rerun()
-                
-            # Lenyapkan wujud tombol pemicu rahasia secara mutlak menggunakan selector DOM bertingkat
+            # --- 🎯 1. ENGINE PEMICU RAHASIA STREAMLIT (TERISOLASI DALAM POP-UP GAIB) ---
+            # Kita bungkus tombol pemicu asli ke dalam popover terisolasi agar 100% lenyap dari layar
+            with st.popover("SECRET_GUILD_VAULT", use_container_width=True):
+                if st.button("HIDDEN_B1", key="secret_trigger_buruan"):
+                    st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
+                    st.rerun()
+                    
+                if st.button("HIDDEN_B2", key="secret_trigger_misi"):
+                    st.session_state["campaign_sub_page"] = "view_buku_tugas"
+                    st.rerun()
+            
+            # Padamkan wujud luar dari kotak tombol popover pembungkusnya agar area atas bersih total
             st.markdown(
                 """
                 <style>
-                    /* Targetkan bungkus luar dan dalam dari tombol rahasia secara bersamaan */
-                    div[data-testid="stButton"]:has(button[key="secret_trigger_buruan"]),
-                    div[data-testid="stButton"]:has(button[key="secret_trigger_misi"]),
-                    button[key="secret_trigger_buruan"],
-                    button[key="secret_trigger_misi"],
-                    div[data-testid="stVerticalBlockBorderWrapper"]:has(button[key^="secret_trigger_"]) {
+                    /* Lenyapkan tombol popover gaib pembungkus di atas secara mutlak */
+                    div[data-testid="stPopover"],
+                    button:has(p:contains("SECRET_GUILD_VAULT")),
+                    div:has(> button[key="secret_trigger_buruan"]) {
                         display: none !important;
                         opacity: 0 !important;
                         visibility: hidden !important;
