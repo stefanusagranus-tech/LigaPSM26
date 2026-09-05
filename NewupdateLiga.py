@@ -1500,6 +1500,100 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.session_state["campaign_sub_page"] = "resepsionis_utama"
 
         # =========================================================================
+        # 🎨 1. SUNTIKKAN SISI CSS FULLSCREEN SEJAJAR (STERIL & ANTI-BENTROK - FIXED)
+        # =========================================================================
+        st.markdown(
+            """
+            <style>
+                /* Kunci Fullscreen Web, Android, & iOS */
+                [data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"], .stSidebar, button[title="Expand sidebar"] { 
+                    display: none !important; width: 0px !important;
+                }
+                
+                /* FIX STERIL: Menghapus header bawaan Streamlit TANPA melenyapkan elemen anak pertama jurnismu */
+                [data-testid="stHeader"], header, .stAppHeader {
+                    display: none !important; height: 0px !important; margin: 0 !important;
+                }
+                
+                .main .block-container { 
+                    background-color: #090d16 !important; min-height: 100vh !important; max-width: 650px !important; margin: 0 auto !important; padding-top: 5% !important; box-sizing: border-box !important;
+                }
+                div[data-testid="stVerticalBlock"] { gap: 0rem !important; }
+
+                /* Tema Lobby Resepsionis */
+                .guild-lobby-title { text-align: center; color: #fbbf24 !important; font-family: monospace; font-size: 24px !important; font-weight: 900 !important; text-shadow: 0 0 12px rgba(251,191,36,0.4) !important; margin: 0 0 5px 0 !important; }
+                .guild-lobby-sub { text-align: center; color: #475569 !important; font-size: 11px !important; margin: 0 0 25px 0 !important; font-family: monospace; }
+                
+                /* ========================================================================= */
+                /* 👑 FIX MUTLAK: SETTING DIMENSI BUKU YANG PROPORSIAL & FLEKSIBEL           */
+                /* ========================================================================= */
+                div[data-testid="stColumn"] button[data-testid="stBaseButton-secondary"],
+                div[data-testid="stColumn"] button[data-testid="stBaseButton-primary"],
+                div[data-testid="stColumn"] .stButton button {
+                    /* Mengubah tinggi buku dari raksasa besar menjadi ukuran saku petualang yang pas */
+                    min-height: 140px !important; 
+                    height: 140px !important;
+                    border-radius: 4px 14px 14px 4px !important;
+                    font-family: monospace !important;
+                    font-size: 12px !important;
+                    font-weight: 800 !important;
+                    white-space: pre-line !important; /* Mengaktifkan fungsi enter \n */
+                    line-height: 1.4 !important;
+                    border-left: 10px solid rgba(0,0,0,0.5) !important; /* Ketebalan jilid punggung buku */
+                    display: flex !important;
+                    flex-direction: column !important;
+                    justify-content: center !important;
+                    align-items: center !important;
+                    width: 100% !important;
+                    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+                    padding: 10px !important;
+                    box-sizing: border-box !important;
+                }
+                
+                /* 📘 DEKORASI BUKU 1: JURNAL BURUAN (KOLOM KIRI) */
+                div[data-testid="stColumn"]:nth-child(1) button {
+                    background: linear-gradient(135deg, #0b1329 0%, #1e3a8a 100%) !important;
+                    color: #38bdf8 !important;
+                    border: 2px solid #38bdf8 !important;
+                    box-shadow: 5px 12px 25px rgba(0,0,0,0.6) !important;
+                }
+                div[data-testid="stColumn"]:nth-child(1) button:hover {
+                    transform: translateY(-5px) rotate(-1deg) !important; /* Sedikit miring estetik saat diangkat */
+                    border-color: #00f0ff !important;
+                    box-shadow: 0 0 25px rgba(0, 240, 255, 0.5) !important;
+                    color: #ffffff !important;
+                }
+                
+                /* 🔮 DEKORASI BUKU 2: KITAB MISI GUILD (KOLOM KANAN) */
+                div[data-testid="stColumn"]:nth-child(2) button {
+                    background: linear-gradient(135deg, #161233 0%, #581c87 100%) !important;
+                    color: #c084fc !important;
+                    border: 2px solid #c084fc !important;
+                    box-shadow: 5px 12px 25px rgba(0,0,0,0.6) !important;
+                }
+                div[data-testid="stColumn"]:nth-child(2) button:hover {
+                    transform: translateY(-5px) rotate(1deg) !important;
+                    border-color: #d8b4fe !important;
+                    box-shadow: 0 0 25px rgba(168, 85, 247, 0.5) !important;
+                    color: #ffffff !important;
+                }
+
+                /* Tampilan Buku Terbuka (Perkamen Kuno) */
+                .rpg-open-book-container { background: #f4eae1 !important; border: 4px solid #5c4033 !important; border-radius: 12px !important; box-shadow: 0 15px 35px rgba(0,0,0,0.6) !important; display: flex !important; min-height: 380px !important; position: relative !important; overflow: hidden !important; width: 100% !important; max-width: 580px !important; margin: 0 auto !important; }
+                .rpg-open-book-container::before { content: "" !important; position: absolute !important; top: 0 !important; left: 50% !important; width: 2px !important; height: 100% !important; background: linear-gradient(90deg, rgba(0,0,0,0.15), rgba(0,0,0,0.3), rgba(0,0,0,0.15)) !important; box-shadow: 0 0 10px rgba(0,0,0,0.4) !important; z-index: 5 !important; }
+                .rpg-book-page { width: 50% !important; padding: 24px 18px !important; box-sizing: border-box !important; display: flex !important; flex-direction: column !important; justify-content: flex-start !important; color: #2b1d0c !important; font-family: 'Courier New', monospace !important; }
+                .open-page-title { text-align: center !important; font-size: 15px !important; font-weight: 900 !important; margin: 0 0 2px 0 !important; color: #854d0e !important; }
+                .open-page-sub { text-align: center !important; font-size: 10px !important; color: #a1a1aa !important; margin: 0 0 10px 0 !important; font-style: italic !important; }
+                .open-book-divider { border-bottom: 2px double #854d0e !important; margin-bottom: 15px !important; width: 100% !important; }
+                .open-stat-row { display: flex !important; justify-content: space-between !important; font-size: 11px !important; font-weight: bold !important; margin-bottom: 12px !important; border-bottom: 1px dashed rgba(133,77,14,0.15) !important; padding-bottom: 4px !important; }
+                .open-page-footer { margin-top: auto !important; font-size: 9px !important; color: #78716c !important; text-align: center !important; font-weight: bold !important; }
+            </style>
+            """, 
+            unsafe_allow_html=True
+        )
+
+
+        # =========================================================================
         # 👑 NAVIGATION STRUKTUR INTERNAL: JALUR NAVIGASI UTAMA BERURUTAN (FIXED)
         # =========================================================================
          
