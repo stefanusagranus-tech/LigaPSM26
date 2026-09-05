@@ -430,7 +430,8 @@ st.markdown(
         box-shadow: 0 0 18px rgba(56, 189, 248, 0.6) !important;
         color: #ffffff !important;
     }
-    div.stButton > button, div.stFormSubmitButton > button {
+    div.stButton > button:not([key*="pure_css"]):not([key*="btn_desk_nav_"]), 
+    div.stFormSubmitButton > button {
         background-color: #080c14 !important;
         color: #ffffff !important;
         border: 2px solid #00f0ff !important;
@@ -438,8 +439,29 @@ st.markdown(
         font-weight: bold !important;
         box-shadow: 0 0 10px rgba(0, 240, 255, 0.3) !important;
         transition: all 0.3s ease !important;
+        height: auto;
+        min-height: auto;
     }
-    div.stButton > button:hover, div.stFormSubmitButton > button:hover {
+    div.stButton > button:not([key*="pure_css"]):not([key*="btn_desk_nav_"]):hover, 
+    div.stFormSubmitButton > button:hover {
+        background-color: #00f0ff !important;
+        color: #080c14 !important;
+        box-shadow: 0 0 20px rgba(0, 240, 255, 0.8) !important;
+    }
+    div.stButton > button:not([key*="pure_css"]):not([key*="btn_desk_nav_"]), 
+    div.stFormSubmitButton > button {
+        background-color: #080c14 !important;
+        color: #ffffff !important;
+        border: 2px solid #00f0ff !important;
+        border-radius: 8px !important;
+        font-weight: bold !important;
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.3) !important;
+        transition: all 0.3s ease !important;
+        height: auto;
+        min-height: auto;
+    }
+    div.stButton > button:not([key*="pure_css"]):not([key*="btn_desk_nav_"]):hover, 
+    div.stFormSubmitButton > button:hover {
         background-color: #00f0ff !important;
         color: #080c14 !important;
         box-shadow: 0 0 20px rgba(0, 240, 255, 0.8) !important;
