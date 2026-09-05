@@ -1524,30 +1524,32 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 .guild-lobby-title { text-align: center; color: #fbbf24 !important; font-family: monospace; font-size: 24px !important; font-weight: 900 !important; text-shadow: 0 0 12px rgba(251,191,36,0.4) !important; margin: 0 0 5px 0 !important; }
                 .guild-lobby-sub { text-align: center; color: #475569 !important; font-size: 11px !important; margin: 0 0 25px 0 !important; font-family: monospace; }
                 
+                                /* ========================================================================= */
+                /* 👑 FIX MUTLAK: PENGHANCHUR GEMBOK CSS UNIVERSAL (OVERRIDER ENGINE)       */
                 /* ========================================================================= */
-                /* 👑 FIX MUTLAK: TARGET SELECTOR TOMBOL BUKU VERTIKAL PURE STREAMLIT        */
-                /* ========================================================================= */
-                div[data-testid="stColumn"] button[key="btn_buku_buruan_pure_css"],
-                div[data-testid="stColumn"] button[key="btn_buku_misi_pure_css"] {
-                    /* Mengunci tinggi buku vertikal yang ideal dan simetris */
+                /* Kita tembak langsung menggunakan ID atribut internal Streamlit agar super kuat */
+                div[data-testid="stColumn"] button[data-testid^="stBaseButton-"][key="btn_buku_buruan_pure_css"],
+                div[data-testid="stColumn"] button[data-testid^="stBaseButton-"][key="btn_buku_misi_pure_css"] {
+                    /* Paksa ukuran tinggi vertikal buku (Gunakan !important ganda secara struktur) */
                     min-height: 250px !important; 
                     height: 250px !important;
                     max-width: 210px !important;  
                     width: 210px !important;
                     margin: 0 auto !important;    
                     border-radius: 6px 20px 20px 6px !important;
-                    font-family: monospace !important;
                     border-left: 14px solid rgba(0,0,0,0.55) !important; /* Punggung Buku */
+                    box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
                     
-                    /* SEKTOR KUNCI: Mengaktifkan Enter \n & Menyusun Konten dari Atas ke Bawah */
-                    white-space: pre-line !important; 
+                    /* PAKSA OVERRIDE: Menghancurkan layout baris lurus milik CSS universal */
                     display: flex !important;
                     flex-direction: column !important;
-                    justify-content: space-between !important; /* Dorong teks panah otomatis ke paling bawah */
+                    white-space: pre-line !important; /* Mengaktifkan fungsi enter \n Python */
+                    justify-content: space-between !important; 
                     align-items: center !important;
                     text-align: center !important;
                     padding: 22px 14px !important;
                     box-sizing: border-box !important;
+                    font-family: monospace !important;
                     font-size: 11px !important;
                     font-weight: 600 !important;
                     line-height: 1.4 !important;
@@ -1555,14 +1557,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 }
 
                 /* Menghilangkan efek gosong hitam saat tombol diklik */
-                div[data-testid="stColumn"] button:active, 
-                div[data-testid="stColumn"] button:focus {
+                div[data-testid="stColumn"] button[key="btn_buku_buruan_pure_css"]:active, 
+                div[data-testid="stColumn"] button[key="btn_buku_misi_pure_css"]:focus {
                     background: inherit !important;
                     filter: none !important;
                 }
                 
                 /* 📘 TEMA WARNA BUKU 1 (JURNAL BURUAN - KOLOM KIRI) */
-                div[data-testid="stColumn"]:nth-child(1) button[key="btn_buku_buruan_pure_css"] {
+                div[data-testid="stColumn"]:nth-child(1) button[data-testid^="stBaseButton-"][key="btn_buku_buruan_pure_css"] {
                     background: linear-gradient(135deg, #0b1329 0%, #1e3a8a 100%) !important;
                     color: #38bdf8 !important;
                     border: 2px solid #38bdf8 !important;
@@ -1576,7 +1578,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 }
                 
                 /* 🔮 TEMA WARNA BUKU 2 (KITAB MISI GUILD - KOLOM KANAN) */
-                div[data-testid="stColumn"]:nth-child(2) button[key="btn_buku_misi_pure_css"] {
+                div[data-testid="stColumn"]:nth-child(2) button[data-testid^="stBaseButton-"][key="btn_buku_misi_pure_css"] {
                     background: linear-gradient(135deg, #161233 0%, #581c87 100%) !important;
                     color: #c084fc !important;
                     border: 2px solid #c084fc !important;
