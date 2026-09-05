@@ -1614,29 +1614,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     """, 
                     unsafe_allow_html=True
                 )
-                if st.button("Lihat Status ➔", use_container_width=True, key="btn_lobby_buruan_camp_style_fixed"):
-                    st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
-                    st.rerun()
-                    
-            # 🔮 KOLOM KANAN: KITAB MISI GUILD (AMBIL QUEST)
-            with col_lobby2:
-                st.markdown(
-                    """
-                    <div class="camp-card">
-                        <div class="camp-icon">🔮</div>
-                        <div class="camp-title">KITAB MISI GUILD</div>
-                        <div class="camp-desc">
-                            Cek papan pengumuman maklumat aliansi untuk melihat quest musiman, 
-                            tugas mingguan PSM, serta daily target buruan toko Anda.
-                        </div>
-                    </div>
-                    """, 
-                    unsafe_allow_html=True
-                )
-                if st.button("Ambil Quest ➔", use_container_width=True, key="btn_lobby_misi_camp_style_fixed"):
-                    st.session_state["campaign_sub_page"] = "view_buku_tugas"
-                    st.rerun()
-
+                
             # Tombol keluar utama kembali ke Camp Persiapan (Ditaruh di bawah columns)
             st.markdown("<br><hr style='border-color: rgba(180, 83, 9, 0.2); margin: 15px 0;'><br>", unsafe_allow_html=True)
             st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
