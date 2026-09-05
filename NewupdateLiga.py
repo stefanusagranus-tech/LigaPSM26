@@ -1628,13 +1628,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
          
         # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (CLEAN INTEGRATED BOOK SYSTEM)
-        # =========================================================================
-        if st.session_state.get("campaign_sub_page", "resepsionis_utama") == "resepsionis_utama":
-            st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
-            st.markdown("<p class='guild-lobby-sub'>Pilih gulungan jurnal di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
-            
-        # =========================================================================
         # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (100% PURE HTML FORM ENGINE)
         # =========================================================================
         if st.session_state.get("campaign_sub_page", "resepsionis_utama") == "resepsionis_utama":
@@ -1668,11 +1661,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     </button>
                 </form>
                 
-                <!-- 🔮 BUKU 2: KITAB MISI GUILD -->
+                <!-- ⚔️ BUKU 2: KITAB MISI GUILD -->
                 <form method="get" action="" class="book-form-card">
                     <input type="hidden" name="book_click" value="kitab_misi">
                     <button type="submit" class="book-inner-submit b2-theme">
-                        <div class="book-emoji-large">🔮 ⚔️</div>
+                        <div class="book-emoji-large">⚔️</div>
                         <div class="book-title-bold">KITAB MISI GUILD</div>
                         <div class="book-desc-small">Cek papan pengumuman maklumat aliansi untuk memantau target pencapaian toko harian, quest mingguan PSM, dan target quiz berkala.</div>
                         <div class="book-action-arrow">➔ Buka Kitab</div>
