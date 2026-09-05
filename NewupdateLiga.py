@@ -1813,83 +1813,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             # Inisialisasi nomor halaman internal jika belum terdaftar di memori
             if "book_page_number" not in st.session_state:
                 st.session_state["book_page_number"] = 1
-
-                        # --- 🎮 3. CONTROL CENTER: ENGINE NAVIGASI TOMBOL ALAS KAKI BUKU (FIXED SIDE-BY-SIDE) ---
-            st.markdown("<br>", unsafe_allow_html=True)
-            
-            # 🎨 SUNTIKKAN BUNGKUSAN FLEXBOX KHUSUS AGAR TOMBOL PAS BERJEJER KIRI-KANAN SIMETRIS
-            st.markdown(
-                """
-                <style>
-                    /* Targetkan baris kolom navigasi khusus buku ini */
-                    div.rpg-button-nav-container {
-                        display: flex !important;
-                        flex-direction: row !important; /* Paksa wajib kiri-kanan */
-                        justify-content: space-between !important;
-                        align-items: center !important;
-                        gap: 15px !important; /* Jarak renggang antar tombol */
-                        width: 100% !important;
-                        max-width: 580px !important; /* Samakan lebar dengan bingkai buku di atasnya */
-                        margin: 0 auto !important;
-                        box-sizing: border-box !important;
-                    }
-                    
-                    /* Hancurkan gembok universal yang memaksa tombol melar penuh ke bawah */
-                    div.rpg-button-nav-container div[data-testid="stColumn"] {
-                        width: 48% !important;
-                        flex: 1 1 0% !important;
-                        padding: 0 !important;
-                        margin: 0 !important;
-                    }
-                    
-                    /* Poles baju tombol agar ukurannya mengecil pas, fleksibel, dan serasi */
-                    div.rpg-button-nav-container div[data-testid="stColumn"] button {
-                        width: 100% !important;
-                        max-width: 100% !important;
-                        min-height: 42px !important;
-                        height: 42px !important;
-                        font-family: monospace !important;
-                        font-size: 11.5px !important;
-                        font-weight: bold !important;
-                        border-radius: 6px !important;
-                        margin: 0 !important;
-                        padding: 0 10px !important;
-                    }
-                </style>
-                """,
-                unsafe_allow_html=True
-            )
-
-            # 👑 BUNGKUS KOLOM DI DALAM DIV FLEXBOX SEJAJAR
-            st.markdown('<div class="rpg-button-nav-container">', unsafe_allow_html=True)
-            col_nav1, col_nav2 = st.columns(2)
-
-            with col_nav1:
-                # HALAMAN 1: Berfungsi sebagai Tombol EXIT Utama
-                if current_page == 1:
-                    if st.button("📖 TUTUP JURNAL & KEMBALI", use_container_width=True, key="btn_nav_page_exit_lobby"):
-                        st.session_state["campaign_sub_page"] = "resepsionis_utama"
-                        st.rerun()
-                # HALAMAN 2 atau 3: Berfungsi sebagai Tombol KEMBALI Halaman Sebelumnya
-                else:
-                    if st.button("⬅️ HALAMAN SEBELUMNYA", use_container_width=True, key="btn_nav_page_back_step"):
-                        st.session_state["book_page_number"] -= 1
-                        st.rerun()
-
-            with col_nav2:
-                # HALAMAN TERAKHIR: Berfungsi memutar balik alur navigasi ke Halaman Pertama
-                if current_page == 3:
-                    if st.button("↺ KEMBALI KE AWAL (HAL 1)", use_container_width=True, key="btn_nav_page_reset_to_one"):
-                        st.session_state["book_page_number"] = 1
-                        st.rerun()
-                # HALAMAN 1 atau 2: Berfungsi sebagai Tombol LANJUT ke halaman berikutnya
-                else:
-                    if st.button("HALAMAN BERIKUTNYA ➔", use_container_width=True, key="btn_nav_page_next_step"):
-                        st.session_state["book_page_number"] += 1
-                        st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
-
-
+                
             # --- 🎨 SUNTIKKAN SISI CSS UNTUK ANIMASI DAN LOGIKA TABEL SCROLL ---
             st.markdown(
                 """
@@ -2049,33 +1973,69 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             # Cetak susunan halaman HTML ke layar Streamlit
             st.markdown(html_content_pages, unsafe_allow_html=True)
 
+           # =========================================================================
             # --- 🎮 3. CONTROL CENTER: ENGINE NAVIGASI TOMBOL ALAS KAKI BUKU ---
-            st.markdown("<br>", unsafe_allow_html=True)
+            # =========================================================================
+            st.markdown(
+                """
+                <style>
+                    div.rpg-button-nav-container {
+                        display: flex !important;
+                        flex-direction: row !important;
+                        justify-content: space-between !important;
+                        align-items: center !important;
+                        gap: 15px !important;
+                        width: 100% !important;
+                        max-width: 580px !important;
+                        margin: 0 auto !important;
+                        box-sizing: border-box !important;
+                    }
+                    div.rpg-button-nav-container div[data-testid="stColumn"] {
+                        width: 48% !important;
+                        flex: 1 1 0% !important;
+                        padding: 0 !important;
+                        margin: 0 !important;
+                    }
+                    div.rpg-button-nav-container div[data-testid="stColumn"] button {
+                        width: 100% !important;
+                        max-width: 100% !important;
+                        min-height: 42px !important;
+                        height: 42px !important;
+                        font-family: monospace !important;
+                        font-size: 11.5px !important;
+                        font-weight: bold !important;
+                        border-radius: 6px !important;
+                        margin: 0 !important;
+                        padding: 0 10px !important;
+                    }
+                </style>
+                """,
+                unsafe_allow_html=True
+            )
+
+            st.markdown('<div class="rpg-button-nav-container">', unsafe_allow_html=True)
             col_nav1, col_nav2 = st.columns(2)
 
             with col_nav1:
-                # HALAMAN 1: Berfungsi sebagai Tombol EXIT Utama
                 if current_page == 1:
                     if st.button("📖 TUTUP JURNAL & KEMBALI", use_container_width=True, key="btn_nav_page_exit_lobby"):
                         st.session_state["campaign_sub_page"] = "resepsionis_utama"
                         st.rerun()
-                # HALAMAN 2 atau 3: Berfungsi sebagai Tombol KEMBALI Halaman Sebelumnya
                 else:
                     if st.button("⬅️ HALAMAN SEBELUMNYA", use_container_width=True, key="btn_nav_page_back_step"):
                         st.session_state["book_page_number"] -= 1
                         st.rerun()
 
             with col_nav2:
-                # HALAMAN TERAKHIR: Berfungsi memutar balik alur navigasi ke Halaman Pertama
                 if current_page == 3:
                     if st.button("↺ KEMBALI KE AWAL (HAL 1)", use_container_width=True, key="btn_nav_page_reset_to_one"):
                         st.session_state["book_page_number"] = 1
                         st.rerun()
-                # HALAMAN 1 atau 2: Berfungsi sebagai Tombol LANJUT ke halaman berikutnya
                 else:
                     if st.button("HALAMAN BERIKUTNYA ➔", use_container_width=True, key="btn_nav_page_next_step"):
                         st.session_state["book_page_number"] += 1
                         st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
 
 
         # =========================================================================
