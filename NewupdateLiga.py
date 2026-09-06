@@ -5078,7 +5078,6 @@ elif selected_tab == "⚙️ Pengaturan & Master":
     • *PWP (Pay With Points)*
     - Syarat/Poin  : {int(s_pwp):,}
     - Total Redeem : {int(r_pwp):,}
-    - Total Qty    : {int(t_pwp):,} Pcs
     - Total Qty    : {int(q_pwp):,} Pcs
     - Ach. Redeem  : *{ach_pwp:.1f}%*
 
