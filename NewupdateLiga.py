@@ -4922,7 +4922,7 @@ elif selected_tab == "⚙️ Pengaturan & Master":
 
         st.markdown("---")
 
-        # 3. Center Backup & Keamanan Database (MENGGUNAKAN XLSXWRITER)
+        # 3. Center Backup & Keamanan Database
         st.subheader("📦 Center Backup Database")
         col_bk1, col_bk2 = st.columns(2)
 
@@ -4954,7 +4954,6 @@ elif selected_tab == "⚙️ Pengaturan & Master":
             st.markdown("##### 📥 Backup Manual File (.xlsx)")
             try:
                 output_backup = io.BytesIO()
-                # Menggunakan xlsxwriter yang sudah terpasang
                 with pd.ExcelWriter(
                     output_backup, engine="xlsxwriter"
                 ) as backup_writer:
@@ -5025,11 +5024,12 @@ elif selected_tab == "⚙️ Pengaturan & Master":
             )
             selected_month_num = bulan_list.index(selected_month_name) + 1
 
-        # Filter Periode PSM Spesifik / Semua Periode Bulan Tersebut
+        # Filter Periode PSM
         psm_periods_df = st.session_state.get("periods_df", pd.DataFrame())
         psm_opt = ["Seluruh Penjualan 1 Bulan"]
 
         if not psm_periods_df.empty and "period_name" in psm_periods_df.columns:
+            # Coba konversi tanggal mulai jika ada
             if "start_date" in psm_periods_df.columns:
                 psm_periods_df["temp_dt"] = pd.to_datetime(
                     psm_periods_df["start_date"], errors="coerce"
@@ -5038,7 +5038,15 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                     psm_periods_df["temp_dt"].dt.month == selected_month_num
                 ]
                 if not m_df.empty:
-                    psm_opt.extend(m_df["period_name"].dropna().tolist())
+                    psm_opt.extend(m_df["period_name"].dropna().unique().tolist())
+                else:
+                    psm_opt.extend(
+                        psm_periods_df["period_name"].dropna().unique().tolist()
+                    )
+            else:
+                psm_opt.extend(
+                    psm_periods_df["period_name"].dropna().unique().tolist()
+                )
 
         with col_rep2:
             selected_psm_period_opt = st.selectbox("🎯 Filter Periode PSM", psm_opt)
@@ -5050,9 +5058,12 @@ elif selected_tab == "⚙️ Pengaturan & Master":
         )
 
         if btn_gen_summary:
-            # --- A. KALKULASI REKAP PSM ---
+            # --- A. KALKULASI PERBAIKAN PSM ---
             target_psm_tot = 0
             actual_psm_tot = 0
+
+            # Data Sales PSM
+            sales_item_df = st.session_state.get("sales_item_df", pd.DataFrame())
 
             if not psm_periods_df.empty:
                 p_filtered = psm_periods_df.copy()
@@ -5060,79 +5071,118 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                     p_filtered = p_filtered[
                         p_filtered["period_name"] == selected_psm_period_opt
                     ]
-                else:
-                    if "temp_dt" in p_filtered.columns:
-                        p_filtered = p_filtered[
-                            p_filtered["temp_dt"].dt.month == selected_month_num
-                        ]
 
                 if "target_total" in p_filtered.columns:
-                    target_psm_tot = p_filtered["target_total"].fillna(0).sum()
-                if "actual_qty" in p_filtered.columns:
-                    actual_psm_tot = p_filtered["actual_qty"].fillna(0).sum()
+                    target_psm_tot = pd.to_numeric(
+                        p_filtered["target_total"], errors="coerce"
+                    ).sum()
+
+                # Mengambil Qty Penjualan PSM yang sesuai
+                if not sales_item_df.empty:
+                    sales_temp = sales_item_df.copy()
+                    if "updated_at" in sales_temp.columns:
+                        sales_temp["dt_temp"] = pd.to_datetime(
+                            sales_temp["updated_at"], errors="coerce"
+                        )
+                        sales_temp = sales_temp[
+                            sales_temp["dt_temp"].dt.month == selected_month_num
+                        ]
+
+                    if (
+                        selected_psm_period_opt != "Seluruh Penjualan 1 Bulan"
+                        and "period_id" in p_filtered.columns
+                    ):
+                        valid_pids = p_filtered["period_id"].unique()
+                        if "period_id" in sales_temp.columns:
+                            sales_temp = sales_temp[
+                                sales_temp["period_id"].isin(valid_pids)
+                            ]
+
+                    if "qty" in sales_temp.columns:
+                        actual_psm_tot = pd.to_numeric(
+                            sales_temp["qty"], errors="coerce"
+                        ).sum()
+                    elif (
+                        "actual_qty" in p_filtered.columns
+                        and actual_psm_tot == 0
+                    ):
+                        actual_psm_tot = pd.to_numeric(
+                            p_filtered["actual_qty"], errors="coerce"
+                        ).sum()
 
             ach_psm = (
                 (actual_psm_tot / target_psm_tot * 100) if target_psm_tot > 0 else 0
             )
 
-            # --- B. KALKULASI REKAP PPS ---
+            # --- B. KALKULASI REKAP PPS (DENGAN PEMISAHAN & CEMILAN CEBAN) ---
             sales_pps_df = st.session_state.get("sales_pps_df", pd.DataFrame())
 
-            syarat_pwp = 0
-            redeem_pwp = 0
-            qty_pwp = 0
-            syarat_sg = 0
-            redeem_sg = 0
-            qty_sg = 0
+            # Inisialisasi Kategori PPS
+            pps_data = {
+                "pwp": {"syarat": 0, "redeem": 0, "qty": 0},
+                "sueger": {"syarat": 0, "redeem": 0, "qty": 0},
+                "sg": {"syarat": 0, "redeem": 0, "qty": 0},  # Serba Gratis
+                "ceban": {"syarat": 0, "redeem": 0, "qty": 0},  # Cemilan Ceban
+            }
 
-            if not sales_pps_df.empty and "updated_at" in sales_pps_df.columns:
-                sales_pps_df["dt_temp"] = pd.to_datetime(
-                    sales_pps_df["updated_at"], errors="coerce"
-                )
-                pps_month_df = sales_pps_df[
-                    sales_pps_df["dt_temp"].dt.month == selected_month_num
-                ]
+            if not sales_pps_df.empty:
+                s_pps = sales_pps_df.copy()
+                if "updated_at" in s_pps.columns:
+                    s_pps["dt_temp"] = pd.to_datetime(
+                        s_pps["updated_at"], errors="coerce"
+                    )
+                    s_pps = s_pps[s_pps["dt_temp"].dt.month == selected_month_num]
 
-                syarat_pwp = (
-                    pps_month_df["syarat_pwp"].sum()
-                    if "syarat_pwp" in pps_month_df.columns
-                    else 0
-                )
-                redeem_pwp = (
-                    pps_month_df["redeem_pwp"].sum()
-                    if "redeem_pwp" in pps_month_df.columns
-                    else 0
-                )
-                qty_pwp = (
-                    pps_month_df["qty_pwp"].sum()
-                    if "qty_pwp" in pps_month_df.columns
-                    else 0
-                )
+                # Sum fungsi aman
+                def safe_sum(col_name):
+                    return (
+                        pd.to_numeric(s_pps[col_name], errors="coerce").sum()
+                        if col_name in s_pps.columns
+                        else 0
+                    )
 
-                syarat_sg = (
-                    pps_month_df["syarat_sueger"].sum()
-                    if "syarat_sueger" in pps_month_df.columns
-                    else 0
-                )
-                redeem_sg = (
-                    pps_month_df["redeem_sueger"].sum()
-                    if "redeem_sueger" in pps_month_df.columns
-                    else 0
-                )
-                qty_sg = (
-                    pps_month_df["qty_sg"].sum()
-                    if "qty_sg" in pps_month_df.columns
-                    else 0
+                # 1. PWP
+                pps_data["pwp"]["syarat"] = safe_sum("syarat_pwp")
+                pps_data["pwp"]["redeem"] = safe_sum("redeem_pwp")
+                pps_data["pwp"]["qty"] = safe_sum("qty_pwp")
+
+                # 2. Sueger
+                pps_data["sueger"]["syarat"] = safe_sum("syarat_sueger")
+                pps_data["sueger"]["redeem"] = safe_sum("redeem_sueger")
+                pps_data["sueger"]["qty"] = safe_sum("qty_sueger") or safe_sum(
+                    "qty_sg"
                 )
 
-            ach_pwp_redeem = (
-                (redeem_pwp / syarat_pwp * 100) if syarat_pwp > 0 else 0
+                # 3. Serba Gratis (SG)
+                pps_data["sg"]["syarat"] = safe_sum("syarat_sg") or safe_sum(
+                    "syarat_serbagratis"
+                )
+                pps_data["sg"]["redeem"] = safe_sum("redeem_sg") or safe_sum(
+                    "redeem_serbagratis"
+                )
+                pps_data["sg"]["qty"] = safe_sum("qty_serbagratis")
+
+                # 4. Cemilan Ceban
+                pps_data["ceban"]["syarat"] = safe_sum("syarat_ceban")
+                pps_data["ceban"]["redeem"] = safe_sum("redeem_ceban")
+                pps_data["ceban"]["qty"] = safe_sum("qty_ceban")
+
+            # Menghitung Achievement
+            def calc_ach(redeem, syarat):
+                return (redeem / syarat * 100) if syarat > 0 else 0
+
+            ach_pwp = calc_ach(
+                pps_data["pwp"]["redeem"], pps_data["pwp"]["syarat"]
             )
-            ach_sg_redeem = (
-                (redeem_sg / syarat_sg * 100) if syarat_sg > 0 else 0
+            ach_sueger = calc_ach(
+                pps_data["sueger"]["redeem"], pps_data["sueger"]["syarat"]
+            )
+            ach_sg = calc_ach(pps_data["sg"]["redeem"], pps_data["sg"]["syarat"])
+            ach_ceban = calc_ach(
+                pps_data["ceban"]["redeem"], pps_data["ceban"]["syarat"]
             )
 
-            # Format Teks WhatsApp
+            # --- FORMAT TEKS REPORT WHATSAPP ---
             wa_text = f"""*📊 REPORT SUMMARY PENJUALAN {selected_month_name.upper()} 2026*
     ----------------------------------------
     *1. PROGRAM PSM ({selected_psm_period_opt.upper()})*
@@ -5142,30 +5192,46 @@ elif selected_tab == "⚙️ Pengaturan & Master":
 
     *2. PROGRAM PENJUALAN & KINERJA (PPS)*
     • *PWP (Pay With Points)*
-    - Syarat Redeem: {int(syarat_pwp):,}
-    - Total Redeem : {int(redeem_pwp):,}
-    - Total Qty    : {int(qty_pwp):,} Pcs
-    - Ach. Redeem  : *{ach_pwp_redeem:.1f}%*
+    - Syarat Redeem: {int(pps_data['pwp']['syarat']):,}
+    - Total Redeem : {int(pps_data['pwp']['redeem']):,}
+    - Total Qty    : {int(pps_data['pwp']['qty']):,} Pcs
+    - Ach. Redeem  : *{ach_pwp:.1f}%*
 
-    • *SUEGER / SERBA GRATIS*
-    - Syarat Redeem: {int(syarat_sg):,}
-    - Total Redeem : {int(redeem_sg):,}
-    - Total Qty    : {int(qty_sg):,} Pcs
-    - Ach. Redeem  : *{ach_sg_redeem:.1f}%*
+    • *SUEGER*
+    - Syarat Redeem: {int(pps_data['sueger']['syarat']):,}
+    - Total Redeem : {int(pps_data['sueger']['redeem']):,}
+    - Total Qty    : {int(pps_data['sueger']['qty']):,} Pcs
+    - Ach. Redeem  : *{ach_sueger:.1f}%*
+
+    • *SERBA GRATIS*
+    - Syarat Redeem: {int(pps_data['sg']['syarat']):,}
+    - Total Redeem : {int(pps_data['sg']['redeem']):,}
+    - Total Qty    : {int(pps_data['sg']['qty']):,} Pcs
+    - Ach. Redeem  : *{ach_sg:.1f}%*
+
+    • *CEMILAN CEBAN*
+    - Syarat Redeem: {int(pps_data['ceban']['syarat']):,}
+    - Total Redeem : {int(pps_data['ceban']['redeem']):,}
+    - Total Qty    : {int(pps_data['ceban']['qty']):,} Pcs
+    - Ach. Redeem  : *{ach_ceban:.1f}%*
     ----------------------------------------
     _Generated automatically via LigaPSM System_
     """.replace(
                 ",", "."
             )
 
-            st.markdown("##### 📝 Hasil Text Report (Siap Copas ke WA):")
+            st.markdown("##### 📝 Teks Report Summary:")
             st.text_area(
-                "Salin teks di bawah ini:",
+                "Teks di bawah ini sudah terformat rapat dan rapi untuk WhatsApp:",
                 wa_text,
-                height=280,
+                height=340,
                 key="wa_summary_text_area",
             )
+
+            # Bantuan Tombol Salin Cepat
+            st.code(wa_text, language="text")
             st.success(
-                "✅ Report summary berhasil digenerate! Silakan blok dan salin"
-                " teks di atas."
+                "✅ Report summary berhasil dibuat! Gunakan tombol ikon di pojok"
+                " kanan atas kotak hitam (code block) di atas untuk langsung"
+                " menyalin ke clipboard."
             )
