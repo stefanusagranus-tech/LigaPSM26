@@ -7,7 +7,7 @@ import os
 import io
 import base64
 from datetime import datetime
-from zoneinfo import ZoaneInfo
+from zoneinfo import ZoneInfo
 import numpy as np
 import pandas as pd
 import plotly.express as px
