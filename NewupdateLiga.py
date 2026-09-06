@@ -4620,23 +4620,61 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                         except Exception as e:
                             st.error(f"❌ Gagal menyimpan program Sueger: {e}")
 
-        elif selected_pps_sub == "➕ Tambah Periode PPS":
-            st.markdown("##### 📌 Form Input Periode PPS (Target Fisik & Pembulatan Otomatis)")
+       elif selected_pps_sub == "➕ Tambah Periode PPS":
+            st.markdown(
+                "##### 📌 Form Input Periode PPS (Target Fisik & Pembulatan Otomatis)"
+            )
+
+            # Menghitung jumlah personil aktif secara dinamis untuk pembagi target
+            total_active_personnel = 9
+            if "person_df" in st.session_state and not st.session_state.person_df.empty:
+                if "person_name" in st.session_state.person_df.columns:
+                    count_p = (
+                        st.session_state.person_df["person_name"].dropna().nunique()
+                    )
+                    if count_p > 0:
+                        total_active_personnel = count_p
+
             with st.form("form_add_pps_pure_only"):
                 col_p1, col_p2 = st.columns(2)
                 with col_p1:
-                    pps_id = st.text_input("ID Periode PPS", placeholder="Contoh: PPS01").strip().upper()
-                    pps_name = st.text_input("Nama Periode PPS", placeholder="Contoh: PPS MARET").strip()
-                    pps_target = st.number_input("Target Total (Pcs)", min_value=0, step=1, value=180)
+                    pps_id = (
+                        st.text_input("ID Periode PPS", placeholder="Contoh: PPS01")
+                        .strip()
+                        .upper()
+                    )
+                    pps_name = st.text_input(
+                        "Nama Periode PPS", placeholder="Contoh: PPS MARET"
+                    ).strip()
+                    pps_target = st.number_input(
+                        "Target Total (Pcs)", min_value=0, step=1, value=180
+                    )
                 with col_p2:
-                    pps_start = st.date_input("Tanggal Mulai", value=waktu_wib.date(), key="pps_start_only")
-                    pps_end = st.date_input("Tanggal Akhir", value=waktu_wib.date(), key="pps_end_only")
+                    pps_start = st.date_input(
+                        "Tanggal Mulai", value=waktu_wib.date(), key="pps_start_only"
+                    )
+                    pps_end = st.date_input(
+                        "Tanggal Akhir", value=waktu_wib.date(), key="pps_end_only"
+                    )
 
-                    pps_target_kasir_auto = int(math.ceil(pps_target / 9)) if pps_target > 0 else 0
-                    st.markdown(f"👤 **Target Otomatis Per Personil (Target Total / 9):** `{pps_target_kasir_auto} Pcs`")
-                    st.caption("*(Nilai desimal dibulatkan ke atas secara otomatis dan disimpan ke PERIODE_PPS)*")
+                    # Hitung target per personil dengan pembulatan ke atas
+                    pps_target_kasir_auto = (
+                        int(math.ceil(pps_target / total_active_personnel))
+                        if pps_target > 0
+                        else 0
+                    )
+                    st.markdown(
+                        f"👤 **Target Otomatis Per Personil (Target Total /"
+                        f" {total_active_personnel}):** `{pps_target_kasir_auto} Pcs`"
+                    )
+                    st.caption(
+                        "*(Nilai desimal dibulatkan ke atas secara otomatis dan"
+                        " disimpan ke PERIODE_PPS)*"
+                    )
 
-                btn_submit_pps_exc = st.form_submit_button("💾 Simpan Periode PPS", use_container_width=True)
+                btn_submit_pps_exc = st.form_submit_button(
+                    "💾 Simpan Periode PPS", use_container_width=True
+                )
 
                 if btn_submit_pps_exc:
                     if not pps_id or not pps_name:
@@ -4645,23 +4683,40 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                         st.error("⚠️ Tanggal mulai tidak boleh melebihi tanggal akhir!")
                     else:
                         try:
-                            new_pps_row = pd.DataFrame([{
-                                "period_id": pps_id,
-                                "start_date": str(pps_start),
-                                "end_date": str(pps_end),
-                                "period_name": pps_name,
-                                "target_total": int(pps_target),
-                                "status": "Aktif",
-                                "actual_qty": 0
-                            }])
+                            # Menambahkan 'target_personil' ke dalam baris data baru
+                            new_pps_row = pd.DataFrame([
+                                {
+                                    "period_id": pps_id,
+                                    "start_date": str(pps_start),
+                                    "end_date": str(pps_end),
+                                    "period_name": pps_name,
+                                    "target_total": int(pps_target),
+                                    "target_personil": int(
+                                        pps_target_kasir_auto
+                                    ),  # <-- DIKIRIM KE SHEET
+                                    "status": "Aktif",
+                                    "actual_qty": 0,
+                                    "syarat_total": 0,
+                                    "redeem_total": 0,
+                                }
+                            ])
 
-                            st.session_state.periode_pps_df = pd.concat(
-                                [st.session_state.periode_pps_df, new_pps_row], ignore_index=True
+                            if "periods_pps_df" not in st.session_state:
+                                st.session_state.periods_pps_df = pd.DataFrame()
+
+                            st.session_state.periods_pps_df = pd.concat(
+                                [st.session_state.periods_pps_df, new_pps_row],
+                                ignore_index=True,
                             )
-                            
-                            save_master_table("PERIODE_PPS", st.session_state.periode_pps_df)
 
-                            st.toast("✅ Periode PPS berhasil disimpan ke PERIODE_PPS!", icon="🎉")
+                            save_master_table(
+                                "PERIODE_PPS", st.session_state.periods_pps_df
+                            )
+
+                            st.toast(
+                                "✅ Periode PPS berhasil disimpan ke PERIODE_PPS!",
+                                icon="🎉",
+                            )
                             time.sleep(1.2)
                             st.rerun()
                         except Exception as e:
