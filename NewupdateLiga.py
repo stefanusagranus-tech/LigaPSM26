@@ -7,7 +7,7 @@ import os
 import io
 import base64
 from datetime import datetime
-from zoneinfo import ZoneInfo
+from zoneinfo import ZoaneInfo
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -4859,10 +4859,11 @@ elif selected_tab == "⚙️ Pengaturan & Master":
             else:
                 st.info("Belum ada data periode yang tercatat di tabel `PERIODE_PPS`.")
 
-    # --- SUB TAB 5: STATUS SISTEM & KESEHATAN DATABASE ---
+    # --- SUB TAB 5: STATUS SISTEM & GENERATOR REPORT WHATSAPP ---
     elif selected_master_sub == "📊 Status & Summary":
         st.markdown(
-            "<h4 style='color: #00ff88;'>📊 Status & Kesehatan Sistem Database</h4>",
+            "<h4 style='color: #00ff88;'>📊 Status Database & Generator Report"
+            " WhatsApp</h4>",
             unsafe_allow_html=True,
         )
 
@@ -4885,12 +4886,6 @@ elif selected_tab == "⚙️ Pengaturan & Master":
 
         # 2. Status Detail Google Sheets & Cache Management
         st.subheader("🛠️ Manajemen Koneksi & Cache Google Sheets")
-        st.info(
-            "💡 Halaman ini memantau status sinkronisasi data lokal aplikasi dengan"
-            " Google Sheets serta menyediakan tombol kontrol untuk memperbarui cache"
-            " jika terjadi perubahan langsung pada spreadsheet."
-        )
-
         col_db1, col_db2 = st.columns(2)
         with col_db1:
             st.markdown("##### 📌 Informasi Sinkronisasi")
@@ -4907,7 +4902,6 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                 "🧹 Bersihkan Cache & Muat Ulang Data", use_container_width=True
             ):
                 try:
-                    # Membersihkan cache Streamlit yang terhubung ke database
                     st.cache_data.clear()
                     st.toast(
                         "✅ Cache berhasil dibersihkan! Data dimuat ulang.", icon="🔄"
@@ -4928,28 +4922,16 @@ elif selected_tab == "⚙️ Pengaturan & Master":
 
         st.markdown("---")
 
-        # =========================================================================
-        # 📦 SYSTEM BACKUP & RECOVERY CENTER (DITAMBAHKAN DI SINI)
-        # =========================================================================
-        st.subheader("📦 Center Backup & Keamanan Database")
-        st.caption(
-            "Fitur ini memungkinkan Anda mencadangkan seluruh data sistem secara"
-            " otomatis maupun mengunduhnya secara manual."
-        )
-
+        # 3. Center Backup & Keamanan Database (MENGGUNAKAN XLSXWRITER)
+        st.subheader("📦 Center Backup Database")
         col_bk1, col_bk2 = st.columns(2)
 
         with col_bk1:
             st.markdown("##### ☁️ Backup Otomatis Google Sheets")
-            st.write(
-                "Sistem secara otomatis menduplikasi data penting ke tab `_BACKUP`"
-                " di Google Sheets saat transaksi disimpan."
-            )
             if st.button(
                 "⚡ Jalankan Backup Otomatis Sekarang", use_container_width=True
             ):
                 try:
-                    # Panggil fungsi backup ke Google Sheets
                     if "backup_to_gsheets" in globals():
                         success = backup_to_gsheets()
                         if success:
@@ -4958,8 +4940,8 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                             )
                         else:
                             st.warning(
-                                "⚠️ Backup selesai, namun pastikan tab `_BACKUP`"
-                                " sudah dibuat di Google Sheets."
+                                "⚠️ Pastikan tab `_BACKUP` sudah dibuat di Google"
+                                " Sheets."
                             )
                     else:
                         st.info(
@@ -4970,14 +4952,9 @@ elif selected_tab == "⚙️ Pengaturan & Master":
 
         with col_bk2:
             st.markdown("##### 📥 Backup Manual File (.xlsx)")
-            st.write(
-                "Unduh seluruh tabel database (PSM, PPS, Master Item & Personil) ke"
-                " dalam 1 file Excel multi-sheet."
-            )
-
             try:
-                # Fungsi inline untuk generate file Excel
                 output_backup = io.BytesIO()
+                # Menggunakan xlsxwriter yang sudah terpasang
                 with pd.ExcelWriter(
                     output_backup, engine="xlsxwriter"
                 ) as backup_writer:
@@ -5016,28 +4993,179 @@ elif selected_tab == "⚙️ Pengaturan & Master":
 
         st.markdown("---")
 
-        # 3. Quick Table Preview (Opsional untuk memastikan data terbaca)
-        st.subheader("📋 Preview Tabel Master Aktif")
-        tab_prev1, tab_prev2 = st.tabs(["Master Items", "Periode Aktif"])
+        # =========================================================================
+        # 4. GENERATOR REPORT SUMMARY WHATSAPP
+        # =========================================================================
+        st.subheader("📲 Generator Report Summary WhatsApp")
+        st.caption(
+            "Pilih filter bulan & periode untuk menghasilkan rangkuman performa PSM"
+            " & PPS yang siap disalin ke grup WhatsApp."
+        )
 
-        with tab_prev1:
-            if (
-                "items_df" in st.session_state
-                and not st.session_state.items_df.empty
-            ):
-                st.dataframe(
-                    st.session_state.items_df.head(10), use_container_width=True
-                )
-            else:
-                st.info("Tidak ada data item master.")
+        # Filter Opsi Bulan
+        col_rep1, col_rep2 = st.columns(2)
+        with col_rep1:
+            bulan_list = [
+                "Januari",
+                "Februari",
+                "Maret",
+                "April",
+                "Mei",
+                "Juni",
+                "Juli",
+                "Agustus",
+                "September",
+                "Oktober",
+                "November",
+                "Desember",
+            ]
+            curr_month_idx = waktu_wib.month - 1
+            selected_month_name = st.selectbox(
+                "📅 Pilih Bulan Report", bulan_list, index=curr_month_idx
+            )
+            selected_month_num = bulan_list.index(selected_month_name) + 1
 
-        with tab_prev2:
-            if (
-                "periods_df" in st.session_state
-                and not st.session_state.periods_df.empty
-            ):
-                st.dataframe(
-                    st.session_state.periods_df, use_container_width=True
+        # Filter Periode PSM Spesifik / Semua Periode Bulan Tersebut
+        psm_periods_df = st.session_state.get("periods_df", pd.DataFrame())
+        psm_opt = ["Seluruh Penjualan 1 Bulan"]
+
+        if not psm_periods_df.empty and "period_name" in psm_periods_df.columns:
+            if "start_date" in psm_periods_df.columns:
+                psm_periods_df["temp_dt"] = pd.to_datetime(
+                    psm_periods_df["start_date"], errors="coerce"
                 )
-            else:
-                st.info("Tidak ada data periode.")
+                m_df = psm_periods_df[
+                    psm_periods_df["temp_dt"].dt.month == selected_month_num
+                ]
+                if not m_df.empty:
+                    psm_opt.extend(m_df["period_name"].dropna().tolist())
+
+        with col_rep2:
+            selected_psm_period_opt = st.selectbox("🎯 Filter Periode PSM", psm_opt)
+
+        btn_gen_summary = st.button(
+            "🚀 Generate Summary WhatsApp",
+            use_container_width=True,
+            type="primary",
+        )
+
+        if btn_gen_summary:
+            # --- A. KALKULASI REKAP PSM ---
+            target_psm_tot = 0
+            actual_psm_tot = 0
+
+            if not psm_periods_df.empty:
+                p_filtered = psm_periods_df.copy()
+                if selected_psm_period_opt != "Seluruh Penjualan 1 Bulan":
+                    p_filtered = p_filtered[
+                        p_filtered["period_name"] == selected_psm_period_opt
+                    ]
+                else:
+                    if "temp_dt" in p_filtered.columns:
+                        p_filtered = p_filtered[
+                            p_filtered["temp_dt"].dt.month == selected_month_num
+                        ]
+
+                if "target_total" in p_filtered.columns:
+                    target_psm_tot = p_filtered["target_total"].fillna(0).sum()
+                if "actual_qty" in p_filtered.columns:
+                    actual_psm_tot = p_filtered["actual_qty"].fillna(0).sum()
+
+            ach_psm = (
+                (actual_psm_tot / target_psm_tot * 100) if target_psm_tot > 0 else 0
+            )
+
+            # --- B. KALKULASI REKAP PPS ---
+            sales_pps_df = st.session_state.get("sales_pps_df", pd.DataFrame())
+
+            syarat_pwp = 0
+            redeem_pwp = 0
+            qty_pwp = 0
+            syarat_sg = 0
+            redeem_sg = 0
+            qty_sg = 0
+
+            if not sales_pps_df.empty and "updated_at" in sales_pps_df.columns:
+                sales_pps_df["dt_temp"] = pd.to_datetime(
+                    sales_pps_df["updated_at"], errors="coerce"
+                )
+                pps_month_df = sales_pps_df[
+                    sales_pps_df["dt_temp"].dt.month == selected_month_num
+                ]
+
+                syarat_pwp = (
+                    pps_month_df["syarat_pwp"].sum()
+                    if "syarat_pwp" in pps_month_df.columns
+                    else 0
+                )
+                redeem_pwp = (
+                    pps_month_df["redeem_pwp"].sum()
+                    if "redeem_pwp" in pps_month_df.columns
+                    else 0
+                )
+                qty_pwp = (
+                    pps_month_df["qty_pwp"].sum()
+                    if "qty_pwp" in pps_month_df.columns
+                    else 0
+                )
+
+                syarat_sg = (
+                    pps_month_df["syarat_sueger"].sum()
+                    if "syarat_sueger" in pps_month_df.columns
+                    else 0
+                )
+                redeem_sg = (
+                    pps_month_df["redeem_sueger"].sum()
+                    if "redeem_sueger" in pps_month_df.columns
+                    else 0
+                )
+                qty_sg = (
+                    pps_month_df["qty_sg"].sum()
+                    if "qty_sg" in pps_month_df.columns
+                    else 0
+                )
+
+            ach_pwp_redeem = (
+                (redeem_pwp / syarat_pwp * 100) if syarat_pwp > 0 else 0
+            )
+            ach_sg_redeem = (
+                (redeem_sg / syarat_sg * 100) if syarat_sg > 0 else 0
+            )
+
+            # Format Teks WhatsApp
+            wa_text = f"""*📊 REPORT SUMMARY PENJUALAN {selected_month_name.upper()} 2026*
+    ----------------------------------------
+    *1. PROGRAM PSM ({selected_psm_period_opt.upper()})*
+    • Target PSM     : {int(target_psm_tot):,} Pcs
+    • Actual Qty     : {int(actual_psm_tot):,} Pcs
+    • Achievement    : *{ach_psm:.1f}%*
+
+    *2. PROGRAM PENJUALAN & KINERJA (PPS)*
+    • *PWP (Pay With Points)*
+    - Syarat Redeem: {int(syarat_pwp):,}
+    - Total Redeem : {int(redeem_pwp):,}
+    - Total Qty    : {int(qty_pwp):,} Pcs
+    - Ach. Redeem  : *{ach_pwp_redeem:.1f}%*
+
+    • *SUEGER / SERBA GRATIS*
+    - Syarat Redeem: {int(syarat_sg):,}
+    - Total Redeem : {int(redeem_sg):,}
+    - Total Qty    : {int(qty_sg):,} Pcs
+    - Ach. Redeem  : *{ach_sg_redeem:.1f}%*
+    ----------------------------------------
+    _Generated automatically via LigaPSM System_
+    """.replace(
+                ",", "."
+            )
+
+            st.markdown("##### 📝 Hasil Text Report (Siap Copas ke WA):")
+            st.text_area(
+                "Salin teks di bawah ini:",
+                wa_text,
+                height=280,
+                key="wa_summary_text_area",
+            )
+            st.success(
+                "✅ Report summary berhasil digenerate! Silakan blok dan salin"
+                " teks di atas."
+            )
