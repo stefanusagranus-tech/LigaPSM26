@@ -3116,7 +3116,7 @@ elif selected_tab == "📝 Input Data":
                             )
             
     # =========================================================================
-    # SUB TAB 2: INPUT SALES PPS
+    # SUB TAB 2: INPUT SALES PPS (LOGIKA TANGGAL FIX)
     # =========================================================================
     elif active_sub_tab == "🎯 Input Sales PPS":
         st.markdown(
@@ -3163,20 +3163,22 @@ elif selected_tab == "📝 Input Data":
 
             today_date = waktu_wib.date()
 
-            # Deteksi Batas Tanggal Promo Aktif dari PERIODE_PPS
-            min_promo_date, max_promo_date = (
-                today_date - timedelta(days=30),
-                today_date + timedelta(days=30),
-            )
-            if not periode_pps_df.empty and all(
-                col in periode_pps_df.columns for col in ["start_date", "end_date"]
+            # --- FIX: AMBIL BATAS TANGGAL DARI PERIODE_PPS ---
+            pps_master_df = st.session_state.get("periods_pps_df", pd.DataFrame())
+
+            min_promo_date = today_date - timedelta(days=30)
+            max_promo_date = today_date + timedelta(days=30)
+
+            if not pps_master_df.empty and all(
+                col in pps_master_df.columns for col in ["start_date", "end_date"]
             ):
                 valid_starts = pd.to_datetime(
-                    periode_pps_df["start_date"], errors="coerce"
+                    pps_master_df["start_date"], errors="coerce"
                 ).dropna()
                 valid_ends = pd.to_datetime(
-                    periode_pps_df["end_date"], errors="coerce"
+                    pps_master_df["end_date"], errors="coerce"
                 ).dropna()
+
                 if not valid_starts.empty and not valid_ends.empty:
                     min_promo_date = valid_starts.min().date()
                     max_promo_date = valid_ends.max().date()
@@ -3220,6 +3222,7 @@ elif selected_tab == "📝 Input Data":
                         "Nama Kasir", all_personnel, key="pps_kasir_dyn"
                     )
 
+                    # Pastikan default_date tidak melebih batas min/max
                     default_date_pps = (
                         min_promo_date
                         if today_date < min_promo_date
@@ -3324,7 +3327,6 @@ elif selected_tab == "📝 Input Data":
 
                 current_max_pps_id += 1
 
-                # Ambil person_id dari master personil
                 p_match = (
                     person_df[person_df["person_name"] == staff_name]
                     if not person_df.empty
@@ -3336,7 +3338,6 @@ elif selected_tab == "📝 Input Data":
                     else "PRS999"
                 )
 
-                # Baris data transaksi baru
                 new_pps_record = {
                     "record_id": f"PPS{current_max_pps_id:05d}",
                     "period_id": "PPS_MULTI",
@@ -3360,16 +3361,15 @@ elif selected_tab == "📝 Input Data":
                         if "sales_pps_df" not in st.session_state:
                             st.session_state.sales_pps_df = pd.DataFrame()
 
-                        # 1. Tambahkan data transaksi ke SALES_PPS
                         st.session_state.sales_pps_df = pd.concat(
                             [st.session_state.sales_pps_df, new_pps_df],
                             ignore_index=True,
                         )
 
-                        # 2. Jalankan Kalkulasi Sinkronisasi ke PERIODE_PPS
+                        # Jalankan sinkronisasi
                         sync_periode_pps_from_sales()
 
-                        # 3. Simpan Ke Database / Google Sheets
+                        # Simpan ke Google Sheets
                         save_database(
                             st.session_state.sales_item_df,
                             st.session_state.sales_person_df,
