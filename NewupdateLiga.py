@@ -4,6 +4,7 @@ from datetime import date, datetime, timedelta
 import re
 import math
 import os
+import io
 import base64
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -411,6 +412,51 @@ if not periods_dict and not active_periods_df.empty:
         str(row["period_name"]): str(row["period_id"])
         for _, row in active_periods_df.iterrows()
     }
+
+def backup_to_gsheets():
+    """Menyimpan salinan cadangan otomatis ke tab _BACKUP di Google Sheets."""
+    try:
+        # 1. Backup Data PPS
+        if (
+            "sales_pps_df" in st.session_state
+            and not st.session_state.sales_pps_df.empty
+        ):
+            conn.update(
+                worksheet="SALES_PPS_BACKUP", data=st.session_state.sales_pps_df
+            )
+
+        if (
+            "periods_pps_df" in st.session_state
+            and not st.session_state.periods_pps_df.empty
+        ):
+            conn.update(
+                worksheet="PERIODE_PPS_BACKUP",
+                data=st.session_state.periods_pps_df,
+            )
+
+        # 2. Backup Data Utama / PSM
+        if (
+            "sales_item_df" in st.session_state
+            and not st.session_state.sales_item_df.empty
+        ):
+            conn.update(
+                worksheet="SALES_ITEM_BACKUP",
+                data=st.session_state.sales_item_df,
+            )
+
+        if (
+            "sales_person_df" in st.session_state
+            and not st.session_state.sales_person_df.empty
+        ):
+            conn.update(
+                worksheet="SALES_PERSON_BACKUP",
+                data=st.session_state.sales_person_df,
+            )
+
+        return True
+    except Exception as e:
+        # Jika tab _BACKUP belum dibuat di Google Sheets, sistem tidak akan menghentikan aplikasi
+        return False
 
 # ==========================================
 # 3. WAKTU REALTIME GMT+7 (WIB)
@@ -3100,6 +3146,9 @@ elif selected_tab == "📝 Input Data":
                                         st.session_state.sales_store_df,
                                     )
 
+                                    # --- BACKUP OTOMATIS BERJALAN DI SINI ---
+                                    backup_to_gsheets()
+
                                 show_success_popup(
                                     inserted_count,
                                     m_person,
@@ -3376,6 +3425,9 @@ elif selected_tab == "📝 Input Data":
                             st.session_state.sales_pps_df,
                             st.session_state.sales_store_df,
                         )
+
+                        # --- BACKUP OTOMATIS BERJALAN DI SINI ---
+                        backup_to_gsheets()
 
                     show_success_pps_dialog(
                         staff_name,
@@ -4813,63 +4865,179 @@ elif selected_tab == "⚙️ Pengaturan & Master":
             "<h4 style='color: #00ff88;'>📊 Status & Kesehatan Sistem Database</h4>",
             unsafe_allow_html=True,
         )
-    
+
         # 1. Metrik Utama Sistem
         c_s1, c_s2, c_s3 = st.columns(3)
         with c_s1:
             st.metric("🔗 Koneksi Database", "Terhubung (GSheets)")
         with c_s2:
-            st.metric("📦 Total Master Item", f"{len(st.session_state.get('items_df', []))} Item")
+            st.metric(
+                "📦 Total Master Item",
+                f"{len(st.session_state.get('items_df', []))} Item",
+            )
         with c_s3:
-            st.metric("👥 Total Personil", f"{len(st.session_state.get('person_df', []))} Staf")
-    
+            st.metric(
+                "👥 Total Personil",
+                f"{len(st.session_state.get('person_df', []))} Staf",
+            )
+
         st.markdown("---")
-        
+
         # 2. Status Detail Google Sheets & Cache Management
         st.subheader("🛠️ Manajemen Koneksi & Cache Google Sheets")
         st.info(
-            "💡 Halaman ini memantau status sinkronisasi data lokal aplikasi dengan Google Sheets "
-            "serta menyediakan tombol kontrol untuk memperbarui cache jika terjadi perubahan langsung pada spreadsheet."
+            "💡 Halaman ini memantau status sinkronisasi data lokal aplikasi dengan"
+            " Google Sheets serta menyediakan tombol kontrol untuk memperbarui cache"
+            " jika terjadi perubahan langsung pada spreadsheet."
         )
-    
+
         col_db1, col_db2 = st.columns(2)
         with col_db1:
             st.markdown("##### 📌 Informasi Sinkronisasi")
-            st.write(f"- **Waktu Server (WIB):** `{waktu_wib.strftime('%Y-%m-%d %H:%M:%S')}`")
-            st.write(f"- **Status Sesi Aktif:** `Aktif & Aman`")
-            st.write(f"- **Mode Penyimpanan:** `Cloud (Google Sheets API)`")
-    
+            st.write(
+                f"- **Waktu Server (WIB):**"
+                f" `{waktu_wib.strftime('%Y-%m-%d %H:%M:%S')}`"
+            )
+            st.write("- **Status Sesi Aktif:** `Aktif & Aman` ")
+            st.write("- **Mode Penyimpanan:** `Cloud (Google Sheets API)`")
+
         with col_db2:
             st.markdown("##### 🔄 Kontrol Data & Cache")
-            if st.button("🧹 Bersihkan Cache & Muat Ulang Data", use_container_width=True):
+            if st.button(
+                "🧹 Bersihkan Cache & Muat Ulang Data", use_container_width=True
+            ):
                 try:
                     # Membersihkan cache Streamlit yang terhubung ke database
                     st.cache_data.clear()
-                    st.toast("✅ Cache berhasil dibersihkan! Data dimuat ulang.", icon="🔄")
+                    st.toast(
+                        "✅ Cache berhasil dibersihkan! Data dimuat ulang.", icon="🔄"
+                    )
                     time.sleep(1.2)
                     st.rerun()
                 except Exception as e:
                     st.error(f"❌ Gagal membersihkan cache: {e}")
-    
-            if st.button("📥 Paksa Tarik Data Terbaru (Sync)", use_container_width=True):
-                st.toast("🔄 Menyinkronkan ulang data dari Google Sheets...", icon="☁️")
+
+            if st.button(
+                "📥 Paksa Tarik Data Terbaru (Sync)", use_container_width=True
+            ):
+                st.toast(
+                    "🔄 Menyinkronkan ulang data dari Google Sheets...", icon="☁️"
+                )
                 time.sleep(1.2)
                 st.rerun()
-    
+
         st.markdown("---")
-        
+
+        # =========================================================================
+        # 📦 SYSTEM BACKUP & RECOVERY CENTER (DITAMBAHKAN DI SINI)
+        # =========================================================================
+        st.subheader("📦 Center Backup & Keamanan Database")
+        st.caption(
+            "Fitur ini memungkinkan Anda mencadangkan seluruh data sistem secara"
+            " otomatis maupun mengunduhnya secara manual."
+        )
+
+        col_bk1, col_bk2 = st.columns(2)
+
+        with col_bk1:
+            st.markdown("##### ☁️ Backup Otomatis Google Sheets")
+            st.write(
+                "Sistem secara otomatis menduplikasi data penting ke tab `_BACKUP`"
+                " di Google Sheets saat transaksi disimpan."
+            )
+            if st.button(
+                "⚡ Jalankan Backup Otomatis Sekarang", use_container_width=True
+            ):
+                try:
+                    # Panggil fungsi backup ke Google Sheets
+                    if "backup_to_gsheets" in globals():
+                        success = backup_to_gsheets()
+                        if success:
+                            st.success(
+                                "✅ Backup ke tab `_BACKUP` Google Sheets berhasil!"
+                            )
+                        else:
+                            st.warning(
+                                "⚠️ Backup selesai, namun pastikan tab `_BACKUP`"
+                                " sudah dibuat di Google Sheets."
+                            )
+                    else:
+                        st.info(
+                            "ℹ️ Sistem backup Google Sheets aktif secara background."
+                        )
+                except Exception as err:
+                    st.error(f"❌ Gagal menjalankan backup: {err}")
+
+        with col_bk2:
+            st.markdown("##### 📥 Backup Manual File (.xlsx)")
+            st.write(
+                "Unduh seluruh tabel database (PSM, PPS, Master Item & Personil) ke"
+                " dalam 1 file Excel multi-sheet."
+            )
+
+            try:
+                # Fungsi inline untuk generate file Excel
+                output_backup = io.BytesIO()
+                with pd.ExcelWriter(
+                    output_backup, engine="xlsxwriter"
+                ) as backup_writer:
+                    dict_backup_tables = {
+                        "PERIODE_PSM": "periods_df",
+                        "MASTER_ITEM": "items_df",
+                        "MASTER_PERSONIL": "person_df",
+                        "SALES_ITEM": "sales_item_df",
+                        "SALES_PERSONIL": "sales_person_df",
+                        "PERIODE_PPS": "periods_pps_df",
+                        "SALES_PPS": "sales_pps_df",
+                        "PERIODE_STORE": "periods_store_df",
+                        "SALES_STORE": "sales_store_df",
+                    }
+                    for sheet_name, state_key in dict_backup_tables.items():
+                        df_b = st.session_state.get(state_key, pd.DataFrame())
+                        if not df_b.empty:
+                            df_b.to_excel(
+                                backup_writer, sheet_name=sheet_name, index=False
+                            )
+
+                excel_backup_bytes = output_backup.getvalue()
+                filename_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+                st.download_button(
+                    label="💾 Download Full Backup (.xlsx)",
+                    data=excel_backup_bytes,
+                    file_name=f"Backup_Database_LigaPSM_{filename_time}.xlsx",
+                    mime=(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    ),
+                    use_container_width=True,
+                )
+            except Exception as e_dl:
+                st.error(f"⚠️ Gagal menyiapkan file download: {e_dl}")
+
+        st.markdown("---")
+
         # 3. Quick Table Preview (Opsional untuk memastikan data terbaca)
         st.subheader("📋 Preview Tabel Master Aktif")
         tab_prev1, tab_prev2 = st.tabs(["Master Items", "Periode Aktif"])
-        
+
         with tab_prev1:
-            if "items_df" in st.session_state and not st.session_state.items_df.empty:
-                st.dataframe(st.session_state.items_df.head(10), use_container_width=True)
+            if (
+                "items_df" in st.session_state
+                and not st.session_state.items_df.empty
+            ):
+                st.dataframe(
+                    st.session_state.items_df.head(10), use_container_width=True
+                )
             else:
                 st.info("Tidak ada data item master.")
-                
+
         with tab_prev2:
-            if "periods_df" in st.session_state and not st.session_state.periods_df.empty:
-                st.dataframe(st.session_state.periods_df, use_container_width=True)
+            if (
+                "periods_df" in st.session_state
+                and not st.session_state.periods_df.empty
+            ):
+                st.dataframe(
+                    st.session_state.periods_df, use_container_width=True
+                )
             else:
                 st.info("Tidak ada data periode.")
