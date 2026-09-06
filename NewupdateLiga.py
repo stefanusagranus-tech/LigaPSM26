@@ -31,262 +31,268 @@ SPREADSHEET_ID = "1kJ-OsjLEsFuNyyBg2TwxlWz8Ape4lwF9h0t66q3ldQk"
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 
-@st.cache_data(ttl=60)
+# Menggunakan cache dengan TTL 300 detik (5 menit) untuk mencegah Quota Limit
+@st.cache_data(ttl=300)
 def load_database():
-  """Membaca data sheet secara bertahap sesuai modul PSM, PPS, dan Store Performance."""
-  try:
-    # 1. Modul PSM & Master Data Umum
-    periods_df = conn.read(worksheet="PERIODE", ttl=0)
-    time.sleep(0.3)
-    items_df = conn.read(worksheet="MASTER_ITEM", ttl=0)
-    time.sleep(0.3)
-    person_df = conn.read(worksheet="MASTER_PERSONIL", ttl=0)
-    time.sleep(0.3)
-    sales_item_df = conn.read(worksheet="SALES_ITEM", ttl=0)
-    time.sleep(0.3)
-    sales_person_df = conn.read(worksheet="SALES_PERSONIL", ttl=0)
-    time.sleep(0.3)
+    """Membaca data sheet secara bertahap sesuai modul PSM, PPS, dan Store Performance."""
+    try:
+        # 1. Modul PSM & Master Data Umum
+        periods_df = conn.read(worksheet="PERIODE")
+        items_df = conn.read(worksheet="MASTER_ITEM")
+        person_df = conn.read(worksheet="MASTER_PERSONIL")
+        sales_item_df = conn.read(worksheet="SALES_ITEM")
+        sales_person_df = conn.read(worksheet="SALES_PERSONIL")
 
-    # 2. Modul PPS
-    periods_pps_df = conn.read(worksheet="PERIODE_PPS", ttl=0)
-    time.sleep(0.3)
-    sales_pps_df = conn.read(worksheet="SALES_PPS", ttl=0)
-    time.sleep(0.3)
+        # 2. Modul PPS
+        periods_pps_df = conn.read(worksheet="PERIODE_PPS")
+        sales_pps_df = conn.read(worksheet="SALES_PPS")
 
-    # 3. Modul Store Performance
-    periods_store_df = conn.read(worksheet="PERIODE_STOREPERFORMANCE", ttl=0)
-    time.sleep(0.3)
-    sales_store_df = conn.read(worksheet="SALES_STOREPERFORMANCE", ttl=0)
+        # 3. Modul Store Performance
+        periods_store_df = conn.read(worksheet="PERIODE_STOREPERFORMANCE")
+        sales_store_df = conn.read(worksheet="SALES_STOREPERFORMANCE")
 
-    # Pembersihan nama kolom menjadi string bersih dan huruf kecil
-    all_dfs = [
-        periods_df,
-        items_df,
-        person_df,
-        sales_item_df,
-        sales_person_df,
-        periods_pps_df,
-        sales_pps_df,
-        periods_store_df,
-        sales_store_df,
-    ]
-    for df in all_dfs:
-      if not df.empty:
-        df.columns = df.columns.astype(str).str.strip().str.lower()
+        # Pembersihan nama kolom menjadi string bersih dan huruf kecil
+        all_dfs = [
+            periods_df,
+            items_df,
+            person_df,
+            sales_item_df,
+            sales_person_df,
+            periods_pps_df,
+            sales_pps_df,
+            periods_store_df,
+            sales_store_df,
+        ]
+        for df in all_dfs:
+            if not df.empty:
+                df.columns = df.columns.astype(str).str.strip().str.lower()
 
-    # Normalisasi tipe data period_id
-    for df in all_dfs:
-      if not df.empty and "period_id" in df.columns:
-        df["period_id"] = df["period_id"].astype(str).str.strip()
+        # Normalisasi tipe data period_id
+        for df in all_dfs:
+            if not df.empty and "period_id" in df.columns:
+                df["period_id"] = df["period_id"].astype(str).str.strip()
 
-    # Normalisasi tipe data item_id
-    for df in [items_df, sales_item_df, sales_person_df]:
-      if not df.empty and "item_id" in df.columns:
-        df["item_id"] = df["item_id"].astype(str).str.strip()
+        # Normalisasi tipe data item_id
+        for df in [items_df, sales_item_df, sales_person_df]:
+            if not df.empty and "item_id" in df.columns:
+                df["item_id"] = df["item_id"].astype(str).str.strip()
 
-    # Normalisasi nama personil
-    for df in [person_df, sales_person_df, sales_pps_df, sales_store_df]:
-      for col in ["person_name", "staff_name", "kasir_name"]:
-        if not df.empty and col in df.columns:
-          df[col] = df[col].astype(str).str.strip().str.upper()
-          df[col] = df[col].str.replace(r"\s+", " ", regex=True)
+        # Normalisasi nama personil
+        for df in [person_df, sales_person_df, sales_pps_df, sales_store_df]:
+            for col in ["person_name", "staff_name", "kasir_name"]:
+                if not df.empty and col in df.columns:
+                    df[col] = df[col].astype(str).str.strip().str.upper()
+                    df[col] = df[col].str.replace(r"\s+", " ", regex=True)
 
-    return (
-        periods_df,
-        periods_pps_df,
-        periods_store_df,
-        items_df,
-        person_df,
-        sales_item_df,
-        sales_person_df,
-        sales_pps_df,
-        sales_store_df,
-    )
-  except Exception as e:
-    st.error(f"Gagal membaca Google Sheets: {e}")
-    return tuple([pd.DataFrame() for _ in range(9)])
+        return (
+            periods_df,
+            periods_pps_df,
+            periods_store_df,
+            items_df,
+            person_df,
+            sales_item_df,
+            sales_person_df,
+            sales_pps_df,
+            sales_store_df,
+        )
+    except Exception as e:
+        st.error(f"Gagal membaca Google Sheets: {e}")
+        return tuple([pd.DataFrame() for _ in range(9)])
 
 
 def save_database(
     sales_item_df, sales_person_df, sales_pps_df, sales_store_df
 ):
-  """Menyimpan data transaksi ke Google Sheets dengan pengaman validasi data kosong."""
-  try:
-    # PENGAMANAN: Blokir penyimpanan jika data transaksi utama mendadak kosong melompong
-    if sales_item_df.empty or sales_person_df.empty:
-      st.warning(
-          "⚠️ Proses simpan dibatalkan: Data transaksi terdeteksi kosong untuk"
-          " mencegah kehilangan data."
-      )
-      return False
+    """Menyimpan data transaksi ke Google Sheets dengan pengaman validasi data kosong."""
+    try:
+        # PENGAMANAN: Blokir penyimpanan jika data transaksi utama mendadak kosong
+        if sales_item_df.empty or sales_person_df.empty:
+            st.warning(
+                "⚠️ Proses simpan dibatalkan: Data transaksi terdeteksi kosong"
+                " untuk mencegah kehilangan data."
+            )
+            return False
 
-    # Proses update bertahap dengan jeda waktu untuk menghindari rate limit API
-    conn.update(worksheet="SALES_ITEM", data=sales_item_df)
-    time.sleep(0.4)
-    conn.update(worksheet="SALES_PERSONIL", data=sales_person_df)
-    time.sleep(0.4)
-    conn.update(worksheet="SALES_PPS", data=sales_pps_df)
-    time.sleep(0.4)
-    conn.update(worksheet="SALES_STOREPERFORMANCE", data=sales_store_df)
+        # Proses update bertahap dengan jeda waktu untuk penulisan
+        conn.update(worksheet="SALES_ITEM", data=sales_item_df)
+        time.sleep(0.4)
+        conn.update(worksheet="SALES_PERSONIL", data=sales_person_df)
+        time.sleep(0.4)
+        conn.update(worksheet="SALES_PPS", data=sales_pps_df)
+        time.sleep(0.4)
+        conn.update(worksheet="SALES_STOREPERFORMANCE", data=sales_store_df)
 
-    st.toast(
-        "Perubahan transaksi tersimpan permanen di Google Sheets!", icon="✅"
-    )
-    return True
-  except Exception as e:
-    st.error(
-        f"❌ Gagal menyimpan transaksi ke Google Sheets (Kemungkinan terkena"
-        f" limit/timeout): {e}"
-    )
-    return False
+        # Hapus cache agar Streamlit membaca data paling baru setelah disimpan
+        st.cache_data.clear()
+
+        st.toast(
+            "Perubahan transaksi tersimpan permanen di Google Sheets!", icon="✅"
+        )
+        return True
+    except Exception as e:
+        st.error(
+            f"❌ Gagal menyimpan transaksi ke Google Sheets (Kemungkinan"
+            f" terkena limit/timeout): {e}"
+        )
+        return False
 
 
 def save_master_table(sheet_name, df_data):
-  """Menyimpan tabel master dengan pengaman validasi data kosong dan urutan kolom."""
-  try:
-    if df_data.empty:
-      st.warning(f"⚠️ Master {sheet_name} batal disimpan karena data kosong.")
-      return False
+    """Menyimpan tabel master dengan pengaman validasi data kosong dan urutan kolom."""
+    try:
+        if df_data.empty:
+            st.warning(
+                f"⚠️ Master {sheet_name} batal disimpan karena data kosong."
+            )
+            return False
 
-    # Penyelarasan urutan kolom khusus untuk MASTER_ITEM agar tidak bergeser
-    if sheet_name == "MASTER_ITEM":
-      expected_cols = ["period_id", "item_id", "item_name", "active", "category"]
-      # Pastikan kolom yang belum ada ditambahkan sebagai string kosong
-      for col in expected_cols:
-        if col not in df_data.columns:
-          df_data[col] = ""
-      # Urutkan DataFrame persis seperti struktur Google Sheets
-      df_data = df_data[expected_cols]
+        # Penyelarasan urutan kolom khusus untuk MASTER_ITEM agar tidak bergeser
+        if sheet_name == "MASTER_ITEM":
+            expected_cols = [
+                "period_id",
+                "item_id",
+                "item_name",
+                "active",
+                "category",
+            ]
+            for col in expected_cols:
+                if col not in df_data.columns:
+                    df_data[col] = ""
+            df_data = df_data[expected_cols]
 
-    conn.update(worksheet=sheet_name, data=df_data)
-    time.sleep(0.3)
-    st.toast(
-        f"Master {sheet_name} berhasil diperbarui di Google Sheets!", icon="✅"
-    )
-    return True
-  except Exception as e:
-    st.error(f"❌ Gagal update master {sheet_name} (Terkena limit API): {e}")
-    return False
+        conn.update(worksheet=sheet_name, data=df_data)
+        time.sleep(0.3)
+
+        # Hapus cache agar perubahan master data langsung terefleksi
+        st.cache_data.clear()
+
+        st.toast(
+            f"Master {sheet_name} berhasil diperbarui di Google Sheets!",
+            icon="✅",
+        )
+        return True
+    except Exception as e:
+        st.error(
+            f"❌ Gagal update master {sheet_name} (Terkena limit API): {e}"
+        )
+        return False
 
 
 def sync_store_sales_from_personnel():
-  if (
-      "sales_person_df" in st.session_state
-      and "sales_item_df" in st.session_state
-  ):
-    sp_df = st.session_state.sales_person_df.copy()
-    si_df = st.session_state.sales_item_df.copy()
+    if (
+        "sales_person_df" in st.session_state
+        and "sales_item_df" in st.session_state
+    ):
+        sp_df = st.session_state.sales_person_df.copy()
+        si_df = st.session_state.sales_item_df.copy()
 
-    req_cols_sp = ["period_id", "item_id", "actual_qty"]
-    req_cols_si = ["period_id", "item_id"]
+        req_cols_sp = ["period_id", "item_id", "actual_qty"]
+        req_cols_si = ["period_id", "item_id"]
 
-    if sp_df.empty or not all(col in sp_df.columns for col in req_cols_sp):
-      return
-    if si_df.empty or not all(col in si_df.columns for col in req_cols_si):
-      return
+        if sp_df.empty or not all(col in sp_df.columns for col in req_cols_sp):
+            return
+        if si_df.empty or not all(col in si_df.columns for col in req_cols_si):
+            return
 
-    sp_df["period_id"] = sp_df["period_id"].astype(str)
-    sp_df["item_id"] = sp_df["item_id"].astype(str)
-    si_df["period_id"] = si_df["period_id"].astype(str)
-    si_df["item_id"] = si_df["item_id"].astype(str)
+        sp_df["period_id"] = sp_df["period_id"].astype(str)
+        sp_df["item_id"] = sp_df["item_id"].astype(str)
+        si_df["period_id"] = si_df["period_id"].astype(str)
+        si_df["item_id"] = si_df["item_id"].astype(str)
 
-    sp_df["actual_qty"] = pd.to_numeric(
-        sp_df["actual_qty"], errors="coerce"
-    ).fillna(0)
-    tot_per_item = (
-        sp_df.groupby(["period_id", "item_id"])["actual_qty"]
-        .sum()
-        .reset_index()
-    )
-    tot_per_item.rename(columns={"actual_qty": "calc_actual_qty"}, inplace=True)
+        sp_df["actual_qty"] = pd.to_numeric(
+            sp_df["actual_qty"], errors="coerce"
+        ).fillna(0)
+        tot_per_item = (
+            sp_df.groupby(["period_id", "item_id"])["actual_qty"]
+            .sum()
+            .reset_index()
+        )
+        tot_per_item.rename(
+            columns={"actual_qty": "calc_actual_qty"}, inplace=True
+        )
 
-    if "calc_actual_qty" in si_df.columns:
-      si_df.drop(columns=["calc_actual_qty"], inplace=True)
+        if "calc_actual_qty" in si_df.columns:
+            si_df.drop(columns=["calc_actual_qty"], inplace=True)
 
-    merged = pd.merge(
-        si_df, tot_per_item, on=["period_id", "item_id"], how="left"
-    )
-    merged["calc_actual_qty"] = merged["calc_actual_qty"].fillna(0)
-    merged["actual_qty"] = merged["calc_actual_qty"]
-    merged.drop(columns=["calc_actual_qty"], inplace=True)
-    st.session_state.sales_item_df = merged
+        merged = pd.merge(
+            si_df, tot_per_item, on=["period_id", "item_id"], how="left"
+        )
+        merged["calc_actual_qty"] = merged["calc_actual_qty"].fillna(0)
+        merged["actual_qty"] = merged["calc_actual_qty"]
+        merged.drop(columns=["calc_actual_qty"], inplace=True)
+        st.session_state.sales_item_df = merged
 
 
 # Inisialisasi Session State Data
 if "data_loaded" not in st.session_state:
-  (
-      p_df,
-      p_pps_df,
-      p_store_df,
-      i_df,
-      pers_df,
-      si_df,
-      sp_df,
-      s_pps_df,
-      s_store_df,
-  ) = load_database()
-  st.session_state.periods_df = p_df
-  st.session_state.periods_pps_df = p_pps_df
-  st.session_state.periods_store_df = p_store_df
-  st.session_state.items_df = i_df
-  st.session_state.person_df = pers_df
-  st.session_state.sales_item_df = si_df
-  st.session_state.sales_person_df = sp_df
-  st.session_state.sales_pps_df = s_pps_df
-  st.session_state.sales_store_df = s_store_df
-  st.session_state.data_loaded = True
+    (
+        p_df,
+        p_pps_df,
+        p_store_df,
+        i_df,
+        pers_df,
+        si_df,
+        sp_df,
+        s_pps_df,
+        s_store_df,
+    ) = load_database()
+    st.session_state.periods_df = p_df
+    st.session_state.periods_pps_df = p_pps_df
+    st.session_state.periods_store_df = p_store_df
+    st.session_state.items_df = i_df
+    st.session_state.person_df = pers_df
+    st.session_state.sales_item_df = si_df
+    st.session_state.sales_person_df = sp_df
+    st.session_state.sales_pps_df = s_pps_df
+    st.session_state.sales_store_df = s_store_df
+    st.session_state.data_loaded = True
+
 
 # --- FUNGSI PEMBANTU BATAS TANGGAL PERIODE ---
 def get_period_date_bounds(p_id):
-  if not periods_df.empty and "period_id" in periods_df.columns:
-    p_match = periods_df[
-        periods_df["period_id"].astype(str).str.strip() == str(p_id).strip()
-    ]
-    if (
-        not p_match.empty
-        and "start_date" in p_match.columns
-        and "end_date" in p_match.columns
-    ):
-      try:
-        p_start = pd.to_datetime(
-            p_match.iloc[0]["start_date"], errors="coerce"
-        ).date()
-        p_end = pd.to_datetime(
-            p_match.iloc[0]["end_date"], errors="coerce"
-        ).date()
-        if not pd.isna(p_start) and not pd.isna(p_end):
-          if p_start > p_end:
-            p_start, p_end = p_end, p_start
-          return p_start, p_end
-      except Exception:
-        pass
-  today = waktu_wib.date()
-  return today.replace(day=1), today
+    periods_df = st.session_state.get("periods_df", pd.DataFrame())
+    if not periods_df.empty and "period_id" in periods_df.columns:
+        p_match = periods_df[
+            periods_df["period_id"].astype(str).str.strip() == str(p_id).strip()
+        ]
+        if (
+            not p_match.empty
+            and "start_date" in p_match.columns
+            and "end_date" in p_match.columns
+        ):
+            try:
+                p_start = pd.to_datetime(
+                    p_match.iloc[0]["start_date"], errors="coerce"
+                ).date()
+                p_end = pd.to_datetime(
+                    p_match.iloc[0]["end_date"], errors="coerce"
+                ).date()
+                if not pd.isna(p_start) and not pd.isna(p_end):
+                    if p_start > p_end:
+                        p_start, p_end = p_end, p_start
+                    return p_start, p_end
+            except Exception:
+                pass
+    today = pd.Timestamp.now().date()
+    return today.replace(day=1), today
+
 
 # --- INISIALISASI GLOBAL PERIODS_DICT ---
 periods_dict = {}
-active_periods_df = (
-    st.session_state.get("periods_df", pd.DataFrame())
-    if not st.session_state.get("periods_df", pd.DataFrame()).empty
-    else (
-        periode_df
-        if "periode_df" in locals() and not periode_df.empty
-        else pd.DataFrame()
-    )
-)
+active_periods_df = st.session_state.get("periods_df", pd.DataFrame())
 
 if not active_periods_df.empty and all(
     col in active_periods_df.columns
     for col in ["period_id", "period_name", "start_date", "end_date"]
 ):
-  for _, row in active_periods_df.iterrows():
-    periods_dict[str(row["period_name"])] = str(row["period_id"])
+    for _, row in active_periods_df.iterrows():
+        periods_dict[str(row["period_name"])] = str(row["period_id"])
 
 if not periods_dict and not active_periods_df.empty:
-  periods_dict = {
-      str(row["period_name"]): str(row["period_id"])
-      for _, row in active_periods_df.iterrows()
-  }
+    periods_dict = {
+        str(row["period_name"]): str(row["period_id"])
+        for _, row in active_periods_df.iterrows()
+    }
 
 # ==========================================
 # 3. WAKTU REALTIME GMT+7 (WIB)
