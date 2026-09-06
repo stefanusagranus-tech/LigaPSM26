@@ -2631,7 +2631,6 @@ elif selected_tab == "📝 Input Data":
                 12: "Desember",
             }
 
-            # Set default pilihan bulan ke bulan berjalan saat ini
             default_month_num = today_date.month
             month_options = list(nama_bulan_dict.values())
             default_month_idx = default_month_num - 1
@@ -2648,7 +2647,7 @@ elif selected_tab == "📝 Input Data":
             ][0]
 
             # -----------------------------------------------------------------
-            # 2. FILTER DAFTAR PERIODE BERDASARKAN BULAN TERPILIH
+            # 2. AMBIL PERIODE MURNI DARI TABEL PERIODE (periods_df)
             # -----------------------------------------------------------------
             tab1_periods_dict = {}
             default_period_key = None
@@ -2658,8 +2657,13 @@ elif selected_tab == "📝 Input Data":
                 for col in ["period_id", "period_name", "start_date", "end_date"]
             ):
                 for _, row in periods_df.iterrows():
-                    p_id = str(row["period_id"])
+                    p_id = (
+                        str(row["period_id"])
+                        .replace(".0", "")
+                        .strip()
+                    )
                     p_name = str(row["period_name"])
+
                     try:
                         p_start = pd.to_datetime(
                             row["start_date"], errors="coerce"
@@ -2674,15 +2678,11 @@ elif selected_tab == "📝 Input Data":
                         if p_start > p_end:
                             p_start, p_end = p_end, p_start
 
-                        # Filter: Masukkan periode hanya jika bulan dimulainya cocok dengan bulan terpilih
+                        # Filter periode yang start_date-nya berada di bulan terpilih
                         if p_start.month == selected_month_num:
-                            max_allowed_date = p_end + timedelta(days=2)
+                            tab1_periods_dict[p_name] = p_id
 
-                            if is_admin or (
-                                p_start <= today_date <= max_allowed_date
-                            ):
-                                tab1_periods_dict[p_name] = p_id
-
+                            # Set default pilihan jika hari ini masuk dalam rentang periode ini
                             if (
                                 p_start <= today_date <= p_end
                                 and default_period_key is None
@@ -2691,11 +2691,11 @@ elif selected_tab == "📝 Input Data":
                     except Exception:
                         continue
 
-            # Fallback jika periode tidak ditemukan pada bulan tersebut
+            # Render Dropdown Periode
             if not tab1_periods_dict:
                 st.warning(
-                    f"⚠️ Tidak ada periode transaksi aktif yang terdaftar pada bulan"
-                    f" **{selected_bulan_name}**."
+                    f"⚠️ Tidak ada periode transaksi yang terdaftar pada tabel"
+                    f" **PERIODE** di bulan **{selected_bulan_name}**."
                 )
                 m_period_name = None
                 m_p_id = None
@@ -2714,7 +2714,7 @@ elif selected_tab == "📝 Input Data":
                 m_p_id = tab1_periods_dict[m_period_name]
 
             # -----------------------------------------------------------------
-            # 3. TENTUKAN BATAS TANGGAL TRANSAKSI SESUAI RENTANG PERIODE
+            # 3. BATAS TANGGAL TRANSAKSI SESUAI RENTANG PERIODE
             # -----------------------------------------------------------------
             if m_p_id:
                 try:
@@ -2744,7 +2744,7 @@ elif selected_tab == "📝 Input Data":
                 )
 
                 # -------------------------------------------------------------
-                # 4. PILIH PERSONIL / USER (DENGAN PROTEKSI ADMIN VS USER)
+                # 4. PILIH PERSONIL / USER (ROLE-BASED)
                 # -------------------------------------------------------------
                 all_personnel = (
                     sorted(person_df["person_name"].dropna().unique().tolist())
@@ -2753,14 +2753,12 @@ elif selected_tab == "📝 Input Data":
                 )
 
                 if is_admin:
-                    # Admin bebas memilih nama staf
                     m_person = st.selectbox(
                         "👤 Pilih Nama Personil / Staf",
                         options=all_personnel,
                         key="multi_person",
                     )
                 else:
-                    # Non-Admin: Selectbox dikunci ke nama akun sendiri
                     if current_user in all_personnel:
                         user_idx = all_personnel.index(current_user)
                     else:
@@ -2776,29 +2774,28 @@ elif selected_tab == "📝 Input Data":
                     )
 
                 # -------------------------------------------------------------
-                # 5. AMBIL ITEM DARI `sales_item_df` BERDASARKAN PERIODE
+                # 5. AMBIL DAFTAR ITEM MURNI DARI TABEL SALES_ITEM (sales_item_df)
                 # -------------------------------------------------------------
                 sales_item_ref = st.session_state.get(
                     "sales_item_df", pd.DataFrame()
                 )
 
-                if (
-                    not sales_item_ref.empty
+                cleaned_sales_period = (
+                    sales_item_ref["period_id"]
+                    .astype(str)
+                    .str.replace(r"\.0$", "", regex=True)
+                    .str.strip()
+                    if not sales_item_ref.empty
                     and "period_id" in sales_item_ref.columns
-                ):
-                    cleaned_sales_period = (
-                        sales_item_ref["period_id"]
-                        .astype(str)
-                        .str.replace(r"\.0$", "", regex=True)
-                        .str.strip()
-                    )
-                    cleaned_target_p_id = re.sub(r"\.0$", "", str(m_p_id)).strip()
+                    else pd.Series()
+                )
+                cleaned_target_p_id = re.sub(r"\.0$", "", str(m_p_id)).strip()
 
-                    filtered_sales_item_df = sales_item_ref[
-                        cleaned_sales_period == cleaned_target_p_id
-                    ]
-                else:
-                    filtered_sales_item_df = pd.DataFrame()
+                filtered_sales_item_df = (
+                    sales_item_ref[cleaned_sales_period == cleaned_target_p_id]
+                    if not sales_item_ref.empty
+                    else pd.DataFrame()
+                )
 
                 items_list = []
                 if (
@@ -2813,7 +2810,7 @@ elif selected_tab == "📝 Input Data":
                     )
 
                 # -------------------------------------------------------------
-                # 6. TAMPILKAN FORM INPUT SALES
+                # 6. FORM INPUT QTY PENJUALAN PRODUK
                 # -------------------------------------------------------------
                 if not items_list:
                     st.warning(
@@ -2856,7 +2853,7 @@ elif selected_tab == "📝 Input Data":
                         )
 
                     # ---------------------------------------------------------
-                    # 7. PROSES PENYIMPANAN DATA
+                    # 7. SIMPAN DATA TRANSAKSI
                     # ---------------------------------------------------------
                     if btn_save:
                         p_match = (
@@ -2892,8 +2889,6 @@ elif selected_tab == "📝 Input Data":
                             input_qty = int(item_data["qty"])
                             if input_qty > 0:
                                 current_max_id += 1
-
-                                # Baris baru Sales Personil
                                 new_rows.append(
                                     {
                                         "record_id": f"SP{current_max_id:05d}",
@@ -2908,10 +2903,9 @@ elif selected_tab == "📝 Input Data":
                                 )
                                 inserted_count += 1
 
-                                # Akumulasi Qty ke sales_item_df
+                                # Akumulasi ke sales_item_df
                                 if "sales_item_df" in st.session_state:
                                     s_item_df = st.session_state.sales_item_df
-
                                     cond = (
                                         s_item_df["period_id"]
                                         .astype(str)
