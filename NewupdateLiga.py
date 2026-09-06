@@ -5064,7 +5064,7 @@ elif selected_tab == "⚙️ Pengaturan & Master":
             ach_sueger = (r_sueger / s_sueger * 100) if s_sueger > 0 else 0
             ach_sg = (r_sg / s_sg * 100) if s_sg > 0 else 0
             ach_ceban = (r_ceban / s_ceban * 100) if s_ceban > 0 else 0
-            ach_qtypwp = (q_pwpn / t_pwp *100) 0 else 0
+            ach_qtypwp = (q_pwp / t_pwp *100) if q_pwp > 0 else 0
 
             # ---------------------------------------------------------------------
             # C. FORMAT TEKS SUMMARY WHATSAPP
@@ -5082,6 +5082,7 @@ elif selected_tab == "⚙️ Pengaturan & Master":
     - Total Redeem : {int(r_pwp):,}
     - Total Qty    : {int(t_pwp):,} Pcs
     - Total Qty    : {int(q_pwp):,} Pcs
+    - Ach. Qty  : *{ach_qtypwp:.1f}%*
     - Ach. Redeem  : *{ach_pwp:.1f}%*
 
     • *SUEGER*
