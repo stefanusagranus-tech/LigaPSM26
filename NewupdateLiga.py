@@ -1925,47 +1925,49 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.markdown("</div>", unsafe_allow_html=True)
 
         # =========================================================================
-        # 📘 JURNAL BURUAN INDIVIDU (SESUAI KOLOM GOOGLE SHEETS)
+        # 📘 JURNAL BURUAN INDIVIDU (SESUAI SESSION STATE & GOOGLE SHEETS)
         # =========================================================================
-        elif st.session_state["campaign_sub_page"] == "view_buku_pencapaian":
+        elif st.session_state.get("campaign_sub_page") == "view_buku_pencapaian":
             
             current_page = st.session_state.get("book_page_number", 1)
-            username_hero = st.session_state.get("username", "RIZKI GUNAWAN") # Sesuaikan dengan nama kasir di sheet
-            periode_aktif = st.session_state.get("periode_aktif", "S01")
+            username_hero = str(st.session_state.get("username", "RIZKI GUNAWAN")).strip().upper()
+            periode_aktif = "S01" # Sesuaikan period_id aktif (misal S01)
 
-            # --- 📥 AMBIL DATAFRAME DARI SESSION STATE ---
-            df_sales_item = st.session_state.get("df_sales_item", pd.DataFrame())
-            sales_personil = st.session_state.get("sales_personil", pd.DataFrame())
+            # --- 📥 AMBIL DATAFRAME DARI SESSION STATE YANG BENAR ---
+            df_sales_item = st.session_state.get("sales_item_df", pd.DataFrame())
+            sales_personil = st.session_state.get("sales_person_df", pd.DataFrame())
+
+            # Normalisasi nama kolom ke lowercase agar aman
+            if not df_sales_item.empty:
+                df_sales_item.columns = df_sales_item.columns.astype(str).str.strip().str.lower()
+            if not sales_personil.empty:
+                sales_personil.columns = sales_personil.columns.astype(str).str.strip().str.lower()
 
             # --- 🔍 1. TARIK TOTAL TARGET KASIR DARI SALES_ITEM ---
             target_kasir_val = 0
-            if not df_sales_item.empty:
-                # Filter berdasarkan period_id
-                df_f_item = df_sales_item[df_sales_item['period_id'] == periode_aktif]
+            if not df_sales_item.empty and 'period_id' in df_sales_item.columns:
+                df_f_item = df_sales_item[df_sales_item['period_id'].astype(str).str.strip() == periode_aktif]
                 if 'target_kasir' in df_f_item.columns:
-                    target_kasir_val = int(df_f_item['target_kasir'].sum())
+                    target_kasir_val = int(pd.to_numeric(df_f_item['target_kasir'], errors='coerce').sum())
 
             # --- 🔍 2. TARIK QTY AKTUAL & RINCIAN ITEM DARI SALES_PERSONIL ---
             qty_penjualan_psm_val = 0
             list_item_tercapai_html = ""
             
-            if not sales_personil.empty:
-                # Filter berdasarkan period_id dan nama personil (person_name)
+            if not sales_personil.empty and 'period_id' in sales_personil.columns and 'person_name' in sales_personil.columns:
                 df_user_sales = sales_personil[
-                    (sales_personil['period_id'] == periode_aktif) & 
-                    (sales_personil['person_name'].str.upper() == username_hero.upper())
+                    (sales_personil['period_id'].astype(str).str.strip() == periode_aktif) & 
+                    (sales_personil['person_name'].str.upper() == username_hero)
                 ]
                 
-                # Hitung total actual_qty kasir tersebut
                 if 'actual_qty' in df_user_sales.columns:
-                    qty_penjualan_psm_val = int(df_user_sales['actual_qty'].sum())
+                    qty_penjualan_psm_val = int(pd.to_numeric(df_user_sales['actual_qty'], errors='coerce').sum())
 
-                # Buat list item tercapai secara dinamis untuk Halaman 3
                 for _, row in df_user_sales.iterrows():
                     nama_item = row.get('item_name', 'Item Quest')
                     qty_aktual = row.get('actual_qty', 0)
-                    status_item = "SUKSES" if qty_aktual > 0 else "BELUM AKTIF"
-                    warna_status = "#16a34a" if qty_aktual > 0 else "#71717a"
+                    status_item = "SUKSES" if pd.to_numeric(qty_aktual, errors='coerce') > 0 else "BELUM AKTIF"
+                    warna_status = "#16a34a" if pd.to_numeric(qty_aktual, errors='coerce') > 0 else "#71717a"
                     list_item_tercapai_html += f'<div class="open-stat-row"><span>📦 {nama_item}</span><span style="color:{warna_status};">{qty_aktual} Qty ({status_item})</span></div>'
             
             if list_item_tercapai_html == "":
@@ -1973,12 +1975,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             # --- 🔍 3. HITUNG RANKING PENJUALAN KASIR ---
             ranking_val = "#RANK -"
-            if not sales_personil.empty and 'actual_qty' in sales_personil.columns:
-                df_ranked = sales_personil[sales_personil['period_id'] == periode_aktif].groupby('person_name')['actual_qty'].sum().reset_index()
+            if not sales_personil.empty and 'actual_qty' in sales_personil.columns and 'period_id' in sales_personil.columns:
+                df_period_sp = sales_personil[sales_personil['period_id'].astype(str).str.strip() == periode_aktif].copy()
+                df_period_sp['actual_qty'] = pd.to_numeric(df_period_sp['actual_qty'], errors='coerce').fillna(0)
+                df_ranked = df_period_sp.groupby('person_name')['actual_qty'].sum().reset_index()
                 df_ranked = df_ranked.sort_values(by='actual_qty', ascending=False).reset_index(drop=True)
                 df_ranked['rank'] = df_ranked.index + 1
                 
-                user_rank_row = df_ranked[df_ranked['person_name'].str.upper() == username_hero.upper()]
+                user_rank_row = df_ranked[df_ranked['person_name'].str.upper() == username_hero]
                 if not user_rank_row.empty:
                     ranking_val = f"#RANK {int(user_rank_row['rank'].values[0])}"
 
@@ -2034,6 +2038,22 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 """,
                 unsafe_allow_html=True
             )
+
+            # --- 🪲 KOTAK DEBUG DATA ---
+            with st.expander("🛠️ Kotak Debug Data (Klik untuk Buka)"):
+                st.write("1. Username Aktif:", username_hero)
+                st.write("2. Bulan Aktif:", st.session_state.get("selected_month", "September"))
+                st.write("--- Isi DataFrame SALES_ITEM ---")
+                if not df_sales_item.empty:
+                    st.dataframe(df_sales_item.head(3))
+                else:
+                    st.warning("DataFrame df_sales_item kosong!")
+                
+                st.write("--- Isi DataFrame SALES_PERSONIL ---")
+                if not sales_personil.empty:
+                    st.dataframe(sales_personil.head(3))
+                else:
+                    st.warning("DataFrame sales_personil kosong!")
 
             # --- 🏛️ TOMBOL NAVIGASI ATAS ---
             if current_page == 1:
