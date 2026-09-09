@@ -2450,220 +2450,114 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # ==============================================================================
         # 🚪 KONDISI 3: BUKU TERBUKA - KITAB MISI GUILD (DENGAN ISOLASI CSS WRAPPER)
         # ==============================================================================
-<<<<<<< HEAD
         import textwrap
-=======
-        import textwrap
-        import streamlit as st
->>>>>>> 40a857e8540a7f7460b59eb2bf0a26cef9207965
 
         if "kitab_misi_page" not in st.session_state:
-            st.session_state["kitab_misi_page"] = 1
+        st.session_state["kitab_misi_page"] = 1
+
+        if "page_direction" not in st.session_state:
+        st.session_state["page_direction"] = "right"
 
         TOTAL_SHEETS = 5
 
-        # 🎨 SUNTIKKAN CSS DENGAN TEMA MEDIEVAL RPG, MEDAL, & ANIMASI BUKA HALAMAN
+        # Menyuntikkan animasi spesifik halaman berdasarkan arah navigasi (Maju/Mundur)
+        dir_anim = st.session_state["page_direction"]
         st.markdown(
-            """
+            f"""
             <style>
-                .kitab-misi-page-wrapper .guild-lobby-title {
-                    text-align: center;
-                    font-family: 'Courier New', monospace;
-                    font-weight: 900;
-                    color: #b45309;
-                    margin-bottom: 2px;
-                    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-                }
-                .kitab-misi-page-wrapper .guild-lobby-sub {
-                    text-align: center;
-                    font-family: 'Courier New', monospace;
-                    font-size: 11px;
-                    color: #78716c;
-                    margin-bottom: 20px;
-                    font-style: italic;
-                }
-
-                /* 🪄 ANIMASI PERUBAHAN HALAMAN BUKU (PAGE TURN EFFECT) */
-                @keyframes pageTurn {
-                    0% {
-                        opacity: 0;
-                        transform: scale(0.97) rotateY(5deg);
-                    }
-                    100% {
-                        opacity: 1;
-                        transform: scale(1) rotateY(0deg);
-                    }
-                }
-
-                .kitab-misi-page-wrapper .rpg-open-book-container {
-                    background: #fdf8f2;
-                    border: 6px solid #3d2b1f;
-                    border-radius: 12px;
-                    box-shadow: 0 20px 40px rgba(0,0,0,0.8), inset 0 0 50px rgba(181, 101, 29, 0.15);
-                    display: flex;
-                    min-height: 400px;
-                    max-height: 420px;
-                    position: relative;
-                    overflow: hidden;
-                    width: 100%;
-                    max-width: 700px;
-                    margin: 0 auto;
-                    animation: pageTurn 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-                    perspective: 1000px;
-                }
-
-                .kitab-misi-page-wrapper .rpg-open-book-container::before {
-                    content: "";
-                    position: absolute;
-                    top: 0;
-                    left: 50%;
-                    width: 6px;
-                    height: 100%;
-                    background: linear-gradient(90deg, rgba(61,43,31,0.5), rgba(20,10,5,0.8), rgba(61,43,31,0.5));
-                    z-index: 5;
-                }
-                .kitab-misi-page-wrapper .rpg-book-page {
-                    width: 50%;
-                    padding: 20px 15px;
-                    box-sizing: border-box;
-                    display: flex;
-                    flex-direction: column;
-                    color: #2b1d0c;
-                    font-family: 'Courier New', monospace;
-                    overflow-y: auto;
-                }
-                .kitab-misi-page-wrapper .open-page-title {
-                    text-align: center;
-                    font-size: 13px;
-                    font-weight: 900;
-                    margin: 0 0 2px 0;
-                    color: #854d0e;
-                    letter-spacing: 0.5px;
-                    text-transform: uppercase;
-                }
-                .kitab-misi-page-wrapper .open-page-subtitle {
-                    text-align: center;
-                    font-size: 9.5px;
-                    color: #78716c;
-                    margin: 0 0 10px 0;
-                    font-style: italic;
-                }
-                .kitab-misi-page-wrapper .open-book-divider {
-                    border-bottom: 2px double #b45309;
-                    margin-bottom: 14px;
-                    width: 100%;
-                    opacity: 0.7;
-                }
-                .kitab-misi-page-wrapper .open-stat-row {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    font-size: 10px;
-                    font-weight: bold;
-                    margin-bottom: 12px;
-                    border-bottom: 1px dashed rgba(133,77,14,0.25);
-                    padding-bottom: 6px;
-                }
-                
-                /* 🏅 KELAS KHUSUS PODIUM & MEDAL */
-                .rank-1 { background: rgba(234, 179, 8, 0.15); border-left: 4px solid #eab308; padding-left: 6px; border-radius: 4px; }
-                .rank-2 { background: rgba(148, 163, 184, 0.15); border-left: 4px solid #94a3b8; padding-left: 6px; border-radius: 4px; }
-                .rank-3 { background: rgba(217, 119, 6, 0.15); border-left: 4px solid #d97706; padding-left: 6px; border-radius: 4px; }
-
-                .kitab-misi-page-wrapper .open-page-footer {
-                    margin-top: auto;
-                    font-size: 9px;
-                    color: #78716c;
-                    text-align: center;
-                    font-weight: bold;
-                    padding-top: 6px;
-                }
-
-                /* ✨ GAYA TOMBOL RPG KULIT UNTUK ST.BUTTON */
-                .kitab-misi-page-wrapper div.stButton > button {
-                    background: linear-gradient(135deg, #3d2b1f 0%, #2b1d0c 100%);
-                    color: #fdf8f2;
-                    border: 2px solid #b45309;
-                    border-radius: 8px;
-                    font-family: 'Courier New', monospace;
-                    font-weight: bold;
-                    box-shadow: 0 4px 6px rgba(0,0,0,0.4);
-                    transition: all 0.2s ease-in-out;
-                }
-                .kitab-misi-page-wrapper div.stButton > button:hover {
-                    background: linear-gradient(135deg, #5c4033 0%, #3d2b1f 100%);
-                    border-color: #d97706;
-                    color: #ffffff;
-                    box-shadow: 0 6px 10px rgba(0,0,0,0.6);
-                }
+                .kitab-misi-page-wrapper .rpg-book-page:nth-child(1) {{
+                    transform-origin: left center !important;
+                    animation: {'flipPageLeft' if dir_anim == 'right' else 'flipPageRight'} 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+                }}
+                .kitab-misi-page-wrapper .rpg-book-page:nth-child(2) {{
+                    transform-origin: right center !important;
+                    animation: {'flipPageRight' if dir_anim == 'right' else 'flipPageLeft'} 0.6s cubic-bezier(0.25, 1, 0.5, 1) 0.1s forwards !important;
+                    opacity: 0;
+                }}
             </style>
-            
-            <!-- 📦 BUKA PEMBUNGKUS UTAMA -->
             <div class="kitab-misi-page-wrapper">
             """,
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
 
         # 🏛️ HEADER UTAMA
-        st.markdown("<h2 class='guild-lobby-title'>📜 KITAB MISI GUILD</h2>", unsafe_allow_html=True)
-        st.markdown("<p class='guild-lobby-sub'>Lembar maklumat rincian target harian dan season toko.</p>", unsafe_allow_html=True)
+        st.markdown(
+            "<h2 class='guild-lobby-title'>📜 KITAB MISI GUILD</h2>",
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            "<p class='guild-lobby-sub'>Lembar maklumat rincian target harian dan season toko.</p>",
+            unsafe_allow_html=True,
+        )
 
         page_num = st.session_state["kitab_misi_page"]
 
         # Navigasi Lembar Buku di Atas
         col_nav1, col_nav2, col_nav3 = st.columns([1, 2, 1])
         with col_nav1:
-            if page_num == 1:
-                if st.button("🚪 TUTUP KITAB", key="btn_close_top", use_container_width=True):
-                    st.session_state["campaign_sub_page"] = "resepsionis_utama"
-                    st.rerun()
-            else:
-                if st.button("⬅️ Sebelumnya", key="prev_sheet", use_container_width=True):
-                    st.session_state["kitab_misi_page"] -= 1
-                    st.rerun()
+        if page_num == 1:
+            if st.button("🚪 TUTUP KITAB", key="btn_close_top", use_container_width=True):
+            st.session_state["campaign_sub_page"] = "resepsionis_utama"
+            st.rerun()
+        else:
+            if st.button("⬅️ Sebelumnya", key="prev_sheet", use_container_width=True):
+            st.session_state["page_direction"] = "left"
+            st.session_state["kitab_misi_page"] -= 1
+            st.rerun()
 
         with col_nav2:
-            st.markdown(f"<p style='text-align:center; color:#854d0e; font-family:monospace; font-weight:bold; font-size:11px; margin-top:8px;'>LEMBAR BUKA KE-{page_num} DARI {TOTAL_SHEETS}</p>", unsafe_allow_html=True)
+        st.markdown(
+            f"<p style='text-align:center; color:#854d0e; font-family:monospace;"
+            f" font-weight:bold; font-size:11px; margin-top:8px;'>LEMBAR BUKA"
+            f" KE-{page_num} DARI {TOTAL_SHEETS}</p>",
+            unsafe_allow_html=True,
+        )
 
         with col_nav3:
-            if page_num < TOTAL_SHEETS:
-                if st.button("Berikutnya ➡️", key="next_sheet", use_container_width=True):
-                    st.session_state["kitab_misi_page"] += 1
-                    st.rerun()
+        if page_num < TOTAL_SHEETS:
+            if st.button("Berikutnya ➡️", key="next_sheet", use_container_width=True):
+            st.session_state["page_direction"] = "right"
+            st.session_state["kitab_misi_page"] += 1
+            st.rerun()
 
         dummy_9_personil = [
-            ("1. Ksatria Arthur", "98 Pcs"), ("2. Lancelot", "92 Pcs"), 
-            ("3. Galahad", "85 Pcs"), ("4. Parsifal", "78 Pcs"), 
-            ("5. Gawain", "70 Pcs"), ("6. Tristan", "65 Pcs"), 
-            ("7. Bors", "60 Pcs"), ("8. Kay", "55 Pcs"), ("9. Bedivere", "50 Pcs")
+            ("1. Ksatria Arthur", "98 Pcs"),
+            ("2. Lancelot", "92 Pcs"),
+            ("3. Galahad", "85 Pcs"),
+            ("4. Parsifal", "78 Pcs"),
+            ("5. Gawain", "70 Pcs"),
+            ("6. Tristan", "65 Pcs"),
+            ("7. Bors", "60 Pcs"),
+            ("8. Kay", "55 Pcs"),
+            ("9. Bedivere", "50 Pcs"),
         ]
 
+
         def format_row(index, name, score):
-            rank_class = ""
-            badge = f"#{index}"
-            if index == 1:
-                rank_class = "rank-1"
-                badge = "👑 1"
-            elif index == 2:
-                rank_class = "rank-2"
-                badge = "🥈 2"
-            elif index == 3:
-                rank_class = "rank-3"
-                badge = "🥉 3"
-            elif index >= 4 and index <= 6:
-                badge = f"🛡️ {index}"
-            else:
-                badge = f"📜 {index}"
-                
-            return f'<div class="open-stat-row {rank_class}"><span style="color:#854d0e;">{badge} | {name}</span><span style="color:#b45309;">{score}</span></div>'
+        rank_class = ""
+        if index == 1:
+            rank_class = "rank-1"
+            badge = "👑 1"
+        elif index == 2:
+            rank_class = "rank-2"
+            badge = "🥈 2"
+        elif index == 3:
+            rank_class = "rank-3"
+            badge = "🥉 3"
+        elif index >= 4 and index <= 6:
+            badge = f"🛡️ {index}"
+        else:
+            badge = f"📜 {index}"
+
+        return f'<div class="open-stat-row {rank_class}"><span style="color:#854d0e;">{badge} | {name}</span><span style="color:#b45309;">{score}</span></div>'
+
 
         if page_num == 1:
-            # --- LEMBAR 1: Kiri = Target Item (1), Kanan = Target Item (2) ---
-            html_open_tugas = textwrap.dedent("""
+        html_open_tugas = textwrap.dedent("""
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page">
                     <h3 class="open-page-title">🎯 TARGET ITEM (1)</h3>
-                    <p class="open-page-subtitle">Daftar Kuota Target Utama</p>
+                    <p class="open-page-sub">Daftar Kuota Target Utama</p>
                     <div class="open-book-divider"></div>
                     <div class="open-stat-row"><span>⚔️ Item A (Special)</span><span>50 Pcs</span></div>
                     <div class="open-stat-row"><span>🛡️ Item B (Rare)</span><span>40 Pcs</span></div>
@@ -2672,7 +2566,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 </div>
                 <div class="rpg-book-page">
                     <h3 class="open-page-title">📦 TARGET ITEM (2)</h3>
-                    <p class="open-page-subtitle">Realisasi Perolehan Item Toko</p>
+                    <p class="open-page-sub">Realisasi Perolehan Item Toko</p>
                     <div class="open-book-divider"></div>
                     <div class="open-stat-row"><span>⚔️ Item A (Special)</span><span style="color:#16a34a;">✨ 48 / 50 Pcs</span></div>
                     <div class="open-stat-row"><span>🛡️ Item B (Rare)</span><span style="color:#dc2626;">⚠️ 35 / 40 Pcs</span></div>
@@ -2683,12 +2577,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             """)
 
         elif page_num == 2:
-            # --- LEMBAR 2: Kiri = Target PPS, Kanan = Posisi Pahlawan ---
-            html_open_tugas = textwrap.dedent("""
+        html_open_tugas = textwrap.dedent("""
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page">
                     <h3 class="open-page-title">🛡️ TARGET PPS</h3>
-                    <p class="open-page-subtitle">Rincian Target Harian PPS</p>
+                    <p class="open-page-sub">Rincian Target Harian PPS</p>
                     <div class="open-book-divider"></div>
                     <div class="open-stat-row"><span>⚡ Target PPS Alpha</span><span>15 Pcs</span></div>
                     <div class="open-stat-row"><span>⚡ Target PPS Beta</span><span>20 Pcs</span></div>
@@ -2697,7 +2590,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 </div>
                 <div class="rpg-book-page">
                     <h3 class="open-page-title">📍 POSISI PAHLAWAN</h3>
-                    <p class="open-page-subtitle">Status Peringkat Guild Anda</p>
+                    <p class="open-page-sub">Status Peringkat Guild Anda</p>
                     <div class="open-book-divider"></div>
                     <div class="open-stat-row"><span>⚔️ RANK PSM</span><span style="color:#16a34a; font-weight:bold;">🥉 Peringkat #3 (92%)</span></div>
                     <div class="open-stat-row"><span>🛡️ RANK PPS</span><span style="color:#d97706; font-weight:bold;">🛡️ Peringkat #5 (85%)</span></div>
@@ -2708,22 +2601,25 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             """)
 
         elif page_num == 3:
-            # --- LEMBAR 3: Kiri = PSM 1-3, Kanan = PSM 4-9 ---
-            rows_psm_13 = "".join([format_row(i+1, n, s) for i, (n, s) in enumerate(dummy_9_personil[:3])])
-            rows_psm_49 = "".join([format_row(i+4, n, s) for i, (n, s) in enumerate(dummy_9_personil[3:])])
-            
-            html_open_tugas = textwrap.dedent(f"""
+        rows_psm_13 = "".join(
+            [format_row(i + 1, n, s) for i, (n, s) in enumerate(dummy_9_personil[:3])]
+        )
+        rows_psm_49 = "".join(
+            [format_row(i + 4, n, s) for i, (n, s) in enumerate(dummy_9_personil[3:])]
+        )
+
+        html_open_tugas = textwrap.dedent(f"""
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page">
                     <h3 class="open-page-title">⚔️ PSM (1-3)</h3>
-                    <p class="open-page-subtitle">Top 3 Pahlawan PSM</p>
+                    <p class="open-page-sub">Top 3 Pahlawan PSM</p>
                     <div class="open-book-divider"></div>
                     {rows_psm_13}
                     <p class="open-page-footer">Halaman Kiri • PSM 1-3</p>
                 </div>
                 <div class="rpg-book-page">
                     <h3 class="open-page-title">⚔️ PSM (4-9)</h3>
-                    <p class="open-page-subtitle">Daftar Lanjutan PSM</p>
+                    <p class="open-page-sub">Daftar Lanjutan PSM</p>
                     <div class="open-book-divider"></div>
                     {rows_psm_49}
                     <p class="open-page-footer">Halaman Kanan • PSM 4-9</p>
@@ -2732,22 +2628,25 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             """)
 
         elif page_num == 4:
-            # --- LEMBAR 4: Kiri = PPS 1-3, Kanan = PPS 4-9 ---
-            rows_pps_13 = "".join([format_row(i+1, n, s) for i, (n, s) in enumerate(dummy_9_personil[:3])])
-            rows_pps_49 = "".join([format_row(i+4, n, s) for i, (n, s) in enumerate(dummy_9_personil[3:])])
-            
-            html_open_tugas = textwrap.dedent(f"""
+        rows_pps_13 = "".join(
+            [format_row(i + 1, n, s) for i, (n, s) in enumerate(dummy_9_personil[:3])]
+        )
+        rows_pps_49 = "".join(
+            [format_row(i + 4, n, s) for i, (n, s) in enumerate(dummy_9_personil[3:])]
+        )
+
+        html_open_tugas = textwrap.dedent(f"""
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page">
                     <h3 class="open-page-title">🛡️ PPS (1-3)</h3>
-                    <p class="open-page-subtitle">Top 3 Pahlawan PPS</p>
+                    <p class="open-page-sub">Top 3 Pahlawan PPS</p>
                     <div class="open-book-divider"></div>
                     {rows_pps_13}
                     <p class="open-page-footer">Halaman Kiri • PPS 1-3</p>
                 </div>
                 <div class="rpg-book-page">
                     <h3 class="open-page-title">🛡️ PPS (4-9)</h3>
-                    <p class="open-page-subtitle">Daftar Lanjutan PPS</p>
+                    <p class="open-page-sub">Daftar Lanjutan PPS</p>
                     <div class="open-book-divider"></div>
                     {rows_pps_49}
                     <p class="open-page-footer">Halaman Kanan • PPS 4-9</p>
@@ -2756,23 +2655,28 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             """)
 
         elif page_num == 5:
-            # --- LEMBAR 5: Kiri = Sueger 1-3, Kanan = Sueger 4-9 ---
-            sueger_data = [(n, f"{int(s.replace(' Pcs',''))+5} Pcs") for n, s in dummy_9_personil]
-            rows_sueger_13 = "".join([format_row(i+1, n, s) for i, (n, s) in enumerate(sueger_data[:3])])
-            rows_sueger_49 = "".join([format_row(i+4, n, s) for i, (n, s) in enumerate(sueger_data[3:])])
-            
-            html_open_tugas = textwrap.dedent(f"""
+        sueger_data = [
+            (n, f"{int(s.replace(' Pcs',''))+5} Pcs") for n, s in dummy_9_personil
+        ]
+        rows_sueger_13 = "".join(
+            [format_row(i + 1, n, s) for i, (n, s) in enumerate(sueger_data[:3])]
+        )
+        rows_sueger_49 = "".join(
+            [format_row(i + 4, n, s) for i, (n, s) in enumerate(sueger_data[3:])]
+        )
+
+        html_open_tugas = textwrap.dedent(f"""
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page">
                     <h3 class="open-page-title">⚡ SUEGER (1-3)</h3>
-                    <p class="open-page-subtitle">Top 3 Poin Sueger</p>
+                    <p class="open-page-sub">Top 3 Poin Sueger</p>
                     <div class="open-book-divider"></div>
                     {rows_sueger_13}
                     <p class="open-page-footer">Halaman Kiri • Sueger 1-3</p>
                 </div>
                 <div class="rpg-book-page">
                     <h3 class="open-page-title">⚡ SUEGER (4-9)</h3>
-                    <p class="open-page-subtitle">Daftar Lanjutan Sueger</p>
+                    <p class="open-page-sub">Daftar Lanjutan Sueger</p>
                     <div class="open-book-divider"></div>
                     {rows_sueger_49}
                     <p class="open-page-footer">Halaman Kanan • Sueger 4-9</p>
