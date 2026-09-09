@@ -2775,8 +2775,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             </div>
             """.format(active_period=active_period, items_html_left=items_html_left, items_html_right=items_html_right)
 
-            st.markdown(html_open_tugas, unsafe_allow_html=True)
-
         elif page_num == 2:
 
             html_open_tugas = """
