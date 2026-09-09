@@ -2355,15 +2355,16 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
     
         # ==============================================================================
-        # 🚪 KONDISI 3: BUKU TERBUKA - KITAB MISI GUILD (CUSTOM DESIGN)
+        # 🚪 KONDISI 3: BUKU TERBUKA - KITAB MISI GUILD (DENGAN ISOLASI CSS WRAPPER)
         # ==============================================================================
         elif st.session_state.get("campaign_sub_page") == "view_buku_tugas":
             
-            # 🎨 STYLING CSS KHUSUS HALAMAN BUKU
+            # 🎨 SUNTIKKAN CSS KHUSUS YANG DIKUNCI HANYA UNTUK KITAB MISI
             st.markdown(
                 """
                 <style>
-                    .guild-lobby-title {
+                    /* 🛡️ CSS ISOLASI: Hanya berlaku di dalam .kitab-misi-page-wrapper */
+                    .kitab-misi-page-wrapper .guild-lobby-title {
                         text-align: center;
                         font-family: 'Courier New', monospace;
                         font-weight: 900;
@@ -2371,7 +2372,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         margin-bottom: 2px;
                         text-shadow: 0 1px 2px rgba(0,0,0,0.2);
                     }
-                    .guild-lobby-sub {
+                    .kitab-misi-page-wrapper .guild-lobby-sub {
                         text-align: center;
                         font-family: 'Courier New', monospace;
                         font-size: 11px;
@@ -2379,7 +2380,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         margin-bottom: 20px;
                         font-style: italic;
                     }
-                    .rpg-open-book-container {
+                    .kitab-misi-page-wrapper .rpg-open-book-container {
                         background: #fdf8f2;
                         border: 6px solid #3d2b1f;
                         border-radius: 12px;
@@ -2393,7 +2394,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         max-width: 650px;
                         margin: 0 auto;
                     }
-                    .rpg-open-book-container::before {
+                    .kitab-misi-page-wrapper .rpg-open-book-container::before {
                         content: "";
                         position: absolute;
                         top: 0;
@@ -2403,7 +2404,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         background: linear-gradient(90deg, rgba(61,43,31,0.5), rgba(20,10,5,0.8), rgba(61,43,31,0.5));
                         z-index: 5;
                     }
-                    .rpg-book-page {
+                    .kitab-misi-page-wrapper .rpg-book-page {
                         width: 50%;
                         padding: 20px 15px;
                         box-sizing: border-box;
@@ -2413,7 +2414,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         font-family: 'Courier New', monospace;
                         overflow-y: auto;
                     }
-                    .open-page-title {
+                    .kitab-misi-page-wrapper .open-page-title {
                         text-align: center;
                         font-size: 13px;
                         font-weight: 900;
@@ -2422,20 +2423,20 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         letter-spacing: 0.5px;
                         text-transform: uppercase;
                     }
-                    .open-page-subtitle {
+                    .kitab-misi-page-wrapper .open-page-subtitle {
                         text-align: center;
                         font-size: 9.5px;
                         color: #78716c;
                         margin: 0 0 10px 0;
                         font-style: italic;
                     }
-                    .open-book-divider {
+                    .kitab-misi-page-wrapper .open-book-divider {
                         border-bottom: 2px double #b45309;
                         margin-bottom: 14px;
                         width: 100%;
                         opacity: 0.7;
                     }
-                    .open-stat-row {
+                    .kitab-misi-page-wrapper .open-stat-row {
                         display: flex;
                         justify-content: space-between;
                         align-items: center;
@@ -2445,7 +2446,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         border-bottom: 1px dashed rgba(133,77,14,0.25);
                         padding-bottom: 6px;
                     }
-                    .open-page-footer {
+                    .kitab-misi-page-wrapper .open-page-footer {
                         margin-top: auto;
                         font-size: 9px;
                         color: #78716c;
@@ -2454,6 +2455,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         padding-top: 6px;
                     }
                 </style>
+                
+                <!-- 📦 BUKA PEMBUNGKUS UTAMA -->
+                <div class="kitab-misi-page-wrapper">
                 """,
                 unsafe_allow_html=True
             )
@@ -2484,6 +2488,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     </div>
                     <p class="open-page-footer">Page 1 • Daily Bulletin</p>
                 </div>
+                
                 <!-- 📄 HALAMAN KANAN: MISI SKALA BESAR -->
                 <div class="rpg-book-page">
                     <h3 class="open-page-title">🏆 SEASON QUESTS</h3>
@@ -2509,6 +2514,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             if st.button("⬅️ TUTUP KITAB MISI", use_container_width=True, key="btn_close_inner_buku2_fixed"):
                 st.session_state["campaign_sub_page"] = "resepsionis_utama"
                 st.rerun()
+
+            # 🔒 TUTUP PEMBUNGKUS UTAMA DIV
+            st.markdown("</div>", unsafe_allow_html=True)
 
             # Memotong eksekusi halaman agar skrip di bawahnya tidak ikut terpanggil
             st.stop()
