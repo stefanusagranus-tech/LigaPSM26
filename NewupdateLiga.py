@@ -2711,7 +2711,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 df_filtered_items = df_item_raw[df_item_raw['Periode'] == active_period]
             else:
                 df_filtered_items = pd.DataFrame()
-
             # Render HTML kartu item interaktif
             items_html_left = ""
             items_html_right = ""
