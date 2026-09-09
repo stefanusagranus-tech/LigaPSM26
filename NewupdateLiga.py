@@ -5014,66 +5014,60 @@ elif selected_tab == "⚙️ Pengaturan & Master":
             ach_psm = (actual_psm_tot / target_psm_tot * 100) if target_psm_tot > 0 else 0
 
             # ---------------------------------------------------------------------
-            # B. LOGIKA PPS (Pencarian fleksibel berdasarkan potongan kata kunci)
+            # B. LOGIKA PPS (Mengambil langsung berdasarkan period_id yang akurat)
             # ---------------------------------------------------------------------
             periods_pps_df = st.session_state.get("periods_pps_df", pd.DataFrame())
             pps_filtered = periods_pps_df.copy()
 
-            if not pps_filtered.empty:
-                if "start_date" in pps_filtered.columns:
-                    pps_filtered["start_date"] = pd.to_datetime(pps_filtered["start_date"], errors="coerce")
-                    pps_date_filtered = pps_filtered[
-                        (pps_filtered["start_date"].dt.month == selected_month_num) & 
-                        (pps_filtered["start_date"].dt.year == waktu_wib.year)
-                    ]
-                    if not pps_date_filtered.empty:
-                        pps_filtered = pps_date_filtered
-
-            def get_pps_metric_flexible(df, keywords, col_name):
-                """Mencari data berdasarkan potongan kata kunci pada kolom period_name"""
-                if df.empty or "period_name" not in df.columns or col_name not in df.columns:
+            def get_pps_by_id(df, p_id, col_name):
+                """Mengambil nilai berdasarkan period_id yang spesifik"""
+                if df.empty or "period_id" not in df.columns or col_name not in df.columns:
                     return 0
-                total = 0
-                for kw in keywords:
-                    mask = df["period_name"].astype(str).str.strip().str.lower().str.contains(kw.lower(), na=False)
-                    sub_df = df[mask]
-                    val = pd.to_numeric(sub_df[col_name], errors="coerce").sum()
-                    if val > 0:
-                        total += val
-                return total
+                sub_df = df[df["period_id"].astype(str).str.strip() == p_id]
+                if sub_df.empty:
+                    return 0
+                return pd.to_numeric(sub_df[col_name], errors="coerce").sum()
 
-            # PWP
-            s_pwp  = get_pps_metric_flexible(pps_filtered, ["pwp"], "syarat_total")
-            r_pwp  = get_pps_metric_flexible(pps_filtered, ["pwp"], "redeem_total")
-            tq_pwp = get_pps_metric_flexible(pps_filtered, ["pwp"], "target_total")
-            q_pwp  = get_pps_metric_flexible(pps_filtered, ["pwp"], "actual_qty")
+            # Kolom redeem di sheet tertulis 'deem_total' (atau 'redeem_total')
+            redeem_col_name = "deem_total" if "deem_total" in pps_filtered.columns else "redeem_total"
+
+            # 1. PWP (period_id: PWP01)
+            s_pwp  = get_pps_by_id(pps_filtered, "PWP01", "syarat_total")
+            r_pwp  = get_pps_by_id(pps_filtered, "PWP01", redeem_col_name)
+            tq_pwp = get_pps_by_id(pps_filtered, "PWP01", "target_total")
+            q_pwp  = get_pps_by_id(pps_filtered, "PWP01", "actual_qty")
 
             ach_pwp_redeem = (r_pwp / s_pwp * 100) if s_pwp > 0 else 0
             ach_pwp_qty    = (q_pwp / tq_pwp * 100) if tq_pwp > 0 else 0
 
-            # SUEGER (Menggunakan potongan kata "sueg" agar "SUEGEER" tetap tertangkap)
-            s_sueger_val = get_pps_metric_flexible(pps_filtered, ["sueg", "suger", "es"], "syarat_total")
-            if s_sueger_val == 0:
-                s_sueger_val = get_pps_metric_flexible(pps_filtered, ["sueg", "suger", "es"], "target_total")
-
-            r_sueger_val = get_pps_metric_flexible(pps_filtered, ["sueg", "suger", "es"], "redeem_total")
+            # 2. SUEGER (period_id: SGR001)
+            s_sueger_val = get_pps_by_id(pps_filtered, "SGR001", "syarat_total")
+            r_sueger_val = get_pps_by_id(pps_filtered, "SGR001", redeem_col_name)
             if r_sueger_val == 0:
-                r_sueger_val = get_pps_metric_flexible(pps_filtered, ["sueg", "suger", "es"], "actual_qty")
-
+                r_sueger_val = get_pps_by_id(pps_filtered, "SGR001", "actual_qty")
             ach_sueger = (r_sueger_val / s_sueger_val * 100) if s_sueger_val > 0 else 0
 
-            # SERBA GRATIS
-            t_sg = get_pps_metric_flexible(pps_filtered, ["serba gratis", "sg", "gratis"], "target_total")
-            q_sg = get_pps_metric_flexible(pps_filtered, ["serba gratis", "sg", "gratis"], "actual_qty")
+            # 3. SERBA GRATIS (period_id: SGS01)
+            t_sg = get_pps_by_id(pps_filtered, "SGS01", "target_total")
+            q_sg = get_pps_by_id(pps_filtered, "SGS01", "actual_qty")
             ach_sg = (q_sg / t_sg * 100) if t_sg > 0 else 0
 
-            # CEMILAN CEBAN
-            t_ceban = get_pps_metric_flexible(pps_filtered, ["cemilan ceban", "ceban", "cemilan"], "target_total")
-            q_ceban = get_pps_metric_flexible(pps_filtered, ["cemilan ceban", "ceban", "cemilan"], "actual_qty")
+            # 4. CEMILAN CEBAN (period_id: CBN01)
+            t_ceban = get_pps_by_id(pps_filtered, "CBN01", "target_total")
+            q_ceban = get_pps_by_id(pps_filtered, "CBN01", "actual_qty")
             ach_ceban = (q_ceban / t_ceban * 100) if t_ceban > 0 else 0
 
             # ---------------------------------------------------------------------
-            # C. FORMAT TEKS SUMMARY WHATSAPP
+            # D. PERHITUNGAN BOBOT POIN PROGRAM
+            # ---------------------------------------------------------------------
+            poin_psm = 20 * (ach_psm / 100)
+            poin_pwp = 25 * (ach_pwp_qty / 100)
+            poin_sg = 30 * (ach_sg / 100)
+            
+            total_poin_didapat = poin_psm + poin_pwp + poin_sg
+
+            # ---------------------------------------------------------------------
+            # E. FORMAT TEKS SUMMARY WHATSAPP
             # ---------------------------------------------------------------------
             wa_text = f"""*📊 REPORT SUMMARY PENJUALAN {selected_month_name.upper()} {waktu_wib.year}*
         ----------------------------------------
@@ -5081,6 +5075,7 @@ elif selected_tab == "⚙️ Pengaturan & Master":
         • Target PSM     : {int(target_psm_tot):,} Pcs
         • Actual Qty     : {int(actual_psm_tot):,} Pcs
         • Achievement    : *{ach_psm:.1f}%*
+        • Poin PSM       : *{poin_psm:.2f}* (Bobot Max: 20)
 
         *2. PROGRAM PENJUALAN & KINERJA (PPS)*
         • *PWP (Pay With Points)*
@@ -5090,6 +5085,7 @@ elif selected_tab == "⚙️ Pengaturan & Master":
         - Total Qty    : {int(q_pwp):,} Pcs
         - Ach. Redeem  : *{ach_pwp_redeem:.1f}%*
         - Ach. Qty     : *{ach_pwp_qty:.1f}%*
+        - Poin PWP     : *{poin_pwp:.2f}* (Bobot Max: 25)
 
         • *SUEGER*
         - Syarat Redeem: {int(s_sueger_val):,}
@@ -5100,20 +5096,19 @@ elif selected_tab == "⚙️ Pengaturan & Master":
         - Target Qty   : {int(t_sg):,} Pcs
         - Actual Qty   : {int(q_sg):,} Pcs
         - Achievement  : *{ach_sg:.1f}%*
+        - Poin SG      : *{poin_sg:.2f}* (Bobot Max: 30)
 
-        • *CEMILAN CEBAN*
-        - Target Qty   : {int(t_ceban):,} Pcs
-        - Actual Qty   : {int(q_ceban):,} Pcs
-        - Achievement  : *{ach_ceban:.1f}%*
+        ----------------------------------------
+        *🏆 TOTAL POIN DIDAPAT: {total_poin_didapat:.2f}*
         ----------------------------------------
         _Generated automatically via LigaPSM System_
         """.replace(",", ".")
 
             st.markdown("##### 📝 Hasil Text Report (Siap Copas ke WA):")
             st.text_area(
-                "Salin teks di bawah ini:",
+                "Salin teks di bawah sini:",
                 wa_text,
-                height=360,
+                height=400,
                 key="wa_summary_text_area",
             )
             st.code(wa_text, language="text")
