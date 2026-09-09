@@ -1931,7 +1931,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             
             current_page = st.session_state.get("book_page_number", 1)
             username_hero = st.session_state.get("username", "RIZKI GUNAWAN") # Sesuaikan dengan nama kasir di sheet
-            periode_aktif = "S01" # Sesuaikan period_id aktif (misal S01 untuk September)
+            periode_aktif = st.session_state.get("periode_aktif", "S01")
 
             # --- 📥 AMBIL DATAFRAME DARI SESSION STATE ---
             df_sales_item = st.session_state.get("df_sales_item", pd.DataFrame())
@@ -2124,7 +2124,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             # --- 🐞 KODE DEBUG SEMENTARA UNTUK MENGECEK DATA ---
             with st.expander("🛠️ Kotak Debug Data (Klik untuk Buka)"):
                 st.write("1. Username Aktif:", username_hero)
-                st.write("2. Bulan Aktif:", st.session_state.get("periode_aktif", "S01")
+                st.write("2. Bulan Aktif:", bulan_aktif)
                 
                 st.write("--- Isi DataFrame SALES_ITEM ---")
                 if not df_sales_item.empty:
