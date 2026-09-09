@@ -2822,7 +2822,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             """
         
         elif page_num == 3:
-            # Halaman 3: Ranking Qty (Periode Aktif) & Akumulasi Achiv Bulan Berjalan dengan Debugging Item
+            # Halaman 3: Ranking Qty (Periode Aktif) & Akumulasi Achiv Bulanan (Groupby Person & Item terlebih dahulu)
             sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
             sales_item_df = st.session_state.get("sales_item_df", pd.DataFrame())
             periods_df = st.session_state.get("periods_df", pd.DataFrame())
@@ -2869,7 +2869,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         if "s0" in pid.lower() or "sep" in pname or "september" in pname:
                             month_period_ids.add(pid)
 
-            # 3. Hitung Akumulasi Item Achiv Bulanan & Catat Detailnya untuk Debugging
+            # 3. Hitung Akumulasi Item Achiv Bulanan dengan menggabungkan baris duplikat per (Personil, Periode, Item)
             achiv_dict = {}
             debug_achiv_records = []
             
@@ -2885,6 +2885,23 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     sp_month["person_name"] = sp_month["person_name"].astype(str).str.strip()
                     sp_month["actual_qty"] = pd.to_numeric(sp_month.get("actual_qty", 0), errors="coerce").fillna(0)
                     
+                    # Cari kolom kunci item di sales_person_df
+                    sp_item_key = None
+                    for k in ["item_id", "item_code", "kode_item", "item_name", "nama_item", "sku"]:
+                        if k in sp_month.columns:
+                            sp_item_key = k
+                            break
+                    
+                    if sp_item_key:
+                        sp_month["clean_item"] = sp_month[sp_item_key].astype(str).str.strip()
+                    else:
+                        sp_month["clean_item"] = "GENERAL"
+
+                    sp_month["clean_pid"] = sp_month["period_id"].astype(str).str.strip() if "period_id" in sp_month.columns else ""
+
+                    # LANGKAH UTAMA: Jumlahkan actual_qty yang terpecah-pecah berdasarkan Personil, Periode, dan Item
+                    aggregated_sales = sp_month.groupby(["person_name", "clean_pid", "clean_item"])["actual_qty"].sum().reset_index()
+
                     # Buat dictionary target dari sales_item_df
                     target_map = {}
                     if not sales_item_df.empty:
@@ -2909,36 +2926,25 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                                 if pd.notna(tval):
                                     target_map[(pid, ival)] = tval
 
-                    sp_item_key = None
-                    for k in ["item_id", "item_code", "kode_item", "item_name", "nama_item", "sku"]:
-                        if k in sp_month.columns:
-                            sp_item_key = k
-                            break
-
-                    for _, row in sp_month.iterrows():
+                    # Evaluasi target berdasarkan total gabungan
+                    for _, row in aggregated_sales.iterrows():
                         p_name = row["person_name"]
-                        act = row["actual_qty"]
-                        pid = str(row.get("period_id", "")).strip()
-                        ival = str(row.get(sp_item_key, "")).strip() if sp_item_key else ""
-                        item_display_name = row.get(sp_item_key, "Unknown Item")
+                        pid = row["clean_pid"]
+                        ival = row["clean_item"]
+                        total_act = row["actual_qty"]
                         
-                        target_val = 0
-                        if (pid, ival) in target_map:
-                            target_val = target_map[(pid, ival)]
-                        elif "target_kasir" in row:
-                            target_val = pd.to_numeric(row["target_kasir"], errors="coerce")
-                        
+                        target_val = target_map.get((pid, ival), 0)
                         if pd.isna(target_val):
                             target_val = 0
 
-                        is_achiv = (act >= target_val and target_val > 0)
+                        is_achiv = (total_act >= target_val and target_val > 0)
                         if is_achiv:
                             achiv_dict[p_name] = achiv_dict.get(p_name, 0) + 1
                             debug_achiv_records.append({
                                 "Personil": p_name,
                                 "Periode": pid,
-                                "Item": ival if ival else item_display_name,
-                                "Actual Qty": act,
+                                "Item": ival,
+                                "Total Actual Qty (Gabungan)": total_act,
                                 "Target Kasir": target_val
                             })
 
@@ -2990,21 +2996,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             </div>
             """.format(active_period=active_period, rows_psm_13=rows_psm_13, rows_psm_49=rows_psm_49)
 
-            # Tampilkan Buku RPG di Streamlit
             st.markdown(html_open_tugas, unsafe_allow_html=True)
 
-            # --- PANEL DEBUGGING: Tampilkan Rincian Item yang Terdeteksi Achiv oleh Sistem ---
-            with st.expander("🔍 Cek Rincian Item Achiv (Debugging Data)", expanded=True):
+            with st.expander("🔍 Cek Rincian Item Achiv (Setelah Digabung)", expanded=False):
                 if debug_achiv_records:
-                    df_debug = pd.DataFrame(debug_achiv_records)
-                    st.dataframe(df_debug, use_container_width=True)
-                    
-                    # Ringkasan per personil
-                    summary_debug = df_debug.groupby("Personil").size().reset_index(name="Total Achiv Terhitung")
-                    st.write("Ringkasan Total Achiv per Personil:")
-                    st.dataframe(summary_debug, use_container_width=True)
+                    st.dataframe(pd.DataFrame(debug_achiv_records), use_container_width=True)
                 else:
-                    st.warning("Tidak ada item yang memenuhi syarat achiv (Actual Qty >= Target Kasir) yang terbaca oleh sistem.")
+                    st.warning("Tidak ada item yang memenuhi syarat achiv.")
 
         elif page_num == 4:
             rows_pps_13 = "".join([format_row(i + 1, n, s) for i, (n, s) in enumerate(dummy_9_personil[:3])])
