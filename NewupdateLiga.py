@@ -2870,8 +2870,20 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 if not sp_month.empty:
                     sp_month["person_name"] = sp_month["person_name"].astype(str).str.strip()
                     sp_month["actual_qty"] = pd.to_numeric(sp_month.get("actual_qty", 0), errors="coerce").fillna(0)
-                    sp_month["target_kasir"] = pd.to_numeric(sp_month.get("target_kasir", 0), errors="coerce").fillna(0)
-                    sp_month["is_achiv"] = sp_month["actual_qty"] >= sp_month["target_kasir"]
+                    
+                    # Deteksi nama kolom target yang tersedia di DataFrame
+                    target_col = None
+                    for col in ["target_kasir", "target_qty", "target", "item_target"]:
+                        if col in sp_month.columns:
+                            target_col = col
+                            break
+                    
+                    if target_col:
+                        sp_month["target_val"] = pd.to_numeric(sp_month[target_col], errors="coerce").fillna(0)
+                    else:
+                        sp_month["target_val"] = 0
+
+                    sp_month["is_achiv"] = sp_month["actual_qty"] >= sp_month["target_val"]
                     
                     grouped_achiv = sp_month.groupby("person_name")["is_achiv"].sum().reset_index()
                     for _, r in grouped_achiv.iterrows():
