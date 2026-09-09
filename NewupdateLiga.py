@@ -2822,7 +2822,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             """
         
         elif page_num == 3:
-            # Halaman 3: Ranking Qty (Periode Aktif) & Akumulasi Achiv Bulan Berjalan (Direct Mapping sales_item_df)
+            # Halaman 3: Ranking Qty (Periode Aktif) & Akumulasi Achiv Bulan Berjalan dengan Debugging Item
             sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
             sales_item_df = st.session_state.get("sales_item_df", pd.DataFrame())
             periods_df = st.session_state.get("periods_df", pd.DataFrame())
@@ -2869,12 +2869,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         if "s0" in pid.lower() or "sep" in pname or "september" in pname:
                             month_period_ids.add(pid)
 
-            # 3. Hitung Akumulasi Item Achiv Bulanan dengan mencocokkan target dari sales_item_df
+            # 3. Hitung Akumulasi Item Achiv Bulanan & Catat Detailnya untuk Debugging
             achiv_dict = {}
+            debug_achiv_records = []
+            
             if not sales_person_df.empty and "person_name" in sales_person_df.columns:
                 sp_month = sales_person_df.copy()
                 
-                # Filter hanya periode bulan September jika ada
+                # Filter periode bulan September
                 if "period_id" in sp_month.columns and month_period_ids:
                     sp_month["clean_pid"] = sp_month["period_id"].astype(str).str.strip()
                     sp_month = sp_month[sp_month["clean_pid"].isin(month_period_ids)]
@@ -2883,25 +2885,23 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     sp_month["person_name"] = sp_month["person_name"].astype(str).str.strip()
                     sp_month["actual_qty"] = pd.to_numeric(sp_month.get("actual_qty", 0), errors="coerce").fillna(0)
                     
-                    # Jika sales_item_df tersedia, buat dictionary target berdasarkan (period_id, item_id/sku)
+                    # Buat dictionary target dari sales_item_df
                     target_map = {}
                     if not sales_item_df.empty:
                         item_df = sales_item_df.copy()
-                        # Cari kolom target kasir di sales_item_df
                         t_col = None
                         for col in item_df.columns:
                             if "target_kasir" in col.lower() or ("target" in col.lower() and "kasir" in col.lower()):
                                 t_col = col
                                 break
                         
+                        it_key = None
+                        for k in ["item_id", "item_code", "kode_item", "item_name", "nama_item", "sku"]:
+                            if k in item_df.columns:
+                                it_key = k
+                                break
+                        
                         if t_col:
-                            # Cari kolom kunci item di sales_item_df
-                            it_key = None
-                            for k in ["item_id", "item_code", "kode_item", "item_name", "nama_item", "sku"]:
-                                if k in item_df.columns:
-                                    it_key = k
-                                    break
-                            
                             for _, r in item_df.iterrows():
                                 pid = str(r.get("period_id", "")).strip()
                                 ival = str(r.get(it_key, "")).strip() if it_key else ""
@@ -2909,22 +2909,19 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                                 if pd.notna(tval):
                                     target_map[(pid, ival)] = tval
 
-                    # Ambil juga kolom kunci item di sales_person_df untuk pencocokan
                     sp_item_key = None
                     for k in ["item_id", "item_code", "kode_item", "item_name", "nama_item", "sku"]:
                         if k in sp_month.columns:
                             sp_item_key = k
                             break
 
-                    # Evaluasi target per baris transaksi kasir
-                    achiv_results = []
                     for _, row in sp_month.iterrows():
                         p_name = row["person_name"]
                         act = row["actual_qty"]
                         pid = str(row.get("period_id", "")).strip()
                         ival = str(row.get(sp_item_key, "")).strip() if sp_item_key else ""
+                        item_display_name = row.get(sp_item_key, "Unknown Item")
                         
-                        # Ambil target kasir dari map atau langsung dari kolom row jika ada
                         target_val = 0
                         if (pid, ival) in target_map:
                             target_val = target_map[(pid, ival)]
@@ -2934,15 +2931,16 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         if pd.isna(target_val):
                             target_val = 0
 
-                        # Dihitung achiv jika actual >= target dan target > 0
-                        is_achiv = 1 if (act >= target_val and target_val > 0) else 0
-                        achiv_results.append({"person_name": p_name, "is_achiv": is_achiv})
-
-                    if achiv_results:
-                        df_achiv = pd.DataFrame(achiv_results)
-                        grouped_achiv = df_achiv.groupby("person_name")["is_achiv"].sum().reset_index()
-                        for _, r in grouped_achiv.iterrows():
-                            achiv_dict[r["person_name"]] = int(r["is_achiv"])
+                        is_achiv = (act >= target_val and target_val > 0)
+                        if is_achiv:
+                            achiv_dict[p_name] = achiv_dict.get(p_name, 0) + 1
+                            debug_achiv_records.append({
+                                "Personil": p_name,
+                                "Periode": pid,
+                                "Item": ival if ival else item_display_name,
+                                "Actual Qty": act,
+                                "Target Kasir": target_val
+                            })
 
             # 4. Gabungkan master personil dengan data qty periode aktif & akumulasi achiv bulanan
             ranking_list = []
@@ -2954,7 +2952,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 a = achiv_dict.get(name, 0)
                 ranking_list.append((name, q, a))
 
-            # Urutkan peringkat berdasarkan total qty periode aktif terbanyak
             ranking_list = sorted(ranking_list, key=lambda x: x[1], reverse=True)
 
             formatted_ranking = []
@@ -2992,6 +2989,22 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 </div>
             </div>
             """.format(active_period=active_period, rows_psm_13=rows_psm_13, rows_psm_49=rows_psm_49)
+
+            # Tampilkan Buku RPG di Streamlit
+            st.markdown(html_open_tugas, unsafe_allow_html=True)
+
+            # --- PANEL DEBUGGING: Tampilkan Rincian Item yang Terdeteksi Achiv oleh Sistem ---
+            with st.expander("🔍 Cek Rincian Item Achiv (Debugging Data)", expanded=True):
+                if debug_achiv_records:
+                    df_debug = pd.DataFrame(debug_achiv_records)
+                    st.dataframe(df_debug, use_container_width=True)
+                    
+                    # Ringkasan per personil
+                    summary_debug = df_debug.groupby("Personil").size().reset_index(name="Total Achiv Terhitung")
+                    st.write("Ringkasan Total Achiv per Personil:")
+                    st.dataframe(summary_debug, use_container_width=True)
+                else:
+                    st.warning("Tidak ada item yang memenuhi syarat achiv (Actual Qty >= Target Kasir) yang terbaca oleh sistem.")
 
         elif page_num == 4:
             rows_pps_13 = "".join([format_row(i + 1, n, s) for i, (n, s) in enumerate(dummy_9_personil[:3])])
