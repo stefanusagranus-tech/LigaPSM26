@@ -2738,7 +2738,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 else:
                     items_html_right += card_markup
 
-            html_open_tugas = f"""
+            html_open_tugas = """
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page rpg-book-page-left">
                     <h3 class="open-page-title">🎯 TARGET ITEM (1)</h3>
