@@ -2687,17 +2687,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # 📄 5. KONTEN PER HALAMAN BUKU (Halaman 1)
         # ==========================================
         if page_num == 1:
-            # 1. Ambil period_id yang aktif berdasarkan periode
             periods_df = st.session_state.get("periods_df", pd.DataFrame())
             target_period_id = ""
-            
             if not periods_df.empty:
                 for _, r in periods_df.iterrows():
                     p_name = str(r.get("period_name", ""))
                     if active_period.lower() in p_name.lower() or p_name.lower() in p_name.lower():
                         target_period_id = str(r.get("period_id", "")).strip()
                         break
-                # Fallback pencocokan tanggal jika nama tidak ketemu
                 if not target_period_id:
                     for _, r in periods_df.iterrows():
                         try:
@@ -2709,7 +2706,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         except Exception:
                             pass
 
-            # 2. Ambil target dari SALES_ITEM difilter berdasarkan period_id
             sales_item_df = st.session_state.get("sales_item_df", pd.DataFrame())
             df_filtered_items = pd.DataFrame()
             if not sales_item_df.empty and target_period_id:
@@ -2717,7 +2713,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             elif not sales_item_df.empty:
                 df_filtered_items = sales_item_df
 
-            # 3. Ambil data aktual penjualan dari SALES_PERSONIL berdasarkan period_id (dijumlahkan per item_id)
             sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
             actual_dict = {}
             if not sales_person_df.empty:
@@ -2728,13 +2723,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             items_html_left = ""
             items_html_right = ""
-
             render_items = []
             if not df_filtered_items.empty:
                 for _, r in df_filtered_items.iterrows():
                     item_id = str(r.get("item_id", "")).strip()
                     name = str(r.get("item_name", "Item Misi"))
-                    # Mengambil kolom target_kasir sesuai permintaan
                     target = int(pd.to_numeric(r.get("target_kasir", r.get("target_qty", 0)), errors="coerce"))
                     aktual = int(actual_dict.get(item_id, 0))
                     render_items.append((name, target, aktual))
@@ -2746,23 +2739,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 gap = itarget - iaktual if itarget > 0 else 0
                 achiv = (iaktual / itarget) * 100 if itarget > 0 else 0
                 is_done = iaktual >= itarget if itarget > 0 else False
-                
                 card_cls = "rpg-item-card completed" if is_done else "rpg-item-card"
-                badge = '<span class="badge-success">✨ SELESAI</span>' if is_done else f'<span class="badge-warning">GAP: {gap}</span>'
+                badge = '<span class="badge-success">✨ SELESAI</span>' if is_done else '<span class="badge-warning">GAP: {}</span>'.format(gap)
                 achiv_color = '#065f46' if is_done else '#92400e'
-                
-                card_markup = """
-                <div class="{card_cls}">
-                    <div>
-                        <div class="item-title">⚔️ {iname} {badge}</div>
-                        <div class="item-stats">Target: {itarget} | Aktual: <b>{iaktual}</b></div>
-                    </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 14px; font-weight: bold; color: {achiv_color};">{achiv:.1f}%</div>
-                    </div>
-                </div>
-                """
-
+                card_markup = '<div class="{}"><div><div class="item-title">⚔️ {} {}</div><div class="item-stats">Target: {} | Aktual: <b>{}</b></div></div><div style="text-align: right;"><div style="font-size: 14px; font-weight: bold; color: {};">{:.1f}%</div></div></div>'.format(card_cls, iname, badge, itarget, iaktual, achiv_color, achiv)
                 if idx % 2 == 0:
                     items_html_left += card_markup
                 else:
@@ -2771,29 +2751,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             if not items_html_right:
                 items_html_right = "<div style='color:#78350f; font-size:12px; text-align:center; margin-top:20px;'><i>Tidak ada item tambahan pada periode ini.</i></div>"
 
-            html_open_tugas = """
-            <div class="rpg-open-book-container">
-                <div class="rpg-book-page rpg-book-page-left">
-                    <h3 class="open-page-title">🎯 TARGET ITEM (1)</h3>
-                    <p class="open-page-sub">Maklumat Target & Achiv ({active_period})</p>
-                    <div class="open-book-divider"></div>
-                    {items_html_left}
-                    <div class="open-page-footer">Halaman Kiri • Item Bagian 1</div>
-                </div>
-                <div class="rpg-book-page rpg-book-page-right">
-                    <h3 class="open-page-title">🎯 TARGET ITEM (2)</h3>
-                    <p class="open-page-sub">Kelanjutan Maklumat Target Item</p>
-                    <div class="open-book-divider"></div>
-                    {items_html_right}
-                    <div class="open-page-footer">Halaman Kanan • Item Bagian 2</div>
-                </div>
-            </div>
-            """
+            html_open_tugas = '<div class="rpg-open-book-container"><div class="rpg-book-page rpg-book-page-left"><h3 class="open-page-title">🎯 TARGET ITEM (1)</h3><p class="open-page-sub">Maklumat Target & Achiv ({})</p><div class="open-book-divider"></div>{}<div class="open-page-footer">Halaman Kiri • Item Bagian 1</div></div><div class="rpg-book-page rpg-book-page-right"><h3 class="open-page-title">🎯 TARGET ITEM (2)</h3><p class="open-page-sub">Kelanjutan Maklumat Target Item</p><div class="open-book-divider"></div>{}<div class="open-page-footer">Halaman Kanan • Item Bagian 2</div></div></div>'.format(active_period, items_html_left, items_html_right)
 
-            # Render menggunakan st.markdown dengan unsafe_allow_html=True agar ter-render sebagai HTML murni
             st.markdown(html_open_tugas, unsafe_allow_html=True)
-
         elif page_num == 2:
+            
             html_open_tugas = """
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page rpg-book-page-left">
