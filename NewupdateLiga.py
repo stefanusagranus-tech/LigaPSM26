@@ -1925,7 +1925,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.markdown("</div>", unsafe_allow_html=True)
 
         # =========================================================================
-        # 📘 JURNAL BURUAN INDIVIDU (PERIODE OTOMATIS BULAN BERJALAN)
+        # 📘 JURNAL BURUAN INDIVIDU (HANYA MENAMPILKAN ITEM YANG TERCAPAI)
         # =========================================================================
         elif st.session_state.get("campaign_sub_page") == "view_buku_pencapaian":
             
@@ -1948,43 +1948,53 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             if not periods_df.empty:
                 periods_df.columns = periods_df.columns.astype(str).str.strip().str.lower()
 
-            # --- 🗓️ DETEKSI PERIODE AKTIF BERDASARKAN BULAN BERJALAN / TANGGAL HARI INI ---
+            # --- 🗓️ AMBIL SELURUH PERIODE DALAM BULAN BERJALAN (1 BULAN PENUH) ---
             today_date = datetime.now().date()
-            periode_aktif = "S01" # Fallback default
-            nama_periode_aktif = "September"
+            current_month = today_date.month
+            current_year = today_date.year
+            
+            list_periode_bulan_ini = []
+            nama_periode_aktif = today_date.strftime("%B %Y")
 
-            if not periods_df.empty and all(col in periods_df.columns for col in ['period_id', 'start_date', 'end_date']):
+            if not periods_df.empty and all(col in periods_df.columns for col in ['period_id', 'start_date']):
                 for _, row in periods_df.iterrows():
                     try:
                         p_start = pd.to_datetime(row['start_date'], errors='coerce').date()
-                        p_end = pd.to_datetime(row['end_date'], errors='coerce').date()
-                        if pd.notna(p_start) and pd.notna(p_end) and (p_start <= today_date <= p_end):
-                            periode_aktif = str(row['period_id']).strip()
-                            if 'period_name' in periods_df.columns:
-                                nama_periode_aktif = str(row['period_name']).strip()
-                            break
+                        if pd.notna(p_start) and p_start.month == current_month and p_start.year == current_year:
+                            p_id = str(row['period_id']).strip()
+                            if p_id not in list_periode_bulan_ini:
+                                list_periode_bulan_ini.append(p_id)
                     except Exception:
                         continue
             
-            # Simpan ke session state agar bisa dibaca bagian lain jika diperlukan
-            st.session_state["periode_aktif"] = periode_aktif
-            st.session_state["selected_month"] = nama_periode_aktif
+            if not list_periode_bulan_ini:
+                list_periode_bulan_ini = ["S01"]
 
-            # --- 🔍 1. TARIK TOTAL TARGET KASIR DARI SALES_ITEM ---
-            target_kasir_val = 0
+            # --- 🔍 1. TARIK TARGET DARI SALES_ITEM BERDASARKAN MASTER ITEM & PERIODE 1 BULAN ---
+            dict_target_item = {}
+            total_target_kasir_bulan = 0
+
             if not df_sales_item.empty and 'period_id' in df_sales_item.columns:
-                df_f_item = df_sales_item[df_sales_item['period_id'].astype(str).str.strip() == periode_aktif]
+                df_f_item = df_sales_item[df_sales_item['period_id'].astype(str).str.strip().isin(list_periode_bulan_ini)]
+                
                 if 'target_kasir' in df_f_item.columns:
-                    target_kasir_val = int(pd.to_numeric(df_f_item['target_kasir'], errors='coerce').sum())
+                    df_f_item['target_kasir'] = pd.to_numeric(df_f_item['target_kasir'], errors='coerce').fillna(0)
+                    total_target_kasir_bulan = int(df_f_item['target_kasir'].sum())
 
-            # --- 🔍 2. TARIK QTY AKTUAL & GROUPING ITEM UNTUK HINDARI DOUBLE ---
+                if 'item_name' in df_f_item.columns and 'target_kasir' in df_f_item.columns:
+                    for _, row in df_f_item.iterrows():
+                        it_name = str(row['item_name']).strip().upper()
+                        tgt_val = pd.to_numeric(row['target_kasir'], errors='coerce') or 0
+                        dict_target_item[it_name] = dict_target_item.get(it_name, 0) + int(tgt_val)
+
+            # --- 🔍 2. TARIK QTY AKTUAL PENJUALAN KASIR & HANYA AMBIL YANG TERCAPAI ---
             qty_penjualan_psm_val = 0
             list_item_tercapai_html = ""
+            jumlah_item_tercapai_count = 0
             
             if not sales_personil.empty and 'period_id' in sales_personil.columns and 'person_name' in sales_personil.columns:
-                # Filter berdasarkan periode aktif dan nama kasir
                 df_user_sales = sales_personil[
-                    (sales_personil['period_id'].astype(str).str.strip() == periode_aktif) & 
+                    (sales_personil['period_id'].astype(str).str.strip().isin(list_periode_bulan_ini)) & 
                     (sales_personil['person_name'].str.upper() == username_hero)
                 ].copy()
                 
@@ -1992,33 +2002,37 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     df_user_sales['actual_qty'] = pd.to_numeric(df_user_sales['actual_qty'], errors='coerce').fillna(0)
                     qty_penjualan_psm_val = int(df_user_sales['actual_qty'].sum())
 
-                    # AGAR TIDAK DOUBLE: Groupby berdasarkan item_name lalu jumlahkan qty-nya
                     if 'item_name' in df_user_sales.columns:
-                        df_grouped_item = df_user_sales.groupby('item_name')['actual_qty'].sum().reset_index()
+                        df_grouped_item = df_user_sales.groupby(df_user_sales['item_name'].astype(str).str.strip().str.upper())['actual_qty'].sum().reset_index()
+                        df_grouped_item.columns = ['item_name', 'actual_qty']
                         
                         for _, row in df_grouped_item.iterrows():
                             nama_item = row['item_name']
                             qty_aktual = int(row['actual_qty'])
                             
-                            # Validasi item tercapai / sukses dengan emoji menarik
-                            if qty_aktual > 0:
-                                emoji_status = "🏆 TARGET TERCAPAI!"
-                                status_item = "SUKSES"
-                                warna_status = "#16a34a"
-                            else:
-                                emoji_status = "📌 BELUM CAPAI"
-                                status_item = "BELUM AKTIF"
-                                warna_status = "#71717a"
+                            target_item_ini = dict_target_item.get(nama_item, 0)
+                            
+                            # Validasi: Hanya masukkan ke HTML jika memenuhi target (tercapai)
+                            is_achieved = False
+                            if target_item_ini > 0 and qty_aktual >= target_item_ini:
+                                is_achieved = True
+                            elif target_item_ini == 0 and qty_aktual > 0:
+                                is_achieved = True
 
-                            list_item_tercapai_html += f'<div class="open-stat-row"><span>📦 {nama_item}</span><span style="color:{warna_status};">{qty_aktual} Qty ({emoji_status})</span></div>'
+                            if is_achieved:
+                                emoji_status = "🏆 TERCAPAI!"
+                                warna_status = "#16a34a"
+                                jumlah_item_tercapai_count += qty_aktual
+                                
+                                list_item_tercapai_html += f'<div class="open-stat-row"><span>📦 {nama_item}</span><span style="color:{warna_status};">{qty_aktual} Qty ({emoji_status})</span></div>'
 
             if list_item_tercapai_html == "":
-                list_item_tercapai_html = '<div class="open-stat-row"><span>📦 BELUM ADA TRANSAKSI</span><span style="color:#71717a;">0 Qty</span></div>'
+                list_item_tercapai_html = '<div class="open-stat-row"><span>📦 BELUM ADA ITEM TERCAPAI</span><span style="color:#71717a;">0 Qty</span></div>'
 
-            # --- 🔍 3. HITUNG RANKING PENJUALAN KASIR ---
+            # --- 🔍 3. HITUNG RANKING PENJUALAN KASIR (BULAN INI) ---
             ranking_val = "#RANK -"
             if not sales_personil.empty and 'actual_qty' in sales_personil.columns and 'period_id' in sales_personil.columns:
-                df_period_sp = sales_personil[sales_personil['period_id'].astype(str).str.strip() == periode_aktif].copy()
+                df_period_sp = sales_personil[sales_personil['period_id'].astype(str).str.strip().isin(list_periode_bulan_ini)].copy()
                 df_period_sp['actual_qty'] = pd.to_numeric(df_period_sp['actual_qty'], errors='coerce').fillna(0)
                 df_ranked = df_period_sp.groupby('person_name')['actual_qty'].sum().reset_index()
                 df_ranked = df_ranked.sort_values(by='actual_qty', ascending=False).reset_index(drop=True)
@@ -2123,10 +2137,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     '</div>'
                     '<div class="rpg-book-page">'
                     '<div class="open-page-title">⚔️ REKAP REPORT ⚔️</div>'
-                    '<div class="open-page-sub">Akumulasi Poin Buruan</div>'
+                    '<div class="open-page-sub">Akumulasi Poin Buruan (1 Bulan)</div>'
                     '<div class="open-book-divider"></div>'
                     f'<div class="open-stat-row" style="margin-top:10px;"><span>QTY PENJUALAN PSM</span><span style="color:#b45309;">{qty_penjualan_psm_val} Pts</span></div>'
-                    f'<div class="open-stat-row"><span>TARGET TERCAPAI</span><span style="color:#16a34a;">{target_kasir_val} Pts</span></div>'
+                    f'<div class="open-stat-row"><span>TARGET TERCAPAI</span><span style="color:#16a34a;">{jumlah_item_tercapai_count} Pts</span></div>'
                     f'<div class="open-stat-row"><span>RANKING PENJUALAN</span><span style="color:#ca8a04; font-weight:900;">{ranking_val}</span></div>'
                     '<div class="open-page-footer" style="margin-top:auto;">- Halaman 2 -</div>'
                     '</div>'
@@ -2138,7 +2152,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     '<div class="rpg-open-book-container rpg-open-book-animated">'
                     '<div class="rpg-book-page">'
                     '<div class="open-page-title">💎 DETAIL ITEM TERCAPAI 💎</div>'
-                    f'<div class="open-page-sub">Rincian Quest ({nama_periode_aktif} / {periode_aktif})</div>'
+                    f'<div class="open-page-sub">Rincian Quest Bulan {nama_periode_aktif}</div>'
                     '<div class="open-book-divider"></div>'
                     f'{list_item_tercapai_html}' 
                     '<div class="open-page-footer">- Halaman 3 -</div>'
@@ -2177,6 +2191,16 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             st.markdown(html_content_pages, unsafe_allow_html=True)
 
+            # --- 🏛️ TOMBOL NAVIGASI BAWAH ---
+            if current_page == 3:
+                if st.button("↺ KEMBALI KE AWAL REPORT (HALAMAN 1)", use_container_width=True, key="btn_desk_nav_reset"):
+                    st.session_state["book_page_number"] = 1
+                    st.rerun()
+            else:
+                if st.button("HALAMAN BERIKUTNYA (BUKA LEMBARAN LAIN) ➔", use_container_width=True, key="btn_desk_nav_next"):
+                    st.session_state["book_page_number"] += 1
+                    st.rerun()
+
             # --- 🐞 KODE DEBUG SEMENTARA UNTUK MENGECEK DATA ---
             with st.expander("🛠️ Kotak Debug Data (Klik untuk Buka)"):
                 st.write("1. Username Aktif:", username_hero)
@@ -2195,16 +2219,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     st.write("Kolom yang tersedia:", sales_personil.columns.tolist())
                 else:
                     st.warning("DataFrame sales_personil kosong atau belum termuat di session_state!")
-
-            # --- 🏛️ 6. TOMBOL NAVIGASI BAWAH ---
-            if current_page == 3:
-                if st.button("↺ KEMBALI KE AWAL REPORT (HALAMAN 1)", use_container_width=True, key="btn_desk_nav_reset"):
-                    st.session_state["book_page_number"] = 1
-                    st.rerun()
-            else:
-                if st.button("HALAMAN BERIKUTNYA (BUKA LEMBARAN LAIN) ➔", use_container_width=True, key="btn_desk_nav_next"):
-                    st.session_state["book_page_number"] += 1
-                    st.rerun()
 
         #==============================================================================================#
         # 🚪 KONDISI 3: BUKU TERBUKA - KITAB MISI GUILD
