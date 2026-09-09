@@ -1923,7 +1923,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 st.session_state.current_camp_menu = "main"
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
-
+         
+         # Memotong eksekusi halaman agar skrip di bawahnya tidak ikut terpanggil
+            st.stop()
+            
         # =========================================================================
         # 📘 JURNAL BURUAN INDIVIDU (PEMISAHAN RANKING: TINGKAT LEVEL = RANKING PPS, RANKING PENJUALAN = RANKING PSM)
         # =========================================================================
@@ -2352,7 +2355,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 if st.button("LEMBAR BERIKUTNYA (BUKA HALAMAN SELANJUTNYA) ➔", use_container_width=True, key="btn_desk_nav_next"):
                     st.session_state["book_page_number"] += 1
                     st.rerun()
-
+            
+            # Memotong eksekusi halaman agar skrip di bawahnya tidak ikut terpanggil
+            st.stop()
     
         # ==============================================================================
         # 🚪 KONDISI 3: BUKU TERBUKA - KITAB MISI GUILD (DENGAN ISOLASI CSS WRAPPER)
