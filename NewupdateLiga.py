@@ -2800,20 +2800,20 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             """
 
         elif page_num == 3:
-            # Halaman 3: Ranking PSM Bulanan (Akumulasi 1 Bulan berdasarkan SALES_PERSONIL)
+            # Halaman 3: Ranking PSM berdasarkan Periode Aktif
             sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
             ranking_list = []
 
             if not sales_person_df.empty and "person_name" in sales_person_df.columns:
-                # Filter berdasarkan bulan/periode jika kolom tanggal atau periode tersedia, 
-                # atau ambil keseluruhan data sales_person_df untuk akumulasi bulanan
-                sp_month_df = sales_person_df.copy()
-                
-                if "actual_qty" in sp_month_df.columns:
-                    sp_month_df["actual_qty"] = pd.to_numeric(sp_month_df["actual_qty"], errors="coerce").fillna(0)
-                    # Akumulasi total actual_qty per person_name
-                    grouped_psm = sp_month_df.groupby("person_name")["actual_qty"].sum().reset_index()
-                    # Urutkan dari yang terbesar ke terkecil
+                # Filter berdasarkan period_id yang sedang aktif
+                sp_filtered = sales_person_df.copy()
+                if target_period_id and "period_id" in sp_filtered.columns:
+                    sp_filtered = sp_filtered[sp_filtered["period_id"].astype(str).str.strip() == target_period_id]
+
+                if not sp_filtered.empty and "actual_qty" in sp_filtered.columns:
+                    sp_filtered["actual_qty"] = pd.to_numeric(sp_filtered["actual_qty"], errors="coerce").fillna(0)
+                    # Akumulasi actual_qty per person_name dalam periode aktif
+                    grouped_psm = sp_filtered.groupby("person_name")["actual_qty"].sum().reset_index()
                     grouped_psm = grouped_psm.sort_values(by="actual_qty", ascending=False)
                     
                     for _, r in grouped_psm.iterrows():
@@ -2821,11 +2821,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         p_score = int(r.get("actual_qty", 0))
                         ranking_list.append((p_name, "{} Pcs".format(p_score)))
 
-            # Fallback ke dummy data jika data kosong
+            # Fallback ke dummy data jika data pada periode ini kosong
             if not ranking_list:
                 ranking_list = dummy_9_personil
 
-            # Bagi menjadi Top 1-3 dan sisanya (4-9 atau seterusnya)
+            # Bagi menjadi Top 1-3 dan sisanya (4-9)
             top_3_data = ranking_list[:3]
             rest_data = ranking_list[3:]
 
@@ -2833,26 +2833,26 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             rows_psm_49 = "".join([format_row(i + 4, n, s) for i, (n, s) in enumerate(rest_data)])
 
             if not rows_psm_49:
-                rows_psm_49 = "<div style='color:#78350f; font-size:12px; text-align:center; margin-top:20px;'><i>Belum ada data peringkat lanjutan.</i></div>"
+                rows_psm_49 = "<div style='color:#78350f; font-size:12px; text-align:center; margin-top:20px;'><i>Belum ada data peringkat lanjutan pada periode ini.</i></div>"
 
             html_open_tugas = """
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page rpg-book-page-left">
                     <h3 class="open-page-title">⚔️ PSM TOP (1-3)</h3>
-                    <p class="open-page-sub">Akumulasi Bulanan: {current_month_name}</p>
+                    <p class="open-page-sub">Periode: {active_period}</p>
                     <div class="open-book-divider"></div>
                     {rows_psm_13}
                     <div class="open-page-footer">Halaman Kiri • PSM 1-3</div>
                 </div>
                 <div class="rpg-book-page rpg-book-page-right">
                     <h3 class="open-page-title">⚔️ PSM (4-9)</h3>
-                    <p class="open-page-sub">Kelanjutan Peringkat Bulanan</p>
+                    <p class="open-page-sub">Kelanjutan Peringkat Periode</p>
                     <div class="open-book-divider"></div>
                     {rows_psm_49}
                     <div class="open-page-footer">Halaman Kanan • PSM 4-9</div>
                 </div>
             </div>
-            """.format(current_month_name=current_month_name, rows_psm_13=rows_psm_13, rows_psm_49=rows_psm_49)
+            """.format(active_period=active_period, rows_psm_13=rows_psm_13, rows_psm_49=rows_psm_49)
 
         elif page_num == 4:
             rows_pps_13 = "".join([format_row(i + 1, n, s) for i, (n, s) in enumerate(dummy_9_personil[:3])])
