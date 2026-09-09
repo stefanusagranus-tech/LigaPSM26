@@ -2127,7 +2127,26 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     '</div>'
                 )
 
-            st.markdown(html_content_pages, unsafe_allow_html=True)
+            # --- 🐞 KODE DEBUG SEMENTARA UNTUK MENGECEK DATA ---
+            with st.expander("🛠️ Kotak Debug Data (Klik untuk Buka)"):
+                st.write("1. Username Aktif:", username_hero)
+                st.write("2. Bulan Aktif:", bulan_aktif)
+                
+                st.write("--- Isi DataFrame SALES_ITEM ---")
+                if not df_sales_item.empty:
+                    st.dataframe(df_sales_item)
+                    st.write("Kolom yang tersedia:", df_sales_item.columns.tolist())
+                else:
+                    st.warning("DataFrame df_sales_item kosong atau belum termuat di session_state!")
+                    
+                st.write("--- Isi DataFrame SALES_PERSONIL ---")
+                if not sales_personil.empty:
+                    st.dataframe(sales_personil)
+                    st.write("Kolom yang tersedia:", sales_personil.columns.tolist())
+                else:
+                    st.warning("DataFrame sales_personil kosong atau belum termuat di session_state!")    
+
+                        st.markdown(html_content_pages, unsafe_allow_html=True)
 
             # --- 🏛️ 6. TOMBOL NAVIGASI BAWAH ---
             if current_page == 3:
