@@ -2403,7 +2403,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         import streamlit as st
         import textwrap
 
-       # ==========================================
+        # ==========================================
         # 🎨 1. SUNTIKAN CSS (BACKGROUND SISIK/NAGA BARU & WATERMARK KERTAS)
         # ==========================================
         st.markdown("""
@@ -2783,6 +2783,208 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             """
 
         st.markdown(html_open_tugas, unsafe_allow_html=True)
+        st.stop()
+
+    #===============================================================================#
+     # ⛺ JALUR C: BERANDA UTAMA 3 KARTU CAMP (YANG HARUSNYA MUNCUL DI AWAL)
+    #==============================================================================#
+    elif st.session_state["current_camp_menu"] == "main":
+        st.markdown(
+            """
+            <style>
+                .main .block-container { background-color: #0b0f19 !important; min-height: 100vh !important; max-width: 800px !important; margin: 0 auto !important; padding-top: 5% !important; padding-left: 20px !important; padding-right: 20px !important; box-sizing: border-box !important; }
+                [data-testid="stSidebar"] { display: none !important; }
+                [data-testid="stHeader"] { display: none !important; }
+                div[data-testid="stColumn"] { display: flex !important; flex-direction: column !important; justify-content: flex-start !important; align-items: stretch !important; }
+                .camp-card { background: linear-gradient(135deg, #131926 0%, #1e2638 100%); border: 2px solid #b45309; border-bottom: none; border-radius: 12px 12px 0 0; padding: 24px; text-align: center; position: relative; box-shadow: 0 4px 15px rgba(180, 83, 9, 0.15); flex-grow: 1; }
+                .camp-card-full { background: linear-gradient(135deg, #131926 0%, #1e2638 100%); border: 2px solid #b45309; border-bottom: none; border-radius: 12px 12px 0 0; padding: 24px; text-align: center; position: relative; box-shadow: 0 4px 15px rgba(180, 83, 9, 0.15); width: 100%; box-sizing: border-box; margin-top: 20px; }
+                .camp-icon { font-size: 45px; margin-bottom: 12px; filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.4)); }
+                .camp-title { color: #fef08a; font-family: monospace; font-size: 16px; font-weight: 800; margin-bottom: 8px; letter-spacing: 1px; }
+                .camp-desc { color: #94a3b8; font-family: monospace; font-size: 12px; line-height: 1.5; margin-bottom: 5px; }
+                div.stButton { margin: 0 !important; padding: 0 !important; display: block !important; width: 100% !important; }
+                div.stButton > button { background: rgba(180, 83, 9, 0.15) !important; color: #fef08a !important; border: 2px solid #b45309 !important; border-top: 1px solid rgba(180, 83, 9, 0.3) !important; border-radius: 0 0 12px 12px !important; font-family: monospace !important; font-size: 13px !important; font-weight: 700 !important; padding: 12px 0px !important; width: 100% !important; box-sizing: border-box !important; margin: 0 !important; }
+                div.stButton > button:hover { background: #b45309 !important; color: #0b0f19 !important; box-shadow: 0 4px 12px rgba(180, 83, 9, 0.4) !important; }
+                .leave-camp-box div.stButton { margin-top: 40px !important; }
+                .leave-camp-box div.stButton > button { border-radius: 10px !important; background: rgba(239, 68, 68, 0.1) !important; color: #ef4444 !important; border: 1px solid rgba(239, 68, 68, 0.4) !important; }
+                .leave-camp-box div.stButton > button:hover { background: #ef4444 !important; color: white !important; box-shadow: 0 0 15px rgba(239, 68, 68, 0.5) !important; }
+                @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+                .spark { position: absolute; border-radius: 50%; border: 2px solid #ef4444; box-sizing: border-box; }
+                .circle1 { width: 120px; height: 120px; animation: explode 1.6s infinite linear; filter: drop-shadow(0 0 10px #f97316); }
+                .circle2 { width: 140px; height: 140px; animation: explode 1.6s infinite linear; animation-delay: 0.8s; filter: drop-shadow(0 0 10px #ef4444); }
+                @keyframes strike { 0%, 100% { transform: scale(1) translateY(0); } 50% { transform: scale(0.9) translateY(8px); filter: drop-shadow(0 0 25px #fbbf24); } }
+                @keyframes explode { 0% { transform: scale(0.3); opacity: 1; border-style: solid; } 50% { border-style: dashed; } 100% { transform: scale(1.1); opacity: 0; border-style: dotted; } }
+            </style>
+            """, 
+            unsafe_allow_html=True
+        )
+
+        st.markdown("<h1 style='color: #f59e0b; font-family: monospace; font-size: 32px; text-shadow: 0 0 15px rgba(245,158,11,0.4); text-align: center; margin-bottom: 5px;'>⛺ PREPARATION CAMP ⛺</h1>", unsafe_allow_html=True)
+        col_camp1, col_camp2, col_camp3 = st.columns(3)
+    
+        #================
+        #Kartu nama anjay#
+        #================
+        with col_camp1:
+            st.markdown("<div class='camp-card'><div class='camp-icon'>📜</div><div class='camp-title'>ANGGOTA GUILD</div><div class='camp-desc'>Buka gulungan piagam untuk memeriksa status level, poin atribut, dan rapor performa penjualan individu Anda.</div></div>", unsafe_allow_html=True)
+            if st.button("Lihat Status ➔", use_container_width=True, key="btn_camp_status"):
+                placeholder = st.empty()
+                with placeholder.container():
+                    # --- LAYAR LOADING FULLSCREEN: RITUAL PENCATATAN NAMA HERO (ANTI-STUCK) ---
+                    st.markdown(
+                        """
+                        <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
+                            <div class="magic-portal-container" style="position: relative; width: 150px; height: 150px; display: flex; justify-content: center; align-items: center;">
+                                <!-- Efek Ring Sihir Emas Berpusing Pelan -->
+                                <svg width="160" height="160" viewBox="0 0 160 160" style="position: absolute;">
+                                    <circle cx="80" cy="80" r="70" stroke="#d97706" stroke-width="2" stroke-dasharray="8, 6" fill="none" style="transform-origin: 80px 80px; animation: spin-clockwise 10s infinite linear;" />
+                                    <circle cx="80" cy="80" r="50" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="3, 4" fill="none" style="transform-origin: 80px 80px; animation: spin-counter 6s infinite linear;" />
+                                </svg>
+                                <div style="font-size: 50px; filter: drop-shadow(0 0 12px #d97706); animation: pulse-core 2s infinite ease-in-out;">📜</div>
+                            </div>
+                            <h1 style='color: #fbbf24; font-family: monospace; animation: blink 1.5s infinite; font-size: 22px; margin-top: 40px; letter-spacing: 2px; text-shadow: 0 0 15px rgba(251,191,36,0.4);'>RECORDING HERO NAME...</h1>
+                            <p style='color: #475569; font-size: 13px; margin-top: 5px; font-family: monospace;'>Reading spreadsheet registry and stabilizing guild roster...</p>
+                            <style>
+                                @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+                                [data-testid="stSidebar"] { display: none !important; }
+                                [data-testid="stHeader"] { display: none !important; }
+                                @keyframes spin-clockwise { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                                @keyframes spin-counter { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+                                @keyframes pulse-core { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+                            </style>
+                        </div>
+                        """, 
+                        unsafe_allow_html=True
+                    )
+                    # Menjalankan bar simulasi pemuatan selama ~3 detik
+                    progress_bar = st.progress(0)
+                    for percent_complete in range(100):
+                        time.sleep(0.03) 
+                        progress_bar.progress(percent_complete + 1)
+                
+                placeholder.empty()
+                # Nyalakan status sub-menu dan segarkan halaman untuk menampilkan Back Card
+                st.session_state.current_camp_menu = "status"
+                st.rerun()
+                
+        with col_camp2:
+            st.markdown("<div class='camp-card'><div class='camp-icon'>🎯</div><div class='camp-title'>QUIZ CAMPAIGN</div><div class='camp-desc'>Cek papan pengumuman untuk melihat quest musiman, tugas mingguan PSM, serta daily target buruan Anda.</div></div>", unsafe_allow_html=True)
+            if st.button("Ambil Quest ➔", use_container_width=True, key="btn_camp_quest"):
+                placeholder_loading = st.empty()
+                with placeholder_loading.container():
+                    # 🧙‍♂️ RITUAL LOADING FULLSCREEN: LINGKARAN SIHIR + PENCATATAN BUKU GAIB
+                    st.markdown(
+                        """
+                        <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
+                            <!-- LINGKARAN SIHIR VEKTOR BERPENDAR NEON -->
+                            <div class="magic-circle-container" style="position: relative; width: 200px; height: 100px; display: flex; justify-content: center; align-items: center;">
+                                <svg width="200" height="200" viewBox="0 0 200 200" style="position: absolute; top: -50px;">
+                                    <circle cx="100" cy="100" r="90" class="vector-glow" stroke="#00f0ff" stroke-width="3" stroke-dasharray="15, 10" fill="none" />
+                                    <circle cx="100" cy="100" r="65" class="vector-glow-inner" stroke="#a855f7" stroke-width="2" stroke-dasharray="4, 6" fill="none" />
+                                    <polygon points="100,25 165,140 35,140" stroke="#fbbf24" stroke-width="1.5" fill="none" class="vector-glow" style="transform-origin: 100px 100px; animation: spin-clockwise 12s infinite linear;" />
+                                </svg>
+                                <!-- EMOJI BUKU BERPUTAR DI TENGAH SEGITIGA SIHIR -->
+                                <div class="magic-core-book" style="position: absolute; font-size: 55px; filter: drop-shadow(0 0 15px #00f0ff); animation: pulse-book 1.5s infinite ease-in-out; z-index: 10;">📖</div>
+                            </div>
+                            <!-- TEKS ANIMASI PENCATATAN DATA -->
+                            <h1 id="txt-magic-title" style='color: #00f0ff; font-family: monospace; animation: blink-text 1.2s infinite; font-size: 22px; margin-top: 70px; letter-spacing: 2px; text-shadow: 0 0 15px rgba(0,240,255,0.5); text-align: center;'>LOGGING ADVENTURE DATA...</h1>
+                            <p id="txt-magic-sub" style='color: #64748b; font-size: 13px; margin-top: 5px; font-family: monospace; text-align: center; max-width: 320px; padding: 0 15px;'>Opening the heavy leather journal and engraving your guild performance...</p>
+                            <!-- GAUNG GAYA ANIMASI CSS -->
+                            <style>
+                                @keyframes spin-clockwise { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                                .vector-glow { transform-origin: 100px 100px; animation: spin-clockwise 10s infinite linear; filter: drop-shadow(0 0 12px #00f0ff); }
+                                .vector-glow-inner { transform-origin: 100px 100px; animation: spin-clockwise 6s infinite linear; reverse; filter: drop-shadow(0 0 10px #a855f7); }
+                                @keyframes pulse-book { 0%, 100% { transform: scale(1) rotateY(0deg); } 50% { transform: scale(1.15) rotateY(180deg); } }
+                                @keyframes blink-text { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+                            </style>
+                        </div>
+                        """, 
+                        unsafe_allow_html=True
+                    )
+                    
+                    # Jeda khidmat simulasi prapencatatan mantra (3 detik)
+                    progress_bar = st.progress(0)
+                    for percent_complete in range(100):
+                        time.sleep(0.02)
+                        progress_bar.progress(percent_complete + 1)
+                        if percent_complete == 40:
+                            st.markdown("<script>window.parent.document.getElementById('txt-magic-title').innerHTML = 'SYNCHRONIZING REWARD LOGS...'; window.parent.document.getElementById('txt-magic-sub').innerHTML = 'Inking down total item counts and verifying sueger elixirs...';</script>", unsafe_allow_html=True)
+                        elif percent_complete == 80:
+                            st.markdown("<script>window.parent.document.getElementById('txt-magic-title').innerHTML = 'STABILIZING MANA CONNECTIONS...'; window.parent.document.getElementById('txt-magic-sub').innerHTML = 'Polishing crystal emblems and locking privacy gates...';</script>", unsafe_allow_html=True)
+                    
+                    # 🔔 LAYAR KEDUA: PENGUMUMAN SELAMAT DATANG DI RESEPSIONIS GUILD
+                    st.markdown(
+                        """
+                        <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
+                            <div style='font-size: 70px; filter: drop-shadow(0 0 20px #fbbf24); animation: welcome-bounce 1s infinite alternate;'>🛎️</div>
+                            <h1 style='color: #fbbf24; font-family: monospace; font-size: 26px; margin-top: 30px; letter-spacing: 2px; text-shadow: 0 0 20px rgba(251,191,36,0.6); text-align: center; padding: 0 10px;'>SELAMAT DATANG DI RESEPSIONIS GUILD</h1>
+                            <p style='color: #ffffff; font-size: 14px; margin-top: 10px; font-family: monospace; text-align: center; font-style: italic;'>Silakan pilih buku panduan di meja resepsionis untuk melanjutkan tugas.</p>
+                            <style>
+                                @keyframes welcome-bounce { from { transform: translateY(0); } to { transform: translateY(-12px); } }
+                            </style>
+                        </div>
+                        """, 
+                        unsafe_allow_html=True
+                    )
+                    time.sleep(1.8) # Jeda waktu agar pengguna bisa membaca tulisan selamat datang
+                
+                placeholder_loading.empty()
+                
+                # Mengaktifkan gerbang alihan menuju halaman 2 Buku Resepsionis
+                st.session_state.current_camp_menu = "quiz_campaign"
+                st.session_state["campaign_sub_page"] = "resepsionis_utama"
+                st.rerun()
+
+                
+        # =========================================================================
+        # ⚔️ KARTU 3: UPGRADE SKILL (EDISI RITUAL PENEMPAAN SENJATA 1-100)
+        # =========================================================================
+        with col_camp3:
+            st.markdown("<div class='camp-card'><div class='camp-icon'>⚔️</div><div class='camp-title'>UPGRADE SKILL</div><div class='camp-desc'>Masuki ruang latihan untuk mengasah keahlian bertarung Anda (Shortcut penginputan data transaksi penjualan).</div></div>", unsafe_allow_html=True)
+            if st.button("Latih Skill ➔", use_container_width=True, key="btn_camp_skill"):
+                placeholder = st.empty()
+                with placeholder.container():
+                    # --- LAYAR LOADING FULLSCREEN: BLACKSMITH FORGING (MURNI TANPA TAG STYLE YANG RAWAN BOCOR) ---
+                    st.markdown(
+                        """
+                        <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
+                            <div class="forge-container" style="position: relative; width: 150px; height: 150px; display: flex; justify-content: center; align-items: center;">
+                                <div class="anvil" style="font-size: 70px; z-index: 10; animation: strike 0.8s infinite ease-in-out;">⚒️</div>
+                                <div class="spark circle1"></div>
+                                <div class="spark circle2"></div>
+                            </div>
+                            <h1 style='color: #f97316; font-family: monospace; animation: blink 1.2s infinite; font-size: 26px; margin-top: 40px; letter-spacing: 2px; text-shadow: 0 0 15px rgba(249,115,22,0.5);'>FORGING YOUR SALES SKILL...</h1>
+                            <p id="forge-status" style='color: #64748b; font-size: 13px; margin-top: 5px; font-family: monospace;'>Heating the metal and sharpening performance attributes...</p>
+                            <p id="progress-text" style='color: #fbbf24; font-family: monospace; font-size: 18px; font-weight: bold; margin-top: 25px;'>FORGING PROGRESS: 0%</p>
+                        </div>
+                        """, unsafe_allow_html=True
+                    )
+                    
+                    # Progress bar simulasi tempa berjalan mundur lambat khidmat
+                    progress_bar = st.progress(0)
+                    for percent_complete in range(100):
+                        time.sleep(0.04) 
+                        current_percent = percent_complete + 1
+                        progress_bar.progress(current_percent)
+                        st.markdown(f"<script>window.parent.document.getElementById('progress-text').innerHTML = 'FORGING PROGRESS: {current_percent}%'; if ({current_percent} > 40 && {current_percent} < 80) {{ window.parent.document.getElementById('forge-status').innerHTML = 'Tempering blade core and structuring transaction logs...'; }} else if ({current_percent} >= 80) {{ window.parent.document.getElementById('forge-status').innerHTML = 'Quenching weapon in holy water! Stabilization complete!'; }}</script>", unsafe_allow_html=True)
+                    
+                    # Sukses Screen Pendek
+                    st.markdown("<div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'><h1 style='color: #fbbf24; font-family: monospace; font-size: 32px; text-shadow: 0 0 20px rgba(251,191,36,0.6);'>⚔️ WEAPON UPGRADED!</h1><p style='color: #ffffff; font-size: 15px; margin-top: 10px; font-family: monospace;'>Entering training ground with your sharpest sword...</p></div>", unsafe_allow_html=True)
+                    time.sleep(1.2)
+                
+                # 🚀 KUNCI PERBAIKAN EMERGENSI: MENGGUNAKAN GERBANG ALIHAN AMAN (ANTI-TABRAKAN WIDGET)
+                placeholder.empty()
+                st.session_state.portal_prep_ready = False  # Menutup layar perkemahan
+                
+                # Alih-alih menembak widget langsung, kita nyalakan saklar bantuan sementara
+                st.session_state.redirect_to_input = True
+                
+                st.rerun()
+                
+        st.markdown("<div class='leave-camp-box'>", unsafe_allow_html=True)
+        if st.button("🚪 KEMBALI KE BERANDA KOTA", use_container_width=True, key="btn_leave_camp"):
+            st.session_state.portal_prep_ready = False
+            st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
         st.stop()
 
 # =========================================================================
