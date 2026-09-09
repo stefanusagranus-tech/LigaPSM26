@@ -2453,21 +2453,24 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         import streamlit as st
         import textwrap
 
-        # ==========================================
-        # 🎨 1. SUNTIKAN CSS (WATERMARK NAGA MENYESUAIKAN UKURAN KERTAS)
+       # ==========================================
+        # 🎨 1. SUNTIKAN CSS (BACKGROUND SISIK/NAGA BARU & WATERMARK KERTAS)
         # ==========================================
         st.markdown("""
         <style>
             /* Mengimpor font MedievalSharp dari Google Fonts */
             @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
 
-            /* Background Utama */
+            /* Background Utama dengan Gambar Baru */
             .stApp {
                 background-color: #030303 !important;
                 background-image: 
-                    radial-gradient(circle at 50% 30%, rgba(217, 119, 6, 0.2) 0%, transparent 75%),
-                    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cpath fill='%23f97316' fill-opacity='0.18' d='M40 0 L80 40 L40 80 L0 40 Z M40 15 L65 40 L40 65 L15 40 Z'/%3E%3C/svg%3E") !important;
-                background-repeat: repeat !important;
+                    linear-gradient(rgba(3, 3, 3, 0.75), rgba(3, 3, 3, 0.75)),
+                    url("https://static0.thegamerimages.com/wordpress/wp-content/uploads/2025/01/copy-of-untitled-2025-01-31t105330-637.jpg?q=49&fit=crop&w=825&dpr=2") !important;
+                background-size: cover !important;
+                background-position: center !important;
+                background-repeat: no-repeat !important;
+                background-attachment: fixed !important;
             }
 
             .kitab-misi-page-wrapper {
@@ -2520,11 +2523,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 background-repeat: no-repeat;
             }
 
-            /* WATERMARK HALAMAN KIRI & KANAN (Menyesuaikan Ukuran Kotak Kertas) */
+            /* WATERMARK HALAMAN KIRI & KANAN */
             .rpg-book-page-left, .rpg-book-page-right {
                 background-image: url("https://img.pikbest.com/png-images/20250303/fierce-dragon-silhouette--e2-80-93-stylized-black-and-white-mythical-beast-illustration_11570728.png!bw800");
                 background-position: center 65%;
-                /* Menggunakan 'contain' agar ukurannya proporsional pas di dalam kertas */
                 background-size: 75% auto; 
             }
 
