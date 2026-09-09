@@ -2730,7 +2730,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 is_done = iaktual >= itarget
                 card_cls = "rpg-item-card completed" if is_done else "rpg-item-card"
                 badge = "<span class='badge-success'>✨ SELESAI</span>" if is_done else f"<span class='badge-warning'>GAP: {gap}</span>"
-                
                 card_markup = f"""
                 <div class="{card_cls}">
                     <div>
@@ -2746,7 +2745,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     items_html_left += card_markup
                 else:
                     items_html_right += card_markup
-
             html_open_tugas = f"""
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page rpg-book-page-left">
