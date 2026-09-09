@@ -2717,11 +2717,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             actual_dict = {}
             if not sales_person_df.empty:
                 sp_filtered = sales_person_df[sales_person_df["period_id"].astype(str).str.strip() == target_period_id] if target_period_id else sales_person_df
-                
                 current_user = str(st.session_state.get("username", st.session_state.get("user", "admin"))).strip().lower()
                 if current_user != "admin" and not sp_filtered.empty and "person_name" in sp_filtered.columns:
                     sp_filtered = sp_filtered[sp_filtered["person_name"].astype(str).str.strip().str.lower() == current_user]
-
                 if not sp_filtered.empty and "item_id" in sp_filtered.columns and "actual_qty" in sp_filtered.columns:
                     sp_filtered["actual_qty"] = pd.to_numeric(sp_filtered["actual_qty"], errors="coerce").fillna(0)
                     actual_dict = sp_filtered.groupby("item_id")["actual_qty"].sum().to_dict()
