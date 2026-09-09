@@ -2996,14 +2996,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             </div>
             """.format(active_period=active_period, rows_psm_13=rows_psm_13, rows_psm_49=rows_psm_49)
 
-            st.markdown(html_open_tugas, unsafe_allow_html=True)
-
-            with st.expander("🔍 Cek Rincian Item Achiv (Setelah Digabung)", expanded=False):
-                if debug_achiv_records:
-                    st.dataframe(pd.DataFrame(debug_achiv_records), use_container_width=True)
-                else:
-                    st.warning("Tidak ada item yang memenuhi syarat achiv.")
-
         elif page_num == 4:
             rows_pps_13 = "".join([format_row(i + 1, n, s) for i, (n, s) in enumerate(dummy_9_personil[:3])])
             rows_pps_49 = "".join([format_row(i + 4, n, s) for i, (n, s) in enumerate(dummy_9_personil[3:])])
