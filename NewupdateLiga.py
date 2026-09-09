@@ -2461,19 +2461,27 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             /* Mengimpor font MedievalSharp dari Google Fonts */
             @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
 
-           /* Background Utama yang Dibuat Lebih Cerah */
+           /* Background Utama (Tanpa filter global agar elemen anak aman) */
             .stApp {
                 background-color: #1a1a1a !important;
                 background-image: 
-                    /* Lapisan gelap transparan yang lebih tipis agar gambar latar lebih terang */
                     linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)),
                     url("https://static0.thegamerimages.com/wordpress/wp-content/uploads/2025/01/copy-of-untitled-2025-01-31t105330-637.jpg?q=49&fit=crop&w=825&dpr=2") !important;
                 background-size: cover !important;
                 background-position: center !important;
                 background-repeat: no-repeat !important;
                 background-attachment: fixed !important;
-                /* Menaikkan tingkat kecerahan gambar */
-                filter: brightness(1.25);
+            }
+
+            /* Lapisan kertas buku - dibuat sedikit lebih transparan (0.80) agar siluet naga kembali muncul */
+            .rpg-book-page::before {
+                content: "";
+                position: absolute;
+                top: 0; left: 0; right: 0; bottom: 0;
+                background-color: rgba(255, 251, 235, 0.80); 
+                z-index: 1;
+                pointer-events: none;
+                border-radius: 6px;
             }
 
             .kitab-misi-page-wrapper {
