@@ -2424,6 +2424,28 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         current_month_name = today.strftime("%B")
 
         # ==========================================
+        # 📅 4.1. TENTUKAN PERIODE AKTIF GLOBAL
+        # ==========================================
+        periods_df = st.session_state.get("periods_df", pd.DataFrame())
+        target_period_id = ""
+        if not periods_df.empty:
+            for _, r in periods_df.iterrows():
+                try:
+                    s_date = pd.to_datetime(r.get("start_date")).date()
+                    e_date = pd.to_datetime(r.get("end_date")).date()
+                    if s_date <= today <= e_date:
+                        target_period_id = str(r.get("period_id", "")).strip()
+                        break
+                except Exception:
+                    pass
+            if not target_period_id:
+                for _, r in periods_df.iterrows():
+                    p_name = str(r.get("period_name", "")).lower()
+                    if "8" in p_name and "15" in p_name and ("sep" in p_name or "september" in p_name):
+                        target_period_id = str(r.get("period_id", "")).strip()
+                        break
+
+        # ==========================================
         # 🎨 3. SUNTIKAN CSS (TERMASUK Kartu Item RPG Interaktif)
         # ==========================================
         st.markdown("""
