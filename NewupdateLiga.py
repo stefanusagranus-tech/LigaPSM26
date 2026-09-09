@@ -2683,56 +2683,85 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             ("Bors", "60 Pcs"), ("Kay", "55 Pcs"), ("Bedivere", "50 Pcs")
         ]
 
-       # ==========================================
+        # ==========================================
         # 📄 5. KONTEN PER HALAMAN BUKU (Halaman 1)
         # ==========================================
         if page_num == 1:
-            # Ambil data langsung dari session state global kamu
-            df_item_raw = st.session_state.get("sales_item_df", pd.DataFrame())
+            # 1. Ambil period_id yang aktif berdasarkan periode
+            periods_df = st.session_state.get("periods_df", pd.DataFrame())
+            target_period_id = ""
             
+            if not periods_df.empty:
+                for _, r in periods_df.iterrows():
+                    p_name = str(r.get("period_name", ""))
+                    if active_period.lower() in p_name.lower() or p_name.lower() in p_name.lower():
+                        target_period_id = str(r.get("period_id", "")).strip()
+                        break
+                # Fallback pencocokan tanggal jika nama tidak ketemu
+                if not target_period_id:
+                    for _, r in periods_df.iterrows():
+                        try:
+                            s_date = pd.to_datetime(r.get("start_date")).date()
+                            e_date = pd.to_datetime(r.get("end_date")).date()
+                            if s_date <= today <= e_date:
+                                target_period_id = str(r.get("period_id", "")).strip()
+                                break
+                        except Exception:
+                            pass
+
+            # 2. Ambil target dari SALES_ITEM difilter berdasarkan period_id
+            sales_item_df = st.session_state.get("sales_item_df", pd.DataFrame())
             df_filtered_items = pd.DataFrame()
-            if not df_item_raw.empty:
-                col_periode = next((c for c in df_item_raw.columns if 'periode' in c.lower()), None)
-                if col_periode:
-                    df_filtered_items = df_item_raw[df_item_raw[col_periode].astype(str).str.strip() == active_period]
-                else:
-                    df_filtered_items = df_item_raw
+            if not sales_item_df.empty and target_period_id:
+                df_filtered_items = sales_item_df[sales_item_df["period_id"].astype(str).str.strip() == target_period_id]
+            elif not sales_item_df.empty:
+                df_filtered_items = sales_item_df
+
+            # 3. Ambil data aktual penjualan dari SALES_PERSONIL berdasarkan period_id (dijumlahkan per item_id)
+            sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
+            actual_dict = {}
+            if not sales_person_df.empty:
+                sp_filtered = sales_person_df[sales_person_df["period_id"].astype(str).str.strip() == target_period_id] if target_period_id else sales_person_df
+                if not sp_filtered.empty and "item_id" in sp_filtered.columns and "actual_qty" in sp_filtered.columns:
+                    sp_filtered["actual_qty"] = pd.to_numeric(sp_filtered["actual_qty"], errors="coerce").fillna(0)
+                    actual_dict = sp_filtered.groupby("item_id")["actual_qty"].sum().to_dict()
 
             items_html_left = ""
             items_html_right = ""
 
-            if df_filtered_items.empty:
-                render_items = [
-                    ("Item A (Data Kosong/Belum Sinkron)", 50, 20),
-                    ("Item B (Contoh)", 40, 40)
-                ]
-            else:
-                render_items = []
+            render_items = []
+            if not df_filtered_items.empty:
                 for _, r in df_filtered_items.iterrows():
-                    name = str(r.get('item_name', r.get('Nama_Item', r.get('Item', 'Item Misi'))))
-                    target = int(r.get('target_qty', r.get('Target_Qty', r.get('Target', 50))))
-                    aktual = int(r.get('actual_qty', r.get('Aktual_Qty', r.get('Aktual', 0))))
+                    item_id = str(r.get("item_id", "")).strip()
+                    name = str(r.get("item_name", "Item Misi"))
+                    # Mengambil kolom target_kasir sesuai permintaan
+                    target = int(pd.to_numeric(r.get("target_kasir", r.get("target_qty", 0)), errors="coerce"))
+                    aktual = int(actual_dict.get(item_id, 0))
                     render_items.append((name, target, aktual))
 
+            if not render_items:
+                render_items = [("Belum ada target item untuk periode ini", 0, 0)]
+
             for idx, (iname, itarget, iaktual) in enumerate(render_items):
-                gap = itarget - iaktual
+                gap = itarget - iaktual if itarget > 0 else 0
                 achiv = (iaktual / itarget) * 100 if itarget > 0 else 0
-                is_done = iaktual >= itarget
+                is_done = iaktual >= itarget if itarget > 0 else False
+                
                 card_cls = "rpg-item-card completed" if is_done else "rpg-item-card"
-                badge = "<span class='badge-success'>✨ SELESAI</span>" if is_done else "<span class='badge-warning'>GAP: {}</span>".format(gap)
+                badge = '<span class="badge-success">✨ SELESAI</span>' if is_done else f'<span class="badge-warning">GAP: {gap}</span>'
                 achiv_color = '#065f46' if is_done else '#92400e'
                 
                 card_markup = """
-                <div class="{}">
+                <div class="{card_cls}">
                     <div>
-                        <div class="item-title">⚔️ {} {}</div>
-                        <div class="item-stats">Target: {} | Aktual: <b>{}</b></div>
+                        <div class="item-title">⚔️ {iname} {badge}</div>
+                        <div class="item-stats">Target: {itarget} | Aktual: <b>{iaktual}</b></div>
                     </div>
                     <div style="text-align: right;">
-                        <div style="font-size: 14px; font-weight: bold; color: {};">{:.1f}%</div>
+                        <div style="font-size: 14px; font-weight: bold; color: {achiv_color};">{achiv:.1f}%</div>
                     </div>
                 </div>
-                """.format(card_cls, iname, badge, itarget, iaktual, achiv_color, achiv)
+                """
 
                 if idx % 2 == 0:
                     items_html_left += card_markup
@@ -2746,24 +2775,23 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page rpg-book-page-left">
                     <h3 class="open-page-title">🎯 TARGET ITEM (1)</h3>
-                    <p class="open-page-sub">Maklumat Target & Achiv ({})</p>
+                    <p class="open-page-sub">Maklumat Target & Achiv ({active_period})</p>
                     <div class="open-book-divider"></div>
-                    {}
+                    {items_html_left}
                     <div class="open-page-footer">Halaman Kiri • Item Bagian 1</div>
                 </div>
                 <div class="rpg-book-page rpg-book-page-right">
                     <h3 class="open-page-title">🎯 TARGET ITEM (2)</h3>
                     <p class="open-page-sub">Kelanjutan Maklumat Target Item</p>
                     <div class="open-book-divider"></div>
-                    {}
+                    {items_html_right}
                     <div class="open-page-footer">Halaman Kanan • Item Bagian 2</div>
                 </div>
             </div>
-            """.format(
-                active_period, 
-                items_html_left if items_html_left else "<div style='color:#78350f; font-size:12px; text-align:center;'>Belum ada data item untuk periode ini.</div>", 
-                items_html_right
-            )
+            """
+
+        # Render menggunakan st.markdown dengan unsafe_allow_html=True agar ter-render sebagai HTML murni
+        st.markdown(html_open_tugas, unsafe_allow_html=True)
 
         elif page_num == 2:
             html_open_tugas = """
