@@ -2458,7 +2458,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         st.markdown("""
         <style>
             /* Mengimpor font gaya medieval/blackletter dari Google Fonts */
-            @import url('https://www.dafont.com/cloister-black.font');
+            @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
 
             .kitab-misi-page-wrapper {
                 position: relative;
