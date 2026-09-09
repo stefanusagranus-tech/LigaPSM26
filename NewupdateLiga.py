@@ -1925,23 +1925,50 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.markdown("</div>", unsafe_allow_html=True)
 
         # =========================================================================
-        # 📘 JURNAL BURUAN INDIVIDU (SESUAI SESSION STATE & GOOGLE SHEETS)
+        # 📘 JURNAL BURUAN INDIVIDU (PERIODE OTOMATIS BULAN BERJALAN)
         # =========================================================================
         elif st.session_state.get("campaign_sub_page") == "view_buku_pencapaian":
             
+            import random
+            from datetime import datetime
+            
             current_page = st.session_state.get("book_page_number", 1)
             username_hero = str(st.session_state.get("username", "RIZKI GUNAWAN")).strip().upper()
-            periode_aktif = "S01" # Sesuaikan period_id aktif (misal S01)
 
-            # --- 📥 AMBIL DATAFRAME DARI SESSION STATE YANG BENAR ---
+            # --- 📥 AMBIL DATAFRAME DARI SESSION STATE ---
             df_sales_item = st.session_state.get("sales_item_df", pd.DataFrame())
             sales_personil = st.session_state.get("sales_person_df", pd.DataFrame())
+            periods_df = st.session_state.get("periods_df", pd.DataFrame())
 
-            # Normalisasi nama kolom ke lowercase agar aman
+            # Normalisasi nama kolom ke lowercase
             if not df_sales_item.empty:
                 df_sales_item.columns = df_sales_item.columns.astype(str).str.strip().str.lower()
             if not sales_personil.empty:
                 sales_personil.columns = sales_personil.columns.astype(str).str.strip().str.lower()
+            if not periods_df.empty:
+                periods_df.columns = periods_df.columns.astype(str).str.strip().str.lower()
+
+            # --- 🗓️ DETEKSI PERIODE AKTIF BERDASARKAN BULAN BERJALAN / TANGGAL HARI INI ---
+            today_date = datetime.now().date()
+            periode_aktif = "S01" # Fallback default
+             nama_periode_aktif = "September"
+
+            if not periods_df.empty and all(col in periods_df.columns for col in ['period_id', 'start_date', 'end_date']):
+                for _, row in periods_df.iterrows():
+                    try:
+                        p_start = pd.to_datetime(row['start_date'], errors='coerce').date()
+                        p_end = pd.to_datetime(row['end_date'], errors='coerce').date()
+                        if pd.notna(p_start) and pd.notna(p_end) and (p_start <= today_date <= p_end):
+                            periode_aktif = str(row['period_id']).strip()
+                            if 'period_name' in periods_df.columns:
+                                nama_periode_aktif = str(row['period_name']).strip()
+                            break
+                    except Exception:
+                        continue
+            
+            # Simpan ke session state agar bisa dibaca bagian lain jika diperlukan
+            st.session_state["periode_aktif"] = periode_aktif
+            st.session_state["selected_month"] = nama_periode_aktif
 
             # --- 🔍 1. TARIK TOTAL TARGET KASIR DARI SALES_ITEM ---
             target_kasir_val = 0
@@ -1950,26 +1977,41 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 if 'target_kasir' in df_f_item.columns:
                     target_kasir_val = int(pd.to_numeric(df_f_item['target_kasir'], errors='coerce').sum())
 
-            # --- 🔍 2. TARIK QTY AKTUAL & RINCIAN ITEM DARI SALES_PERSONIL ---
+            # --- 🔍 2. TARIK QTY AKTUAL & GROUPING ITEM UNTUK HINDARI DOUBLE ---
             qty_penjualan_psm_val = 0
             list_item_tercapai_html = ""
             
             if not sales_personil.empty and 'period_id' in sales_personil.columns and 'person_name' in sales_personil.columns:
+                # Filter berdasarkan periode aktif dan nama kasir
                 df_user_sales = sales_personil[
                     (sales_personil['period_id'].astype(str).str.strip() == periode_aktif) & 
                     (sales_personil['person_name'].str.upper() == username_hero)
-                ]
+                ].copy()
                 
-                if 'actual_qty' in df_user_sales.columns:
-                    qty_penjualan_psm_val = int(pd.to_numeric(df_user_sales['actual_qty'], errors='coerce').sum())
+                if not df_user_sales.empty:
+                    df_user_sales['actual_qty'] = pd.to_numeric(df_user_sales['actual_qty'], errors='coerce').fillna(0)
+                    qty_penjualan_psm_val = int(df_user_sales['actual_qty'].sum())
 
-                for _, row in df_user_sales.iterrows():
-                    nama_item = row.get('item_name', 'Item Quest')
-                    qty_aktual = row.get('actual_qty', 0)
-                    status_item = "SUKSES" if pd.to_numeric(qty_aktual, errors='coerce') > 0 else "BELUM AKTIF"
-                    warna_status = "#16a34a" if pd.to_numeric(qty_aktual, errors='coerce') > 0 else "#71717a"
-                    list_item_tercapai_html += f'<div class="open-stat-row"><span>📦 {nama_item}</span><span style="color:{warna_status};">{qty_aktual} Qty ({status_item})</span></div>'
-            
+                    # AGAR TIDAK DOUBLE: Groupby berdasarkan item_name lalu jumlahkan qty-nya
+                    if 'item_name' in df_user_sales.columns:
+                        df_grouped_item = df_user_sales.groupby('item_name')['actual_qty'].sum().reset_index()
+                        
+                        for _, row in df_grouped_item.iterrows():
+                            nama_item = row['item_name']
+                            qty_aktual = int(row['actual_qty'])
+                            
+                            # Validasi item tercapai / sukses dengan emoji menarik
+                            if qty_aktual > 0:
+                                emoji_status = "🏆 TARGET TERCAPAI!"
+                                status_item = "SUKSES"
+                                warna_status = "#16a34a"
+                            else:
+                                emoji_status = "📌 BELUM CAPAI"
+                                status_item = "BELUM AKTIF"
+                                warna_status = "#71717a"
+
+                            list_item_tercapai_html += f'<div class="open-stat-row"><span>📦 {nama_item}</span><span style="color:{warna_status};">{qty_aktual} Qty ({emoji_status})</span></div>'
+
             if list_item_tercapai_html == "":
                 list_item_tercapai_html = '<div class="open-stat-row"><span>📦 BELUM ADA TRANSAKSI</span><span style="color:#71717a;">0 Qty</span></div>'
 
@@ -1990,6 +2032,16 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 "level": "LV. 85", "pwp": "2,450,000", "sg": "1,200,000", "sueger": "3,150,000",
                 "cemilan": "450,000", "achievement": "92.5%"
             }
+
+            # --- 📜 KATA-KATA MOTIVASI OTOMATIS BERUBAH ---
+            daftar_motivasi = [
+                "\"Tetap semangat ksatria! Konsistensi hari ini adalah kunci kemenangan di akhir bulan.\"",
+                "\"Setiap item yang terjual mendekatkanmu pada singgasana juara! Terus berjuang!\"",
+                "\"Jangan menyerah pada rintangan kecil, pahlawan sejati selalu bangkit dan melampaui target!\"",
+                "\"Fokus, bidik target dengan tepat, dan buktikan kemampuan terbaikmu di arena penjualan!\"",
+                "\"Langkah kecil setiap hari menghasilkan pencapaian luar biasa. Ayo taklukkan quest hari ini!\""
+            ]
+            motivasi_terpilih = random.choice(daftar_motivasi)
 
             # --- 🎨 STYLING BUKU ---
             st.markdown(
@@ -2018,14 +2070,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     .rpg-book-page { 
                         width: 50% !important; padding: 22px 18px !important; box-sizing: border-box !important; 
                         display: flex !important; flex-direction: column !important; justify-content: flex-start !important; 
-                        color: #2b1d0c !important; font-family: 'Courier New', monospace !important; 
+                        color: #2b1d0c !important; font-family: 'Courier New', monospace !important; overflow-y: auto !important;
                     }
                     .open-page-title { text-align: center !important; font-size: 14px !important; font-weight: 900 !important; margin: 0 0 2px 0 !important; color: #854d0e !important; }
                     .open-page-sub { text-align: center !important; font-size: 10px !important; color: #78716c !important; margin: 0 0 10px 0 !important; font-style: italic !important; }
                     .open-book-divider { border-bottom: 2px double #854d0e !important; margin-bottom: 12px !important; width: 100% !important; }
                     .open-stat-row { 
-                        display: flex !important; justify-content: space-between !important; font-size: 10.5px !important; 
-                        font-weight: bold !important; margin-bottom: 10px !important; border-bottom: 1px dashed rgba(133,77,14,0.15) !important; padding-bottom: 4px !important; 
+                        display: flex !important; justify-content: space-between !important; font-size: 10px !important; 
+                        font-weight: bold !important; margin-bottom: 8px !important; border-bottom: 1px dashed rgba(133,77,14,0.15) !important; padding-bottom: 4px !important; 
                     }
                     .open-page-footer { margin-top: auto !important; font-size: 9px !important; color: #78716c !important; text-align: center !important; font-weight: bold !important; }
                     .sueger-daily-scroll-box { max-height: 220px !important; overflow-y: auto !important; padding-right: 5px !important; width: 100% !important; }
@@ -2038,22 +2090,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 """,
                 unsafe_allow_html=True
             )
-
-            # --- 🪲 KOTAK DEBUG DATA ---
-            with st.expander("🛠️ Kotak Debug Data (Klik untuk Buka)"):
-                st.write("1. Username Aktif:", username_hero)
-                st.write("2. Bulan Aktif:", st.session_state.get("selected_month", "September"))
-                st.write("--- Isi DataFrame SALES_ITEM ---")
-                if not df_sales_item.empty:
-                    st.dataframe(df_sales_item.head(3))
-                else:
-                    st.warning("DataFrame df_sales_item kosong!")
-                
-                st.write("--- Isi DataFrame SALES_PERSONIL ---")
-                if not sales_personil.empty:
-                    st.dataframe(sales_personil.head(3))
-                else:
-                    st.warning("DataFrame sales_personil kosong!")
 
             # --- 🏛️ TOMBOL NAVIGASI ATAS ---
             if current_page == 1:
@@ -2102,17 +2138,17 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     '<div class="rpg-open-book-container rpg-open-book-animated">'
                     '<div class="rpg-book-page">'
                     '<div class="open-page-title">💎 DETAIL ITEM TERCAPAI 💎</div>'
-                    f'<div class="open-page-sub">Rincian Quest Periode {periode_aktif}</div>'
+                    f'<div class="open-page-sub">Rincian Quest ({nama_periode_aktif} / {periode_aktif})</div>'
                     '<div class="open-book-divider"></div>'
                     f'{list_item_tercapai_html}' 
                     '<div class="open-page-footer">- Halaman 3 -</div>'
                     '</div>'
                     '<div class="rpg-book-page">'
                     '<div class="open-page-title">📜 CATATAN ALIANSI 📜</div>'
-                    '<div class="open-page-sub">Maklumat Tambahan Petualang</div>'
+                    '<div class="open-page-sub">Maklumat & Motivasi Petualang</div>'
                     '<div class="open-book-divider"></div>'
-                    f'<p style="font-size:11px; color:#5c4033; line-height:1.6; text-align:center; font-style:italic; margin:0;">'
-                    f'"Target kasir Anda periode ini tercatat sebesar <b>{target_kasir_val} Pts</b> berdasarkan sheet SALES_ITEM."'
+                    f'<p style="font-size:11px; color:#5c4033; line-height:1.6; text-align:center; font-style:italic; margin-top:20px;">'
+                    f'{motivasi_terpilih}'
                     '</p>'
                     '<div class="open-page-footer" style="margin-top:auto;">- Halaman 4 -</div>'
                     '</div>'
@@ -2121,7 +2157,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             elif current_page == 3:
                 baris_tanggal_html = ""
-                for tgl in range(1, 31):
+                for tgl in range(1, 32):
                     nilai_harian = f"Rp {100000 + (tgl * 5000):,}"
                     baris_tanggal_html += f'<div class="open-stat-row"><span>Tanggal {tgl:02d}</span><span style="color:#0d9488;">{nilai_harian}</span></div>'
 
