@@ -2516,22 +2516,28 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         st.markdown("<h2 class='guild-lobby-title'>📜 KITAB MISI GUILD</h2>", unsafe_allow_html=True)
         st.markdown("<p class='guild-lobby-sub'>Lembar maklumat rincian target harian dan season toko.</p>", unsafe_allow_html=True)
 
-        # Navigasi Lembar Buku (Diperbarui menjadi 4 Halaman)
+        page_num = st.session_state["kitab_misi_page"]
+
+        # Navigasi Lembar Buku di Atas
         col_nav1, col_nav2, col_nav3 = st.columns([1, 2, 1])
         with col_nav1:
-            if st.session_state["kitab_misi_page"] > 1:
+            if page_num == 1:
+                if st.button("🚪 TUTUP KITAB", key="btn_close_top", use_container_width=True):
+                    st.session_state["campaign_sub_page"] = "resepsionis_utama"
+                    st.rerun()
+            else:
                 if st.button("⬅️ Sebelumnya", key="prev_sheet", use_container_width=True):
                     st.session_state["kitab_misi_page"] -= 1
                     st.rerun()
+
         with col_nav2:
-            st.markdown(f"<p style='text-align:center; color:#854d0e; font-family:monospace; font-weight:bold; font-size:11px; margin-top:8px;'>LEMBAR KE-{st.session_state['kitab_misi_page']} DARI 4</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center; color:#854d0e; font-family:monospace; font-weight:bold; font-size:11px; margin-top:8px;'>LEMBAR KE-{page_num} DARI 4</p>", unsafe_allow_html=True)
+
         with col_nav3:
-            if st.session_state["kitab_misi_page"] < 4:
+            if page_num < 4:
                 if st.button("Berikutnya ➡️", key="next_sheet", use_container_width=True):
                     st.session_state["kitab_misi_page"] += 1
                     st.rerun()
-
-        page_num = st.session_state["kitab_misi_page"]
 
         dummy_9_personil = [
             ("1. Ksatria Arthur", "98 Pcs"), ("2. Lancelot", "92 Pcs"), 
@@ -2540,40 +2546,81 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             ("7. Bors", "60 Pcs"), ("8. Kay", "55 Pcs"), ("9. Bedivere", "50 Pcs")
         ]
 
+        # Tentukan posisi rank toko kita saat ini (contoh: Peringkat ke-5 / Gawain)
+        my_rank_pps = 5 
+        my_rank_psm = 3
+
         if page_num == 1:
-            # --- LEMBAR 1: RANKING PPS ---
-            rows_pps = "".join([f'<div class="open-stat-row"><span>{n}</span><span style="color:#b45309;">{s}</span></div>' for n, s in dummy_9_personil])
+            # --- LEMBAR 1: RANKING PPS (1 - 4) ---
+            rows_pps_1 = "".join([f'<div class="open-stat-row"><span>{n}</span><span style="color:#b45309;">{s}</span></div>' for n, s in dummy_9_personil[:4]])
+            
+            # --- LEMBAR 1 (Kanan): NAVIGASI/INFO POSISI RANKING KITA ---
             html_open_tugas = textwrap.dedent(f"""
             <div class="rpg-open-book-container">
-                <div class="rpg-book-page" style="width: 100%;">
-                    <h3 class="open-page-title">🛡️ RANKING PPS</h3>
-                    <p class="open-page-subtitle">Top 9 Pahlawan PPS Guild</p>
+                <div class="rpg-book-page">
+                    <h3 class="open-page-title">🛡️ RANKING PPS (1-4)</h3>
+                    <p class="open-page-subtitle">Top Pahlawan PPS Guild</p>
                     <div class="open-book-divider"></div>
-                    {rows_pps}
-                    <p class="open-page-footer">Page 1 • PPS Standings</p>
+                    {rows_pps_1}
+                    <p class="open-page-footer">Page 1 • PPS Top 4</p>
+                </div>
+                <div class="rpg-book-page" style="justify-content: center; align-items: center; text-align: center;">
+                    <h3 class="open-page-title">📍 POSISI TOKO KITA</h3>
+                    <p class="open-page-subtitle">Status Peringkat Guild Anda</p>
+                    <div class="open-book-divider" style="width: 80%;"></div>
+                    <div style="background: rgba(180,83,9,0.1); padding: 15px; border-radius: 8px; border: 1px dashed #b45309; width: 100%;">
+                        <p style="font-size: 11px; font-weight: bold; color: #854d0e; margin-bottom: 5px;">SHIELD RANK (PPS):</p>
+                        <p style="font-size: 14px; font-weight: 900; color: #16a34a; margin: 0;">Peringkat ke-{my_rank_pps} dari 9</p>
+                        <p style="font-size: 9px; color: #78716c; font-style: italic; margin-top: 5px;">(Cek Lembar 2 untuk melihat detail posisi Anda)</p>
+                    </div>
+                    <p class="open-page-footer" style="width: 100%;">Page 2 • Position Info</p>
                 </div>
             </div>
             """)
 
         elif page_num == 2:
-            # --- LEMBAR 2: RANKING PSM ---
-            rows_psm = "".join([f'<div class="open-stat-row"><span>{n}</span><span style="color:#b45309;">{int(s.replace(" Pcs",""))+15} Pcs</span></div>' for n, s in dummy_9_personil])
+            # --- LEMBAR 2: RANKING PPS (5 - 9) & RANKING PSM (1 - 4) ---
+            rows_pps_2 = "".join([f'<div class="open-stat-row"><span>{n}</span><span style="color:#b45309;">{s}</span></div>' for n, s in dummy_9_personil[4:]])
+            rows_psm_1 = "".join([f'<div class="open-stat-row"><span>{n}</span><span style="color:#b45309;">{int(s.replace(" Pcs",""))+15} Pcs</span></div>' for n, s in dummy_9_personil[:4]])
+            
             html_open_tugas = textwrap.dedent(f"""
             <div class="rpg-open-book-container">
-                <div class="rpg-book-page" style="width: 100%;">
-                    <h3 class="open-page-title">⚔️ RANKING PSM</h3>
-                    <p class="open-page-subtitle">Akumulasi Poin Penjualan PSM</p>
+                <div class="rpg-book-page">
+                    <h3 class="open-page-title">🛡️ RANKING PPS (5-9)</h3>
+                    <p class="open-page-subtitle">Pahlawan PPS Selanjutnya</p>
                     <div class="open-book-divider"></div>
-                    {rows_psm}
-                    <p class="open-page-footer">Page 2 • PSM Standings</p>
+                    {rows_pps_2}
+                    <div style="margin-top: auto; background: rgba(22,163,74,0.1); padding: 6px; border-radius: 4px; text-align: center; font-size: 9.5px; color: #16a34a; font-weight: bold;">
+                        📍 Posisi Anda: Rank #{my_rank_pps}
+                    </div>
+                    <p class="open-page-footer">Page 3 • PPS 5-9</p>
+                </div>
+                <div class="rpg-book-page">
+                    <h3 class="open-page-title">⚔️ RANKING PSM (1-4)</h3>
+                    <p class="open-page-subtitle">Top Poin Penjualan PSM</p>
+                    <div class="open-book-divider"></div>
+                    {rows_psm_1}
+                    <p class="open-page-footer">Page 4 • PSM Top 4</p>
                 </div>
             </div>
             """)
 
         elif page_num == 3:
-            # --- LEMBAR 3: DAILY QUESTS & PENCAPAIAN PENJUALAN ---
-            html_open_tugas = textwrap.dedent("""
+            # --- LEMBAR 3: RANKING PSM (5 - 9) & INFO POSISI PSM ---
+            rows_psm_2 = "".join([f'<div class="open-stat-row"><span>{n}</span><span style="color:#b45309;">{int(s.replace(" Pcs",""))+15} Pcs</span></div>' for n, s in dummy_9_personil[4:]])
+            
+            html_open_tugas = textwrap.dedent(f"""
             <div class="rpg-open-book-container">
+                <div class="rpg-book-page">
+                    <h3 class="open-page-title">⚔️ RANKING PSM (5-9)</h3>
+                    <p class="open-page-subtitle">Akumulasi Poin PSM Selanjutnya</p>
+                    <div class="open-book-divider"></div>
+                    {rows_psm_2}
+                    <div style="margin-top: auto; background: rgba(22,163,74,0.1); padding: 6px; border-radius: 4px; text-align: center; font-size: 9.5px; color: #16a34a; font-weight: bold;">
+                        📍 Posisi PSM Anda: Rank #{my_rank_psm}
+                    </div>
+                    <p class="open-page-footer">Page 5 • PSM 5-9</p>
+                </div>
                 <div class="rpg-book-page">
                     <h3 class="open-page-title">⚡ DAILY QUESTS</h3>
                     <p class="open-page-subtitle">Target Harian Guild</p>
@@ -2582,8 +2629,15 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     <div class="open-stat-row"><span>🛡️ TARGET PWP</span><span style="color:#16a34a;">1.4 Pcs (DONE)</span></div>
                     <div class="open-stat-row"><span>📦 TARGET PSM</span><span style="color:#dc2626;">3.5 Pcs (HUNTING)</span></div>
                     <div class="open-stat-row"><span>⚡ TARGET SUEGER</span><span style="color:#16a34a;">4.0 Pcs (DONE)</span></div>
-                    <p class="open-page-footer">Page 3 • Daily Quests</p>
+                    <p class="open-page-footer">Page 6 • Daily Quests</p>
                 </div>
+            </div>
+            """)
+
+        elif page_num == 4:
+            # --- LEMBAR 4: PENCAPAIAN & TARGET ITEM ---
+            html_open_tugas = textwrap.dedent("""
+            <div class="rpg-open-book-container">
                 <div class="rpg-book-page">
                     <h3 class="open-page-title">🏆 PENCAPAIAN</h3>
                     <p class="open-page-subtitle">Achievement & Status Guild</p>
@@ -2591,43 +2645,22 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     <div class="open-stat-row"><span>WEEKLY PSM ACH</span><span style="color:#16a34a;">88% (GOOD)</span></div>
                     <div class="open-stat-row"><span>PERIOD PWP ACH</span><span style="color:#16a34a;">94% (EXCELLENT)</span></div>
                     <div class="open-stat-row"><span>TOTAL REWARD</span><span style="color:#b45309;">1,450 Gold</span></div>
-                    <p class="open-page-footer">Page 4 • Sales Achievement</p>
-                </div>
-            </div>
-            """)
-
-        elif page_num == 4:
-            # --- LEMBAR 4: TARGET ITEM & ACTUAL ITEM ---
-            html_open_tugas = textwrap.dedent("""
-            <div class="rpg-open-book-container">
-                <div class="rpg-book-page">
-                    <h3 class="open-page-title">🎯 TARGET ITEM</h3>
-                    <p class="open-page-subtitle">Daftar Kuota Target Item</p>
-                    <div class="open-book-divider"></div>
-                    <div class="open-stat-row"><span>Item A (Special)</span><span>50 Pcs</span></div>
-                    <div class="open-stat-row"><span>Item B (Rare)</span><span>40 Pcs</span></div>
-                    <div class="open-stat-row"><span>Item C (Common)</span><span>100 Pcs</span></div>
-                    <p class="open-page-footer">Page 5 • Target Items</p>
+                    <p class="open-page-footer">Page 7 • Sales Achievement</p>
                 </div>
                 <div class="rpg-book-page">
-                    <h3 class="open-page-title">📦 ACTUAL ITEM</h3>
-                    <p class="open-page-subtitle">Realisasi Perolehan Item</p>
+                    <h3 class="open-page-title">🎯 TARGET & ACTUAL ITEM</h3>
+                    <p class="open-page-subtitle">Kuota & Realisasi Item Toko</p>
                     <div class="open-book-divider"></div>
-                    <div class="open-stat-row"><span>Item A (Special)</span><span style="color:#16a34a;">48 Pcs (ON TRACK)</span></div>
-                    <div class="open-stat-row"><span>Item B (Rare)</span><span style="color:#dc2626;">35 Pcs (HUNTING)</span></div>
-                    <div class="open-stat-row"><span>Item C (Common)</span><span style="color:#16a34a;">95 Pcs (ON TRACK)</span></div>
-                    <p class="open-page-footer">Page 6 • Actual Items</p>
+                    <div class="open-stat-row"><span>Item A (Special)</span><span style="color:#16a34a;">48 / 50 Pcs</span></div>
+                    <div class="open-stat-row"><span>Item B (Rare)</span><span style="color:#dc2626;">35 / 40 Pcs</span></div>
+                    <div class="open-stat-row"><span>Item C (Common)</span><span style="color:#16a34a;">95 / 100 Pcs</span></div>
+                    <p class="open-page-footer">Page 8 • Item Status</p>
                 </div>
             </div>
             """)
 
         st.markdown(html_open_tugas, unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
-
-        # 🚪 TOMBOL KELUAR / KEMBALI KE LOBBY
-        if st.button("⬅️ TUTUP KITAB MISI", use_container_width=True, key="btn_close_inner_buku2_fixed"):
-            st.session_state["campaign_sub_page"] = "resepsionis_utama"
-            st.rerun()
 
         # 🔒 TUTUP PEMBUNGKUS UTAMA DIV
         st.markdown("</div>", unsafe_allow_html=True)
