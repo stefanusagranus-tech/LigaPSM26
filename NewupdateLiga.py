@@ -750,20 +750,28 @@ if not st.session_state.logged_in:
   show_login_page()
   st.stop()
 
-# ==========================================================
-# 7. SIDEBAR DASHBOARD - GAYA CODINGLAB (BAGIAN 1)
-# ==========================================================
-
-# Inisialisasi status buka/tutup sidebar di session_state
-if "sidebar_collapsed" not in st.session_state:
-    st.session_state.sidebar_collapsed = False
-
-# Fungsi untuk memicu perubahan ukuran sidebar saat tombol diklik
-def toggle_sidebar_size():
-    st.session_state.sidebar_collapsed = not st.session_state.sidebar_collapsed
-
-# Tentukan lebar sidebar berdasarkan statusnya
-sidebar_width = "80px" if st.session_state.sidebar_collapsed else "260px"
+# ==========================================
+# 7. SIDEBAR DASHBOARD - GAYA CODINGLAB 
+# ==========================================
+# Tambahkan pengaman ini agar sidebar tidak merender menu utama saat di dalam camp
+if not st.session_state.get("portal_prep_ready", False):
+    # Simpan seluruh kode st.sidebar.radio dan menu navigasi utama di dalam blok ini
+    selected_tab = st.sidebar.radio("", menu_options, key="selected_tab", label_visibility="collapsed")
+    
+    # Tombol Keluar / Logout
+    st.sidebar.markdown("<hr style='margin: 15px 0; border-color: #27272a;'>", unsafe_allow_html=True)
+    logout_text = "🚪" if st.session_state.sidebar_collapsed else "🚪 Keluar / Logout"
+    if st.sidebar.button(logout_text, use_container_width=True, key="logout_sidebar"):
+        st.session_state.logged_in = False
+        st.session_state.username = ""
+        st.rerun()
+else:
+    # Sembunyikan sidebar secara total ketika berada di dalam preparation camp
+    st.markdown("""
+        <style>
+            [data-testid="stSidebar"] { display: none !important; }
+        </style>
+    """, unsafe_allow_html=True)
 
 st.sidebar.markdown(
     f"""
@@ -1615,10 +1623,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             unsafe_allow_html=True
         )
         
-        # Cetak kontainer dan tombol resmi Streamlit Anda
+       # Cetak kontainer dan tombol resmi Streamlit Anda
         st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
         if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_close_status"):
+            # Reset state camp menu dan portal agar kembali bersih ke alur utama
             st.session_state["current_camp_menu"] = "main"
+            st.session_state["portal_prep_ready"] = False
             st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
         
@@ -2006,9 +2016,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 st.rerun()
 
             st.markdown("<br><hr style='border-color: rgba(251, 191, 36, 0.3); margin: 15px 0;'><br>", unsafe_allow_html=True)
+            # Cetak kontainer dan tombol resmi Streamlit Anda
             st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
-            if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_radio_hanging"):
-                st.session_state.current_camp_menu = "main"
+            if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_close_status"):
+                # Reset state camp menu dan portal agar kembali bersih ke alur utama
+                st.session_state["current_camp_menu"] = "main"
+                st.session_state["portal_prep_ready"] = False
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
          
