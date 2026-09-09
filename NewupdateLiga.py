@@ -2822,7 +2822,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             """
 
         elif page_num == 3:
-            # Halaman 3: Ranking Qty berdasarkan Periode Aktif, tapi Achiv Count berdasarkan Bulan Berjalan
+            # Halaman 3: Ranking Qty berdasarkan Periode Aktif, tapi Count Item Achiv (target_kasir terpenuhi) berdasarkan Bulan Berjalan
             sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
             periods_df = st.session_state.get("periods_df", pd.DataFrame())
             
@@ -2833,7 +2833,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             elif not sales_person_df.empty and "person_name" in sales_person_df.columns:
                 master_personil = sales_person_df["person_name"].dropna().astype(str).str.strip().unique().tolist()
 
-            # 1. Hitung Total Qty (untuk Peringkat/Rangking) berdasarkan Periode Aktif
+            # 1. Hitung Total Qty (untuk Peringkat/Rangking Utama) berdasarkan Periode Aktif
             qty_dict = {}
             if not sales_person_df.empty and "person_name" in sales_person_df.columns:
                 sp_period = sales_person_df.copy()
@@ -2847,7 +2847,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     for _, r in grouped_qty.iterrows():
                         qty_dict[r["person_name"]] = int(r["actual_qty"])
 
-            # 2. Cari semua period_id yang masuk dalam bulan berjalan (berdasarkan tanggal hari ini)
+            # 2. Cari semua period_id yang masuk dalam bulan berjalan (September)
             current_year = today.year
             current_month = today.month
             month_period_ids = []
@@ -2860,7 +2860,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     except Exception:
                         pass
 
-            # 3. Hitung Jumlah Item Achiv berdasarkan Akumulasi Bulan Berjalan
+            # 3. Hitung Jumlah Item yang Achiv (Actual >= Target Kasir) selama Bulan Berjalan
             achiv_dict = {}
             if not sales_person_df.empty and "person_name" in sales_person_df.columns:
                 sp_month = sales_person_df.copy()
@@ -2870,26 +2870,17 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 if not sp_month.empty:
                     sp_month["person_name"] = sp_month["person_name"].astype(str).str.strip()
                     sp_month["actual_qty"] = pd.to_numeric(sp_month.get("actual_qty", 0), errors="coerce").fillna(0)
+                    sp_month["target_kasir"] = pd.to_numeric(sp_month.get("target_kasir", 0), errors="coerce").fillna(0)
                     
-                    # Deteksi nama kolom target yang tersedia di DataFrame
-                    target_col = None
-                    for col in ["target_kasir", "target_qty", "target", "item_target"]:
-                        if col in sp_month.columns:
-                            target_col = col
-                            break
+                    # Kondisi Achiv: Actual Qty sudah melewati atau sama dengan Target Kasir (> 0 juga untuk pastikan ada penjualan)
+                    sp_month["is_achiv"] = (sp_month["actual_qty"] >= sp_month["target_kasir"]) & (sp_month["target_kasir"] > 0)
                     
-                    if target_col:
-                        sp_month["target_val"] = pd.to_numeric(sp_month[target_col], errors="coerce").fillna(0)
-                    else:
-                        sp_month["target_val"] = 0
-
-                    sp_month["is_achiv"] = sp_month["actual_qty"] >= sp_month["target_val"]
-                    
+                    # Hitung berapa banyak baris item unik yang achiv per personil
                     grouped_achiv = sp_month.groupby("person_name")["is_achiv"].sum().reset_index()
                     for _, r in grouped_achiv.iterrows():
                         achiv_dict[r["person_name"]] = int(r["is_achiv"])
 
-            # Gabungkan master personil dengan data qty periode aktif & achiv bulanan
+            # Gabungkan master personil dengan data qty periode aktif & jumlah item achiv bulanan
             ranking_list = []
             all_names = set(master_personil) | set(qty_dict.keys()) | set(achiv_dict.keys())
             for name in all_names:
