@@ -2453,7 +2453,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         import textwrap
 
         # ==========================================
-        # 🎨 1. SUNTIKAN CSS (MEDIEVALSHARP & LAYOUT)
+        # 🎨 1. SUNTIKAN CSS (JUDUL HALAMAN KETENGAH & FONT SAMA)
         # ==========================================
         st.markdown("""
         <style>
@@ -2516,20 +2516,24 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 }
             }
 
+            /* Judul Setiap Lembar Buku: Font MedievalSharp & Rata Tengah */
             .open-page-title {
-                font-family: 'MedievalSharp', cursive, serif;
+                font-family: 'MedievalSharp', cursive, serif !important;
                 font-weight: bold;
                 color: #451a03 !important;
-                font-size: 18px;
+                font-size: 20px;
                 margin-bottom: 2px;
+                text-align: center !important;
             }
 
+            /* Sub-judul Setiap Lembar Buku: Rata Tengah */
             .open-page-sub {
                 font-size: 12px;
                 color: #78350f !important;
                 margin-bottom: 12px;
                 font-weight: 600;
                 font-family: monospace;
+                text-align: center !important;
             }
 
             .open-book-divider {
@@ -2624,7 +2628,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     st.session_state["kitab_misi_page"] += 1
                     st.rerun()
             else:
-                # Kembali ke Halaman 1 jika berada di halaman terakhir
                 if st.button("🔄 KEMBALI KE AWAL", key="btn_back_to_first", use_container_width=True):
                     st.session_state["page_direction"] = "left"
                     st.session_state["kitab_misi_page"] = 1
