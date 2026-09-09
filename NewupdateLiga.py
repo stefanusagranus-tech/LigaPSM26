@@ -5014,7 +5014,7 @@ elif selected_tab == "⚙️ Pengaturan & Master":
             ach_psm = (actual_psm_tot / target_psm_tot * 100) if target_psm_tot > 0 else 0
 
             # ---------------------------------------------------------------------
-            # B. LOGIKA PPS (Mengambil dari PERIODE_PPS berdasarkan Baris Program / period_name)
+            # B. LOGIKA PPS (Pencarian fleksibel berdasarkan potongan kata kunci)
             # ---------------------------------------------------------------------
             periods_pps_df = st.session_state.get("periods_pps_df", pd.DataFrame())
             pps_filtered = periods_pps_df.copy()
@@ -5029,97 +5029,91 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                     if not pps_date_filtered.empty:
                         pps_filtered = pps_date_filtered
 
-            def get_pps_metric(df, keyword, col_name):
-                """Mengambil total nilai dari dataframe PPS berdasarkan kecocokan nama program (period_name)"""
+            def get_pps_metric_flexible(df, keywords, col_name):
+                """Mencari data berdasarkan potongan kata kunci pada kolom period_name"""
                 if df.empty or "period_name" not in df.columns or col_name not in df.columns:
                     return 0
-                mask = df["period_name"].astype(str).str.strip().str.lower().str.contains(keyword.lower())
-                sub_df = df[mask]
-                return pd.to_numeric(sub_df[col_name], errors="coerce").sum()
+                total = 0
+                for kw in keywords:
+                    mask = df["period_name"].astype(str).str.strip().str.lower().str.contains(kw.lower(), na=False)
+                    sub_df = df[mask]
+                    val = pd.to_numeric(sub_df[col_name], errors="coerce").sum()
+                    if val > 0:
+                        total += val
+                return total
 
             # PWP
-            s_pwp  = get_pps_metric(pps_filtered, "pwp", "syarat_total")
-            r_pwp  = get_pps_metric(pps_filtered, "pwp", "redeem_total")
-            tq_pwp = get_pps_metric(pps_filtered, "pwp", "target_total")
-            q_pwp  = get_pps_metric(pps_filtered, "pwp", "actual_qty")
+            s_pwp  = get_pps_metric_flexible(pps_filtered, ["pwp"], "syarat_total")
+            r_pwp  = get_pps_metric_flexible(pps_filtered, ["pwp"], "redeem_total")
+            tq_pwp = get_pps_metric_flexible(pps_filtered, ["pwp"], "target_total")
+            q_pwp  = get_pps_metric_flexible(pps_filtered, ["pwp"], "actual_qty")
 
             ach_pwp_redeem = (r_pwp / s_pwp * 100) if s_pwp > 0 else 0
             ach_pwp_qty    = (q_pwp / tq_pwp * 100) if tq_pwp > 0 else 0
 
-            # SUEGER
-            s_sueger = get_pps_metric(pps_filtered, "sueger", "syarat_total")
-            r_sueger = get_pps_metric(pps_filtered, "sueger", "redeem_total") # Bisa diganti actual_qty jika sueger menggunakan qty
-            q_sueger = get_pps_metric(pps_filtered, "sueger", "actual_qty")
-            
-            # Menyesuaikan penarikan data sueger (apabila menggunakan syarat & qty redeem)
-            s_sueger_val = s_sueger if s_sueger > 0 else get_pps_metric(pps_filtered, "sueger", "target_total")
-            r_sueger_val = r_sueger if r_sueger > 0 else q_sueger
+            # SUEGER (Menggunakan potongan kata "sueg" agar "SUEGEER" tetap tertangkap)
+            s_sueger_val = get_pps_metric_flexible(pps_filtered, ["sueg", "suger", "es"], "syarat_total")
+            if s_sueger_val == 0:
+                s_sueger_val = get_pps_metric_flexible(pps_filtered, ["sueg", "suger", "es"], "target_total")
+
+            r_sueger_val = get_pps_metric_flexible(pps_filtered, ["sueg", "suger", "es"], "redeem_total")
+            if r_sueger_val == 0:
+                r_sueger_val = get_pps_metric_flexible(pps_filtered, ["sueg", "suger", "es"], "actual_qty")
+
             ach_sueger = (r_sueger_val / s_sueger_val * 100) if s_sueger_val > 0 else 0
 
             # SERBA GRATIS
-            t_sg = get_pps_metric(pps_filtered, "serba gratis", "target_total")
-            if t_sg == 0:
-                t_sg = get_pps_metric(pps_filtered, "sg", "target_total")
-            
-            q_sg = get_pps_metric(pps_filtered, "serba gratis", "actual_qty")
-            if q_sg == 0:
-                q_sg = get_pps_metric(pps_filtered, "sg", "actual_qty")
-                
+            t_sg = get_pps_metric_flexible(pps_filtered, ["serba gratis", "sg", "gratis"], "target_total")
+            q_sg = get_pps_metric_flexible(pps_filtered, ["serba gratis", "sg", "gratis"], "actual_qty")
             ach_sg = (q_sg / t_sg * 100) if t_sg > 0 else 0
 
             # CEMILAN CEBAN
-            t_ceban = get_pps_metric(pps_filtered, "cemilan ceban", "target_total")
-            if t_ceban == 0:
-                t_ceban = get_pps_metric(pps_filtered, "ceban", "target_total")
-                
-            q_ceban = get_pps_metric(pps_filtered, "cemilan ceban", "actual_qty")
-            if q_ceban == 0:
-                q_ceban = get_pps_metric(pps_filtered, "ceban", "actual_qty")
-                
+            t_ceban = get_pps_metric_flexible(pps_filtered, ["cemilan ceban", "ceban", "cemilan"], "target_total")
+            q_ceban = get_pps_metric_flexible(pps_filtered, ["cemilan ceban", "ceban", "cemilan"], "actual_qty")
             ach_ceban = (q_ceban / t_ceban * 100) if t_ceban > 0 else 0
 
             # ---------------------------------------------------------------------
             # C. FORMAT TEKS SUMMARY WHATSAPP
             # ---------------------------------------------------------------------
             wa_text = f"""*📊 REPORT SUMMARY PENJUALAN {selected_month_name.upper()} {waktu_wib.year}*
-        ----------------------------------------
-        *1. PROGRAM PSM ({selected_psm_period_opt.upper()})*
-        • Target PSM     : {int(target_psm_tot):,} Pcs
-        • Actual Qty     : {int(actual_psm_tot):,} Pcs
-        • Achievement    : *{ach_psm:.1f}%*
+            ----------------------------------------
+            *1. PROGRAM PSM ({selected_psm_period_opt.upper()})*
+            • Target PSM     : {int(target_psm_tot):,} Pcs
+            • Actual Qty     : {int(actual_psm_tot):,} Pcs
+            • Achievement    : *{ach_psm:.1f}%*
 
-        *2. PROGRAM PENJUALAN & KINERJA (PPS)*
-        • *PWP (Pay With Points)*
-        - Syarat Redeem: {int(s_pwp):,}
-        - Total Redeem : {int(r_pwp):,}
-        - Target Qty   : {int(tq_pwp):,} Pcs
-        - Total Qty    : {int(q_pwp):,} Pcs
-        - Ach. Redeem  : *{ach_pwp_redeem:.1f}%*
-        - Ach. Qty     : *{ach_pwp_qty:.1f}%*
+            *2. PROGRAM PENJUALAN & KINERJA (PPS)*
+            • *PWP (Pay With Points)*
+            - Syarat Redeem: {int(s_pwp):,}
+            - Total Redeem : {int(r_pwp):,}
+            - Target Qty   : {int(tq_pwp):,} Pcs
+            - Total Qty    : {int(q_pwp):,} Pcs
+            - Ach. Redeem  : *{ach_pwp_redeem:.1f}%*
+            - Ach. Qty     : *{ach_pwp_qty:.1f}%*
 
-        • *SUEGER*
-        - Syarat Redeem: {int(s_sueger_val):,}
-        - Qty Redeem   : {int(r_sueger_val):,}
-        - Achievement  : *{ach_sueger:.1f}%*
+            • *SUEGER*
+            - Syarat Redeem: {int(s_sueger_val):,}
+            - Qty Redeem   : {int(r_sueger_val):,}
+            - Achievement  : *{ach_sueger:.1f}%*
 
-        • *SERBA GRATIS*
-        - Target Qty   : {int(t_sg):,} Pcs
-        - Actual Qty   : {int(q_sg):,} Pcs
-        - Achievement  : *{ach_sg:.1f}%*
+            • *SERBA GRATIS*
+            - Target Qty   : {int(t_sg):,} Pcs
+            - Actual Qty   : {int(q_sg):,} Pcs
+            - Achievement  : *{ach_sg:.1f}%*
 
-        • *CEMILAN CEBAN*
-        - Target Qty   : {int(t_ceban):,} Pcs
-        - Actual Qty   : {int(q_ceban):,} Pcs
-        - Achievement  : *{ach_ceban:.1f}%*
-        ----------------------------------------
-        _Generated automatically via LigaPSM System_
-        """.replace(",", ".")
+            • *CEMILAN CEBAN*
+            - Target Qty   : {int(t_ceban):,} Pcs
+            - Actual Qty   : {int(q_ceban):,} Pcs
+            - Achievement  : *{ach_ceban:.1f}%*
+            ----------------------------------------
+            _Generated automatically via LigaPSM System_
+            """.replace(",", ".")
 
-            st.markdown("##### 📝 Hasil Text Report (Siap Copas ke WA):")
-            st.text_area(
-                "Salin teks di bawah ini:",
-                wa_text,
-                height=360,
-                key="wa_summary_text_area",
-            )
-            st.code(wa_text, language="text")
+                st.markdown("##### 📝 Hasil Text Report (Siap Copas ke WA):")
+                st.text_area(
+                    "Salin teks di bawah ini:",
+                    wa_text,
+                    height=360,
+                    key="wa_summary_text_area",
+                )
+                st.code(wa_text, language="text")
