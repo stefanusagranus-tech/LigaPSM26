@@ -2484,7 +2484,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     </div>
                     <p class="open-page-footer">Page 1 • Daily Bulletin</p>
                 </div>
-                
                 <!-- 📄 HALAMAN KANAN: MISI SKALA BESAR -->
                 <div class="rpg-book-page">
                     <h3 class="open-page-title">🏆 SEASON QUESTS</h3>
