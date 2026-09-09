@@ -2126,6 +2126,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     '</div>'
                     '</div>'
                 )
+            st.markdown(html_content_pages, unsafe_allow_html=True)
 
             # --- 🐞 KODE DEBUG SEMENTARA UNTUK MENGECEK DATA ---
             with st.expander("🛠️ Kotak Debug Data (Klik untuk Buka)"):
@@ -2144,9 +2145,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     st.dataframe(sales_personil)
                     st.write("Kolom yang tersedia:", sales_personil.columns.tolist())
                 else:
-                    st.warning("DataFrame sales_personil kosong atau belum termuat di session_state!")    
-
-                        st.markdown(html_content_pages, unsafe_allow_html=True)
+                    st.warning("DataFrame sales_personil kosong atau belum termuat di session_state!")
 
             # --- 🏛️ 6. TOMBOL NAVIGASI BAWAH ---
             if current_page == 3:
