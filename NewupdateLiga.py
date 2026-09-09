@@ -902,6 +902,16 @@ if not st.session_state.sidebar_collapsed:
         </div>
     """, unsafe_allow_html=True
     )
+
+    def toggle_sidebar_size():
+    # Toggle nilai status lebar sidebar antara ukuran kecil dan besar
+    if st.session_state.get("sidebar_width", "280px") == "280px":
+        st.session_state.sidebar_width = "70px"
+        st.session_state.sidebar_collapsed = True
+    else:
+        st.session_state.sidebar_width = "280px"
+        st.session_state.sidebar_collapsed = False
+        
     # Tombol Panah ditaruh di bawah profil agar posisinya pas dan stabil
     st.sidebar.button("◀ Tutup Sidebar", on_click=toggle_sidebar_size, key="toggle_size_btn_open", use_container_width=True)
 else:
