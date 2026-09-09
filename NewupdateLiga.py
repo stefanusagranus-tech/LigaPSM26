@@ -2353,31 +2353,116 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     st.session_state["book_page_number"] += 1
                     st.rerun()
 
-            # --- 🐞 KODE DEBUG SEMENTARA UNTUK MENGECEK DATA ---
-            with st.expander("🛠️ Kotak Debug Data (Klik untuk Buka)"):
-                st.write("1. Username Aktif:", username_hero)
-                st.write("2. Bulan Aktif:", st.session_state.get("selected_month", "September"))
-                
-                st.write("--- Isi DataFrame SALES_ITEM ---")
-                if not df_sales_item.empty:
-                    st.dataframe(df_sales_item)
-                    st.write("Kolom yang tersedia:", df_sales_item.columns.tolist())
-                else:
-                    st.warning("DataFrame df_sales_item kosong atau belum termuat di session_state!")
-                    
-                st.write("--- Isi DataFrame SALES_PERSONIL ---")
-                if not sales_personil.empty:
-                    st.dataframe(sales_personil)
-                    st.write("Kolom yang tersedia:", sales_personil.columns.tolist())
-                else:
-                    st.warning("DataFrame sales_personil kosong atau belum termuat di session_state!")
+    
+        # ==============================================================================
+        # 🚪 KONDISI 3: BUKU TERBUKA - KITAB MISI GUILD (CUSTOM DESIGN)
+        # ==============================================================================
+        elif st.session_state.get("campaign_sub_page") == "view_buku_tugas":
+            
+            # 🎨 STYLING CSS KHUSUS HALAMAN BUKU
+            st.markdown(
+                """
+                <style>
+                    .guild-lobby-title {
+                        text-align: center;
+                        font-family: 'Courier New', monospace;
+                        font-weight: 900;
+                        color: #b45309;
+                        margin-bottom: 2px;
+                        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+                    }
+                    .guild-lobby-sub {
+                        text-align: center;
+                        font-family: 'Courier New', monospace;
+                        font-size: 11px;
+                        color: #78716c;
+                        margin-bottom: 20px;
+                        font-style: italic;
+                    }
+                    .rpg-open-book-container {
+                        background: #fdf8f2;
+                        border: 6px solid #3d2b1f;
+                        border-radius: 12px;
+                        box-shadow: 0 20px 40px rgba(0,0,0,0.8), inset 0 0 50px rgba(181, 101, 29, 0.15);
+                        display: flex;
+                        min-height: 380px;
+                        max-height: 400px;
+                        position: relative;
+                        overflow: hidden;
+                        width: 100%;
+                        max-width: 650px;
+                        margin: 0 auto;
+                    }
+                    .rpg-open-book-container::before {
+                        content: "";
+                        position: absolute;
+                        top: 0;
+                        left: 50%;
+                        width: 6px;
+                        height: 100%;
+                        background: linear-gradient(90deg, rgba(61,43,31,0.5), rgba(20,10,5,0.8), rgba(61,43,31,0.5));
+                        z-index: 5;
+                    }
+                    .rpg-book-page {
+                        width: 50%;
+                        padding: 20px 15px;
+                        box-sizing: border-box;
+                        display: flex;
+                        flex-direction: column;
+                        color: #2b1d0c;
+                        font-family: 'Courier New', monospace;
+                        overflow-y: auto;
+                    }
+                    .open-page-title {
+                        text-align: center;
+                        font-size: 13px;
+                        font-weight: 900;
+                        margin: 0 0 2px 0;
+                        color: #854d0e;
+                        letter-spacing: 0.5px;
+                        text-transform: uppercase;
+                    }
+                    .open-page-subtitle {
+                        text-align: center;
+                        font-size: 9.5px;
+                        color: #78716c;
+                        margin: 0 0 10px 0;
+                        font-style: italic;
+                    }
+                    .open-book-divider {
+                        border-bottom: 2px double #b45309;
+                        margin-bottom: 14px;
+                        width: 100%;
+                        opacity: 0.7;
+                    }
+                    .open-stat-row {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        font-size: 10px;
+                        font-weight: bold;
+                        margin-bottom: 14px;
+                        border-bottom: 1px dashed rgba(133,77,14,0.25);
+                        padding-bottom: 6px;
+                    }
+                    .open-page-footer {
+                        margin-top: auto;
+                        font-size: 9px;
+                        color: #78716c;
+                        text-align: center;
+                        font-weight: bold;
+                        padding-top: 6px;
+                    }
+                </style>
+                """,
+                unsafe_allow_html=True
+            )
 
-        #==============================================================================================#
-        # 🚪 KONDISI 3: BUKU TERBUKA - KITAB MISI GUILD
-        elif st.session_state["campaign_sub_page"] == "view_buku_tugas":
-            st.markdown("<h2 class='guild-lobby-title'> 📜 KITAB MISI GUILD </h2>", unsafe_allow_html=True)
+            # 🏛️ HEADER UTAMA
+            st.markdown("<h2 class='guild-lobby-title'>📜 KITAB MISI GUILD</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub'>Lembar maklumat rincian target harian dan season toko.</p>", unsafe_allow_html=True)
             
+            # 📖 STRUKTUR HTML BUKU TERBUKA (2 HALAMAN)
             html_open_tugas = """
             <div class="rpg-open-book-container">
                 <!-- 📄 HALAMAN KIRI: MISI HARIAN -->
@@ -2385,31 +2470,49 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     <h3 class="open-page-title">⚡ DAILY QUESTS</h3>
                     <p class="open-page-subtitle">Tugas Hari Ini</p>
                     <div class="open-book-divider"></div>
-                    <div class="open-stat-row"><span>🔥 TARGET SG</span><span style="color:#16a34a;">2.3 Pcs (DONE)</span></div>
-                    <div class="open-stat-row"><span>🛡️ TARGET PWP</span><span style="color:#16a34a;">1.4 Pcs (DONE)</span></div>
-                    <div class="open-stat-row"><span>📦 TARGET PSM</span><span style="color:#dc2626;">3.5 Pcs (HUNTING)</span></div>
+                    <div class="open-stat-row">
+                        <span>🔥 TARGET SG</span>
+                        <span style="color:#16a34a;">2.3 Pcs <span style="font-size:8.5px;">(DONE)</span></span>
+                    </div>
+                    <div class="open-stat-row">
+                        <span>🛡️ TARGET PWP</span>
+                        <span style="color:#16a34a;">1.4 Pcs <span style="font-size:8.5px;">(DONE)</span></span>
+                    </div>
+                    <div class="open-stat-row">
+                        <span>📦 TARGET PSM</span>
+                        <span style="color:#dc2626;">3.5 Pcs <span style="font-size:8.5px;">(HUNTING)</span></span>
+                    </div>
                     <p class="open-page-footer">Page 1 • Daily Bulletin</p>
                 </div>
-                <!-- 📄 HALAMAN KANAN: MISI BERKALA -->
+                
+                <!-- 📄 HALAMAN KANAN: MISI SKALA BESAR -->
                 <div class="rpg-book-page">
                     <h3 class="open-page-title">🏆 SEASON QUESTS</h3>
                     <p class="open-page-subtitle">Misi Skala Besar</p>
                     <div class="open-book-divider"></div>
-                    <div class="open-stat-row"><span>⚔️ WEEKLY PSM</span><span style="color:#854d0e;">38 Pcs</span></div>
-                    <div class="open-stat-row"><span>🛡️ PERIOD PWP</span><span style="color:#854d0e;">20 Pcs</span></div>
+                    <div class="open-stat-row">
+                        <span>⚔️ WEEKLY PSM</span>
+                        <span style="color:#854d0e; font-weight:900;">38 Pcs</span>
+                    </div>
+                    <div class="open-stat-row">
+                        <span>🛡️ PERIOD PWP</span>
+                        <span style="color:#854d0e; font-weight:900;">20 Pcs</span>
+                    </div>
                     <p class="open-page-footer">Page 2 • Guild Orders</p>
                 </div>
             </div>
             """
+            
             st.markdown(html_open_tugas, unsafe_allow_html=True)
             st.markdown("<br>", unsafe_allow_html=True)
             
+            # 🚪 TOMBOL KELUAR / KEMBALI KE LOBBY
             if st.button("⬅️ TUTUP KITAB MISI", use_container_width=True, key="btn_close_inner_buku2_fixed"):
                 st.session_state["campaign_sub_page"] = "resepsionis_utama"
                 st.rerun()
 
-        # Memotong eksekusi halaman secara resmi agar skrip dashboard utama di bawah tidak bocor masuk
-        st.stop()
+            # Memotong eksekusi halaman agar skrip di bawahnya tidak ikut terpanggil
+            st.stop()
 
     # ⛺ JALUR C: BERANDA UTAMA 3 KARTU CAMP (YANG HARUSNYA MUNCUL DI AWAL)
     elif st.session_state["current_camp_menu"] == "main":
