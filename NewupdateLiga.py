@@ -2454,7 +2454,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         import textwrap
 
         # ==========================================
-        # 🎨 1. SUNTIKAN CSS (WATERMARK PNG NAGA BARU KIRI & KANAN)
+        # 🎨 1. SUNTIKAN CSS (WATERMARK NAGA MENYESUAIKAN UKURAN KERTAS)
         # ==========================================
         st.markdown("""
         <style>
@@ -2520,27 +2520,20 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 background-repeat: no-repeat;
             }
 
-            /* WATERMARK HALAMAN KIRI (Menggunakan link PNG Naga Baru) */
-            .rpg-book-page-left {
+            /* WATERMARK HALAMAN KIRI & KANAN (Menyesuaikan Ukuran Kotak Kertas) */
+            .rpg-book-page-left, .rpg-book-page-right {
                 background-image: url("https://img.pikbest.com/png-images/20250303/fierce-dragon-silhouette--e2-80-93-stylized-black-and-white-mythical-beast-illustration_11570728.png!bw800");
-                background-position: center;
-                background-size: 260px 260px;
+                background-position: center 65%;
+                /* Menggunakan 'contain' agar ukurannya proporsional pas di dalam kertas */
+                background-size: 75% auto; 
             }
 
-            /* WATERMARK HALAMAN KANAN (Menggunakan link PNG Naga Baru) */
-            .rpg-book-page-right {
-                background-image: url("https://img.pikbest.com/png-images/20250303/fierce-dragon-silhouette--e2-80-93-stylized-black-and-white-mythical-beast-illustration_11570728.png!bw800");
-                background-position: center;
-                background-size: 260px 260px;
-            }
-
-            /* Efek transparan khusus untuk gambar latar belakang PNG agar mirip watermark */
+            /* Efek transparan kertas di atas watermark agar tetap nyaman dibaca */
             .rpg-book-page::before {
                 content: "";
                 position: absolute;
                 top: 0; left: 0; right: 0; bottom: 0;
-                /* Menjadikan warna kertas menutupi gambar agar jadi samar/watermark */
-                background-color: rgba(255, 251, 235, 0.93); 
+                background-color: rgba(255, 251, 235, 0.90); 
                 z-index: 1;
                 pointer-events: none;
                 border-radius: 6px;
@@ -2556,7 +2549,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     width: 100% !important;
                     min-height: 360px !important;
                     max-height: 360px !important;
-                    background-size: 180px 180px;
+                }
+                .rpg-book-page-left, .rpg-book-page-right {
+                    background-size: 65% auto;
                 }
             }
 
