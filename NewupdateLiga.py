@@ -2785,6 +2785,22 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         st.markdown(html_open_tugas, unsafe_allow_html=True)
         st.stop()
 
+        # ==========================================
+        # 🐛 DEBUG MODE PANEL
+        # ==========================================
+        DEBUG_MODE = True  # Ubah ke False jika ingin menyembunyikan panel debug
+        
+        if DEBUG_MODE:
+            with st.expander("🛠️ Panel Debug - Kitab Misi Guild", expanded=False):
+                st.write("**Status Session State Saat Ini:**")
+                st.json({
+                    "kitab_misi_page": st.session_state.get("kitab_misi_page"),
+                    "page_direction": st.session_state.get("page_direction"),
+                    "campaign_sub_page": st.session_state.get("campaign_sub_page"),
+                    "total_sheets": TOTAL_SHEETS
+                })
+                st.write(f"**Mapping Data Aktif:** Halaman {page_num} memuat data dari *dummy_9_personil* (Total data: {len(dummy_9_personil)} baris).")
+
     #===============================================================================#
      # ⛺ JALUR C: BERANDA UTAMA 3 KARTU CAMP (YANG HARUSNYA MUNCUL DI AWAL)
     #==============================================================================#
