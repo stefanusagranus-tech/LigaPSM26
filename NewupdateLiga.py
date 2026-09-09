@@ -1682,7 +1682,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.session_state["campaign_sub_page"] = "resepsionis_utama"
 
         # =========================================================================
-        # 🎨 1. SUNTIKKAN SISI CSS FULLSCREEN SEJAJAR (STERIL & ANTI-BENTROK - FIXED)
+        # 🎨 1. SUNTIKKAN SISI CSS FULLSCREEN SEJAJAR (ANIMASI BUKU & TOMBOL KAYU)
         # =========================================================================
         st.markdown(
             """
@@ -1692,7 +1692,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     display: none !important; width: 0px !important;
                 }
                 
-                /* FIX STERIL: Menghapus header bawaan Streamlit TANPA melenyapkan elemen anak pertama jurnismu */
+                /* FIX STERIL: Menghapus header bawaan Streamlit */
                 [data-testid="stHeader"], header, .stAppHeader {
                     display: none !important; height: 0px !important; margin: 0 !important;
                 }
@@ -1706,79 +1706,96 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 .guild-lobby-title { text-align: center; color: #fbbf24 !important; font-family: monospace; font-size: 24px !important; font-weight: 900 !important; text-shadow: 0 0 12px rgba(251,191,36,0.4) !important; margin: 0 0 5px 0 !important; }
                 .guild-lobby-sub { text-align: center; color: #475569 !important; font-size: 11px !important; margin: 0 0 25px 0 !important; font-family: monospace; }
                 
-                 /* ========================================================================= */
-                /* 👑 FIX MUTLAK: OVERRIDER BUKU MENYATU PERTAMA + POSISI TENGAH SIMETRIS     */
                 /* ========================================================================= */
-                div[data-testid="stColumn"] button[data-testid^="stBaseButton-"][key="btn_buku_buruan_pure_css"],
-                div[data-testid="stColumn"] button[data-testid^="stBaseButton-"][key="btn_buku_misi_pure_css"] {
-                    /* Kunci tinggi vertikal buku premium */
-                    min-height: 250px !important; 
-                    height: 250px !important;
-                    
-                    /* 🎯 SEKTOR KUNCI: Kunci lebar dan paksa posisi bergeser ke tengah kolom */
-                    max-width: 210px !important;  
-                    width: 210px !important;
-                    margin: 0 auto !important; /* Dorong mati ke tengah-tengah kolom secara simetris */
-                    
-                    border-radius: 6px 20px 20px 6px !important;
-                    border-left: 14px solid rgba(0,0,0,0.55) !important; /* Punggung Buku */
-                    box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
-                    
-                    /* Hancurkan layout memanjang horizontal milik tema universal */
-                    display: flex !important;
-                    flex-direction: column !important;
-                    white-space: pre-line !important; /* WAJIB: Aktifkan fungsi enter \n Python */
-                    justify-content: space-between !important; 
-                    align-items: center !important;
-                    text-align: center !important;
-                    padding: 22px 14px !important;
-                    box-sizing: border-box !important;
-                    font-family: monospace !important;
-                    font-size: 11px !important;
-                    font-weight: 600 !important;
-                    line-height: 1.4 !important;
-                    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
-                }
-
-                /* Menghilangkan efek gosong hitam saat tombol diklik */
-                div[data-testid="stColumn"] button[key="btn_buku_buruan_pure_css"]:active, 
-                div[data-testid="stColumn"] button[key="btn_buku_misi_pure_css"]:focus {
-                    background: inherit !important;
-                    filter: none !important;
+                /* 🪵 TOMBOL BAWAH: PAPAN KAYU ANTIK (TANPA GLOW)                            */
+                /* ========================================================================= */
+                div[data-testid="stColumn"] button[key="btn_close_inner_buku2_fixed"],
+                .stButton button {
+                    background: linear-gradient(135deg, #4a3319 0%, #2c1d0c 100%) !important;
+                    color: #e2d9c5 !important;
+                    border: 2px solid #5c4033 !important;
+                    border-top: 2px solid #735137 !important;
+                    border-bottom: 2px solid #1a1107 !important;
+                    border-radius: 6px !important;
+                    box-shadow: 0 6px 15px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1) !important;
+                    font-family: 'Courier New', monospace !important;
+                    font-weight: bold !important;
+                    text-shadow: 0 1px 2px rgba(0,0,0,0.8) !important;
+                    transition: all 0.2s ease !important;
                 }
                 
-                /* 📘 TEMA WARNA BUKU 1 (JURNAL BURUAN - KOLOM KIRI) */
-                div[data-testid="stColumn"]:nth-child(1) button[data-testid^="stBaseButton-"][key="btn_buku_buruan_pure_css"] {
-                    background: linear-gradient(135deg, #0b1329 0%, #1e3a8a 100%) !important;
-                    color: #38bdf8 !important;
-                    border: 2px solid #38bdf8 !important;
-                    box-shadow: 5px 15px 30px rgba(0,0,0,0.6), inset -6px 0 15px rgba(0,0,0,0.4) !important;
-                }
-                div[data-testid="stColumn"]:nth-child(1) button[key="btn_buku_buruan_pure_css"]:hover {
-                    transform: translateY(-8px) rotate(-1deg) !important; /* Efek mengambang miring */
-                    border-color: #00f0ff !important;
-                    box-shadow: 0 0 25px rgba(0, 240, 255, 0.5), inset -6px 0 15px rgba(0,0,0,0.2) !important;
-                    color: #ffffff !important;
-                }
-                
-                /* 🔮 TEMA WARNA BUKU 2 (KITAB MISI GUILD - KOLOM KANAN) */
-                div[data-testid="stColumn"]:nth-child(2) button[data-testid^="stBaseButton-"][key="btn_buku_misi_pure_css"] {
-                    background: linear-gradient(135deg, #161233 0%, #581c87 100%) !important;
-                    color: #c084fc !important;
-                    border: 2px solid #c084fc !important;
-                    box-shadow: 5px 15px 30px rgba(0,0,0,0.6), inset -6px 0 15px rgba(0,0,0,0.4) !important;
-                }
-                div[data-testid="stColumn"]:nth-child(2) button[key="btn_buku_misi_pure_css"]:hover {
-                    transform: translateY(-8px) rotate(1deg) !important;
-                    border-color: #d8b4fe !important;
-                    box-shadow: 0 0 25px rgba(168, 85, 247, 0.5), inset -6px 0 15px rgba(0,0,0,0.2) !important;
-                    color: #ffffff !important;
+                /* Efek saat tombol kayu ditekan (turun dan agak gelap tanpa cahaya neon) */
+                .stButton button:active {
+                    background: linear-gradient(135deg, #2c1d0c 0%, #1a1107 100%) !important;
+                    transform: translateY(2px) !important;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.8), inset 0 2px 4px rgba(0,0,0,0.5) !important;
+                    border-color: #3d2b1f !important;
+                    color: #b5a995 !important;
                 }
 
-                /* Tampilan Buku Terbuka (Perkamen Kuno) */
-                .rpg-open-book-container { background: #f4eae1 !important; border: 4px solid #5c4033 !important; border-radius: 12px !important; box-shadow: 0 15px 35px rgba(0,0,0,0.6) !important; display: flex !important; min-height: 380px !important; position: relative !important; overflow: hidden !important; width: 100% !important; max-width: 580px !important; margin: 0 auto !important; }
-                .rpg-open-book-container::before { content: "" !important; position: absolute !important; top: 0 !important; left: 50% !important; width: 2px !important; height: 100% !important; background: linear-gradient(90deg, rgba(0,0,0,0.15), rgba(0,0,0,0.3), rgba(0,0,0,0.15)) !important; box-shadow: 0 0 10px rgba(0,0,0,0.4) !important; z-index: 5 !important; }
-                .rpg-book-page { width: 50% !important; padding: 24px 18px !important; box-sizing: border-box !important; display: flex !important; flex-direction: column !important; justify-content: flex-start !important; color: #2b1d0c !important; font-family: 'Courier New', monospace !important; }
+                /* ========================================================================= */
+                /* 📖 ANIMASI & STRUKTUR BUKU TERBUKA (PERKAMEN KUNO DENGAN EFEK 3D FLIP)    */
+                /* ========================================================================= */
+                @keyframes flipPageLeft {
+                    0% { transform: rotateY(-90deg); opacity: 0; }
+                    100% { transform: rotateY(0deg); opacity: 1; }
+                }
+
+                @keyframes flipPageRight {
+                    0% { transform: rotateY(90deg); opacity: 0; }
+                    100% { transform: rotateY(0deg); opacity: 1; }
+                }
+
+                .rpg-open-book-container { 
+                    background: #f4eae1 !important; 
+                    border: 4px solid #5c4033 !important; 
+                    border-radius: 12px !important; 
+                    box-shadow: 0 15px 35px rgba(0,0,0,0.6) !important; 
+                    display: flex !important; 
+                    min-height: 380px !important; 
+                    position: relative !important; 
+                    overflow: hidden !important; 
+                    width: 100% !important; 
+                    max-width: 580px !important; 
+                    margin: 0 auto !important; 
+                    perspective: 1200px !important; /* Ruang 3D untuk efek lembar */
+                }
+                
+                .rpg-open-book-container::before { 
+                    content: "" !important; 
+                    position: absolute !important; 
+                    top: 0 !important; 
+                    left: 50% !important; 
+                    width: 2px !important; 
+                    height: 100% !important; 
+                    background: linear-gradient(90deg, rgba(0,0,0,0.15), rgba(0,0,0,0.3), rgba(0,0,0,0.15)) !important; 
+                    box-shadow: 0 0 10px rgba(0,0,0,0.4) !important; 
+                    z-index: 5 !important; 
+                }
+                
+                .rpg-book-page { 
+                    width: 50% !important; 
+                    padding: 24px 18px !important; 
+                    box-sizing: border-box !important; 
+                    display: flex !important; 
+                    flex-direction: column !important; 
+                    justify-content: flex-start !important; 
+                    color: #2b1d0c !important; 
+                    font-family: 'Courier New', monospace !important; 
+                }
+
+                /* Terapkan animasi flip 3D terpisah untuk halaman kiri dan kanan */
+                .rpg-book-page:nth-child(1) {
+                    transform-origin: left center !important;
+                    animation: flipPageLeft 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+                }
+
+                .rpg-book-page:nth-child(2) {
+                    transform-origin: right center !important;
+                    animation: flipPageRight 0.7s cubic-bezier(0.25, 1, 0.5, 1) 0.15s forwards !important;
+                    opacity: 0;
+                }
+
                 .open-page-title { text-align: center !important; font-size: 15px !important; font-weight: 900 !important; margin: 0 0 2px 0 !important; color: #854d0e !important; }
                 .open-page-sub { text-align: center !important; font-size: 10px !important; color: #a1a1aa !important; margin: 0 0 10px 0 !important; font-style: italic !important; }
                 .open-book-divider { border-bottom: 2px double #854d0e !important; margin-bottom: 15px !important; width: 100% !important; }
