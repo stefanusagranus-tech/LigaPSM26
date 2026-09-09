@@ -2457,12 +2457,25 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # ==========================================
         st.markdown("""
         <style>
+            /* Mengimpor font gaya medieval/blackletter dari Google Fonts */
+            @import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');
+
             .kitab-misi-page-wrapper {
                 position: relative;
                 width: 100%;
                 max-width: 950px;
                 margin: 0 auto;
                 box-sizing: border-box;
+            }
+
+            /* Menerapkan font Cloister Black / Blackletter pada Judul Utama */
+            .guild-lobby-title {
+                font-family: 'UnifrakturMaguntia', 'Cloister Black', 'Cinzel', serif !important;
+                font-size: 38px !important;
+                letter-spacing: 2px;
+                color: #f59e0b !important;
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+                text-align: center;
             }
 
             .rpg-open-book-container {
@@ -2492,7 +2505,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 flex-direction: column;
             }
 
-            /* Responsif untuk Mobile Android/iOS */
             @media (max-width: 768px) {
                 .rpg-open-book-container {
                     flex-direction: column !important;
