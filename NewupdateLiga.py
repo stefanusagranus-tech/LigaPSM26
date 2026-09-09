@@ -2715,7 +2715,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             # Render HTML kartu item interaktif
             items_html_left = ""
             items_html_right = ""
-            
             # Data contoh item jika data sheet belum di-mapping penuh
             sample_items = [
                 ("Item A (Special Special)", 50, 48),
@@ -2723,7 +2722,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 ("Item C (Common Potion)", 100, 75),
                 ("Item D (Legendary Scroll)", 30, 32) # Tercapai (Hijau)
             ]
-
             for idx, (iname, itarget, iaktual) in enumerate(sample_items):
                 gap = itarget - iaktual
                 achiv = (iaktual / itarget) * 100 if itarget > 0 else 0
