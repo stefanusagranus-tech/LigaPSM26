@@ -2452,16 +2452,16 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # ==============================================================================
         import streamlit as st
         import textwrap
-        
+
         # ==========================================
-        # 🎨 1. SUNTIKAN CSS (WATERMARK SILUET NAGA DI HALAMAN BUKU)
+        # 🎨 1. SUNTIKAN CSS (WATERMARK SILUET NAGA KLASIK)
         # ==========================================
         st.markdown("""
         <style>
             /* Mengimpor font MedievalSharp dari Google Fonts */
             @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
 
-            /* Background Utama: Hitam pekat dengan tekstur pola siluet naga yang tegas */
+            /* Background Utama */
             .stApp {
                 background-color: #030303 !important;
                 background-image: 
@@ -2478,7 +2478,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 box-sizing: border-box;
             }
 
-            /* Menerapkan font MedievalSharp pada Judul Utama Guild */
             .guild-lobby-title {
                 font-family: 'MedievalSharp', cursive, serif !important;
                 font-size: 38px !important;
@@ -2502,18 +2501,19 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 box-sizing: border-box !important;
             }
 
-            /* KONTROL UKURAN HALAMAN BUKU & WATERMARK SILUET NAGA */
+            /* KONTROL UKURAN HALAMAN BUKU & WATERMARK SILUET NAGA SEPERTI GAMBAR */
             .rpg-book-page {
                 flex: 1 1 50% !important;
                 width: 50% !important;
                 min-height: 430px !important;
                 max-height: 430px !important;
                 background-color: #fffbeb;
-                /* WATERMARK SILUET NAGA DI TENGAH HALAMAN BUKU */
-                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23b45309' opacity='0.06'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z'/%3E%3C/svg%3E");
+                
+                /* WATERMARK SILUET NAGA KLASIK */
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 500' fill='%2378350f' opacity='0.07'%3E%3Cpath d='M250 80C220 80 190 95 170 120C150 100 120 90 90 100C70 106 55 120 45 140C30 135 15 145 10 160C5 175 10 190 20 200C15 210 15 225 25 235C30 220 45 210 60 215C50 230 55 250 70 260C60 280 65 305 85 320C75 340 85 365 105 375C95 395 110 420 130 430C120 450 140 475 165 480C190 485 215 470 225 450C240 460 260 460 275 450C290 470 315 485 340 480C365 475 385 450 375 430C395 420 410 395 400 375C420 365 430 340 420 320C440 305 445 280 435 260C450 250 455 230 445 215C460 210 475 220 480 235C490 225 490 210 485 200C495 190 500 175 495 160C490 145 475 135 460 140C450 120 435 106 415 100C385 90 355 100 335 120C315 95 285 80 250 80Z'/%3E%3C/svg%3E");
                 background-repeat: no-repeat;
                 background-position: center;
-                background-size: 220px 220px;
+                background-size: 260px 260px;
                 
                 padding: 16px;
                 border-radius: 6px;
@@ -2536,11 +2536,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     width: 100% !important;
                     min-height: 360px !important;
                     max-height: 360px !important;
-                    background-size: 160px 160px;
+                    background-size: 180px 180px;
                 }
             }
 
-            /* Judul Setiap Lembar Buku: Font MedievalSharp & Rata Tengah */
             .open-page-title {
                 font-family: 'MedievalSharp', cursive, serif !important;
                 font-weight: bold;
@@ -2552,7 +2551,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 z-index: 2;
             }
 
-            /* Sub-judul Setiap Lembar Buku: Rata Tengah */
             .open-page-sub {
                 font-size: 12px;
                 color: #78350f !important;
