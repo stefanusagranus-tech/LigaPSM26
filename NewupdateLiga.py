@@ -1924,8 +1924,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
 
-        # =========================================================================
-        # 📘 JURNAL BURUAN INDIVIDU (RPG ENHANCED EDITION DENGAN LOG HARIAN SUEGER)
+       # =========================================================================
+        # 📘 JURNAL BURUAN INDIVIDU (LENGKAP DENGAN PERBAIKAN LOG HARIAN SUEGER & RANKING PENJUALAN PSM)
         # =========================================================================
         elif st.session_state.get("campaign_sub_page") == "view_buku_pencapaian":
             
@@ -1994,59 +1994,86 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     total_syarat_sueger = df_pps_user['syarat_sueger'].sum() if 'syarat_sueger' in df_pps_user.columns else 0
                     total_redeem_sueger = df_pps_user['redeem_sueger'].sum() if 'redeem_sueger' in df_pps_user.columns else 0
 
-                    # Ekstraksi Tanggal & Shift untuk Log Sueger Harian
-                    if 'updated_at' in df_pps_user.columns:
-                        for _, row in df_pps_user.iterrows():
-                            tgl_raw = str(row.get('updated_at', ''))
-                            shift_raw = str(row.get('shift_person', 'SHIFT 1')).strip().upper()
-                            redeem_val = int(row.get('redeem_sueger', 0))
-                            
-                            try:
-                                parsed_dt = pd.to_datetime(tgl_raw, errors='coerce')
-                                if pd.notna(parsed_dt):
-                                    tgl_str = parsed_dt.strftime("Tanggal %d")
-                                else:
-                                    tgl_str = "Tanggal 01"
-                            except Exception:
-                                tgl_str = "Tanggal 01"
+                    # Ekstraksi Baris per Baris (Tanggal, Shift Asli, Syarat, Redeem, & Achievement %)
+                    for _, row in df_pps_user.iterrows():
+                        tgl_raw = str(row.get('updated_at', '')) or str(row.get('date', ''))
+                        
+                        # Ambil shift langsung dari kolom dataframe (misal: shift_person, shift, dll.)
+                        shift_raw = "SHIFT 1"
+                        for s_col in ['shift_person', 'shift', 'nama_shift']:
+                            if s_col in row and pd.notna(row[s_col]) and str(row[s_col]).strip() != "":
+                                shift_raw = str(row[s_col]).strip().upper()
+                                break
+                        
+                        syarat_row = int(row.get('syarat_sueger', 0))
+                        redeem_row = int(row.get('redeem_sueger', 0))
+                        
+                        # Hitung Achievement % per baris log
+                        ach_row = (redeem_row / syarat_row * 100) if syarat_row > 0 else 0.0
+                        
+                        # Format Tanggal
+                        try:
+                            parsed_dt = pd.to_datetime(tgl_raw, errors='coerce')
+                            if pd.notna(parsed_dt):
+                                tgl_str = f"Tgl {parsed_dt.strftime('%d/%m')}"
+                            else:
+                                tgl_str = "Tgl Khusus"
+                        except Exception:
+                            tgl_str = "Tgl Khusus"
 
-                            if redeem_val > 0:
-                                log_sueger_collection.append(
-                                    f'<div class="open-stat-row"><span>{tgl_str} <span style="font-size:8px; color:#b45309; background:#fef08a; padding:1px 4px; border-radius:4px;">{shift_raw}</span></span><span style="color:#0d9488; font-weight:900;">Rp {redeem_val * 5000:,} 🍹</span></div>'
-                                )
+                        # Tampilkan baris jika ada data redeem atau syarat
+                        if syarat_row > 0 or redeem_row > 0:
+                            log_sueger_collection.append(
+                                f'<div class="open-stat-row">'
+                                f'<span>{tgl_str} <span style="font-size:7.5px; color:#b45309; background:#fef08a; padding:1px 3px; border-radius:3px;">{shift_raw}</span></span>'
+                                f'<span style="color:#0d9488; font-weight:900;">Syarat: {syarat_row} | Redeem: {redeem_row} (<span style="color:#ca8a04;">{ach_row:.0f}%</span>)</span>'
+                                f'</div>'
+                            )
 
             if not log_sueger_collection:
-                log_sueger_collection.append('<div class="open-stat-row"><span>BELUM ADA ARSIP SUEGER</span><span style="color:#71717a;">Rp 0</span></div>')
+                log_sueger_collection.append('<div class="open-stat-row"><span>BELUM ADA ARSIP SUEGER</span><span style="color:#71717a;">-</span></div>')
 
-            # Hitung Achievement % Sueger
+            # Hitung Achievement % Total Sueger
             achievement_pct = 0.0
             if total_syarat_sueger > 0:
                 achievement_pct = (total_redeem_sueger / total_syarat_sueger) * 100
             achievement_str = f"{achievement_pct:.1f}%"
 
-            # --- 🔍 2. HITUNG RANKING KASIR DI SALES_PPS ---
+            # --- 🔍 2. HITUNG QTY PENJUALAN & RANKING PENJUALAN DARI SALES_PERSONIL ---
+            qty_penjualan_psm_val = 0
             ranking_pwp_sg_val = "#RANK -"
-            ranking_sueger_val = "#RANK -"
 
+            if not sales_personil.empty and 'period_id' in sales_personil.columns and 'person_name' in sales_personil.columns:
+                df_sp_all = sales_personil.copy()
+                df_sp_all['person_clean'] = df_sp_all['person_name'].astype(str).str.strip().str.upper()
+                df_sp_all['actual_qty'] = pd.to_numeric(df_sp_all['actual_qty'], errors='coerce').fillna(0)
+
+                # Filter untuk periode bulan berjalan
+                df_sp_bulan_ini = df_sp_all[df_sp_all['period_id'].astype(str).str.strip().isin(list_periode_bulan_ini)]
+
+                # Hitung Qty Penjualan PSM milik user yang sedang aktif
+                df_user_sales = df_sp_bulan_ini[df_sp_bulan_ini['person_clean'] == username_hero]
+                if not df_user_sales.empty:
+                    qty_penjualan_psm_val = int(df_user_sales['actual_qty'].sum())
+
+                # Hitung Ranking Penjualan berdasarkan total actual_qty per kasir/person_name dalam bulan berjalan
+                df_ranked_sales = df_sp_bulan_ini.groupby('person_clean')['actual_qty'].sum().reset_index()
+                df_ranked_sales = df_ranked_sales.sort_values(by='actual_qty', ascending=False).reset_index(drop=True)
+                df_ranked_sales['rank'] = df_ranked_sales.index + 1
+
+                user_sales_rank = df_ranked_sales[df_ranked_sales['person_clean'] == username_hero]
+                if not user_sales_rank.empty:
+                    ranking_pwp_sg_val = f"#RANK {int(user_sales_rank['rank'].values[0])}"
+
+            # Ranking Sueger Achievement
+            ranking_sueger_val = "#RANK -"
             if not sales_pps_df.empty and 'kasir_name' in sales_pps_df.columns:
                 df_pps_all = sales_pps_df.copy()
-                for col_num in ['qty_pwp', 'qty_sg', 'syarat_sueger', 'redeem_sueger']:
+                for col_num in ['syarat_sueger', 'redeem_sueger']:
                     if col_num in df_pps_all.columns:
                         df_pps_all[col_num] = pd.to_numeric(df_pps_all[col_num], errors='coerce').fillna(0)
                 
                 df_pps_all['kasir_clean'] = df_pps_all['kasir_name'].astype(str).str.strip().str.upper()
-
-                # Ranking PWP + SG
-                df_pps_all['total_pwp_sg'] = df_pps_all.get('qty_pwp', 0) + df_pps_all.get('qty_sg', 0)
-                df_ranked_pwpsg = df_pps_all.groupby('kasir_clean')['total_pwp_sg'].sum().reset_index()
-                df_ranked_pwpsg = df_ranked_pwpsg.sort_values(by='total_pwp_sg', ascending=False).reset_index(drop=True)
-                df_ranked_pwpsg['rank'] = df_ranked_pwpsg.index + 1
-                
-                user_pwpsg_row = df_ranked_pwpsg[df_ranked_pwpsg['kasir_clean'] == username_hero]
-                if not user_pwpsg_row.empty:
-                    ranking_pwp_sg_val = f"#RANK {int(user_pwpsg_row['rank'].values[0])}"
-
-                # Ranking Achievement Sueger
                 df_ranked_sueger = df_pps_all.groupby('kasir_clean')[['syarat_sueger', 'redeem_sueger']].sum().reset_index()
                 df_ranked_sueger['ach_sueger'] = df_ranked_sueger.apply(
                     lambda r: (r['redeem_sueger'] / r['syarat_sueger'] * 100) if r['syarat_sueger'] > 0 else 0.0, axis=1
@@ -2079,21 +2106,19 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         tgt_val = pd.to_numeric(row['target_kasir'], errors='coerce') or 0
                         dict_target_item[it_name] = dict_target_item.get(it_name, 0) + int(tgt_val)
 
-            qty_penjualan_psm_val = 0
             list_item_tercapai_collection = []
             
             if not sales_personil.empty and 'period_id' in sales_personil.columns and 'person_name' in sales_personil.columns:
-                df_user_sales = sales_personil[
+                df_user_sales_items = sales_personil[
                     (sales_personil['period_id'].astype(str).str.strip().isin(list_periode_bulan_ini)) & 
-                    (sales_personil['person_name'].str.upper() == username_hero)
+                    (sales_personil['person_name'].astype(str).str.strip().str.upper() == username_hero)
                 ].copy()
                 
-                if not df_user_sales.empty:
-                    df_user_sales['actual_qty'] = pd.to_numeric(df_user_sales['actual_qty'], errors='coerce').fillna(0)
-                    qty_penjualan_psm_val = int(df_user_sales['actual_qty'].sum())
+                if not df_user_sales_items.empty:
+                    df_user_sales_items['actual_qty'] = pd.to_numeric(df_user_sales_items['actual_qty'], errors='coerce').fillna(0)
 
-                    if 'item_name' in df_user_sales.columns:
-                        df_grouped_item = df_user_sales.groupby(df_user_sales['item_name'].astype(str).str.strip().str.upper())['actual_qty'].sum().reset_index()
+                    if 'item_name' in df_user_sales_items.columns:
+                        df_grouped_item = df_user_sales_items.groupby(df_user_sales_items['item_name'].astype(str).str.strip().str.upper())['actual_qty'].sum().reset_index()
                         df_grouped_item.columns = ['item_name', 'actual_qty']
                         
                         for _, row in df_grouped_item.iterrows():
@@ -2171,14 +2196,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             current_spread = book_spreads[current_page - 1]
 
-            # --- 🎨 STYLING RPG BUKU (MAKIN ELEGAN & IMERSIF) ---
+            # --- 🎨 STYLING RPG BUKU ---
             st.markdown(
                 """
                 <style>
                     div[data-testid="stColumn"] button[key^="btn_desk_nav_"],
                     div[data-testid="stVerticalBlockBorderWrapper"] button[key^="btn_desk_nav_"],
                     .stButton button[key^="btn_desk_nav_"] {
-                        width: 100% !important; max-width: 580px !important; margin: 0 auto !important;
+                        width: 100% !important; max-width: 620px !important; margin: 0 auto !important;
                         min-height: 44px !important; height: 44px !important;
                         background: linear-gradient(135deg, #5c4033 0%, #3d2b1f 100%) !important;
                         color: #fef08a !important; border: 2px solid #b45309 !important; border-radius: 8px !important;
@@ -2190,25 +2215,25 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         background: #fdf8f2 !important; border: 5px solid #3d2b1f !important; border-radius: 12px !important; 
                         box-shadow: 0 20px 40px rgba(0,0,0,0.8), inset 0 0 40px rgba(181, 101, 29, 0.15) !important; 
                         display: flex !important; min-height: 380px !important; max-height: 380px !important; 
-                        position: relative !important; overflow: hidden !important; width: 100% !important; max-width: 580px !important; margin: 15px auto !important;
+                        position: relative !important; overflow: hidden !important; width: 100% !important; max-width: 620px !important; margin: 15px auto !important;
                     }
                     .rpg-open-book-container::before { 
                         content: "" !important; position: absolute !important; top: 0 !important; left: 50% !important; 
                         width: 4px !important; height: 100% !important; background: linear-gradient(90deg, rgba(61,43,31,0.4), rgba(30,20,10,0.7), rgba(61,43,31,0.4)) !important; z-index: 5 !important; 
                     }
                     .rpg-book-page { 
-                        width: 50% !important; padding: 20px 16px !important; box-sizing: border-box !important; 
+                        width: 50% !important; padding: 18px 12px !important; box-sizing: border-box !important; 
                         display: flex !important; flex-direction: column !important; justify-content: flex-start !important; 
                         color: #2b1d0c !important; font-family: 'Courier New', monospace !important; overflow-y: auto !important;
                     }
-                    .open-page-title { text-align: center !important; font-size: 13px !important; font-weight: 900 !important; margin: 0 0 2px 0 !important; color: #854d0e !important; letter-spacing: 0.5px; text-transform: uppercase; }
-                    .open-page-sub { text-align: center !important; font-size: 9.5px !important; color: #78716c !important; margin: 0 0 10px 0 !important; font-style: italic !important; }
-                    .open-book-divider { border-bottom: 2px double #b45309 !important; margin-bottom: 10px !important; width: 100% !important; opacity: 0.7; }
+                    .open-page-title { text-align: center !important; font-size: 12px !important; font-weight: 900 !important; margin: 0 0 2px 0 !important; color: #854d0e !important; letter-spacing: 0.5px; text-transform: uppercase; }
+                    .open-page-sub { text-align: center !important; font-size: 9px !important; color: #78716c !important; margin: 0 0 8px 0 !important; font-style: italic !important; }
+                    .open-book-divider { border-bottom: 2px double #b45309 !important; margin-bottom: 8px !important; width: 100% !important; opacity: 0.7; }
                     .open-stat-row { 
-                        display: flex !important; justify-content: space-between !important; align-items: center !important; font-size: 10px !important; 
-                        font-weight: bold !important; margin-bottom: 8px !important; border-bottom: 1px dashed rgba(133,77,14,0.2) !important; padding-bottom: 4px !important; 
+                        display: flex !important; justify-content: space-between !important; align-items: center !important; font-size: 9px !important; 
+                        font-weight: bold !important; margin-bottom: 7px !important; border-bottom: 1px dashed rgba(133,77,14,0.2) !important; padding-bottom: 3px !important; 
                     }
-                    .open-page-footer { margin-top: auto !important; font-size: 9px !important; color: #78716c !important; text-align: center !important; font-weight: bold !important; padding-top: 5px; }
+                    .open-page-footer { margin-top: auto !important; font-size: 9px !important; color: #78716c !important; text-align: center !important; font-weight: bold !important; padding-top: 4px; }
                     .sueger-daily-scroll-box { max-height: 230px !important; overflow-y: auto !important; padding-right: 4px !important; width: 100% !important; }
                     .rpg-open-book-animated { animation: bookOpenFold 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; transform-origin: center center; }
                     @keyframes bookOpenFold {
@@ -2288,7 +2313,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     '<div class="rpg-open-book-container rpg-open-book-animated">'
                     '<div class="rpg-book-page">'
                     '<div class="open-page-title">🍹 LOG HARIAN SUEGER 🍹</div>'
-                    '<div class="open-page-sub">Arsip Tanggal & Shift Berdasarkan Sales PPS</div>'
+                    '<div class="open-page-sub">Arsip Tanggal, Shift, Syarat & Redeem</div>'
                     '<div class="open-book-divider"></div>'
                     '<div class="sueger-daily-scroll-box">'
                     f'{current_spread["sueger_html"]}'
@@ -2300,7 +2325,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     '<div class="open-page-sub">Maklumat & Motivasi Petualang</div>'
                     '<div class="open-book-divider"></div>'
                     f'<div style="background: rgba(180, 83, 9, 0.08); border-left: 3px solid #b45309; padding: 12px; border-radius: 6px; margin-top: 15px;">'
-                    f'<p style="font-size:10.5px; color:#5c4033; line-height:1.6; text-align:center; font-style:italic; margin: 0;">'
+                    f'<p style="font-size:10px; color:#5c4033; line-height:1.6; text-align:center; font-style:italic; margin: 0;">'
                     f'{current_spread["motivasi_text"]}'
                     f'</p>'
                     f'</div>'
