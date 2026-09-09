@@ -773,6 +773,8 @@ else:
         </style>
     """, unsafe_allow_html=True)
 
+sidebar_width = st.session_state.get("sidebar_width", "280px")
+
 st.sidebar.markdown(
     f"""
     <style>
