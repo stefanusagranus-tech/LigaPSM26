@@ -2450,17 +2450,18 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # ==============================================================================
         # 🚪 KONDISI 3: BUKU TERBUKA - KITAB MISI GUILD (DENGAN ISOLASI CSS WRAPPER)
         # ==============================================================================
+        import streamlit as st
         import textwrap
-
+        
         # ==========================================
-        # 🎨 1. SUNTIKAN CSS (LATAR BELAKANG NAGA & UKURAN HALAMAN KONSISTEN)
+        # 🎨 1. SUNTIKAN CSS (WATERMARK SILUET NAGA DI HALAMAN BUKU)
         # ==========================================
         st.markdown("""
         <style>
             /* Mengimpor font MedievalSharp dari Google Fonts */
             @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
 
-            /* Background Utama: Hitam pekat dengan tekstur pola sisik/siluet naga yang tegas */
+            /* Background Utama: Hitam pekat dengan tekstur pola siluet naga yang tegas */
             .stApp {
                 background-color: #030303 !important;
                 background-image: 
@@ -2501,13 +2502,19 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 box-sizing: border-box !important;
             }
 
-            /* KONTROL UKURAN HALAMAN BUKU AGAR SELALU KONSISTEN / SAMA PERSIS */
+            /* KONTROL UKURAN HALAMAN BUKU & WATERMARK SILUET NAGA */
             .rpg-book-page {
                 flex: 1 1 50% !important;
                 width: 50% !important;
-                min-height: 430px !important; /* Tinggi minimum tetap */
-                max-height: 430px !important; /* Tinggi maksimum dikunci agar tidak berubah-ubah */
-                background: #fffbeb;
+                min-height: 430px !important;
+                max-height: 430px !important;
+                background-color: #fffbeb;
+                /* WATERMARK SILUET NAGA DI TENGAH HALAMAN BUKU */
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23b45309' opacity='0.06'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z'/%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: 220px 220px;
+                
                 padding: 16px;
                 border-radius: 6px;
                 border: 1px solid #d97706;
@@ -2515,7 +2522,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 box-sizing: border-box !important;
                 display: flex;
                 flex-direction: column;
-                overflow-y: auto; /* Guliran halus jika konten baris data melebihi tinggi halaman */
+                overflow-y: auto;
+                position: relative;
             }
 
             /* Responsif untuk Mobile Android/iOS */
@@ -2528,6 +2536,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     width: 100% !important;
                     min-height: 360px !important;
                     max-height: 360px !important;
+                    background-size: 160px 160px;
                 }
             }
 
@@ -2539,6 +2548,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 font-size: 20px;
                 margin-bottom: 2px;
                 text-align: center !important;
+                position: relative;
+                z-index: 2;
             }
 
             /* Sub-judul Setiap Lembar Buku: Rata Tengah */
@@ -2549,12 +2560,16 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 font-weight: 600;
                 font-family: monospace;
                 text-align: center !important;
+                position: relative;
+                z-index: 2;
             }
 
             .open-book-divider {
                 height: 2px;
                 background: #d97706;
                 margin-bottom: 12px;
+                position: relative;
+                z-index: 2;
             }
 
             .open-stat-row {
@@ -2569,6 +2584,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 font-size: 12px;
                 font-weight: bold;
                 color: #451a03 !important;
+                position: relative;
+                z-index: 2;
             }
 
             .open-stat-row.rank-1 {
@@ -2594,6 +2611,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 font-family: monospace;
                 padding-top: 10px;
                 font-weight: bold;
+                position: relative;
+                z-index: 2;
             }
         </style>
         """, unsafe_allow_html=True)
@@ -2608,7 +2627,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.session_state["page_direction"] = "right"
 
         TOTAL_SHEETS = 5
-        dir_anim = st.session_state["page_direction"]
 
         st.markdown("<h2 class='guild-lobby-title'>📜 KITAB MISI GUILD</h2>", unsafe_allow_html=True)
         st.markdown("<p style='text-align:center; color:#fef3c7; font-size:13px; font-family:monospace;'>Lembar maklumat rincian target harian dan season toko.</p>", unsafe_allow_html=True)
