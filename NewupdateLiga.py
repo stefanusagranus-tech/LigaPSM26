@@ -1925,86 +1925,95 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.markdown("</div>", unsafe_allow_html=True)
 
         # =========================================================================
-        # 📘 KONDISI 2: JURNAL BURUAN INDIVIDU (BAGIAN 1 - WOODEN DESK & NAV TOP)
+        # 📘 KONDISI 2: JURNAL BURUAN INDIVIDU (DENGAN PERCOBAAN INPUT DATA)
         # =========================================================================
         elif st.session_state["campaign_sub_page"] == "view_buku_pencapaian":
             
+            # --- 🛠️ 1. INISIALISASI HALAMAN & VARIABEL USER ---
             current_page = st.session_state.get("book_page_number", 1)
             username_hero = st.session_state.get("username", "admin")
+            bulan_aktif = "September" # Dapat disesuaikan dengan state pilihan bulan aplikasi
 
+            # 🧪 SIMULASI / PERCOBAAN INPUT DATA (DATA FRAME PANDAS)
+            # Simulasi data target kasir dari sheet SALES_ITEM
+            df_sales_item = pd.DataFrame([
+                {"username": "admin", "bulan": "September", "target_kasir": 1500},
+                {"username": "player2", "bulan": "September", "target_kasir": 1400}
+            ])
+
+            # Simulasi data penjualan aktual dari sheet SALES_PERSONIL
+            sales_personil = pd.DataFrame([
+                {"username": "admin", "bulan": "September", "nama_item": "ITEM PWP PREMIUM", "qty": 5},
+                {"username": "admin", "bulan": "September", "nama_item": "SUEGER MANGO XL", "qty": 42},
+                {"username": "admin", "bulan": "September", "nama_item": "CEMILAN MAREK", "qty": 15},
+                {"username": "admin", "bulan": "September", "nama_item": "CEBAN COOKIES", "qty": 0}
+            ])
+
+            # --- 🔍 2. PROSES TARIK DATA TARGET & AKTUAL ---
+            # Tarik target_kasir dari sales_item
+            df_filtered_item = df_sales_item[df_sales_item['bulan'] == bulan_aktif]
+            matched_target = df_filtered_item[df_filtered_item['username'] == username_hero]['target_kasir']
+            target_kasir_val = int(matched_target.values[0]) if not matched_target.empty else 1500
+
+            # Tarik data aktual item kasir untuk dihimpun ke Halaman 3 (Detail Item)
+            df_user_sales = sales_personil[
+                (sales_personil['bulan'] == bulan_aktif) & 
+                (sales_personil['username'] == username_hero)
+            ]
+
+            list_item_tercapai_html = ""
+            for _, row in df_user_sales.iterrows():
+                nama_item = row.get('nama_item', 'Item Quest')
+                qty_aktual = row.get('qty', 0)
+                status_item = "SUKSES" if qty_aktual > 0 else "BELUM AKTIF"
+                warna_status = "#16a34a" if qty_aktual > 0 else "#71717a"
+                list_item_tercapai_html += f'<div class="open-stat-row"><span>📦 {nama_item}</span><span style="color:{warna_status};">{qty_aktual} Qty ({status_item})</span></div>'
+
+            # Variabel statistik pahlawan pendukung
             data_stats = {
                 "level": "LV. 85", "pwp": "2,450,000", "sg": "1,200,000", "sueger": "3,150,000",
                 "cemilan": "450,000", "achievement": "92.5%", "qty_psm": "1,240 Pts",
-                "target_capai": "1,500 Pts", "ranking": "#RANK 4"
+                "target_capai": f"{target_kasir_val} Pts", "ranking": "#RANK 4"
             }
 
-            # --- 🎨 STYLING MEDIEVAL-GLOW UNTUK TOMBOL & BUKU PERKAMEN ---
+            # --- 🎨 3. STYLING KUNO MEJA GUILD ---
             st.markdown(
                 """
                 <style>
-                    /* 🚪 TOMBOL NAVIGASI DENGAN EFEK CAHAYA (GLOW) MEDIEVAL */
                     div[data-testid="stColumn"] button[key^="btn_desk_nav_"],
                     div[data-testid="stVerticalBlockBorderWrapper"] button[key^="btn_desk_nav_"],
                     .stButton button[key^="btn_desk_nav_"] {
-                        width: 100% !important;
-                        max-width: 580px !important;
-                        margin: 0 auto !important;
-                        min-height: 44px !important;
-                        height: 44px !important;
-                        background: linear-gradient(135deg, #3d2b1f 100%, #1c140d 0%) !important;
-                        color: #fef08a !important; 
-                        border: 2px solid #d97706 !important; 
-                        border-radius: 8px !important;
-                        font-family: monospace !important;
-                        font-weight: 900 !important;
-                        font-size: 13px !important;
-                        letter-spacing: 1px !important;
-                        box-shadow: 0 0 15px rgba(180, 83, 9, 0.4), inset 0 0 10px rgba(251, 191, 36, 0.1) !important;
-                        transition: all 0.2s ease-in-out !important;
+                        width: 100% !important; max-width: 580px !important; margin: 0 auto !important;
+                        min-height: 44px !important; height: 44px !important;
+                        background: linear-gradient(135deg, #5c4033 0%, #3d2b1f 100%) !important;
+                        color: #fef08a !important; border: 2px solid #b45309 !important; border-radius: 8px !important;
+                        font-family: monospace !important; font-weight: 900 !important; font-size: 13px !important;
+                        letter-spacing: 1px !important; box-shadow: 0 8px 20px rgba(0,0,0,0.6) !important;
                     }
-                    div[data-testid="stColumn"] button[key^="btn_desk_nav_"]:hover {
-                        background: #b45309 !important;
-                        color: #0b0f19 !important;
-                        box-shadow: 0 0 25px rgba(251, 191, 36, 0.8) !important;
-                        transform: translateY(-2px) !important;
-                    }
-                    div[data-testid="stColumn"] button[key^="btn_desk_nav_"]:active,
-                    div[data-testid="stColumn"] button[key^="btn_desk_nav_"]:focus {
-                        background: #3d2b1f !important; color: #fef08a !important; filter: none !important;
-                    }
-                    
-                    /* 👑 BINGKAI BUKU KUNO DENGAN PENDARAN MAGIS */
                     .rpg-open-book-container {
-                        background: #fbf5ed !important; 
-                        border: 4px solid #78350f !important; 
-                        border-radius: 12px !important; 
-                        box-shadow: 0 0 30px rgba(180, 83, 9, 0.35), 0 15px 35px rgba(0,0,0,0.7) !important; 
-                        display: flex !important; 
+                        background: #f4eae1 !important; border: 4px solid #5c4033 !important; border-radius: 12px !important; 
+                        box-shadow: 0 15px 35px rgba(0,0,0,0.7) !important; display: flex !important; 
                         min-height: 380px !important; max-height: 380px !important; position: relative !important; 
                         overflow: hidden !important; width: 100% !important; max-width: 580px !important; margin: 15px auto !important;
                     }
                     .rpg-open-book-container::before { 
                         content: "" !important; position: absolute !important; top: 0 !important; left: 50% !important; 
-                        width: 2px !important; height: 100% !important; background: linear-gradient(90deg, rgba(0,0,0,0.15), rgba(0,0,0,0.3), rgba(0,0,0,0.15)) !important; box-shadow: 0 0 10px rgba(0,0,0,0.4) !important; z-index: 5 !important; 
+                        width: 2px !important; height: 100% !important; background: linear-gradient(90deg, rgba(0,0,0,0.15), rgba(0,0,0,0.3), rgba(0,0,0,0.15)) !important; z-index: 5 !important; 
                     }
                     .rpg-book-page { 
                         width: 50% !important; padding: 22px 18px !important; box-sizing: border-box !important; 
                         display: flex !important; flex-direction: column !important; justify-content: flex-start !important; 
                         color: #2b1d0c !important; font-family: 'Courier New', monospace !important; 
                     }
-                    .open-page-title { text-align: center !important; font-size: 14px !important; font-weight: 900 !important; margin: 0 0 2px 0 !important; color: #b45309 !important; letter-spacing: 0.5px !important; text-shadow: 0 0 2px rgba(180, 83, 9, 0.2); }
+                    .open-page-title { text-align: center !important; font-size: 14px !important; font-weight: 900 !important; margin: 0 0 2px 0 !important; color: #854d0e !important; }
                     .open-page-sub { text-align: center !important; font-size: 10px !important; color: #78716c !important; margin: 0 0 10px 0 !important; font-style: italic !important; }
-                    .open-book-divider { border-bottom: 2px double #b45309 !important; margin-bottom: 12px !important; width: 100% !important; }
+                    .open-book-divider { border-bottom: 2px double #854d0e !important; margin-bottom: 12px !important; width: 100% !important; }
                     .open-stat-row { 
                         display: flex !important; justify-content: space-between !important; font-size: 10.5px !important; 
-                        font-weight: bold !important; margin-bottom: 10px !important; border-bottom: 1px dashed rgba(180,83,9,0.2) !important; padding-bottom: 4px !important; 
+                        font-weight: bold !important; margin-bottom: 10px !important; border-bottom: 1px dashed rgba(133,77,14,0.15) !important; padding-bottom: 4px !important; 
                     }
                     .open-page-footer { margin-top: auto !important; font-size: 9px !important; color: #78716c !important; text-align: center !important; font-weight: bold !important; }
                     .sueger-daily-scroll-box { max-height: 220px !important; overflow-y: auto !important; padding-right: 5px !important; width: 100% !important; }
-                    .sueger-daily-scroll-box::-webkit-scrollbar { width: 5px !important; }
-                    .sueger-daily-scroll-box::-webkit-scrollbar-track { background: rgba(180,83,9,0.05) !important; }
-                    .sueger-daily-scroll-box::-webkit-scrollbar-thumb { background: #b45309 !important; border-radius: 4px !important; }
-                    
                     .rpg-open-book-animated { animation: bookOpenFold 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; transform-origin: center center; }
                     @keyframes bookOpenFold {
                         0% { transform: scaleX(0.7) scale(0.98); opacity: 0.5; filter: brightness(0.7); }
@@ -2015,6 +2024,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 unsafe_allow_html=True
             )
 
+            # --- 🏛️ 4. TOMBOL NAVIGASI ATAS ---
             if current_page == 1:
                 if st.button("📖 TUTUP JURNAL & KEMBALI KE MEJA DESK", use_container_width=True, key="btn_desk_nav_exit"):
                     st.session_state["campaign_sub_page"] = "resepsionis_utama"
@@ -2025,9 +2035,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     st.session_state["book_page_number"] -= 1
                     st.rerun()
                     
+            # --- 🏛️ 5. RENDER HALAMAN BUKU BERDASARKAN INPUT ---
             html_content_pages = ""
 
             if current_page == 1:
+                # Halaman 1 & 2: Status Pahlawan & Rekap Report
                 html_content_pages = (
                     '<div class="rpg-open-book-container rpg-open-book-animated">'
                     '<div class="rpg-book-page">'
@@ -2056,24 +2068,22 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 )
 
             elif current_page == 2:
+                # Halaman 3 & 4: Detail Item Tercapai (Dinamis dari input data) & Catatan
                 html_content_pages = (
                     '<div class="rpg-open-book-container rpg-open-book-animated">'
                     '<div class="rpg-book-page">'
                     '<div class="open-page-title">💎 DETAIL ITEM TERCAPAI 💎</div>'
-                    '<div class="open-page-sub">Rincian Quest Berhasil</div>'
+                    f'<div class="open-page-sub">Rincian Quest Bulan {bulan_aktif}</div>'
                     '<div class="open-book-divider"></div>'
-                    '<div class="open-stat-row"><span>📦 ITEM PWP PREMIUM</span><span style="color:#16a34a;">SUKSES</span></div>'
-                    '<div class="open-stat-row"><span>🥤 SUEGER MANGO XL</span><span style="color:#16a34a;">42 Qty</span></div>'
-                    '<div class="open-stat-row"><span>🍿 CEMILAN MAREK</span><span style="color:#16a34a;">15 Qty</span></div>'
-                    '<div class="open-stat-row"><span>🍪 CEBAN COOKIES</span><span style="color:#71717a;">BELUM AKTIF</span></div>'
+                    f'{list_item_tercapai_html}' # Data masuk secara dinamis dari hasil percSobaan input loop
                     '<div class="open-page-footer">- Halaman 3 -</div>'
                     '</div>'
                     '<div class="rpg-book-page">'
                     '<div class="open-page-title">📜 CATATAN ALIANSI 📜</div>'
                     '<div class="open-page-sub">Maklumat Tambahan Petualang</div>'
                     '<div class="open-book-divider"></div>'
-                    '<p style="font-size:11px; color:#5c4033; line-height:1.6; text-align:center; font-style:italic; margin:0;">'
-                    '"Pertahankan ritme penjualan Anda! Sisa poin buruan harian akan diakumulasikan otomatis pada saat pergantian shift malam guild pusat."'
+                    f'<p style="font-size:11px; color:#5c4033; line-height:1.6; text-align:center; font-style:italic; margin:0;">'
+                    f'"Target kasir Anda bulan ini tercatat sebesar <b>{target_kasir_val} Pts</b> berdasarkan maklumat sheet SALES_ITEM."'
                     '</p>'
                     '<div class="open-page-footer" style="margin-top:auto;">- Halaman 4 -</div>'
                     '</div>'
@@ -2081,6 +2091,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 )
 
             elif current_page == 3:
+                # Halaman 5: Log Harian Sugi / Arsip Dinamis
                 baris_tanggal_html = ""
                 for tgl in range(1, 31):
                     nilai_harian = f"Rp {100000 + (tgl * 5000):,}"
@@ -2102,6 +2113,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             st.markdown(html_content_pages, unsafe_allow_html=True)
 
+            # --- 🏛️ 6. TOMBOL NAVIGASI BAWAH ---
             if current_page == 3:
                 if st.button("↺ KEMBALI KE AWAL REPORT (HALAMAN 1)", use_container_width=True, key="btn_desk_nav_reset"):
                     st.session_state["book_page_number"] = 1
@@ -2110,7 +2122,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 if st.button("HALAMAN BERIKUTNYA (BUKA LEMBARAN LAIN) ➔", use_container_width=True, key="btn_desk_nav_next"):
                     st.session_state["book_page_number"] += 1
                     st.rerun()
-
+                    
         #==============================================================================================#
         # 🚪 KONDISI 3: BUKU TERBUKA - KITAB MISI GUILD
         elif st.session_state["campaign_sub_page"] == "view_buku_tugas":
