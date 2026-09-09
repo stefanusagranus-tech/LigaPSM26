@@ -2870,7 +2870,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 if not sp_month.empty:
                     sp_month["person_name"] = sp_month["person_name"].astype(str).str.strip()
                     sp_month["actual_qty"] = pd.to_numeric(sp_month.get("actual_qty", 0), errors="coerce").fillna(0)
-                    sp_month["target_kasir"] = pd.to_numeric(sp_month.get("target_kasir", 0), errors="coerce").fillna(0)
+                    
+                    # Pengecekan aman kolom target_kasir
+                    if "target_kasir" in sp_month.columns:
+                        sp_month["target_kasir"] = pd.to_numeric(sp_month["target_kasir"], errors="coerce").fillna(0)
+                    else:
+                        sp_month["target_kasir"] = 0
                     
                     # Kondisi Achiv: Actual Qty sudah melewati atau sama dengan Target Kasir (> 0 juga untuk pastikan ada penjualan)
                     sp_month["is_achiv"] = (sp_month["actual_qty"] >= sp_month["target_kasir"]) & (sp_month["target_kasir"] > 0)
