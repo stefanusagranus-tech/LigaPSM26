@@ -1924,8 +1924,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
 
-       # =========================================================================
-        # 📘 JURNAL BURUAN INDIVIDU (LENGKAP DENGAN PERBAIKAN LOG HARIAN SUEGER & RANKING PENJUALAN PSM)
+        # =========================================================================
+        # 📘 JURNAL BURUAN INDIVIDU (PEMISAHAN RANKING: TINGKAT LEVEL = RANKING PPS, RANKING PENJUALAN = RANKING PSM)
         # =========================================================================
         elif st.session_state.get("campaign_sub_page") == "view_buku_pencapaian":
             
@@ -1998,7 +1998,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     for _, row in df_pps_user.iterrows():
                         tgl_raw = str(row.get('updated_at', '')) or str(row.get('date', ''))
                         
-                        # Ambil shift langsung dari kolom dataframe (misal: shift_person, shift, dll.)
                         shift_raw = "SHIFT 1"
                         for s_col in ['shift_person', 'shift', 'nama_shift']:
                             if s_col in row and pd.notna(row[s_col]) and str(row[s_col]).strip() != "":
@@ -2008,10 +2007,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         syarat_row = int(row.get('syarat_sueger', 0))
                         redeem_row = int(row.get('redeem_sueger', 0))
                         
-                        # Hitung Achievement % per baris log
                         ach_row = (redeem_row / syarat_row * 100) if syarat_row > 0 else 0.0
                         
-                        # Format Tanggal
                         try:
                             parsed_dt = pd.to_datetime(tgl_raw, errors='coerce')
                             if pd.notna(parsed_dt):
@@ -2021,7 +2018,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         except Exception:
                             tgl_str = "Tgl Khusus"
 
-                        # Tampilkan baris jika ada data redeem atau syarat
                         if syarat_row > 0 or redeem_row > 0:
                             log_sueger_collection.append(
                                 f'<div class="open-stat-row">'
@@ -2039,41 +2035,52 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 achievement_pct = (total_redeem_sueger / total_syarat_sueger) * 100
             achievement_str = f"{achievement_pct:.1f}%"
 
-            # --- 🔍 2. HITUNG QTY PENJUALAN & RANKING PENJUALAN DARI SALES_PERSONIL ---
-            qty_penjualan_psm_val = 0
-            ranking_pwp_sg_val = "#RANK -"
+            # --- 🔍 2. HITUNG RANKING PPS (TINGKAT LEVEL) & RANKING PSM (RANKING PENJUALAN) ---
+            ranking_pps_val = "#RANK -"
+            ranking_psm_val = "#RANK -"
 
+            # A. Hitung Ranking PPS (Total (qty_pwp + qty_sg) dari sales_pps_df)
+            if not sales_pps_df.empty and 'kasir_name' in sales_pps_df.columns:
+                df_pps_all = sales_pps_df.copy()
+                for col_num in ['qty_pwp', 'qty_sg', 'syarat_sueger', 'redeem_sueger']:
+                    if col_num in df_pps_all.columns:
+                        df_pps_all[col_num] = pd.to_numeric(df_pps_all[col_num], errors='coerce').fillna(0)
+                
+                df_pps_all['kasir_clean'] = df_pps_all['kasir_name'].astype(str).str.strip().str.upper()
+                df_pps_all['total_pwp_sg'] = df_pps_all.get('qty_pwp', 0) + df_pps_all.get('qty_sg', 0)
+                
+                df_ranked_pps = df_pps_all.groupby('kasir_clean')['total_pwp_sg'].sum().reset_index()
+                df_ranked_pps = df_ranked_pps.sort_values(by='total_pwp_sg', ascending=False).reset_index(drop=True)
+                df_ranked_pps['rank'] = df_ranked_pps.index + 1
+                
+                user_pps_row = df_ranked_pps[df_ranked_pps['kasir_clean'] == username_hero]
+                if not user_pps_row.empty:
+                    ranking_pps_val = f"#RANK {int(user_pps_row['rank'].values[0])}"
+
+            # B. Hitung Qty Penjualan PSM & Ranking PSM (dari sales_personil)
+            qty_penjualan_psm_val = 0
             if not sales_personil.empty and 'period_id' in sales_personil.columns and 'person_name' in sales_personil.columns:
                 df_sp_all = sales_personil.copy()
                 df_sp_all['person_clean'] = df_sp_all['person_name'].astype(str).str.strip().str.upper()
                 df_sp_all['actual_qty'] = pd.to_numeric(df_sp_all['actual_qty'], errors='coerce').fillna(0)
 
-                # Filter untuk periode bulan berjalan
                 df_sp_bulan_ini = df_sp_all[df_sp_all['period_id'].astype(str).str.strip().isin(list_periode_bulan_ini)]
 
-                # Hitung Qty Penjualan PSM milik user yang sedang aktif
                 df_user_sales = df_sp_bulan_ini[df_sp_bulan_ini['person_clean'] == username_hero]
                 if not df_user_sales.empty:
                     qty_penjualan_psm_val = int(df_user_sales['actual_qty'].sum())
 
-                # Hitung Ranking Penjualan berdasarkan total actual_qty per kasir/person_name dalam bulan berjalan
                 df_ranked_sales = df_sp_bulan_ini.groupby('person_clean')['actual_qty'].sum().reset_index()
                 df_ranked_sales = df_ranked_sales.sort_values(by='actual_qty', ascending=False).reset_index(drop=True)
                 df_ranked_sales['rank'] = df_ranked_sales.index + 1
 
                 user_sales_rank = df_ranked_sales[df_ranked_sales['person_clean'] == username_hero]
                 if not user_sales_rank.empty:
-                    ranking_pwp_sg_val = f"#RANK {int(user_sales_rank['rank'].values[0])}"
+                    ranking_psm_val = f"#RANK {int(user_sales_rank['rank'].values[0])}"
 
-            # Ranking Sueger Achievement
+            # C. Ranking Sueger Achievement
             ranking_sueger_val = "#RANK -"
             if not sales_pps_df.empty and 'kasir_name' in sales_pps_df.columns:
-                df_pps_all = sales_pps_df.copy()
-                for col_num in ['syarat_sueger', 'redeem_sueger']:
-                    if col_num in df_pps_all.columns:
-                        df_pps_all[col_num] = pd.to_numeric(df_pps_all[col_num], errors='coerce').fillna(0)
-                
-                df_pps_all['kasir_clean'] = df_pps_all['kasir_name'].astype(str).str.strip().str.upper()
                 df_ranked_sueger = df_pps_all.groupby('kasir_clean')[['syarat_sueger', 'redeem_sueger']].sum().reset_index()
                 df_ranked_sueger['ach_sueger'] = df_ranked_sueger.apply(
                     lambda r: (r['redeem_sueger'] / r['syarat_sueger'] * 100) if r['syarat_sueger'] > 0 else 0.0, axis=1
@@ -2086,7 +2093,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     ranking_sueger_val = f"#RANK {int(user_sueger_row['rank'].values[0])}"
 
             data_stats = {
-                "level": ranking_pwp_sg_val,
+                "level": ranking_pps_val,          # Menggunakan Ranking PPS untuk Tingkat Level
                 "pwp": f"{total_pwp_val:,} Pts", 
                 "sg": f"{total_sg_val:,} Pts", 
                 "sueger": f"{total_sueger_val:,} Pts", 
@@ -2282,7 +2289,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     '<div class="open-book-divider"></div>'
                     f'<div class="open-stat-row" style="margin-top:10px;"><span>QTY PENJUALAN PSM</span><span style="color:#b45309; font-weight:900;">{qty_penjualan_psm_val} Pts 📦</span></div>'
                     f'<div class="open-stat-row"><span>ITEM TERCAPAI</span><span style="color:#16a34a; font-weight:900;">{jumlah_jenis_item_tercapai} Jenis 🏆</span></div>'
-                    f'<div class="open-stat-row"><span>RANKING PENJUALAN</span><span style="color:#ca8a04; font-weight:900;">{ranking_pwp_sg_val} 👑</span></div>'
+                    f'<div class="open-stat-row"><span>RANKING PENJUALAN</span><span style="color:#ca8a04; font-weight:900;">{ranking_psm_val} 👑</span></div>'
                     '<div class="open-page-footer" style="margin-top:auto;">- Halaman 2 -</div>'
                     '</div>'
                     '</div>'
