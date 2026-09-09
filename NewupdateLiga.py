@@ -2822,8 +2822,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             """
 
         elif page_num == 3:
-            # Halaman 3: Ranking Qty berdasarkan Periode Aktif, Achiv Count berdasarkan Akumulasi Bulan Berjalan (September)
+            # Halaman 3: Ranking Qty berdasarkan Periode Aktif, Achiv Count berdasarkan Akumulasi Bulan Berjalan (Join sales_person_df dengan sales_item_df)
             sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
+            sales_item_df = st.session_state.get("sales_item_df", pd.DataFrame())
+            periods_df = st.session_state.get("periods_df", pd.DataFrame())
             
             # Ambil master list personil toko agar yang belum transaksi tetap muncul
             master_personil = []
@@ -2846,39 +2848,89 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     for _, r in grouped_qty.iterrows():
                         qty_dict[r["person_name"]] = int(r["actual_qty"])
 
-            # 2. Hitung Item Achiv berdasarkan Seluruh Data Bulan Berjalan (September)
+            # 2. Cari semua period_id yang masuk dalam bulan berjalan (September)
+            current_year = today.year
+            current_month = today.month
+            month_period_ids = set()
+            
+            if not periods_df.empty and "period_id" in periods_df.columns:
+                for _, r in periods_df.iterrows():
+                    try:
+                        s_date = pd.to_datetime(r.get("start_date", "")).date()
+                        if s_date.year == current_year and s_date.month == current_month:
+                            month_period_ids.add(str(r.get("period_id", "")).strip())
+                    except Exception:
+                        pass
+                
+                # Fallback jika start_date tidak terbaca
+                if not month_period_ids:
+                    for _, r in periods_df.iterrows():
+                        pid = str(r.get("period_id", "")).strip()
+                        pname = str(r.get("period_name", "")).lower()
+                        if "s0" in pid.lower() or "sep" in pname or "september" in pname:
+                            month_period_ids.add(pid)
+
+            # 3. Hitung Jumlah Item Achiv Bulanan dengan menggabungkan sales_person_df dan sales_item_df
             achiv_dict = {}
             if not sales_person_df.empty and "person_name" in sales_person_df.columns:
                 sp_month = sales_person_df.copy()
                 
-                # Jika ada kolom tanggal, filter bulan September. Jika tidak, gunakan seluruh data yang ada di dataframe.
-                date_col = None
-                for col in ["date", "tanggal", "transaction_date", "created_at"]:
-                    if col in sp_month.columns:
-                        date_col = col
-                        break
+                # Filter berdasarkan periode bulan September
+                if "period_id" in sp_month.columns and month_period_ids:
+                    sp_month["clean_pid"] = sp_month["period_id"].astype(str).str.strip()
+                    sp_month = sp_month[sp_month["clean_pid"].isin(month_period_ids)]
                 
-                if date_col:
-                    sp_month["parsed_date"] = pd.to_datetime(sp_month[date_col], errors="coerce")
-                    sp_month = sp_month[(sp_month["parsed_date"].dt.year == today.year) & (sp_month["parsed_date"].dt.month == today.month)]
-                
-                if not sp_month.empty:
-                    sp_month["person_name"] = sp_month["person_name"].astype(str).str.strip()
-                    sp_month["actual_qty"] = pd.to_numeric(sp_month.get("actual_qty", 0), errors="coerce").fillna(0)
+                if not sp_month.empty and not sales_item_df.empty:
+                    item_df = sales_item_df.copy()
                     
-                    if "target_kasir" in sp_month.columns:
-                        sp_month["target_kasir"] = pd.to_numeric(sp_month["target_kasir"], errors="coerce").fillna(0)
+                    # Pastikan kolom kunci untuk menggabungkan (merge) tersedia
+                    # Biasanya digabung berdasarkan 'period_id' dan 'item_id' (atau nama item)
+                    sp_cols = [c.lower() for c in sp_month.columns]
+                    item_cols = [c.lower() for c in item_df.columns]
+                    
+                    # Tentukan kolom acuan merge (misal: 'period_id' dan 'item_id')
+                    merge_keys = []
+                    for k in ["period_id", "item_id", "item_name", "nama_item"]:
+                        if k in sp_cols and k in item_cols:
+                            merge_keys.append(k)
+                    
+                    if not merge_keys and "period_id" in sp_cols and "period_id" in item_cols:
+                        merge_keys = ["period_id"]
+
+                    if merge_keys:
+                        # Bersihkan spasi pada key sebelum merge
+                        for k in merge_keys:
+                            sp_month[k] = sp_month[k].astype(str).str.strip()
+                            item_df[k] = item_df[k].astype(str).str.strip()
+                        
+                        # Gabungkan data penjualan kasir dengan data target item
+                        merged_df = pd.merge(sp_month, item_df, on=merge_keys, how="left", suffixes=('', '_item'))
                     else:
-                        sp_month["target_kasir"] = 0
-                    
+                        merged_df = sp_month.copy()
+
+                    # Ambil kolom target_kasir dari sales_item_df yang sudah digabung
+                    target_col_name = "target_kasir"
+                    if "target_kasir" not in merged_df.columns:
+                        for col in merged_df.columns:
+                            if "target" in col.lower() and "kasir" in col.lower():
+                                target_col_name = col
+                                break
+
+                    merged_df["actual_qty"] = pd.to_numeric(merged_df.get("actual_qty", 0), errors="coerce").fillna(0)
+                    if target_col_name in merged_df.columns:
+                        merged_df["target_val"] = pd.to_numeric(merged_df[target_col_name], errors="coerce").fillna(0)
+                    else:
+                        merged_df["target_val"] = 0
+
                     # Kondisi Achiv: Actual Qty >= Target Kasir dan Target Kasir > 0
-                    sp_month["is_achiv"] = (sp_month["actual_qty"] >= sp_month["target_kasir"]) & (sp_month["target_kasir"] > 0)
+                    merged_df["is_achiv"] = (merged_df["actual_qty"] >= merged_df["target_val"]) & (merged_df["target_val"] > 0)
                     
-                    grouped_achiv = sp_month.groupby("person_name")["is_achiv"].sum().reset_index()
+                    merged_df["person_name"] = merged_df["person_name"].astype(str).str.strip()
+                    grouped_achiv = merged_df.groupby("person_name")["is_achiv"].sum().reset_index()
                     for _, r in grouped_achiv.iterrows():
                         achiv_dict[r["person_name"]] = int(r["is_achiv"])
 
-            # Gabungkan master personil dengan data qty periode aktif & akumulasi achiv bulanan
+            # 4. Gabungkan master personil dengan data qty periode aktif & akumulasi achiv bulanan
             ranking_list = []
             all_names = set(master_personil) | set(qty_dict.keys()) | set(achiv_dict.keys())
             for name in all_names:
