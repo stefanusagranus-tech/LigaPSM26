@@ -1924,50 +1924,46 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
 
-       # =========================================================================
-        # 📘 JURNAL BURUAN INDIVIDU (TERHUBUNG KE DATA ASLI)
+        # =========================================================================
+        # 📘 JURNAL BURUAN INDIVIDU (SESUAI KOLOM GOOGLE SHEETS)
         # =========================================================================
         elif st.session_state["campaign_sub_page"] == "view_buku_pencapaian":
             
-            # --- 🛠️ 1. INISIALISASI HALAMAN & VARIABEL USER ---
             current_page = st.session_state.get("book_page_number", 1)
-            username_hero = st.session_state.get("username", "admin")
-            bulan_aktif = st.session_state.get("selected_month", "September") # Mengambil bulan aktif dari state aplikasi
+            username_hero = st.session_state.get("username", "RIZKI GUNAWAN") # Sesuaikan dengan nama kasir di sheet
+            periode_aktif = "S01" # Sesuaikan period_id aktif (misal S01 untuk September)
 
-            # --- 🔍 2. TARIK DATA ASLI DARI SHEET ---
-            # Pastikan variabel DataFrame dari sheet sudah dimuat di session_state atau global scope
+            # --- 📥 AMBIL DATAFRAME DARI SESSION STATE ---
             df_sales_item = st.session_state.get("df_sales_item", pd.DataFrame())
             sales_personil = st.session_state.get("sales_personil", pd.DataFrame())
-            df_all_sales = st.session_state.get("df_all_sales", pd.DataFrame())
 
-            # A. Tarik Target Kasir dari sheet SALES_ITEM
+            # --- 🔍 1. TARIK TOTAL TARGET KASIR DARI SALES_ITEM ---
             target_kasir_val = 0
             if not df_sales_item.empty:
-                df_filtered_target = df_sales_item[
-                    (df_sales_item['bulan'] == bulan_aktif) & 
-                    (df_sales_item['username'] == username_hero)
-                ]
-                if not df_filtered_target.empty:
-                    target_kasir_val = int(df_filtered_target['target_kasir'].values[0])
+                # Filter berdasarkan period_id
+                df_f_item = df_sales_item[df_sales_item['period_id'] == periode_aktif]
+                if 'target_kasir' in df_f_item.columns:
+                    target_kasir_val = int(df_f_item['target_kasir'].sum())
 
-            # B. Tarik QTY Penjualan PSM Aktual & Rincian Item Tercapai (Halaman 3)
+            # --- 🔍 2. TARIK QTY AKTUAL & RINCIAN ITEM DARI SALES_PERSONIL ---
             qty_penjualan_psm_val = 0
             list_item_tercapai_html = ""
             
             if not sales_personil.empty:
+                # Filter berdasarkan period_id dan nama personil (person_name)
                 df_user_sales = sales_personil[
-                    (sales_personil['bulan'] == bulan_aktif) & 
-                    (sales_personil['username'] == username_hero)
+                    (sales_personil['period_id'] == periode_aktif) & 
+                    (sales_personil['person_name'].str.upper() == username_hero.upper())
                 ]
                 
-                # Hitung total QTY PSM aktual kasir
-                if 'qty' in df_user_sales.columns:
-                    qty_penjualan_psm_val = int(df_user_sales['qty'].sum())
+                # Hitung total actual_qty kasir tersebut
+                if 'actual_qty' in df_user_sales.columns:
+                    qty_penjualan_psm_val = int(df_user_sales['actual_qty'].sum())
 
-                # Generate list item tercapai secara dinamis
+                # Buat list item tercapai secara dinamis untuk Halaman 3
                 for _, row in df_user_sales.iterrows():
-                    nama_item = row.get('nama_item', 'Item Quest')
-                    qty_aktual = row.get('qty', 0)
+                    nama_item = row.get('item_name', 'Item Quest')
+                    qty_aktual = row.get('actual_qty', 0)
                     status_item = "SUKSES" if qty_aktual > 0 else "BELUM AKTIF"
                     warna_status = "#16a34a" if qty_aktual > 0 else "#71717a"
                     list_item_tercapai_html += f'<div class="open-stat-row"><span>📦 {nama_item}</span><span style="color:{warna_status};">{qty_aktual} Qty ({status_item})</span></div>'
@@ -1975,24 +1971,23 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             if list_item_tercapai_html == "":
                 list_item_tercapai_html = '<div class="open-stat-row"><span>📦 BELUM ADA TRANSAKSI</span><span style="color:#71717a;">0 Qty</span></div>'
 
-            # C. Hitung Ranking Penjualan Secara Dinamis
+            # --- 🔍 3. HITUNG RANKING PENJUALAN KASIR ---
             ranking_val = "#RANK -"
-            if not df_all_sales.empty and 'qty' in df_all_sales.columns:
-                df_ranked = df_all_sales.groupby('username')['qty'].sum().reset_index()
-                df_ranked = df_ranked.sort_values(by='qty', ascending=False).reset_index(drop=True)
+            if not sales_personil.empty and 'actual_qty' in sales_personil.columns:
+                df_ranked = sales_personil[sales_personil['period_id'] == periode_aktif].groupby('person_name')['actual_qty'].sum().reset_index()
+                df_ranked = df_ranked.sort_values(by='actual_qty', ascending=False).reset_index(drop=True)
                 df_ranked['rank'] = df_ranked.index + 1
                 
-                user_rank_row = df_ranked[df_ranked['username'] == username_hero]
+                user_rank_row = df_ranked[df_ranked['person_name'].str.upper() == username_hero.upper()]
                 if not user_rank_row.empty:
                     ranking_val = f"#RANK {int(user_rank_row['rank'].values[0])}"
 
-            # Data statistik pendukung karakter lainnya
             data_stats = {
                 "level": "LV. 85", "pwp": "2,450,000", "sg": "1,200,000", "sueger": "3,150,000",
                 "cemilan": "450,000", "achievement": "92.5%"
             }
 
-            # --- 🎨 3. STYLING KUNO MEJA GUILD ---
+            # --- 🎨 STYLING BUKU ---
             st.markdown(
                 """
                 <style>
@@ -2040,7 +2035,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 unsafe_allow_html=True
             )
 
-            # --- 🏛️ 4. TOMBOL NAVIGASI ATAS ---
+            # --- 🏛️ TOMBOL NAVIGASI ATAS ---
             if current_page == 1:
                 if st.button("📖 TUTUP JURNAL & KEMBALI KE MEJA DESK", use_container_width=True, key="btn_desk_nav_exit"):
                     st.session_state["campaign_sub_page"] = "resepsionis_utama"
@@ -2051,11 +2046,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     st.session_state["book_page_number"] -= 1
                     st.rerun()
                     
-            # --- 🏛️ 5. RENDER HALAMAN BUKU BERDASARKAN DATA ASLI ---
+            # --- 🏛️ RENDER HALAMAN BUKU ---
             html_content_pages = ""
 
             if current_page == 1:
-                # Halaman 1 & 2: Status Pahlawan & Rekap Report (Terhubung Data Asli)
                 html_content_pages = (
                     '<div class="rpg-open-book-container rpg-open-book-animated">'
                     '<div class="rpg-book-page">'
@@ -2084,12 +2078,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 )
 
             elif current_page == 2:
-                # Halaman 3 & 4: Detail Item Tercapai (Dinamis) & Catatan Aliansi
                 html_content_pages = (
                     '<div class="rpg-open-book-container rpg-open-book-animated">'
                     '<div class="rpg-book-page">'
                     '<div class="open-page-title">💎 DETAIL ITEM TERCAPAI 💎</div>'
-                    f'<div class="open-page-sub">Rincian Quest Bulan {bulan_aktif}</div>'
+                    f'<div class="open-page-sub">Rincian Quest Periode {periode_aktif}</div>'
                     '<div class="open-book-divider"></div>'
                     f'{list_item_tercapai_html}' 
                     '<div class="open-page-footer">- Halaman 3 -</div>'
@@ -2099,7 +2092,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     '<div class="open-page-sub">Maklumat Tambahan Petualang</div>'
                     '<div class="open-book-divider"></div>'
                     f'<p style="font-size:11px; color:#5c4033; line-height:1.6; text-align:center; font-style:italic; margin:0;">'
-                    f'"Target kasir Anda bulan ini tercatat sebesar <b>{target_kasir_val} Pts</b> berdasarkan maklumat sheet SALES_ITEM."'
+                    f'"Target kasir Anda periode ini tercatat sebesar <b>{target_kasir_val} Pts</b> berdasarkan sheet SALES_ITEM."'
                     '</p>'
                     '<div class="open-page-footer" style="margin-top:auto;">- Halaman 4 -</div>'
                     '</div>'
@@ -2107,7 +2100,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 )
 
             elif current_page == 3:
-                # Halaman 5: Log Harian Sugi / Arsip Dinamis
                 baris_tanggal_html = ""
                 for tgl in range(1, 31):
                     nilai_harian = f"Rp {100000 + (tgl * 5000):,}"
@@ -2126,6 +2118,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     '</div>'
                     '</div>'
                 )
+
             st.markdown(html_content_pages, unsafe_allow_html=True)
 
             # --- 🐞 KODE DEBUG SEMENTARA UNTUK MENGECEK DATA ---
