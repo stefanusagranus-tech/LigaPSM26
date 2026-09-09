@@ -2727,8 +2727,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             if not df_filtered_items.empty:
                 for _, r in df_filtered_items.iterrows():
                     item_id = str(r.get("item_id", "")).strip()
-                    name = str(r.get("item_name", "Item Misi"))
-                    target = int(pd.to_numeric(r.get("target_kasir", r.get("target_qty", 0)), errors="coerce"))
+                    name = str(r.get("item_name", r.get("item_nam", "Item Misi")))
+                    target = int(pd.to_numeric(r.get("target_kasir", r.get("get_kasir", 0)), errors="coerce"))
                     aktual = int(actual_dict.get(item_id, 0))
                     render_items.append((name, target, aktual))
 
@@ -2754,8 +2754,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             html_open_tugas = '<div class="rpg-open-book-container"><div class="rpg-book-page rpg-book-page-left"><h3 class="open-page-title">🎯 TARGET ITEM (1)</h3><p class="open-page-sub">Maklumat Target & Achiv ({})</p><div class="open-book-divider"></div>{}<div class="open-page-footer">Halaman Kiri • Item Bagian 1</div></div><div class="rpg-book-page rpg-book-page-right"><h3 class="open-page-title">🎯 TARGET ITEM (2)</h3><p class="open-page-sub">Kelanjutan Maklumat Target Item</p><div class="open-book-divider"></div>{}<div class="open-page-footer">Halaman Kanan • Item Bagian 2</div></div></div>'.format(active_period, items_html_left, items_html_right)
 
             st.markdown(html_open_tugas, unsafe_allow_html=True)
-        elif page_num == 2:
             
+        elif page_num == 2:
+
             html_open_tugas = """
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page rpg-book-page-left">
