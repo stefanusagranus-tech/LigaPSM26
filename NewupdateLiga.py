@@ -2452,6 +2452,116 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # ==============================================================================
         import textwrap
 
+        # ==========================================
+        # 🎨 1. SUNTIKAN CSS ANIMASI & LAYOUT BUKU
+        # ==========================================
+        st.markdown("""
+        <style>
+            .kitab-misi-page-wrapper {
+                position: relative;
+                width: 100%;
+                perspective: 1500px;
+                margin-top: 10px;
+            }
+
+            .rpg-open-book-container {
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: space-between !important;
+                gap: 20px !important;
+                width: 100% !important;
+                background: #fef3c7;
+                padding: 30px;
+                border-radius: 8px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.5), inset 0 0 40px rgba(120, 53, 15, 0.15);
+                border: 2px solid #b45309;
+                box-sizing: border-box !important;
+            }
+
+            .rpg-book-page {
+                flex: 1 !important;
+                width: 50% !important;
+                background: #fffbeb;
+                padding: 20px;
+                border-radius: 6px;
+                border: 1px solid #d97706;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+                box-sizing: border-box !important;
+                display: flex;
+                flex-direction: column;
+            }
+
+            @keyframes flipPageLeft {
+                0% { transform: rotateY(0deg); opacity: 1; }
+                100% { transform: rotateY(-90deg); opacity: 0; }
+            }
+
+            @keyframes flipPageRight {
+                0% { transform: rotateY(90deg); opacity: 0; }
+                100% { transform: rotateY(0deg); opacity: 1; }
+            }
+
+            .open-page-title {
+                font-family: monospace;
+                font-weight: bold;
+                color: #78350f;
+                font-size: 18px;
+                margin-bottom: 4px;
+            }
+
+            .open-page-sub {
+                font-size: 12px;
+                color: #92400e;
+                margin-bottom: 15px;
+            }
+
+            .open-book-divider {
+                height: 2px;
+                background: #d97706;
+                margin-bottom: 15px;
+            }
+
+            .open-stat-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 8px 10px;
+                margin-bottom: 8px;
+                background: #fdf8f6;
+                border: 1px solid #f3e8ff;
+                border-radius: 4px;
+                font-size: 13px;
+                font-weight: bold;
+            }
+
+            .open-stat-row.rank-1 {
+                background: linear-gradient(90deg, #fef08a, #fef9c3);
+                border-color: #eab308;
+            }
+
+            .open-stat-row.rank-2 {
+                background: linear-gradient(90deg, #e5e7eb, #f3f4f6);
+                border-color: #9ca3af;
+            }
+
+            .open-stat-row.rank-3 {
+                background: linear-gradient(90deg, #fed7aa, #ffedd5);
+                border-color: #f97316;
+            }
+
+            .open-page-footer {
+                margin-top: auto;
+                text-align: right;
+                font-size: 10px;
+                color: #b45309;
+                font-family: monospace;
+                padding-top: 15px;
+            }
+        </style>
+        """, unsafe_allow_html=True)
+
+        # ==========================================
+        # 🚪 2. KONDISI & NAVIGASI BUKU TERBUKA
+        # ==========================================
         if "kitab_misi_page" not in st.session_state:
             st.session_state["kitab_misi_page"] = 1
 
@@ -2459,9 +2569,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.session_state["page_direction"] = "right"
 
         TOTAL_SHEETS = 5
-
-        # Menyuntikkan animasi spesifik halaman berdasarkan arah navigasi
         dir_anim = st.session_state["page_direction"]
+
         st.markdown(
             f"""
             <style>
@@ -2480,19 +2589,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             unsafe_allow_html=True,
         )
 
-        # 🏛️ HEADER UTAMA
-        st.markdown(
-            "<h2 class='guild-lobby-title'>📜 KITAB MISI GUILD</h2>",
-            unsafe_allow_html=True,
-        )
-        st.markdown(
-            "<p class='guild-lobby-sub'>Lembar maklumat rincian target harian dan season toko.</p>",
-            unsafe_allow_html=True,
-        )
+        st.markdown("<h2 class='guild-lobby-title'>📜 KITAB MISI GUILD</h2>", unsafe_allow_html=True)
+        st.markdown("<p class='guild-lobby-sub'>Lembar maklumat rincian target harian dan season toko.</p>", unsafe_allow_html=True)
 
         page_num = st.session_state["kitab_misi_page"]
 
-        # Navigasi Atas (Halaman 1: Tombol Tutup di Kiri | Halaman Terakhir: Tombol Tutup di Kanan)
+        # Navigasi Atas (Tombol Tutup di Kiri jika hal 1, di Kanan jika hal terakhir)
         col_nav1, col_nav2, col_nav3 = st.columns([1, 2, 1])
 
         with col_nav1:
@@ -2555,6 +2657,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             return f'<div class="open-stat-row {rank_class}"><span style="color:#854d0e;">{badge} | {name}</span><span style="color:#b45309;">{score}</span></div>'
 
+        # ==========================================
+        # 📄 3. KONTEN PER HALAMAN BUKU
+        # ==========================================
         if page_num == 1:
             html_open_tugas = """
             <div class="rpg-open-book-container">
@@ -2675,7 +2780,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
         st.markdown(html_open_tugas, unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
-
         st.stop()
 
     # ⛺ JALUR C: BERANDA UTAMA 3 KARTU CAMP (YANG HARUSNYA MUNCUL DI AWAL)
