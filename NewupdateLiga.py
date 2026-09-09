@@ -2520,19 +2520,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             # Memotong eksekusi halaman agar skrip di bawahnya tidak ikut terpanggil
             st.stop()
 
-        # ==========================================
-        # ROUTER UTAMA (PENGONTROL HALAMAN)
-        # ==========================================
-        if "campaign_sub_page" not in st.session_state:
-            st.session_state["campaign_sub_page"] = "resepsionis_utama"
-
-        current_page = st.session_state["campaign_sub_page"]
-
-        if current_page == "resepsionis_utama":
-            render_resepsionis()
-        elif current_page == "view_buku_tugas":
-            render_kitab_misi()
-
     # ⛺ JALUR C: BERANDA UTAMA 3 KARTU CAMP (YANG HARUSNYA MUNCUL DI AWAL)
     elif st.session_state["current_camp_menu"] == "main":
         st.markdown(
