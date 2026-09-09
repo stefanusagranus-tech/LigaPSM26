@@ -2822,40 +2822,90 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             """
 
         elif page_num == 3:
-            # Halaman 3: Ranking PSM berdasarkan Periode Aktif
+            # Halaman 3: Ranking Qty berdasarkan Periode Aktif, tapi Achiv Count berdasarkan Bulan Berjalan
             sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
-            ranking_list = []
+            periods_df = st.session_state.get("periods_df", pd.DataFrame())
+            
+            # Ambil master list personil toko agar yang belum transaksi tetap muncul
+            master_personil = []
+            if "master_personil_df" in st.session_state and not st.session_state["master_personil_df"].empty:
+                master_personil = st.session_state["master_personil_df"]["person_name"].dropna().astype(str).str.strip().unique().tolist()
+            elif not sales_person_df.empty and "person_name" in sales_person_df.columns:
+                master_personil = sales_person_df["person_name"].dropna().astype(str).str.strip().unique().tolist()
 
+            # 1. Hitung Total Qty (untuk Peringkat/Rangking) berdasarkan Periode Aktif
+            qty_dict = {}
             if not sales_person_df.empty and "person_name" in sales_person_df.columns:
-                # Filter berdasarkan period_id yang sedang aktif
-                sp_filtered = sales_person_df.copy()
-                if target_period_id and "period_id" in sp_filtered.columns:
-                    sp_filtered = sp_filtered[sp_filtered["period_id"].astype(str).str.strip() == target_period_id]
+                sp_period = sales_person_df.copy()
+                if target_period_id and "period_id" in sp_period.columns:
+                    sp_period = sp_period[sp_period["period_id"].astype(str).str.strip() == target_period_id]
+                
+                if not sp_period.empty:
+                    sp_period["person_name"] = sp_period["person_name"].astype(str).str.strip()
+                    sp_period["actual_qty"] = pd.to_numeric(sp_period.get("actual_qty", 0), errors="coerce").fillna(0)
+                    grouped_qty = sp_period.groupby("person_name")["actual_qty"].sum().reset_index()
+                    for _, r in grouped_qty.iterrows():
+                        qty_dict[r["person_name"]] = int(r["actual_qty"])
 
-                if not sp_filtered.empty and "actual_qty" in sp_filtered.columns:
-                    sp_filtered["actual_qty"] = pd.to_numeric(sp_filtered["actual_qty"], errors="coerce").fillna(0)
-                    # Akumulasi actual_qty per person_name dalam periode aktif
-                    grouped_psm = sp_filtered.groupby("person_name")["actual_qty"].sum().reset_index()
-                    grouped_psm = grouped_psm.sort_values(by="actual_qty", ascending=False)
+            # 2. Cari semua period_id yang masuk dalam bulan berjalan (berdasarkan tanggal hari ini)
+            current_year = today.year
+            current_month = today.month
+            month_period_ids = []
+            if not periods_df.empty:
+                for _, r in periods_df.iterrows():
+                    try:
+                        s_date = pd.to_datetime(r.get("start_date")).date()
+                        if s_date.year == current_year and s_date.month == current_month:
+                            month_period_ids.append(str(r.get("period_id", "")).strip())
+                    except Exception:
+                        pass
+
+            # 3. Hitung Jumlah Item Achiv berdasarkan Akumulasi Bulan Berjalan
+            achiv_dict = {}
+            if not sales_person_df.empty and "person_name" in sales_person_df.columns:
+                sp_month = sales_person_df.copy()
+                if month_period_ids and "period_id" in sp_month.columns:
+                    sp_month = sp_month[sp_month["period_id"].astype(str).str.strip().isin(month_period_ids)]
+                
+                if not sp_month.empty:
+                    sp_month["person_name"] = sp_month["person_name"].astype(str).str.strip()
+                    sp_month["actual_qty"] = pd.to_numeric(sp_month.get("actual_qty", 0), errors="coerce").fillna(0)
+                    sp_month["target_kasir"] = pd.to_numeric(sp_month.get("target_kasir", 0), errors="coerce").fillna(0)
+                    sp_month["is_achiv"] = sp_month["actual_qty"] >= sp_month["target_kasir"]
                     
-                    for _, r in grouped_psm.iterrows():
-                        p_name = str(r.get("person_name", "")).strip()
-                        p_score = int(r.get("actual_qty", 0))
-                        ranking_list.append((p_name, "{} Pcs".format(p_score)))
+                    grouped_achiv = sp_month.groupby("person_name")["is_achiv"].sum().reset_index()
+                    for _, r in grouped_achiv.iterrows():
+                        achiv_dict[r["person_name"]] = int(r["is_achiv"])
 
-            # Fallback ke dummy data jika data pada periode ini kosong
-            if not ranking_list:
-                ranking_list = dummy_9_personil
+            # Gabungkan master personil dengan data qty periode aktif & achiv bulanan
+            ranking_list = []
+            all_names = set(master_personil) | set(qty_dict.keys()) | set(achiv_dict.keys())
+            for name in all_names:
+                if not name:
+                    continue
+                q = qty_dict.get(name, 0)
+                a = achiv_dict.get(name, 0)
+                ranking_list.append((name, q, a))
 
-            # Bagi menjadi Top 1-3 dan sisanya (4-9)
-            top_3_data = ranking_list[:3]
-            rest_data = ranking_list[3:]
+            # Urutkan peringkat berdasarkan total qty periode aktif terbanyak
+            ranking_list = sorted(ranking_list, key=lambda x: x[1], reverse=True)
+
+            formatted_ranking = []
+            for name, qty, achiv_count in ranking_list:
+                score_label = "{} Pcs <span style='font-size:11px; color:#065f46; font-weight:normal;'>(✨ {} Item Achiv Bulan Ini)</span>".format(qty, achiv_count)
+                formatted_ranking.append((name, score_label))
+
+            if not formatted_ranking:
+                formatted_ranking = [(n, "0 Pcs <span style='font-size:11px; color:#92400e;'>(✨ 0 Item Achiv Bulan Ini)</span>") for n, _ in dummy_9_personil]
+
+            top_3_data = formatted_ranking[:3]
+            rest_data = formatted_ranking[3:]
 
             rows_psm_13 = "".join([format_row(i + 1, n, s) for i, (n, s) in enumerate(top_3_data)])
             rows_psm_49 = "".join([format_row(i + 4, n, s) for i, (n, s) in enumerate(rest_data)])
 
             if not rows_psm_49:
-                rows_psm_49 = "<div style='color:#78350f; font-size:12px; text-align:center; margin-top:20px;'><i>Belum ada data peringkat lanjutan pada periode ini.</i></div>"
+                rows_psm_49 = "<div style='color:#78350f; font-size:12px; text-align:center; margin-top:20px;'><i>Tidak ada personil lanjutan.</i></div>"
 
             html_open_tugas = """
             <div class="rpg-open-book-container">
