@@ -2424,24 +2424,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         current_month_name = today.strftime("%B")
 
         # ==========================================
-        # 📊 2. TARIK DATA DARI GOOGLE SHEETS
-        # ==========================================
-        SHEET_ID = "1kJ-OsjLEsFuNyyBg2TwxlWz8Ape4lwF9h0t66q3ldQk"
-        GID_SALES_ITEM = "2041806781" 
-        GID_SALES_PERSONIL = "0" 
-
-        @st.cache_data(ttl=300)
-        def load_sheet_tab(gid_value):
-            url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={gid_value}"
-            try:
-                return pd.read_csv(url)
-            except Exception as e:
-                return pd.DataFrame()
-
-        df_item_raw = load_sheet_tab(GID_SALES_ITEM)
-        df_personil_raw = load_sheet_tab(GID_SALES_PERSONIL)
-
-        # ==========================================
         # 🎨 3. SUNTIKAN CSS (TERMASUK Kartu Item RPG Interaktif)
         # ==========================================
         st.markdown("""
@@ -2701,61 +2683,85 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             ("Bors", "60 Pcs"), ("Kay", "55 Pcs"), ("Bedivere", "50 Pcs")
         ]
 
-       # ==========================================
-        # 📄 5. KONTEN PER HALAMAN BUKU (Menggunakan format referensi Anda)
+        # ==========================================
+        # 📄 5. KONTEN PER HALAMAN BUKU (Halaman 1)
         # ==========================================
         if page_num == 1:
-            sample_items = [
-                ("Item A (Special Special)", 50, 48),
-                ("Item B (Rare Armor)", 40, 40),
-                ("Item C (Common Potion)", 100, 75),
-                ("Item D (Legendary Scroll)", 30, 32)
-            ]
+            # Ambil data dari sheet SALES_ITEM dan filter berdasarkan Periode Aktif
+            df_filtered_items = pd.DataFrame()
+            if not df_item_raw.empty:
+                col_periode = next((c for c in df_item_raw.columns if 'periode' in c.lower()), None)
+                if col_periode:
+                    df_filtered_items = df_item_raw[df_item_raw[col_periode].astype(str).str.strip() == active_period]
+                else:
+                    df_filtered_items = df_item_raw
 
             items_html_left = ""
             items_html_right = ""
 
-            for idx, (iname, itarget, iaktual) in enumerate(sample_items):
+            if df_filtered_items.empty:
+                render_items = [
+                    ("Item A (Data Kosong/Belum Sinkron)", 50, 20),
+                    ("Item B (Contoh)", 40, 40)
+                ]
+            else:
+                render_items = []
+                for _, r in df_filtered_items.iterrows():
+                    name = str(r.get('Nama_Item', r.get('Item', 'Item Misi')))
+                    target = int(r.get('Target_Qty', r.get('Target', 50)))
+                    aktual = int(r.get('Aktual_Qty', r.get('Aktual', 0)))
+                    render_items.append((name, target, aktual))
+
+            for idx, (iname, itarget, iaktual) in enumerate(render_items):
                 gap = itarget - iaktual
                 achiv = (iaktual / itarget) * 100 if itarget > 0 else 0
                 is_done = iaktual >= itarget
                 card_cls = "rpg-item-card completed" if is_done else "rpg-item-card"
-                badge = "<span class='badge-success'>✨ SELESAI</span>" if is_done else f"<span class='badge-warning'>GAP: {gap}</span>"
+                badge = "<span class='badge-success'>✨ SELESAI</span>" if is_done else "<span class='badge-warning'>GAP: {}</span>".format(gap)
+                achiv_color = '#065f46' if is_done else '#92400e'
                 
-                card_markup = f"""
-                <div class="{card_cls}">
+                card_markup = """
+                <div class="{}">
                     <div>
-                        <div class="item-title">⚔️ {iname} {badge}</div>
-                        <div class="item-stats">Target: {itarget} | Aktual: <b>{iaktual}</b></div>
+                        <div class="item-title">⚔️ {} {}</div>
+                        <div class="item-stats">Target: {} | Aktual: <b>{}</b></div>
                     </div>
                     <div style="text-align: right;">
-                        <div style="font-size: 14px; font-weight: bold; color: {'#065f46' if is_done else '#92400e'};">{achiv:.1f}%</div>
+                        <div style="font-size: 14px; font-weight: bold; color: {};">{:.1f}%</div>
                     </div>
                 </div>
-                """
-                if idx < 2:
+                """.format(card_cls, iname, badge, itarget, iaktual, achiv_color, achiv)
+
+                if idx % 2 == 0:
                     items_html_left += card_markup
                 else:
                     items_html_right += card_markup
+
+            if not items_html_right:
+                items_html_right = "<div style='color:#78350f; font-size:12px; text-align:center; margin-top:20px;'><i>Tidak ada item tambahan pada periode ini.</i></div>"
 
             html_open_tugas = """
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page rpg-book-page-left">
                     <h3 class="open-page-title">🎯 TARGET ITEM (1)</h3>
-                    <p class="open-page-sub">Maklumat Target & Achiv Periode Ini</p>
+                    <p class="open-page-sub">Maklumat Target & Achiv ({})</p>
                     <div class="open-book-divider"></div>
-                    {items_html_left}
+                    {}
                     <div class="open-page-footer">Halaman Kiri • Item Bagian 1</div>
                 </div>
                 <div class="rpg-book-page rpg-book-page-right">
                     <h3 class="open-page-title">🎯 TARGET ITEM (2)</h3>
                     <p class="open-page-sub">Kelanjutan Maklumat Target Item</p>
                     <div class="open-book-divider"></div>
-                    {items_html_right}
+                    {}
                     <div class="open-page-footer">Halaman Kanan • Item Bagian 2</div>
                 </div>
             </div>
-            """
+            """.format(
+                active_period, 
+                items_html_left if items_html_left else "<div style='color:#78350f; font-size:12px; text-align:center;'>Belum ada data item untuk periode ini.</div>", 
+                items_html_right
+            )
 
         elif page_num == 2:
             html_open_tugas = """
