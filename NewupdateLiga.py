@@ -1924,8 +1924,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
 
-        # =========================================================================
-        # 📘 JURNAL BURUAN INDIVIDU (HANYA MENAMPILKAN ITEM YANG TERCAPAI)
+       # =========================================================================
+        # 📘 JURNAL BURUAN INDIVIDU (REKAP LAPORAN DENGAN HALAMAN BUKU OTOMATIS)
         # =========================================================================
         elif st.session_state.get("campaign_sub_page") == "view_buku_pencapaian":
             
@@ -1987,10 +1987,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         tgt_val = pd.to_numeric(row['target_kasir'], errors='coerce') or 0
                         dict_target_item[it_name] = dict_target_item.get(it_name, 0) + int(tgt_val)
 
-            # --- 🔍 2. TARIK QTY AKTUAL PENJUALAN KASIR & HANYA AMBIL YANG TERCAPAI ---
+            # --- 🔍 2. TARIK QTY AKTUAL PENJUALAN KASIR & KUMPULKAN DAFTAR ITEM TERCAPAI ---
             qty_penjualan_psm_val = 0
-            list_item_tercapai_html = ""
-            jumlah_item_tercapai_count = 0
+            list_item_tercapai_collection = []
             
             if not sales_personil.empty and 'period_id' in sales_personil.columns and 'person_name' in sales_personil.columns:
                 df_user_sales = sales_personil[
@@ -2012,7 +2011,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                             
                             target_item_ini = dict_target_item.get(nama_item, 0)
                             
-                            # Validasi: Hanya masukkan ke HTML jika memenuhi target (tercapai)
                             is_achieved = False
                             if target_item_ini > 0 and qty_aktual >= target_item_ini:
                                 is_achieved = True
@@ -2022,12 +2020,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                             if is_achieved:
                                 emoji_status = "🏆 TERCAPAI!"
                                 warna_status = "#16a34a"
-                                jumlah_item_tercapai_count += qty_aktual
-                                
-                                list_item_tercapai_html += f'<div class="open-stat-row"><span>📦 {nama_item}</span><span style="color:{warna_status};">{qty_aktual} Qty ({emoji_status})</span></div>'
+                                row_html = f'<div class="open-stat-row"><span>📦 {nama_item}</span><span style="color:{warna_status};">{qty_aktual} Qty ({emoji_status})</span></div>'
+                                list_item_tercapai_collection.append(row_html)
 
-            if list_item_tercapai_html == "":
-                list_item_tercapai_html = '<div class="open-stat-row"><span>📦 BELUM ADA ITEM TERCAPAI</span><span style="color:#71717a;">0 Qty</span></div>'
+            jumlah_jenis_item_tercapai = len(list_item_tercapai_collection)
+
+            if jumlah_jenis_item_tercapai == 0:
+                list_item_tercapai_collection.append('<div class="open-stat-row"><span>📦 BELUM ADA ITEM TERCAPAI</span><span style="color:#71717a;">0 Qty</span></div>')
 
             # --- 🔍 3. HITUNG RANKING PENJUALAN KASIR (BULAN INI) ---
             ranking_val = "#RANK -"
@@ -2056,6 +2055,70 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 "\"Langkah kecil setiap hari menghasilkan pencapaian luar biasa. Ayo taklukkan quest hari ini!\""
             ]
             motivasi_terpilih = random.choice(daftar_motivasi)
+
+            # --- ⚙️ SISTEM PAGINASI DINAMIS (PENGATUR HALAMAN BUKU) ---
+            # Halaman 1 & 2: Menu Utama (Status Pahlawan & Rekap Report)
+            # Halaman 3 dst: Lembar Detail Item Tercapai (maksimal 5 item per halaman agar pas dibaca)
+            ITEMS_PER_PAGE = 5
+            chunked_items = [list_item_tercapai_collection[i:i + ITEMS_PER_PAGE] for i in range(0, len(list_item_tercapai_collection), ITEMS_PER_PAGE)]
+            total_item_pages = len(chunked_items)
+            
+            # Total halaman keseluruhan = 1 (Halaman Utama) + total_item_pages (Halaman Detail Item) + 1 (Halaman Sueger/Arsip Harian) + 1 (Halaman Aliansi/Motivasi)
+            # Agar sederhana dan terstruktur rapi:
+            # - Spread 1 (current_page == 1): Halaman 1 (Status) & Halaman 2 (Rekap Report)
+            # - Spread berikutnya: Detail Item Tercapai secara berurutan, lalu diakhiri Arsip Sueger & Motivasi Aliansi.
+            
+            # Mari kita tentukan total pasang halaman (spread) buku:
+            # Spread 1: Halaman 1 & 2 (Utama)
+            # Spread 2 s/d N: Detail Item Tercapai (Kiri & Kanan diisi item)
+            # Spread Terakhir: Halaman Arsip Sueger (Kiri) & Motivasi Aliansi (Kanan)
+            
+            # Kita buat list struktur buku agar mudah dinavigasi:
+            book_spreads = []
+            
+            # Spread Pertama (Halaman 1 & 2)
+            book_spreads.append({
+                "type": "main_menu",
+                "left_title": "⚜️ STATUS PAHLAWAN ⚜️",
+                "left_sub": "Catatan Karakter Ksatria",
+                "right_title": "⚔️ REKAP REPORT ⚔️",
+                "right_sub": "Akumulasi Poin Buruan (1 Bulan)"
+            })
+            
+            # Spread untuk Detail Item Tercapai (Paginasi Otomatis per 5 item di kiri, 5 item di kanan jika muat)
+            # Atau per halaman buku menampilkan list item
+            item_page_pairs = [chunked_items[i:i+2] for i in range(0, len(chunked_items), 2)]
+            for idx, pair in enumerate(item_page_pairs):
+                left_items_html = "".join(pair[0])
+                right_items_html = "".join(pair[1]) if len(pair) > 1 else '<div class="open-stat-row"><span>✨ BAGIAN INI TELAH SELESAI</span><span style="color:#71717a;">-</span></div>'
+                
+                book_spreads.append({
+                    "type": "item_detail",
+                    "page_num_left": f"Halaman {(idx*2)+3}",
+                    "page_num_right": f"Halaman {(idx*2)+4}",
+                    "left_content": left_items_html,
+                    "right_content": right_items_html,
+                    "sub_title": f"Rincian Quest Bulan {nama_periode_aktif}"
+                })
+            
+            # Spread Terakhir: Log Sueger & Catatan Aliansi
+            baris_tanggal_html = ""
+            for tgl in range(1, 32):
+                nilai_harian = f"Rp {100000 + (tgl * 5000):,}"
+                baris_tanggal_html += f'<div class="open-stat-row"><span>Tanggal {tgl:02d}</span><span style="color:#0d9488;">{nilai_harian}</span></div>'
+
+            book_spreads.append({
+                "type": "closing_scroll",
+                "sueger_html": baris_tanggal_html,
+                "motivasi_text": motivasi_terpilih
+            })
+
+            max_spread_index = len(book_spreads)
+            if current_page > max_spread_index:
+                current_page = 1
+                st.session_state["book_page_number"] = 1
+
+            current_spread = book_spreads[current_page - 1]
 
             # --- 🎨 STYLING BUKU ---
             st.markdown(
@@ -2112,19 +2175,19 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     st.session_state["book_page_number"] = 1
                     st.rerun()
             else:
-                if st.button("⬅️ LOG PREVIOUS PAGE (HALAMAN SEBELUMNYA)", use_container_width=True, key="btn_desk_nav_prev"):
+                if st.button("⬅️ LEMBAR SEBELUMNYA (PREV PAGE)", use_container_width=True, key="btn_desk_nav_prev"):
                     st.session_state["book_page_number"] -= 1
                     st.rerun()
                     
-            # --- 🏛️ RENDER HALAMAN BUKU ---
+            # --- 🏛️ RENDER HALAMAN BUKU BERDASARKAN SPREAD AKTIF ---
             html_content_pages = ""
 
-            if current_page == 1:
+            if current_spread["type"] == "main_menu":
                 html_content_pages = (
                     '<div class="rpg-open-book-container rpg-open-book-animated">'
                     '<div class="rpg-book-page">'
-                    '<div class="open-page-title">⚜️ STATUS PAHLAWAN ⚜️</div>'
-                    '<div class="open-page-sub">Catatan Karakter Ksatria</div>'
+                    f'<div class="open-page-title">{current_spread["left_title"]}</div>'
+                    f'<div class="open-page-sub">{current_spread["left_sub"]}</div>'
                     '<div class="open-book-divider"></div>'
                     f'<div class="open-stat-row"><span>NAMA PAHLAWAN</span><span style="color:#b45309;">{username_hero}</span></div>'
                     f'<div class="open-stat-row"><span>TINGKAT LEVEL</span><span style="color:#16a34a;">{data_stats["level"]}</span></div>'
@@ -2136,55 +2199,57 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     '<div class="open-page-footer">- Halaman 1 -</div>'
                     '</div>'
                     '<div class="rpg-book-page">'
-                    '<div class="open-page-title">⚔️ REKAP REPORT ⚔️</div>'
-                    '<div class="open-page-sub">Akumulasi Poin Buruan (1 Bulan)</div>'
+                    f'<div class="open-page-title">{current_spread["right_title"]}</div>'
+                    f'<div class="open-page-sub">{current_spread["right_sub"]}</div>'
                     '<div class="open-book-divider"></div>'
-                    f'<div class="open-stat-row" style="margin-top:10px;"><span>QTY PENJUALAN PSM</span><span style="color:#b45309;">{qty_penjualan_psm_val} Pts</span></div>'
-                    f'<div class="open-stat-row"><span>TARGET TERCAPAI</span><span style="color:#16a34a;">{jumlah_item_tercapai_count} Pts</span></div>'
-                    f'<div class="open-stat-row"><span>RANKING PENJUALAN</span><span style="color:#ca8a04; font-weight:900;">{ranking_val}</span></div>'
+                    f'<div class="open-stat-row" style="margin-top:10px;"><span>QTY PENJUALAN PSM</span><span style="color:#b45309;">{qty_penjualan_psm_val} Pts 📦</span></div>'
+                    f'<div class="open-stat-row"><span>ITEM TERCAPAI</span><span style="color:#16a34a;">{jumlah_jenis_item_tercapai} Jenis 🏆</span></div>'
+                    f'<div class="open-stat-row"><span>RANKING PENJUALAN</span><span style="color:#ca8a04; font-weight:900;">{ranking_val} 👑</span></div>'
                     '<div class="open-page-footer" style="margin-top:auto;">- Halaman 2 -</div>'
                     '</div>'
                     '</div>'
                 )
 
-            elif current_page == 2:
+            elif current_spread["type"] == "item_detail":
                 html_content_pages = (
                     '<div class="rpg-open-book-container rpg-open-book-animated">'
                     '<div class="rpg-book-page">'
                     '<div class="open-page-title">💎 DETAIL ITEM TERCAPAI 💎</div>'
-                    f'<div class="open-page-sub">Rincian Quest Bulan {nama_periode_aktif}</div>'
+                    f'<div class="open-page-sub">{current_spread["sub_title"]}</div>'
                     '<div class="open-book-divider"></div>'
-                    f'{list_item_tercapai_html}' 
-                    '<div class="open-page-footer">- Halaman 3 -</div>'
+                    f'{current_spread["left_content"]}' 
+                    f'<div class="open-page-footer">- {current_spread["page_num_left"]} -</div>'
+                    '</div>'
+                    '<div class="rpg-book-page">'
+                    '<div class="open-page-title">💎 DETAIL ITEM TERCAPAI 💎</div>'
+                    f'<div class="open-page-sub">{current_spread["sub_title"]} (Lanjutan)</div>'
+                    '<div class="open-book-divider"></div>'
+                    f'{current_spread["right_content"]}' 
+                    f'<div class="open-page-footer">- {current_spread["page_num_right"]} -</div>'
+                    '</div>'
+                    '</div>'
+                )
+
+            elif current_spread["type"] == "closing_scroll":
+                html_content_pages = (
+                    '<div class="rpg-open-book-container rpg-open-book-animated">'
+                    '<div class="rpg-book-page">'
+                    '<div class="open-page-title">🍹 LOG HARIAN SUEGER 🍹</div>'
+                    '<div class="open-page-sub">Arsip Penjualan Otomatis Tanggal 01 s/d Akhir Bulan</div>'
+                    '<div class="open-book-divider"></div>'
+                    '<div class="sueger-daily-scroll-box">'
+                    f'{current_spread["sueger_html"]}'
+                    '</div>'
+                    '<div class="open-page-footer" style="margin-top:10px;">- Arsip Harian -</div>'
                     '</div>'
                     '<div class="rpg-book-page">'
                     '<div class="open-page-title">📜 CATATAN ALIANSI 📜</div>'
                     '<div class="open-page-sub">Maklumat & Motivasi Petualang</div>'
                     '<div class="open-book-divider"></div>'
                     f'<p style="font-size:11px; color:#5c4033; line-height:1.6; text-align:center; font-style:italic; margin-top:20px;">'
-                    f'{motivasi_terpilih}'
+                    f'{current_spread["motivasi_text"]}'
                     '</p>'
-                    '<div class="open-page-footer" style="margin-top:auto;">- Halaman 4 -</div>'
-                    '</div>'
-                    '</div>'
-                )
-
-            elif current_page == 3:
-                baris_tanggal_html = ""
-                for tgl in range(1, 32):
-                    nilai_harian = f"Rp {100000 + (tgl * 5000):,}"
-                    baris_tanggal_html += f'<div class="open-stat-row"><span>Tanggal {tgl:02d}</span><span style="color:#0d9488;">{nilai_harian}</span></div>'
-
-                html_content_pages = (
-                    '<div class="rpg-open-book-container rpg-open-book-animated">'
-                    '<div class="rpg-book-page" style="width:100% !important; max-width:100% !important;">'
-                    '<div class="open-page-title">🍹 LOG HARIAN SUEGER 🍹</div>'
-                    '<div class="open-page-sub">Arsip Penjualan Otomatis Tanggal 01 s/d Akhir Bulan</div>'
-                    '<div class="open-book-divider"></div>'
-                    '<div class="sueger-daily-scroll-box">'
-                    f'{baris_tanggal_html}'
-                    '</div>'
-                    '<div class="open-page-footer" style="margin-top:10px;">- Halaman 5 (Arsip Dinamis) -</div>'
+                    '<div class="open-page-footer" style="margin-top:auto;">- Halaman Terakhir -</div>'
                     '</div>'
                     '</div>'
                 )
@@ -2192,12 +2257,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.markdown(html_content_pages, unsafe_allow_html=True)
 
             # --- 🏛️ TOMBOL NAVIGASI BAWAH ---
-            if current_page == 3:
-                if st.button("↺ KEMBALI KE AWAL REPORT (HALAMAN 1)", use_container_width=True, key="btn_desk_nav_reset"):
+            if current_page == max_spread_index:
+                if st.button("↺ KEMBALI KE HALAMAN UTAMA (AWAL BUKU)", use_container_width=True, key="btn_desk_nav_reset"):
                     st.session_state["book_page_number"] = 1
                     st.rerun()
             else:
-                if st.button("HALAMAN BERIKUTNYA (BUKA LEMBARAN LAIN) ➔", use_container_width=True, key="btn_desk_nav_next"):
+                if st.button("LEMBAR BERIKUTNYA (BUKA HALAMAN SELANJUTNYA) ➔", use_container_width=True, key="btn_desk_nav_next"):
                     st.session_state["book_page_number"] += 1
                     st.rerun()
 
