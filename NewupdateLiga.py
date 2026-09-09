@@ -2701,32 +2701,27 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             ("Bors", "60 Pcs"), ("Kay", "55 Pcs"), ("Bedivere", "50 Pcs")
         ]
 
-        # ==========================================
-        # 📄 5. KONTEN PER HALAMAN BUKU (Halaman 1 & 3 Fokus PSM)
+       # ==========================================
+        # 📄 5. KONTEN PER HALAMAN BUKU (Menggunakan format referensi Anda)
         # ==========================================
         if page_num == 1:
-            # Halaman 1: Target Item Interaktif Berdasarkan Periode Aktif
-            # Filter item berdasarkan active_period dari sheet SALES_ITEM (jika kolom tersedia)
-            if not df_item_raw.empty and 'Periode' in df_item_raw.columns:
-                df_filtered_items = df_item_raw[df_item_raw['Periode'] == active_period]
-            else:
-                df_filtered_items = pd.DataFrame()
-            # Render HTML kartu item interaktif
-            items_html_left = ""
-            items_html_right = ""
-            # Data contoh item jika data sheet belum di-mapping penuh
             sample_items = [
                 ("Item A (Special Special)", 50, 48),
-                ("Item B (Rare Armor)", 40, 40), # Tercapai (Hijau)
+                ("Item B (Rare Armor)", 40, 40),
                 ("Item C (Common Potion)", 100, 75),
-                ("Item D (Legendary Scroll)", 30, 32) # Tercapai (Hijau)
+                ("Item D (Legendary Scroll)", 30, 32)
             ]
+
+            items_html_left = ""
+            items_html_right = ""
+
             for idx, (iname, itarget, iaktual) in enumerate(sample_items):
                 gap = itarget - iaktual
                 achiv = (iaktual / itarget) * 100 if itarget > 0 else 0
                 is_done = iaktual >= itarget
                 card_cls = "rpg-item-card completed" if is_done else "rpg-item-card"
                 badge = "<span class='badge-success'>✨ SELESAI</span>" if is_done else f"<span class='badge-warning'>GAP: {gap}</span>"
+                
                 card_markup = f"""
                 <div class="{card_cls}">
                     <div>
@@ -2742,6 +2737,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     items_html_left += card_markup
                 else:
                     items_html_right += card_markup
+
             html_open_tugas = f"""
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page rpg-book-page-left">
