@@ -2392,6 +2392,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         if "kitab_misi_page" not in st.session_state:
             st.session_state["kitab_misi_page"] = 1
 
+        # Total lembar sekarang ada 9
+        TOTAL_PAGES = 9
+
         # 🎨 SUNTIKKAN CSS TERMASUK STYLING TOMBOL STREAMLIT
         st.markdown(
             """
@@ -2531,10 +2534,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     st.rerun()
 
         with col_nav2:
-            st.markdown(f"<p style='text-align:center; color:#854d0e; font-family:monospace; font-weight:bold; font-size:11px; margin-top:8px;'>LEMBAR KE-{page_num} DARI 4</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center; color:#854d0e; font-family:monospace; font-weight:bold; font-size:11px; margin-top:8px;'>LEMBAR KE-{page_num} DARI {TOTAL_PAGES}</p>", unsafe_allow_html=True)
 
         with col_nav3:
-            if page_num < 4:
+            if page_num < TOTAL_PAGES:
                 if st.button("Berikutnya ➡️", key="next_sheet", use_container_width=True):
                     st.session_state["kitab_misi_page"] += 1
                     st.rerun()
@@ -2546,115 +2549,141 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             ("7. Bors", "60 Pcs"), ("8. Kay", "55 Pcs"), ("9. Bedivere", "50 Pcs")
         ]
 
-        # Tentukan posisi rank toko kita saat ini (contoh: Peringkat ke-5 / Gawain)
-        my_rank_pps = 5 
-        my_rank_psm = 3
-
         if page_num == 1:
-            # --- LEMBAR 1: RANKING PPS (1 - 4) ---
-            rows_pps_1 = "".join([f'<div class="open-stat-row"><span>{n}</span><span style="color:#b45309;">{s}</span></div>' for n, s in dummy_9_personil[:4]])
-            
-            # --- LEMBAR 1 (Kanan): NAVIGASI/INFO POSISI RANKING KITA ---
-            html_open_tugas = textwrap.dedent(f"""
+            # --- LEMBAR 1: TARGET ITEM (Bagian 1) ---
+            html_open_tugas = textwrap.dedent("""
             <div class="rpg-open-book-container">
-                <div class="rpg-book-page">
-                    <h3 class="open-page-title">🛡️ RANKING PPS (1-4)</h3>
-                    <p class="open-page-subtitle">Top Pahlawan PPS Guild</p>
+                <div class="rpg-book-page" style="width: 100%;">
+                    <h3 class="open-page-title">🎯 TARGET ITEM (1)</h3>
+                    <p class="open-page-subtitle">Daftar Kuota Target Utama</p>
                     <div class="open-book-divider"></div>
-                    {rows_pps_1}
-                    <p class="open-page-footer">Page 1 • PPS Top 4</p>
-                </div>
-                <div class="rpg-book-page" style="justify-content: center; align-items: center; text-align: center;">
-                    <h3 class="open-page-title">📍 POSISI TOKO KITA</h3>
-                    <p class="open-page-subtitle">Status Peringkat Guild Anda</p>
-                    <div class="open-book-divider" style="width: 80%;"></div>
-                    <div style="background: rgba(180,83,9,0.1); padding: 15px; border-radius: 8px; border: 1px dashed #b45309; width: 100%;">
-                        <p style="font-size: 11px; font-weight: bold; color: #854d0e; margin-bottom: 5px;">SHIELD RANK (PPS):</p>
-                        <p style="font-size: 14px; font-weight: 900; color: #16a34a; margin: 0;">Peringkat ke-{my_rank_pps} dari 9</p>
-                        <p style="font-size: 9px; color: #78716c; font-style: italic; margin-top: 5px;">(Cek Lembar 2 untuk melihat detail posisi Anda)</p>
-                    </div>
-                    <p class="open-page-footer" style="width: 100%;">Page 2 • Position Info</p>
+                    <div class="open-stat-row"><span>Item A (Special)</span><span>50 Pcs</span></div>
+                    <div class="open-stat-row"><span>Item B (Rare)</span><span>40 Pcs</span></div>
+                    <div class="open-stat-row"><span>Item C (Common)</span><span>100 Pcs</span></div>
+                    <p class="open-page-footer">Page 1 • Target Item A</p>
                 </div>
             </div>
             """)
 
         elif page_num == 2:
-            # --- LEMBAR 2: RANKING PPS (5 - 9) & RANKING PSM (1 - 4) ---
-            rows_pps_2 = "".join([f'<div class="open-stat-row"><span>{n}</span><span style="color:#b45309;">{s}</span></div>' for n, s in dummy_9_personil[4:]])
-            rows_psm_1 = "".join([f'<div class="open-stat-row"><span>{n}</span><span style="color:#b45309;">{int(s.replace(" Pcs",""))+15} Pcs</span></div>' for n, s in dummy_9_personil[:4]])
-            
-            html_open_tugas = textwrap.dedent(f"""
+            # --- LEMBAR 2: TARGET ITEM (Bagian 2 / Actual) ---
+            html_open_tugas = textwrap.dedent("""
             <div class="rpg-open-book-container">
-                <div class="rpg-book-page">
-                    <h3 class="open-page-title">🛡️ RANKING PPS (5-9)</h3>
-                    <p class="open-page-subtitle">Pahlawan PPS Selanjutnya</p>
+                <div class="rpg-book-page" style="width: 100%;">
+                    <h3 class="open-page-title">📦 TARGET ITEM (2)</h3>
+                    <p class="open-page-subtitle">Realisasi Perolehan Item Toko</p>
                     <div class="open-book-divider"></div>
-                    {rows_pps_2}
-                    <div style="margin-top: auto; background: rgba(22,163,74,0.1); padding: 6px; border-radius: 4px; text-align: center; font-size: 9.5px; color: #16a34a; font-weight: bold;">
-                        📍 Posisi Anda: Rank #{my_rank_pps}
-                    </div>
-                    <p class="open-page-footer">Page 3 • PPS 5-9</p>
-                </div>
-                <div class="rpg-book-page">
-                    <h3 class="open-page-title">⚔️ RANKING PSM (1-4)</h3>
-                    <p class="open-page-subtitle">Top Poin Penjualan PSM</p>
-                    <div class="open-book-divider"></div>
-                    {rows_psm_1}
-                    <p class="open-page-footer">Page 4 • PSM Top 4</p>
+                    <div class="open-stat-row"><span>Item A (Special)</span><span style="color:#16a34a;">48 / 50 Pcs</span></div>
+                    <div class="open-stat-row"><span>Item B (Rare)</span><span style="color:#dc2626;">35 / 40 Pcs</span></div>
+                    <div class="open-stat-row"><span>Item C (Common)</span><span style="color:#16a34a;">95 / 100 Pcs</span></div>
+                    <p class="open-page-footer">Page 2 • Target Item B</p>
                 </div>
             </div>
             """)
 
         elif page_num == 3:
-            # --- LEMBAR 3: RANKING PSM (5 - 9) & INFO POSISI PSM ---
-            rows_psm_2 = "".join([f'<div class="open-stat-row"><span>{n}</span><span style="color:#b45309;">{int(s.replace(" Pcs",""))+15} Pcs</span></div>' for n, s in dummy_9_personil[4:]])
-            
-            html_open_tugas = textwrap.dedent(f"""
+            # --- LEMBAR 3: TARGET PPS ---
+            html_open_tugas = textwrap.dedent("""
             <div class="rpg-open-book-container">
-                <div class="rpg-book-page">
-                    <h3 class="open-page-title">⚔️ RANKING PSM (5-9)</h3>
-                    <p class="open-page-subtitle">Akumulasi Poin PSM Selanjutnya</p>
+                <div class="rpg-book-page" style="width: 100%;">
+                    <h3 class="open-page-title">🛡️ TARGET PPS</h3>
+                    <p class="open-page-subtitle">Rincian Target Harian PPS</p>
                     <div class="open-book-divider"></div>
-                    {rows_psm_2}
-                    <div style="margin-top: auto; background: rgba(22,163,74,0.1); padding: 6px; border-radius: 4px; text-align: center; font-size: 9.5px; color: #16a34a; font-weight: bold;">
-                        📍 Posisi PSM Anda: Rank #{my_rank_psm}
-                    </div>
-                    <p class="open-page-footer">Page 5 • PSM 5-9</p>
-                </div>
-                <div class="rpg-book-page">
-                    <h3 class="open-page-title">⚡ DAILY QUESTS</h3>
-                    <p class="open-page-subtitle">Target Harian Guild</p>
-                    <div class="open-book-divider"></div>
-                    <div class="open-stat-row"><span>🔥 TARGET SG</span><span style="color:#16a34a;">2.3 Pcs (DONE)</span></div>
-                    <div class="open-stat-row"><span>🛡️ TARGET PWP</span><span style="color:#16a34a;">1.4 Pcs (DONE)</span></div>
-                    <div class="open-stat-row"><span>📦 TARGET PSM</span><span style="color:#dc2626;">3.5 Pcs (HUNTING)</span></div>
-                    <div class="open-stat-row"><span>⚡ TARGET SUEGER</span><span style="color:#16a34a;">4.0 Pcs (DONE)</span></div>
-                    <p class="open-page-footer">Page 6 • Daily Quests</p>
+                    <div class="open-stat-row"><span>Target PPS Alpha</span><span>15 Pcs</span></div>
+                    <div class="open-stat-row"><span>Target PPS Beta</span><span>20 Pcs</span></div>
+                    <div class="open-stat-row"><span>Target PPS Gamma</span><span>10 Pcs</span></div>
+                    <p class="open-page-footer">Page 3 • Target PPS</p>
                 </div>
             </div>
             """)
 
         elif page_num == 4:
-            # --- LEMBAR 4: PENCAPAIAN & TARGET ITEM ---
+            # --- LEMBAR 4: INFORMASI URUTAN/POSISI PAHLAWAN KITA ---
             html_open_tugas = textwrap.dedent("""
             <div class="rpg-open-book-container">
-                <div class="rpg-book-page">
-                    <h3 class="open-page-title">🏆 PENCAPAIAN</h3>
-                    <p class="open-page-subtitle">Achievement & Status Guild</p>
+                <div class="rpg-book-page" style="width: 100%;">
+                    <h3 class="open-page-title">📍 POSISI & URUTAN PAHLAWAN</h3>
+                    <p class="open-page-subtitle">Status Peringkat Guild Anda</p>
                     <div class="open-book-divider"></div>
-                    <div class="open-stat-row"><span>WEEKLY PSM ACH</span><span style="color:#16a34a;">88% (GOOD)</span></div>
-                    <div class="open-stat-row"><span>PERIOD PWP ACH</span><span style="color:#16a34a;">94% (EXCELLENT)</span></div>
-                    <div class="open-stat-row"><span>TOTAL REWARD</span><span style="color:#b45309;">1,450 Gold</span></div>
-                    <p class="open-page-footer">Page 7 • Sales Achievement</p>
+                    <div class="open-stat-row"><span>RANK PSM</span><span style="color:#16a34a; font-weight:bold;">Peringkat #3 (92%)</span></div>
+                    <div class="open-stat-row"><span>RANK PPS</span><span style="color:#16a34a; font-weight:bold;">Peringkat #5 (85%)</span></div>
+                    <div class="open-stat-row"><span>RANK SUEGER</span><span style="color:#b45309; font-weight:bold;">Peringkat #2 (94%)</span></div>
+                    <p class="open-page-footer">Page 4 • Posisi Pahlawan</p>
                 </div>
-                <div class="rpg-book-page">
-                    <h3 class="open-page-title">🎯 TARGET & ACTUAL ITEM</h3>
-                    <p class="open-page-subtitle">Kuota & Realisasi Item Toko</p>
+            </div>
+            """)
+
+        elif page_num == 5:
+            # --- LEMBAR 5: PERINGKAT PSM 1-3 ---
+            rows_psm_13 = "".join([f'<div class="open-stat-row"><span>{n}</span><span style="color:#b45309;">{s}</span></div>' for n, s in dummy_9_personil[:3]])
+            html_open_tugas = textwrap.dedent(f"""
+            <div class="rpg-open-book-container">
+                <div class="rpg-book-page" style="width: 100%;">
+                    <h3 class="open-page-title">⚔️ PERINGKAT PSM (1-3)</h3>
+                    <p class="open-page-subtitle">Top 3 Pahlawan PSM</p>
                     <div class="open-book-divider"></div>
-                    <div class="open-stat-row"><span>Item A (Special)</span><span style="color:#16a34a;">48 / 50 Pcs</span></div>
-                    <div class="open-stat-row"><span>Item B (Rare)</span><span style="color:#dc2626;">35 / 40 Pcs</span></div>
-                    <div class="open-stat-row"><span>Item C (Common)</span><span style="color:#16a34a;">95 / 100 Pcs</span></div>
-                    <p class="open-page-footer">Page 8 • Item Status</p>
+                    {rows_psm_13}
+                    <p class="open-page-footer">Page 5 • PSM Rank 1-3</p>
+                </div>
+            </div>
+            """)
+
+        elif page_num == 6:
+            # --- LEMBAR 6: PERINGKAT PSM 4-9 (Dengan tanda peringkat) ---
+            rows_psm_49 = "".join([f'<div class="open-stat-row"><span>{n}</span><span style="color:#b45309;">{s}</span></div>' for n, s in dummy_9_personil[3:]])
+            html_open_tugas = textwrap.dedent(f"""
+            <div class="rpg-open-book-container">
+                <div class="rpg-book-page" style="width: 100%;">
+                    <h3 class="open-page-title">⚔️ PERINGKAT PSM (4-9)</h3>
+                    <p class="open-page-subtitle">Daftar Peringkat Lanjutan PSM</p>
+                    <div class="open-book-divider"></div>
+                    {rows_psm_49}
+                    <p class="open-page-footer">Page 6 • PSM Rank 4-9</p>
+                </div>
+            </div>
+            """)
+
+        elif page_num == 7:
+            # --- LEMBAR 7: PERINGKAT PPS 1-4 ---
+            rows_pps_14 = "".join([f'<div class="open-stat-row"><span>{n}</span><span style="color:#b45309;">{s}</span></div>' for n, s in dummy_9_personil[:4]])
+            html_open_tugas = textwrap.dedent(f"""
+            <div class="rpg-open-book-container">
+                <div class="rpg-book-page" style="width: 100%;">
+                    <h3 class="open-page-title">🛡️ PERINGKAT PPS (1-4)</h3>
+                    <p class="open-page-subtitle">Top Pahlawan PPS Guild</p>
+                    <div class="open-book-divider"></div>
+                    {rows_pps_14}
+                    <p class="open-page-footer">Page 7 • PPS Rank 1-4</p>
+                </div>
+            </div>
+            """)
+
+        elif page_num == 8:
+            # --- LEMBAR 8: PERINGKAT PPS 5-9 ---
+            rows_pps_59 = "".join([f'<div class="open-stat-row"><span>{n}</span><span style="color:#b45309;">{s}</span></div>' for n, s in dummy_9_personil[4:]])
+            html_open_tugas = textwrap.dedent(f"""
+            <div class="rpg-open-book-container">
+                <div class="rpg-book-page" style="width: 100%;">
+                    <h3 class="open-page-title">🛡️ PERINGKAT PPS (5-9)</h3>
+                    <p class="open-page-subtitle">Daftar Peringkat Lanjutan PPS</p>
+                    <div class="open-book-divider"></div>
+                    {rows_pps_59}
+                    <p class="open-page-footer">Page 8 • PPS Rank 5-9</p>
+                </div>
+            </div>
+            """)
+
+        elif page_num == 9:
+            # --- LEMBAR 9: PERINGKAT SUEGER (1-9 / Sesuai permintaan lembar 8-9 untuk sueger) ---
+            rows_sueger = "".join([f'<div class="open-stat-row"><span>{n}</span><span style="color:#b45309;">{int(s.replace(" Pcs",""))+5} Pcs</span></div>' for n, s in dummy_9_personil])
+            html_open_tugas = textwrap.dedent(f"""
+            <div class="rpg-open-book-container">
+                <div class="rpg-book-page" style="width: 100%;">
+                    <h3 class="open-page-title">⚡ PERINGKAT SUEGER</h3>
+                    <p class="open-page-subtitle">Akumulasi Poin Sueger Guild</p>
+                    <div class="open-book-divider"></div>
+                    {rows_sueger}
+                    <p class="open-page-footer">Page 9 • Sueger Standings</p>
                 </div>
             </div>
             """)
