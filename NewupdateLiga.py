@@ -2453,10 +2453,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         import textwrap
 
         if "kitab_misi_page" not in st.session_state:
-        st.session_state["kitab_misi_page"] = 1
+            st.session_state["kitab_misi_page"] = 1
 
         if "page_direction" not in st.session_state:
-        st.session_state["page_direction"] = "right"
+            st.session_state["page_direction"] = "right"
 
         TOTAL_SHEETS = 5
 
