@@ -2387,6 +2387,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # ==============================================================================
         # 🚪 KONDISI 3: BUKU TERBUKA - KITAB MISI GUILD (DENGAN ISOLASI CSS WRAPPER)
         # ==============================================================================
+        import textwrap
+        
         if "kitab_misi_page" not in st.session_state:
             st.session_state["kitab_misi_page"] = 1
 
