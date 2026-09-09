@@ -2461,16 +2461,19 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             /* Mengimpor font MedievalSharp dari Google Fonts */
             @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
 
-            /* Background Utama dengan Gambar Baru */
+           /* Background Utama yang Dibuat Lebih Cerah */
             .stApp {
-                background-color: #030303 !important;
+                background-color: #1a1a1a !important;
                 background-image: 
-                    linear-gradient(rgba(3, 3, 3, 0.75), rgba(3, 3, 3, 0.75)),
+                    /* Lapisan gelap transparan yang lebih tipis agar gambar latar lebih terang */
+                    linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)),
                     url("https://static0.thegamerimages.com/wordpress/wp-content/uploads/2025/01/copy-of-untitled-2025-01-31t105330-637.jpg?q=49&fit=crop&w=825&dpr=2") !important;
                 background-size: cover !important;
                 background-position: center !important;
                 background-repeat: no-repeat !important;
                 background-attachment: fixed !important;
+                /* Menaikkan tingkat kecerahan gambar */
+                filter: brightness(1.25);
             }
 
             .kitab-misi-page-wrapper {
