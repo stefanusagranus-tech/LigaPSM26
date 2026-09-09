@@ -2820,7 +2820,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 </div>
             </div>
             """
-elif page_num == 3:
+        
+        elif page_num == 3:
             # Halaman 3: Ranking Qty (Periode Aktif) & Akumulasi Achiv Bulan Berjalan (Direct Mapping sales_item_df)
             sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
             sales_item_df = st.session_state.get("sales_item_df", pd.DataFrame())
