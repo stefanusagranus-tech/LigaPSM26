@@ -3246,25 +3246,18 @@ elif selected_tab == "📝 Input Data":
                         key="pps_shift_dyn",
                     )
 
-                    if is_admin:
-                        staff_name = st.selectbox(
-                            "Nama Staf / Personil",
-                            all_personnel,
-                            key="pps_staff_dyn",
-                        )
-                    else:
-                        user_idx = (
-                            all_personnel.index(current_user)
-                            if current_user in all_personnel
-                            else 0
-                        )
-                        staff_name = st.selectbox(
-                            "Nama Staf (Dikunci)",
-                            all_personnel,
-                            index=user_idx,
-                            disabled=True,
-                            key="pps_staff_disabled",
-                        )
+                    # Diubah agar semua user bisa memilih/mengubah nama staf
+                    user_idx = (
+                        all_personnel.index(current_user)
+                        if current_user in all_personnel
+                        else 0
+                    )
+                    staff_name = st.selectbox(
+                        "Nama Staf / Personil",
+                        all_personnel,
+                        index=user_idx,
+                        key="pps_staff_dyn",
+                    )
 
                 with col_p2:
                     kasir_name = st.selectbox(
