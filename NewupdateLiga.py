@@ -2453,7 +2453,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         import textwrap
 
         # ==========================================
-        # 🎨 1. SUNTIKAN CSS ANIMASI & LAYOUT BUKU
+        # 🎨 1. SUNTIKAN CSS MEDIA QUERY & KELAS MEDIEVAL
         # ==========================================
         st.markdown("""
         <style>
@@ -2465,7 +2465,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 box-sizing: border-box;
             }
 
-            /* Kontainer Buku Terbuka yang responsif untuk Web, iOS, dan Android */
             .rpg-open-book-container {
                 display: flex !important;
                 flex-direction: row !important;
@@ -2480,7 +2479,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 box-sizing: border-box !important;
             }
 
-            /* Halaman Kiri & Kanan (Otomatis tumpuk ke bawah jika di layar HP kecil) */
             .rpg-book-page {
                 flex: 1 !important;
                 width: 50% !important;
@@ -2494,6 +2492,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 flex-direction: column;
             }
 
+            /* Responsif untuk Mobile Android/iOS */
             @media (max-width: 768px) {
                 .rpg-open-book-container {
                     flex-direction: column !important;
@@ -2504,9 +2503,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 }
             }
 
-            /* Warna Teks Disesuaikan agar Kontras dan Jelas Dibaca */
             .open-page-title {
-                font-family: monospace;
+                font-family: 'Courier New', Courier, monospace;
                 font-weight: bold;
                 color: #451a03 !important;
                 font-size: 16px;
@@ -2567,7 +2565,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         </style>
         """, unsafe_allow_html=True)
 
-        # Logika state dan navigasi tetap berjalan normal
+        # ==========================================
+        # 🚪 2. STATE & NAVIGASI
+        # ==========================================
         if "kitab_misi_page" not in st.session_state:
             st.session_state["kitab_misi_page"] = 1
 
@@ -2576,13 +2576,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
         TOTAL_SHEETS = 5
         dir_anim = st.session_state["page_direction"]
-
-        st.markdown(
-            f"""
-            <div class="kitab-misi-page-wrapper">
-            """,
-            unsafe_allow_html=True,
-        )
 
         st.markdown("<h2 class='guild-lobby-title' style='text-align:center;'>📜 KITAB MISI GUILD</h2>", unsafe_allow_html=True)
         st.markdown("<p class='guild-lobby-sub' style='text-align:center;'>Lembar maklumat rincian target harian dan season toko.</p>", unsafe_allow_html=True)
@@ -2617,8 +2610,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     st.session_state["kitab_misi_page"] += 1
                     st.rerun()
             else:
-                if st.button("🚪 KEMBALI UTAMA", key="btn_close_top_right", use_container_width=True):
-                    st.session_state["campaign_sub_page"] = "resepsionis_utama"
+                # Diubah menjadi kembali ke Halaman 1
+                if st.button("🔄 KEMBALI KE AWAL", key="btn_back_to_first", use_container_width=True):
+                    st.session_state["page_direction"] = "left"
+                    st.session_state["kitab_misi_page"] = 1
                     st.rerun()
 
         dummy_9_personil = [
@@ -2651,6 +2646,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             return f'<div class="open-stat-row {rank_class}"><span>{badge} | {name}</span><span>{score}</span></div>'
 
+        # ==========================================
+        # 📄 3. KONTEN PER HALAMAN
+        # ==========================================
         if page_num == 1:
             html_open_tugas = """
             <div class="rpg-open-book-container">
@@ -2763,7 +2761,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             """
 
         st.markdown(html_open_tugas, unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
         st.stop()
 
     # ⛺ JALUR C: BERANDA UTAMA 3 KARTU CAMP (YANG HARUSNYA MUNCUL DI AWAL)
