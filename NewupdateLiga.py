@@ -2492,17 +2492,18 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
         page_num = st.session_state["kitab_misi_page"]
 
-        # Navigasi Lembar Buku di Atas
+        # Navigasi Lembar Buku di Atas (Halaman 1: Tombol tutup di Kiri, Halaman Terakhir: Tombol tutup di Kanan)
         col_nav1, col_nav2, col_nav3 = st.columns([1, 2, 1])
+
         with col_nav1:
-            if page_num == 1:
-                if st.button("🚪 TUTUP KITAB", key="btn_close_top", use_container_width=True):
-                    st.session_state["campaign_sub_page"] = "resepsionis_utama"
-                    st.rerun()
-            else:
+            if page_num > 1:
                 if st.button("⬅️ Sebelumnya", key="prev_sheet", use_container_width=True):
                     st.session_state["page_direction"] = "left"
                     st.session_state["kitab_misi_page"] -= 1
+                    st.rerun()
+            else:
+                if st.button("🚪 TUTUP KITAB", key="btn_close_top", use_container_width=True):
+                    st.session_state["campaign_sub_page"] = "resepsionis_utama"
                     st.rerun()
 
         with col_nav2:
@@ -2519,17 +2520,22 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     st.session_state["page_direction"] = "right"
                     st.session_state["kitab_misi_page"] += 1
                     st.rerun()
+            else:
+                # Tombol kembali ke halaman utama di kanan atas khusus halaman terakhir
+                if st.button("🚪 KEMBALI UTAMA", key="btn_close_top_right", use_container_width=True):
+                    st.session_state["campaign_sub_page"] = "resepsionis_utama"
+                    st.rerun()
 
         dummy_9_personil = [
-            ("1. Ksatria Arthur", "98 Pcs"),
-            ("2. Lancelot", "92 Pcs"),
-            ("3. Galahad", "85 Pcs"),
-            ("4. Parsifal", "78 Pcs"),
-            ("5. Gawain", "70 Pcs"),
-            ("6. Tristan", "65 Pcs"),
-            ("7. Bors", "60 Pcs"),
-            ("8. Kay", "55 Pcs"),
-            ("9. Bedivere", "50 Pcs"),
+            ("Ksatria Arthur", "98 Pcs"),
+            ("Lancelot", "92 Pcs"),
+            ("Galahad", "85 Pcs"),
+            ("Parsifal", "78 Pcs"),
+            ("Gawain", "70 Pcs"),
+            ("Tristan", "65 Pcs"),
+            ("Bors", "60 Pcs"),
+            ("Kay", "55 Pcs"),
+            ("Bedivere", "50 Pcs"),
         ]
 
 
