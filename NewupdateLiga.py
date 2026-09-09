@@ -2387,168 +2387,143 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # ==============================================================================
         # 🚪 KONDISI 3: BUKU TERBUKA - KITAB MISI GUILD (DENGAN ISOLASI CSS WRAPPER)
         # ==============================================================================
-        elif st.session_state.get("campaign_sub_page") == "view_buku_tugas":
-            
-            # 🎨 SUNTIKKAN CSS KHUSUS YANG DIKUNCI HANYA UNTUK KITAB MISI
-            st.markdown(
-                """
-                <style>
-                    /* 🛡️ CSS ISOLASI: Hanya berlaku di dalam .kitab-misi-page-wrapper */
-                    .kitab-misi-page-wrapper .guild-lobby-title {
-                        text-align: center;
-                        font-family: 'Courier New', monospace;
-                        font-weight: 900;
-                        color: #b45309;
-                        margin-bottom: 2px;
-                        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-                    }
-                    .kitab-misi-page-wrapper .guild-lobby-sub {
-                        text-align: center;
-                        font-family: 'Courier New', monospace;
-                        font-size: 11px;
-                        color: #78716c;
-                        margin-bottom: 20px;
-                        font-style: italic;
-                    }
-                    .kitab-misi-page-wrapper .rpg-open-book-container {
-                        background: #fdf8f2;
-                        border: 6px solid #3d2b1f;
-                        border-radius: 12px;
-                        box-shadow: 0 20px 40px rgba(0,0,0,0.8), inset 0 0 50px rgba(181, 101, 29, 0.15);
-                        display: flex;
-                        min-height: 380px;
-                        max-height: 400px;
-                        position: relative;
-                        overflow: hidden;
-                        width: 100%;
-                        max-width: 650px;
-                        margin: 0 auto;
-                    }
-                    .kitab-misi-page-wrapper .rpg-open-book-container::before {
-                        content: "";
-                        position: absolute;
-                        top: 0;
-                        left: 50%;
-                        width: 6px;
-                        height: 100%;
-                        background: linear-gradient(90deg, rgba(61,43,31,0.5), rgba(20,10,5,0.8), rgba(61,43,31,0.5));
-                        z-index: 5;
-                    }
-                    .kitab-misi-page-wrapper .rpg-book-page {
-                        width: 50%;
-                        padding: 20px 15px;
-                        box-sizing: border-box;
-                        display: flex;
-                        flex-direction: column;
-                        color: #2b1d0c;
-                        font-family: 'Courier New', monospace;
-                        overflow-y: auto;
-                    }
-                    .kitab-misi-page-wrapper .open-page-title {
-                        text-align: center;
-                        font-size: 13px;
-                        font-weight: 900;
-                        margin: 0 0 2px 0;
-                        color: #854d0e;
-                        letter-spacing: 0.5px;
-                        text-transform: uppercase;
-                    }
-                    .kitab-misi-page-wrapper .open-page-subtitle {
-                        text-align: center;
-                        font-size: 9.5px;
-                        color: #78716c;
-                        margin: 0 0 10px 0;
-                        font-style: italic;
-                    }
-                    .kitab-misi-page-wrapper .open-book-divider {
-                        border-bottom: 2px double #b45309;
-                        margin-bottom: 14px;
-                        width: 100%;
-                        opacity: 0.7;
-                    }
-                    .kitab-misi-page-wrapper .open-stat-row {
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        font-size: 10px;
-                        font-weight: bold;
-                        margin-bottom: 14px;
-                        border-bottom: 1px dashed rgba(133,77,14,0.25);
-                        padding-bottom: 6px;
-                    }
-                    .kitab-misi-page-wrapper .open-page-footer {
-                        margin-top: auto;
-                        font-size: 9px;
-                        color: #78716c;
-                        text-align: center;
-                        font-weight: bold;
-                        padding-top: 6px;
-                    }
-                </style>
-                
-                <!-- 📦 BUKA PEMBUNGKUS UTAMA -->
-                <div class="kitab-misi-page-wrapper">
-                """,
-                unsafe_allow_html=True
-            )
+        # Inisialisasi state halaman buku (1 sampai 3 untuk 3 lembar buka)
+        if "kitab_misi_page" not in st.session_state:
+            st.session_state["kitab_misi_page"] = 1
 
-            # 🏛️ HEADER UTAMA
-            st.markdown("<h2 class='guild-lobby-title'>📜 KITAB MISI GUILD</h2>", unsafe_allow_html=True)
-            st.markdown("<p class='guild-lobby-sub'>Lembar maklumat rincian target harian dan season toko.</p>", unsafe_allow_html=True)
-            
-            # 📖 STRUKTUR HTML BUKU TERBUKA (2 HALAMAN)
+        # Navigasi Lembar Buku di dalam Wrapper
+        col_nav1, col_nav2, col_nav3 = st.columns([1, 2, 1])
+        with col_nav1:
+            if st.session_state["kitab_misi_page"] > 1:
+                if st.button("⬅️ Lembar Sebelumnya", key="prev_sheet", use_container_width=True):
+                    st.session_state["kitab_misi_page"] -= 1
+                    st.rerun()
+        with col_nav2:
+            st.markdown(f"<p style='text-align:center; color:#854d0e; font-family:monospace; font-weight:bold; font-size:11px; margin-top:8px;'>LEMBAR KE-{st.session_state['kitab_misi_page']} DARI 3</p>", unsafe_allow_html=True)
+        with col_nav3:
+            if st.session_state["kitab_misi_page"] < 3:
+                if st.button("Lembar Berikutnya ➡️", key="next_sheet", use_container_width=True):
+                    st.session_state["kitab_misi_page"] += 1
+                    st.rerun()
+
+        page_num = st.session_state["kitab_misi_page"]
+
+        # Dummy Data 9 Personil untuk Lembar 1
+        dummy_9_personil = [
+            ("1. Ksatria Arthur", "98 Pcs"), ("2. Lancelot", "92 Pcs"), 
+            ("3. Galahad", "85 Pcs"), ("4. Parsifal", "78 Pcs"), 
+            ("5. Gawain", "70 Pcs"), ("6. Tristan", "65 Pcs"), 
+            ("7. Bors", "60 Pcs"), ("8. Kay", "55 Pcs"), ("9. Bedivere", "50 Pcs")
+        ]
+
+        if page_num == 1:
+            # --- LEMBAR 1: RANKING PPS & RANKING PSM (9 Personil Muat dengan Rapi) ---
             html_open_tugas = """
             <div class="rpg-open-book-container">
-                <!-- 📄 HALAMAN KIRI: MISI HARIAN -->
+                <!-- 📄 HALAMAN KIRI: RANKING PPS -->
                 <div class="rpg-book-page">
-                    <h3 class="open-page-title">⚡ DAILY QUESTS</h3>
-                    <p class="open-page-subtitle">Tugas Hari Ini</p>
+                    <h3 class="open-page-title">🛡️ RANKING PPS</h3>
+                    <p class="open-page-subtitle">Top 9 Pahlawan PPS Guild</p>
                     <div class="open-book-divider"></div>
+            """
+            for nama, skor in dummy_9_personil:
+                html_open_tugas += f"""
                     <div class="open-stat-row">
-                        <span>🔥 TARGET SG</span>
-                        <span style="color:#16a34a;">2.3 Pcs <span style="font-size:8.5px;">(DONE)</span></span>
+                        <span>{nama}</span>
+                        <span style="color:#b45309;">{skor}</span>
                     </div>
-                    <div class="open-stat-row">
-                        <span>🛡️ TARGET PWP</span>
-                        <span style="color:#16a34a;">1.4 Pcs <span style="font-size:8.5px;">(DONE)</span></span>
-                    </div>
-                    <div class="open-stat-row">
-                        <span>📦 TARGET PSM</span>
-                        <span style="color:#dc2626;">3.5 Pcs <span style="font-size:8.5px;">(HUNTING)</span></span>
-                    </div>
-                    <p class="open-page-footer">Page 1 • Daily Bulletin</p>
+                """
+            html_open_tugas += """
+                    <p class="open-page-footer">Page 1 • PPS Standings</p>
                 </div>
-                <!-- 📄 HALAMAN KANAN: MISI SKALA BESAR -->
+                <!-- 📄 HALAMAN KANAN: RANKING PSM -->
                 <div class="rpg-book-page">
-                    <h3 class="open-page-title">🏆 SEASON QUESTS</h3>
-                    <p class="open-page-subtitle">Misi Skala Besar</p>
+                    <h3 class="open-page-title">⚔️ RANKING PSM</h3>
+                    <p class="open-page-subtitle">Akumulasi Poin Penjualan PSM</p>
                     <div class="open-book-divider"></div>
+            """
+            for nama, skor in dummy_9_personil:
+                dummy_psm_score = int(skor.replace(' Pcs','')) + 15
+                html_open_tugas += f"""
                     <div class="open-stat-row">
-                        <span>⚔️ WEEKLY PSM</span>
-                        <span style="color:#854d0e; font-weight:900;">38 Pcs</span>
+                        <span>{nama}</span>
+                        <span style="color:#b45309;">{dummy_psm_score} Pcs</span>
                     </div>
-                    <div class="open-stat-row">
-                        <span>🛡️ PERIOD PWP</span>
-                        <span style="color:#854d0e; font-weight:900;">20 Pcs</span>
-                    </div>
-                    <p class="open-page-footer">Page 2 • Guild Orders</p>
+                """
+            html_open_tugas += """
+                    <p class="open-page-footer">Page 2 • PSM Standings</p>
                 </div>
             </div>
             """
-            
-            st.markdown(html_open_tugas, unsafe_allow_html=True)
-            st.markdown("<br>", unsafe_allow_html=True)
-            
-            # 🚪 TOMBOL KELUAR / KEMBALI KE LOBBY
-            if st.button("⬅️ TUTUP KITAB MISI", use_container_width=True, key="btn_close_inner_buku2_fixed"):
-                st.session_state["campaign_sub_page"] = "resepsionis_utama"
-                st.rerun()
 
-            # 🔒 TUTUP PEMBUNGKUS UTAMA DIV
-            st.markdown("</div>", unsafe_allow_html=True)
+        elif page_num == 2:
+            # --- LEMBAR 2: DAILY QUESTS & PENCAPAIAN PENJUALAN ---
+            html_open_tugas = """
+            <div class="rpg-open-book-container">
+                <!-- 📄 HALAMAN KIRI: DAILY QUESTS -->
+                <div class="rpg-book-page">
+                    <h3 class="open-page-title">⚡ DAILY QUESTS</h3>
+                    <p class="open-page-subtitle">Target Harian (SG, PWP, PSM, Sueger)</p>
+                    <div class="open-book-divider"></div>
+                    <div class="open-stat-row"><span>🔥 TARGET SG</span><span style="color:#16a34a;">2.3 Pcs (DONE)</span></div>
+                    <div class="open-stat-row"><span>🛡️ TARGET PWP</span><span style="color:#16a34a;">1.4 Pcs (DONE)</span></div>
+                    <div class="open-stat-row"><span>📦 TARGET PSM</span><span style="color:#dc2626;">3.5 Pcs (HUNTING)</span></div>
+                    <div class="open-stat-row"><span>⚡ TARGET SUEGER</span><span style="color:#16a34a;">4.0 Pcs (DONE)</span></div>
+                    <p class="open-page-footer">Page 3 • Daily Quests</p>
+                </div>
+                <!-- 📄 HALAMAN KANAN: PENCAPAIAN PENJUALAN -->
+                <div class="rpg-book-page">
+                    <h3 class="open-page-title">🏆 PENCAPAIAN PENJUALAN</h3>
+                    <p class="open-page-subtitle">Achievement & Status Guild</p>
+                    <div class="open-book-divider"></div>
+                    <div class="open-stat-row"><span>WEEKLY PSM ACH</span><span style="color:#16a34a;">88% (GOOD)</span></div>
+                    <div class="open-stat-row"><span>PERIOD PWP ACH</span><span style="color:#16a34a;">94% (EXCELLENT)</span></div>
+                    <div class="open-stat-row"><span>TOTAL REWARD</span><span style="color:#b45309;">1,450 Gold</span></div>
+                    <p class="open-page-footer">Page 4 • Sales Achievement</p>
+                </div>
+            </div>
+            """
 
-            # Memotong eksekusi halaman agar skrip di bawahnya tidak ikut terpanggil
-            st.stop()
+        elif page_num == 3:
+            # --- LEMBAR 3: TARGET ITEM & ACTUAL ITEM (DIBAGI 2 HALAMAN) ---
+            html_open_tugas = """
+            <div class="rpg-open-book-container">
+                <!-- 📄 HALAMAN KIRI: TARGET ITEM -->
+                <div class="rpg-book-page">
+                    <h3 class="open-page-title">🎯 TARGET ITEM TOKO</h3>
+                    <p class="open-page-subtitle">Daftar Kuota Target Item</p>
+                    <div class="open-book-divider"></div>
+                    <div class="open-stat-row"><span>Item A (Special)</span><span>50 Pcs</span></div>
+                    <div class="open-stat-row"><span>Item B (Rare)</span><span>40 Pcs</span></div>
+                    <div class="open-stat-row"><span>Item C (Common)</span><span>100 Pcs</span></div>
+                    <p class="open-page-footer">Page 5 • Target Items</p>
+                </div>
+                <!-- 📄 HALAMAN KANAN: ACTUAL ITEM -->
+                <div class="rpg-book-page">
+                    <h3 class="open-page-title">📦 ACTUAL ITEM TOKO</h3>
+                    <p class="open-page-subtitle">Realisasi Perolehan Item</p>
+                    <div class="open-book-divider"></div>
+                    <div class="open-stat-row"><span>Item A (Special)</span><span style="color:#16a34a;">48 Pcs (ON TRACK)</span></div>
+                    <div class="open-stat-row"><span>Item B (Rare)</span><span style="color:#dc2626;">35 Pcs (HUNTING)</span></div>
+                    <div class="open-stat-row"><span>Item C (Common)</span><span style="color:#16a34a;">95 Pcs (ON TRACK)</span></div>
+                    <p class="open-page-footer">Page 6 • Actual Items</p>
+                </div>
+            </div>
+            """
+
+        st.markdown(html_open_tugas, unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # 🚪 TOMBOL KELUAR / KEMBALI KE LOBBY
+        if st.button("⬅️ TUTUP KITAB MISI", use_container_width=True, key="btn_close_inner_buku2_fixed"):
+            st.session_state["campaign_sub_page"] = "resepsionis_utama"
+            st.rerun()
+
+        # 🔒 TUTUP PEMBUNGKUS UTAMA DIV
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # Memotong eksekusi halaman agar skrip di bawahnya tidak ikut terpanggil
+        st.stop()
 
     # ⛺ JALUR C: BERANDA UTAMA 3 KARTU CAMP (YANG HARUSNYA MUNCUL DI AWAL)
     elif st.session_state["current_camp_menu"] == "main":
