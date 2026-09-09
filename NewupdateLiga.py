@@ -2388,7 +2388,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # 🚪 KONDISI 3: BUKU TERBUKA - KITAB MISI GUILD (DENGAN ISOLASI CSS WRAPPER)
         # ==============================================================================
         import textwrap
-        
+
         if "kitab_misi_page" not in st.session_state:
             st.session_state["kitab_misi_page"] = 1
 
@@ -2487,7 +2487,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     padding-top: 6px;
                 }
 
-                /* ✨ UBAH TOMBOL ST.BUTTON MENJADI GAYA RPG KULIT */
+                /* ✨ GAYA TOMBOL RPG KULIT UNTUK ST.BUTTON */
                 .kitab-misi-page-wrapper div.stButton > button {
                     background: linear-gradient(135deg, #3d2b1f 0%, #2b1d0c 100%);
                     color: #fdf8f2;
@@ -2516,7 +2516,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         st.markdown("<h2 class='guild-lobby-title'>📜 KITAB MISI GUILD</h2>", unsafe_allow_html=True)
         st.markdown("<p class='guild-lobby-sub'>Lembar maklumat rincian target harian dan season toko.</p>", unsafe_allow_html=True)
 
-        # Navigasi Lembar Buku di dalam Wrapper
+        # Navigasi Lembar Buku (Diperbarui menjadi 4 Halaman)
         col_nav1, col_nav2, col_nav3 = st.columns([1, 2, 1])
         with col_nav1:
             if st.session_state["kitab_misi_page"] > 1:
@@ -2524,9 +2524,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     st.session_state["kitab_misi_page"] -= 1
                     st.rerun()
         with col_nav2:
-            st.markdown(f"<p style='text-align:center; color:#854d0e; font-family:monospace; font-weight:bold; font-size:11px; margin-top:8px;'>LEMBAR KE-{st.session_state['kitab_misi_page']} DARI 3</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center; color:#854d0e; font-family:monospace; font-weight:bold; font-size:11px; margin-top:8px;'>LEMBAR KE-{st.session_state['kitab_misi_page']} DARI 4</p>", unsafe_allow_html=True)
         with col_nav3:
-            if st.session_state["kitab_misi_page"] < 3:
+            if st.session_state["kitab_misi_page"] < 4:
                 if st.button("Berikutnya ➡️", key="next_sheet", use_container_width=True):
                     st.session_state["kitab_misi_page"] += 1
                     st.rerun()
@@ -2541,19 +2541,26 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         ]
 
         if page_num == 1:
+            # --- LEMBAR 1: RANKING PPS ---
             rows_pps = "".join([f'<div class="open-stat-row"><span>{n}</span><span style="color:#b45309;">{s}</span></div>' for n, s in dummy_9_personil])
-            rows_psm = "".join([f'<div class="open-stat-row"><span>{n}</span><span style="color:#b45309;">{int(s.replace(" Pcs",""))+15} Pcs</span></div>' for n, s in dummy_9_personil])
-            
             html_open_tugas = textwrap.dedent(f"""
             <div class="rpg-open-book-container">
-                <div class="rpg-book-page">
+                <div class="rpg-book-page" style="width: 100%;">
                     <h3 class="open-page-title">🛡️ RANKING PPS</h3>
                     <p class="open-page-subtitle">Top 9 Pahlawan PPS Guild</p>
                     <div class="open-book-divider"></div>
                     {rows_pps}
                     <p class="open-page-footer">Page 1 • PPS Standings</p>
                 </div>
-                <div class="rpg-book-page">
+            </div>
+            """)
+
+        elif page_num == 2:
+            # --- LEMBAR 2: RANKING PSM ---
+            rows_psm = "".join([f'<div class="open-stat-row"><span>{n}</span><span style="color:#b45309;">{int(s.replace(" Pcs",""))+15} Pcs</span></div>' for n, s in dummy_9_personil])
+            html_open_tugas = textwrap.dedent(f"""
+            <div class="rpg-open-book-container">
+                <div class="rpg-book-page" style="width: 100%;">
                     <h3 class="open-page-title">⚔️ RANKING PSM</h3>
                     <p class="open-page-subtitle">Akumulasi Poin Penjualan PSM</p>
                     <div class="open-book-divider"></div>
@@ -2563,12 +2570,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             </div>
             """)
 
-        elif page_num == 2:
+        elif page_num == 3:
+            # --- LEMBAR 3: DAILY QUESTS & PENCAPAIAN PENJUALAN ---
             html_open_tugas = textwrap.dedent("""
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page">
                     <h3 class="open-page-title">⚡ DAILY QUESTS</h3>
-                    <p class="open-page-subtitle">Target Harian (SG, PWP, PSM, Sueger)</p>
+                    <p class="open-page-subtitle">Target Harian Guild</p>
                     <div class="open-book-divider"></div>
                     <div class="open-stat-row"><span>🔥 TARGET SG</span><span style="color:#16a34a;">2.3 Pcs (DONE)</span></div>
                     <div class="open-stat-row"><span>🛡️ TARGET PWP</span><span style="color:#16a34a;">1.4 Pcs (DONE)</span></div>
@@ -2577,7 +2585,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     <p class="open-page-footer">Page 3 • Daily Quests</p>
                 </div>
                 <div class="rpg-book-page">
-                    <h3 class="open-page-title">🏆 PENCAPAIAN PENJUALAN</h3>
+                    <h3 class="open-page-title">🏆 PENCAPAIAN</h3>
                     <p class="open-page-subtitle">Achievement & Status Guild</p>
                     <div class="open-book-divider"></div>
                     <div class="open-stat-row"><span>WEEKLY PSM ACH</span><span style="color:#16a34a;">88% (GOOD)</span></div>
@@ -2588,11 +2596,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             </div>
             """)
 
-        elif page_num == 3:
+        elif page_num == 4:
+            # --- LEMBAR 4: TARGET ITEM & ACTUAL ITEM ---
             html_open_tugas = textwrap.dedent("""
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page">
-                    <h3 class="open-page-title">🎯 TARGET ITEM TOKO</h3>
+                    <h3 class="open-page-title">🎯 TARGET ITEM</h3>
                     <p class="open-page-subtitle">Daftar Kuota Target Item</p>
                     <div class="open-book-divider"></div>
                     <div class="open-stat-row"><span>Item A (Special)</span><span>50 Pcs</span></div>
@@ -2601,7 +2610,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     <p class="open-page-footer">Page 5 • Target Items</p>
                 </div>
                 <div class="rpg-book-page">
-                    <h3 class="open-page-title">📦 ACTUAL ITEM TOKO</h3>
+                    <h3 class="open-page-title">📦 ACTUAL ITEM</h3>
                     <p class="open-page-subtitle">Realisasi Perolehan Item</p>
                     <div class="open-book-divider"></div>
                     <div class="open-stat-row"><span>Item A (Special)</span><span style="color:#16a34a;">48 Pcs (ON TRACK)</span></div>
@@ -2615,7 +2624,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         st.markdown(html_open_tugas, unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # 🚪 TOMBOL KELUAR MENGGUNAKAN ST.BUTTON STANDAR (OTOMATIS BERGAYA KULIT KARENA CSS WRAPPER)
+        # 🚪 TOMBOL KELUAR / KEMBALI KE LOBBY
         if st.button("⬅️ TUTUP KITAB MISI", use_container_width=True, key="btn_close_inner_buku2_fixed"):
             st.session_state["campaign_sub_page"] = "resepsionis_utama"
             st.rerun()
