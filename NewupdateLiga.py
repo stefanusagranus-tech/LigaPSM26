@@ -1798,10 +1798,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (HANGING SCROLL / BOOK OVERRIDER)
         # =========================================================================
         if st.session_state.get("campaign_sub_page", "resepsionis_utama") == "resepsionis_utama":
-            st.markdown("<h2 class='guild-lobby-title'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
-            st.markdown("<p class='guild-lobby-sub'>Pilih gulungan maklumat di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
+            st.markdown("<h2 class='guild-lobby-title' style='text-shadow: 0 0 15px rgba(251,191,36,0.5); color: #fef08a;'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
+            st.markdown("<p class='guild-lobby-sub' style='color: #cbd5e1;'>Pilih gulungan maklumat di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
             
-            # --- 🎨 SIHIR CSS: HANCURKAN RADIO + AKALI JADI PAPAN GANTUNG BERANIMASI ---
+            # --- 🎨 SIHIR CSS: HANCURKAN RADIO + AKALI JADI PAPAN GANTUNG BERANIMASI (MEDIEVAL-GLOW) ---
             st.markdown(
                 """
                 <style>
@@ -1834,17 +1834,17 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         width: 0px !important; height: 0px !important; margin: 0 !important; padding: 0 !important;
                     }
                     
-                    /* DESAIN PAPAN GANTUNGAN PERKAMEN */
+                    /* DESAIN PAPAN GANTUNGAN PERKAMEN DENGAN EFEK GLOW KEEMASAN */
                     div[data-testid="stRadio"] div[role="radiogroup"] > label {
-                        background: linear-gradient(135deg, #131926 0%, #1e2638 100%) !important;
+                        background: linear-gradient(135deg, #0f172a 0%, #1e1b18 100%) !important;
                         border: 2px solid #b45309 !important;
-                        border-top: 8px solid #b45309 !important; /* Aksen jepit papan kayu */
-                        border-radius: 4px 4px 16px 16px !important;
+                        border-top: 8px solid #d97706 !important; /* Aksen jepit papan kayu magis */
+                        border-radius: 6px 6px 16px 16px !important;
                         width: 100% !important;
                         min-height: 140px !important;
                         padding: 22px 20px !important;
                         margin: 0 !important;
-                        box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
+                        box-shadow: 0 0 20px rgba(180, 83, 9, 0.3), inset 0 0 15px rgba(251, 191, 36, 0.05) !important;
                         cursor: pointer !important;
                         display: flex !important;
                         flex-direction: column !important;
@@ -1855,35 +1855,33 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
                     }
                     
-                    /* Efek Ayunan Lembut Berputar Saat Di-Hover */
+                    /* Efek Ayunan & Pendaran Terang Saat Di-Hover */
                     div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
-                        transform: translateY(5px) scale(0.99) !important;
+                        transform: translateY(-3px) scale(1.01) !important;
                         border-color: #fbbf24 !important;
                         border-top-color: #fbbf24 !important;
-                        box-shadow: 0 4px 15px rgba(180, 83, 9, 0.3) !important;
+                        box-shadow: 0 0 25px rgba(251, 191, 36, 0.6), inset 0 0 15px rgba(251, 191, 36, 0.2) !important;
                     }
 
-                    /* Modifikasi font isi teks agar rapi */
+                    /* Modifikasi font isi teks agar kontras & bercahaya */
                     div[data-testid="stRadio"] div[role="radiogroup"] label div[data-testid="stMarkdownContainer"] p {
                         font-family: monospace !important;
                         font-size: 11.5px !important;
                         line-height: 1.5 !important;
-                        color: #94a3b8 !important;
+                        color: #f1f5f9 !important;
                     }
                     
-                    /* 🎬 SEKTOR SIHIR: MEMAKSA EMOJI BARIS PERTAMA BERANIMASI MENGAMBANG */
+                    /* 🎬 SEKTOR SIHIR: EMOJI BERANIMASI MENGAMBANG DENGAN GLOW */
                     div[data-testid="stRadio"] div[role="radiogroup"] label div[data-testid="stMarkdownContainer"] p::first-line {
                         font-size: 40px !important;
                         line-height: 1.3 !important;
                         display: inline-block !important;
-                        /* Jalankan animasi nafas mengambang kuno */
                         animation: floatingScroll 2.5s infinite ease-in-out !important;
                     }
                     
-                    /* `@keyframes` penggerak angin medieval */
                     @keyframes floatingScroll {
-                        0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 4px rgba(251,191,36,0.1)); }
-                        50% { transform: translateY(-5px) scale(1.06); filter: drop-shadow(0 0 12px rgba(251,191,36,0.4)); }
+                        0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 6px rgba(251,191,36,0.4)); }
+                        50% { transform: translateY(-5px) scale(1.06); filter: drop-shadow(0 0 16px rgba(251,191,36,0.8)); }
                     }
                     
                     div[data-testid="stRadio"] > label { display: none !important; }
@@ -1892,7 +1890,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 unsafe_allow_html=True
             )
             
-            # --- 📦 FORMAT TEKS GULUNGAN VERTIKAL (Murni Python \n - Bebas Teks Bocor) ---
+            # --- 📦 FORMAT TEKS GULUNGAN VERTIKAL ---
             gulungan_buruan = (
                 "📘\n"
                 "📜 JURNAL BURUAN INDIVIDU 📜\n"
@@ -1905,7 +1903,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 "Cek papan pengumuman maklumat aliansi untuk memantau target pencapaian toko harian, daftar quest mingguan PSM, serta tantangan kuis berkala.\n"
             )
             
-            # Jalankan Widget Radio dengan konsep Gantung
             pilihan_gulungan = st.radio(
                 "SELECT_HANGING_VAL",
                 options=[gulungan_buruan, gulungan_misi],
@@ -1913,7 +1910,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 key="rpg_hanging_scroll_selector"
             )
             
-            # --- 🎯 ENGINE TRANSISI NAVIGASI (INSTAN KLIK) ---
             if pilihan_gulungan == gulungan_buruan:
                 st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
                 st.rerun()
@@ -1921,8 +1917,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 st.session_state["campaign_sub_page"] = "view_buku_tugas"
                 st.rerun()
 
-            # Tombol keluar utama kembali ke Camp Persiapan
-            st.markdown("<br><hr style='border-color: rgba(180, 83, 9, 0.2); margin: 15px 0;'><br>", unsafe_allow_html=True)
+            st.markdown("<br><hr style='border-color: rgba(251, 191, 36, 0.3); margin: 15px 0;'><br>", unsafe_allow_html=True)
             st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
             if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_radio_hanging"):
                 st.session_state.current_camp_menu = "main"
@@ -1934,56 +1929,57 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
         elif st.session_state["campaign_sub_page"] == "view_buku_pencapaian":
             
-            # --- 🛠️ 1. INITIALISASI NOMOR HALAMAN & VARIABEL DATA ---
             current_page = st.session_state.get("book_page_number", 1)
             username_hero = st.session_state.get("username", "admin")
 
-            # Database Data Statistik
             data_stats = {
                 "level": "LV. 85", "pwp": "2,450,000", "sg": "1,200,000", "sueger": "3,150,000",
                 "cemilan": "450,000", "achievement": "92.5%", "qty_psm": "1,240 Pts",
                 "target_capai": "1,500 Pts", "ranking": "#RANK 4"
             }
 
-            # --- 🎨 2. SUNTIKKAN STYLING PREMIUM TEMA MEJA KAYU GUILD ---
+            # --- 🎨 STYLING MEDIEVAL-GLOW UNTUK TOMBOL & BUKU PERKAMEN ---
             st.markdown(
                 """
                 <style>
-                    /* 🚪 KUNCI POLOS TOMBOL: Menyulap st.button asli menjadi papan kayu medieval */
+                    /* 🚪 TOMBOL NAVIGASI DENGAN EFEK CAHAYA (GLOW) MEDIEVAL */
                     div[data-testid="stColumn"] button[key^="btn_desk_nav_"],
                     div[data-testid="stVerticalBlockBorderWrapper"] button[key^="btn_desk_nav_"],
                     .stButton button[key^="btn_desk_nav_"] {
                         width: 100% !important;
-                        max-width: 580px !important; /* Presisi sejajar sempurna dengan lebar buku */
+                        max-width: 580px !important;
                         margin: 0 auto !important;
                         min-height: 44px !important;
                         height: 44px !important;
-                        background: linear-gradient(135deg, #5c4033 0%, #3d2b1f 100%) !important;
-                        color: #fef08a !important; /* Teks Emas Menyala */
-                        border: 2px solid #b45309 !important; /* Bingkai Emas Cokelat */
+                        background: linear-gradient(135deg, #3d2b1f 100%, #1c140d 0%) !important;
+                        color: #fef08a !important; 
+                        border: 2px solid #d97706 !important; 
                         border-radius: 8px !important;
                         font-family: monospace !important;
                         font-weight: 900 !important;
                         font-size: 13px !important;
                         letter-spacing: 1px !important;
-                        box-shadow: 0 8px 20px rgba(0,0,0,0.6) !important;
+                        box-shadow: 0 0 15px rgba(180, 83, 9, 0.4), inset 0 0 10px rgba(251, 191, 36, 0.1) !important;
                         transition: all 0.2s ease-in-out !important;
                     }
                     div[data-testid="stColumn"] button[key^="btn_desk_nav_"]:hover {
                         background: #b45309 !important;
                         color: #0b0f19 !important;
-                        box-shadow: 0 0 15px rgba(180, 83, 9, 0.6) !important;
+                        box-shadow: 0 0 25px rgba(251, 191, 36, 0.8) !important;
                         transform: translateY(-2px) !important;
                     }
                     div[data-testid="stColumn"] button[key^="btn_desk_nav_"]:active,
                     div[data-testid="stColumn"] button[key^="btn_desk_nav_"]:focus {
-                        background: #5c4033 !important; color: #fef08a !important; filter: none !important;
+                        background: #3d2b1f !important; color: #fef08a !important; filter: none !important;
                     }
                     
-                    /* 👑 BINGKAI STRUKTUR BUKU TERBUKA KUNO */
+                    /* 👑 BINGKAI BUKU KUNO DENGAN PENDARAN MAGIS */
                     .rpg-open-book-container {
-                        background: #f4eae1 !important; border: 4px solid #5c4033 !important; border-radius: 12px !important; 
-                        box-shadow: 0 15px 35px rgba(0,0,0,0.7) !important; display: flex !important; 
+                        background: #fbf5ed !important; 
+                        border: 4px solid #78350f !important; 
+                        border-radius: 12px !important; 
+                        box-shadow: 0 0 30px rgba(180, 83, 9, 0.35), 0 15px 35px rgba(0,0,0,0.7) !important; 
+                        display: flex !important; 
                         min-height: 380px !important; max-height: 380px !important; position: relative !important; 
                         overflow: hidden !important; width: 100% !important; max-width: 580px !important; margin: 15px auto !important;
                     }
@@ -1996,18 +1992,18 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         display: flex !important; flex-direction: column !important; justify-content: flex-start !important; 
                         color: #2b1d0c !important; font-family: 'Courier New', monospace !important; 
                     }
-                    .open-page-title { text-align: center !important; font-size: 14px !important; font-weight: 900 !important; margin: 0 0 2px 0 !important; color: #854d0e !important; letter-spacing: 0.5px !important; }
+                    .open-page-title { text-align: center !important; font-size: 14px !important; font-weight: 900 !important; margin: 0 0 2px 0 !important; color: #b45309 !important; letter-spacing: 0.5px !important; text-shadow: 0 0 2px rgba(180, 83, 9, 0.2); }
                     .open-page-sub { text-align: center !important; font-size: 10px !important; color: #78716c !important; margin: 0 0 10px 0 !important; font-style: italic !important; }
-                    .open-book-divider { border-bottom: 2px double #854d0e !important; margin-bottom: 12px !important; width: 100% !important; }
+                    .open-book-divider { border-bottom: 2px double #b45309 !important; margin-bottom: 12px !important; width: 100% !important; }
                     .open-stat-row { 
                         display: flex !important; justify-content: space-between !important; font-size: 10.5px !important; 
-                        font-weight: bold !important; margin-bottom: 10px !important; border-bottom: 1px dashed rgba(133,77,14,0.15) !important; padding-bottom: 4px !important; 
+                        font-weight: bold !important; margin-bottom: 10px !important; border-bottom: 1px dashed rgba(180,83,9,0.2) !important; padding-bottom: 4px !important; 
                     }
                     .open-page-footer { margin-top: auto !important; font-size: 9px !important; color: #78716c !important; text-align: center !important; font-weight: bold !important; }
                     .sueger-daily-scroll-box { max-height: 220px !important; overflow-y: auto !important; padding-right: 5px !important; width: 100% !important; }
                     .sueger-daily-scroll-box::-webkit-scrollbar { width: 5px !important; }
-                    .sueger-daily-scroll-box::-webkit-scrollbar-track { background: rgba(133,77,14,0.05) !important; }
-                    .sueger-daily-scroll-box::-webkit-scrollbar-thumb { background: #854d0e !important; border-radius: 4px !important; }
+                    .sueger-daily-scroll-box::-webkit-scrollbar-track { background: rgba(180,83,9,0.05) !important; }
+                    .sueger-daily-scroll-box::-webkit-scrollbar-thumb { background: #b45309 !important; border-radius: 4px !important; }
                     
                     .rpg-open-book-animated { animation: bookOpenFold 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; transform-origin: center center; }
                     @keyframes bookOpenFold {
@@ -2019,7 +2015,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 unsafe_allow_html=True
             )
 
-            # --- 🏛️ 3. PAPAN UTAMA 1: TOMBOL NAVIGASI DI ATAS BUKU (NATIVE & POLOS) ---
             if current_page == 1:
                 if st.button("📖 TUTUP JURNAL & KEMBALI KE MEJA DESK", use_container_width=True, key="btn_desk_nav_exit"):
                     st.session_state["campaign_sub_page"] = "resepsionis_utama"
@@ -2030,14 +2025,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     st.session_state["book_page_number"] -= 1
                     st.rerun()
                     
-            # --- 🏛️ 4. ENGINE GENERATOR ISI KONTEN PERKAMEN (TENGAH MEJA) ---
             html_content_pages = ""
 
-            # 🚪 KONDISI A: TAMPILAN HALAMAN 1 & 2 (Rapat Tanpa Celah Enter)
             if current_page == 1:
                 html_content_pages = (
                     '<div class="rpg-open-book-container rpg-open-book-animated">'
-                    '<!-- 📖 LEMBARAN KIRI: STATUS PAHLAWAN -->'
                     '<div class="rpg-book-page">'
                     '<div class="open-page-title">⚜️ STATUS PAHLAWAN ⚜️</div>'
                     '<div class="open-page-sub">Catatan Karakter Ksatria</div>'
@@ -2051,7 +2043,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     f'<div class="open-stat-row"><span>ACHIEVEMENT %</span><span style="color:#ca8a04; font-weight:900;">{data_stats["achievement"]}</span></div>'
                     '<div class="open-page-footer">- Halaman 1 -</div>'
                     '</div>'
-                    '<!-- 📖 LEMBARAN KANAN: REKAP REPORT -->'
                     '<div class="rpg-book-page">'
                     '<div class="open-page-title">⚔️ REKAP REPORT ⚔️</div>'
                     '<div class="open-page-sub">Akumulasi Poin Buruan</div>'
@@ -2064,11 +2055,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     '</div>'
                 )
 
-            # 💎 KONDISI B: TAMPILAN HALAMAN 3 (DETAIL ITEM YANG TERCAPAI)
             elif current_page == 2:
                 html_content_pages = (
                     '<div class="rpg-open-book-container rpg-open-book-animated">'
-                    '<!-- 📖 LEMBARAN KIRI: DETAIL ITEM TERCAPAI -->'
                     '<div class="rpg-book-page">'
                     '<div class="open-page-title">💎 DETAIL ITEM TERCAPAI 💎</div>'
                     '<div class="open-page-sub">Rincian Quest Berhasil</div>'
@@ -2079,7 +2068,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     '<div class="open-stat-row"><span>🍪 CEBAN COOKIES</span><span style="color:#71717a;">BELUM AKTIF</span></div>'
                     '<div class="open-page-footer">- Halaman 3 -</div>'
                     '</div>'
-                    '<!-- 📖 LEMBARAN KANAN: CATATAN ALIANSI -->'
                     '<div class="rpg-book-page">'
                     '<div class="open-page-title">📜 CATATAN ALIANSI 📜</div>'
                     '<div class="open-page-sub">Maklumat Tambahan Petualang</div>'
@@ -2092,9 +2080,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     '</div>'
                 )
 
-            # 📅 KONDISI C: TAMPILAN HALAMAN 4 (LOG HARIAN SUEGER - AUTO GENERATED LOOP)
             elif current_page == 3:
-                # Loop Python otomatis menggambar baris tanggal 1 sampai akhir bulan (30 hari)
                 baris_tanggal_html = ""
                 for tgl in range(1, 31):
                     nilai_harian = f"Rp {100000 + (tgl * 5000):,}"
@@ -2102,12 +2088,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
                 html_content_pages = (
                     '<div class="rpg-open-book-container rpg-open-book-animated">'
-                    '<!-- 📖 LEMBARAN UTAMA CHASSIS: LOG HARIAN SUEGER SAKU -->'
                     '<div class="rpg-book-page" style="width:100% !important; max-width:100% !important;">'
                     '<div class="open-page-title">🍹 LOG HARIAN SUEGER 🍹</div>'
                     '<div class="open-page-sub">Arsip Penjualan Otomatis Tanggal 01 s/d Akhir Bulan</div>'
                     '<div class="open-book-divider"></div>'
-                    '<!-- SCROLL BOX: Mengunci area log agar bisa digulir ke bawah dan anti-meluber -->'
                     '<div class="sueger-daily-scroll-box">'
                     f'{baris_tanggal_html}'
                     '</div>'
@@ -2116,11 +2100,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     '</div>'
                 )
 
-            # Cetak visual lembaran perkamen tepat di tengah meja kayu
             st.markdown(html_content_pages, unsafe_allow_html=True)
 
-            # --- 🏛️ 5. PAPAN UTAMA 2: TOMBOL NAVIGASI KANAN DI BAWAH BUKU (NATIVE & POLOS) ---
-            # Jika berada di halaman terakhir (Page 3), tombol berubah fungsi memutar alur ke awal
             if current_page == 3:
                 if st.button("↺ KEMBALI KE AWAL REPORT (HALAMAN 1)", use_container_width=True, key="btn_desk_nav_reset"):
                     st.session_state["book_page_number"] = 1
