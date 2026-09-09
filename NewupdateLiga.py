@@ -2683,11 +2683,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             ("Bors", "60 Pcs"), ("Kay", "55 Pcs"), ("Bedivere", "50 Pcs")
         ]
 
-        # ==========================================
+       # ==========================================
         # 📄 5. KONTEN PER HALAMAN BUKU (Halaman 1)
         # ==========================================
         if page_num == 1:
-            # Ambil data dari sheet SALES_ITEM dan filter berdasarkan Periode Aktif
+            # Ambil data langsung dari session state global kamu
+            df_item_raw = st.session_state.get("sales_item_df", pd.DataFrame())
+            
             df_filtered_items = pd.DataFrame()
             if not df_item_raw.empty:
                 col_periode = next((c for c in df_item_raw.columns if 'periode' in c.lower()), None)
@@ -2707,9 +2709,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             else:
                 render_items = []
                 for _, r in df_filtered_items.iterrows():
-                    name = str(r.get('Nama_Item', r.get('Item', 'Item Misi')))
-                    target = int(r.get('Target_Qty', r.get('Target', 50)))
-                    aktual = int(r.get('Aktual_Qty', r.get('Aktual', 0)))
+                    name = str(r.get('item_name', r.get('Nama_Item', r.get('Item', 'Item Misi'))))
+                    target = int(r.get('target_qty', r.get('Target_Qty', r.get('Target', 50))))
+                    aktual = int(r.get('actual_qty', r.get('Aktual_Qty', r.get('Aktual', 0))))
                     render_items.append((name, target, aktual))
 
             for idx, (iname, itarget, iaktual) in enumerate(render_items):
