@@ -4969,7 +4969,7 @@ elif selected_tab == "⚙️ Pengaturan & Master":
 
         if btn_gen_summary:
             # ---------------------------------------------------------------------
-            # A. LOGIKA HITUNG AKURAT UNTUK PSM (PERIODE untuk Tanggal & SALES_ITEM untuk Target/Aktual)
+            # A. LOGIKA HITUNG AKURAT UNTUK PSM
             # ---------------------------------------------------------------------
             target_psm_tot = 0
             actual_psm_tot = 0
@@ -4980,15 +4980,17 @@ elif selected_tab == "⚙️ Pengaturan & Master":
             if not psm_periods_df.empty:
                 p_filtered = psm_periods_df.copy()
                 
-                # Deteksi kolom tanggal di sheet PERIODE
-                start_date_col = next((col for col in ["start_date", "tanggal_mulai", "tgl_mulai", "start"] if col in p_filtered.columns), None)
+                start_date_col = next((col for col in ["start_date", "tanggal_mulai", "tgl_mulai", "start", "tanggal"] if col in p_filtered.columns), None)
                 
                 if start_date_col:
                     p_filtered[start_date_col] = pd.to_datetime(p_filtered[start_date_col], errors="coerce")
-                    p_filtered = p_filtered[
+                    p_date_filtered = p_filtered[
                         (p_filtered[start_date_col].dt.month == selected_month_num) & 
                         (p_filtered[start_date_col].dt.year == waktu_wib.year)
                     ]
+                    # Fallback jika hasil filter tanggal kosong agar data tidak hilang total
+                    if not p_date_filtered.empty:
+                        p_filtered = p_date_filtered
 
                 if selected_psm_period_opt != "Seluruh Penjualan 1 Bulan" and "period_name" in p_filtered.columns:
                     p_filtered = p_filtered[p_filtered["period_name"] == selected_psm_period_opt]
@@ -5000,11 +5002,11 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                 s_item = sales_item_df.copy()
                 
                 if valid_period_ids and "period_id" in s_item.columns:
-                    s_item = s_item[s_item["period_id"].isin(valid_period_ids)]
-                elif selected_psm_period_opt != "Seluruh Penjualan 1 Bulan":
-                    s_item = s_item.iloc[0:0]
+                    s_item_filtered = s_item[s_item["period_id"].isin(valid_period_ids)]
+                    if not s_item_filtered.empty:
+                        s_item = s_item_filtered
 
-                target_cols = ["target_qty", "qty_target", "target", "target_total"]
+                target_cols = ["target_qty", "qty_target", "target", "target_total", "target_psm"]
                 for col in target_cols:
                     if col in s_item.columns:
                         target_psm_tot = pd.to_numeric(s_item[col], errors="coerce").sum()
@@ -5013,11 +5015,13 @@ elif selected_tab == "⚙️ Pengaturan & Master":
 
                 if "qty" in s_item.columns:
                     actual_psm_tot = pd.to_numeric(s_item["qty"], errors="coerce").sum()
+                elif "actual_qty" in s_item.columns:
+                    actual_psm_tot = pd.to_numeric(s_item["actual_qty"], errors="coerce").sum()
 
             ach_psm = (actual_psm_tot / target_psm_tot * 100) if target_psm_tot > 0 else 0
 
             # ---------------------------------------------------------------------
-            # B. LOGIKA PPS (Mengambil dari PERIODE_PPS berdasarkan Tanggal/Bulan)
+            # B. LOGIKA PPS (Mengambil dari PERIODE_PPS)
             # ---------------------------------------------------------------------
             periods_pps_df = st.session_state.get("periods_pps_df", pd.DataFrame())
             pps_filtered = periods_pps_df.copy()
@@ -5026,10 +5030,12 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                 pps_date_col = next((col for col in ["start_date", "tanggal_mulai", "tgl_mulai", "start", "tanggal"] if col in pps_filtered.columns), None)
                 if pps_date_col:
                     pps_filtered[pps_date_col] = pd.to_datetime(pps_filtered[pps_date_col], errors="coerce")
-                    pps_filtered = pps_filtered[
+                    pps_date_filtered = pps_filtered[
                         (pps_filtered[pps_date_col].dt.month == selected_month_num) & 
                         (pps_filtered[pps_date_col].dt.year == waktu_wib.year)
                     ]
+                    if not pps_date_filtered.empty:
+                        pps_filtered = pps_date_filtered
 
             def get_pps_sum(df, possible_names):
                 if df.empty:
@@ -5037,31 +5043,40 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                 for name in possible_names:
                     for col in df.columns:
                         if col.strip().lower() == name.strip().lower():
-                            return pd.to_numeric(df[col], errors="coerce").sum()
+                            val = pd.to_numeric(df[col], errors="coerce").sum()
+                            if val > 0:
+                                return val
+                # Pencarian fleksibel lapis kedua (mengandung kata kunci)
+                for name in possible_names:
+                    for col in df.columns:
+                        if name.strip().lower() in col.strip().lower():
+                            val = pd.to_numeric(df[col], errors="coerce").sum()
+                            if val > 0:
+                                return val
                 return 0
 
-            # PWP (Syarat Redeem, Total Redeem, Target Qty, Total Qty)
-            s_pwp = get_pps_sum(pps_filtered, ["syarat_pwp", "syarat pwp", "target_pwp"])
-            r_pwp = get_pps_sum(pps_filtered, ["redeem_pwp", "redeem pwp", "ach_pwp_redeem", "total_redeem_pwp"])
-            tq_pwp = get_pps_sum(pps_filtered, ["target_qty_pwp", "target_pwp_qty", "target_qty", "qty_target_pwp"])
-            q_pwp = get_pps_sum(pps_filtered, ["qty_pwp", "qty pwp", "actual_qty_pwp", "actual_pwp"])
+            # PWP
+            s_pwp = get_pps_sum(pps_filtered, ["syarat_pwp", "syarat pwp", "target_pwp", "pwp_syarat"])
+            r_pwp = get_pps_sum(pps_filtered, ["redeem_pwp", "redeem pwp", "ach_pwp_redeem", "total_redeem_pwp", "pwp_redeem"])
+            tq_pwp = get_pps_sum(pps_filtered, ["target_qty_pwp", "target_pwp_qty", "target_qty", "qty_target_pwp", "pwp_target_qty"])
+            q_pwp = get_pps_sum(pps_filtered, ["qty_pwp", "qty pwp", "actual_qty_pwp", "actual_pwp", "pwp_qty"])
 
             ach_pwp_redeem = (r_pwp / s_pwp * 100) if s_pwp > 0 else 0
             ach_pwp_qty = (q_pwp / tq_pwp * 100) if tq_pwp > 0 else 0
 
-            # SUEGER (Syarat Redeem, Qty Redeem)
-            s_sueger = get_pps_sum(pps_filtered, ["syarat_sueger", "syarat sueger", "target_sueger"])
-            r_sueger = get_pps_sum(pps_filtered, ["redeem_sueger", "redeem sueger", "qty_sueger", "qty sueger", "ach_sueger_redeem"])
+            # SUEGER
+            s_sueger = get_pps_sum(pps_filtered, ["syarat_sueger", "syarat sueger", "target_sueger", "sueger_syarat"])
+            r_sueger = get_pps_sum(pps_filtered, ["redeem_sueger", "redeem sueger", "qty_sueger", "qty sueger", "ach_sueger_redeem", "sueger_redeem", "sueger_qty"])
             ach_sueger = (r_sueger / s_sueger * 100) if s_sueger > 0 else 0
 
-            # SERBA GRATIS (Target Qty, Actual Qty - Tanpa Syarat & Redeem)
-            t_sg = get_pps_sum(pps_filtered, ["target_sg", "target_serbagratis", "target serba gratis", "target_qty_sg"])
-            q_sg = get_pps_sum(pps_filtered, ["qty_sg", "qty_serbagratis", "qty serba gratis", "qty_serba_gratis", "actual_qty_sg", "actual_sg"])
+            # SERBA GRATIS
+            t_sg = get_pps_sum(pps_filtered, ["target_sg", "target_serbagratis", "target serba gratis", "target_qty_sg", "sg_target"])
+            q_sg = get_pps_sum(pps_filtered, ["qty_sg", "qty_serbagratis", "qty serba gratis", "qty_serba_gratis", "actual_qty_sg", "actual_sg", "sg_qty"])
             ach_sg = (q_sg / t_sg * 100) if t_sg > 0 else 0
 
-            # CEMILAN CEBAN (Target Qty, Actual Qty - Tanpa Syarat & Redeem)
-            t_ceban = get_pps_sum(pps_filtered, ["target_ceban", "target_cemilan_ceban", "target cemilan ceban", "target_qty_ceban"])
-            q_ceban = get_pps_sum(pps_filtered, ["qty_ceban", "qty_cemilan_ceban", "qty cemilan ceban", "actual_qty_ceban", "actual_ceban"])
+            # CEMILAN CEBAN
+            t_ceban = get_pps_sum(pps_filtered, ["target_ceban", "target_cemilan_ceban", "target cemilan ceban", "target_qty_ceban", "ceban_target"])
+            q_ceban = get_pps_sum(pps_filtered, ["qty_ceban", "qty_cemilan_ceban", "qty cemilan ceban", "actual_qty_ceban", "actual_ceban", "ceban_qty"])
             ach_ceban = (q_ceban / t_ceban * 100) if t_ceban > 0 else 0
 
             # ---------------------------------------------------------------------
@@ -5109,3 +5124,9 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                 key="wa_summary_text_area",
             )
             st.code(wa_text, language="text")
+
+            # --- DEBUG INFO (Opsional untuk mengecek nama kolom yang terbaca) ---
+            with st.expander("🔍 Cek Nama Kolom Dataframe (Debug Info)"):
+                st.write("Kolom `periods_df`:", list(psm_periods_df.columns) if not psm_periods_df.empty else "Kosong")
+                st.write("Kolom `sales_item_df`:", list(sales_item_df.columns) if not sales_item_df.empty else "Kosong")
+                st.write("Kolom `periods_pps_df`:", list(periods_pps_df.columns) if not periods_pps_df.empty else "Kosong")
