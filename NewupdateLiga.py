@@ -2822,9 +2822,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             """
 
         elif page_num == 3:
-            # Halaman 3: Ranking Qty berdasarkan Periode Aktif, Achiv Count akumulasi seluruh periode bulan berjalan (S01, S02, dll)
+            # Halaman 3: Ranking Qty berdasarkan Periode Aktif, Achiv Count berdasarkan Akumulasi Bulan Berjalan (September)
             sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
-            periods_df = st.session_state.get("periods_df", pd.DataFrame())
             
             # Ambil master list personil toko agar yang belum transaksi tetap muncul
             master_personil = []
@@ -2833,7 +2832,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             elif not sales_person_df.empty and "person_name" in sales_person_df.columns:
                 master_personil = sales_person_df["person_name"].dropna().astype(str).str.strip().unique().tolist()
 
-            # 1. Hitung Total Qty (untuk Peringkat Utama) berdasarkan Periode Aktif (misal: S02)
+            # 1. Hitung Total Qty (untuk Peringkat Utama) berdasarkan Periode Aktif
             qty_dict = {}
             if not sales_person_df.empty and "person_name" in sales_person_df.columns:
                 sp_period = sales_person_df.copy()
@@ -2847,39 +2846,21 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     for _, r in grouped_qty.iterrows():
                         qty_dict[r["person_name"]] = int(r["actual_qty"])
 
-            # 2. Ambil SEMUA period_id yang masuk dalam bulan September (S01, S02, dst.)
-            current_year = today.year
-            current_month = today.month
-            month_period_ids = set()
-            
-            if not periods_df.empty and "period_id" in periods_df.columns:
-                for _, r in periods_df.iterrows():
-                    try:
-                        # Cek jika kolom tanggal start_date / end_date ada di periods_df
-                        s_date = pd.to_datetime(r.get("start_date", "")).date()
-                        if s_date.year == current_year and s_date.month == current_month:
-                            month_period_ids.add(str(r.get("period_id", "")).strip())
-                    except Exception:
-                        pass
-                
-                # Fallback cadangan: Jika periods_df tidak punya start_date, cocokan awalan ID atau nama periode yang mengandung 'sep' atau 'S0'
-                if not month_period_ids:
-                    for _, r in periods_df.iterrows():
-                        pid = str(r.get("period_id", "")).strip()
-                        pname = str(r.get("period_name", "")).lower()
-                        if "s0" in pid.lower() or "sep" in pname or "september" in pname:
-                            month_period_ids.add(pid)
-
-            # 3. Hitung Item Achiv dengan menggabungkan semua data periode di bulan September
+            # 2. Hitung Item Achiv berdasarkan Seluruh Data Bulan Berjalan (September)
             achiv_dict = {}
             if not sales_person_df.empty and "person_name" in sales_person_df.columns:
                 sp_month = sales_person_df.copy()
                 
-                if "period_id" in sp_month.columns:
-                    sp_month["clean_pid"] = sp_month["period_id"].astype(str).str.strip()
-                    if month_period_ids:
-                        # Filter hanya untuk period_id yang ada di bulan September (S01, S02, dll)
-                        sp_month = sp_month[sp_month["clean_pid"].isin(month_period_ids)]
+                # Jika ada kolom tanggal, filter bulan September. Jika tidak, gunakan seluruh data yang ada di dataframe.
+                date_col = None
+                for col in ["date", "tanggal", "transaction_date", "created_at"]:
+                    if col in sp_month.columns:
+                        date_col = col
+                        break
+                
+                if date_col:
+                    sp_month["parsed_date"] = pd.to_datetime(sp_month[date_col], errors="coerce")
+                    sp_month = sp_month[(sp_month["parsed_date"].dt.year == today.year) & (sp_month["parsed_date"].dt.month == today.month)]
                 
                 if not sp_month.empty:
                     sp_month["person_name"] = sp_month["person_name"].astype(str).str.strip()
@@ -2893,7 +2874,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     # Kondisi Achiv: Actual Qty >= Target Kasir dan Target Kasir > 0
                     sp_month["is_achiv"] = (sp_month["actual_qty"] >= sp_month["target_kasir"]) & (sp_month["target_kasir"] > 0)
                     
-                    # Akumulasi jumlah item yang achiv dari S01 + S02 + ... selama bulan September
                     grouped_achiv = sp_month.groupby("person_name")["is_achiv"].sum().reset_index()
                     for _, r in grouped_achiv.iterrows():
                         achiv_dict[r["person_name"]] = int(r["is_achiv"])
@@ -2946,7 +2926,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 </div>
             </div>
             """.format(active_period=active_period, rows_psm_13=rows_psm_13, rows_psm_49=rows_psm_49)
-            
+        
+
         elif page_num == 4:
             rows_pps_13 = "".join([format_row(i + 1, n, s) for i, (n, s) in enumerate(dummy_9_personil[:3])])
             rows_pps_49 = "".join([format_row(i + 4, n, s) for i, (n, s) in enumerate(dummy_9_personil[3:])])
