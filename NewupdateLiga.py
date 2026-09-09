@@ -2453,12 +2453,22 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         import textwrap
 
         # ==========================================
-        # 🎨 1. SUNTIKAN CSS (JUDUL HALAMAN KETENGAH & FONT SAMA)
+        # 🎨 1. SUNTIKAN CSS (BACKGROUND NAGA & TEMA HITAM)
         # ==========================================
         st.markdown("""
         <style>
             /* Mengimpor font MedievalSharp dari Google Fonts */
             @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
+
+            /* Mengubah background utama Streamlit menjadi Hitam Pekat dengan Tekstur/Watermark Naga */
+            .stApp {
+                background-color: #030303 !important;
+                background-image: 
+                    radial-gradient(circle at 50% 30%, rgba(180, 83, 9, 0.08) 0%, transparent 60%),
+                    /* Pola siluet/tekstur naga samar menggunakan SVG data-URI */
+                    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 100 100' opacity='0.03'%3E%3Cpath fill='%23ffffff' d='M50 0 L60 30 L90 30 L65 50 L75 80 L50 65 L25 80 L35 50 L10 30 L40 30 Z'/%3E%3C/svg%3E") !important;
+                background-repeat: repeat !important;
+            }
 
             .kitab-misi-page-wrapper {
                 position: relative;
@@ -2468,13 +2478,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 box-sizing: border-box;
             }
 
-            /* Menerapkan font MedievalSharp pada Judul Utama */
+            /* Menerapkan font MedievalSharp pada Judul Utama Guild */
             .guild-lobby-title {
                 font-family: 'MedievalSharp', cursive, serif !important;
                 font-size: 38px !important;
                 letter-spacing: 2px;
                 color: #f59e0b !important;
-                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+                text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.9);
                 text-align: center;
             }
 
@@ -2487,7 +2497,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 background: #fef3c7;
                 padding: 20px;
                 border-radius: 10px;
-                box-shadow: 0 8px 20px rgba(0,0,0,0.4), inset 0 0 30px rgba(120, 53, 15, 0.15);
+                box-shadow: 0 12px 30px rgba(0,0,0,0.8), inset 0 0 30px rgba(120, 53, 15, 0.2);
                 border: 2px solid #b45309;
                 box-sizing: border-box !important;
             }
