@@ -2392,10 +2392,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         if "kitab_misi_page" not in st.session_state:
             st.session_state["kitab_misi_page"] = 1
 
-        # Total lembar buku terbuka sekarang ada 5 (Lembar 1: Target Item Kiri-Kanan, Lembar 2: Target PPS & Posisi, Lembar 3: PSM 1-3 & 4-9, Lembar 4: PPS 1-4 & 5-9, Lembar 5: Sueger 1-3 & 4-9)
         TOTAL_SHEETS = 5
 
-        # 🎨 SUNTIKKAN CSS TERMASUK ANIMASI BUKA HALAMAN & STYLING TOMBOL
+        # 🎨 SUNTIKKAN CSS DENGAN TEMA MEDIEVAL RPG, MEDAL, & ANIMASI BUKA HALAMAN
         st.markdown(
             """
             <style>
@@ -2416,7 +2415,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     font-style: italic;
                 }
 
-                /* 🪄 ANIMASI PERUBAHAN HALAMAN BUKU */
+                /* 🪄 ANIMASI PERUBAHAN HALAMAN BUKU (PAGE TURN EFFECT) */
                 @keyframes pageTurn {
                     0% {
                         opacity: 0;
@@ -2434,12 +2433,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     border-radius: 12px;
                     box-shadow: 0 20px 40px rgba(0,0,0,0.8), inset 0 0 50px rgba(181, 101, 29, 0.15);
                     display: flex;
-                    min-height: 380px;
-                    max-height: 400px;
+                    min-height: 400px;
+                    max-height: 420px;
                     position: relative;
                     overflow: hidden;
                     width: 100%;
-                    max-width: 650px;
+                    max-width: 700px;
                     margin: 0 auto;
                     animation: pageTurn 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
                     perspective: 1000px;
@@ -2493,10 +2492,16 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     align-items: center;
                     font-size: 10px;
                     font-weight: bold;
-                    margin-bottom: 14px;
+                    margin-bottom: 12px;
                     border-bottom: 1px dashed rgba(133,77,14,0.25);
                     padding-bottom: 6px;
                 }
+                
+                /* 🏅 KELAS KHUSUS PODIUM & MEDAL */
+                .rank-1 { background: rgba(234, 179, 8, 0.15); border-left: 4px solid #eab308; padding-left: 6px; border-radius: 4px; }
+                .rank-2 { background: rgba(148, 163, 184, 0.15); border-left: 4px solid #94a3b8; padding-left: 6px; border-radius: 4px; }
+                .rank-3 { background: rgba(217, 119, 6, 0.15); border-left: 4px solid #d97706; padding-left: 6px; border-radius: 4px; }
+
                 .kitab-misi-page-wrapper .open-page-footer {
                     margin-top: auto;
                     font-size: 9px;
@@ -2565,6 +2570,25 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             ("7. Bors", "60 Pcs"), ("8. Kay", "55 Pcs"), ("9. Bedivere", "50 Pcs")
         ]
 
+        def format_row(index, name, score):
+            rank_class = ""
+            badge = f"#{index}"
+            if index == 1:
+                rank_class = "rank-1"
+                badge = "👑 1"
+            elif index == 2:
+                rank_class = "rank-2"
+                badge = "🥈 2"
+            elif index == 3:
+                rank_class = "rank-3"
+                badge = "🥉 3"
+            elif index >= 4 and index <= 6:
+                badge = f"🛡️ {index}"
+            else:
+                badge = f"📜 {index}"
+                
+            return f'<div class="open-stat-row {rank_class}"><span style="color:#854d0e;">{badge} | {name}</span><span style="color:#b45309;">{score}</span></div>'
+
         if page_num == 1:
             # --- LEMBAR 1: Kiri = Target Item (1), Kanan = Target Item (2) ---
             html_open_tugas = textwrap.dedent("""
@@ -2573,52 +2597,52 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     <h3 class="open-page-title">🎯 TARGET ITEM (1)</h3>
                     <p class="open-page-subtitle">Daftar Kuota Target Utama</p>
                     <div class="open-book-divider"></div>
-                    <div class="open-stat-row"><span>Item A (Special)</span><span>50 Pcs</span></div>
-                    <div class="open-stat-row"><span>Item B (Rare)</span><span>40 Pcs</span></div>
-                    <div class="open-stat-row"><span>Item C (Common)</span><span>100 Pcs</span></div>
+                    <div class="open-stat-row"><span>⚔️ Item A (Special)</span><span>50 Pcs</span></div>
+                    <div class="open-stat-row"><span>🛡️ Item B (Rare)</span><span>40 Pcs</span></div>
+                    <div class="open-stat-row"><span>📦 Item C (Common)</span><span>100 Pcs</span></div>
                     <p class="open-page-footer">Halaman Kiri • Target Item A</p>
                 </div>
                 <div class="rpg-book-page">
                     <h3 class="open-page-title">📦 TARGET ITEM (2)</h3>
                     <p class="open-page-subtitle">Realisasi Perolehan Item Toko</p>
                     <div class="open-book-divider"></div>
-                    <div class="open-stat-row"><span>Item A (Special)</span><span style="color:#16a34a;">48 / 50 Pcs</span></div>
-                    <div class="open-stat-row"><span>Item B (Rare)</span><span style="color:#dc2626;">35 / 40 Pcs</span></div>
-                    <div class="open-stat-row"><span>Item C (Common)</span><span style="color:#16a34a;">95 / 100 Pcs</span></div>
+                    <div class="open-stat-row"><span>⚔️ Item A (Special)</span><span style="color:#16a34a;">✨ 48 / 50 Pcs</span></div>
+                    <div class="open-stat-row"><span>🛡️ Item B (Rare)</span><span style="color:#dc2626;">⚠️ 35 / 40 Pcs</span></div>
+                    <div class="open-stat-row"><span>📦 Item C (Common)</span><span style="color:#16a34a;">✨ 95 / 100 Pcs</span></div>
                     <p class="open-page-footer">Halaman Kanan • Target Item B</p>
                 </div>
             </div>
             """)
 
         elif page_num == 2:
-            # --- LEMBAR 2: Kiri = Target PPS, Kanan = Informasi Urutan Pahlawan Kita ---
+            # --- LEMBAR 2: Kiri = Target PPS, Kanan = Posisi Pahlawan ---
             html_open_tugas = textwrap.dedent("""
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page">
                     <h3 class="open-page-title">🛡️ TARGET PPS</h3>
                     <p class="open-page-subtitle">Rincian Target Harian PPS</p>
                     <div class="open-book-divider"></div>
-                    <div class="open-stat-row"><span>Target PPS Alpha</span><span>15 Pcs</span></div>
-                    <div class="open-stat-row"><span>Target PPS Beta</span><span>20 Pcs</span></div>
-                    <div class="open-stat-row"><span>Target PPS Gamma</span><span>10 Pcs</span></div>
+                    <div class="open-stat-row"><span>⚡ Target PPS Alpha</span><span>15 Pcs</span></div>
+                    <div class="open-stat-row"><span>⚡ Target PPS Beta</span><span>20 Pcs</span></div>
+                    <div class="open-stat-row"><span>⚡ Target PPS Gamma</span><span>10 Pcs</span></div>
                     <p class="open-page-footer">Halaman Kiri • Target PPS</p>
                 </div>
                 <div class="rpg-book-page">
                     <h3 class="open-page-title">📍 POSISI PAHLAWAN</h3>
                     <p class="open-page-subtitle">Status Peringkat Guild Anda</p>
                     <div class="open-book-divider"></div>
-                    <div class="open-stat-row"><span>RANK PSM</span><span style="color:#16a34a; font-weight:bold;">Peringkat #3 (92%)</span></div>
-                    <div class="open-stat-row"><span>RANK PPS</span><span style="color:#16a34a; font-weight:bold;">Peringkat #5 (85%)</span></div>
-                    <div class="open-stat-row"><span>RANK SUEGER</span><span style="color:#b45309; font-weight:bold;">Peringkat #2 (94%)</span></div>
+                    <div class="open-stat-row"><span>⚔️ RANK PSM</span><span style="color:#16a34a; font-weight:bold;">🥉 Peringkat #3 (92%)</span></div>
+                    <div class="open-stat-row"><span>🛡️ RANK PPS</span><span style="color:#d97706; font-weight:bold;">🛡️ Peringkat #5 (85%)</span></div>
+                    <div class="open-stat-row"><span>⚡ RANK SUEGER</span><span style="color:#eab308; font-weight:bold;">🥈 Peringkat #2 (94%)</span></div>
                     <p class="open-page-footer">Halaman Kanan • Posisi Pahlawan</p>
                 </div>
             </div>
             """)
 
         elif page_num == 3:
-            # --- LEMBAR 3: Kiri = Peringkat PSM 1-3, Kanan = Peringkat PSM 4-9 ---
-            rows_psm_13 = "".join([f'<div class="open-stat-row"><span style="font-weight:bold; color:#854d0e;">Rank {i+1}</span><span>{n}</span><span style="color:#b45309;">{s}</span></div>' for i, (n, s) in enumerate(dummy_9_personil[:3])])
-            rows_psm_49 = "".join([f'<div class="open-stat-row"><span style="font-weight:bold; color:#854d0e;">Rank {i+4}</span><span>{n}</span><span style="color:#b45309;">{s}</span></div>' for i, (n, s) in enumerate(dummy_9_personil[3:])])
+            # --- LEMBAR 3: Kiri = PSM 1-3, Kanan = PSM 4-9 ---
+            rows_psm_13 = "".join([format_row(i+1, n, s) for i, (n, s) in enumerate(dummy_9_personil[:3])])
+            rows_psm_49 = "".join([format_row(i+4, n, s) for i, (n, s) in enumerate(dummy_9_personil[3:])])
             
             html_open_tugas = textwrap.dedent(f"""
             <div class="rpg-open-book-container">
@@ -2640,9 +2664,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             """)
 
         elif page_num == 4:
-            # --- LEMBAR 4: Kiri = Peringkat PPS 1-3, Kanan = Peringkat PPS 4-9 ---
-            rows_pps_13 = "".join([f'<div class="open-stat-row"><span style="font-weight:bold; color:#854d0e;">Rank {i+1}</span><span>{n}</span><span style="color:#b45309;">{s}</span></div>' for i, (n, s) in enumerate(dummy_9_personil[:3])])
-            rows_pps_49 = "".join([f'<div class="open-stat-row"><span style="font-weight:bold; color:#854d0e;">Rank {i+4}</span><span>{n}</span><span style="color:#b45309;">{s}</span></div>' for i, (n, s) in enumerate(dummy_9_personil[3:])])
+            # --- LEMBAR 4: Kiri = PPS 1-3, Kanan = PPS 4-9 ---
+            rows_pps_13 = "".join([format_row(i+1, n, s) for i, (n, s) in enumerate(dummy_9_personil[:3])])
+            rows_pps_49 = "".join([format_row(i+4, n, s) for i, (n, s) in enumerate(dummy_9_personil[3:])])
             
             html_open_tugas = textwrap.dedent(f"""
             <div class="rpg-open-book-container">
@@ -2664,10 +2688,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             """)
 
         elif page_num == 5:
-            # --- LEMBAR 5: Kiri = Peringkat Sueger (1-3), Kanan = Peringkat Sueger (4-9) ---
+            # --- LEMBAR 5: Kiri = Sueger 1-3, Kanan = Sueger 4-9 ---
             sueger_data = [(n, f"{int(s.replace(' Pcs',''))+5} Pcs") for n, s in dummy_9_personil]
-            rows_sueger_13 = "".join([f'<div class="open-stat-row"><span style="font-weight:bold; color:#854d0e;">Rank {i+1}</span><span>{n}</span><span style="color:#b45309;">{s}</span></div>' for i, (n, s) in enumerate(sueger_data[:3])])
-            rows_sueger_49 = "".join([f'<div class="open-stat-row"><span style="font-weight:bold; color:#854d0e;">Rank {i+4}</span><span>{n}</span><span style="color:#b45309;">{s}</span></div>' for i, (n, s) in enumerate(sueger_data[3:])])
+            rows_sueger_13 = "".join([format_row(i+1, n, s) for i, (n, s) in enumerate(sueger_data[:3])])
+            rows_sueger_49 = "".join([format_row(i+4, n, s) for i, (n, s) in enumerate(sueger_data[3:])])
             
             html_open_tugas = textwrap.dedent(f"""
             <div class="rpg-open-book-container">
