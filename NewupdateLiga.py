@@ -5076,44 +5076,44 @@ elif selected_tab == "⚙️ Pengaturan & Master":
             # C. FORMAT TEKS SUMMARY WHATSAPP
             # ---------------------------------------------------------------------
             wa_text = f"""*📊 REPORT SUMMARY PENJUALAN {selected_month_name.upper()} {waktu_wib.year}*
-            ----------------------------------------
-            *1. PROGRAM PSM ({selected_psm_period_opt.upper()})*
-            • Target PSM     : {int(target_psm_tot):,} Pcs
-            • Actual Qty     : {int(actual_psm_tot):,} Pcs
-            • Achievement    : *{ach_psm:.1f}%*
+        ----------------------------------------
+        *1. PROGRAM PSM ({selected_psm_period_opt.upper()})*
+        • Target PSM     : {int(target_psm_tot):,} Pcs
+        • Actual Qty     : {int(actual_psm_tot):,} Pcs
+        • Achievement    : *{ach_psm:.1f}%*
 
-            *2. PROGRAM PENJUALAN & KINERJA (PPS)*
-            • *PWP (Pay With Points)*
-            - Syarat Redeem: {int(s_pwp):,}
-            - Total Redeem : {int(r_pwp):,}
-            - Target Qty   : {int(tq_pwp):,} Pcs
-            - Total Qty    : {int(q_pwp):,} Pcs
-            - Ach. Redeem  : *{ach_pwp_redeem:.1f}%*
-            - Ach. Qty     : *{ach_pwp_qty:.1f}%*
+        *2. PROGRAM PENJUALAN & KINERJA (PPS)*
+        • *PWP (Pay With Points)*
+        - Syarat Redeem: {int(s_pwp):,}
+        - Total Redeem : {int(r_pwp):,}
+        - Target Qty   : {int(tq_pwp):,} Pcs
+        - Total Qty    : {int(q_pwp):,} Pcs
+        - Ach. Redeem  : *{ach_pwp_redeem:.1f}%*
+        - Ach. Qty     : *{ach_pwp_qty:.1f}%*
 
-            • *SUEGER*
-            - Syarat Redeem: {int(s_sueger_val):,}
-            - Qty Redeem   : {int(r_sueger_val):,}
-            - Achievement  : *{ach_sueger:.1f}%*
+        • *SUEGER*
+        - Syarat Redeem: {int(s_sueger_val):,}
+        - Qty Redeem   : {int(r_sueger_val):,}
+        - Achievement  : *{ach_sueger:.1f}%*
 
-            • *SERBA GRATIS*
-            - Target Qty   : {int(t_sg):,} Pcs
-            - Actual Qty   : {int(q_sg):,} Pcs
-            - Achievement  : *{ach_sg:.1f}%*
+        • *SERBA GRATIS*
+        - Target Qty   : {int(t_sg):,} Pcs
+        - Actual Qty   : {int(q_sg):,} Pcs
+        - Achievement  : *{ach_sg:.1f}%*
 
-            • *CEMILAN CEBAN*
-            - Target Qty   : {int(t_ceban):,} Pcs
-            - Actual Qty   : {int(q_ceban):,} Pcs
-            - Achievement  : *{ach_ceban:.1f}%*
-            ----------------------------------------
-            _Generated automatically via LigaPSM System_
-            """.replace(",", ".")
+        • *CEMILAN CEBAN*
+        - Target Qty   : {int(t_ceban):,} Pcs
+        - Actual Qty   : {int(q_ceban):,} Pcs
+        - Achievement  : *{ach_ceban:.1f}%*
+        ----------------------------------------
+        _Generated automatically via LigaPSM System_
+        """.replace(",", ".")
 
-                st.markdown("##### 📝 Hasil Text Report (Siap Copas ke WA):")
-                st.text_area(
-                    "Salin teks di bawah ini:",
-                    wa_text,
-                    height=360,
-                    key="wa_summary_text_area",
-                )
-                st.code(wa_text, language="text")
+            st.markdown("##### 📝 Hasil Text Report (Siap Copas ke WA):")
+            st.text_area(
+                "Salin teks di bawah ini:",
+                wa_text,
+                height=360,
+                key="wa_summary_text_area",
+            )
+            st.code(wa_text, language="text")
