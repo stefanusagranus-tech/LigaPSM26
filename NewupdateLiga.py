@@ -1924,8 +1924,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
 
-       # =========================================================================
-        # 📘 JURNAL BURUAN INDIVIDU (REKAP LAPORAN DENGAN HALAMAN BUKU OTOMATIS)
+        # =========================================================================
+        # 📘 JURNAL BURUAN INDIVIDU (DATA STATUS PAHLAWAN DARI SALES_PPS)
         # =========================================================================
         elif st.session_state.get("campaign_sub_page") == "view_buku_pencapaian":
             
@@ -1939,14 +1939,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             df_sales_item = st.session_state.get("sales_item_df", pd.DataFrame())
             sales_personil = st.session_state.get("sales_person_df", pd.DataFrame())
             periods_df = st.session_state.get("periods_df", pd.DataFrame())
+            sales_pps_df = st.session_state.get("sales_pps_df", pd.DataFrame())  # Sheet SALES_PPS
 
             # Normalisasi nama kolom ke lowercase
-            if not df_sales_item.empty:
-                df_sales_item.columns = df_sales_item.columns.astype(str).str.strip().str.lower()
-            if not sales_personil.empty:
-                sales_personil.columns = sales_personil.columns.astype(str).str.strip().str.lower()
-            if not periods_df.empty:
-                periods_df.columns = periods_df.columns.astype(str).str.strip().str.lower()
+            for df_obj in [df_sales_item, sales_personil, periods_df, sales_pps_df]:
+                if not df_obj.empty:
+                    df_obj.columns = df_obj.columns.astype(str).str.strip().str.lower()
 
             # --- 🗓️ AMBIL SELURUH PERIODE DALAM BULAN BERJALAN (1 BULAN PENUH) ---
             today_date = datetime.now().date()
@@ -1970,24 +1968,50 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             if not list_periode_bulan_ini:
                 list_periode_bulan_ini = ["S01"]
 
-            # --- 🔍 1. TARIK TARGET DARI SALES_ITEM BERDASARKAN MASTER ITEM & PERIODE 1 BULAN ---
-            dict_target_item = {}
-            total_target_kasir_bulan = 0
+            # --- 🔍 1. TARIK DATA DARI SALES_PPS BERDASARKAN KASIR_NAME & BULAN BERJALAN ---
+            total_pwp_val = 0
+            total_sg_val = 0
+            total_sueger_val = 0
+            total_cemilan_val = 0
+            total_syarat_sueger = 0
+            total_redeem_sueger = 0
 
+            if not sales_pps_df.empty and 'kasir_name' in sales_pps_df.columns:
+                # Filter berdasarkan kasir_name yang sesuai dengan username login
+                df_pps_user = sales_pps_df[sales_pps_df['kasir_name'].astype(str).str.strip().str.upper() == username_hero].copy()
+                
+                if not df_pps_user.empty:
+                    # Konversi kolom numerik agar aman dijumlahkan
+                    for col_num in ['qty_pwp', 'qty_sg', 'syarat_sueger', 'redeem_sueger', 'cemilan_ceban']:
+                        if col_num in df_pps_user.columns:
+                            df_pps_user[col_num] = pd.to_numeric(df_pps_user[col_num], errors='coerce').fillna(0)
+
+                    total_pwp_val = int(df_pps_user['qty_pwp'].sum()) if 'qty_pwp' in df_pps_user.columns else 0
+                    total_sg_val = int(df_pps_user['qty_sg'].sum()) if 'qty_sg' in df_pps_user.columns else 0
+                    total_sueger_val = int(df_pps_user['redeem_sueger'].sum()) if 'redeem_sueger' in df_pps_user.columns else 0
+                    total_cemilan_val = int(df_pps_user['cemilan_ceban'].sum()) if 'cemilan_ceban' in df_pps_user.columns else 0
+                    
+                    total_syarat_sueger = df_pps_user['syarat_sueger'].sum() if 'syarat_sueger' in df_pps_user.columns else 0
+                    total_redeem_sueger = df_pps_user['redeem_sueger'].sum() if 'redeem_sueger' in df_pps_user.columns else 0
+
+            # Hitung Achievement % Berdasarkan Rasio Sueger (Redeem / Syarat)
+            achievement_pct = 0.0
+            if total_syarat_sueger > 0:
+                achievement_pct = (total_redeem_sueger / total_syarat_sueger) * 100
+            achievement_str = f"{achievement_pct:.1f}%"
+
+            # --- 🔍 2. TARIK TARGET DARI SALES_ITEM BERDASARKAN MASTER ITEM & PERIODE 1 BULAN ---
+            dict_target_item = {}
             if not df_sales_item.empty and 'period_id' in df_sales_item.columns:
                 df_f_item = df_sales_item[df_sales_item['period_id'].astype(str).str.strip().isin(list_periode_bulan_ini)]
-                
-                if 'target_kasir' in df_f_item.columns:
-                    df_f_item['target_kasir'] = pd.to_numeric(df_f_item['target_kasir'], errors='coerce').fillna(0)
-                    total_target_kasir_bulan = int(df_f_item['target_kasir'].sum())
-
                 if 'item_name' in df_f_item.columns and 'target_kasir' in df_f_item.columns:
+                    df_f_item['target_kasir'] = pd.to_numeric(df_f_item['target_kasir'], errors='coerce').fillna(0)
                     for _, row in df_f_item.iterrows():
                         it_name = str(row['item_name']).strip().upper()
                         tgt_val = pd.to_numeric(row['target_kasir'], errors='coerce') or 0
                         dict_target_item[it_name] = dict_target_item.get(it_name, 0) + int(tgt_val)
 
-            # --- 🔍 2. TARIK QTY AKTUAL PENJUALAN KASIR & KUMPULKAN DAFTAR ITEM TERCAPAI ---
+            # --- 🔍 3. TARIK QTY AKTUAL PENJUALAN KASIR & KUMPULKAN DAFTAR ITEM TERCAPAI ---
             qty_penjualan_psm_val = 0
             list_item_tercapai_collection = []
             
@@ -2008,7 +2032,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         for _, row in df_grouped_item.iterrows():
                             nama_item = row['item_name']
                             qty_aktual = int(row['actual_qty'])
-                            
                             target_item_ini = dict_target_item.get(nama_item, 0)
                             
                             is_achieved = False
@@ -2024,11 +2047,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                                 list_item_tercapai_collection.append(row_html)
 
             jumlah_jenis_item_tercapai = len(list_item_tercapai_collection)
-
             if jumlah_jenis_item_tercapai == 0:
                 list_item_tercapai_collection.append('<div class="open-stat-row"><span>📦 BELUM ADA ITEM TERCAPAI</span><span style="color:#71717a;">0 Qty</span></div>')
 
-            # --- 🔍 3. HITUNG RANKING PENJUALAN KASIR (BULAN INI) ---
+            # --- 🔍 4. HITUNG RANKING PENJUALAN KASIR (BULAN INI) ---
             ranking_val = "#RANK -"
             if not sales_personil.empty and 'actual_qty' in sales_personil.columns and 'period_id' in sales_personil.columns:
                 df_period_sp = sales_personil[sales_personil['period_id'].astype(str).str.strip().isin(list_periode_bulan_ini)].copy()
@@ -2042,8 +2064,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     ranking_val = f"#RANK {int(user_rank_row['rank'].values[0])}"
 
             data_stats = {
-                "level": "LV. 85", "pwp": "2,450,000", "sg": "1,200,000", "sueger": "3,150,000",
-                "cemilan": "450,000", "achievement": "92.5%"
+                "level": "LV. 85", 
+                "pwp": f"{total_pwp_val:,} Pts", 
+                "sg": f"{total_sg_val:,} Pts", 
+                "sueger": f"{total_sueger_val:,} Pts", 
+                "cemilan": f"{total_cemilan_val:,} Pts", 
+                "achievement": achievement_str
             }
 
             # --- 📜 KATA-KATA MOTIVASI OTOMATIS BERUBAH ---
@@ -2057,26 +2083,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             motivasi_terpilih = random.choice(daftar_motivasi)
 
             # --- ⚙️ SISTEM PAGINASI DINAMIS (PENGATUR HALAMAN BUKU) ---
-            # Halaman 1 & 2: Menu Utama (Status Pahlawan & Rekap Report)
-            # Halaman 3 dst: Lembar Detail Item Tercapai (maksimal 5 item per halaman agar pas dibaca)
             ITEMS_PER_PAGE = 5
             chunked_items = [list_item_tercapai_collection[i:i + ITEMS_PER_PAGE] for i in range(0, len(list_item_tercapai_collection), ITEMS_PER_PAGE)]
-            total_item_pages = len(chunked_items)
             
-            # Total halaman keseluruhan = 1 (Halaman Utama) + total_item_pages (Halaman Detail Item) + 1 (Halaman Sueger/Arsip Harian) + 1 (Halaman Aliansi/Motivasi)
-            # Agar sederhana dan terstruktur rapi:
-            # - Spread 1 (current_page == 1): Halaman 1 (Status) & Halaman 2 (Rekap Report)
-            # - Spread berikutnya: Detail Item Tercapai secara berurutan, lalu diakhiri Arsip Sueger & Motivasi Aliansi.
-            
-            # Mari kita tentukan total pasang halaman (spread) buku:
-            # Spread 1: Halaman 1 & 2 (Utama)
-            # Spread 2 s/d N: Detail Item Tercapai (Kiri & Kanan diisi item)
-            # Spread Terakhir: Halaman Arsip Sueger (Kiri) & Motivasi Aliansi (Kanan)
-            
-            # Kita buat list struktur buku agar mudah dinavigasi:
             book_spreads = []
             
-            # Spread Pertama (Halaman 1 & 2)
+            # Spread 1 (Halaman 1 & 2)
             book_spreads.append({
                 "type": "main_menu",
                 "left_title": "⚜️ STATUS PAHLAWAN ⚜️",
@@ -2085,8 +2097,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 "right_sub": "Akumulasi Poin Buruan (1 Bulan)"
             })
             
-            # Spread untuk Detail Item Tercapai (Paginasi Otomatis per 5 item di kiri, 5 item di kanan jika muat)
-            # Atau per halaman buku menampilkan list item
+            # Spread Detail Item
             item_page_pairs = [chunked_items[i:i+2] for i in range(0, len(chunked_items), 2)]
             for idx, pair in enumerate(item_page_pairs):
                 left_items_html = "".join(pair[0])
@@ -2101,7 +2112,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     "sub_title": f"Rincian Quest Bulan {nama_periode_aktif}"
                 })
             
-            # Spread Terakhir: Log Sueger & Catatan Aliansi
+            # Spread Terakhir (Log Sueger & Aliansi)
             baris_tanggal_html = ""
             for tgl in range(1, 32):
                 nilai_harian = f"Rp {100000 + (tgl * 5000):,}"
@@ -2191,10 +2202,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     '<div class="open-book-divider"></div>'
                     f'<div class="open-stat-row"><span>NAMA PAHLAWAN</span><span style="color:#b45309;">{username_hero}</span></div>'
                     f'<div class="open-stat-row"><span>TINGKAT LEVEL</span><span style="color:#16a34a;">{data_stats["level"]}</span></div>'
-                    f'<div class="open-stat-row"><span>TOTAL PWP</span><span style="color:#2563eb;">Rp {data_stats["pwp"]}</span></div>'
-                    f'<div class="open-stat-row"><span>PENJUALAN SG</span><span style="color:#7c3aed;">Rp {data_stats["sg"]}</span></div>'
-                    f'<div class="open-stat-row"><span>PENJUALAN SUEGER</span><span style="color:#0d9488;">Rp {data_stats["sueger"]}</span></div>'
-                    f'<div class="open-stat-row"><span>CEMILAN CEBAN</span><span style="color:#db2777;">Rp {data_stats["cemilan"]}</span></div>'
+                    f'<div class="open-stat-row"><span>TOTAL PWP</span><span style="color:#2563eb;">{data_stats["pwp"]}</span></div>'
+                    f'<div class="open-stat-row"><span>PENJUALAN SG</span><span style="color:#7c3aed;">{data_stats["sg"]}</span></div>'
+                    f'<div class="open-stat-row"><span>PENJUALAN SUEGER</span><span style="color:#0d9488;">{data_stats["sueger"]}</span></div>'
+                    f'<div class="open-stat-row"><span>CEMILAN CEBAN</span><span style="color:#db2777;">{data_stats["cemilan"]}</span></div>'
                     f'<div class="open-stat-row"><span>ACHIEVEMENT %</span><span style="color:#ca8a04; font-weight:900;">{data_stats["achievement"]}</span></div>'
                     '<div class="open-page-footer">- Halaman 1 -</div>'
                     '</div>'
