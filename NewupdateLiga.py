@@ -2124,7 +2124,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             # --- 🐞 KODE DEBUG SEMENTARA UNTUK MENGECEK DATA ---
             with st.expander("🛠️ Kotak Debug Data (Klik untuk Buka)"):
                 st.write("1. Username Aktif:", username_hero)
-                st.write("2. Bulan Aktif:", bulan_aktif)
+                st.write("2. Bulan Aktif:", st.session_state.get("periode_aktif", "S01")
                 
                 st.write("--- Isi DataFrame SALES_ITEM ---")
                 if not df_sales_item.empty:
