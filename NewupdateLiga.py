@@ -2687,7 +2687,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # 📄 5. KONTEN PER HALAMAN BUKU (Halaman 1)
         # ==========================================
         if page_num == 1:
-            st.error("🚨 DEBUG: Halaman 1 sedang dirender!") # <--- INI UNTUK MENGECEK APAKAH INI MUNCUL 2 KALI
             periods_df = st.session_state.get("periods_df", pd.DataFrame())
             target_period_id = ""
             if not periods_df.empty:
@@ -2802,9 +2801,41 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
         elif page_num == 3:
             # Halaman 3: Ranking PSM Bulanan (Akumulasi 1 Bulan berdasarkan SALES_PERSONIL)
-            rows_psm_13 = "".join([format_row(i + 1, n, s) for i, (n, s) in enumerate(dummy_9_personil[:3])])
-            rows_psm_49 = "".join([format_row(i + 4, n, s) for i, (n, s) in enumerate(dummy_9_personil[3:])])
-            html_open_tugas = f"""
+            sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
+            ranking_list = []
+
+            if not sales_person_df.empty and "person_name" in sales_person_df.columns:
+                # Filter berdasarkan bulan/periode jika kolom tanggal atau periode tersedia, 
+                # atau ambil keseluruhan data sales_person_df untuk akumulasi bulanan
+                sp_month_df = sales_person_df.copy()
+                
+                if "actual_qty" in sp_month_df.columns:
+                    sp_month_df["actual_qty"] = pd.to_numeric(sp_month_df["actual_qty"], errors="coerce").fillna(0)
+                    # Akumulasi total actual_qty per person_name
+                    grouped_psm = sp_month_df.groupby("person_name")["actual_qty"].sum().reset_index()
+                    # Urutkan dari yang terbesar ke terkecil
+                    grouped_psm = grouped_psm.sort_values(by="actual_qty", ascending=False)
+                    
+                    for _, r in grouped_psm.iterrows():
+                        p_name = str(r.get("person_name", "")).strip()
+                        p_score = int(r.get("actual_qty", 0))
+                        ranking_list.append((p_name, "{} Pcs".format(p_score)))
+
+            # Fallback ke dummy data jika data kosong
+            if not ranking_list:
+                ranking_list = dummy_9_personil
+
+            # Bagi menjadi Top 1-3 dan sisanya (4-9 atau seterusnya)
+            top_3_data = ranking_list[:3]
+            rest_data = ranking_list[3:]
+
+            rows_psm_13 = "".join([format_row(i + 1, n, s) for i, (n, s) in enumerate(top_3_data)])
+            rows_psm_49 = "".join([format_row(i + 4, n, s) for i, (n, s) in enumerate(rest_data)])
+
+            if not rows_psm_49:
+                rows_psm_49 = "<div style='color:#78350f; font-size:12px; text-align:center; margin-top:20px;'><i>Belum ada data peringkat lanjutan.</i></div>"
+
+            html_open_tugas = """
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page rpg-book-page-left">
                     <h3 class="open-page-title">⚔️ PSM TOP (1-3)</h3>
@@ -2821,7 +2852,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     <div class="open-page-footer">Halaman Kanan • PSM 4-9</div>
                 </div>
             </div>
-            """
+            """.format(current_month_name=current_month_name, rows_psm_13=rows_psm_13, rows_psm_49=rows_psm_49)
 
         elif page_num == 4:
             rows_pps_13 = "".join([format_row(i + 1, n, s) for i, (n, s) in enumerate(dummy_9_personil[:3])])
