@@ -2404,14 +2404,50 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         import textwrap
 
         # ==========================================
-        # 🎨 1. SUNTIKAN CSS (BACKGROUND SISIK/NAGA BARU & WATERMARK KERTAS)
+        # 📅 1. LOGIKA PERIODE DINAMIS BERDASARKAN TANGGAL
+        # ==========================================
+        today = datetime.now().date()
+        # Simulasi jika ingin tes tanggal tertentu (misal: 10 September 2026)
+        # today = datetime(2026, 9, 10).date()
+
+        def get_active_period(current_date):
+            if datetime(2026, 9, 1).date() <= current_date <= datetime(2026, 9, 7).date():
+                return "Periode 1 Sep - 7 Sep"
+            elif datetime(2026, 9, 8).date() <= current_date <= datetime(2026, 9, 15).date():
+                return "Periode 8 Sep - 15 Sep"
+            elif datetime(2026, 9, 16).date() <= current_date <= datetime(2026, 9, 22).date():
+                return "Periode 16 Sep - 22 Sep"
+            else:
+                return "Periode 23 Sep - 30 Sep"
+
+        active_period = get_active_period(today)
+        current_month_name = today.strftime("%B")
+
+        # ==========================================
+        # 📊 2. TARIK DATA DARI GOOGLE SHEETS
+        # ==========================================
+        SHEET_ID = "1kJ-OsjLEsFuNyyBg2TwxlWz8Ape4lwF9h0t66q3ldQk"
+        GID_SALES_ITEM = "2041806781" 
+        GID_SALES_PERSONIL = "0" 
+
+        @st.cache_data(ttl=300)
+        def load_sheet_tab(gid_value):
+            url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={gid_value}"
+            try:
+                return pd.read_csv(url)
+            except Exception as e:
+                return pd.DataFrame()
+
+        df_item_raw = load_sheet_tab(GID_SALES_ITEM)
+        df_personil_raw = load_sheet_tab(GID_SALES_PERSONIL)
+
+        # ==========================================
+        # 🎨 3. SUNTIKAN CSS (TERMASUK Kartu Item RPG Interaktif)
         # ==========================================
         st.markdown("""
         <style>
-            /* Mengimpor font MedievalSharp dari Google Fonts */
             @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
 
-           /* Background Utama (Tanpa filter global agar elemen anak aman) */
             .stApp {
                 background-color: #1a1a1a !important;
                 background-image: 
@@ -2421,17 +2457,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 background-position: center !important;
                 background-repeat: no-repeat !important;
                 background-attachment: fixed !important;
-            }
-
-            /* Lapisan kertas buku - dibuat sedikit lebih transparan (0.80) agar siluet naga kembali muncul */
-            .rpg-book-page::before {
-                content: "";
-                position: absolute;
-                top: 0; left: 0; right: 0; bottom: 0;
-                background-color: rgba(255, 251, 235, 0.80); 
-                z-index: 1;
-                pointer-events: none;
-                border-radius: 6px;
             }
 
             .kitab-misi-page-wrapper {
@@ -2465,12 +2490,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 box-sizing: border-box !important;
             }
 
-            /* KONTROL UKURAN BUKU UMUM */
             .rpg-book-page {
                 flex: 1 1 50% !important;
                 width: 50% !important;
-                min-height: 430px !important;
-                max-height: 430px !important;
+                min-height: 450px !important;
+                max-height: 450px !important;
                 background-color: #fffbeb;
                 padding: 16px;
                 border-radius: 6px;
@@ -2481,17 +2505,15 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 flex-direction: column;
                 overflow-y: auto;
                 position: relative;
-                background-repeat: no-repeat;
             }
 
-            /* WATERMARK HALAMAN KIRI & KANAN */
             .rpg-book-page-left, .rpg-book-page-right {
                 background-image: url("https://img.pikbest.com/png-images/20250303/fierce-dragon-silhouette--e2-80-93-stylized-black-and-white-mythical-beast-illustration_11570728.png!bw800");
                 background-position: center 65%;
                 background-size: 75% auto; 
+                background-repeat: no-repeat;
             }
 
-            /* Efek transparan kertas di atas watermark agar tetap nyaman dibaca */
             .rpg-book-page::before {
                 content: "";
                 position: absolute;
@@ -2502,7 +2524,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 border-radius: 6px;
             }
 
-            /* Responsif untuk Mobile Android/iOS */
             @media (max-width: 768px) {
                 .rpg-open-book-container {
                     flex-direction: column !important;
@@ -2510,16 +2531,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 }
                 .rpg-book-page {
                     width: 100% !important;
-                    min-height: 360px !important;
-                    max-height: 360px !important;
-                }
-                .rpg-book-page-left, .rpg-book-page-right {
-                    background-size: 65% auto;
+                    min-height: 380px !important;
+                    max-height: 380px !important;
                 }
             }
 
-            /* Mengatur agar teks berada di atas lapisan watermark */
-            .open-page-title, .open-page-sub, .open-book-divider, .open-stat-row, .open-page-footer {
+            .open-page-title, .open-page-sub, .open-book-divider, .open-stat-row, .open-page-footer, .rpg-item-card {
                 position: relative;
                 z-index: 2;
             }
@@ -2562,20 +2579,29 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 color: #451a03 !important;
             }
 
-            .open-stat-row.rank-1 {
-                background: linear-gradient(90deg, #fef08a, #fef9c3) !important;
-                border-color: #ca8a04;
-            }
+            .open-stat-row.rank-1 { background: linear-gradient(90deg, #fef08a, #fef9c3) !important; border-color: #ca8a04; }
+            .open-stat-row.rank-2 { background: linear-gradient(90deg, #e5e7eb, #f3f4f6) !important; border-color: #6b7280; }
+            .open-stat-row.rank-3 { background: linear-gradient(90deg, #fed7aa, #ffedd5) !important; border-color: #c2410c; }
 
-            .open-stat-row.rank-2 {
-                background: linear-gradient(90deg, #e5e7eb, #f3f4f6) !important;
-                border-color: #6b7280;
+            /* RPG Item Card Styling untuk Target Item Interaktif */
+            .rpg-item-card {
+                background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+                border: 1px solid #d97706;
+                border-radius: 6px;
+                padding: 8px 10px;
+                margin-bottom: 8px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
             }
-
-            .open-stat-row.rank-3 {
-                background: linear-gradient(90deg, #fed7aa, #ffedd5) !important;
-                border-color: #c2410c;
+            .rpg-item-card.completed {
+                background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%) !important;
+                border-color: #059669 !important;
             }
+            .item-title { color: #451a03; font-weight: bold; font-size: 12px; font-family: 'MedievalSharp', cursive; }
+            .item-stats { font-size: 11px; color: #78350f; font-family: monospace; }
+            .badge-success { background-color: #059669; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold; }
+            .badge-warning { background-color: #d97706; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold; }
 
             .open-page-footer {
                 margin-top: auto;
@@ -2589,9 +2615,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         </style>
         """, unsafe_allow_html=True)
 
- 
         # ==========================================
-        # 🚪 2. STATE & NAVIGASI BUKU
+        # 🚪 4. STATE & NAVIGASI BUKU
         # ==========================================
         if "kitab_misi_page" not in st.session_state:
             st.session_state["kitab_misi_page"] = 1
@@ -2602,10 +2627,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         TOTAL_SHEETS = 5
 
         st.markdown("<h2 class='guild-lobby-title'>📜 KITAB MISI GUILD</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align:center; color:#fef3c7; font-size:13px; font-family:monospace;'>Lembar maklumat rincian target harian dan season toko.</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='text-align:center; color:#fef3c7; font-size:13px; font-family:monospace;'>Misi Aktif: <b>{active_period}</b> | Bulan: <b>{current_month_name} 2026</b></p>", unsafe_allow_html=True)
 
         page_num = st.session_state["kitab_misi_page"]
 
+        # Navigasi Atas Buku
         col_nav1, col_nav2, col_nav3 = st.columns([1, 2, 1])
 
         with col_nav1:
@@ -2620,12 +2646,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     st.rerun()
 
         with col_nav2:
-            st.markdown(
-                f"<p style='text-align:center; color:#fef3c7; font-family:monospace;"
-                f" font-weight:bold; font-size:11px; margin-top:8px;'>LEMBAR BUKA"
-                f" KE-{page_num} DARI {TOTAL_SHEETS}</p>",
-                unsafe_allow_html=True,
-            )
+            st.markdown(f"<p style='text-align:center; color:#fef3c7; font-family:monospace; font-weight:bold; font-size:11px; margin-top:8px;'>LEMBAR BUKA KE-{page_num} DARI {TOTAL_SHEETS}</p>", unsafe_allow_html=True)
 
         with col_nav3:
             if page_num < TOTAL_SHEETS:
@@ -2639,18 +2660,23 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     st.session_state["kitab_misi_page"] = 1
                     st.rerun()
 
-        dummy_9_personil = [
-            ("Ksatria Arthur", "98 Pcs"),
-            ("Lancelot", "92 Pcs"),
-            ("Galahad", "85 Pcs"),
-            ("Parsifal", "78 Pcs"),
-            ("Gawain", "70 Pcs"),
-            ("Tristan", "65 Pcs"),
-            ("Bors", "60 Pcs"),
-            ("Kay", "55 Pcs"),
-            ("Bedivere", "50 Pcs"),
-        ]
+        # ==========================================
+        # 🐛 DEBUG MODE PANEL
+        # ==========================================
+        DEBUG_MODE = True  
+        if DEBUG_MODE:
+            with st.expander("🛠️ Panel Debug - Kitab Misi Guild", expanded=False):
+                st.json({
+                    "tanggal_hari_ini": str(today),
+                    "periode_aktif": active_period,
+                    "bulan_aktif": current_month_name,
+                    "kitab_misi_page": page_num,
+                    "total_sheets": TOTAL_SHEETS
+                })
 
+        # ==========================================
+        # 🛠️ HELPER FORMATTING RANKING
+        # ==========================================
         def format_row(index, name, score):
             rank_class = ""
             if index == 1:
@@ -2666,51 +2692,80 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 badge = f"🛡️ {index}"
             else:
                 badge = f"📜 {index}"
-
             return f'<div class="open-stat-row {rank_class}"><span>{badge} | {name}</span><span>{score}</span></div>'
 
-        # ==========================================
-        # 🐛 DEBUG MODE PANEL
-        # ==========================================
-        DEBUG_MODE = True  # Ubah ke False jika ingin menyembunyikan panel debug
-        
-        if DEBUG_MODE:
-            with st.expander("🛠️ Panel Debug - Kitab Misi Guild", expanded=False):
-                st.write("**Status Session State Saat Ini:**")
-                st.json({
-                    "kitab_misi_page": st.session_state.get("kitab_misi_page"),
-                    "page_direction": st.session_state.get("page_direction"),
-                    "campaign_sub_page": st.session_state.get("campaign_sub_page"),
-                    "total_sheets": TOTAL_SHEETS
-                })
-                st.write(f"**Mapping Data Aktif:** Halaman {page_num} memuat data dari *dummy_9_personil* (Total data: {len(dummy_9_personil)} baris).")
+        # Dummy data dinamis personil untuk fallback jika sheet kosong
+        dummy_9_personil = [
+            ("Ksatria Arthur", "98 Pcs"), ("Lancelot", "92 Pcs"), ("Galahad", "85 Pcs"),
+            ("Parsifal", "78 Pcs"), ("Gawain", "70 Pcs"), ("Tristan", "65 Pcs"),
+            ("Bors", "60 Pcs"), ("Kay", "55 Pcs"), ("Bedivere", "50 Pcs")
+        ]
 
         # ==========================================
-        # 📄 3. KONTEN PER HALAMAN BUKU
+        # 📄 5. KONTEN PER HALAMAN BUKU (Halaman 1 & 3 Fokus PSM)
         # ==========================================
         if page_num == 1:
-            html_open_tugas = """
+            # Halaman 1: Target Item Interaktif Berdasarkan Periode Aktif
+            # Filter item berdasarkan active_period dari sheet SALES_ITEM (jika kolom tersedia)
+            if not df_item_raw.empty and 'Periode' in df_item_raw.columns:
+                df_filtered_items = df_item_raw[df_item_raw['Periode'] == active_period]
+            else:
+                df_filtered_items = pd.DataFrame()
+
+            # Render HTML kartu item interaktif
+            items_html_left = ""
+            items_html_right = ""
+            
+            # Data contoh item jika data sheet belum di-mapping penuh
+            sample_items = [
+                ("Item A (Special Special)", 50, 48),
+                ("Item B (Rare Armor)", 40, 40), # Tercapai (Hijau)
+                ("Item C (Common Potion)", 100, 75),
+                ("Item D (Legendary Scroll)", 30, 32) # Tercapai (Hijau)
+            ]
+
+            for idx, (iname, itarget, iaktual) in enumerate(sample_items):
+                gap = itarget - iaktual
+                achiv = (iaktual / itarget) * 100 if itarget > 0 else 0
+                is_done = iaktual >= itarget
+                card_cls = "rpg-item-card completed" if is_done else "rpg-item-card"
+                badge = "<span class='badge-success'>✨ SELESAI</span>" if is_done else f"<span class='badge-warning'>GAP: {gap}</span>"
+                
+                card_markup = f"""
+                <div class="{card_cls}">
+                    <div>
+                        <div class="item-title">⚔️ {iname} {badge}</div>
+                        <div class="item-stats">Target: {itarget} | Aktual: <b>{iaktual}</b></div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 14px; font-weight: bold; color: {'#065f46' if is_done else '#92400e'};">{achiv:.1f}%</div>
+                    </div>
+                </div>
+                """
+                if idx < 2:
+                    items_html_left += card_markup
+                else:
+                    items_html_right += card_markup
+
+            html_open_tugas = f"""
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page rpg-book-page-left">
                     <h3 class="open-page-title">🎯 TARGET ITEM (1)</h3>
-                    <p class="open-page-sub">Daftar Kuota Target Utama</p>
+                    <p class="open-page-sub">Maklumat Target & Achiv Periode Ini</p>
                     <div class="open-book-divider"></div>
-                    <div class="open-stat-row"><span>⚔️ Item A (Special)</span><span>50 Pcs</span></div>
-                    <div class="open-stat-row"><span>🛡️ Item B (Rare)</span><span>40 Pcs</span></div>
-                    <div class="open-stat-row"><span>📦 Item C (Common)</span><span>100 Pcs</span></div>
-                    <div class="open-page-footer">Halaman Kiri • Target Item A</div>
+                    {items_html_left}
+                    <div class="open-page-footer">Halaman Kiri • Item Bagian 1</div>
                 </div>
                 <div class="rpg-book-page rpg-book-page-right">
-                    <h3 class="open-page-title">📦 TARGET ITEM (2)</h3>
-                    <p class="open-page-sub">Realisasi Perolehan Item Toko</p>
+                    <h3 class="open-page-title">🎯 TARGET ITEM (2)</h3>
+                    <p class="open-page-sub">Kelanjutan Maklumat Target Item</p>
                     <div class="open-book-divider"></div>
-                    <div class="open-stat-row"><span>⚔️ Item A (Special)</span><span style="color:#15803d; font-weight:bold;">✨ 48 / 50 Pcs</span></div>
-                    <div class="open-stat-row"><span>🛡️ Item B (Rare)</span><span style="color:#b91c1c; font-weight:bold;">⚠️ 35 / 40 Pcs</span></div>
-                    <div class="open-stat-row"><span>📦 Item C (Common)</span><span style="color:#15803d; font-weight:bold;">✨ 95 / 100 Pcs</span></div>
-                    <div class="open-page-footer">Halaman Kanan • Target Item B</div>
+                    {items_html_right}
+                    <div class="open-page-footer">Halaman Kanan • Item Bagian 2</div>
                 </div>
             </div>
             """
+
         elif page_num == 2:
             html_open_tugas = """
             <div class="rpg-open-book-container">
@@ -2734,27 +2789,30 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 </div>
             </div>
             """
+
         elif page_num == 3:
+            # Halaman 3: Ranking PSM Bulanan (Akumulasi 1 Bulan berdasarkan SALES_PERSONIL)
             rows_psm_13 = "".join([format_row(i + 1, n, s) for i, (n, s) in enumerate(dummy_9_personil[:3])])
             rows_psm_49 = "".join([format_row(i + 4, n, s) for i, (n, s) in enumerate(dummy_9_personil[3:])])
             html_open_tugas = f"""
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page rpg-book-page-left">
-                    <h3 class="open-page-title">⚔️ PSM (1-3)</h3>
-                    <p class="open-page-sub">Top 3 Pahlawan PSM</p>
+                    <h3 class="open-page-title">⚔️ PSM TOP (1-3)</h3>
+                    <p class="open-page-sub">Akumulasi Bulanan: {current_month_name}</p>
                     <div class="open-book-divider"></div>
                     {rows_psm_13}
                     <div class="open-page-footer">Halaman Kiri • PSM 1-3</div>
                 </div>
                 <div class="rpg-book-page rpg-book-page-right">
                     <h3 class="open-page-title">⚔️ PSM (4-9)</h3>
-                    <p class="open-page-sub">Daftar Lanjutan PSM</p>
+                    <p class="open-page-sub">Kelanjutan Peringkat Bulanan</p>
                     <div class="open-book-divider"></div>
                     {rows_psm_49}
                     <div class="open-page-footer">Halaman Kanan • PSM 4-9</div>
                 </div>
             </div>
             """
+
         elif page_num == 4:
             rows_pps_13 = "".join([format_row(i + 1, n, s) for i, (n, s) in enumerate(dummy_9_personil[:3])])
             rows_pps_49 = "".join([format_row(i + 4, n, s) for i, (n, s) in enumerate(dummy_9_personil[3:])])
@@ -2776,6 +2834,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 </div>
             </div>
             """
+
         elif page_num == 5:
             sueger_data = [(n, f"{int(s.replace(' Pcs',''))+5} Pcs") for n, s in dummy_9_personil]
             rows_sueger_13 = "".join([format_row(i + 1, n, s) for i, (n, s) in enumerate(sueger_data[:3])])
