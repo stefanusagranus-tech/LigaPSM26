@@ -2684,7 +2684,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         ]
 
         # ==========================================
-        # 📄 5. KONTEN PER HALAMAN BUKU (Halaman 1)
+        # 📄 5. KONTEN PER HALAMAN BUKU (Halaman 1 - Fixed)
         # ==========================================
         if page_num == 1:
             periods_df = st.session_state.get("periods_df", pd.DataFrame())
@@ -2756,6 +2756,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             html_open_tugas = '<div class="rpg-open-book-container"><div class="rpg-book-page rpg-book-page-left"><h3 class="open-page-title">🎯 TARGET ITEM (1)</h3><p class="open-page-sub">Maklumat Target & Achiv ({})</p><div class="open-book-divider"></div>{}<div class="open-page-footer">Halaman Kiri • Item Bagian 1</div></div><div class="rpg-book-page rpg-book-page-right"><h3 class="open-page-title">🎯 TARGET ITEM (2)</h3><p class="open-page-sub">Kelanjutan Maklumat Target Item</p><div class="open-book-divider"></div>{}<div class="open-page-footer">Halaman Kanan • Item Bagian 2</div></div></div>'.format(active_period, items_html_left, items_html_right)
 
+            # Pastikan st.markdown ini HANYA DIPANGGIL SEKALI DI SINI
             st.markdown(html_open_tugas, unsafe_allow_html=True)
 
         elif page_num == 2:
