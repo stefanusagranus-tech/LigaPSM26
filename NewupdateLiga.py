@@ -2453,20 +2453,19 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         import textwrap
 
         # ==========================================
-        # 🎨 1. SUNTIKAN CSS (BACKGROUND NAGA & TEMA HITAM)
+        # 🎨 1. SUNTIKAN CSS (LATAR BELAKANG NAGA & UKURAN HALAMAN KONSISTEN)
         # ==========================================
         st.markdown("""
         <style>
             /* Mengimpor font MedievalSharp dari Google Fonts */
             @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
 
-            /* Mengubah background utama Streamlit menjadi Hitam Pekat dengan Tekstur/Watermark Naga */
+            /* Background Utama: Hitam pekat dengan tekstur pola sisik/siluet naga yang tegas */
             .stApp {
                 background-color: #030303 !important;
                 background-image: 
-                    radial-gradient(circle at 50% 30%, rgba(180, 83, 9, 0.08) 0%, transparent 60%),
-                    /* Pola siluet/tekstur naga samar menggunakan SVG data-URI */
-                    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 100 100' opacity='0.03'%3E%3Cpath fill='%23ffffff' d='M50 0 L60 30 L90 30 L65 50 L75 80 L50 65 L25 80 L35 50 L10 30 L40 30 Z'/%3E%3C/svg%3E") !important;
+                    radial-gradient(circle at 50% 30%, rgba(217, 119, 6, 0.2) 0%, transparent 75%),
+                    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cpath fill='%23f97316' fill-opacity='0.18' d='M40 0 L80 40 L40 80 L0 40 Z M40 15 L65 40 L40 65 L15 40 Z'/%3E%3C/svg%3E") !important;
                 background-repeat: repeat !important;
             }
 
@@ -2502,9 +2501,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 box-sizing: border-box !important;
             }
 
+            /* KONTROL UKURAN HALAMAN BUKU AGAR SELALU KONSISTEN / SAMA PERSIS */
             .rpg-book-page {
-                flex: 1 !important;
+                flex: 1 1 50% !important;
                 width: 50% !important;
+                min-height: 430px !important; /* Tinggi minimum tetap */
+                max-height: 430px !important; /* Tinggi maksimum dikunci agar tidak berubah-ubah */
                 background: #fffbeb;
                 padding: 16px;
                 border-radius: 6px;
@@ -2513,6 +2515,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 box-sizing: border-box !important;
                 display: flex;
                 flex-direction: column;
+                overflow-y: auto; /* Guliran halus jika konten baris data melebihi tinggi halaman */
             }
 
             /* Responsif untuk Mobile Android/iOS */
@@ -2523,6 +2526,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 }
                 .rpg-book-page {
                     width: 100% !important;
+                    min-height: 360px !important;
+                    max-height: 360px !important;
                 }
             }
 
