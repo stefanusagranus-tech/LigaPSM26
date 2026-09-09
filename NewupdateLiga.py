@@ -1951,7 +1951,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             # --- 🗓️ DETEKSI PERIODE AKTIF BERDASARKAN BULAN BERJALAN / TANGGAL HARI INI ---
             today_date = datetime.now().date()
             periode_aktif = "S01" # Fallback default
-             nama_periode_aktif = "September"
+            nama_periode_aktif = "September"
 
             if not periods_df.empty and all(col in periods_df.columns for col in ['period_id', 'start_date', 'end_date']):
                 for _, row in periods_df.iterrows():
