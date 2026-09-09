@@ -2822,7 +2822,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             """
 
         elif page_num == 3:
-            # Halaman 3: Ranking Qty berdasarkan Periode Aktif, Achiv Count berdasarkan Akumulasi Bulan Berjalan (Join sales_person_df dengan sales_item_df)
+            # Halaman 3: Ranking Qty (Periode Aktif) & Akumulasi Achiv Bulan Berjalan (Join akurat sales_person & sales_item)
             sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
             sales_item_df = st.session_state.get("sales_item_df", pd.DataFrame())
             periods_df = st.session_state.get("periods_df", pd.DataFrame())
@@ -2848,7 +2848,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     for _, r in grouped_qty.iterrows():
                         qty_dict[r["person_name"]] = int(r["actual_qty"])
 
-            # 2. Cari semua period_id yang masuk dalam bulan berjalan (September)
+            # 2. Ambil SEMUA period_id yang masuk dalam bulan berjalan (September)
             current_year = today.year
             current_month = today.month
             month_period_ids = set()
@@ -2862,7 +2862,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     except Exception:
                         pass
                 
-                # Fallback jika start_date tidak terbaca
                 if not month_period_ids:
                     for _, r in periods_df.iterrows():
                         pid = str(r.get("period_id", "")).strip()
@@ -2870,12 +2869,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         if "s0" in pid.lower() or "sep" in pname or "september" in pname:
                             month_period_ids.add(pid)
 
-            # 3. Hitung Jumlah Item Achiv Bulanan dengan menggabungkan sales_person_df dan sales_item_df
+            # 3. Hitung Akumulasi Item Achiv Bulanan dengan Mapping Kolom Item yang Presisi
             achiv_dict = {}
             if not sales_person_df.empty and "person_name" in sales_person_df.columns:
                 sp_month = sales_person_df.copy()
                 
-                # Filter berdasarkan periode bulan September
                 if "period_id" in sp_month.columns and month_period_ids:
                     sp_month["clean_pid"] = sp_month["period_id"].astype(str).str.strip()
                     sp_month = sp_month[sp_month["clean_pid"].isin(month_period_ids)]
@@ -2883,42 +2881,42 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 if not sp_month.empty and not sales_item_df.empty:
                     item_df = sales_item_df.copy()
                     
-                    # Pastikan kolom kunci untuk menggabungkan (merge) tersedia
-                    # Biasanya digabung berdasarkan 'period_id' dan 'item_id' (atau nama item)
-                    sp_cols = [c.lower() for c in sp_month.columns]
-                    item_cols = [c.lower() for c in item_df.columns]
+                    # Deteksi kolom penghubung item yang sesuai di kedua dataframe
+                    sp_item_col = None
+                    item_item_col = None
                     
-                    # Tentukan kolom acuan merge (misal: 'period_id' dan 'item_id')
-                    merge_keys = []
-                    for k in ["period_id", "item_id", "item_name", "nama_item"]:
-                        if k in sp_cols and k in item_cols:
-                            merge_keys.append(k)
-                    
-                    if not merge_keys and "period_id" in sp_cols and "period_id" in item_cols:
-                        merge_keys = ["period_id"]
+                    for col_sp in ["item_id", "item_code", "kode_item", "item_name", "nama_item", "sku"]:
+                        if col_sp in sp_month.columns:
+                            for col_it in [col_sp, "item_id", "item_code", "kode_item", "item_name", "nama_item", "sku"]:
+                                if col_it in item_df.columns:
+                                    sp_item_col = col_sp
+                                    item_item_col = col_it
+                                    break
+                            if sp_item_col:
+                                break
 
-                    if merge_keys:
-                        # Bersihkan spasi pada key sebelum merge
-                        for k in merge_keys:
-                            sp_month[k] = sp_month[k].astype(str).str.strip()
-                            item_df[k] = item_df[k].astype(str).str.strip()
+                    # Lakukan merge berdasarkan period_id dan kolom item yang terdeteksi
+                    if "period_id" in sp_month.columns and "period_id" in item_df.columns and sp_item_col and item_item_col:
+                        sp_month["join_pid"] = sp_month["period_id"].astype(str).str.strip()
+                        sp_month["join_item"] = sp_month[sp_item_col].astype(str).str.strip()
                         
-                        # Gabungkan data penjualan kasir dengan data target item
-                        merged_df = pd.merge(sp_month, item_df, on=merge_keys, how="left", suffixes=('', '_item'))
+                        item_df["join_pid"] = item_df["period_id"].astype(str).str.strip()
+                        item_df["join_item"] = item_df[item_item_col].astype(str).str.strip()
+                        
+                        merged_df = pd.merge(sp_month, item_df, on=["join_pid", "join_item"], how="left", suffixes=('', '_item'))
                     else:
                         merged_df = sp_month.copy()
 
-                    # Ambil kolom target_kasir dari sales_item_df yang sudah digabung
-                    target_col_name = "target_kasir"
-                    if "target_kasir" not in merged_df.columns:
-                        for col in merged_df.columns:
-                            if "target" in col.lower() and "kasir" in col.lower():
-                                target_col_name = col
-                                break
+                    # Cari kolom target kasir pada hasil merge
+                    target_col = None
+                    for col in merged_df.columns:
+                        if "target_kasir" in col.lower() or ("target" in col.lower() and "kasir" in col.lower()):
+                            target_col = col
+                            break
 
                     merged_df["actual_qty"] = pd.to_numeric(merged_df.get("actual_qty", 0), errors="coerce").fillna(0)
-                    if target_col_name in merged_df.columns:
-                        merged_df["target_val"] = pd.to_numeric(merged_df[target_col_name], errors="coerce").fillna(0)
+                    if target_col:
+                        merged_df["target_val"] = pd.to_numeric(merged_df[target_col], errors="coerce").fillna(0)
                     else:
                         merged_df["target_val"] = 0
 
@@ -2978,7 +2976,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 </div>
             </div>
             """.format(active_period=active_period, rows_psm_13=rows_psm_13, rows_psm_49=rows_psm_49)
-        
 
         elif page_num == 4:
             rows_pps_13 = "".join([format_row(i + 1, n, s) for i, (n, s) in enumerate(dummy_9_personil[:3])])
