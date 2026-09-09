@@ -954,21 +954,18 @@ if st.sidebar.button(logout_text, use_container_width=True, key="logout_sidebar"
 # ==========================================
 # 8. HEADER UTAMA (Tombol Menyatu di Banner)
 # ==========================================
+
 # =============================================================================
 # 8. HEADER UTAMA (DIKUNCI AGAR TIDAK BOCOR KE PREPARATION CAMP ATAU STATUS CARD)
 # =============================================================================
-# 🚀 KUNCI FIX UTAMA: Periksa apakah user sedang membuka area game perkemahan atau tidak
 is_di_dalam_camp = ("portal_prep_ready" in st.session_state and st.session_state.portal_prep_ready) or \
-                   ("current_camp_menu" in st.session_state and st.session_state["current_camp_menu"] == "status")
+                    ("current_camp_menu" in st.session_state and st.session_state["current_camp_menu"] == "status")
 
 if is_di_dalam_camp:
-    # 🧙‍♂️ JIKA USER MEMASUKI PERKEMAHAN ATAU MELIHAT KARTU, BLOKIR KOTAK BIRU INI SECARA GAIB!
     pass
 else:
-    # 🔔 KOTAK BIRU INI HANYA AKAN DIGAMBAR JIKA USER BERADA DI DASHBOARD UTAMA BIASA:
     st.markdown(
         f"""
-        <!-- Ditambahkan padding-left: 60px agar memberi ruang kosong untuk tombol pembuka di dalam banner -->
         <div style='background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%); padding: 16px 24px 16px 60px; border-radius: 12px; border: 1px solid #38bdf8; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; position: relative;'>
             <div>
                 <h2 style='margin:0; color:#ffffff; font-size: 24px;'>📊 PSM TOKO SALES MONITORING</h2>
@@ -979,56 +976,9 @@ else:
                 <p style='margin:0; color:#38bdf8; font-size: 14px; font-weight:bold;'>⏰ {current_time_str}</p>
             </div>
         </div>
-    """,
+        """,
         unsafe_allow_html=True,
     )
-
-# Injeksi CSS presisi untuk memasukkan tombol ke dalam banner Anda
-st.markdown(
-    """
-    <style>
-        /* 1. Membuat area header transparan total */
-        [data-testid="stHeader"] {
-            background-color: transparent !important;
-            box-shadow: none !important;
-            border: none !important;
-            height: 0px !important;
-        }
-        
-        /* 2. Memaksa posisi tombol masuk secara presisi ke dalam pojok kiri banner kustom Anda */
-        [data-testid="stHeader"] button {
-            position: absolute !important;
-            top: 105px !important;    /* Menyelaraskan tinggi tombol agar pas di tengah banner */
-            left: 28px !important;   /* Memosisikan tombol di dalam sisi kiri banner */
-            background-color: #38bdf8 !important; /* Diubah warna Cyan agar serasi dengan border banner Anda */
-            color: #0f172a !important; /* Warna ikon panah gelap agar kontras */
-            border-radius: 8px !important;
-            width: 32px !important;
-            height: 32px !important;
-            box-shadow: 0 0 10px rgba(56, 189, 248, 0.4) !important;
-            z-index: 999999 !important;
-            transition: all 0.2s ease !important;
-        }
-        
-        /* Efek hover tombol saat didekati kursor */
-        [data-testid="stHeader"] button:hover {
-            background-color: #ffffff !important;
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.6) !important;
-        }
-
-        /* 3. Menyembunyikan menu bawaan Streamlit bagian kanan */
-        [data-testid="stHeader"] div:has(button) + div {
-            display: none !important;
-        }
-        
-        /* 4. Menyesuaikan jarak atas halaman */
-        [data-testid="stAppViewContainer"] > section:nth-child(2) {
-            padding-top: 2rem !important;
-        }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
 
 # ==========================================
 # 9. MODUL TAB / SUB MENU
