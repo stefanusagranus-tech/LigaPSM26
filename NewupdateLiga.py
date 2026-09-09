@@ -2454,7 +2454,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         import textwrap
 
         # ==========================================
-        # 🎨 1. SUNTIKAN CSS (WATERMARK SILUET NAGA KLASIK)
+        # 🎨 1. SUNTIKAN CSS (WATERMARK PNG NAGA BARU KIRI & KANAN)
         # ==========================================
         st.markdown("""
         <style>
@@ -2501,20 +2501,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 box-sizing: border-box !important;
             }
 
-            /* KONTROL UKURAN HALAMAN BUKU & WATERMARK SILUET NAGA SEPERTI GAMBAR */
+            /* KONTROL UKURAN BUKU UMUM */
             .rpg-book-page {
                 flex: 1 1 50% !important;
                 width: 50% !important;
                 min-height: 430px !important;
                 max-height: 430px !important;
                 background-color: #fffbeb;
-                
-                /* WATERMARK SILUET NAGA KLASIK */
-                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 500' fill='%2378350f' opacity='0.07'%3E%3Cpath d='M250 80C220 80 190 95 170 120C150 100 120 90 90 100C70 106 55 120 45 140C30 135 15 145 10 160C5 175 10 190 20 200C15 210 15 225 25 235C30 220 45 210 60 215C50 230 55 250 70 260C60 280 65 305 85 320C75 340 85 365 105 375C95 395 110 420 130 430C120 450 140 475 165 480C190 485 215 470 225 450C240 460 260 460 275 450C290 470 315 485 340 480C365 475 385 450 375 430C395 420 410 395 400 375C420 365 430 340 420 320C440 305 445 280 435 260C450 250 455 230 445 215C460 210 475 220 480 235C490 225 490 210 485 200C495 190 500 175 495 160C490 145 475 135 460 140C450 120 435 106 415 100C385 90 355 100 335 120C315 95 285 80 250 80Z'/%3E%3C/svg%3E");
-                background-repeat: no-repeat;
-                background-position: center;
-                background-size: 260px 260px;
-                
                 padding: 16px;
                 border-radius: 6px;
                 border: 1px solid #d97706;
@@ -2524,6 +2517,33 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 flex-direction: column;
                 overflow-y: auto;
                 position: relative;
+                background-repeat: no-repeat;
+            }
+
+            /* WATERMARK HALAMAN KIRI (Menggunakan link PNG Naga Baru) */
+            .rpg-book-page-left {
+                background-image: url("https://img.pikbest.com/png-images/20250303/fierce-dragon-silhouette--e2-80-93-stylized-black-and-white-mythical-beast-illustration_11570728.png!bw800");
+                background-position: center;
+                background-size: 260px 260px;
+            }
+
+            /* WATERMARK HALAMAN KANAN (Menggunakan link PNG Naga Baru) */
+            .rpg-book-page-right {
+                background-image: url("https://img.pikbest.com/png-images/20250303/fierce-dragon-silhouette--e2-80-93-stylized-black-and-white-mythical-beast-illustration_11570728.png!bw800");
+                background-position: center;
+                background-size: 260px 260px;
+            }
+
+            /* Efek transparan khusus untuk gambar latar belakang PNG agar mirip watermark */
+            .rpg-book-page::before {
+                content: "";
+                position: absolute;
+                top: 0; left: 0; right: 0; bottom: 0;
+                /* Menjadikan warna kertas menutupi gambar agar jadi samar/watermark */
+                background-color: rgba(255, 251, 235, 0.93); 
+                z-index: 1;
+                pointer-events: none;
+                border-radius: 6px;
             }
 
             /* Responsif untuk Mobile Android/iOS */
@@ -2540,6 +2560,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 }
             }
 
+            /* Mengatur agar teks berada di atas lapisan watermark */
+            .open-page-title, .open-page-sub, .open-book-divider, .open-stat-row, .open-page-footer {
+                position: relative;
+                z-index: 2;
+            }
+
             .open-page-title {
                 font-family: 'MedievalSharp', cursive, serif !important;
                 font-weight: bold;
@@ -2547,8 +2573,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 font-size: 20px;
                 margin-bottom: 2px;
                 text-align: center !important;
-                position: relative;
-                z-index: 2;
             }
 
             .open-page-sub {
@@ -2558,16 +2582,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 font-weight: 600;
                 font-family: monospace;
                 text-align: center !important;
-                position: relative;
-                z-index: 2;
             }
 
             .open-book-divider {
                 height: 2px;
                 background: #d97706;
                 margin-bottom: 12px;
-                position: relative;
-                z-index: 2;
             }
 
             .open-stat-row {
@@ -2582,8 +2602,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 font-size: 12px;
                 font-weight: bold;
                 color: #451a03 !important;
-                position: relative;
-                z-index: 2;
             }
 
             .open-stat-row.rank-1 {
@@ -2609,8 +2627,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 font-family: monospace;
                 padding-top: 10px;
                 font-weight: bold;
-                position: relative;
-                z-index: 2;
             }
         </style>
         """, unsafe_allow_html=True)
@@ -2700,7 +2716,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         if page_num == 1:
             html_open_tugas = """
             <div class="rpg-open-book-container">
-                <div class="rpg-book-page">
+                <div class="rpg-book-page rpg-book-page-left">
                     <h3 class="open-page-title">🎯 TARGET ITEM (1)</h3>
                     <p class="open-page-sub">Daftar Kuota Target Utama</p>
                     <div class="open-book-divider"></div>
@@ -2709,7 +2725,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     <div class="open-stat-row"><span>📦 Item C (Common)</span><span>100 Pcs</span></div>
                     <div class="open-page-footer">Halaman Kiri • Target Item A</div>
                 </div>
-                <div class="rpg-book-page">
+                <div class="rpg-book-page rpg-book-page-right">
                     <h3 class="open-page-title">📦 TARGET ITEM (2)</h3>
                     <p class="open-page-sub">Realisasi Perolehan Item Toko</p>
                     <div class="open-book-divider"></div>
@@ -2723,7 +2739,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         elif page_num == 2:
             html_open_tugas = """
             <div class="rpg-open-book-container">
-                <div class="rpg-book-page">
+                <div class="rpg-book-page rpg-book-page-left">
                     <h3 class="open-page-title">🛡️ TARGET PPS</h3>
                     <p class="open-page-sub">Rincian Target Harian PPS</p>
                     <div class="open-book-divider"></div>
@@ -2732,7 +2748,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     <div class="open-stat-row"><span>⚡ Target PPS Gamma</span><span>10 Pcs</span></div>
                     <div class="open-page-footer">Halaman Kiri • Target PPS</div>
                 </div>
-                <div class="rpg-book-page">
+                <div class="rpg-book-page rpg-book-page-right">
                     <h3 class="open-page-title">📍 POSISI PAHLAWAN</h3>
                     <p class="open-page-sub">Status Peringkat Guild Anda</p>
                     <div class="open-book-divider"></div>
@@ -2748,14 +2764,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             rows_psm_49 = "".join([format_row(i + 4, n, s) for i, (n, s) in enumerate(dummy_9_personil[3:])])
             html_open_tugas = f"""
             <div class="rpg-open-book-container">
-                <div class="rpg-book-page">
+                <div class="rpg-book-page rpg-book-page-left">
                     <h3 class="open-page-title">⚔️ PSM (1-3)</h3>
                     <p class="open-page-sub">Top 3 Pahlawan PSM</p>
                     <div class="open-book-divider"></div>
                     {rows_psm_13}
                     <div class="open-page-footer">Halaman Kiri • PSM 1-3</div>
                 </div>
-                <div class="rpg-book-page">
+                <div class="rpg-book-page rpg-book-page-right">
                     <h3 class="open-page-title">⚔️ PSM (4-9)</h3>
                     <p class="open-page-sub">Daftar Lanjutan PSM</p>
                     <div class="open-book-divider"></div>
@@ -2769,14 +2785,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             rows_pps_49 = "".join([format_row(i + 4, n, s) for i, (n, s) in enumerate(dummy_9_personil[3:])])
             html_open_tugas = f"""
             <div class="rpg-open-book-container">
-                <div class="rpg-book-page">
+                <div class="rpg-book-page rpg-book-page-left">
                     <h3 class="open-page-title">🛡️ PPS (1-3)</h3>
                     <p class="open-page-sub">Top 3 Pahlawan PPS</p>
                     <div class="open-book-divider"></div>
                     {rows_pps_13}
                     <div class="open-page-footer">Halaman Kiri • PPS 1-3</div>
                 </div>
-                <div class="rpg-book-page">
+                <div class="rpg-book-page rpg-book-page-right">
                     <h3 class="open-page-title">🛡️ PPS (4-9)</h3>
                     <p class="open-page-sub">Daftar Lanjutan PPS</p>
                     <div class="open-book-divider"></div>
@@ -2791,14 +2807,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             rows_sueger_49 = "".join([format_row(i + 4, n, s) for i, (n, s) in enumerate(sueger_data[3:])])
             html_open_tugas = f"""
             <div class="rpg-open-book-container">
-                <div class="rpg-book-page">
+                <div class="rpg-book-page rpg-book-page-left">
                     <h3 class="open-page-title">⚡ SUEGER (1-3)</h3>
                     <p class="open-page-sub">Top 3 Poin Sueger</p>
                     <div class="open-book-divider"></div>
                     {rows_sueger_13}
                     <div class="open-page-footer">Halaman Kiri • Sueger 1-3</div>
                 </div>
-                <div class="rpg-book-page">
+                <div class="rpg-book-page rpg-book-page-right">
                     <h3 class="open-page-title">⚡ SUEGER (4-9)</h3>
                     <p class="open-page-sub">Daftar Lanjutan Sueger</p>
                     <div class="open-book-divider"></div>
