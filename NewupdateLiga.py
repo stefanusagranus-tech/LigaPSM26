@@ -2689,22 +2689,26 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         if page_num == 1:
             periods_df = st.session_state.get("periods_df", pd.DataFrame())
             target_period_id = ""
+            
+            # 1. Cari period_id berdasarkan rentang tanggal aktif (Paling Akurat)
             if not periods_df.empty:
                 for _, r in periods_df.iterrows():
-                    p_name = str(r.get("period_name", ""))
-                    if active_period.lower() in p_name.lower() or p_name.lower() in p_name.lower():
-                        target_period_id = str(r.get("period_id", "")).strip()
-                        break
+                    try:
+                        s_date = pd.to_datetime(r.get("start_date")).date()
+                        e_date = pd.to_datetime(r.get("end_date")).date()
+                        if s_date <= today <= e_date:
+                            target_period_id = str(r.get("period_id", "")).strip()
+                            break
+                    except Exception:
+                        pass
+                
+                # 2. Fallback pencocokan string jika tanggal gagal
                 if not target_period_id:
                     for _, r in periods_df.iterrows():
-                        try:
-                            s_date = pd.to_datetime(r.get("start_date")).date()
-                            e_date = pd.to_datetime(r.get("end_date")).date()
-                            if s_date <= today <= e_date:
-                                target_period_id = str(r.get("period_id", "")).strip()
-                                break
-                        except Exception:
-                            pass
+                        p_name = str(r.get("period_name", "")).lower()
+                        if "8" in p_name and "15" in p_name and ("sep" in p_name or "september" in p_name):
+                            target_period_id = str(r.get("period_id", "")).strip()
+                            break
 
             sales_item_df = st.session_state.get("sales_item_df", pd.DataFrame())
             df_filtered_items = pd.DataFrame()
