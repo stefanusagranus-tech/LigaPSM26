@@ -2847,7 +2847,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             """
         
         elif page_num == 3:
-            # --- STYLING CSS RPG BADGE FRAME & UI (DENGAN WATERMARK NAGA & TEKS JELAS) ---
+            # --- STYLING CSS RPG BADGE FRAME & UI (LINK WATERMARK NAGA DIPERBAIKI) ---
             rpg_badge_style = """
             <style>
             .rpg-open-book-container {
@@ -2866,9 +2866,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 flex-direction: column;
                 min-height: 480px;
                 position: relative;
-                /* Watermark Naga Kembali */
-                background-image: radial-gradient(circle, rgba(212, 175, 55, 0.08) 10%, transparent 10%);
-                background-size: 20px 20px;
             }
             .rpg-book-page::before {
                 content: "";
@@ -2876,13 +2873,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 top: 50%;
                 left: 50%;
                 transform: translate(-50%, -50%);
-                width: 280px;
-                height: 280px;
-                background-image: url("https://img.pikbest.com/png-images/20250303/fierce-dragon-silhouette--e2-80-93-stylized-black-and-white-mythical-beast-illustration_11570728.png!bw800); /* atau background naga bawaan asli kamu */
+                width: 300px;
+                height: 300px;
+                background-image: url("https://img.pikbest.com/png-images/20250303/fierce-dragon-silhouette--e2-80-93-stylized-black-and-white-mythical-beast-illustration_11570728.png!bw800");
                 background-repeat: no-repeat;
                 background-position: center;
                 background-size: contain;
-                opacity: 0.12;
+                opacity: 0.08;
                 pointer-events: none;
             }
             .rpg-badge-1 {
@@ -3094,7 +3091,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 else:
                     b_class, icon = "rpg-badge-3", "🥉 "
                 
-                top_3_html += f'<div class="{b_class}" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; margin-bottom: 8px; border-radius: 6px; position: z-index: 1;"><div style="display: flex; align-items: center; gap: 6px; font-size: 13px;"><span>{icon}<strong>#{rank}</strong></span><span>{n}</span></div><div style="font-size: 13px;">{s}</div></div>'
+                top_3_html += f'<div class="{b_class}" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; margin-bottom: 8px; border-radius: 6px; position: relative; z-index: 1;"><div style="display: flex; align-items: center; gap: 6px; font-size: 13px;"><span>{icon}<strong>#{rank}</strong></span><span>{n}</span></div><div style="font-size: 13px;">{s}</div></div>'
 
             rest_html = ""
             for i, (n, s) in enumerate(formatted_ranking[3:9]):
@@ -3123,6 +3120,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 '</div>'
                 '</div>'
             )
+            
+
         elif page_num == 4:
             rows_pps_13 = "".join([format_row(i + 1, n, s) for i, (n, s) in enumerate(dummy_9_personil[:3])])
             rows_pps_49 = "".join([format_row(i + 4, n, s) for i, (n, s) in enumerate(dummy_9_personil[3:])])
