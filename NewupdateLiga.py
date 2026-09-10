@@ -2829,197 +2829,197 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         elif page_num == 3:
 
             # --- STYLING CSS RPG BADGE FRAME ---
-        rpg_badge_style = "<style>.rpg-badge-1 { background: linear-gradient(135deg, #fef08a, #eab308, #ca8a04); border: 2px solid #713f12; box-shadow: 0 0 10px rgba(234, 179, 8, 0.6); color: #422006 !important; font-weight: bold; } .rpg-badge-2 { background: linear-gradient(135deg, #f1f5f9, #cbd5e1, #94a3b8); border: 2px solid #475569; box-shadow: 0 0 8px rgba(148, 163, 184, 0.5); color: #0f172a !important; font-weight: bold; } .rpg-badge-3 { background: linear-gradient(135deg, #fed7aa, #f97316, #c2410c); border: 2px solid #7c2d12; box-shadow: 0 0 8px rgba(249, 115, 22, 0.5); color: #431407 !important; font-weight: bold; }</style>"
-        st.markdown(rpg_badge_style, unsafe_allow_html=True)
+            rpg_badge_style = "<style>.rpg-badge-1 { background: linear-gradient(135deg, #fef08a, #eab308, #ca8a04); border: 2px solid #713f12; box-shadow: 0 0 10px rgba(234, 179, 8, 0.6); color: #422006 !important; font-weight: bold; } .rpg-badge-2 { background: linear-gradient(135deg, #f1f5f9, #cbd5e1, #94a3b8); border: 2px solid #475569; box-shadow: 0 0 8px rgba(148, 163, 184, 0.5); color: #0f172a !important; font-weight: bold; } .rpg-badge-3 { background: linear-gradient(135deg, #fed7aa, #f97316, #c2410c); border: 2px solid #7c2d12; box-shadow: 0 0 8px rgba(249, 115, 22, 0.5); color: #431407 !important; font-weight: bold; }</style>"
+            st.markdown(rpg_badge_style, unsafe_allow_html=True)
 
-        # --- FUNGSI FORMAT BARIS TABEL ---
-        def format_row_top3(rank, name, score):
-            badge_class = ""
-            icon = ""
-            if rank == 1:
-                badge_class = "rpg-badge-1"
-                icon = "👑 "
-            elif rank == 2:
-                badge_class = "rpg-badge-2"
-                icon = "🥈 "
-            elif rank == 3:
-                badge_class = "rpg-badge-3"
-                icon = "🥉 "
+            # --- FUNGSI FORMAT BARIS TABEL ---
+            def format_row_top3(rank, name, score):
+                badge_class = ""
+                icon = ""
+                if rank == 1:
+                    badge_class = "rpg-badge-1"
+                    icon = "👑 "
+                elif rank == 2:
+                    badge_class = "rpg-badge-2"
+                    icon = "🥈 "
+                elif rank == 3:
+                    badge_class = "rpg-badge-3"
+                    icon = "🥉 "
+                    
+                return f"""
+                <div class="{badge_class}" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; margin-bottom: 8px; border-radius: 8px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span>{icon}<strong>#{rank}</strong></span>
+                        <span>{name}</span>
+                    </div>
+                    <div>{score}</div>
+                </div>
+                """
+
+            def format_row(rank, name, score):
+                return f"""
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; margin-bottom: 8px; border: 1px solid #e2e8f0; background: #ffffff; border-radius: 8px; color: #1e293b;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: #64748b;">🛡️</span>
+                        <span><strong>#{rank}</strong> | {name}</span>
+                    </div>
+                    <div>{score}</div>
+                </div>
+                """
+
+            # --- LOGIKA DATA HALAMAN 3 ---
+            sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
+            sales_item_df = st.session_state.get("sales_item_df", pd.DataFrame())
+            periods_df = st.session_state.get("periods_df", pd.DataFrame())
+            
+            master_personil = []
+            if "master_personil_df" in st.session_state and not st.session_state["master_personil_df"].empty:
+                master_personil = st.session_state["master_personil_df"]["person_name"].dropna().astype(str).str.strip().unique().tolist()
+            elif not sales_person_df.empty and "person_name" in sales_person_df.columns:
+                master_personil = sales_person_df["person_name"].dropna().astype(str).str.strip().unique().tolist()
+
+            qty_dict = {}
+            if not sales_person_df.empty and "person_name" in sales_person_df.columns:
+                sp_period = sales_person_df.copy()
+                if target_period_id and "period_id" in sp_period.columns:
+                    sp_period = sp_period[sp_period["period_id"].astype(str).str.strip() == str(target_period_id).strip()]
                 
-            return f"""
-            <div class="{badge_class}" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; margin-bottom: 8px; border-radius: 8px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span>{icon}<strong>#{rank}</strong></span>
-                    <span>{name}</span>
-                </div>
-                <div>{score}</div>
-            </div>
-            """
+                if not sp_period.empty:
+                    sp_period["person_name"] = sp_period["person_name"].astype(str).str.strip()
+                    sp_period["actual_qty"] = pd.to_numeric(sp_period.get("actual_qty", 0), errors="coerce").fillna(0)
+                    grouped_qty = sp_period.groupby("person_name")["actual_qty"].sum().reset_index()
+                    for _, r in grouped_qty.iterrows():
+                        qty_dict[r["person_name"]] = int(r["actual_qty"])
 
-        def format_row(rank, name, score):
-            return f"""
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; margin-bottom: 8px; border: 1px solid #e2e8f0; background: #ffffff; border-radius: 8px; color: #1e293b;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="color: #64748b;">🛡️</span>
-                    <span><strong>#{rank}</strong> | {name}</span>
-                </div>
-                <div>{score}</div>
-            </div>
-            """
-
-        # --- LOGIKA DATA HALAMAN 3 ---
-        sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
-        sales_item_df = st.session_state.get("sales_item_df", pd.DataFrame())
-        periods_df = st.session_state.get("periods_df", pd.DataFrame())
-        
-        master_personil = []
-        if "master_personil_df" in st.session_state and not st.session_state["master_personil_df"].empty:
-            master_personil = st.session_state["master_personil_df"]["person_name"].dropna().astype(str).str.strip().unique().tolist()
-        elif not sales_person_df.empty and "person_name" in sales_person_df.columns:
-            master_personil = sales_person_df["person_name"].dropna().astype(str).str.strip().unique().tolist()
-
-        qty_dict = {}
-        if not sales_person_df.empty and "person_name" in sales_person_df.columns:
-            sp_period = sales_person_df.copy()
-            if target_period_id and "period_id" in sp_period.columns:
-                sp_period = sp_period[sp_period["period_id"].astype(str).str.strip() == str(target_period_id).strip()]
+            current_year = today.year
+            current_month = today.month
+            month_period_ids = set()
             
-            if not sp_period.empty:
-                sp_period["person_name"] = sp_period["person_name"].astype(str).str.strip()
-                sp_period["actual_qty"] = pd.to_numeric(sp_period.get("actual_qty", 0), errors="coerce").fillna(0)
-                grouped_qty = sp_period.groupby("person_name")["actual_qty"].sum().reset_index()
-                for _, r in grouped_qty.iterrows():
-                    qty_dict[r["person_name"]] = int(r["actual_qty"])
-
-        current_year = today.year
-        current_month = today.month
-        month_period_ids = set()
-        
-        if not periods_df.empty and "period_id" in periods_df.columns:
-            for _, r in periods_df.iterrows():
-                try:
-                    s_date = pd.to_datetime(r.get("start_date", "")).date()
-                    if s_date.year == current_year and s_date.month == current_month:
-                        month_period_ids.add(str(r.get("period_id", "")).strip())
-                except Exception:
-                    pass
-            
-            if not month_period_ids:
+            if not periods_df.empty and "period_id" in periods_df.columns:
                 for _, r in periods_df.iterrows():
-                    pid = str(r.get("period_id", "")).strip()
-                    pname = str(r.get("period_name", "")).lower()
-                    if "s0" in pid.lower() or "sep" in pname or "september" in pname:
-                        month_period_ids.add(pid)
-
-        achiv_dict = {}
-        if not sales_person_df.empty and "person_name" in sales_person_df.columns:
-            sp_month = sales_person_df.copy()
-            
-            if "period_id" in sp_month.columns and month_period_ids:
-                sp_month["clean_pid"] = sp_month["period_id"].astype(str).str.strip()
-                sp_month = sp_month[sp_month["clean_pid"].isin(month_period_ids)]
-            
-            if not sp_month.empty:
-                sp_month["person_name"] = sp_month["person_name"].astype(str).str.strip()
-                sp_month["actual_qty"] = pd.to_numeric(sp_month.get("actual_qty", 0), errors="coerce").fillna(0)
+                    try:
+                        s_date = pd.to_datetime(r.get("start_date", "")).date()
+                        if s_date.year == current_year and s_date.month == current_month:
+                            month_period_ids.add(str(r.get("period_id", "")).strip())
+                    except Exception:
+                        pass
                 
-                sp_item_key = None
-                for k in ["item_id", "item_code", "kode_item", "item_name", "nama_item", "sku"]:
-                    if k in sp_month.columns:
-                        sp_item_key = k
-                        break
+                if not month_period_ids:
+                    for _, r in periods_df.iterrows():
+                        pid = str(r.get("period_id", "")).strip()
+                        pname = str(r.get("period_name", "")).lower()
+                        if "s0" in pid.lower() or "sep" in pname or "september" in pname:
+                            month_period_ids.add(pid)
+
+            achiv_dict = {}
+            if not sales_person_df.empty and "person_name" in sales_person_df.columns:
+                sp_month = sales_person_df.copy()
                 
-                if sp_item_key:
-                    sp_month["clean_item"] = sp_month[sp_item_key].astype(str).str.strip()
-                else:
-                    sp_month["clean_item"] = "GENERAL"
-
-                sp_month["clean_pid"] = sp_month["period_id"].astype(str).str.strip() if "period_id" in sp_month.columns else ""
-
-                aggregated_sales = sp_month.groupby(["person_name", "clean_pid", "clean_item"])["actual_qty"].sum().reset_index()
-
-                target_map = {}
-                if not sales_item_df.empty:
-                    item_df = sales_item_df.copy()
-                    t_col = None
-                    for col in item_df.columns:
-                        if "target_kasir" in col.lower() or ("target" in col.lower() and "kasir" in col.lower()):
-                            t_col = col
-                            break
+                if "period_id" in sp_month.columns and month_period_ids:
+                    sp_month["clean_pid"] = sp_month["period_id"].astype(str).str.strip()
+                    sp_month = sp_month[sp_month["clean_pid"].isin(month_period_ids)]
+                
+                if not sp_month.empty:
+                    sp_month["person_name"] = sp_month["person_name"].astype(str).str.strip()
+                    sp_month["actual_qty"] = pd.to_numeric(sp_month.get("actual_qty", 0), errors="coerce").fillna(0)
                     
-                    it_key = None
+                    sp_item_key = None
                     for k in ["item_id", "item_code", "kode_item", "item_name", "nama_item", "sku"]:
-                        if k in item_df.columns:
-                            it_key = k
+                        if k in sp_month.columns:
+                            sp_item_key = k
                             break
                     
-                    if t_col:
-                        for _, r in item_df.iterrows():
-                            pid = str(r.get("period_id", "")).strip()
-                            ival = str(r.get(it_key, "")).strip() if it_key else ""
-                            tval = pd.to_numeric(r.get(t_col, 0), errors="coerce")
-                            if pd.notna(tval):
-                                target_map[(pid, ival)] = tval
+                    if sp_item_key:
+                        sp_month["clean_item"] = sp_month[sp_item_key].astype(str).str.strip()
+                    else:
+                        sp_month["clean_item"] = "GENERAL"
 
-                for _, row in aggregated_sales.iterrows():
-                    p_name = row["person_name"]
-                    pid = row["clean_pid"]
-                    ival = row["clean_item"]
-                    total_act = row["actual_qty"]
-                    
-                    target_val = target_map.get((pid, ival), 0)
-                    if pd.isna(target_val):
-                        target_val = 0
+                    sp_month["clean_pid"] = sp_month["period_id"].astype(str).str.strip() if "period_id" in sp_month.columns else ""
 
-                    if total_act >= target_val and target_val > 0:
-                        achiv_dict[p_name] = achiv_dict.get(p_name, 0) + 1
+                    aggregated_sales = sp_month.groupby(["person_name", "clean_pid", "clean_item"])["actual_qty"].sum().reset_index()
 
-        ranking_list = []
-        all_names = set(master_personil) | set(qty_dict.keys()) | set(achiv_dict.keys())
-        for name in all_names:
-            if not name:
-                continue
-            q = qty_dict.get(name, 0)
-            a = achiv_dict.get(name, 0)
-            ranking_list.append((name, q, a))
+                    target_map = {}
+                    if not sales_item_df.empty:
+                        item_df = sales_item_df.copy()
+                        t_col = None
+                        for col in item_df.columns:
+                            if "target_kasir" in col.lower() or ("target" in col.lower() and "kasir" in col.lower()):
+                                t_col = col
+                                break
+                        
+                        it_key = None
+                        for k in ["item_id", "item_code", "kode_item", "item_name", "nama_item", "sku"]:
+                            if k in item_df.columns:
+                                it_key = k
+                                break
+                        
+                        if t_col:
+                            for _, r in item_df.iterrows():
+                                pid = str(r.get("period_id", "")).strip()
+                                ival = str(r.get(it_key, "")).strip() if it_key else ""
+                                tval = pd.to_numeric(r.get(t_col, 0), errors="coerce")
+                                if pd.notna(tval):
+                                    target_map[(pid, ival)] = tval
 
-        ranking_list = sorted(ranking_list, key=lambda x: x[1], reverse=True)
+                    for _, row in aggregated_sales.iterrows():
+                        p_name = row["person_name"]
+                        pid = row["clean_pid"]
+                        ival = row["clean_item"]
+                        total_act = row["actual_qty"]
+                        
+                        target_val = target_map.get((pid, ival), 0)
+                        if pd.isna(target_val):
+                            target_val = 0
 
-        formatted_ranking = []
-        for name, qty, achiv_count in ranking_list:
-            score_label = "{} Pcs <span style='font-size:11px; color:#065f46; font-weight:normal;'>(✨ {} Item Achiv Bulan Ini)</span>".format(qty, achiv_count)
-            formatted_ranking.append((name, score_label))
+                        if total_act >= target_val and target_val > 0:
+                            achiv_dict[p_name] = achiv_dict.get(p_name, 0) + 1
 
-        if not formatted_ranking:
-            formatted_ranking = [(n, "0 Pcs <span style='font-size:11px; color:#92400e;'>(✨ 0 Item Achiv Bulan Ini)</span>") for n, _ in dummy_9_personil]
+            ranking_list = []
+            all_names = set(master_personil) | set(qty_dict.keys()) | set(achiv_dict.keys())
+            for name in all_names:
+                if not name:
+                    continue
+                q = qty_dict.get(name, 0)
+                a = achiv_dict.get(name, 0)
+                ranking_list.append((name, q, a))
 
-        top_3_data = formatted_ranking[:3]
-        rest_data = formatted_ranking[3:]
+            ranking_list = sorted(ranking_list, key=lambda x: x[1], reverse=True)
 
-        rows_psm_13 = "".join([format_row_top3(i + 1, n, s) for i, (n, s) in enumerate(top_3_data)])
-        rows_psm_49 = "".join([format_row(i + 4, n, s) for i, (n, s) in enumerate(rest_data)])
+            formatted_ranking = []
+            for name, qty, achiv_count in ranking_list:
+                score_label = "{} Pcs <span style='font-size:11px; color:#065f46; font-weight:normal;'>(✨ {} Item Achiv Bulan Ini)</span>".format(qty, achiv_count)
+                formatted_ranking.append((name, score_label))
 
-        if not rows_psm_49:
-            rows_psm_49 = "<div style='color:#78350f; font-size:12px; text-align:center; margin-top:20px;'><i>Tidak ada personil lanjutan.</i></div>"
+            if not formatted_ranking:
+                formatted_ranking = [(n, "0 Pcs <span style='font-size:11px; color:#92400e;'>(✨ 0 Item Achiv Bulan Ini)</span>") for n, _ in dummy_9_personil]
 
-        html_open_tugas = """
-        <div class="rpg-open-book-container">
-            <div class="rpg-book-page rpg-book-page-left">
-                <h3 class="open-page-title">⚔️ PSM TOP (1-3)</h3>
-                <p class="open-page-sub">Periode: {active_period}</p>
-                <div class="open-book-divider"></div>
-                {rows_psm_13}
-                <div class="open-page-footer">Halaman Kiri • PSM 1-3</div>
+            top_3_data = formatted_ranking[:3]
+            rest_data = formatted_ranking[3:]
+
+            rows_psm_13 = "".join([format_row_top3(i + 1, n, s) for i, (n, s) in enumerate(top_3_data)])
+            rows_psm_49 = "".join([format_row(i + 4, n, s) for i, (n, s) in enumerate(rest_data)])
+
+            if not rows_psm_49:
+                rows_psm_49 = "<div style='color:#78350f; font-size:12px; text-align:center; margin-top:20px;'><i>Tidak ada personil lanjutan.</i></div>"
+
+            html_open_tugas = """
+            <div class="rpg-open-book-container">
+                <div class="rpg-book-page rpg-book-page-left">
+                    <h3 class="open-page-title">⚔️ PSM TOP (1-3)</h3>
+                    <p class="open-page-sub">Periode: {active_period}</p>
+                    <div class="open-book-divider"></div>
+                    {rows_psm_13}
+                    <div class="open-page-footer">Halaman Kiri • PSM 1-3</div>
+                </div>
+                <div class="rpg-book-page rpg-book-page-right">
+                    <h3 class="open-page-title">⚔️ PSM (4-9)</h3>
+                    <p class="open-page-sub">Kelanjutan Peringkat Periode</p>
+                    <div class="open-book-divider"></div>
+                    {rows_psm_49}
+                    <div class="open-page-footer">Halaman Kanan • PSM 4-9</div>
+                </div>
             </div>
-            <div class="rpg-book-page rpg-book-page-right">
-                <h3 class="open-page-title">⚔️ PSM (4-9)</h3>
-                <p class="open-page-sub">Kelanjutan Peringkat Periode</p>
-                <div class="open-book-divider"></div>
-                {rows_psm_49}
-                <div class="open-page-footer">Halaman Kanan • PSM 4-9</div>
-            </div>
-        </div>
-        """.format(active_period=active_period, rows_psm_13=rows_psm_13, rows_psm_49=rows_psm_49)
+            """.format(active_period=active_period, rows_psm_13=rows_psm_13, rows_psm_49=rows_psm_49)
 
         elif page_num == 4:
             rows_pps_13 = "".join([format_row(i + 1, n, s) for i, (n, s) in enumerate(dummy_9_personil[:3])])
