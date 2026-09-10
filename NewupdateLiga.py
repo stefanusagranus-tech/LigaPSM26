@@ -2878,7 +2878,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 transform: translate(-50%, -50%);
                 width: 280px;
                 height: 280px;
-                background-image: url("https://i.ibb.co.com/8410292/dragon-watermark.png"); /* atau background naga bawaan asli kamu */
+                background-image: url("https://img.pikbest.com/png-images/20250303/fierce-dragon-silhouette--e2-80-93-stylized-black-and-white-mythical-beast-illustration_11570728.png!bw800); /* atau background naga bawaan asli kamu */
                 background-repeat: no-repeat;
                 background-position: center;
                 background-size: contain;
