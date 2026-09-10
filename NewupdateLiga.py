@@ -2828,6 +2828,45 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         
         elif page_num == 3:
 
+            # --- STYLING CSS RPG BADGE FRAME ---
+            rpg_badge_style = "<style>.rpg-badge-1 { background: linear-gradient(135deg, #fef08a, #eab308, #ca8a04); border: 2px solid #713f12; box-shadow: 0 0 10px rgba(234, 179, 8, 0.6); color: #422006 !important; font-weight: bold; } .rpg-badge-2 { background: linear-gradient(135deg, #f1f5f9, #cbd5e1, #94a3b8); border: 2px solid #475569; box-shadow: 0 0 8px rgba(148, 163, 184, 0.5); color: #0f172a !important; font-weight: bold; } .rpg-badge-3 { background: linear-gradient(135deg, #fed7aa, #f97316, #c2410c); border: 2px solid #7c2d12; box-shadow: 0 0 8px rgba(249, 115, 22, 0.5); color: #431407 !important; font-weight: bold; }</style>"
+            st.markdown(rpg_badge_style, unsafe_allow_html=True)
+
+            # --- FUNGSI FORMAT BARIS TABEL ---
+            def format_row_top3(rank, name, score):
+                badge_class = ""
+                icon = ""
+                if rank == 1:
+                    badge_class = "rpg-badge-1"
+                    icon = "👑 "
+                elif rank == 2:
+                    badge_class = "rpg-badge-2"
+                    icon = "🥈 "
+                elif rank == 3:
+                    badge_class = "rpg-badge-3"
+                    icon = "🥉 "
+                    
+                return f"""
+                <div class="{badge_class}" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; margin-bottom: 8px; border-radius: 8px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span>{icon}<strong>#{rank}</strong></span>
+                        <span>{name}</span>
+                    </div>
+                    <div>{score}</div>
+                </div>
+                """
+
+            def format_row(rank, name, score):
+                return f"""
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; margin-bottom: 8px; border: 1px solid #e2e8f0; background: #ffffff; border-radius: 8px; color: #1e293b;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: #64748b;">🛡️</span>
+                        <span><strong>#{rank}</strong> | {name}</span>
+                    </div>
+                    <div>{score}</div>
+                </div>
+                """
+
             # --- LOGIKA DATA HALAMAN 3 ---
             sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
             sales_item_df = st.session_state.get("sales_item_df", pd.DataFrame())
