@@ -2609,7 +2609,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             }
             </style>    
             """
-        st.markdown(rpg_badge_style, unsafe_allow_html=True)
+            st.markdown(rpg_badge_style, unsafe_allow_html=True)
 
             /* RPG Item Card Styling untuk Target Item Interaktif */
             .rpg-item-card {
