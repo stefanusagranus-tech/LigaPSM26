@@ -2827,7 +2827,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             """
         
         elif page_num == 3:
-            # Halaman 3: Ranking Qty (Periode Aktif) & Akumulasi Achiv Bulanan (Groupby Person & Item terlebih dahulu)
+
+            # --- LOGIKA DATA HALAMAN 3 ---
             sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
             sales_item_df = st.session_state.get("sales_item_df", pd.DataFrame())
             periods_df = st.session_state.get("periods_df", pd.DataFrame())
@@ -2874,14 +2875,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         if "s0" in pid.lower() or "sep" in pname or "september" in pname:
                             month_period_ids.add(pid)
 
-            # 3. Hitung Akumulasi Item Achiv Bulanan dengan menggabungkan baris duplikat per (Personil, Periode, Item)
+            # 3. Hitung Akumulasi Item Achiv Bulanan (Groupby baris terpecah per Personil, Periode, & Item)
             achiv_dict = {}
             debug_achiv_records = []
             
             if not sales_person_df.empty and "person_name" in sales_person_df.columns:
                 sp_month = sales_person_df.copy()
                 
-                # Filter periode bulan September
                 if "period_id" in sp_month.columns and month_period_ids:
                     sp_month["clean_pid"] = sp_month["period_id"].astype(str).str.strip()
                     sp_month = sp_month[sp_month["clean_pid"].isin(month_period_ids)]
@@ -2890,7 +2890,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     sp_month["person_name"] = sp_month["person_name"].astype(str).str.strip()
                     sp_month["actual_qty"] = pd.to_numeric(sp_month.get("actual_qty", 0), errors="coerce").fillna(0)
                     
-                    # Cari kolom kunci item di sales_person_df
                     sp_item_key = None
                     for k in ["item_id", "item_code", "kode_item", "item_name", "nama_item", "sku"]:
                         if k in sp_month.columns:
@@ -2904,7 +2903,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
                     sp_month["clean_pid"] = sp_month["period_id"].astype(str).str.strip() if "period_id" in sp_month.columns else ""
 
-                    # LANGKAH UTAMA: Jumlahkan actual_qty yang terpecah-pecah berdasarkan Personil, Periode, dan Item
+                    # Gabungkan data penjualan yang terpecah berdasarkan tanggal
                     aggregated_sales = sp_month.groupby(["person_name", "clean_pid", "clean_item"])["actual_qty"].sum().reset_index()
 
                     # Buat dictionary target dari sales_item_df
@@ -2931,7 +2930,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                                 if pd.notna(tval):
                                     target_map[(pid, ival)] = tval
 
-                    # Evaluasi target berdasarkan total gabungan
+                    # Evaluasi pencapaian target gabungan
                     for _, row in aggregated_sales.iterrows():
                         p_name = row["person_name"]
                         pid = row["clean_pid"]
@@ -2949,11 +2948,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                                 "Personil": p_name,
                                 "Periode": pid,
                                 "Item": ival,
-                                "Total Actual Qty (Gabungan)": total_act,
+                                "Total Actual Qty": total_act,
                                 "Target Kasir": target_val
                             })
 
-            # 4. Gabungkan master personil dengan data qty periode aktif & akumulasi achiv bulanan
+            # 4. Gabungkan master personil dengan data qty & achiv
             ranking_list = []
             all_names = set(master_personil) | set(qty_dict.keys()) | set(achiv_dict.keys())
             for name in all_names:
@@ -2976,8 +2975,32 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             top_3_data = formatted_ranking[:3]
             rest_data = formatted_ranking[3:]
 
-            rows_psm_13 = "".join([format_row(i + 1, n, s) for i, (n, s) in enumerate(top_3_data)])
+            # Render baris halaman kiri (Top 3 dengan RPG Badge Frame) dan halaman kanan (4-9)
+            rows_psm_13 = "".join([format_row_top3(i + 1, n, s) for i, (n, s) in enumerate(top_3_data)])
             rows_psm_49 = "".join([format_row(i + 4, n, s) for i, (n, s) in enumerate(rest_data)])
+
+            if not rows_psm_49:
+                rows_psm_49 = "<div style='color:#78350f; font-size:12px; text-align:center; margin-top:20px;'><i>Tidak ada personil lanjutan.</i></div>"
+
+            # Template HTML Buku Terbuka
+            html_open_tugas = """
+            <div class="rpg-open-book-container">
+                <div class="rpg-book-page rpg-book-page-left">
+                    <h3 class="open-page-title">⚔️ PSM TOP (1-3)</h3>
+                    <p class="open-page-sub">Periode: {active_period}</p>
+                    <div class="open-book-divider"></div>
+                    {rows_psm_13}
+                    <div class="open-page-footer">Halaman Kiri • PSM 1-3</div>
+                </div>
+                <div class="rpg-book-page rpg-book-page-right">
+                    <h3 class="open-page-title">⚔️ PSM (4-9)</h3>
+                    <p class="open-page-sub">Kelanjutan Peringkat Periode</p>
+                    <div class="open-book-divider"></div>
+                    {rows_psm_49}
+                    <div class="open-page-footer">Halaman Kanan • PSM 4-9</div>
+                </div>
+            </div>
+            """.format(active_period=active_period, rows_psm_13=rows_psm_13, rows_psm_49=rows_psm_49)
 
             if not rows_psm_49:
                 rows_psm_49 = "<div style='color:#78350f; font-size:12px; text-align:center; margin-top:20px;'><i>Tidak ada personil lanjutan.</i></div>"
