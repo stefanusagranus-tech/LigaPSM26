@@ -2583,9 +2583,33 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 color: #451a03 !important;
             }
 
-            .open-stat-row.rank-1 { background: linear-gradient(90deg, #fef08a, #fef9c3) !important; border-color: #ca8a04; }
-            .open-stat-row.rank-2 { background: linear-gradient(90deg, #e5e7eb, #f3f4f6) !important; border-color: #6b7280; }
-            .open-stat-row.rank-3 { background: linear-gradient(90deg, #fed7aa, #ffedd5) !important; border-color: #c2410c; }
+            # Tambahkan style CSS kustom untuk Badge Frame RPG di bagian atas halaman atau file CSS utama
+            rpg_badge_style = """
+            <style>
+            .rpg-badge-1 {
+                background: linear-gradient(135deg, #fef08a 0%, #eab308 50%, #ca8a04 100%);
+                border: 2px solid #713f12;
+                box-shadow: 0 0 10px rgba(234, 179, 8, 0.6);
+                color: #422006 !important;
+                font-weight: bold;
+            }
+            .rpg-badge-2 {
+                background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 50%, #94a3b8 100%);
+                border: 2px solid #475569;
+                box-shadow: 0 0 8px rgba(148, 163, 184, 0.5);
+                color: #0f172a !important;
+                font-weight: bold;
+            }
+            .rpg-badge-3 {
+                background: linear-gradient(135deg, #fed7aa 0%, #f97316 50%, #c2410c 100%);
+                border: 2px solid #7c2d12;
+                box-shadow: 0 0 8px rgba(249, 115, 22, 0.5);
+                color: #431407 !important;
+                font-weight: bold;
+            }
+            </style>    
+            """
+        st.markdown(rpg_badge_style, unsafe_allow_html=True)
 
             /* RPG Item Card Styling untuk Target Item Interaktif */
             .rpg-item-card {
@@ -2681,22 +2705,28 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # ==========================================
         # 🛠️ HELPER FORMATTING RANKING
         # ==========================================
-        def format_row(index, name, score):
-            rank_class = ""
-            if index == 1:
-                rank_class = "rank-1"
-                badge = "👑 1"
-            elif index == 2:
-                rank_class = "rank-2"
-                badge = "🥈 2"
-            elif index == 3:
-                rank_class = "rank-3"
-                badge = "🥉 3"
-            elif index >= 4 and index <= 6:
-                badge = f"🛡️ {index}"
-            else:
-                badge = f"📜 {index}"
-            return f'<div class="open-stat-row {rank_class}"><span>{badge} | {name}</span><span>{score}</span></div>'
+        def format_row_top3(rank, name, score):
+            badge_class = ""
+            icon = ""
+            if rank == 1:
+                badge_class = "rpg-badge-1"
+                icon = "👑 "
+            elif rank == 2:
+                badge_class = "rpg-badge-2"
+                icon = "🥈 "
+            elif rank == 3:
+                badge_class = "rpg-badge-3"
+                icon = "🥉 "
+                
+            return f"""
+            <div class="{badge_class}" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; margin-bottom: 8px; border-radius: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span>{icon}<strong>#{rank}</strong></span>
+                    <span>{name}</span>
+                </div>
+                <div>{score}</div>
+            </div>
+            """
 
         # Dummy data dinamis personil untuk fallback jika sheet kosong
         dummy_9_personil = [
