@@ -2866,8 +2866,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     <div>{score}</div>
                 </div>
                 """
-            st.markdown(html_open_tugas, unsafe_allow_html=True)
-            
+                st.markdown(html_open_tugas, unsafe_allow_html=True)
+
             # --- LOGIKA DATA HALAMAN 3 ---
             sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
             sales_item_df = st.session_state.get("sales_item_df", pd.DataFrame())
