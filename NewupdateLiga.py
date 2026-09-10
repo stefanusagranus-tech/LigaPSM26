@@ -2847,7 +2847,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             """
         
         elif page_num == 3:
-            # --- STYLING CSS RPG BADGE FRAME & UI (WARNA TEKS DIPERTEGAS & FIXED HEIGHT CONTAINER) ---
+            # --- STYLING CSS RPG BADGE FRAME & UI (DENGAN WATERMARK NAGA & TEKS JELAS) ---
             rpg_badge_style = """
             <style>
             .rpg-open-book-container {
@@ -2865,26 +2865,45 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 display: flex;
                 flex-direction: column;
                 min-height: 480px;
+                position: relative;
+                /* Watermark Naga Kembali */
+                background-image: radial-gradient(circle, rgba(212, 175, 55, 0.08) 10%, transparent 10%);
+                background-size: 20px 20px;
+            }
+            .rpg-book-page::before {
+                content: "";
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 280px;
+                height: 280px;
+                background-image: url("https://i.ibb.co.com/8410292/dragon-watermark.png"); /* atau background naga bawaan asli kamu */
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: contain;
+                opacity: 0.12;
+                pointer-events: none;
             }
             .rpg-badge-1 {
                 background: linear-gradient(135deg, #fef08a 0%, #eab308 100%);
                 border: 2px solid #713f12;
                 box-shadow: 0 0 10px rgba(234, 179, 8, 0.6);
-                color: #271c04 !important;
+                color: #1c1402 !important;
                 font-weight: bold;
             }
             .rpg-badge-2 {
                 background: linear-gradient(135deg, #f1f5f9 0%, #94a3b8 100%);
                 border: 2px solid #475569;
                 box-shadow: 0 0 8px rgba(148, 163, 184, 0.5);
-                color: #0f172a !important;
+                color: #090d16 !important;
                 font-weight: bold;
             }
             .rpg-badge-3 {
                 background: linear-gradient(135deg, #fed7aa 0%, #c2410c 100%);
                 border: 2px solid #7c2d12;
                 box-shadow: 0 0 8px rgba(249, 115, 22, 0.5);
-                color: #3b1104 !important;
+                color: #260a02 !important;
                 font-weight: bold;
             }
             .rpg-normal-row {
@@ -2893,36 +2912,42 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 align-items: center;
                 padding: 8px 12px;
                 margin-bottom: 6px;
-                border: 1px solid #cbd5e1;
+                border: 1px solid #94a3b8;
                 background: #ffffff;
                 border-radius: 6px;
-                color: #0f172a !important;
+                color: #020617 !important;
                 font-size: 13px;
+                font-weight: 600;
             }
             .open-page-title {
-                color: #422006 !important;
+                color: #3b1104 !important;
                 text-align: center;
                 font-weight: bold;
                 margin-bottom: 4px;
+                z-index: 1;
             }
             .open-page-sub {
-                color: #78350f !important;
+                color: #5c2406 !important;
                 text-align: center;
                 font-size: 12px;
                 margin-bottom: 12px;
+                z-index: 1;
+                font-weight: 600;
             }
             .open-book-divider {
                 border-bottom: 2px solid #d4af37;
                 margin-bottom: 15px;
+                z-index: 1;
             }
             .open-page-footer {
                 margin-top: auto;
                 text-align: right;
                 font-size: 10px;
-                color: #78350f !important;
+                color: #5c2406 !important;
                 font-family: monospace;
                 padding-top: 10px;
                 font-weight: bold;
+                z-index: 1;
             }
             </style>
             """
@@ -3051,7 +3076,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             formatted_ranking = []
             for name, qty, achiv_count in ranking_list:
-                score_label = f"{qty} Pcs <span style='font-size:10px; color:#047857; font-weight:bold;'>(✨ {achiv_count} Achiv)</span>"
+                score_label = f"{qty} Pcs <span style='font-size:10px; color:#065f46; font-weight:bold;'>(✨ {achiv_count} Achiv)</span>"
                 formatted_ranking.append((name, score_label))
 
             if not formatted_ranking:
@@ -3069,7 +3094,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 else:
                     b_class, icon = "rpg-badge-3", "🥉 "
                 
-                top_3_html += f'<div class="{b_class}" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; margin-bottom: 8px; border-radius: 6px;"><div style="display: flex; align-items: center; gap: 6px; font-size: 13px;"><span>{icon}<strong>#{rank}</strong></span><span>{n}</span></div><div style="font-size: 13px;">{s}</div></div>'
+                top_3_html += f'<div class="{b_class}" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; margin-bottom: 8px; border-radius: 6px; position: z-index: 1;"><div style="display: flex; align-items: center; gap: 6px; font-size: 13px;"><span>{icon}<strong>#{rank}</strong></span><span>{n}</span></div><div style="font-size: 13px;">{s}</div></div>'
 
             rest_html = ""
             for i, (n, s) in enumerate(formatted_ranking[3:9]):
@@ -3098,7 +3123,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 '</div>'
                 '</div>'
             )
-
         elif page_num == 4:
             rows_pps_13 = "".join([format_row(i + 1, n, s) for i, (n, s) in enumerate(dummy_9_personil[:3])])
             rows_pps_49 = "".join([format_row(i + 4, n, s) for i, (n, s) in enumerate(dummy_9_personil[3:])])
