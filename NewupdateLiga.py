@@ -2847,14 +2847,30 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             """
         
         elif page_num == 3:
-            # --- STYLING CSS RPG BADGE FRAME & UI ---
+            # --- STYLING CSS RPG BADGE FRAME & UI (WARNA TEKS DIPERTEGAS & FIXED HEIGHT CONTAINER) ---
             rpg_badge_style = """
             <style>
+            .rpg-open-book-container {
+                display: flex;
+                gap: 20px;
+                width: 100%;
+            }
+            .rpg-book-page {
+                flex: 1;
+                background: #fdf6e2;
+                border: 3px solid #d4af37;
+                border-radius: 8px;
+                padding: 20px;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                min-height: 480px;
+            }
             .rpg-badge-1 {
                 background: linear-gradient(135deg, #fef08a 0%, #eab308 100%);
                 border: 2px solid #713f12;
                 box-shadow: 0 0 10px rgba(234, 179, 8, 0.6);
-                color: #422006 !important;
+                color: #271c04 !important;
                 font-weight: bold;
             }
             .rpg-badge-2 {
@@ -2868,8 +2884,36 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 background: linear-gradient(135deg, #fed7aa 0%, #c2410c 100%);
                 border: 2px solid #7c2d12;
                 box-shadow: 0 0 8px rgba(249, 115, 22, 0.5);
-                color: #431407 !important;
+                color: #3b1104 !important;
                 font-weight: bold;
+            }
+            .rpg-normal-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 8px 12px;
+                margin-bottom: 6px;
+                border: 1px solid #cbd5e1;
+                background: #ffffff;
+                border-radius: 6px;
+                color: #0f172a !important;
+                font-size: 13px;
+            }
+            .open-page-title {
+                color: #422006 !important;
+                text-align: center;
+                font-weight: bold;
+                margin-bottom: 4px;
+            }
+            .open-page-sub {
+                color: #78350f !important;
+                text-align: center;
+                font-size: 12px;
+                margin-bottom: 12px;
+            }
+            .open-book-divider {
+                border-bottom: 2px solid #d4af37;
+                margin-bottom: 15px;
             }
             .open-page-footer {
                 margin-top: auto;
@@ -2884,7 +2928,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             """
             st.markdown(rpg_badge_style, unsafe_allow_html=True)
 
-            # Pastikan active_period aman terdefinisi
             if 'active_period' not in locals() and 'active_period' not in globals():
                 active_period = st.session_state.get("active_period", "Periode Aktif")
 
@@ -3008,15 +3051,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             formatted_ranking = []
             for name, qty, achiv_count in ranking_list:
-                score_label = f"{qty} Pcs <span style='font-size:11px; color:#065f46; font-weight:normal;'>(✨ {achiv_count} Item Achiv Bulan Ini)</span>"
+                score_label = f"{qty} Pcs <span style='font-size:10px; color:#047857; font-weight:bold;'>(✨ {achiv_count} Achiv)</span>"
                 formatted_ranking.append((name, score_label))
 
-            # Fallback dummy data jika kosong agar tetap ada isinya
             if not formatted_ranking:
                 dummy_9_personil = [("Agent 1", "0 Pcs"), ("Agent 2", "0 Pcs"), ("Agent 3", "0 Pcs"), ("Agent 4", "0 Pcs"), ("Agent 5", "0 Pcs"), ("Agent 6", "0 Pcs"), ("Agent 7", "0 Pcs"), ("Agent 8", "0 Pcs"), ("Agent 9", "0 Pcs")]
-                formatted_ranking = [(n, s + " <span style='font-size:11px; color:#92400e;'>(✨ 0 Item Achiv Bulan Ini)</span>") for n, s in dummy_9_personil]
+                formatted_ranking = [(n, s + " <span style='font-size:10px; color:#b45309; font-weight:bold;'>(✨ 0 Achiv)</span>") for n, s in dummy_9_personil]
 
-            # --- PERULANGAN LANGSUNG (AMAN & TIDAK PECAH) ---
+            # --- PERULANGAN HTML AMAN TANPA FUNGSI ---
             top_3_html = ""
             for i, (n, s) in enumerate(formatted_ranking[:3]):
                 rank = i + 1
@@ -3027,27 +3069,27 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 else:
                     b_class, icon = "rpg-badge-3", "🥉 "
                 
-                top_3_html += f'<div class="{b_class}" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; margin-bottom: 8px; border-radius: 8px;"><div style="display: flex; align-items: center; gap: 8px;"><span>{icon}<strong>#{rank}</strong></span><span>{n}</span></div><div>{s}</div></div>'
+                top_3_html += f'<div class="{b_class}" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; margin-bottom: 8px; border-radius: 6px;"><div style="display: flex; align-items: center; gap: 6px; font-size: 13px;"><span>{icon}<strong>#{rank}</strong></span><span>{n}</span></div><div style="font-size: 13px;">{s}</div></div>'
 
             rest_html = ""
             for i, (n, s) in enumerate(formatted_ranking[3:9]):
                 rank = i + 4
-                rest_html += f'<div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; margin-bottom: 8px; border: 1px solid #e2e8f0; background: #ffffff; border-radius: 8px; color: #1e293b;"><div style="display: flex; align-items: center; gap: 8px;"><span style="color: #64748b;">🛡️</span><span><strong>#{rank}</strong> | {n}</span></div><div>{s}</div></div>'
+                rest_html += f'<div class="rpg-normal-row"><div style="display: flex; align-items: center; gap: 6px;"><span>🛡️</span><span><strong>#{rank}</strong> | {n}</span></div><div>{s}</div></div>'
 
             if not rest_html:
                 rest_html = "<div style='color:#78350f; font-size:12px; text-align:center; margin-top:20px;'><i>Tidak ada personil lanjutan.</i></div>"
 
-            # --- RENDER STRUKTUR BUKU TERBUKA (MENGGUNAKAN AMAN FORMAT STRING) ---
+            # --- RENDER STRUKTUR UTAMA ---
             html_open_tugas = (
                 '<div class="rpg-open-book-container">'
-                '<div class="rpg-book-page rpg-book-page-left">'
+                '<div class="rpg-book-page">'
                 '<h3 class="open-page-title">⚔️ PSM TOP (1-3)</h3>'
                 f'<p class="open-page-sub">Periode: {active_period}</p>'
                 '<div class="open-book-divider"></div>'
                 f'{top_3_html}'
                 '<div class="open-page-footer">Halaman Kiri • PSM 1-3</div>'
                 '</div>'
-                '<div class="rpg-book-page rpg-book-page-right">'
+                '<div class="rpg-book-page">'
                 '<h3 class="open-page-title">⚔️ PSM (4-9)</h3>'
                 '<p class="open-page-sub">Kelanjutan Peringkat Periode</p>'
                 '<div class="open-book-divider"></div>'
