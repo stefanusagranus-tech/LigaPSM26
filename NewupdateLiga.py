@@ -2846,7 +2846,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     badge_class = "rpg-badge-3"
                     icon = "🥉 "
                     
-                return f"""
+                return """
                 <div class="{badge_class}" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; margin-bottom: 8px; border-radius: 8px;">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <span>{icon}<strong>#{rank}</strong></span>
@@ -2855,9 +2855,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     <div>{score}</div>
                 </div>
                 """
-
             def format_row(rank, name, score):
-                return f"""
+                return """
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; margin-bottom: 8px; border: 1px solid #e2e8f0; background: #ffffff; border-radius: 8px; color: #1e293b;">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <span style="color: #64748b;">🛡️</span>
