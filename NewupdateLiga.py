@@ -2583,7 +2583,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 color: #451a03 !important;
             }
 
-            # Tambahkan style CSS kustom untuk Badge Frame RPG di bagian atas halaman atau file CSS utama
             rpg_badge_style = """
             <style>
             .rpg-badge-1 {
@@ -2607,7 +2606,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 color: #431407 !important;
                 font-weight: bold;
             }
-            </style>    
+            </style>
             """
             st.markdown(rpg_badge_style, unsafe_allow_html=True)
 
