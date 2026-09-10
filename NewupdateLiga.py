@@ -2846,8 +2846,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             </div>
             """
         
-        elif page_num == 3:
-            # --- STYLING CSS RPG BADGE FRAME & UI (LINK WATERMARK NAGA DIPERBAIKI) ---
+       elif page_num == 3:
+            # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
             rpg_badge_style = """
             <style>
             .rpg-open-book-container {
@@ -2866,20 +2866,20 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 flex-direction: column;
                 min-height: 480px;
                 position: relative;
+                overflow: hidden;
             }
             .rpg-book-page::before {
                 content: "";
                 position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                width: 300px;
-                height: 300px;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
                 background-image: url("https://img.pikbest.com/png-images/20250303/fierce-dragon-silhouette--e2-80-93-stylized-black-and-white-mythical-beast-illustration_11570728.png!bw800");
                 background-repeat: no-repeat;
                 background-position: center;
-                background-size: contain;
-                opacity: 0.08;
+                background-size: 80% auto;
+                opacity: 0.14;
                 pointer-events: none;
             }
             .rpg-badge-1 {
@@ -3096,10 +3096,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             rest_html = ""
             for i, (n, s) in enumerate(formatted_ranking[3:9]):
                 rank = i + 4
-                rest_html += f'<div class="rpg-normal-row"><div style="display: flex; align-items: center; gap: 6px;"><span>🛡️</span><span><strong>#{rank}</strong> | {n}</span></div><div>{s}</div></div>'
+                rest_html += f'<div class="rpg-normal-row" style="position: relative; z-index: 1;"><div style="display: flex; align-items: center; gap: 6px;"><span>🛡️</span><span><strong>#{rank}</strong> | {n}</span></div><div>{s}</div></div>'
 
             if not rest_html:
-                rest_html = "<div style='color:#78350f; font-size:12px; text-align:center; margin-top:20px;'><i>Tidak ada personil lanjutan.</i></div>"
+                rest_html = "<div style='color:#78350f; font-size:12px; text-align:center; margin-top:20px; position: relative; z-index: 1;'><i>Tidak ada personil lanjutan.</i></div>"
 
             # --- RENDER STRUKTUR UTAMA ---
             html_open_tugas = (
