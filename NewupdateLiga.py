@@ -2583,14 +2583,28 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 color: #451a03 !important;
             }
 
-            rpg_badge_style = (
-            "<style>"
-            ".rpg-badge-1 { background: linear-gradient(to bottom right, #fef08a, #eab308, #ca8a04); border: 2px solid #713f12; box-shadow: 0 0 10px rgba(234, 179, 8, 0.6); color: #422006 !important; font-weight: bold; }"
-            ".rpg-badge-2 { background: linear-gradient(to bottom right, #f1f5f9, #cbd5e1, #94a3b8); border: 2px solid #475569; box-shadow: 0 0 8px rgba(148, 163, 184, 0.5); color: #0f172a !important; font-weight: bold; }"
-            ".rpg-badge-3 { background: linear-gradient(to bottom right, #fed7aa, #f97316, #c2410c); border: 2px solid #7c2d12; box-shadow: 0 0 8px rgba(249, 115, 22, 0.5); color: #431407 !important; font-weight: bold; }"
-            "</style>"
-            )
-            st.markdown(rpg_badge_style, unsafe_allow_html=True)
+            rpg_badge_style = 
+            .rpg-badge-1 {
+                background: linear-gradient(135deg, #fef08a 0%, #eab308 100%);
+                border: 2px solid #713f12;
+                box-shadow: 0 0 10px rgba(234, 179, 8, 0.6);
+                color: #422006 !important;
+                font-weight: bold;
+            }
+            .rpg-badge-2 {
+                background: linear-gradient(135deg, #f1f5f9 0%, #94a3b8 100%);
+                border: 2px solid #475569;
+                box-shadow: 0 0 8px rgba(148, 163, 184, 0.5);
+                color: #0f172a !important;
+                font-weight: bold;
+            }
+            .rpg-badge-3 {
+                background: linear-gradient(135deg, #fed7aa 0%, #c2410c 100%);
+                border: 2px solid #7c2d12;
+                box-shadow: 0 0 8px rgba(249, 115, 22, 0.5);
+                color: #431407 !important;
+                font-weight: bold;
+            }
 
             /* RPG Item Card Styling untuk Target Item Interaktif */
             .rpg-item-card {
