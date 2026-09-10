@@ -2884,6 +2884,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             """
             st.markdown(rpg_badge_style, unsafe_allow_html=True)
 
+            # Pastikan active_period aman terdefinisi
+            if 'active_period' not in locals() and 'active_period' not in globals():
+                active_period = st.session_state.get("active_period", "Periode Aktif")
+
             # --- LOGIKA DATA HALAMAN 3 ---
             sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
             sales_item_df = st.session_state.get("sales_item_df", pd.DataFrame())
@@ -3004,13 +3008,15 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             formatted_ranking = []
             for name, qty, achiv_count in ranking_list:
-                score_label = "{} Pcs <span style='font-size:11px; color:#065f46; font-weight:normal;'>(✨ {} Item Achiv Bulan Ini)</span>".format(qty, achiv_count)
+                score_label = f"{qty} Pcs <span style='font-size:11px; color:#065f46; font-weight:normal;'>(✨ {achiv_count} Item Achiv Bulan Ini)</span>"
                 formatted_ranking.append((name, score_label))
 
+            # Fallback dummy data jika kosong agar tetap ada isinya
             if not formatted_ranking:
-                formatted_ranking = [(n, "0 Pcs <span style='font-size:11px; color:#92400e;'>(✨ 0 Item Achiv Bulan Ini)</span>") for n, _ in dummy_9_personil]
+                dummy_9_personil = [("Agent 1", "0 Pcs"), ("Agent 2", "0 Pcs"), ("Agent 3", "0 Pcs"), ("Agent 4", "0 Pcs"), ("Agent 5", "0 Pcs"), ("Agent 6", "0 Pcs"), ("Agent 7", "0 Pcs"), ("Agent 8", "0 Pcs"), ("Agent 9", "0 Pcs")]
+                formatted_ranking = [(n, s + " <span style='font-size:11px; color:#92400e;'>(✨ 0 Item Achiv Bulan Ini)</span>") for n, s in dummy_9_personil]
 
-            # --- PERULANGAN LANGSUNG TANPA FUNGSI TAMBAHAN (AMAN & TIDAK PECAH) ---
+            # --- PERULANGAN LANGSUNG (AMAN & TIDAK PECAH) ---
             top_3_html = ""
             for i, (n, s) in enumerate(formatted_ranking[:3]):
                 rank = i + 1
@@ -3031,25 +3037,25 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             if not rest_html:
                 rest_html = "<div style='color:#78350f; font-size:12px; text-align:center; margin-top:20px;'><i>Tidak ada personil lanjutan.</i></div>"
 
-            # --- RENDER STRUKTUR BUKU TERBUKA ---
-            html_open_tugas = """
-            <div class="rpg-open-book-container">
-                <div class="rpg-book-page rpg-book-page-left">
-                    <h3 class="open-page-title">⚔️ PSM TOP (1-3)</h3>
-                    <p class="open-page-sub">Periode: {active_period}</p>
-                    <div class="open-book-divider"></div>
-                    {top_3_html}
-                    <div class="open-page-footer">Halaman Kiri • PSM 1-3</div>
-                </div>
-                <div class="rpg-book-page rpg-book-page-right">
-                    <h3 class="open-page-title">⚔️ PSM (4-9)</h3>
-                    <p class="open-page-sub">Kelanjutan Peringkat Periode</p>
-                    <div class="open-book-divider"></div>
-                    {rest_html}
-                    <div class="open-page-footer">Halaman Kanan • PSM 4-9</div>
-                </div>
-            </div>
-            """
+            # --- RENDER STRUKTUR BUKU TERBUKA (MENGGUNAKAN AMAN FORMAT STRING) ---
+            html_open_tugas = (
+                '<div class="rpg-open-book-container">'
+                '<div class="rpg-book-page rpg-book-page-left">'
+                '<h3 class="open-page-title">⚔️ PSM TOP (1-3)</h3>'
+                f'<p class="open-page-sub">Periode: {active_period}</p>'
+                '<div class="open-book-divider"></div>'
+                f'{top_3_html}'
+                '<div class="open-page-footer">Halaman Kiri • PSM 1-3</div>'
+                '</div>'
+                '<div class="rpg-book-page rpg-book-page-right">'
+                '<h3 class="open-page-title">⚔️ PSM (4-9)</h3>'
+                '<p class="open-page-sub">Kelanjutan Peringkat Periode</p>'
+                '<div class="open-book-divider"></div>'
+                f'{rest_html}'
+                '<div class="open-page-footer">Halaman Kanan • PSM 4-9</div>'
+                '</div>'
+                '</div>'
+            )
 
         elif page_num == 4:
             rows_pps_13 = "".join([format_row(i + 1, n, s) for i, (n, s) in enumerate(dummy_9_personil[:3])])
