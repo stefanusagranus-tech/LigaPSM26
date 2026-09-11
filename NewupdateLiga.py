@@ -2898,7 +2898,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 badge_txt = "✨ TERCAPAI" if ok else f"⚡ GAP: {int(gap)}"
                 badge_col = "#15803d" if ok else "#b45309"
 
-                list_html_items += '<div style="background: #fffbeb; border: 2px solid #d97706; border-radius: 8px; padding: 10px 15px; margin-bottom: 12px;"><div style="font-weight: bold; color: #78350f; font-size: 14px; margin-bottom: 5px;">⚡ {}</div><div style="font-size: 12px; color: #451a03; margin-bottom: 8px;">{}</div><div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;"><span>Aktual: <b style="color: #2563eb;">{}</b> | Target: <b style="color: #dc2626;">{}</b></span><span style="color: {}; font-weight: bold;">{:.1f}% ({})</span></div></div>'.format(p_name, info_syarat, int(actual_val), int(target_val), badge_col, achiv, badge_txt)
+                list_html_items += '<div style="background: #fffbeb; border: 2px solid #d97706; border-radius: 8px; padding: 12px 15px; margin-bottom: 12px;"><div style="font-weight: 800; color: #451a03; font-size: 14px; margin-bottom: 5px;">⚡ {}</div><div style="font-size: 12px; color: #1c1917; font-weight: 700; margin-bottom: 8px;">{}</div><div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;"><span>Aktual: <b style="color: #1d4ed8; font-weight: 800;">{}</b> | Target: <b style="color: #b91c1c; font-weight: 800;">{}</b></span><span style="color: {}; font-weight: 800;">{:.1f}% ({})</span></div></div>'.format(p_name, info_syarat, int(actual_val), int(target_val), badge_col, achiv, badge_txt)
 
             if not list_html_items:
                 list_html_items = "<div style='text-align:center; color:#78350f;'><i>Belum ada data Target PPS aktif.</i></div>"
@@ -2917,40 +2917,39 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             total_achiv = (total_all_actual / total_all_target * 100) if total_all_target > 0 else 0
             total_gap = max(0, total_all_target - total_all_actual)
 
-            # Layout Buku Sesuai Contoh Bersih yang Kamu Berikan
             html_open_tugas = """
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page rpg-book-page-left">
-                    <h3 class="open-page-title">🛡️ TARGET PPS</h3>
-                    <p class="open-page-sub">Rincian Target Harian ({active_period})</p>
+                    <h3 class="open-page-title" style="color: #2c1810; font-weight: 900;">🛡️ TARGET PPS</h3>
+                    <p class="open-page-sub" style="color: #4a2810; font-weight: 700;">Rincian Target Harian ({active_period})</p>
                     <div class="open-book-divider"></div>
                     {list_items}
-                    <div class="open-page-footer">Halaman Kiri • Target PPS</div>
+                    <div class="open-page-footer" style="color: #5c3a21; font-weight: 700;">Halaman Kiri • Target PPS</div>
                 </div>
                 <div class="rpg-book-page rpg-book-page-right">
-                    <h3 class="open-page-title">📍 POSISI PAHLAWAN</h3>
-                    <p class="open-page-sub">Status Performa Guild Anda</p>
+                    <h3 class="open-page-title" style="color: #2c1810; font-weight: 900;">📍 POSISI PAHLAWAN</h3>
+                    <p class="open-page-sub" style="color: #4a2810; font-weight: 700;">Status Performa Guild Anda</p>
                     <div class="open-book-divider"></div>
-                    <div style="background: linear-gradient(135deg, #1e1b4b, #31103d); border: 3px solid #f59e0b; border-radius: 12px; padding: 20px; text-align: center; color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-                        <div style="font-size: 12px; letter-spacing: 2px; color: #fbbf24; font-weight: bold; margin-bottom: 10px;">⚔️ MONTHLY GUILD PERFORMANCE ⚔️</div>
+                    <div style="background: linear-gradient(135deg, #1e1b4b, #31103d); border: 3px solid #f59e0b; border-radius: 12px; padding: 20px; text-align: center; color: #ffffff; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                        <div style="font-size: 13px; letter-spacing: 2px; color: #fef08a; font-weight: 800; margin-bottom: 10px;">⚔️ MONTHLY GUILD PERFORMANCE ⚔️</div>
                         <div style="display: flex; justify-content: space-around; align-items: center; margin: 15px 0;">
                             <div>
-                                <div style="font-size: 11px; color: #93c5fd;">AKTUAL BULAN INI</div>
-                                <div style="font-size: 26px; font-weight: bold; color: #38bdf8;">{actual_val_str}</div>
+                                <div style="font-size: 12px; color: #93c5fd; font-weight: bold;">AKTUAL BULAN INI</div>
+                                <div style="font-size: 28px; font-weight: 900; color: #38bdf8;">{actual_val_str}</div>
                             </div>
-                            <div style="font-size: 20px; font-weight: bold; color: #f59e0b;">VS</div>
+                            <div style="font-size: 22px; font-weight: 900; color: #f59e0b;">VS</div>
                             <div>
-                                <div style="font-size: 11px; color: #fca5a5;">TARGET BULAN INI</div>
-                                <div style="font-size: 26px; font-weight: bold; color: #f87171;">{target_val_str}</div>
+                                <div style="font-size: 12px; color: #fca5a5; font-weight: bold;">TARGET BULAN INI</div>
+                                <div style="font-size: 28px; font-weight: 900; color: #f87171;">{target_val_str}</div>
                             </div>
                         </div>
-                        <div style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; margin-top: 10px;">
-                            <div style="font-size: 13px; color: #e2e8f0;">Pencapaian Total (1 Bulan):</div>
-                            <div style="font-size: 22px; font-weight: bold; color: #34d399; margin: 4px 0;">{achiv_str}%</div>
-                            <div style="font-size: 12px; color: #fde047;">GAP (Kekurangan): {gap_str} Pcs</div>
+                        <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 8px; padding: 12px; margin-top: 10px;">
+                            <div style="font-size: 13px; color: #e2e8f0; font-weight: bold;">Pencapaian Total (1 Bulan):</div>
+                            <div style="font-size: 24px; font-weight: 900; color: #4ade80; margin: 4px 0;">{achiv_str}%</div>
+                            <div style="font-size: 13px; color: #fde047; font-weight: bold;">GAP (Kekurangan): {gap_str} Pcs</div>
                         </div>
                     </div>
-                    <div class="open-page-footer">Halaman Kanan • Posisi Pahlawan</div>
+                    <div class="open-page-footer" style="color: #5c3a21; font-weight: 700;">Halaman Kanan • Posisi Pahlawan</div>
                 </div>
             </div>
             """.format(
@@ -2961,6 +2960,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 achiv_str=f"{total_achiv:.1f}",
                 gap_str=int(total_gap)
             )
+            
 
         elif page_num == 3:
             # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
