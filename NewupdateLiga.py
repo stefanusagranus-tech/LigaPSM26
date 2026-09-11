@@ -16,6 +16,8 @@ import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 import streamlit as st
 import streamlit.components.v1 as components
+import textwrap
+
 
 # ==========================================
 # 1. KONFIGURASI HALAMAN STREAMLIT
@@ -2922,9 +2924,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 total_achiv = (total_all_actual / total_all_target * 100) if total_all_target > 0 else 0
                 total_gap = total_all_target - total_all_actual
 
-                posisi_content_html = """
+                posisi_content_html = f"""
                 <div style="background: linear-gradient(135deg, #1e1b4b, #31103d); border: 3px solid #f59e0b; border-radius: 12px; padding: 20px; text-align: center; color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
                     <div style="font-size: 12px; letter-spacing: 2px; color: #fbbf24; font-weight: bold; margin-bottom: 10px;">⚔️ WAR MATCH • TOTAL GUILD PERFORMANCE ⚔️</div>
+                    
                     <div style="display: flex; justify-content: space-around; align-items: center; margin: 15px 0;">
                         <div>
                             <div style="font-size: 11px; color: #93c5fd;">AKTUAL TOKO</div>
@@ -2936,6 +2939,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                             <div style="font-size: 26px; font-weight: bold; color: #f87171;">{int(total_all_target)}</div>
                         </div>
                     </div>
+
                     <div style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; margin-top: 10px;">
                         <div style="font-size: 13px; color: #e2e8f0;">Pencapaian Total (Achievement):</div>
                         <div style="font-size: 22px; font-weight: bold; color: #34d399; margin: 4px 0;">{total_achiv:.1f}%</div>
@@ -2949,7 +2953,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 <div class="open-stat-row"><span>🛡️ RANK PPS</span><span style="color:#b45309; font-weight:bold;">🛡️ Peringkat #5 (85%)</span></div>
                 <div class="open-stat-row"><span>⚡ RANK SUEGER</span><span style="color:#ca8a04; font-weight:bold;">🥈 Peringkat #2 (94%)</span></div>
                 """
-            html_open_tugas = """
+
+            # --- DIGABUNG MENGGUNAKAN textwrap.dedent() & .format() ---
+            html_open_tugas = textwrap.dedent("""
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page rpg-book-page-left">
                     <h3 class="open-page-title">🛡️ TARGET PPS</h3>
@@ -2966,7 +2972,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     <div class="open-page-footer">Halaman Kanan • Posisi Pahlawan</div>
                 </div>
             </div>
-            """.format(pps_content=pps_items_html, posisi_content=posisi_content_html)
+            """).strip().format(pps_content=pps_items_html, posisi_content=posisi_content_html)
+
+            # Render aman ke Streamlit
+            st.markdown(html_open_tugas, unsafe_allow_html=True)
 
         elif page_num == 3:
             # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
