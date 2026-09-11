@@ -2845,9 +2845,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             user_role = str(st.session_state.get("role", "user")).strip().lower()
             is_admin = (user_role == "admin" or current_user == "admin")
 
-            # ==========================================
-            # 1. HITUNG TIME FACTOR
-            # ==========================================
+            # 1. Hitung Time Factor
             active_pps_rows = []
             active_period = "Program PPS"
             time_factor = 50.0
@@ -2873,10 +2871,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     except Exception:
                         time_factor = 50.0
 
-            # ==========================================
-            # 2. RENDER ITEM KIRI (TARGET PPS)
-            # ==========================================
-            list_html_items = ""
+            # 2. Olah Data Kiri (Target PPS)
+            items_kiri_list = []
             icon_list = ["🛡️", "⚡", "🗡️", "🏹", "📜"]
             
             for idx, r in enumerate(active_pps_rows):
@@ -2917,31 +2913,18 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     gap = max(0, target_val - actual_val)
                     info_syarat = f"Target: {int(target_val)} Pcs | Aktual: <b>{int(actual_val)}</b>"
 
-                # Logika warna berdasarkan Time Factor
                 is_above_tf = achiv >= time_factor
                 badge_cls = "badge-success" if is_above_tf else "badge-warning"
                 achiv_color = "#065f46" if is_above_tf else "#b91c1c"
                 badge_txt = "ON TRACK" if is_above_tf else f"GAP: {int(gap)}"
 
-                item_card = f"""
-                <div class="rpg-item-card">
-                    <div>
-                        <div class="item-title">{icon} {p_name} <span class="{badge_cls}">{badge_txt}</span></div>
-                        <div class="item-stats">{info_syarat}</div>
-                    </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 14px; font-weight: bold; color: {achiv_color};">{achiv:.1f}%</div>
-                    </div>
-                </div>
-                """
-                list_html_items += item_card
+                items_kiri_list.append({
+                    "icon": icon, "p_name": p_name, "badge_cls": badge_cls,
+                    "badge_txt": badge_txt, "info_syarat": info_syarat,
+                    "achiv_color": achiv_color, "achiv": achiv
+                })
 
-            if not list_html_items:
-                list_html_items = '<div style="color:#78350f; font-size:12px; text-align:center; margin-top:20px;"><i>Belum ada data Target PPS aktif.</i></div>'
-
-            # ==========================================
-            # 3. RENDER ITEM KANAN (GUILD PERFORMANCE)
-            # ==========================================
+            # 3. Olah Data Kanan (Guild Performance)
             programs = [
                 {"name": "PSM / Target Item", "key": "psm", "col_act": "actual_qty"},
                 {"name": "PWP", "key": "pwp", "col_act": "qty_pwp"},
@@ -2949,7 +2932,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 {"name": "Suegeer (Target 50%)", "key": "suegeer", "col_act": "qty_suegeer"}
             ]
 
-            prog_cards_html = ""
+            items_kanan_list = []
             total_m_target = 0
             total_m_actual = 0
 
@@ -2974,7 +2957,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 pct_blue = min(100.0, p_achiv)
                 pct_red = max(0.0, 100.0 - pct_blue)
 
-                # Cari MVP
                 mvp_name = "-"
                 if not sales_pps_df.empty and "kasir_name" in sales_pps_df.columns:
                     if p_key == "suegeer" and "syarat_suegeer" in sales_pps_df.columns and "redeem_suegeer" in sales_pps_df.columns:
@@ -2987,41 +2969,44 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         if not grp.empty and grp.max() > 0:
                             mvp_name = str(grp.idxmax()).title()
 
-                prog_bar = f"""
-                <div style="background: rgba(120, 53, 15, 0.05); border: 1px solid #b45309; border-radius: 8px; padding: 6px; margin-bottom: 6px;">
-                    <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; color: #451a03; margin-bottom: 3px;">
-                        <span>🗡️ {p['name']}</span>
-                        <span>👑 MVP: <b style="color: #b45309;">{mvp_name}</b></span>
-                    </div>
-                    <div style="display: flex; height: 12px; width: 100%; border-radius: 4px; overflow: hidden; border: 1px solid #78350f; background: #fee2e2;">
-                        <div style="width: {pct_blue}%; background: linear-gradient(90deg, #1d4ed8, #3b82f6); color: #fff; font-size: 8px; text-align: center; line-height: 12px; font-weight: bold;">
-                            {p_achiv:.0f}%
-                        </div>
-                        <div style="width: {pct_red}%; background: linear-gradient(90deg, #ef4444, #b91c1c);"></div>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: bold; margin-top: 2px;">
-                        <span style="color: #1d4ed8;">Aktual: {int(p_actual)}</span>
-                        <span style="color: #b91c1c;">Target: {int(p_target)}</span>
-                    </div>
-                </div>
-                """
-                prog_cards_html += prog_bar
+                items_kanan_list.append({
+                    "name": p["name"], "mvp": mvp_name, "pct_blue": pct_blue,
+                    "p_achiv": p_achiv, "pct_red": pct_red, "p_actual": int(p_actual),
+                    "p_target": int(p_target)
+                })
 
             total_m_achiv = (total_m_actual / total_m_target * 100) if total_m_target > 0 else 0
             total_m_gap = int(max(0, total_m_target - total_m_actual))
 
-            # ==========================================
-            # 4. STRUCTURE BUKU UTAMA (SESUAI HALAMAN 1)
-            # ==========================================
-            html_open_tugas = f"""
+            # =========================================================
+            # 4. HANYA 1 HTML UTUH DENGAN STRUKTUR DENTASI BERTINGKAT
+            # =========================================================
+            single_html_content = textwrap.dedent(f"""
             <div class="rpg-open-book-container">
+                <!-- HALAMAN KIRI -->
                 <div class="rpg-book-page rpg-book-page-left">
                     <h3 class="open-page-title">🛡️ TARGET PPS</h3>
                     <p class="open-page-sub">Rincian Target Harian ({active_period})</p>
-                    <div class="open-book-divider"></div>
-                    {list_html_items}
+                    <div class="open-book-divider"></div>      
+                    {"".join([f'''
+                    <div class="rpg-item-card">
+                        <div>
+                            <div class="item-title">
+                                {x["icon"]} {x["p_name"]} 
+                                <span class="{x["badge_cls"]}">{x["badge_txt"]}</span>
+                            </div>
+                            <div class="item-stats">{x["info_syarat"]}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 14px; font-weight: bold; color: {x["achiv_color"]};">
+                                {x["achiv"]:.1f}%
+                            </div>
+                        </div>
+                    </div>
+                    ''' for x in items_kiri_list]) if items_kiri_list else '<div style="color:#78350f; font-size:12px; text-align:center; margin-top:20px;"><i>Belum ada data Target PPS aktif.</i></div>'}
                     <div class="open-page-footer">Halaman Kiri • Target PPS</div>
                 </div>
+                <!-- HALAMAN KANAN -->
                 <div class="rpg-book-page rpg-book-page-right">
                     <h3 class="open-page-title">📍 POSISI PAHLAWAN</h3>
                     <p class="open-page-sub">Status Performa Guild Bulanan</p>
@@ -3030,7 +3015,24 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         <div style="font-size: 11px; font-weight: 900; color: #451a03; text-align: center; letter-spacing: 1px; margin-bottom: 6px;">
                             ⚔️ MONTHLY GUILD PERFORMANCE ⚔️
                         </div>
-                        {prog_cards_html}
+                        {"".join([f'''
+                        <div style="background: rgba(120, 53, 15, 0.05); border: 1px solid #b45309; border-radius: 8px; padding: 6px; margin-bottom: 6px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; color: #451a03; margin-bottom: 3px;">
+                                <span>🗡️ {y["name"]}</span>
+                                <span>👑 MVP: <b style="color: #b45309;">{y["mvp"]}</b></span>
+                            </div>
+                            <div style="display: flex; height: 12px; width: 100%; border-radius: 4px; overflow: hidden; border: 1px solid #78350f; background: #fee2e2;">
+                                <div style="width: {y["pct_blue"]:.1f}%; background: linear-gradient(90deg, #1d4ed8, #3b82f6); color: #fff; font-size: 8px; text-align: center; line-height: 12px; font-weight: bold;">
+                                    {y["p_achiv"]:.0f}%
+                                </div>
+                                <div style="width: {y["pct_red"]:.1f}%; background: linear-gradient(90deg, #ef4444, #b91c1c);"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: bold; margin-top: 2px;">
+                                <span style="color: #1d4ed8;">Aktual: {y["p_actual"]}</span>
+                                <span style="color: #b91c1c;">Target: {y["p_target"]}</span>
+                            </div>
+                        </div>
+                        ''' for y in items_kanan_list])}
                         <div style="background: rgba(120, 53, 15, 0.1); border-top: 2px dashed #b45309; border-radius: 6px; padding: 5px; text-align: center; margin-top: 4px;">
                             <span style="font-size: 11px; color: #451a03; font-weight: bold;">Total Performance: </span>
                             <b style="font-size: 13px; color: #047857;">{total_m_achiv:.1f}%</b>
@@ -3040,9 +3042,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     <div class="open-page-footer">Halaman Kanan • Posisi Pahlawan</div>
                 </div>
             </div>
-            """
-            
-            st.markdown(html_open_tugas, unsafe_allow_html=True)
+            """)
+
         
         elif page_num == 3:
             # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
