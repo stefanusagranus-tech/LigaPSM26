@@ -2961,13 +2961,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     <div class="open-page-footer">Halaman Kanan • Posisi Pahlawan</div>
                 </div>
             </div>
-            """.format(
-                list_items=list_html_items,
-                actual_val_str=int(total_all_actual),
-                target_val_str=int(total_all_target),
-                achiv_str=f"{total_achiv:.1f}",
-                gap_str=int(total_gap)
-            )
+            """.format(list_items=list_html_items, actual_val_str=int(total_all_actual), target_val_str=int(total_all_target), achiv_str=f"{total_achiv:.1f}", gap_str=int(total_gap))
 
         elif page_num == 3:
             # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
