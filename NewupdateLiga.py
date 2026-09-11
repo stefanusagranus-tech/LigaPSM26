@@ -2919,18 +2919,16 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     badge_text = "✨ TERCAPAI" if is_success else f"⚡ GAP: {int(gap)}"
                     badge_color = "#15803d" if is_success else "#b45309"
 
-                    html_chunks += f"""
-                    <div style="background: #fffbeb; border: 2px solid #d97706; border-radius: 8px; padding: 10px 15px; margin-bottom: 12px;">
-                        <div style="font-weight: bold; color: #78350f; font-size: 14px; margin-bottom: 5px;">⚡ {p_name}</div>
-                        <div style="font-size: 12px; color: #451a03; margin-bottom: 8px;">{status_syarat}</div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
-                            <span>Aktual: <b style="color: #2563eb;">{int(actual_val)}</b> | Target: <b style="color: #dc2626;">{int(target_val)}</b></span>
-                            <span style="color: {badge_color}; font-weight: bold;">{achiv:.1f}% ({badge_text})</span>
-                        </div>
-                    </div>
-                    """
-                return html_chunks
-            # 6. SATUKAN SELURUH STRUKTUR BUKU KIRI DAN KANAN DALAM SATU TEMPLATE UTUH
+            html_chunks += f"""
+            <div style="background: #fffbeb; border: 2px solid #d97706; border-radius: 8px; padding: 10px 15px; margin-bottom: 12px;">
+                <div style="font-weight: bold; color: #78350f; font-size: 14px; margin-bottom: 5px;">⚡ {p_name}</div>
+                <div style="font-size: 12px; color: #451a03; margin-bottom: 8px;">{status_syarat}</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+                    <span>Aktual: <b style="color: #2563eb;">{int(actual_val)}</b> | Target: <b style="color: #dc2626;">{int(target_val)}</b></span>
+                    <span style="color: {badge_color}; font-weight: bold;">{achiv:.1f}% ({badge_text})</span>
+                </div>
+            </div>
+            """
             html_open_tugas = f"""
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page rpg-book-page-left">
@@ -2965,7 +2963,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     </div>
                     <div class="open-page-footer">Halaman Kanan • Posisi Pahlawan</div>
                 </div>
-            </div>
             """
             
             st.markdown(html_open_tugas, unsafe_allow_html=True)
