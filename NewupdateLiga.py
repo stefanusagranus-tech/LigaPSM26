@@ -2944,20 +2944,16 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         <div style="text-align: center; color: #451a03; font-weight: 900; font-size: 18px; margin-bottom: 2px;">🛡️ TARGET PPS</div>
                         <div style="text-align: center; color: #78350f; font-weight: 700; font-size: 11px; margin-bottom: 8px;">Rincian Target Harian ({active_period})</div>
                         <div style="border-bottom: 2px solid #b45309; margin-bottom: 8px;"></div>
-                        
                         {list_items}
                     </div>
-                    
                     <div style="text-align: center; color: #78350f; font-weight: 700; font-size: 10px; border-top: 1px solid #fde68a; padding-top: 4px;">Halaman Kiri • Target PPS</div>
                 </div>
-                
                 <!-- Halaman Kanan -->
                 <div style="flex: 1; background: #fffbeb; border: 3px solid #b45309; border-radius: 12px; padding: 12px 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); height: 480px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between;">
                     <div>
                         <div style="text-align: center; color: #451a03; font-weight: 900; font-size: 18px; margin-bottom: 2px;">📍 POSISI PAHLAWAN</div>
                         <div style="text-align: center; color: #78350f; font-weight: 700; font-size: 11px; margin-bottom: 8px;">Status Performa Guild Anda</div>
                         <div style="border-bottom: 2px solid #b45309; margin-bottom: 12px;"></div>
-                        
                         <div style="background: #1e1b4b; border: 3px solid #f59e0b; border-radius: 10px; padding: 15px; text-align: center; color: #ffffff;">
                             <div style="font-size: 11px; letter-spacing: 1px; color: #fbbf24; font-weight: 800; margin-bottom: 10px;">⚔️ MONTHLY GUILD PERFORMANCE ⚔️</div>
                             <div style="display: flex; justify-content: space-around; align-items: center; margin: 12px 0;">
@@ -2978,7 +2974,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                             </div>
                         </div>
                     </div>
-                    
                     <div style="text-align: center; color: #78350f; font-weight: 700; font-size: 10px; border-top: 1px solid #fde68a; padding-top: 4px;">Halaman Kanan • Posisi Pahlawan</div>
                 </div>
             </div>
