@@ -2927,7 +2927,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             total_gap = max(0, total_all_target - total_all_actual)
 
             # TEMPLATE UTUH
-            html_open_tugas = f"""
+            html_open_tugas = """
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page rpg-book-page-left">
                     <h3 class="open-page-title">🛡️ TARGET PPS</h3>
@@ -2963,8 +2963,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 </div>
             </div>
             """
-            
-            st.markdown(html_open_tugas, unsafe_allow_html=True)
 
         elif page_num == 3:
             # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
