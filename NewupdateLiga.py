@@ -2835,7 +2835,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             </div>
             """.format(active_period=active_period, items_html_left=items_html_left, items_html_right=items_html_right)
 
-       elif page_num == 2:
+        elif page_num == 2:
             # Ambil data dari session state
             periods_pps_df = st.session_state.get("periods_pps_df", pd.DataFrame())
             sales_pps_df = st.session_state.get("sales_pps_df", pd.DataFrame())
