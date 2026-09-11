@@ -2837,10 +2837,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             </div>
             """.format(active_period=active_period, items_html_left=items_html_left, items_html_right=items_html_right)
 
-        elif page_num == 2:
-            # INISIALISASI VARIABEL UTAMA DI ATAS AGAR AMAN DARI SCOPE ERROR
-            list_html_items = ""
-            
+       elif page_num == 2:
             periods_pps_df = st.session_state.get("periods_pps_df", pd.DataFrame())
             sales_pps_df = st.session_state.get("sales_pps_df", pd.DataFrame())
             
@@ -2849,14 +2846,18 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             is_admin = (user_role == "admin" or current_user == "admin")
 
             active_pps_rows = []
+            active_period = "Program PPS"
             if not periods_pps_df.empty:
                 for _, r in periods_pps_df.iterrows():
                     if str(r.get("status", "")).strip().lower() == "aktif":
                         active_pps_rows.append(r)
                 if not active_pps_rows:
                     active_pps_rows = [periods_pps_df.iloc[0]]
+                    
+                if active_pps_rows:
+                    active_period = str(active_pps_rows[0].get("period_name", "Program PPS"))
 
-            # Generate item HTML kiri
+            list_html_items = ""
             for r in active_pps_rows:
                 p_name = str(r.get("period_name", "Program PPS"))
                 target_total = float(pd.to_numeric(r.get("target_total", 0), errors="coerce"))
@@ -2897,10 +2898,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 badge_txt = "✨ TERCAPAI" if ok else f"⚡ GAP: {int(gap)}"
                 badge_col = "#15803d" if ok else "#b45309"
 
+                list_html_items += '<div style="background: #fffbeb; border: 2px solid #d97706; border-radius: 8px; padding: 10px 15px; margin-bottom: 12px;"><div style="font-weight: bold; color: #78350f; font-size: 14px; margin-bottom: 5px;">⚡ {}</div><div style="font-size: 12px; color: #451a03; margin-bottom: 8px;">{}</div><div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;"><span>Aktual: <b style="color: #2563eb;">{}</b> | Target: <b style="color: #dc2626;">{}</b></span><span style="color: {}; font-weight: bold;">{:.1f}% ({})</span></div></div>'.format(p_name, info_syarat, int(actual_val), int(target_val), badge_col, achiv, badge_txt)
+
             if not list_html_items:
                 list_html_items = "<div style='text-align:center; color:#78350f;'><i>Belum ada data Target PPS aktif.</i></div>"
 
-            # Hitung data kanan
             total_all_target = periods_pps_df["target_total"].apply(lambda x: pd.to_numeric(x, errors="coerce")).sum() if not periods_pps_df.empty else 0
             if is_admin:
                 total_all_actual = periods_pps_df["actual_qty"].apply(lambda x: pd.to_numeric(x, errors="coerce")).sum() if not periods_pps_df.empty else 0
@@ -2915,11 +2917,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             total_achiv = (total_all_actual / total_all_target * 100) if total_all_target > 0 else 0
             total_gap = max(0, total_all_target - total_all_actual)
 
+            # Layout Buku Sesuai Contoh Bersih yang Kamu Berikan
             html_open_tugas = """
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page rpg-book-page-left">
                     <h3 class="open-page-title">🛡️ TARGET PPS</h3>
-                    <p class="open-page-sub">Rincian Target Harian PPS</p>
+                    <p class="open-page-sub">Rincian Target Harian ({active_period})</p>
                     <div class="open-book-divider"></div>
                     {list_items}
                     <div class="open-page-footer">Halaman Kiri • Target PPS</div>
@@ -2950,7 +2953,16 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     <div class="open-page-footer">Halaman Kanan • Posisi Pahlawan</div>
                 </div>
             </div>
-            """.format(list_items=list_html_items, actual_val_str=int(total_all_actual), target_val_str=int(total_all_target), achiv_str=f"{total_achiv:.1f}", gap_str=int(total_gap))
+            """.format(
+                active_period=active_period,
+                list_items=list_html_items,
+                actual_val_str=int(total_all_actual),
+                target_val_str=int(total_all_target),
+                achiv_str=f"{total_achiv:.1f}",
+                gap_str=int(total_gap)
+            )
+            
+            st.markdown(html_open_tugas, unsafe_allow_html=True)
 
         elif page_num == 3:
             # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
