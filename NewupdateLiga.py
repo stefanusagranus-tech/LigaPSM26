@@ -2838,16 +2838,29 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             """.format(active_period=active_period, items_html_left=items_html_left, items_html_right=items_html_right)
 
         elif page_num == 2:
+            # 1. AMBIL SESSION STATE
+            periods_df = st.session_state.get("periods_df", pd.DataFrame())
             periods_pps_df = st.session_state.get("periods_pps_df", pd.DataFrame())
             sales_pps_df = st.session_state.get("sales_pps_df", pd.DataFrame())
+            sales_item_df = st.session_state.get("sales_item_df", pd.DataFrame())
+            sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
             
             current_user = str(st.session_state.get("username", st.session_state.get("user", "admin"))).strip().lower()
             user_role = str(st.session_state.get("role", "user")).strip().lower()
             is_admin = (user_role == "admin" or current_user == "admin")
 
-            # 1. Hitung Time Factor
+            # 2. CARI PERIODE AKTIF UTAMA & DATES
+            active_period_id = ""
+            if not periods_df.empty:
+                active_p = periods_df[periods_df["status"].astype(str).str.strip().str.lower() == "aktif"] if "status" in periods_df.columns else pd.DataFrame()
+                if not active_p.empty:
+                    active_period_id = str(active_p.iloc[0].get("period_id", "")).strip()
+                else:
+                    active_period_id = str(periods_df.iloc[0].get("period_id", "")).strip()
+
+            # 3. HITUNG TIME FACTOR & AMBIL DATA PPS AKTIF
             active_pps_rows = []
-            active_period = "Program PPS"
+            active_period_pps_name = "Program PPS"
             time_factor = 50.0
             
             if not periods_pps_df.empty:
@@ -2859,11 +2872,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     
                 if active_pps_rows:
                     r_act = active_pps_rows[0]
-                    active_period = str(r_act.get("period_name", "Program PPS"))
+                    active_period_pps_name = str(r_act.get("period_name", "Program PPS"))
                     try:
                         s_date = pd.to_datetime(r_act.get("start_date")).date()
                         e_date = pd.to_datetime(r_act.get("end_date")).date()
-                        t_today = today if 'today' in locals() else datetime.now().date()
+                        t_today = pd.Timestamp.now().date()
                         total_days = (e_date - s_date).days + 1
                         passed_days = (t_today - s_date).days + 1
                         passed_days = max(1, min(passed_days, total_days))
@@ -2871,7 +2884,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     except Exception:
                         time_factor = 50.0
 
-            # 2. Olah Data Kiri (Target PPS)
+            # 4. OLAH DATA HALAMAN KIRI (TARGET PPS - TANPA GAP SUEGEER)
             items_kiri_list = []
             icon_list = ["🛡️", "⚡", "🗡️", "🏹", "📜"]
             
@@ -2880,25 +2893,31 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 p_lower = p_name.lower()
                 icon = icon_list[idx % len(icon_list)]
                 
-                syarat_val = float(pd.to_numeric(r.get("syarat_total", r.get("syarat_pwp", r.get("syarat_suegeer", 0))), errors="coerce"))
-                redeem_val = float(pd.to_numeric(r.get("redeem_total", r.get("redeem_pwp", r.get("redeem_suegeer", 0))), errors="coerce"))
+                # Penanganan kolom sueger / suegeer
+                col_syarat_sgr = "syarat_sueger" if "syarat_sueger" in r else "syarat_suegeer"
+                col_redeem_sgr = "redeem_sueger" if "redeem_sueger" in r else "redeem_suegeer"
+
+                syarat_val = float(pd.to_numeric(r.get("syarat_total", r.get("syarat_pwp", r.get(col_syarat_sgr, 0))), errors="coerce"))
+                redeem_val = float(pd.to_numeric(r.get("redeem_total", r.get("redeem_pwp", r.get(col_redeem_sgr, 0))), errors="coerce"))
                 
                 f_sales = sales_pps_df
                 if not is_admin and not sales_pps_df.empty and "kasir_name" in sales_pps_df.columns:
                     f_sales = sales_pps_df[sales_pps_df["kasir_name"].astype(str).str.strip().str.lower() == current_user]
 
-                if "suegeer" in p_lower:
+                if "suegeer" in p_lower or "sueger" in p_lower:
                     if not is_admin and not f_sales.empty:
-                        syarat_val = float(pd.to_numeric(f_sales.get("syarat_suegeer", 0), errors="coerce").sum())
-                        redeem_val = float(pd.to_numeric(f_sales.get("redeem_suegeer", 0), errors="coerce").sum())
+                        s_col = "syarat_sueger" if "syarat_sueger" in f_sales.columns else "syarat_suegeer"
+                        r_col = "redeem_sueger" if "redeem_sueger" in f_sales.columns else "redeem_suegeer"
+                        syarat_val = float(pd.to_numeric(f_sales.get(s_col, 0), errors="coerce").sum())
+                        redeem_val = float(pd.to_numeric(f_sales.get(r_col, 0), errors="coerce").sum())
                         actual_val = float(pd.to_numeric(f_sales.get("qty_suegeer", 0), errors="coerce").sum())
                     else:
                         actual_val = float(pd.to_numeric(r.get("actual_qty", 0), errors="coerce"))
 
-                    target_val = syarat_val * 0.5
                     achiv = (redeem_val / syarat_val * 100) if syarat_val > 0 else 0
-                    gap = max(0, target_val - redeem_val)
                     info_syarat = f"Syarat: {int(syarat_val)} | Redeem: {int(redeem_val)} | Aktual: <b>{int(actual_val)}</b>"
+                    badge_txt = "AKTIF"  # PERMINTAAN: Gap Suegeer Tidak Diperlukan
+                    is_above_tf = True
                 else:
                     target_total = float(pd.to_numeric(r.get("target_total", 0), errors="coerce"))
                     target_val = target_total if is_admin else (target_total / 9.0 if target_total > 0 else 0)
@@ -2906,17 +2925,17 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     q_col = "actual_qty"
                     if "pwp" in p_lower and "qty_pwp" in f_sales.columns: q_col = "qty_pwp"
                     elif "serba" in p_lower and "qty_sg" in f_sales.columns: q_col = "qty_sg"
-                    elif "cemilan" in p_lower and "qty_cemilan_ceban" in f_sales.columns: q_col = "qty_cemilan_ceban"
+                    elif "cemilan" in p_lower and "cemilan_ceban" in f_sales.columns: q_col = "cemilan_ceban"
                     
                     actual_val = float(pd.to_numeric(f_sales[q_col], errors="coerce").sum()) if not f_sales.empty and q_col in f_sales.columns else 0
                     achiv = (actual_val / target_val * 100) if target_val > 0 else 0
                     gap = max(0, target_val - actual_val)
                     info_syarat = f"Target: {int(target_val)} Pcs | Aktual: <b>{int(actual_val)}</b>"
+                    is_above_tf = achiv >= time_factor
+                    badge_txt = "ON TRACK" if is_above_tf else f"GAP: {int(gap)}"
 
-                is_above_tf = achiv >= time_factor
                 badge_cls = "badge-success" if is_above_tf else "badge-warning"
                 achiv_color = "#065f46" if is_above_tf else "#b91c1c"
-                badge_txt = "ON TRACK" if is_above_tf else f"GAP: {int(gap)}"
 
                 items_kiri_list.append({
                     "icon": icon, "p_name": p_name, "badge_cls": badge_cls,
@@ -2924,9 +2943,33 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     "achiv_color": achiv_color, "achiv": achiv
                 })
 
-            # 3. Olah Data Kanan (Guild Performance)
+            # 5. OLAH DATA HALAMAN KANAN (GUILD PERFORMANCE & MVP PERSONIL)
+            
+            # A. Hitung PSM / Target Item dari SALES_ITEM & SALES_PERSONIL
+            psm_target = 0.0
+            psm_actual = 0.0
+            psm_mvp = "-"
+            
+            if not sales_item_df.empty and "period_id" in sales_item_df.columns:
+                f_si = sales_item_df[sales_item_df["period_id"].astype(str).str.strip() == active_period_id]
+                if not f_si.empty and "target_qty" in f_si.columns:
+                    psm_target = float(pd.to_numeric(f_si["target_qty"], errors="coerce").sum())
+                    
+            if not sales_person_df.empty and "period_id" in sales_person_df.columns:
+                f_sp = sales_person_df[sales_person_df["period_id"].astype(str).str.strip() == active_period_id]
+                if not f_sp.empty and "actual_qty" in f_sp.columns:
+                    psm_actual = float(pd.to_numeric(f_sp["actual_qty"], errors="coerce").sum())
+                    
+                    # Cari MVP PSM dari Sales Personil
+                    p_col = "staff_name" if "staff_name" in f_sp.columns else ("person_name" if "person_name" in f_sp.columns else "")
+                    if p_col:
+                        grp_psm = f_sp.groupby(p_col)["actual_qty"].sum()
+                        if not grp_psm.empty and grp_psm.max() > 0:
+                            psm_mvp = str(grp_psm.idxmax()).title()
+
+            # B. Program PPS Kanan
             programs = [
-                {"name": "PSM / Target Item", "key": "psm", "col_act": "actual_qty"},
+                {"name": "PSM / Target Item", "key": "psm", "target": psm_target, "actual": psm_actual, "mvp": psm_mvp},
                 {"name": "PWP", "key": "pwp", "col_act": "qty_pwp"},
                 {"name": "Serba Gratis (SG)", "key": "sg", "col_act": "qty_sg"},
                 {"name": "Suegeer (Target 50%)", "key": "suegeer", "col_act": "qty_suegeer"}
@@ -2938,17 +2981,40 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             for p in programs:
                 p_key = p["key"]
-                t_row = periods_pps_df[periods_pps_df["period_name"].str.lower().str.contains(p_key)] if not periods_pps_df.empty else pd.DataFrame()
-                p_target = float(pd.to_numeric(t_row["target_total"].iloc[0], errors="coerce")) if not t_row.empty and "target_total" in t_row.columns else 100.0
-                
-                if p_key == "suegeer":
-                    p_syarat = float(pd.to_numeric(sales_pps_df["syarat_suegeer"], errors="coerce").sum()) if not sales_pps_df.empty and "syarat_suegeer" in sales_pps_df.columns else 0
-                    p_redeem = float(pd.to_numeric(sales_pps_df["redeem_suegeer"], errors="coerce").sum()) if not sales_pps_df.empty and "redeem_suegeer" in sales_pps_df.columns else 0
+                if p_key == "psm":
+                    p_target = p["target"]
+                    p_actual = p["actual"]
+                    mvp_name = p["mvp"]
+                elif p_key == "suegeer":
+                    s_col = "syarat_sueger" if "syarat_sueger" in sales_pps_df.columns else "syarat_suegeer"
+                    r_col = "redeem_sueger" if "redeem_sueger" in sales_pps_df.columns else "redeem_suegeer"
+                    
+                    p_syarat = float(pd.to_numeric(sales_pps_df[s_col], errors="coerce").sum()) if not sales_pps_df.empty and s_col in sales_pps_df.columns else 0
+                    p_redeem = float(pd.to_numeric(sales_pps_df[r_col], errors="coerce").sum()) if not sales_pps_df.empty and r_col in sales_pps_df.columns else 0
                     p_target = p_syarat * 0.5
                     p_actual = p_redeem
+                    
+                    # MVP Suegeer berdasarkan % Achievement (Redeem / Syarat) dari SALES_PPS
+                    mvp_name = "-"
+                    if not sales_pps_df.empty and "kasir_name" in sales_pps_df.columns:
+                        grp = sales_pps_df.groupby("kasir_name")[[s_col, r_col]].sum()
+                        grp = grp[grp[s_col] > 0]
+                        if not grp.empty:
+                            grp["ach"] = (grp[r_col] / grp[s_col]) * 100
+                            if not grp.empty and grp["ach"].max() > 0:
+                                mvp_name = str(grp["ach"].idxmax()).title()
                 else:
+                    t_row = periods_pps_df[periods_pps_df["period_name"].str.lower().str.contains(p_key)] if not periods_pps_df.empty else pd.DataFrame()
+                    p_target = float(pd.to_numeric(t_row["target_total"].iloc[0], errors="coerce")) if not t_row.empty and "target_total" in t_row.columns else 100.0
                     col_name = p["col_act"]
                     p_actual = float(pd.to_numeric(sales_pps_df[col_name], errors="coerce").sum()) if not sales_pps_df.empty and col_name in sales_pps_df.columns else 0
+                    
+                    # MVP PWP / SG berdasarkan Qty Terbanyak dari SALES_PPS
+                    mvp_name = "-"
+                    if not sales_pps_df.empty and "kasir_name" in sales_pps_df.columns and col_name in sales_pps_df.columns:
+                        grp = sales_pps_df.groupby("kasir_name")[col_name].sum()
+                        if not grp.empty and grp.max() > 0:
+                            mvp_name = str(grp.idxmax()).title()
 
                 total_m_target += p_target
                 total_m_actual += p_actual
@@ -2956,18 +3022,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 p_achiv = (p_actual / p_target * 100) if p_target > 0 else 0
                 pct_blue = min(100.0, p_achiv)
                 pct_red = max(0.0, 100.0 - pct_blue)
-
-                mvp_name = "-"
-                if not sales_pps_df.empty and "kasir_name" in sales_pps_df.columns:
-                    if p_key == "suegeer" and "syarat_suegeer" in sales_pps_df.columns and "redeem_suegeer" in sales_pps_df.columns:
-                        grp = sales_pps_df.groupby("kasir_name")[["syarat_suegeer", "redeem_suegeer"]].sum()
-                        grp["ach"] = (grp["redeem_suegeer"] / grp["syarat_suegeer"]) * 100
-                        if not grp.empty and grp["ach"].max() > 0:
-                            mvp_name = str(grp["ach"].idxmax()).title()
-                    elif p["col_act"] in sales_pps_df.columns:
-                        grp = sales_pps_df.groupby("kasir_name")[p["col_act"]].sum()
-                        if not grp.empty and grp.max() > 0:
-                            mvp_name = str(grp.idxmax()).title()
 
                 items_kanan_list.append({
                     "name": p["name"], "mvp": mvp_name, "pct_blue": pct_blue,
@@ -2978,35 +3032,36 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             total_m_achiv = (total_m_actual / total_m_target * 100) if total_m_target > 0 else 0
             total_m_gap = int(max(0, total_m_target - total_m_actual))
 
-            # 4. SATU STRING HTML UTUH TANPA INDENTASI INTERNAL PADA LIST JOIN
+            # 6. HTML RENDER (WARNA DIPEKATKAN AGAR TERLIHAT TERANG DAN JELAS)
             html_kiri_str = "".join([f'<div class="rpg-item-card"><div><div class="item-title">{x["icon"]} {x["p_name"]} <span class="{x["badge_cls"]}">{x["badge_txt"]}</span></div><div class="item-stats">{x["info_syarat"]}</div></div><div style="text-align: right;"><div style="font-size: 14px; font-weight: bold; color: {x["achiv_color"]};">{x["achiv"]:.1f}%</div></div></div>' for x in items_kiri_list]) if items_kiri_list else '<div style="color:#78350f; font-size:12px; text-align:center; margin-top:20px;"><i>Belum ada data Target PPS aktif.</i></div>'
             
-            html_kanan_str = "".join([f'<div style="background: rgba(120, 53, 15, 0.05); border: 1px solid #b45309; border-radius: 8px; padding: 6px; margin-bottom: 6px;"><div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; color: #451a03; margin-bottom: 3px;"><span>🗡️ {y["name"]}</span><span>👑 MVP: <b style="color: #b45309;">{y["mvp"]}</b></span></div><div style="display: flex; height: 12px; width: 100%; border-radius: 4px; overflow: hidden; border: 1px solid #78350f; background: #fee2e2;"><div style="width: {y["pct_blue"]:.1f}%; background: linear-gradient(90deg, #1d4ed8, #3b82f6); color: #fff; font-size: 8px; text-align: center; line-height: 12px; font-weight: bold;">{y["p_achiv"]:.0f}%</div><div style="width: {y["pct_red"]:.1f}%; background: linear-gradient(90deg, #ef4444, #b91c1c);"></div></div><div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: bold; margin-top: 2px;"><span style="color: #1d4ed8;">Aktual: {y["p_actual"]}</span><span style="color: #b91c1c;">Target: {y["p_target"]}</span></div></div>' for y in items_kanan_list])
+            html_kanan_str = "".join([f'<div style="background: #ffffff; border: 1.5px solid #78350f; border-radius: 8px; padding: 6px; margin-bottom: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"><div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; color: #27272a; margin-bottom: 3px;"><span>🗡️ {y["name"]}</span><span style="color: #9a3412;">👑 MVP: <b>{y["mvp"]}</b></span></div><div style="display: flex; height: 12px; width: 100%; border-radius: 4px; overflow: hidden; border: 1px solid #451a03; background: #fecdd3;"><div style="width: {y["pct_blue"]:.1f}%; background: linear-gradient(90deg, #2563eb, #1d4ed8); color: #ffffff; font-size: 9px; text-align: center; line-height: 12px; font-weight: bold;">{y["p_achiv"]:.0f}%</div><div style="width: {y["pct_red"]:.1f}%; background: #ef4444;"></div></div><div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 800; margin-top: 3px;"><span style="color: #1e40af;">Aktual: {y["p_actual"]}</span><span style="color: #9f1239;">Target: {y["p_target"]}</span></div></div>' for y in items_kanan_list])
 
             html_open_tugas = f"""<div class="rpg-open-book-container">
         <div class="rpg-book-page rpg-book-page-left">
         <h3 class="open-page-title">🛡️ TARGET PPS</h3>
-        <p class="open-page-sub">Rincian Target Harian ({active_period})</p>
+        <p class="open-page-sub">Rincian Target Harian ({active_period_pps_name})</p>
         <div class="open-book-divider"></div>
         {html_kiri_str}
         <div class="open-page-footer">Halaman Kiri • Target PPS</div>
         </div>
         <div class="rpg-book-page rpg-book-page-right">
-        <h3 class="open-page-title">📍 POSISI PAHLAWAN</h3>
-        <p class="open-page-sub">Status Performa Guild Bulanan</p>
+        <h3 class="open-page-title" style="color: #451a03 !important;">📍 POSISI PAHLAWAN</h3>
+        <p class="open-page-sub" style="color: #78350f !important;">Status Performa Guild Bulanan</p>
         <div class="open-book-divider"></div>
-        <div style="background: #fff8ed; border: 2px solid #b45309; border-radius: 10px; padding: 8px; box-shadow: inset 0 0 5px rgba(0,0,0,0.1);">
+        <div style="background: #fffbeb; border: 2px solid #9a3412; border-radius: 10px; padding: 8px; box-shadow: inset 0 0 5px rgba(0,0,0,0.05);">
         <div style="font-size: 11px; font-weight: 900; color: #451a03; text-align: center; letter-spacing: 1px; margin-bottom: 6px;">⚔️ MONTHLY GUILD PERFORMANCE ⚔️</div>
         {html_kanan_str}
-        <div style="background: rgba(120, 53, 15, 0.1); border-top: 2px dashed #b45309; border-radius: 6px; padding: 5px; text-align: center; margin-top: 4px;">
+        <div style="background: #fef3c7; border-top: 2px dashed #9a3412; border-radius: 6px; padding: 6px; text-align: center; margin-top: 6px;">
         <span style="font-size: 11px; color: #451a03; font-weight: bold;">Total Performance: </span>
-        <b style="font-size: 13px; color: #047857;">{total_m_achiv:.1f}%</b>
-        <span style="font-size: 10px; color: #b91c1c; font-weight: bold; margin-left: 6px;">(GAP: {total_m_gap} Pcs)</span>
+        <b style="font-size: 13px; color: #065f46;">{total_m_achiv:.1f}%</b>
+        <span style="font-size: 10px; color: #9f1239; font-weight: bold; margin-left: 6px;">(GAP: {total_m_gap} Pcs)</span>
         </div>
         </div>
         <div class="open-page-footer">Halaman Kanan • Posisi Pahlawan</div>
         </div>
         </div>"""
+
                 
         elif page_num == 3:
             # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
