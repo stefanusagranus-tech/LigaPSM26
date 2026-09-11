@@ -2968,9 +2968,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             </div>
             """.format(pps_content=pps_items_html, posisi_content=posisi_content_html)
 
-            # Render aman ke Streamlit
-            st.markdown(html_open_tugas, unsafe_allow_html=True)
-
         elif page_num == 3:
             # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
             rpg_badge_style = """
