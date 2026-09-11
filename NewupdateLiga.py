@@ -3036,28 +3036,45 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             total_m_achiv = (total_m_actual / total_m_target * 100) if total_m_target > 0 else 0
             total_m_gap = int(max(0, total_m_target - total_m_actual))
 
-            # HTML Item Halaman Kanan (Ditegaskan Warna Hitam Pekat & Background Putih Solid)
-            html_kanan_str = "".join([
-                f'<div class="rpg-item-card" style="background-color: #ffffff !important; border: 1.5px solid #78350f !important; padding: 8px !important; margin-bottom: 6px !important;">'
-                f'<div style="width: 100%;">'
-                f'<div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 11px; color: #000000 !important; margin-bottom: 4px;">'
-                f'<span style="color: #000000 !important;">🗡️ {y["name"]}</span>'
-                f'<span style="color: #b45309 !important;">👑 MVP: <b style="color: #b45309 !important;">{y["mvp"]}</b></span>'
-                f'</div>'
-                f'<div style="display: flex; height: 12px; width: 100%; border-radius: 4px; overflow: hidden; border: 1px solid #451a03; background-color: #fecdd3 !important;">'
-                f'<div style="width: {y["pct_blue"]:.1f}%; background: #2563eb !important; color: #ffffff !important; font-size: 9px; text-align: center; line-height: 12px; font-weight: bold;">{y["p_achiv"]:.0f}%</div>'
-                f'<div style="width: {y["pct_red"]:.1f}%; background-color: #dc2626 !important;"></div>'
-                f'</div>'
-                f'<div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 800; margin-top: 4px; color: #000000 !important;">'
-                f'<span style="color: #1d4ed8 !important;">Aktual: {y["p_actual"]}</span>'
-                f'<span style="color: #9f1239 !important;">Target: {y["p_target"]}</span>'
-                f'</div>'
-                f'</div>'
-                f'</div>'
-                for y in items_kanan_list
-            ])
+            # 6. HTML RENDER (FIX ERROR & BEBAS BOCOR)
+            # 1. Inisialisasi awal variabel dengan nilai default aman
+            html_kiri_str = '<div style="color:#78350f; font-size:12px; text-align:center; margin-top:20px;"><i>Belum ada data Target PPS aktif.</i></div>'
+            html_kanan_str = '<div style="color:#78350f; font-size:12px; text-align:center; margin-top:20px;"><i>Belum ada data Performa.</i></div>'
 
-            # Struktur Buku Utama
+            # 2. Buat HTML Item Halaman Kiri (Target PPS Harian)
+            if 'items_kiri_list' in locals() and items_kiri_list:
+                html_kiri_str = "".join([
+                    f'<div class="rpg-item-card">'
+                    f'<div><div class="item-title">{x["icon"]} {x["p_name"]} <span class="{x["badge_cls"]}">{x["badge_txt"]}</span></div>'
+                    f'<div class="item-stats">{x["info_syarat"]}</div></div>'
+                    f'<div style="text-align: right;"><div style="font-size: 14px; font-weight: bold; color: {x["achiv_color"]};">{x["achiv"]:.1f}%</div></div>'
+                    f'</div>'
+                    for x in items_kiri_list
+                ])
+
+            # 3. Buat HTML Item Halaman Kanan (Posisi Pahlawan - Background Putih & Teks Pekat)
+            if 'items_kanan_list' in locals() and items_kanan_list:
+                html_kanan_str = "".join([
+                    f'<div class="rpg-item-card" style="background-color: #ffffff !important; border: 1.5px solid #78350f !important; padding: 8px !important; margin-bottom: 6px !important;">'
+                    f'<div style="width: 100%;">'
+                    f'<div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 11px; color: #000000 !important; margin-bottom: 4px;">'
+                    f'<span style="color: #000000 !important;">🗡️ {y["name"]}</span>'
+                    f'<span style="color: #b45309 !important;">👑 MVP: <b style="color: #b45309 !important;">{y["mvp"]}</b></span>'
+                    f'</div>'
+                    f'<div style="display: flex; height: 12px; width: 100%; border-radius: 4px; overflow: hidden; border: 1px solid #451a03; background-color: #fecdd3 !important;">'
+                    f'<div style="width: {y["pct_blue"]:.1f}%; background: #2563eb !important; color: #ffffff !important; font-size: 9px; text-align: center; line-height: 12px; font-weight: bold;">{y["p_achiv"]:.0f}%</div>'
+                    f'<div style="width: {y["pct_red"]:.1f}%; background-color: #dc2626 !important;"></div>'
+                    f'</div>'
+                    f'<div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 800; margin-top: 4px; color: #000000 !important;">'
+                    f'<span style="color: #1d4ed8 !important;">Aktual: {y["p_actual"]}</span>'
+                    f'<span style="color: #9f1239 !important;">Target: {y["p_target"]}</span>'
+                    f'</div>'
+                    f'</div>'
+                    f'</div>'
+                    for y in items_kanan_list
+                ])
+
+            # 4. Penggabungan Struktur Buku Utama
             html_open_tugas = (
                 f'<div class="rpg-open-book-container">'
                 f'<div class="rpg-book-page rpg-book-page-left">'
@@ -3085,7 +3102,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 f'</div>'
             )
 
-                
+            # 5. Render ke Streamlit (Pastikan baris ini satu-satunya pemicu render di bagian ini)
+            st.markdown(html_open_tugas, unsafe_allow_html=True)
+
         elif page_num == 3:
             # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
             rpg_badge_style = """
