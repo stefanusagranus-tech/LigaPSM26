@@ -2733,7 +2733,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # ==========================================
         # 📄 5. KONTEN PER HALAMAN BUKU (Halaman 1)
         # ==========================================
-        elif page_num == 1:
+        if page_num == 1:
             periods_df = st.session_state.get("periods_df", pd.DataFrame())
             target_period_id = ""
             if not periods_df.empty:
