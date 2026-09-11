@@ -2733,7 +2733,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # ==========================================
         # 📄 5. KONTEN PER HALAMAN BUKU (Halaman 1)
         # ==========================================
-        if page_num == 1:
+        elif page_num == 1:
             periods_df = st.session_state.get("periods_df", pd.DataFrame())
             target_period_id = ""
             if not periods_df.empty:
@@ -2764,9 +2764,17 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             actual_dict = {}
             if not sales_person_df.empty:
                 sp_filtered = sales_person_df[sales_person_df["period_id"].astype(str).str.strip() == target_period_id] if target_period_id else sales_person_df
+                
+                # --- MODIFIKASI: DETEKSI ADMIN VS KASIR ---
                 current_user = str(st.session_state.get("username", st.session_state.get("user", "admin"))).strip().lower()
-                if current_user != "admin" and not sp_filtered.empty and "person_name" in sp_filtered.columns:
-                    sp_filtered = sp_filtered[sp_filtered["person_name"].astype(str).str.strip().str.lower() == current_user]
+                user_role = str(st.session_state.get("role", "user")).strip().lower()
+                
+                # Jika bukan admin, filter berdasarkan nama kasir yang sedang login
+                if user_role != "admin" and current_user != "admin":
+                    if not sp_filtered.empty and "person_name" in sp_filtered.columns:
+                        sp_filtered = sp_filtered[sp_filtered["person_name"].astype(str).str.strip().str.lower() == current_user]
+                # Jika admin, biarkan sp_filtered mencakup keseluruhan data penjualan tanpa filter nama orang
+                
                 if not sp_filtered.empty and "item_id" in sp_filtered.columns and "actual_qty" in sp_filtered.columns:
                     sp_filtered["actual_qty"] = pd.to_numeric(sp_filtered["actual_qty"], errors="coerce").fillna(0)
                     actual_dict = sp_filtered.groupby("item_id")["actual_qty"].sum().to_dict()
@@ -2778,7 +2786,16 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 for _, r in df_filtered_items.iterrows():
                     item_id = str(r.get("item_id", "")).strip()
                     name = str(r.get("item_name", r.get("item_nam", "Item Misi")))
-                    target = int(pd.to_numeric(r.get("target_kasir", r.get("get_kasir", 0)), errors="coerce"))
+                    
+                    # --- MODIFIKASI TARGET ADMIN VS KASIR ---
+                    # Jika admin, kita bisa totalkan target keseluruhan dari sales_item_df atau kolom target_admin jika ada. 
+                    # Menggunakan target_kasir atau kolom target keseluruhan jika admin:
+                    if user_role == "admin" or current_user == "admin":
+                        # Jika admin ingin melihat total target keseluruhan item pada periode tersebut
+                        target = int(pd.to_numeric(r.get("target_admin", r.get("target_kasir", r.get("get_kasir", 0))), errors="coerce"))
+                    else:
+                        target = int(pd.to_numeric(r.get("target_kasir", r.get("get_kasir", 0)), errors="coerce"))
+                    
                     aktual = int(actual_dict.get(item_id, 0))
                     render_items.append((name, target, aktual))
 
