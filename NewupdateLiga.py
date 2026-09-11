@@ -2835,7 +2835,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             </div>
             """.format(active_period=active_period, items_html_left=items_html_left, items_html_right=items_html_right)
 
-        elif page_num == 2:
+       elif page_num == 2:
             # Ambil data dari session state
             periods_pps_df = st.session_state.get("periods_pps_df", pd.DataFrame())
             sales_pps_df = st.session_state.get("sales_pps_df", pd.DataFrame())
@@ -2901,7 +2901,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 badge_text = "✨ TERCAPAI (VICTORY)" if is_success else f"⚡ GAP: {int(gap)}"
                 badge_color = "#15803d" if is_success else "#b45309"
 
-                pps_items_html += """
+                pps_items_html += f"""
                 <div style="background: #fffbeb; border: 2px solid #d97706; border-radius: 8px; padding: 10px 15px; margin-bottom: 12px;">
                     <div style="font-weight: bold; color: #78350f; font-size: 14px; margin-bottom: 5px;">⚡ {p_name}</div>
                     <div style="font-size: 12px; color: #451a03; margin-bottom: 8px;">{status_syarat}</div>
@@ -2922,7 +2922,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 total_achiv = (total_all_actual / total_all_target * 100) if total_all_target > 0 else 0
                 total_gap = total_all_target - total_all_actual
 
-                posisi_content_html = """
+                posisi_content_html = f"""
                 <div style="background: linear-gradient(135deg, #1e1b4b, #31103d); border: 3px solid #f59e0b; border-radius: 12px; padding: 20px; text-align: center; color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
                     <div style="font-size: 12px; letter-spacing: 2px; color: #fbbf24; font-weight: bold; margin-bottom: 10px;">⚔️ WAR MATCH • TOTAL GUILD PERFORMANCE ⚔️</div>
                     
@@ -2951,25 +2951,29 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 <div class="open-stat-row"><span>🛡️ RANK PPS</span><span style="color:#b45309; font-weight:bold;">🛡️ Peringkat #5 (85%)</span></div>
                 <div class="open-stat-row"><span>⚡ RANK SUEGER</span><span style="color:#ca8a04; font-weight:bold;">🥈 Peringkat #2 (94%)</span></div>
                 """
-            # --- DIGABUNG JADI SATU KESATUAN HTML UTUH ---
+
+            # --- DIGABUNG JADI SATU KESATUAN HTML UTUH DENGAN .format() ---
             html_open_tugas = """
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page rpg-book-page-left">
                     <h3 class="open-page-title">🛡️ TARGET PPS</h3>
                     <p class="open-page-sub">Rincian Target Harian PPS</p>
                     <div class="open-book-divider"></div>
-                    {pps_items_html}
+                    {pps_content}
                     <div class="open-page-footer">Halaman Kiri • Target PPS</div>
                 </div>
                 <div class="rpg-book-page rpg-book-page-right">
                     <h3 class="open-page-title">📍 POSISI PAHLAWAN</h3>
                     <p class="open-page-sub">Status Peringkat Guild Anda</p>
                     <div class="open-book-divider"></div>
-                    {posisi_content_html}
+                    {posisi_content}
                     <div class="open-page-footer">Halaman Kanan • Posisi Pahlawan</div>
                 </div>
             </div>
             """.format(pps_content=pps_items_html, posisi_content=posisi_content_html)
+
+            # Render aman ke Streamlit
+            st.markdown(html_open_tugas, unsafe_allow_html=True)
 
         elif page_num == 3:
             # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
