@@ -2926,14 +2926,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             total_achiv = (total_all_actual / total_all_target * 100) if total_all_target > 0 else 0
             total_gap = max(0, total_all_target - total_all_actual)
 
-            # TEMPLATE UTUH
             html_open_tugas = """
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page rpg-book-page-left">
                     <h3 class="open-page-title">🛡️ TARGET PPS</h3>
                     <p class="open-page-sub">Rincian Target Harian PPS</p>
                     <div class="open-book-divider"></div>
-                    {list_html_items}
+                    {list_items}
                     <div class="open-page-footer">Halaman Kiri • Target PPS</div>
                 </div>
                 <div class="rpg-book-page rpg-book-page-right">
@@ -2945,20 +2944,20 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         <div style="display: flex; justify-content: space-around; align-items: center; margin: 15px 0;">
                             <div>
                                 <div style="font-size: 11px; color: #93c5fd;">AKTUAL BULAN INI</div>
-                                <div style="font-size: 26px; font-weight: bold; color: #38bdf8;">{int(total_all_actual)}</div>
+                                <div style="font-size: 26px; font-weight: bold; color: #38bdf8;">{actual_val_str}</div>
                             </div>
                             <div style="font-size: 20px; font-weight: bold; color: #f59e0b;">VS</div>
                             <div>
                                 <div style="font-size: 11px; color: #fca5a5;">TARGET BULAN INI</div>
-                                <div style="font-size: 26px; font-weight: bold; color: #f87171;">{int(total_all_target)}</div>
+                                <div style="font-size: 26px; font-weight: bold; color: #f87171;">{target_val_str}</div>
                             </div>
                         </div>
                         <div style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; margin-top: 10px;">
                             <div style="font-size: 13px; color: #e2e8f0;">Pencapaian Total (1 Bulan):</div>
-                            <div style="font-size: 22px; font-weight: bold; color: #34d399; margin: 4px 0;">{total_achiv:.1f}%</div>
-                            <div style="font-size: 12px; color: #fde047;">GAP (Kekurangan): {int(total_gap)} Pcs</div>
+                            <div style="font-size: 22px; font-weight: bold; color: #34d399; margin: 4px 0;">{achiv_str}%</div>
+                            <div style="font-size: 12px; color: #fde047;">GAP (Kekurangan): {gap_str} Pcs</div>
                         </div>
-                    </div>            
+                    </div>
                     <div class="open-page-footer">Halaman Kanan • Posisi Pahlawan</div>
                 </div>
             </div>
@@ -2969,9 +2968,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 achiv_str=f"{total_achiv:.1f}",
                 gap_str=int(total_gap)
             )
-
-            st.markdown(html_open_tugas, unsafe_allow_html=True)
             
+            st.markdown(html_open_tugas, unsafe_allow_html=True)
+
         elif page_num == 3:
             # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
             rpg_badge_style = """
