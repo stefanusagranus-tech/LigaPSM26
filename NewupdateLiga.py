@@ -2942,6 +2942,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 </div>
             </div>
             """
+            
             # 6. Gabungkan Menjadi Buku Terbuka Utuh
             html_open_tugas = f"""
             <div class="rpg-open-book-container">
