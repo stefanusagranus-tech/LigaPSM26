@@ -2837,7 +2837,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             </div>
             """.format(active_period=active_period, items_html_left=items_html_left, items_html_right=items_html_right)
 
-        elif page_num == 2:
+       elif page_num == 2:
             periods_pps_df = st.session_state.get("periods_pps_df", pd.DataFrame())
             sales_pps_df = st.session_state.get("sales_pps_df", pd.DataFrame())
             
@@ -2898,7 +2898,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 badge_txt = "✨ TERCAPAI" if ok else f"⚡ GAP: {int(gap)}"
                 badge_col = "#15803d" if ok else "#b45309"
 
-                list_html_items += '<div style="background: #fffbeb; border: 2px solid #d97706; border-radius: 8px; padding: 12px 15px; margin-bottom: 12px;"><div style="font-weight: 800; color: #451a03; font-size: 14px; margin-bottom: 5px;">⚡ {}</div><div style="font-size: 12px; color: #1c1917; font-weight: 700; margin-bottom: 8px;">{}</div><div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;"><span>Aktual: <b style="color: #1d4ed8; font-weight: 800;">{}</b> | Target: <b style="color: #b91c1c; font-weight: 800;">{}</b></span><span style="color: {}; font-weight: 800;">{:.1f}% ({})</span></div></div>'.format(p_name, info_syarat, int(actual_val), int(target_val), badge_col, achiv, badge_txt)
+                list_html_items += '<div style="background: #ffffff; border: 2px solid #d97706; border-radius: 8px; padding: 12px 15px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);"><div style="font-weight: 800; color: #78350f; font-size: 14px; margin-bottom: 5px;">⚡ {}</div><div style="font-size: 12px; color: #451a03; font-weight: 700; margin-bottom: 8px;">{}</div><div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;"><span>Aktual: <b style="color: #2563eb; font-weight: 800;">{}</b> | Target: <b style="color: #dc2626; font-weight: 800;">{}</b></span><span style="color: {}; font-weight: 800;">{:.1f}% ({})</span></div></div>'.format(p_name, info_syarat, int(actual_val), int(target_val), badge_col, achiv, badge_txt)
 
             if not list_html_items:
                 list_html_items = "<div style='text-align:center; color:#78350f;'><i>Belum ada data Target PPS aktif.</i></div>"
@@ -2919,7 +2919,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             html_open_tugas = """
             <div class="rpg-open-book-container">
-                <div class="rpg-book-page rpg-book-page-left">
+                <div class="rpg-book-page rpg-book-page-left" style="overflow-y: auto; max-height: 520px; padding-right: 10px;">
                     <h3 class="open-page-title" style="color: #2c1810; font-weight: 900;">🛡️ TARGET PPS</h3>
                     <p class="open-page-sub" style="color: #4a2810; font-weight: 700;">Rincian Target Harian ({active_period})</p>
                     <div class="open-book-divider"></div>
