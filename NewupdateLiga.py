@@ -2919,7 +2919,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     badge_text = "✨ TERCAPAI" if is_success else f"⚡ GAP: {int(gap)}"
                     badge_color = "#15803d" if is_success else "#b45309"
 
-            html_chunks += f"""
+            pps_items_html += f"""
             <div style="background: #fffbeb; border: 2px solid #d97706; border-radius: 8px; padding: 10px 15px; margin-bottom: 12px;">
                 <div style="font-weight: bold; color: #78350f; font-size: 14px; margin-bottom: 5px;">⚡ {p_name}</div>
                 <div style="font-size: 12px; color: #451a03; margin-bottom: 8px;">{status_syarat}</div>
