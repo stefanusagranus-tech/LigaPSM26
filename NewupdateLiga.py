@@ -2919,53 +2919,53 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     badge_text = "✨ TERCAPAI" if is_success else f"⚡ GAP: {int(gap)}"
                     badge_color = "#15803d" if is_success else "#b45309"
 
-            pps_items_html += f"""
-            <div style="background: #fffbeb; border: 2px solid #d97706; border-radius: 8px; padding: 10px 15px; margin-bottom: 12px;">
-                <div style="font-weight: bold; color: #78350f; font-size: 14px; margin-bottom: 5px;">⚡ {p_name}</div>
-                <div style="font-size: 12px; color: #451a03; margin-bottom: 8px;">{status_syarat}</div>
-                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
-                    <span>Aktual: <b style="color: #2563eb;">{int(actual_val)}</b> | Target: <b style="color: #dc2626;">{int(target_val)}</b></span>
-                    <span style="color: {badge_color}; font-weight: bold;">{achiv:.1f}% ({badge_text})</span>
-                </div>
-            </div>
-            """
-            html_open_tugas = f"""
-            <div class="rpg-open-book-container">
-                <div class="rpg-book-page rpg-book-page-left">
-                    <h3 class="open-page-title">🛡️ TARGET PPS</h3>
-                    <p class="open-page-sub">Rincian Target Harian PPS</p>
-                    <div class="open-book-divider"></div>
-                    {render_pps_items()}
-                    <div class="open-page-footer">Halaman Kiri • Target PPS</div>
-                </div>
-                <div class="rpg-book-page rpg-book-page-right">
-                    <h3 class="open-page-title">📍 POSISI PAHLAWAN</h3>
-                    <p class="open-page-sub">Status Performa Guild Anda</p>
-                    <div class="open-book-divider"></div>
-                    <div style="background: linear-gradient(135deg, #1e1b4b, #31103d); border: 3px solid #f59e0b; border-radius: 12px; padding: 20px; text-align: center; color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-                        <div style="font-size: 12px; letter-spacing: 2px; color: #fbbf24; font-weight: bold; margin-bottom: 10px;">⚔️ MONTHLY GUILD PERFORMANCE ⚔️</div>
-                        <div style="display: flex; justify-content: space-around; align-items: center; margin: 15px 0;">
-                            <div>
-                                <div style="font-size: 11px; color: #93c5fd;">AKTUAL BULAN INI</div>
-                                <div style="font-size: 26px; font-weight: bold; color: #38bdf8;">{int(total_all_actual)}</div>
-                            </div>
-                            <div style="font-size: 20px; font-weight: bold; color: #f59e0b;">VS</div>
-                            <div>
-                                <div style="font-size: 11px; color: #fca5a5;">TARGET BULAN INI</div>
-                                <div style="font-size: 26px; font-weight: bold; color: #f87171;">{int(total_all_target)}</div>
-                            </div>
-                        </div>
-                        <div style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; margin-top: 10px;">
-                            <div style="font-size: 13px; color: #e2e8f0;">Pencapaian Total (1 Bulan):</div>
-                            <div style="font-size: 22px; font-weight: bold; color: #34d399; margin: 4px 0;">{total_achiv:.1f}%</div>
-                            <div style="font-size: 12px; color: #fde047;">GAP (Kekurangan): {int(total_gap)} Pcs</div>
+                    pps_items_html += f"""
+                    <div style="background: #fffbeb; border: 2px solid #d97706; border-radius: 8px; padding: 10px 15px; margin-bottom: 12px;">
+                        <div style="font-weight: bold; color: #78350f; font-size: 14px; margin-bottom: 5px;">⚡ {p_name}</div>
+                        <div style="font-size: 12px; color: #451a03; margin-bottom: 8px;">{status_syarat}</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+                            <span>Aktual: <b style="color: #2563eb;">{int(actual_val)}</b> | Target: <b style="color: #dc2626;">{int(target_val)}</b></span>
+                            <span style="color: {badge_color}; font-weight: bold;">{achiv:.1f}% ({badge_text})</span>
                         </div>
                     </div>
-                    <div class="open-page-footer">Halaman Kanan • Posisi Pahlawan</div>
-                </div>
-            """
-            
-            st.markdown(html_open_tugas, unsafe_allow_html=True)
+                    """
+                    html_open_tugas = f"""
+                    <div class="rpg-open-book-container">
+                        <div class="rpg-book-page rpg-book-page-left">
+                            <h3 class="open-page-title">🛡️ TARGET PPS</h3>
+                            <p class="open-page-sub">Rincian Target Harian PPS</p>
+                            <div class="open-book-divider"></div>
+                            {render_pps_items()}
+                            <div class="open-page-footer">Halaman Kiri • Target PPS</div>
+                        </div>
+                        <div class="rpg-book-page rpg-book-page-right">
+                            <h3 class="open-page-title">📍 POSISI PAHLAWAN</h3>
+                            <p class="open-page-sub">Status Performa Guild Anda</p>
+                            <div class="open-book-divider"></div>
+                            <div style="background: linear-gradient(135deg, #1e1b4b, #31103d); border: 3px solid #f59e0b; border-radius: 12px; padding: 20px; text-align: center; color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                                <div style="font-size: 12px; letter-spacing: 2px; color: #fbbf24; font-weight: bold; margin-bottom: 10px;">⚔️ MONTHLY GUILD PERFORMANCE ⚔️</div>
+                                <div style="display: flex; justify-content: space-around; align-items: center; margin: 15px 0;">
+                                    <div>
+                                        <div style="font-size: 11px; color: #93c5fd;">AKTUAL BULAN INI</div>
+                                        <div style="font-size: 26px; font-weight: bold; color: #38bdf8;">{int(total_all_actual)}</div>
+                                    </div>
+                                    <div style="font-size: 20px; font-weight: bold; color: #f59e0b;">VS</div>
+                                    <div>
+                                        <div style="font-size: 11px; color: #fca5a5;">TARGET BULAN INI</div>
+                                        <div style="font-size: 26px; font-weight: bold; color: #f87171;">{int(total_all_target)}</div>
+                                    </div>
+                                </div>
+                                <div style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; margin-top: 10px;">
+                                    <div style="font-size: 13px; color: #e2e8f0;">Pencapaian Total (1 Bulan):</div>
+                                    <div style="font-size: 22px; font-weight: bold; color: #34d399; margin: 4px 0;">{total_achiv:.1f}%</div>
+                                    <div style="font-size: 12px; color: #fde047;">GAP (Kekurangan): {int(total_gap)} Pcs</div>
+                                </div>
+                            </div>
+                            <div class="open-page-footer">Halaman Kanan • Posisi Pahlawan</div>
+                        </div>
+                    """
+                    
+                    st.markdown(html_open_tugas, unsafe_allow_html=True)
 
             # 6. Gabungkan Menjadi Buku Terbuka Utuh
             html_open_tugas = f"""
