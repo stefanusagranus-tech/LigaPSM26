@@ -2851,61 +2851,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             active_pps_rows = []
             if not periods_pps_df.empty:
                 for _, r in periods_pps_df.iterrows():
-                    status = str(r.get("status", "")).strip().lower()
-                    if status == "aktif":
+                    if str(r.get("status", "")).strip().lower() == "aktif":
                         active_pps_rows.append(r)
                 if not active_pps_rows:
                     active_pps_rows = [periods_pps_df.iloc[0]]
 
-            # 4. Generate Konten Halaman Kiri (Target PPS)
-            pps_items_html = ""
-            for r in active_pps_rows:
-                p_name = str(r.get("period_name", "Program PPS"))
-                target_total = float(pd.to_numeric(r.get("target_total", 0), errors="coerce"))
-                
-                if is_admin:
-                    target_val = target_total
-                    actual_val = float(pd.to_numeric(r.get("actual_qty", 0), errors="coerce"))
-                else:
-                    target_val = target_total / 9.0 if target_total > 0 else 0
-                    actual_val = 0
-                    if not sales_pps_df.empty and "kasir_name" in sales_pps_df.columns:
-                        filtered_sales = sales_pps_df[sales_pps_df["kasir_name"].astype(str).str.strip().str.lower() == current_user]
-                        
-                        p_name_lower = p_name.lower()
-                        qty_col = "actual_qty"
-                        if "suegeer" in p_name_lower and "qty_suegeer" in filtered_sales.columns:
-                            qty_col = "qty_suegeer"
-                        elif "pwp" in p_name_lower and "qty_pwp" in filtered_sales.columns:
-                            qty_col = "qty_pwp"
-                        elif "serba" in p_name_lower and "qty_sg" in filtered_sales.columns:
-                            qty_col = "qty_sg"
-                        elif "cemilan" in p_name_lower and "qty_cemilan_ceban" in filtered_sales.columns:
-                            qty_col = "qty_cemilan_ceban"
-                        
-                        if qty_col in filtered_sales.columns:
-                            actual_val = float(pd.to_numeric(filtered_sales[qty_col], errors="coerce").sum())
-
-                syarat_val = float(pd.to_numeric(r.get("syarat_total", r.get("syarat_pwp", 0)), errors="coerce"))
-                redeem_val = float(pd.to_numeric(r.get("deem_total", r.get("redeem_pwp", 0)), errors="coerce"))
-                
-                if "suegeer" in p_name.lower():
-                    target_val = syarat_val * 0.5 if syarat_val > 0 else target_val
-                    status_syarat = f"Syarat: {int(syarat_val)} | Redeem: {int(redeem_val)}"
-                else:
-                    status_syarat = f"Target: {int(target_val)} Pcs"
-
-                achiv = (actual_val / target_val * 100) if target_val > 0 else 0
-                gap = max(0, target_val - actual_val)
-                is_success = actual_val >= target_val
-
-                badge_text = "✨ TERCAPAI" if is_success else f"⚡ GAP: {int(gap)}"
-                badge_color = "#15803d" if is_success else "#b45309"
-
-            if not pps_items_html:
-                pps_items_html = "<div style='text-align:center; color:#78350f;'><i>Belum ada data Target PPS aktif.</i></div>"
-
-            # 5. Generate Konten Halaman Kanan (Diseragamkan: Performa 1 Bulan untuk Admin & Kasir)
+            # 4. Hitung data Halaman Kanan (Performa 1 Bulan)
             total_all_target = periods_pps_df["target_total"].apply(lambda x: pd.to_numeric(x, errors="coerce")).sum() if not periods_pps_df.empty else 0
             
             if is_admin:
@@ -2921,28 +2872,104 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             total_achiv = (total_all_actual / total_all_target * 100) if total_all_target > 0 else 0
             total_gap = max(0, total_all_target - total_all_actual)
 
-            posisi_content_html = f"""
-            <div style="background: linear-gradient(135deg, #1e1b4b, #31103d); border: 3px solid #f59e0b; border-radius: 12px; padding: 20px; text-align: center; color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-                <div style="font-size: 12px; letter-spacing: 2px; color: #fbbf24; font-weight: bold; margin-bottom: 10px;">⚔️ MONTHLY GUILD PERFORMANCE ⚔️</div>
-                <div style="display: flex; justify-content: space-around; align-items: center; margin: 15px 0;">
-                    <div>
-                        <div style="font-size: 11px; color: #93c5fd;">AKTUAL BULAN INI</div>
-                        <div style="font-size: 26px; font-weight: bold; color: #38bdf8;">{int(total_all_actual)}</div>
+            # 5. FUNGSI GENERATOR HTML KIRI (Langsung inline tanpa variabel terpisah yang rawan pecah)
+            def render_pps_items():
+                if not active_pps_rows:
+                    return "<div style='text-align:center; color:#78350f;'><i>Belum ada data Target PPS aktif.</i></div>"
+                
+                html_chunks = ""
+                for r in active_pps_rows:
+                    p_name = str(r.get("period_name", "Program PPS"))
+                    target_total = float(pd.to_numeric(r.get("target_total", 0), errors="coerce"))
+                    
+                    if is_admin:
+                        target_val = target_total
+                        actual_val = float(pd.to_numeric(r.get("actual_qty", 0), errors="coerce"))
+                    else:
+                        target_val = target_total / 9.0 if target_total > 0 else 0
+                        actual_val = 0
+                        if not sales_pps_df.empty and "kasir_name" in sales_pps_df.columns:
+                            filtered_sales = sales_pps_df[sales_pps_df["kasir_name"].astype(str).str.strip().str.lower() == current_user]
+                            p_name_lower = p_name.lower()
+                            qty_col = "actual_qty"
+                            if "suegeer" in p_name_lower and "qty_suegeer" in filtered_sales.columns:
+                                qty_col = "qty_suegeer"
+                            elif "pwp" in p_name_lower and "qty_pwp" in filtered_sales.columns:
+                                qty_col = "qty_pwp"
+                            elif "serba" in p_name_lower and "qty_sg" in filtered_sales.columns:
+                                qty_col = "qty_sg"
+                            elif "cemilan" in p_name_lower and "qty_cemilan_ceban" in filtered_sales.columns:
+                                qty_col = "qty_cemilan_ceban"
+                            
+                            if qty_col in filtered_sales.columns:
+                                actual_val = float(pd.to_numeric(filtered_sales[qty_col], errors="coerce").sum())
+
+                    syarat_val = float(pd.to_numeric(r.get("syarat_total", r.get("syarat_pwp", 0)), errors="coerce"))
+                    redeem_val = float(pd.to_numeric(r.get("deem_total", r.get("redeem_pwp", 0)), errors="coerce"))
+                    
+                    if "suegeer" in p_name.lower():
+                        target_val = syarat_val * 0.5 if syarat_val > 0 else target_val
+                        status_syarat = f"Syarat: {int(syarat_val)} | Redeem: {int(redeem_val)}"
+                    else:
+                        status_syarat = f"Target: {int(target_val)} Pcs"
+
+                    achiv = (actual_val / target_val * 100) if target_val > 0 else 0
+                    gap = max(0, target_val - actual_val)
+                    is_success = actual_val >= target_val
+                    badge_text = "✨ TERCAPAI" if is_success else f"⚡ GAP: {int(gap)}"
+                    badge_color = "#15803d" if is_success else "#b45309"
+
+                    html_chunks += f"""
+                    <div style="background: #fffbeb; border: 2px solid #d97706; border-radius: 8px; padding: 10px 15px; margin-bottom: 12px;">
+                        <div style="font-weight: bold; color: #78350f; font-size: 14px; margin-bottom: 5px;">⚡ {p_name}</div>
+                        <div style="font-size: 12px; color: #451a03; margin-bottom: 8px;">{status_syarat}</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+                            <span>Aktual: <b style="color: #2563eb;">{int(actual_val)}</b> | Target: <b style="color: #dc2626;">{int(target_val)}</b></span>
+                            <span style="color: {badge_color}; font-weight: bold;">{achiv:.1f}% ({badge_text})</span>
+                        </div>
                     </div>
-                    <div style="font-size: 20px; font-weight: bold; color: #f59e0b;">VS</div>
-                    <div>
-                        <div style="font-size: 11px; color: #fca5a5;">TARGET BULAN INI</div>
-                        <div style="font-size: 26px; font-weight: bold; color: #f87171;">{int(total_all_target)}</div>
-                    </div>
+                    """
+                return html_chunks
+            # 6. SATUKAN SELURUH STRUKTUR BUKU KIRI DAN KANAN DALAM SATU TEMPLATE UTUH
+            html_open_tugas = f"""
+            <div class="rpg-open-book-container">
+                <div class="rpg-book-page rpg-book-page-left">
+                    <h3 class="open-page-title">🛡️ TARGET PPS</h3>
+                    <p class="open-page-sub">Rincian Target Harian PPS</p>
+                    <div class="open-book-divider"></div>
+                    {render_pps_items()}
+                    <div class="open-page-footer">Halaman Kiri • Target PPS</div>
                 </div>
-                <div style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; margin-top: 10px;">
-                    <div style="font-size: 13px; color: #e2e8f0;">Pencapaian Total (1 Bulan):</div>
-                    <div style="font-size: 22px; font-weight: bold; color: #34d399; margin: 4px 0;">{total_achiv:.1f}%</div>
-                    <div style="font-size: 12px; color: #fde047;">GAP (Kekurangan): {int(total_gap)} Pcs</div>
+                <div class="rpg-book-page rpg-book-page-right">
+                    <h3 class="open-page-title">📍 POSISI PAHLAWAN</h3>
+                    <p class="open-page-sub">Status Performa Guild Anda</p>
+                    <div class="open-book-divider"></div>
+                    <div style="background: linear-gradient(135deg, #1e1b4b, #31103d); border: 3px solid #f59e0b; border-radius: 12px; padding: 20px; text-align: center; color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                        <div style="font-size: 12px; letter-spacing: 2px; color: #fbbf24; font-weight: bold; margin-bottom: 10px;">⚔️ MONTHLY GUILD PERFORMANCE ⚔️</div>
+                        <div style="display: flex; justify-content: space-around; align-items: center; margin: 15px 0;">
+                            <div>
+                                <div style="font-size: 11px; color: #93c5fd;">AKTUAL BULAN INI</div>
+                                <div style="font-size: 26px; font-weight: bold; color: #38bdf8;">{int(total_all_actual)}</div>
+                            </div>
+                            <div style="font-size: 20px; font-weight: bold; color: #f59e0b;">VS</div>
+                            <div>
+                                <div style="font-size: 11px; color: #fca5a5;">TARGET BULAN INI</div>
+                                <div style="font-size: 26px; font-weight: bold; color: #f87171;">{int(total_all_target)}</div>
+                            </div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; margin-top: 10px;">
+                            <div style="font-size: 13px; color: #e2e8f0;">Pencapaian Total (1 Bulan):</div>
+                            <div style="font-size: 22px; font-weight: bold; color: #34d399; margin: 4px 0;">{total_achiv:.1f}%</div>
+                            <div style="font-size: 12px; color: #fde047;">GAP (Kekurangan): {int(total_gap)} Pcs</div>
+                        </div>
+                    </div>
+                    <div class="open-page-footer">Halaman Kanan • Posisi Pahlawan</div>
                 </div>
             </div>
             """
             
+            st.markdown(html_open_tugas, unsafe_allow_html=True)
+
             # 6. Gabungkan Menjadi Buku Terbuka Utuh
             html_open_tugas = f"""
             <div class="rpg-open-book-container">
