@@ -2868,33 +2868,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             total_achiv = (total_all_actual / total_all_target * 100) if total_all_target > 0 else 0
             total_gap = max(0, total_all_target - total_all_actual)
 
-            # GABUNGKAN SEMUA DALAM SATU BLOK UTUH TANPA POTONGAN VARIABEL TERPISAH
+           # GABUNGKAN DALAM SATU TEMPLATE HTML UTUH TANPA NESTED EXPRESSION BERLEBIHAN
             html_open_tugas = f"""
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page rpg-book-page-left">
                     <h3 class="open-page-title">🛡️ TARGET PPS</h3>
                     <p class="open-page-sub">Rincian Target Harian PPS</p>
-                    <div class="open-book-divider"></div>          
-                    {"".join([f'''
-                    <div style="background: #fffbeb; border: 2px solid #d97706; border-radius: 8px; padding: 10px 15px; margin-bottom: 12px;">
-                        <div style="font-weight: bold; color: #78350f; font-size: 14px; margin-bottom: 5px;">⚡ {str(r.get("period_name", "Program PPS"))}</div>
-                        <div style="font-size: 12px; color: #451a03; margin-bottom: 8px;">{
-                            f"Syarat: {int(float(pd.to_numeric(r.get('syarat_total', r.get('syarat_pwp', 0)), errors='coerce')))} | Redeem: {int(float(pd.to_numeric(r.get('deem_total', r.get('redeem_pwp', 0)), errors='coerce')))}"
-                            if "suegeer" in str(r.get("period_name", "")).lower() 
-                            else f"Target: {int(float(pd.to_numeric(r.get('target_total', 0), errors='coerce')) if is_admin else float(pd.to_numeric(r.get('target_total', 0), errors='coerce')) / 9.0)} Pcs"
-                        }</div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
-                            <span>Aktual: <b style="color: #2563eb;">{
-                                int(float(pd.to_numeric(r.get('actual_qty', 0), errors='coerce'))) if is_admin 
-                                else int(sum([float(pd.to_numeric(sales_pps_df[c], errors='coerce').sum()) for c in ["actual_qty", "qty_suegeer", "qty_pwp", "qty_sg", "qty_cemilan_ceban"] if not sales_pps_df.empty and c in sales_pps_df.columns]))
-                            }</b> | Target: <b style="color: #dc2626;">{int(float(pd.to_numeric(r.get('target_total', 0), errors='coerce')) if is_admin else float(pd.to_numeric(r.get('target_total', 0), errors='coerce')) / 9.0)}</b></span>
-                            <span style="color: {'#15803d' if float(pd.to_numeric(r.get('actual_qty', 0), errors='coerce')) >= float(pd.to_numeric(r.get('target_total', 0), errors='coerce')) else '#b45309'}; font-weight: bold;">
-                                {f"{(float(pd.to_numeric(r.get('actual_qty', 0), errors='coerce')) / float(pd.to_numeric(r.get('target_total', 0), errors='coerce')) * 100):.1f}%" if float(pd.to_numeric(r.get('target_total', 0), errors='coerce')) > 0 else "0.0%"} 
-                                ({ "✨ TERCAPAI" if float(pd.to_numeric(r.get('actual_qty', 0), errors='coerce')) >= float(pd.to_numeric(r.get('target_total', 0), errors='coerce')) else f"⚡ GAP: {int(max(0, float(pd.to_numeric(r.get('target_total', 0), errors='coerce')) - float(pd.to_numeric(r.get('actual_qty', 0), errors='coerce'))))}" })
-                            </span>
-                        </div>
-                    </div>
-                    ''' for r in active_pps_rows]) if active_pps_rows else "<div style='text-align:center; color:#78350f;'><i>Belum ada data Target PPS aktif.</i></div>"}
+                    <div class="open-book-divider"></div>
+                    {list_html_items}
                     <div class="open-page-footer">Halaman Kiri • Target PPS</div>
                 </div>
                 <div class="rpg-book-page rpg-book-page-right">
@@ -2919,7 +2900,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                             <div style="font-size: 22px; font-weight: bold; color: #34d399; margin: 4px 0;">{total_achiv:.1f}%</div>
                             <div style="font-size: 12px; color: #fde047;">GAP (Kekurangan): {int(total_gap)} Pcs</div>
                         </div>
-                    </div>   
+                    </div>
                     <div class="open-page-footer">Halaman Kanan • Posisi Pahlawan</div>
                 </div>
             </div>
