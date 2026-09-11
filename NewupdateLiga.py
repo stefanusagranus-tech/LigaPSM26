@@ -2896,16 +2896,16 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 gap = max(0, target_val - actual_val)
                 ok = actual_val >= target_val
                 badge_txt = "✨ TERCAPAI" if ok else f"⚡ GAP: {int(gap)}"
-                badge_col = "#15803d" if ok else "#b45309"
+                badge_col = "#16a34a" if ok else "#d97706"
 
-                # Kartu Dibuat Kompak (Padding & Margin Dipresisikan Agar Tidak Ada Scrollbar)
+                # Kartu Dibuat Ringkas (Margin & Padding Kecil) Tanpa Menggunakan Class RPG
                 list_html_items += """
-                <div style="background-color: #ffffff !important; border: 2px solid #b45309 !important; border-radius: 6px; padding: 6px 10px; margin-bottom: 6px; opacity: 1 !important; box-shadow: 0 2px 4px rgba(0,0,0,0.15);">
-                    <div style="font-weight: 900 !important; color: #451a03 !important; font-size: 12px; margin-bottom: 2px; opacity: 1 !important;">⚡ {p_name}</div>
-                    <div style="font-size: 11px; color: #27272a !important; font-weight: 800 !important; margin-bottom: 4px; opacity: 1 !important;">{info_syarat}</div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; opacity: 1 !important;">
-                        <span style="color: #18181b !important; font-weight: 700 !important;">Aktual: <b style="color: #1d4ed8 !important; font-weight: 900 !important;">{actual_val}</b> | Target: <b style="color: #b91c1c !important; font-weight: 900 !important;">{target_val}</b></span>
-                        <span style="color: {badge_col} !important; font-weight: 900 !important;">{achiv:.1f}% ({badge_txt})</span>
+                <div style="background-color: #ffffff; border: 2px solid #b45309; border-radius: 6px; padding: 6px 10px; margin-bottom: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); font-family: sans-serif;">
+                    <div style="font-weight: 800; color: #451a03; font-size: 12px; margin-bottom: 2px;">⚡ {p_name}</div>
+                    <div style="font-size: 11px; color: #1c1917; font-weight: 600; margin-bottom: 4px;">{info_syarat}</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+                        <span style="color: #1c1917; font-weight: 600;">Aktual: <b style="color: #2563eb; font-weight: 800;">{actual_val}</b> | Target: <b style="color: #dc2626; font-weight: 800;">{target_val}</b></span>
+                        <span style="color: {badge_col}; font-weight: 800;">{achiv:.1f}% ({badge_txt})</span>
                     </div>
                 </div>
                 """.format(
@@ -2935,44 +2935,51 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             total_achiv = (total_all_actual / total_all_target * 100) if total_all_target > 0 else 0
             total_gap = max(0, total_all_target - total_all_actual)
 
-            # Layout Utama: Kontras Teks Tinggi & Presisi Bebas Scroll
+            # Layout Utama Murni Inline Styling (Bebas dari Intervensi Class CSS Luar)
             html_open_tugas = """
-            <div class="rpg-open-book-container">
-                <div class="rpg-book-page rpg-book-page-left" style="overflow: hidden !important; padding: 10px 15px !important;">
-                    <h3 class="open-page-title" style="color: #2c1810 !important; font-weight: 900 !important; font-size: 16px !important; margin-bottom: 2px !important; opacity: 1 !important;">🛡️ TARGET PPS</h3>
-                    <p class="open-page-sub" style="color: #4a2810 !important; font-weight: 800 !important; font-size: 11px !important; margin-bottom: 6px !important; opacity: 1 !important;">Rincian Target Harian ({active_period})</p>
-                    <div class="open-book-divider" style="margin-bottom: 8px !important;"></div>
+            <div style="display: flex; gap: 15px; width: 100%; box-sizing: border-box; font-family: sans-serif;">
+                <!-- Halaman Kiri -->
+                <div style="flex: 1; background: #fffbeb; border: 3px solid #b45309; border-radius: 12px; padding: 12px 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); height: 480px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="text-align: center; color: #451a03; font-weight: 900; font-size: 18px; margin-bottom: 2px;">🛡️ TARGET PPS</div>
+                        <div style="text-align: center; color: #78350f; font-weight: 700; font-size: 11px; margin-bottom: 8px;">Rincian Target Harian ({active_period})</div>
+                        <div style="border-bottom: 2px solid #b45309; margin-bottom: 8px;"></div>
+                        
+                        {list_items}
+                    </div>
                     
-                    {list_items}
-                    
-                    <div class="open-page-footer" style="color: #5c3a21 !important; font-weight: 800 !important; font-size: 10px !important; margin-top: 5px !important; opacity: 1 !important;">Halaman Kiri • Target PPS</div>
+                    <div style="text-align: center; color: #78350f; font-weight: 700; font-size: 10px; border-top: 1px solid #fde68a; padding-top: 4px;">Halaman Kiri • Target PPS</div>
                 </div>
                 
-                <div class="rpg-book-page rpg-book-page-right" style="overflow: hidden !important; padding: 10px 15px !important;">
-                    <h3 class="open-page-title" style="color: #2c1810 !important; font-weight: 900 !important; font-size: 16px !important; margin-bottom: 2px !important; opacity: 1 !important;">📍 POSISI PAHLAWAN</h3>
-                    <p class="open-page-sub" style="color: #4a2810 !important; font-weight: 800 !important; font-size: 11px !important; margin-bottom: 6px !important; opacity: 1 !important;">Status Performa Guild Anda</p>
-                    <div class="open-book-divider" style="margin-bottom: 8px !important;"></div>
-                    
-                    <div style="background: linear-gradient(135deg, #0f172a, #1e1b4b) !important; border: 3px solid #d97706 !important; border-radius: 10px; padding: 15px; text-align: center; color: #ffffff !important; box-shadow: 0 4px 10px rgba(0,0,0,0.4); opacity: 1 !important;">
-                        <div style="font-size: 11px !important; letter-spacing: 1px; color: #fbbf24 !important; font-weight: 900 !important; margin-bottom: 8px !important;">⚔️ MONTHLY GUILD PERFORMANCE ⚔️</div>
-                        <div style="display: flex; justify-content: space-around; align-items: center; margin: 10px 0;">
-                            <div>
-                                <div style="font-size: 10px !important; color: #93c5fd !important; font-weight: 800 !important;">AKTUAL BULAN INI</div>
-                                <div style="font-size: 24px !important; font-weight: 900 !important; color: #38bdf8 !important;">{actual_val_str}</div>
+                <!-- Halaman Kanan -->
+                <div style="flex: 1; background: #fffbeb; border: 3px solid #b45309; border-radius: 12px; padding: 12px 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); height: 480px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="text-align: center; color: #451a03; font-weight: 900; font-size: 18px; margin-bottom: 2px;">📍 POSISI PAHLAWAN</div>
+                        <div style="text-align: center; color: #78350f; font-weight: 700; font-size: 11px; margin-bottom: 8px;">Status Performa Guild Anda</div>
+                        <div style="border-bottom: 2px solid #b45309; margin-bottom: 12px;"></div>
+                        
+                        <div style="background: #1e1b4b; border: 3px solid #f59e0b; border-radius: 10px; padding: 15px; text-align: center; color: #ffffff;">
+                            <div style="font-size: 11px; letter-spacing: 1px; color: #fbbf24; font-weight: 800; margin-bottom: 10px;">⚔️ MONTHLY GUILD PERFORMANCE ⚔️</div>
+                            <div style="display: flex; justify-content: space-around; align-items: center; margin: 12px 0;">
+                                <div>
+                                    <div style="font-size: 10px; color: #93c5fd; font-weight: 700;">AKTUAL BULAN INI</div>
+                                    <div style="font-size: 26px; font-weight: 900; color: #38bdf8;">{actual_val_str}</div>
+                                </div>
+                                <div style="font-size: 18px; font-weight: 900; color: #f59e0b;">VS</div>
+                                <div>
+                                    <div style="font-size: 10px; color: #fca5a5; font-weight: 700;">TARGET BULAN INI</div>
+                                    <div style="font-size: 26px; font-weight: 900; color: #f87171;">{target_val_str}</div>
+                                </div>
                             </div>
-                            <div style="font-size: 18px !important; font-weight: 900 !important; color: #f59e0b !important;">VS</div>
-                            <div>
-                                <div style="font-size: 10px !important; color: #fca5a5 !important; font-weight: 800 !important;">TARGET BULAN INI</div>
-                                <div style="font-size: 24px !important; font-weight: 900 !important; color: #f87171 !important;">{target_val_str}</div>
+                            <div style="background: rgba(0, 0, 0, 0.5); border: 1px solid #f59e0b; border-radius: 6px; padding: 10px; margin-top: 8px;">
+                                <div style="font-size: 11px; color: #f1f5f9; font-weight: 700;">Pencapaian Total (1 Bulan):</div>
+                                <div style="font-size: 22px; font-weight: 900; color: #4ade80; margin: 2px 0;">{achiv_str}%</div>
+                                <div style="font-size: 11px; color: #fde047; font-weight: 700;">GAP (Kekurangan): {gap_str} Pcs</div>
                             </div>
-                        </div>
-                        <div style="background: rgba(0, 0, 0, 0.6) !important; border: 1px solid #f59e0b !important; border-radius: 6px; padding: 8px; margin-top: 6px;">
-                            <div style="font-size: 11px !important; color: #f1f5f9 !important; font-weight: 800 !important;">Pencapaian Total (1 Bulan):</div>
-                            <div style="font-size: 20px !important; font-weight: 900 !important; color: #4ade80 !important; margin: 2px 0;">{achiv_str}%</div>
-                            <div style="font-size: 11px !important; color: #fde047 !important; font-weight: 800 !important;">GAP (Kekurangan): {gap_str} Pcs</div>
                         </div>
                     </div>
-                    <div class="open-page-footer" style="color: #5c3a21 !important; font-weight: 800 !important; font-size: 10px !important; margin-top: 5px !important; opacity: 1 !important;">Halaman Kanan • Posisi Pahlawan</div>
+                    
+                    <div style="text-align: center; color: #78350f; font-weight: 700; font-size: 10px; border-top: 1px solid #fde68a; padding-top: 4px;">Halaman Kanan • Posisi Pahlawan</div>
                 </div>
             </div>
             """.format(
@@ -2983,6 +2990,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 achiv_str=f"{total_achiv:.1f}",
                 gap_str=int(total_gap)
             )
+            
+            st.markdown(html_open_tugas, unsafe_allow_html=True)
 
         elif page_num == 3:
             # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
