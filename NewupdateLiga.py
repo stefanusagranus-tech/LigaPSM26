@@ -2733,7 +2733,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # ==========================================
         # 📄 5. KONTEN PER HALAMAN BUKU (Halaman 1)
         # ==========================================
-        if page_num == 1:
+       elif page_num == 1:
             periods_df = st.session_state.get("periods_df", pd.DataFrame())
             target_period_id = ""
             if not periods_df.empty:
@@ -2760,20 +2760,20 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             elif not sales_item_df.empty:
                 df_filtered_items = sales_item_df
 
+            # Deteksi Role & User Aktif sesuai session
+            current_user = str(st.session_state.get("username", st.session_state.get("user", "admin"))).strip().lower()
+            user_role = str(st.session_state.get("role", "user")).strip().lower()
+            is_admin = (user_role == "admin" or current_user == "admin")
+
             sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
             actual_dict = {}
             if not sales_person_df.empty:
                 sp_filtered = sales_person_df[sales_person_df["period_id"].astype(str).str.strip() == target_period_id] if target_period_id else sales_person_df
                 
-                # --- MODIFIKASI: DETEKSI ADMIN VS KASIR ---
-                current_user = str(st.session_state.get("username", st.session_state.get("user", "admin"))).strip().lower()
-                user_role = str(st.session_state.get("role", "user")).strip().lower()
-                
                 # Jika bukan admin, filter berdasarkan nama kasir yang sedang login
-                if user_role != "admin" and current_user != "admin":
+                if not is_admin:
                     if not sp_filtered.empty and "person_name" in sp_filtered.columns:
                         sp_filtered = sp_filtered[sp_filtered["person_name"].astype(str).str.strip().str.lower() == current_user]
-                # Jika admin, biarkan sp_filtered mencakup keseluruhan data penjualan tanpa filter nama orang
                 
                 if not sp_filtered.empty and "item_id" in sp_filtered.columns and "actual_qty" in sp_filtered.columns:
                     sp_filtered["actual_qty"] = pd.to_numeric(sp_filtered["actual_qty"], errors="coerce").fillna(0)
@@ -2787,12 +2787,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     item_id = str(r.get("item_id", "")).strip()
                     name = str(r.get("item_name", r.get("item_nam", "Item Misi")))
                     
-                    # --- MODIFIKASI TARGET ADMIN VS KASIR ---
-                    # Jika admin, kita bisa totalkan target keseluruhan dari sales_item_df atau kolom target_admin jika ada. 
-                    # Menggunakan target_kasir atau kolom target keseluruhan jika admin:
-                    if user_role == "admin" or current_user == "admin":
-                        # Jika admin ingin melihat total target keseluruhan item pada periode tersebut
-                        target = int(pd.to_numeric(r.get("target_admin", r.get("target_kasir", r.get("get_kasir", 0))), errors="coerce"))
+                    # Logika Target: target_qty (Admin) vs target_kasir (Kasir)
+                    if is_admin:
+                        target = int(pd.to_numeric(r.get("target_qty", 0), errors="coerce"))
                     else:
                         target = int(pd.to_numeric(r.get("target_kasir", r.get("get_kasir", 0)), errors="coerce"))
                     
@@ -2818,7 +2815,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             if not items_html_right:
                 items_html_right = "<div style='color:#78350f; font-size:12px; text-align:center; margin-top:20px;'><i>Tidak ada item tambahan pada periode ini.</i></div>"
 
-            # Menggunakan struktur layout buku seperti contoh yang kamu berikan
+            # Layout Buku
             html_open_tugas = """
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page rpg-book-page-left">
