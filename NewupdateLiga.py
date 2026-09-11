@@ -2902,17 +2902,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 badge_text = "✨ TERCAPAI" if is_success else f"⚡ GAP: {int(gap)}"
                 badge_color = "#15803d" if is_success else "#b45309"
 
-                pps_items_html += f"""
-                <div style="background: #fffbeb; border: 2px solid #d97706; border-radius: 8px; padding: 10px 15px; margin-bottom: 12px;">
-                    <div style="font-weight: bold; color: #78350f; font-size: 14px; margin-bottom: 5px;">⚡ {p_name}</div>
-                    <div style="font-size: 12px; color: #451a03; margin-bottom: 8px;">{status_syarat}</div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
-                        <span>Aktual: <b style="color: #2563eb;">{int(actual_val)}</b> | Target: <b style="color: #dc2626;">{int(target_val)}</b></span>
-                        <span style="color: {badge_color}; font-weight: bold;">{achiv:.1f}% ({badge_text})</span>
-                    </div>
-                </div>
-                """
-
             if not pps_items_html:
                 pps_items_html = "<div style='text-align:center; color:#78350f;'><i>Belum ada data Target PPS aktif.</i></div>"
 
@@ -2950,6 +2939,25 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     <div style="font-size: 13px; color: #e2e8f0;">Pencapaian Total (1 Bulan):</div>
                     <div style="font-size: 22px; font-weight: bold; color: #34d399; margin: 4px 0;">{total_achiv:.1f}%</div>
                     <div style="font-size: 12px; color: #fde047;">GAP (Kekurangan): {int(total_gap)} Pcs</div>
+                </div>
+            </div>
+            """
+            # 6. Gabungkan Menjadi Buku Terbuka Utuh
+            html_open_tugas = f"""
+            <div class="rpg-open-book-container">
+                <div class="rpg-book-page rpg-book-page-left">
+                    <h3 class="open-page-title">🛡️ TARGET PPS</h3>
+                    <p class="open-page-sub">Rincian Target Harian PPS</p>
+                    <div class="open-book-divider"></div>
+                    {pps_items_html}
+                    <div class="open-page-footer">Halaman Kiri • Target PPS</div>
+                </div>
+                <div class="rpg-book-page rpg-book-page-right">
+                    <h3 class="open-page-title">📍 POSISI PAHLAWAN</h3>
+                    <p class="open-page-sub">Status Performa Guild Anda</p>
+                    <div class="open-book-divider"></div>
+                    {posisi_content_html}
+                    <div class="open-page-footer">Halaman Kanan • Posisi Pahlawan</div>
                 </div>
             </div>
             """
