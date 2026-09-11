@@ -2845,17 +2845,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             user_role = str(st.session_state.get("role", "user")).strip().lower()
             is_admin = (user_role == "admin" or current_user == "admin")
 
-            # Filter data periode PPS yang aktif berdasarkan tanggal hari ini atau status Aktif
-            target_period_id = ""
+            # Filter data periode PPS yang aktif berdasarkan status Aktif
             active_pps_rows = []
             if not periods_pps_df.empty:
                 for _, r in periods_pps_df.iterrows():
-                    p_id = str(r.get("period_id", "")).strip()
                     status = str(r.get("status", "")).strip().lower()
                     if status == "aktif":
                         active_pps_rows.append(r)
 
-                # Jika tidak ada yang berstatus aktif, ambil baris pertama
                 if not active_pps_rows and not periods_pps_df.empty:
                     active_pps_rows = [periods_pps_df.iloc[0]]
 
@@ -2868,22 +2865,17 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 # Penentuan Target & Aktual berdasarkan Admin / Kasir
                 if is_admin:
                     target_val = target_total
-                    # Admin ambil dari actual_qty di sheet PERIODE_PPS atau sum dari SALES_PPS
                     actual_val = float(pd.to_numeric(r.get("actual_qty", 0), errors="coerce"))
                 else:
                     # Kasir: target_total dibagi 9 personil
                     target_val = target_total / 9.0 if target_total > 0 else 0
                     
-                    # Kasir: ambil data dari kolom kasir_name di SALES_PPS
-                    # Cek kolom program spesifik (misal SUEGEER, PWP, SERBA GRATIS berdasarkan nama periode)
                     actual_val = 0
                     if not sales_pps_df.empty and "kasir_name" in sales_pps_df.columns:
-                        # Filter berdasarkan kasir yang login
                         filtered_sales = sales_pps_df[sales_pps_df["kasir_name"].astype(str).str.strip().str.lower() == current_user]
                         
-                        # Tentukan kolom kuantiti berdasarkan jenis program di period_name
                         p_name_lower = p_name.lower()
-                        qty_col = "actual_qty" # default fallback
+                        qty_col = "actual_qty"
                         if "suegeer" in p_name_lower and "qty_suegeer" in filtered_sales.columns:
                             qty_col = "qty_suegeer"
                         elif "pwp" in p_name_lower and "qty_pwp" in filtered_sales.columns:
@@ -2896,7 +2888,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         if qty_col in filtered_sales.columns:
                             actual_val = float(pd.to_numeric(filtered_sales[qty_col], errors="coerce").sum())
 
-                # Khusus Suegeer target 50% / syarat redeem
+                # Khusus Suegeer target 50% dari syarat
                 syarat_val = float(pd.to_numeric(r.get("syarat_total", r.get("syarat_pwp", 0)), errors="coerce"))
                 redeem_val = float(pd.to_numeric(r.get("deem_total", r.get("redeem_pwp", 0)), errors="coerce"))
                 
@@ -2927,18 +2919,19 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             if not pps_html_left:
                 pps_html_left = "<div style='text-align:center; color:#78350f;'><i>Belum ada data Target PPS aktif.</i></div>"
 
-            # --- HALAMAN KANAN: POSISI PAHLAWAN (Admin: War Match Style / Kasir: Peringkat Toko) ---
+            # --- HALAMAN KANAN: POSISI PAHLAWAN ---
             posisi_html_right = ""
             if is_admin:
-                # Tampilan War Match untuk Admin (Total Keseluruhan, Aktual Biru, Target Merah, Achiv Tengah, Gap Bawah)
+                # War Match Style untuk Admin
                 total_all_target = periods_pps_df["target_total"].apply(lambda x: pd.to_numeric(x, errors="coerce")).sum() if not periods_pps_df.empty else 0
                 total_all_actual = periods_pps_df["actual_qty"].apply(lambda x: pd.to_numeric(x, errors="coerce")).sum() if not periods_pps_df.empty else 0
                 total_achiv = (total_all_actual / total_all_target * 100) if total_all_target > 0 else 0
                 total_gap = total_all_target - total_all_actual
 
-                posisi_html_right = f"""
+                posisi_html_right = """
                 <div style="background: linear-gradient(135deg, #1e1b4b, #31103d); border: 3px solid #f59e0b; border-radius: 12px; padding: 20px; text-align: center; color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
                     <div style="font-size: 12px; letter-spacing: 2px; color: #fbbf24; font-weight: bold; margin-bottom: 10px;">⚔️ WAR MATCH • TOTAL GUILD PERFORMANCE ⚔️</div>
+                    
                     <div style="display: flex; justify-content: space-around; align-items: center; margin: 15px 0;">
                         <div>
                             <div style="font-size: 11px; color: #93c5fd;">AKTUAL TOKO</div>
@@ -2950,6 +2943,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                             <div style="font-size: 26px; font-weight: bold; color: #f87171;">{int(total_all_target)}</div>
                         </div>
                     </div>
+
                     <div style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; margin-top: 10px;">
                         <div style="font-size: 13px; color: #e2e8f0;">Pencapaian Total (Achievement):</div>
                         <div style="font-size: 22px; font-weight: bold; color: #34d399; margin: 4px 0;">{total_achiv:.1f}%</div>
@@ -2966,7 +2960,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 """
 
             # Layout Buku Halaman 2
-            html_open_tugas = f"""
+            html_open_tugas = """
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page rpg-book-page-left">
                     <h3 class="open-page-title">🛡️ TARGET PPS</h3>
@@ -2984,6 +2978,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 </div>
             </div>
             """
+
+            # Render ke Streamlit dengan unsafe_allow_html=True agar tidak tampil kode HTML mentah
+            st.markdown(html_open_tugas, unsafe_allow_html=True)
         
         elif page_num == 3:
             # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
