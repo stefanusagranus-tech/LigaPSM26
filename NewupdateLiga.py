@@ -2919,8 +2919,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                             <div style="font-size: 22px; font-weight: bold; color: #34d399; margin: 4px 0;">{total_achiv:.1f}%</div>
                             <div style="font-size: 12px; color: #fde047;">GAP (Kekurangan): {int(total_gap)} Pcs</div>
                         </div>
-                    </div>
-                    
+                    </div>   
                     <div class="open-page-footer">Halaman Kanan • Posisi Pahlawan</div>
                 </div>
             </div>
