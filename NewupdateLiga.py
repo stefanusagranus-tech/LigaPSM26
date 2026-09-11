@@ -2952,28 +2952,32 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 <div class="open-stat-row"><span>⚡ RANK SUEGER</span><span style="color:#ca8a04; font-weight:bold;">🥈 Peringkat #2 (94%)</span></div>
                 """
 
-            # --- DIGABUNG JADI SATU KESATUAN HTML UTUH ---
-            html_open_tugas = f"""
-            <div class="rpg-open-book-container">
-                <div class="rpg-book-page rpg-book-page-left">
+            # --- RENDER MENGGUNAKAN ST.COLUMNS AGAR TIDAK PECAH ---
+            col_left, col_right = st.columns(2)
+
+            with col_left:
+                left_page_html = f"""
+                <div class="rpg-book-page rpg-book-page-left" style="width: 100%;">
                     <h3 class="open-page-title">🛡️ TARGET PPS</h3>
                     <p class="open-page-sub">Rincian Target Harian PPS</p>
                     <div class="open-book-divider"></div>
                     {pps_items_html}
                     <div class="open-page-footer">Halaman Kiri • Target PPS</div>
                 </div>
-                <div class="rpg-book-page rpg-book-page-right">
+                """
+                st.markdown(left_page_html, unsafe_allow_html=True)
+
+            with col_right:
+                right_page_html = f"""
+                <div class="rpg-book-page rpg-book-page-right" style="width: 100%;">
                     <h3 class="open-page-title">📍 POSISI PAHLAWAN</h3>
                     <p class="open-page-sub">Status Peringkat Guild Anda</p>
                     <div class="open-book-divider"></div>
                     {posisi_content_html}
                     <div class="open-page-footer">Halaman Kanan • Posisi Pahlawan</div>
                 </div>
-            </div>
-            """
-
-            # Eksekusi render langsung ke Streamlit
-            st.markdown(html_open_tugas, unsafe_allow_html=True)
+                """
+                st.markdown(right_page_html, unsafe_allow_html=True)
 
         elif page_num == 3:
             # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
