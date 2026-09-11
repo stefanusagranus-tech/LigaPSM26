@@ -2943,23 +2943,42 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     "achiv_color": achiv_color, "achiv": achiv
                 })
 
-            # 5. OLAH DATA HALAMAN KANAN (MONTHLY GUILD PERFORMANCE)
+           # 5. OLAH DATA HALAMAN KANAN (MONTHLY GUILD PERFORMANCE)
             
-            # A. PSM Target & Aktual (Menghitung Total Seluruh Week)
+            # A. PSM Target & Aktual (Filter Berdasarkan Tabel Periods/Periode September)
             psm_target = 0.0
             psm_actual = 0.0
             psm_mvp = "-"
             
-            if not sales_item_df.empty and "target_qty" in sales_item_df.columns:
+            # 1. Ambil seluruh list period_id khusus bulan September (awalan 'S' atau tanggal di bulan 9)
+            sept_period_ids = []
+            if not periods_df.empty:
+                # Pastikan kolom start_date berformat datetime
+                p_df = periods_df.copy()
+                if "start_date" in p_df.columns:
+                    p_df["start_date"] = pd.to_datetime(p_df["start_date"], errors="coerce")
+                    # Filter periode yang jatuh di bulan September
+                    sept_periods = p_df[p_df["start_date"].dt.month == 9]
+                    if not sept_periods.empty and "period_id" in sept_periods.columns:
+                        sept_period_ids = sept_periods["period_id"].astype(str).str.strip().tolist()
+
+            # 2. Hitung Target PSM dari sales_item_df berdasarkan period_id September
+            if not sales_item_df.empty and "period_id" in sales_item_df.columns and "target_qty" in sales_item_df.columns:
+                f_item_sept = sales_item_df[sales_item_df["period_id"].astype(str).str.strip().isin(sept_period_ids)]
+                psm_target = float(pd.to_numeric(f_item_sept["target_qty"], errors="coerce").sum())
+            elif not sales_item_df.empty and "target_qty" in sales_item_df.columns:
+                # Fallback jika sales_item_df tidak punya kolom period_id
                 psm_target = float(pd.to_numeric(sales_item_df["target_qty"], errors="coerce").sum())
-                    
-            if not sales_person_df.empty and "actual_qty" in sales_person_df.columns:
-                psm_actual = float(pd.to_numeric(sales_person_df["actual_qty"], errors="coerce").sum())
+
+            # 3. Hitung Aktual & MVP PSM dari sales_person_df berdasarkan period_id September
+            if not sales_person_df.empty and "period_id" in sales_person_df.columns and "actual_qty" in sales_person_df.columns:
+                f_person_sept = sales_person_df[sales_person_df["period_id"].astype(str).str.strip().isin(sept_period_ids)]
+                psm_actual = float(pd.to_numeric(f_person_sept["actual_qty"], errors="coerce").sum())
                 
-                # Cari MVP PSM dari Seluruh Data Sales Personil
-                p_col = "staff_name" if "staff_name" in sales_person_df.columns else ("person_name" if "person_name" in sales_person_df.columns else "")
+                # Cari MVP PSM September
+                p_col = "staff_name" if "staff_name" in f_person_sept.columns else ("person_name" if "person_name" in f_person_sept.columns else "")
                 if p_col:
-                    grp_psm = sales_person_df.groupby(p_col)["actual_qty"].sum()
+                    grp_psm = f_person_sept.groupby(p_col)["actual_qty"].sum()
                     if not grp_psm.empty and grp_psm.max() > 0:
                         psm_mvp = str(grp_psm.idxmax()).title()
 
