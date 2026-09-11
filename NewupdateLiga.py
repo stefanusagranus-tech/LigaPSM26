@@ -2978,74 +2978,38 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             total_m_achiv = (total_m_actual / total_m_target * 100) if total_m_target > 0 else 0
             total_m_gap = int(max(0, total_m_target - total_m_actual))
 
-            # =========================================================
-            # 4. HANYA 1 HTML UTUH DENGAN STRUKTUR DENTASI BERTINGKAT
-            # =========================================================
-            single_html_content = textwrap.dedent(f"""
-            <div class="rpg-open-book-container">
-                <!-- HALAMAN KIRI -->
-                <div class="rpg-book-page rpg-book-page-left">
-                    <h3 class="open-page-title">🛡️ TARGET PPS</h3>
-                    <p class="open-page-sub">Rincian Target Harian ({active_period})</p>
-                    <div class="open-book-divider"></div>      
-                    {"".join([f'''
-                    <div class="rpg-item-card">
-                        <div>
-                            <div class="item-title">
-                                {x["icon"]} {x["p_name"]} 
-                                <span class="{x["badge_cls"]}">{x["badge_txt"]}</span>
-                            </div>
-                            <div class="item-stats">{x["info_syarat"]}</div>
-                        </div>
-                        <div style="text-align: right;">
-                            <div style="font-size: 14px; font-weight: bold; color: {x["achiv_color"]};">
-                                {x["achiv"]:.1f}%
-                            </div>
-                        </div>
-                    </div>
-                    ''' for x in items_kiri_list]) if items_kiri_list else '<div style="color:#78350f; font-size:12px; text-align:center; margin-top:20px;"><i>Belum ada data Target PPS aktif.</i></div>'}
-                    <div class="open-page-footer">Halaman Kiri • Target PPS</div>
-                </div>
-                <!-- HALAMAN KANAN -->
-                <div class="rpg-book-page rpg-book-page-right">
-                    <h3 class="open-page-title">📍 POSISI PAHLAWAN</h3>
-                    <p class="open-page-sub">Status Performa Guild Bulanan</p>
-                    <div class="open-book-divider"></div>
-                    <div style="background: #fff8ed; border: 2px solid #b45309; border-radius: 10px; padding: 8px; box-shadow: inset 0 0 5px rgba(0,0,0,0.1);">
-                        <div style="font-size: 11px; font-weight: 900; color: #451a03; text-align: center; letter-spacing: 1px; margin-bottom: 6px;">
-                            ⚔️ MONTHLY GUILD PERFORMANCE ⚔️
-                        </div>
-                        {"".join([f'''
-                        <div style="background: rgba(120, 53, 15, 0.05); border: 1px solid #b45309; border-radius: 8px; padding: 6px; margin-bottom: 6px;">
-                            <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; color: #451a03; margin-bottom: 3px;">
-                                <span>🗡️ {y["name"]}</span>
-                                <span>👑 MVP: <b style="color: #b45309;">{y["mvp"]}</b></span>
-                            </div>
-                            <div style="display: flex; height: 12px; width: 100%; border-radius: 4px; overflow: hidden; border: 1px solid #78350f; background: #fee2e2;">
-                                <div style="width: {y["pct_blue"]:.1f}%; background: linear-gradient(90deg, #1d4ed8, #3b82f6); color: #fff; font-size: 8px; text-align: center; line-height: 12px; font-weight: bold;">
-                                    {y["p_achiv"]:.0f}%
-                                </div>
-                                <div style="width: {y["pct_red"]:.1f}%; background: linear-gradient(90deg, #ef4444, #b91c1c);"></div>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: bold; margin-top: 2px;">
-                                <span style="color: #1d4ed8;">Aktual: {y["p_actual"]}</span>
-                                <span style="color: #b91c1c;">Target: {y["p_target"]}</span>
-                            </div>
-                        </div>
-                        ''' for y in items_kanan_list])}
-                        <div style="background: rgba(120, 53, 15, 0.1); border-top: 2px dashed #b45309; border-radius: 6px; padding: 5px; text-align: center; margin-top: 4px;">
-                            <span style="font-size: 11px; color: #451a03; font-weight: bold;">Total Performance: </span>
-                            <b style="font-size: 13px; color: #047857;">{total_m_achiv:.1f}%</b>
-                            <span style="font-size: 10px; color: #b91c1c; font-weight: bold; margin-left: 6px;">(GAP: {total_m_gap} Pcs)</span>
-                        </div>
-                    </div>
-                    <div class="open-page-footer">Halaman Kanan • Posisi Pahlawan</div>
-                </div>
-            </div>
-            """)
-            # SCRIPT PERBAIKAN (Sesuai nama variabel tunggalnya)
-            st.markdown(single_html_content, unsafe_allow_html=True)
-        
+            # 4. SATU STRING HTML UTUH TANPA INDENTASI INTERNAL PADA LIST JOIN
+            html_kiri_str = "".join([f'<div class="rpg-item-card"><div><div class="item-title">{x["icon"]} {x["p_name"]} <span class="{x["badge_cls"]}">{x["badge_txt"]}</span></div><div class="item-stats">{x["info_syarat"]}</div></div><div style="text-align: right;"><div style="font-size: 14px; font-weight: bold; color: {x["achiv_color"]};">{x["achiv"]:.1f}%</div></div></div>' for x in items_kiri_list]) if items_kiri_list else '<div style="color:#78350f; font-size:12px; text-align:center; margin-top:20px;"><i>Belum ada data Target PPS aktif.</i></div>'
+            
+            html_kanan_str = "".join([f'<div style="background: rgba(120, 53, 15, 0.05); border: 1px solid #b45309; border-radius: 8px; padding: 6px; margin-bottom: 6px;"><div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; color: #451a03; margin-bottom: 3px;"><span>🗡️ {y["name"]}</span><span>👑 MVP: <b style="color: #b45309;">{y["mvp"]}</b></span></div><div style="display: flex; height: 12px; width: 100%; border-radius: 4px; overflow: hidden; border: 1px solid #78350f; background: #fee2e2;"><div style="width: {y["pct_blue"]:.1f}%; background: linear-gradient(90deg, #1d4ed8, #3b82f6); color: #fff; font-size: 8px; text-align: center; line-height: 12px; font-weight: bold;">{y["p_achiv"]:.0f}%</div><div style="width: {y["pct_red"]:.1f}%; background: linear-gradient(90deg, #ef4444, #b91c1c);"></div></div><div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: bold; margin-top: 2px;"><span style="color: #1d4ed8;">Aktual: {y["p_actual"]}</span><span style="color: #b91c1c;">Target: {y["p_target"]}</span></div></div>' for y in items_kanan_list])
+
+            html_open_tugas = f"""<div class="rpg-open-book-container">
+        <div class="rpg-book-page rpg-book-page-left">
+        <h3 class="open-page-title">🛡️ TARGET PPS</h3>
+        <p class="open-page-sub">Rincian Target Harian ({active_period})</p>
+        <div class="open-book-divider"></div>
+        {html_kiri_str}
+        <div class="open-page-footer">Halaman Kiri • Target PPS</div>
+        </div>
+        <div class="rpg-book-page rpg-book-page-right">
+        <h3 class="open-page-title">📍 POSISI PAHLAWAN</h3>
+        <p class="open-page-sub">Status Performa Guild Bulanan</p>
+        <div class="open-book-divider"></div>
+        <div style="background: #fff8ed; border: 2px solid #b45309; border-radius: 10px; padding: 8px; box-shadow: inset 0 0 5px rgba(0,0,0,0.1);">
+        <div style="font-size: 11px; font-weight: 900; color: #451a03; text-align: center; letter-spacing: 1px; margin-bottom: 6px;">⚔️ MONTHLY GUILD PERFORMANCE ⚔️</div>
+        {html_kanan_str}
+        <div style="background: rgba(120, 53, 15, 0.1); border-top: 2px dashed #b45309; border-radius: 6px; padding: 5px; text-align: center; margin-top: 4px;">
+        <span style="font-size: 11px; color: #451a03; font-weight: bold;">Total Performance: </span>
+        <b style="font-size: 13px; color: #047857;">{total_m_achiv:.1f}%</b>
+        <span style="font-size: 10px; color: #b91c1c; font-weight: bold; margin-left: 6px;">(GAP: {total_m_gap} Pcs)</span>
+        </div>
+        </div>
+        <div class="open-page-footer">Halaman Kanan • Posisi Pahlawan</div>
+        </div>
+        </div>"""
+
+            st.markdown(html_open_tugas, unsafe_allow_html=True)
+                
         elif page_num == 3:
             # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
             rpg_badge_style = """
