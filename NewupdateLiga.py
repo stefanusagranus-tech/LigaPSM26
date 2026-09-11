@@ -3036,30 +3036,19 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             total_m_achiv = (total_m_actual / total_m_target * 100) if total_m_target > 0 else 0
             total_m_gap = int(max(0, total_m_target - total_m_actual))
 
-            # 6. HTML RENDER (FIX ERROR & BEBAS BOCOR)
-            # HTML Item Halaman Kiri
-            html_kiri_str = "".join([
-                f'<div class="rpg-item-card">'
-                f'<div><div class="item-title">{x["icon"]} {x["p_name"]} <span class="{x["badge_cls"]}">{x["badge_txt"]}</span></div>'
-                f'<div class="item-stats">{x["info_syarat"]}</div></div>'
-                f'<div style="text-align: right;"><div style="font-size: 14px; font-weight: bold; color: {x["achiv_color"]};">{x["achiv"]:.1f}%</div></div>'
-                f'</div>'
-                for x in items_kiri_list
-            ]) if items_kiri_list else '<div style="color:#78350f; font-size:12px; text-align:center; margin-top:20px;"><i>Belum ada data Target PPS aktif.</i></div>'
-                    
-            # HTML Item Halaman Kanan (Gunakan .rpg-item-card & paksa warna pekat agar kontras)
+            # HTML Item Halaman Kanan (Ditegaskan Warna Hitam Pekat & Background Putih Solid)
             html_kanan_str = "".join([
-                f'<div class="rpg-item-card" style="background-color: #ffffff !important; border: 1.5px solid #78350f !important;">'
+                f'<div class="rpg-item-card" style="background-color: #ffffff !important; border: 1.5px solid #78350f !important; padding: 8px !important; margin-bottom: 6px !important;">'
                 f'<div style="width: 100%;">'
-                f'<div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 12px; color: #000000 !important; margin-bottom: 4px;">'
-                f'<span>🗡️ {y["name"]}</span>'
-                f'<span style="color: #b45309 !important;">👑 MVP: {y["mvp"]}</span>'
+                f'<div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 11px; color: #000000 !important; margin-bottom: 4px;">'
+                f'<span style="color: #000000 !important;">🗡️ {y["name"]}</span>'
+                f'<span style="color: #b45309 !important;">👑 MVP: <b style="color: #b45309 !important;">{y["mvp"]}</b></span>'
                 f'</div>'
                 f'<div style="display: flex; height: 12px; width: 100%; border-radius: 4px; overflow: hidden; border: 1px solid #451a03; background-color: #fecdd3 !important;">'
                 f'<div style="width: {y["pct_blue"]:.1f}%; background: #2563eb !important; color: #ffffff !important; font-size: 9px; text-align: center; line-height: 12px; font-weight: bold;">{y["p_achiv"]:.0f}%</div>'
                 f'<div style="width: {y["pct_red"]:.1f}%; background-color: #dc2626 !important;"></div>'
                 f'</div>'
-                f'<div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; margin-top: 4px;">'
+                f'<div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 800; margin-top: 4px; color: #000000 !important;">'
                 f'<span style="color: #1d4ed8 !important;">Aktual: {y["p_actual"]}</span>'
                 f'<span style="color: #9f1239 !important;">Target: {y["p_target"]}</span>'
                 f'</div>'
@@ -3068,7 +3057,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 for y in items_kanan_list
             ])
 
-            # Struktur Buku Utama (Digabung langsung tanpa enter pemicu code block)
+            # Struktur Buku Utama
             html_open_tugas = (
                 f'<div class="rpg-open-book-container">'
                 f'<div class="rpg-book-page rpg-book-page-left">'
@@ -3079,22 +3068,23 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 f'<div class="open-page-footer">Halaman Kiri • Target PPS</div>'
                 f'</div>'
                 f'<div class="rpg-book-page rpg-book-page-right">'
-                f'<h3 class="open-page-title">📍 POSISI PAHLAWAN</h3>'
-                f'<p class="open-page-sub">Status Performa Guild Bulanan</p>'
+                f'<h3 class="open-page-title" style="color: #451a03 !important;">📍 POSISI PAHLAWAN</h3>'
+                f'<p class="open-page-sub" style="color: #78350f !important;">Status Performa Guild Bulanan</p>'
                 f'<div class="open-book-divider"></div>'
-                f'<div style="background-color: rgba(255, 251, 235, 0.85); border: 2px solid #9a3412; border-radius: 10px; padding: 8px;">'
-                f'<div style="font-size: 12px; font-weight: 900; color: #451a03; text-align: center; margin-bottom: 8px;">⚔️ MONTHLY GUILD PERFORMANCE ⚔️</div>'
+                f'<div style="background-color: rgba(255, 251, 235, 0.95); border: 2px solid #9a3412; border-radius: 10px; padding: 8px;">'
+                f'<div style="font-size: 11px; font-weight: 900; color: #451a03 !important; text-align: center; margin-bottom: 6px;">⚔️ MONTHLY GUILD PERFORMANCE ⚔️</div>'
                 f'{html_kanan_str}'
-                f'<div style="border-top: 2px dashed #9a3412; padding-top: 6px; text-align: center; margin-top: 6px;">'
-                f'<span style="font-size: 12px; color: #451a03; font-weight: bold;">Total Performance: </span>'
-                f'<b style="font-size: 14px; color: #065f46;">{total_m_achiv:.1f}%</b>'
-                f'<span style="font-size: 11px; color: #9f1239; font-weight: bold; margin-left: 6px;">(GAP: {total_m_gap} Pcs)</span>'
+                f'<div style="border-top: 2px dashed #9a3412; padding-top: 6px; text-align: center; margin-top: 4px;">'
+                f'<span style="font-size: 11px; color: #451a03 !important; font-weight: bold;">Total Performance: </span>'
+                f'<b style="font-size: 13px; color: #065f46 !important;">{total_m_achiv:.1f}%</b>'
+                f'<span style="font-size: 10px; color: #9f1239 !important; font-weight: bold; margin-left: 6px;">(GAP: {total_m_gap} Pcs)</span>'
                 f'</div>'
                 f'</div>'
                 f'<div class="open-page-footer">Halaman Kanan • Posisi Pahlawan</div>'
                 f'</div>'
                 f'</div>'
             )
+
                 
         elif page_num == 3:
             # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
