@@ -2922,7 +2922,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 total_achiv = (total_all_actual / total_all_target * 100) if total_all_target > 0 else 0
                 total_gap = total_all_target - total_all_actual
 
-                posisi_content_html = f"""
+                posisi_content_html = """
                 <div style="background: linear-gradient(135deg, #1e1b4b, #31103d); border: 3px solid #f59e0b; border-radius: 12px; padding: 20px; text-align: center; color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
                     <div style="font-size: 12px; letter-spacing: 2px; color: #fbbf24; font-weight: bold; margin-bottom: 10px;">⚔️ WAR MATCH • TOTAL GUILD PERFORMANCE ⚔️</div>
                     <div style="display: flex; justify-content: space-around; align-items: center; margin: 15px 0;">
