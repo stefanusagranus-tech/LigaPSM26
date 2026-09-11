@@ -2856,7 +2856,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 if not active_pps_rows and not periods_pps_df.empty:
                     active_pps_rows = [periods_pps_df.iloc[0]]
 
-            # --- GENERATE KONTEN HALAMAN KIRI (TARGET PPS) ---
+            # --- KONTEN HALAMAN KIRI (TARGET PPS) ---
             pps_items_html = ""
             for r in active_pps_rows:
                 p_name = str(r.get("period_name", "Program PPS"))
@@ -2915,7 +2915,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             if not pps_items_html:
                 pps_items_html = "<div style='text-align:center; color:#78350f;'><i>Belum ada data Target PPS aktif.</i></div>"
 
-            # --- GENERATE KONTEN HALAMAN KANAN (POSISI PAHLAWAN) ---
+            # --- KONTEN HALAMAN KANAN (POSISI PAHLAWAN) ---
             if is_admin:
                 total_all_target = periods_pps_df["target_total"].apply(lambda x: pd.to_numeric(x, errors="coerce")).sum() if not periods_pps_df.empty else 0
                 total_all_actual = periods_pps_df["actual_qty"].apply(lambda x: pd.to_numeric(x, errors="coerce")).sum() if not periods_pps_df.empty else 0
@@ -2952,32 +2952,28 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 <div class="open-stat-row"><span>⚡ RANK SUEGER</span><span style="color:#ca8a04; font-weight:bold;">🥈 Peringkat #2 (94%)</span></div>
                 """
 
-            # --- RENDER MENGGUNAKAN ST.COLUMNS AGAR TIDAK PECAH ---
-            col_left, col_right = st.columns(2)
-
-            with col_left:
-                left_page_html = f"""
-                <div class="rpg-book-page rpg-book-page-left" style="width: 100%;">
+            # --- DIGABUNG JADI SATU VARIABEL UTUH SESUAI STRUKTUR BUKU ---
+            html_open_tugas = f"""
+            <div class="rpg-open-book-container">
+                <div class="rpg-book-page rpg-book-page-left">
                     <h3 class="open-page-title">🛡️ TARGET PPS</h3>
                     <p class="open-page-sub">Rincian Target Harian PPS</p>
                     <div class="open-book-divider"></div>
                     {pps_items_html}
                     <div class="open-page-footer">Halaman Kiri • Target PPS</div>
                 </div>
-                """
-                st.markdown(left_page_html, unsafe_allow_html=True)
-
-            with col_right:
-                right_page_html = f"""
-                <div class="rpg-book-page rpg-book-page-right" style="width: 100%;">
+                <div class="rpg-book-page rpg-book-page-right">
                     <h3 class="open-page-title">📍 POSISI PAHLAWAN</h3>
                     <p class="open-page-sub">Status Peringkat Guild Anda</p>
                     <div class="open-book-divider"></div>
                     {posisi_content_html}
                     <div class="open-page-footer">Halaman Kanan • Posisi Pahlawan</div>
                 </div>
-                """
-                st.markdown(right_page_html, unsafe_allow_html=True)
+            </div>
+            """
+
+            # Render aman tanpa memecah kontainer buku utama
+            st.markdown(html_open_tugas, unsafe_allow_html=True)
 
         elif page_num == 3:
             # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
