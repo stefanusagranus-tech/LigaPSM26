@@ -3055,7 +3055,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 </div>
             </div>
             ''' for y in items_kanan_list])
-
             html_open_tugas = f"""<div class="rpg-open-book-container">
         <div class="rpg-book-page rpg-book-page-left">
         <h3 class="open-page-title">🛡️ TARGET PPS</h3>
