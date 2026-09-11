@@ -2897,17 +2897,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 badge_txt = "✨ TERCAPAI" if ok else f"⚡ GAP: {int(gap)}"
                 badge_col = "#15803d" if ok else "#b45309"
 
-                list_html_items += f"""
-                <div style="background: #fffbeb; border: 2px solid #d97706; border-radius: 8px; padding: 10px 15px; margin-bottom: 12px;">
-                    <div style="font-weight: bold; color: #78350f; font-size: 14px; margin-bottom: 5px;">⚡ {p_name}</div>
-                    <div style="font-size: 12px; color: #451a03; margin-bottom: 8px;">{info_syarat}</div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
-                        <span>Aktual: <b style="color: #2563eb;">{int(actual_val)}</b> | Target: <b style="color: #dc2626;">{int(target_val)}</b></span>
-                        <span style="color: {badge_col}; font-weight: bold;">{achiv:.1f}% ({badge_txt})</span>
-                    </div>
-                </div>
-                """
-
             if not list_html_items:
                 list_html_items = "<div style='text-align:center; color:#78350f;'><i>Belum ada data Target PPS aktif.</i></div>"
 
