@@ -2838,6 +2838,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             """.format(active_period=active_period, items_html_left=items_html_left, items_html_right=items_html_right)
 
         elif page_num == 2:
+            # INISIALISASI VARIABEL UTAMA DI ATAS AGAR AMAN DARI SCOPE ERROR
+            list_html_items = ""
+            
             periods_pps_df = st.session_state.get("periods_pps_df", pd.DataFrame())
             sales_pps_df = st.session_state.get("sales_pps_df", pd.DataFrame())
             
@@ -2853,22 +2856,77 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 if not active_pps_rows:
                     active_pps_rows = [periods_pps_df.iloc[0]]
 
+            # Generate item HTML kiri
+            for r in active_pps_rows:
+                p_name = str(r.get("period_name", "Program PPS"))
+                target_total = float(pd.to_numeric(r.get("target_total", 0), errors="coerce"))
+                
+                if is_admin:
+                    target_val = target_total
+                    actual_val = float(pd.to_numeric(r.get("actual_qty", 0), errors="coerce"))
+                else:
+                    target_val = target_total / 9.0 if target_total > 0 else 0
+                    actual_val = 0
+                    if not sales_pps_df.empty and "kasir_name" in sales_pps_df.columns:
+                        filtered_sales = sales_pps_df[sales_pps_df["kasir_name"].astype(str).str.strip().str.lower() == current_user]
+                        p_lower = p_name.lower()
+                        q_col = "actual_qty"
+                        if "suegeer" in p_lower and "qty_suegeer" in filtered_sales.columns:
+                            q_col = "qty_suegeer"
+                        elif "pwp" in p_lower and "qty_pwp" in filtered_sales.columns:
+                            q_col = "qty_pwp"
+                        elif "serba" in p_lower and "qty_sg" in filtered_sales.columns:
+                            q_col = "qty_sg"
+                        elif "cemilan" in p_lower and "qty_cemilan_ceban" in filtered_sales.columns:
+                            q_col = "qty_cemilan_ceban"
+                        if q_col in filtered_sales.columns:
+                            actual_val = float(pd.to_numeric(filtered_sales[q_col], errors="coerce").sum())
+
+                syarat_val = float(pd.to_numeric(r.get("syarat_total", r.get("syarat_pwp", 0)), errors="coerce"))
+                redeem_val = float(pd.to_numeric(r.get("deem_total", r.get("redeem_pwp", 0)), errors="coerce"))
+                
+                if "suegeer" in p_name.lower():
+                    target_val = syarat_val * 0.5 if syarat_val > 0 else target_val
+                    info_syarat = f"Syarat: {int(syarat_val)} | Redeem: {int(redeem_val)}"
+                else:
+                    info_syarat = f"Target: {int(target_val)} Pcs"
+
+                achiv = (actual_val / target_val * 100) if target_val > 0 else 0
+                gap = max(0, target_val - actual_val)
+                ok = actual_val >= target_val
+                badge_txt = "✨ TERCAPAI" if ok else f"⚡ GAP: {int(gap)}"
+                badge_col = "#15803d" if ok else "#b45309"
+
+                list_html_items += f"""
+                <div style="background: #fffbeb; border: 2px solid #d97706; border-radius: 8px; padding: 10px 15px; margin-bottom: 12px;">
+                    <div style="font-weight: bold; color: #78350f; font-size: 14px; margin-bottom: 5px;">⚡ {p_name}</div>
+                    <div style="font-size: 12px; color: #451a03; margin-bottom: 8px;">{info_syarat}</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+                        <span>Aktual: <b style="color: #2563eb;">{int(actual_val)}</b> | Target: <b style="color: #dc2626;">{int(target_val)}</b></span>
+                        <span style="color: {badge_col}; font-weight: bold;">{achiv:.1f}% ({badge_txt})</span>
+                    </div>
+                </div>
+                """
+
+            if not list_html_items:
+                list_html_items = "<div style='text-align:center; color:#78350f;'><i>Belum ada data Target PPS aktif.</i></div>"
+
+            # Hitung data kanan
             total_all_target = periods_pps_df["target_total"].apply(lambda x: pd.to_numeric(x, errors="coerce")).sum() if not periods_pps_df.empty else 0
-            
             if is_admin:
                 total_all_actual = periods_pps_df["actual_qty"].apply(lambda x: pd.to_numeric(x, errors="coerce")).sum() if not periods_pps_df.empty else 0
             else:
                 total_all_actual = 0
                 if not sales_pps_df.empty and "kasir_name" in sales_pps_df.columns:
-                    filtered_sales = sales_pps_df[sales_pps_df["kasir_name"].astype(str).str.strip().str.lower() == current_user]
+                    f_sales = sales_pps_df[sales_pps_df["kasir_name"].astype(str).str.strip().str.lower() == current_user]
                     for col in ["actual_qty", "qty_suegeer", "qty_pwp", "qty_sg", "qty_cemilan_ceban"]:
-                        if col in filtered_sales.columns:
-                            total_all_actual += float(pd.to_numeric(filtered_sales[col], errors="coerce").sum())
+                        if col in f_sales.columns:
+                            total_all_actual += float(pd.to_numeric(f_sales[col], errors="coerce").sum())
 
             total_achiv = (total_all_actual / total_all_target * 100) if total_all_target > 0 else 0
             total_gap = max(0, total_all_target - total_all_actual)
 
-           # GABUNGKAN DALAM SATU TEMPLATE HTML UTUH TANPA NESTED EXPRESSION BERLEBIHAN
+            # TEMPLATE UTUH
             html_open_tugas = f"""
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page rpg-book-page-left">
@@ -2900,7 +2958,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                             <div style="font-size: 22px; font-weight: bold; color: #34d399; margin: 4px 0;">{total_achiv:.1f}%</div>
                             <div style="font-size: 12px; color: #fde047;">GAP (Kekurangan): {int(total_gap)} Pcs</div>
                         </div>
-                    </div>
+                    </div>            
                     <div class="open-page-footer">Halaman Kanan • Posisi Pahlawan</div>
                 </div>
             </div>
