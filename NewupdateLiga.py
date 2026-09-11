@@ -3036,13 +3036,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             total_m_achiv = (total_m_actual / total_m_target * 100) if total_m_target > 0 else 0
             total_m_gap = int(max(0, total_m_target - total_m_actual))
 
-            # 6. HTML RENDER (VARIABEL KIRI & KANAN TERPISAH SEPENUHNYA)
+            # 6. HTML RENDER (FIX ERROR & BEBAS BOCOR)
             html_kiri_str = "".join([f'<div class="rpg-item-card"><div><div class="item-title">{x["icon"]} {x["p_name"]} <span class="{x["badge_cls"]}">{x["badge_txt"]}</span></div><div class="item-stats">{x["info_syarat"]}</div></div><div style="text-align: right;"><div style="font-size: 14px; font-weight: bold; color: {x["achiv_color"]};">{x["achiv"]:.1f}%</div></div></div>' for x in items_kiri_list]) if items_kiri_list else '<div style="color:#78350f; font-size:12px; text-align:center; margin-top:20px;"><i>Belum ada data Target PPS aktif.</i></div>'
                     
-            html_kanan_str = "".join([f'<div style="background-color: #ffffff !important; border: 2px solid #78350f !important; border-radius: 8px; padding: 8px; margin-bottom: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.15);"><div style="display: flex; justify-content: space-between; font-size: 12px !important; font-weight: 800 !important; margin-bottom: 4px;"><span style="color: #000000 !important;">🗡️ {y["name"]}</span><span style="color: #b45309 !important; font-weight: 900 !important;">👑 MVP: <b style="color: #b45309 !important;">{y["mvp"]}</b></span></div><div style="display: flex; height: 14px; width: 100%; border-radius: 4px; overflow: hidden; border: 1px solid #451a03; background-color: #fecdd3 !important;"><div style="width: {y["pct_blue"]:.1f}%; background: linear-gradient(90deg, #1d4ed8, #2563eb) !important; color: #ffffff !important; font-size: 10px; text-align: center; line-height: 14px; font-weight: bold;">{y["p_achiv"]:.0f}%</div><div style="width: {y["pct_red"]:.1f}%; background-color: #dc2626 !important;"></div></div><div style="display: flex; justify-content: space-between; font-size: 11px !important; font-weight: 800 !important; margin-top: 4px;"><span style="color: #1d4ed8 !important;">Aktual: {y["p_actual"]}</span><span style="color: #9f1239 !important;">Target: {y["p_target"]}</span></div></div>' for y in items_kanan_list])
+            html_kanan_str = "".join([f'<div style="background-color: #ffffff !important; border: 2px solid #78350f !important; border-radius: 8px; padding: 8px; margin-bottom: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); opacity: 1 !important; position: relative; z-index: 5;"><div style="display: flex; justify-content: space-between; font-size: 12px !important; font-weight: 800 !important; margin-bottom: 4px;"><span style="color: #000000 !important;">🗡️ {y["name"]}</span><span style="color: #b45309 !important; font-weight: 900 !important;">👑 MVP: <b style="color: #b45309 !important;">{y["mvp"]}</b></span></div><div style="display: flex; height: 14px; width: 100%; border-radius: 4px; overflow: hidden; border: 1px solid #451a03; background-color: #fecdd3 !important;"><div style="width: {y["pct_blue"]:.1f}%; background: linear-gradient(90deg, #1d4ed8, #2563eb) !important; color: #ffffff !important; font-size: 10px; text-align: center; line-height: 14px; font-weight: bold;">{y["p_achiv"]:.0f}%</div><div style="width: {y["pct_red"]:.1f}%; background-color: #dc2626 !important;"></div></div><div style="display: flex; justify-content: space-between; font-size: 11px !important; font-weight: 800 !important; margin-top: 4px;"><span style="color: #1d4ed8 !important;">Aktual: {y["p_actual"]}</span><span style="color: #9f1239 !important;">Target: {y["p_target"]}</span></div></div>' for y in items_kanan_list])
 
-            # 1. VARIABEL KHUSUS HALAMAN KIRI
-            html_kiri = (
+            page_left = (
                 f'<div class="rpg-book-page rpg-book-page-left">'
                 f'<h3 class="open-page-title">🛡️ TARGET PPS</h3>'
                 f'<p class="open-page-sub">Rincian Target Harian ({active_period_pps_name})</p>'
@@ -3052,8 +3051,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 f'</div>'
             )
 
-            # 2. VARIABEL KHUSUS HALAMAN KANAN
-            html_kanan = (
+            page_right = (
                 f'<div class="rpg-book-page rpg-book-page-right" style="background-color: #fef3c7 !important;">'
                 f'<h3 class="open-page-title" style="color: #451a03 !important; font-weight: 900 !important;">📍 POSISI PAHLAWAN</h3>'
                 f'<p class="open-page-sub" style="color: #78350f !important; font-weight: 700 !important;">Status Performa Guild Bulanan</p>'
@@ -3070,8 +3068,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 f'</div>'
             )
 
-            # 3. PENGGABUNGAN KE LAYOUT UTAMA SEBELUM RENDER
-            st.markdown(f'<div class="rpg-open-book-container">{html_kiri}{html_kanan}</div>', unsafe_allow_html=True)
+            # Inisialisasi ulang html_open_tugas agar NameError teratasi
+            html_open_tugas = f'<div class="rpg-open-book-container">{page_left}{page_right}</div>'
+
+            st.markdown(html_open_tugas, unsafe_allow_html=True)
 
                 
         elif page_num == 3:
