@@ -2954,26 +2954,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             </div>
             """
 
-            # 6. Gabungkan Menjadi Buku Terbuka Utuh
-            html_open_tugas = f"""
-            <div class="rpg-open-book-container">
-                <div class="rpg-book-page rpg-book-page-left">
-                    <h3 class="open-page-title">🛡️ TARGET PPS</h3>
-                    <p class="open-page-sub">Rincian Target Harian PPS</p>
-                    <div class="open-book-divider"></div>
-                    {pps_items_html}
-                    <div class="open-page-footer">Halaman Kiri • Target PPS</div>
-                </div>
-                <div class="rpg-book-page rpg-book-page-right">
-                    <h3 class="open-page-title">📍 POSISI PAHLAWAN</h3>
-                    <p class="open-page-sub">Status Performa Guild Anda</p>
-                    <div class="open-book-divider"></div>
-                    {posisi_content_html}
-                    <div class="open-page-footer">Halaman Kanan • Posisi Pahlawan</div>
-                </div>
-            </div>
-            """
-
         elif page_num == 3:
             # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
             rpg_badge_style = """
