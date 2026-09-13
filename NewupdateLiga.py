@@ -2884,7 +2884,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     except Exception:
                         time_factor = 50.0
 
-            # 4. OLAH DATA HALAMAN KIRI (TARGET PPS HARIAN) - FIX SAFE SUM UNTUK USER/NIK
+            # 4. OLAH DATA HALAMAN KIRI (TARGET PPS HARIAN) - AMAN UNTUK NIK USER
             items_kiri_list = []
             icon_list = ["🛡️", "⚡", "🗡️", "🏹", "📜"]
             
@@ -2943,54 +2943,49 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     "achiv_color": achiv_color, "achiv": achiv
                 })
 
-            # 5. OLAH DATA HALAMAN KANAN (MONTHLY GUILD PERFORMANCE - DINAMIS BULAN BERJALAN)
-            
+            # 5. OLAH DATA HALAMAN KANAN (MONTHLY GUILD PERFORMANCE - SEPTEMBER ONLY)
             psm_target = 0.0
             psm_actual = 0.0
             psm_mvp = "-"
             
-            # 1. Ambil list period_id bulan berjalan otomatis (Sep, Okt, Nov, dst.)
-            current_month_period_ids = []
-            if not periods_df.empty and "start_date" in periods_df.columns:
+            # A. Filter period_id September dari sheet PERIODE
+            sept_period_ids = []
+            if not periods_df.empty:
                 p_df = periods_df.copy()
-                p_df["start_date"] = pd.to_datetime(p_df["start_date"], errors="coerce")
-                
-                # Cari bulan dari periode aktif saat ini
-                active_month = pd.Timestamp.now().month
-                if not active_period_id.strip() == "":
-                    act_row = p_df[p_df["period_id"].astype(str).str.strip() == active_period_id]
-                    if not act_row.empty and not pd.isna(act_row.iloc[0]["start_date"]):
-                        active_month = act_row.iloc[0]["start_date"].month
-                
-                # Filter periode yang berada pada bulan tersebut
-                curr_periods = p_df[p_df["start_date"].dt.month == active_month]
-                if not curr_periods.empty and "period_id" in curr_periods.columns:
-                    current_month_period_ids = curr_periods["period_id"].astype(str).str.strip().tolist()
+                if "start_date" in p_df.columns:
+                    p_df["start_date"] = pd.to_datetime(p_df["start_date"], errors="coerce")
+                    sept_periods = p_df[
+                        (p_df["start_date"].dt.month == 9) | 
+                        (p_df["period_id"].astype(str).str.strip().str.upper().str.startswith("S"))
+                    ]
+                    if not sept_periods.empty and "period_id" in sept_periods.columns:
+                        sept_period_ids = sept_periods["period_id"].astype(str).str.strip().tolist()
 
-            # 2. Hitung Target PSM berdasarkan period_id bulan aktif
+            # B. Target PSM dari sheet SALES_ITEM berdasarkan period_id September
             if not sales_item_df.empty and "target_qty" in sales_item_df.columns:
-                if "period_id" in sales_item_df.columns and current_month_period_ids:
-                    f_item = sales_item_df[sales_item_df["period_id"].astype(str).str.strip().isin(current_month_period_ids)]
+                if "period_id" in sales_item_df.columns and sept_period_ids:
+                    f_item_sept = sales_item_df[sales_item_df["period_id"].astype(str).str.strip().isin(sept_period_ids)]
                 else:
-                    f_item = sales_item_df
-                psm_target = float(pd.to_numeric(f_item["target_qty"], errors="coerce").sum())
-
-            # 3. Hitung Aktual & MVP PSM berdasarkan period_id bulan aktif
-            if not sales_person_df.empty and "actual_qty" in sales_person_df.columns:
-                if "period_id" in sales_person_df.columns and current_month_period_ids:
-                    f_person = sales_person_df[sales_person_df["period_id"].astype(str).str.strip().isin(current_month_period_ids)]
-                else:
-                    f_person = sales_person_df
-                    
-                psm_actual = float(pd.to_numeric(f_person["actual_qty"], errors="coerce").sum())
+                    f_item_sept = sales_item_df
                 
-                p_col = "staff_name" if "staff_name" in f_person.columns else ("person_name" if "person_name" in f_person.columns else "")
+                psm_target = float(pd.to_numeric(f_item_sept["target_qty"], errors="coerce").sum())
+
+            # C. Penjualan & MVP PSM dari sheet SALES_PERSONIL berdasarkan period_id September
+            if not sales_person_df.empty and "actual_qty" in sales_person_df.columns:
+                if "period_id" in sales_person_df.columns and sept_period_ids:
+                    f_person_sept = sales_person_df[sales_person_df["period_id"].astype(str).str.strip().isin(sept_period_ids)]
+                else:
+                    f_person_sept = sales_person_df
+                
+                psm_actual = float(pd.to_numeric(f_person_sept["actual_qty"], errors="coerce").sum())
+                
+                p_col = "person_name" if "person_name" in f_person_sept.columns else ("staff_name" if "staff_name" in f_person_sept.columns else "")
                 if p_col:
-                    grp_psm = f_person.groupby(p_col)["actual_qty"].sum()
+                    grp_psm = f_person_sept.groupby(p_col)["actual_qty"].sum()
                     if not grp_psm.empty and grp_psm.max() > 0:
                         psm_mvp = str(grp_psm.idxmax()).title()
 
-            # B. Definisi Program Halaman Kanan
+            # D. Definisi Program Halaman Kanan
             programs = [
                 {"name": "PSM / Target Item", "key": "psm", "target": psm_target, "actual": psm_actual, "mvp": psm_mvp},
                 {"name": "PWP", "key": "pwp", "col_act": "qty_pwp"},
@@ -3106,7 +3101,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 
                 f'</div>'
             )
-            
+
         elif page_num == 3:
             # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
             rpg_badge_style = """
