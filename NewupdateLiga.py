@@ -3099,178 +3099,177 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 f'</div>'
             )
 
-           # 6. RENDER HTML DUA HALAMAN (FIX UNCLOSED TAGS & GLOBAL CSS)
+            # 6. RENDER HTML DUA HALAMAN (FIX UNCLOSED TAGS & GLOBAL CSS)
+            # Render Halaman Kiri (Target PPS)
+            html_kiri_str = "".join([
+                f'<div class="rpg-item-card">'
+                f'<div><div class="item-title">{x["icon"]} {x["p_name"]} <span class="{x["badge_cls"]}">{x["badge_txt"]}</span></div>'
+                f'<div class="item-stats">{x["info_syarat"]}</div></div>'
+                f'<div style="text-align: right;"><div style="font-size: 14px; font-weight: bold; color: {x["achiv_color"]};">{x["achiv"]:.1f}%</div></div>'
+                f'</div>'
+                for x in items_kiri_list
+            ]) if items_kiri_list else '<div style="color:#78350f; font-size:12px; text-align:center; margin-top:20px;"><i>Belum ada data Target PPS aktif.</i></div>'
 
-    # Render Halaman Kiri (Target PPS)
-    html_kiri_str = "".join([
-        f'<div class="rpg-item-card">'
-        f'<div><div class="item-title">{x["icon"]} {x["p_name"]} <span class="{x["badge_cls"]}">{x["badge_txt"]}</span></div>'
-        f'<div class="item-stats">{x["info_syarat"]}</div></div>'
-        f'<div style="text-align: right;"><div style="font-size: 14px; font-weight: bold; color: {x["achiv_color"]};">{x["achiv"]:.1f}%</div></div>'
-        f'</div>'
-        for x in items_kiri_list
-    ]) if items_kiri_list else '<div style="color:#78350f; font-size:12px; text-align:center; margin-top:20px;"><i>Belum ada data Target PPS aktif.</i></div>'
+            # Render Halaman Kanan (Guild War Cards) - Tag dipastikan tertutup rapi
+            html_kanan_items = ""
+            for item in items_kanan_list:
+                label_stat = f"Redeem: {item['p_actual']} / Syarat: {item['p_target']}" if item["is_suegeer"] else f"Hit: {item['p_actual']} / Target: {item['p_target']}"
+                html_kanan_items += (
+                    f'<div class="gw-card">'
+                    f'<div class="gw-card-header">'
+                    f'<span class="gw-card-title">⚔️ {item["name"]}</span>'
+                    f'<span class="gw-mvp">👑 MVP: {item["mvp"]}</span>'
+                    f'</div>'
+                    f'<div class="gw-bar-container">'
+                    f'<div class="gw-bar-blue" style="width: {item["blue_flex"]}%;"></div>'
+                    f'<div class="gw-bar-red" style="width: {item["red_flex"]}%;"></div>'
+                    f'<div class="gw-bar-text">{item["p_achiv"]:.1f}%</div>'
+                    f'</div>'
+                    f'<div class="gw-card-footer">{label_stat}</div>'
+                    f'</div>'
+                )
 
-    # Render Halaman Kanan (Guild War Cards) - Tag dipastikan tertutup rapi
-    html_kanan_items = ""
-    for item in items_kanan_list:
-        label_stat = f"Redeem: {item['p_actual']} / Syarat: {item['p_target']}" if item["is_suegeer"] else f"Hit: {item['p_actual']} / Target: {item['p_target']}"
-        html_kanan_items += (
-            f'<div class="gw-card">'
-            f'<div class="gw-card-header">'
-            f'<span class="gw-card-title">⚔️ {item["name"]}</span>'
-            f'<span class="gw-mvp">👑 MVP: {item["mvp"]}</span>'
-            f'</div>'
-            f'<div class="gw-bar-container">'
-            f'<div class="gw-bar-blue" style="width: {item["blue_flex"]}%;"></div>'
-            f'<div class="gw-bar-red" style="width: {item["red_flex"]}%;"></div>'
-            f'<div class="gw-bar-text">{item["p_achiv"]:.1f}%</div>'
-            f'</div>'
-            f'<div class="gw-card-footer">{label_stat}</div>'
-            f'</div>'
-        )
+            # CSS Khusus Perkamen RPG (Kiri & Kanan Terikat Efek Sama)
+            css_gw = f"""
+            <style>
+                /* Samakan style dasar kedua halaman buku */
+                .rpg-book-page-left, .rpg-book-page-right {{
+                    color: #451a03 !important;
+                }}
+                .rpg-book-page-right * {{
+                    opacity: 1 !important;
+                    visibility: visible !important;
+                }}
 
-        # CSS Khusus Perkamen RPG (Kiri & Kanan Terikat Efek Sama)
-        css_gw = f"""
-        <style>
-            /* Samakan style dasar kedua halaman buku */
-            .rpg-book-page-left, .rpg-book-page-right {{
-                color: #451a03 !important;
-            }}
-            .rpg-book-page-right * {{
-                opacity: 1 !important;
-                visibility: visible !important;
-            }}
+                /* HEADER GUILD WAR ARENA */
+                .gw-header-box {{
+                    background-color: #fffbeb !important;
+                    border: 2px solid #b45309 !important;
+                    border-radius: 8px !important;
+                    padding: 8px 12px !important;
+                    margin-bottom: 12px !important;
+                    text-align: center !important;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.08) !important;
+                }}
+                .gw-match-title {{
+                    display: flex !important;
+                    justify-content: space-between !important;
+                    align-items: center !important;
+                    font-weight: 800 !important;
+                }}
+                .gw-team-blue {{ color: #0284c7 !important; font-size: 13px !important; font-weight: 900 !important; }}
+                .gw-team-red {{ color: #dc2626 !important; font-size: 13px !important; font-weight: 900 !important; }}
+                .gw-vs {{ font-size: 14px !important; color: #78350f !important; margin: 0 6px !important; }}
+                .gw-status-text {{
+                    font-size: 11px !important;
+                    font-weight: 900 !important;
+                    color: {status_color} !important;
+                    letter-spacing: 2px !important;
+                    margin: 3px 0 !important;
+                }}
+                .gw-main-bar {{
+                    height: 18px !important;
+                    background-color: #cbd5e1 !important;
+                    border-radius: 4px !important;
+                    border: 1px solid #94a3b8 !important;
+                    display: flex !important;
+                    overflow: hidden !important;
+                    position: relative !important;
+                    margin-top: 4px !important;
+                }}
+                .gw-main-blue {{ background: linear-gradient(90deg, #0284c7, #38bdf8) !important; height: 100% !important; }}
+                .gw-main-red {{ background: linear-gradient(90deg, #dc2626, #f87171) !important; height: 100% !important; }}
+                .gw-main-bar-text {{
+                    position: absolute !important; width: 100% !important; text-align: center !important; line-height: 18px !important;
+                    font-size: 10px !important; font-weight: bold !important; color: #ffffff !important; text-shadow: 1px 1px 2px #000 !important;
+                }}
 
-            /* HEADER GUILD WAR ARENA */
-            .gw-header-box {{
-                background-color: #fffbeb !important;
-                border: 2px solid #b45309 !important;
-                border-radius: 8px !important;
-                padding: 8px 12px !important;
-                margin-bottom: 12px !important;
-                text-align: center !important;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.08) !important;
-            }}
-            .gw-match-title {{
-                display: flex !important;
-                justify-content: space-between !important;
-                align-items: center !important;
-                font-weight: 800 !important;
-            }}
-            .gw-team-blue {{ color: #0284c7 !important; font-size: 13px !important; font-weight: 900 !important; }}
-            .gw-team-red {{ color: #dc2626 !important; font-size: 13px !important; font-weight: 900 !important; }}
-            .gw-vs {{ font-size: 14px !important; color: #78350f !important; margin: 0 6px !important; }}
-            .gw-status-text {{
-                font-size: 11px !important;
-                font-weight: 900 !important;
-                color: {status_color} !important;
-                letter-spacing: 2px !important;
-                margin: 3px 0 !important;
-            }}
-            .gw-main-bar {{
-                height: 18px !important;
-                background-color: #cbd5e1 !important;
-                border-radius: 4px !important;
-                border: 1px solid #94a3b8 !important;
-                display: flex !important;
-                overflow: hidden !important;
-                position: relative !important;
-                margin-top: 4px !important;
-            }}
-            .gw-main-blue {{ background: linear-gradient(90deg, #0284c7, #38bdf8) !important; height: 100% !important; }}
-            .gw-main-red {{ background: linear-gradient(90deg, #dc2626, #f87171) !important; height: 100% !important; }}
-            .gw-main-bar-text {{
-                position: absolute !important; width: 100% !important; text-align: center !important; line-height: 18px !important;
-                font-size: 10px !important; font-weight: bold !important; color: #ffffff !important; text-shadow: 1px 1px 2px #000 !important;
-            }}
+                /* KARTU ITEM GUILD WAR (HALAMAN KANAN) */
+                .gw-card {{
+                    background-color: #fffdf5 !important;
+                    border: 1.5px solid #fde68a !important;
+                    border-radius: 6px !important;
+                    padding: 8px 10px !important;
+                    margin-bottom: 8px !important;
+                    box-shadow: 0 2px 4px rgba(180, 83, 9, 0.08) !important;
+                }}
+                .gw-card-header {{ 
+                    display: flex !important; 
+                    justify-content: space-between !important; 
+                    align-items: center !important; 
+                    margin-bottom: 4px !important; 
+                }}
+                .gw-card-title {{ 
+                    font-size: 12px !important; 
+                    font-weight: bold !important; 
+                    color: #451a03 !important;
+                }}
+                .gw-mvp {{ 
+                    font-size: 9px !important; 
+                    background-color: #fef3c7 !important; 
+                    color: #b45309 !important; 
+                    border: 1px solid #fde68a !important; 
+                    padding: 2px 6px !important; 
+                    border-radius: 4px !important; 
+                    font-weight: bold !important; 
+                }}
+                .gw-bar-container {{
+                    height: 14px !important; 
+                    background-color: #cbd5e1 !important; 
+                    border-radius: 3px !important; 
+                    border: 1px solid #94a3b8 !important;
+                    display: flex !important; 
+                    overflow: hidden !important; 
+                    position: relative !important;
+                }}
+                .gw-bar-blue {{ background: linear-gradient(90deg, #2563eb, #60a5fa) !important; height: 100% !important; }}
+                .gw-bar-red {{ background: linear-gradient(90deg, #dc2626, #f87171) !important; height: 100% !important; }}
+                .gw-bar-text {{
+                    position: absolute !important; width: 100% !important; text-align: center !important; line-height: 14px !important;
+                    font-size: 9px !important; font-weight: bold !important; color: #ffffff !important; text-shadow: 1px 1px 2px #000 !important;
+                }}
+                .gw-card-footer {{ 
+                    font-size: 10px !important; 
+                    color: #78350f !important; 
+                    margin-top: 4px !important; 
+                    font-weight: 700 !important; 
+                }}
+            </style>
+            """
 
-            /* KARTU ITEM GUILD WAR (HALAMAN KANAN) */
-            .gw-card {{
-                background-color: #fffdf5 !important;
-                border: 1.5px solid #fde68a !important;
-                border-radius: 6px !important;
-                padding: 8px 10px !important;
-                margin-bottom: 8px !important;
-                box-shadow: 0 2px 4px rgba(180, 83, 9, 0.08) !important;
-            }}
-            .gw-card-header {{ 
-                display: flex !important; 
-                justify-content: space-between !important; 
-                align-items: center !important; 
-                margin-bottom: 4px !important; 
-            }}
-            .gw-card-title {{ 
-                font-size: 12px !important; 
-                font-weight: bold !important; 
-                color: #451a03 !important;
-            }}
-            .gw-mvp {{ 
-                font-size: 9px !important; 
-                background-color: #fef3c7 !important; 
-                color: #b45309 !important; 
-                border: 1px solid #fde68a !important; 
-                padding: 2px 6px !important; 
-                border-radius: 4px !important; 
-                font-weight: bold !important; 
-            }}
-            .gw-bar-container {{
-                height: 14px !important; 
-                background-color: #cbd5e1 !important; 
-                border-radius: 3px !important; 
-                border: 1px solid #94a3b8 !important;
-                display: flex !important; 
-                overflow: hidden !important; 
-                position: relative !important;
-            }}
-            .gw-bar-blue {{ background: linear-gradient(90deg, #2563eb, #60a5fa) !important; height: 100% !important; }}
-            .gw-bar-red {{ background: linear-gradient(90deg, #dc2626, #f87171) !important; height: 100% !important; }}
-            .gw-bar-text {{
-                position: absolute !important; width: 100% !important; text-align: center !important; line-height: 14px !important;
-                font-size: 9px !important; font-weight: bold !important; color: #ffffff !important; text-shadow: 1px 1px 2px #000 !important;
-            }}
-            .gw-card-footer {{ 
-                font-size: 10px !important; 
-                color: #78350f !important; 
-                margin-top: 4px !important; 
-                font-weight: 700 !important; 
-            }}
-        </style>
-        """
-
-        # Konstruksi HTML Gabungan secara Bersih
-        html_open_tugas = (
-            f'{css_gw}'
-            f'<div class="rpg-open-book-container">'
-            f'<div class="rpg-book-page rpg-book-page-left">'
-            f'<h3 class="open-page-title">🛡️ TARGET PPS</h3>'
-            f'<p class="open-page-sub">Rincian Target Harian ({active_period_pps_name})</p>'
-            f'<div class="open-book-divider"></div>'
-            f'{html_kiri_str}'
-            f'<div class="open-page-footer">Halaman Kiri • Target PPS</div>'
-            f'</div>'
-            f'<div class="rpg-book-page rpg-book-page-right">'
-            f'<h3 class="open-page-title">⚔️ GUILD WAR ARENA</h3>'
-            f'<p class="open-page-sub">Pertempuran Performa Bulanan</p>'
-            f'<div class="open-book-divider"></div>'
-            f'<div class="gw-header-box">'
-            f'<div class="gw-match-title">'
-            f'<span class="gw-team-blue">🛡️ ACHIV: {total_blue_pts_int} PTS</span>'
-            f'<span class="gw-vs">⚔️</span>'
-            f'<span class="gw-team-red">TARGET: {total_red_pts_int} PTS 🎯</span>'
-            f'</div>'
-            f'<div class="gw-status-text">{match_status}</div>'
-            f'<div class="gw-main-bar">'
-            f'<div class="gw-main-blue" style="width: {header_blue_pct}%;"></div>'
-            f'<div class="gw-main-red" style="width: {header_red_pct}%;"></div>'
-            f'<div class="gw-main-bar-text">{total_blue_pts_int} / {total_red_pts_int} PTS</div>'
-            f'</div>'
-            f'</div>'
-            f'{html_kanan_items}'
-            f'<div class="open-page-footer">Halaman Kanan • Guild War</div>'
-            f'</div>'
-            f'</div>'
-        )
+            # Konstruksi HTML Gabungan secara Bersih
+            html_open_tugas = (
+                f'{css_gw}'
+                f'<div class="rpg-open-book-container">'
+                f'<div class="rpg-book-page rpg-book-page-left">'
+                f'<h3 class="open-page-title">🛡️ TARGET PPS</h3>'
+                f'<p class="open-page-sub">Rincian Target Harian ({active_period_pps_name})</p>'
+                f'<div class="open-book-divider"></div>'
+                f'{html_kiri_str}'
+                f'<div class="open-page-footer">Halaman Kiri • Target PPS</div>'
+                f'</div>'
+                f'<div class="rpg-book-page rpg-book-page-right">'
+                f'<h3 class="open-page-title">⚔️ GUILD WAR ARENA</h3>'
+                f'<p class="open-page-sub">Pertempuran Performa Bulanan</p>'
+                f'<div class="open-book-divider"></div>'
+                f'<div class="gw-header-box">'
+                f'<div class="gw-match-title">'
+                f'<span class="gw-team-blue">🛡️ ACHIV: {total_blue_pts_int} PTS</span>'
+                f'<span class="gw-vs">⚔️</span>'
+                f'<span class="gw-team-red">TARGET: {total_red_pts_int} PTS 🎯</span>'
+                f'</div>'
+                f'<div class="gw-status-text">{match_status}</div>'
+                f'<div class="gw-main-bar">'
+                f'<div class="gw-main-blue" style="width: {header_blue_pct}%;"></div>'
+                f'<div class="gw-main-red" style="width: {header_red_pct}%;"></div>'
+                f'<div class="gw-main-bar-text">{total_blue_pts_int} / {total_red_pts_int} PTS</div>'
+                f'</div>'
+                f'</div>'
+                f'{html_kanan_items}'
+                f'<div class="open-page-footer">Halaman Kanan • Guild War</div>'
+                f'</div>'
+                f'</div>'
+            )
 
         elif page_num == 3:
             # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
