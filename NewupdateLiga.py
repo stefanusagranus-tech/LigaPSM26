@@ -3099,7 +3099,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 f'</div>'
             )
 
-            # 6. RENDER HTML DUA HALAMAN (FIX UNCLOSED TAGS & GLOBAL CSS)
+            # 6. RENDER HTML DUA HALAMAN (FIX WATERMARK OVERLAY & Z-INDEX)
             # Render Halaman Kiri (Target PPS)
             html_kiri_str = "".join([
                 f'<div class="rpg-item-card">'
@@ -3110,7 +3110,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 for x in items_kiri_list
             ]) if items_kiri_list else '<div style="color:#78350f; font-size:12px; text-align:center; margin-top:20px;"><i>Belum ada data Target PPS aktif.</i></div>'
 
-            # Render Halaman Kanan (Guild War Cards) - Tag dipastikan tertutup rapi
+            # Render Halaman Kanan (Guild War Cards)
             html_kanan_items = ""
             for item in items_kanan_list:
                 label_stat = f"Redeem: {item['p_actual']} / Syarat: {item['p_target']}" if item["is_suegeer"] else f"Hit: {item['p_actual']} / Target: {item['p_target']}"
@@ -3129,82 +3129,100 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     f'</div>'
                 )
 
-            # CSS Khusus Perkamen RPG (Kiri & Kanan Terikat Efek Sama)
-            css_gw = f"""
+            # Header Box Guild War
+            html_header_box = (
+                f'<div class="gw-header-box">'
+                f'<div class="gw-match-title">'
+                f'<span class="gw-team-blue">🛡️ ACHIV: {total_blue_pts_int} PTS</span>'
+                f'<span class="gw-vs">⚔️</span>'
+                f'<span class="gw-team-red">TARGET: {total_red_pts_int} PTS 🎯</span>'
+                f'</div>'
+                f'<div class="gw-status-text" style="color: {status_color} !important;">{match_status}</div>'
+                f'<div class="gw-main-bar">'
+                f'<div class="gw-main-blue" style="width: {header_blue_pct}%;"></div>'
+                f'<div class="gw-main-red" style="width: {header_red_pct}%;"></div>'
+                f'<div class="gw-main-bar-text">{total_blue_pts_int} / {total_red_pts_int} PTS</div>'
+                f'</div>'
+                f'</div>'
+            )
+
+            # CSS PERBAIKAN: Memaksa Z-Index Naik Ke Depan Watermark
+            css_gw = """
             <style>
-                /* Samakan style dasar kedua halaman buku */
-                .rpg-book-page-left, .rpg-book-page-right {{
-                    color: #451a03 !important;
-                }}
-                .rpg-book-page-right * {{
+                /* Paksa container halaman kanan & semua elemen didalamnya agar selalu di depan watermark */
+                .rpg-book-page-right {
+                    position: relative !important;
+                    z-index: 1 !important;
+                }
+                .rpg-book-page-right * {
+                    position: relative !important;
+                    z-index: 5 !important;
                     opacity: 1 !important;
-                    visibility: visible !important;
-                }}
+                }
 
                 /* HEADER GUILD WAR ARENA */
-                .gw-header-box {{
+                .gw-header-box {
                     background-color: #fffbeb !important;
                     border: 2px solid #b45309 !important;
                     border-radius: 8px !important;
                     padding: 8px 12px !important;
                     margin-bottom: 12px !important;
                     text-align: center !important;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.08) !important;
-                }}
-                .gw-match-title {{
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+                }
+                .gw-match-title {
                     display: flex !important;
                     justify-content: space-between !important;
                     align-items: center !important;
                     font-weight: 800 !important;
-                }}
-                .gw-team-blue {{ color: #0284c7 !important; font-size: 13px !important; font-weight: 900 !important; }}
-                .gw-team-red {{ color: #dc2626 !important; font-size: 13px !important; font-weight: 900 !important; }}
-                .gw-vs {{ font-size: 14px !important; color: #78350f !important; margin: 0 6px !important; }}
-                .gw-status-text {{
+                }
+                .gw-team-blue { color: #0284c7 !important; font-size: 13px !important; font-weight: 900 !important; }
+                .gw-team-red { color: #dc2626 !important; font-size: 13px !important; font-weight: 900 !important; }
+                .gw-vs { font-size: 14px !important; color: #78350f !important; margin: 0 6px !important; }
+                .gw-status-text {
                     font-size: 11px !important;
                     font-weight: 900 !important;
-                    color: {status_color} !important;
                     letter-spacing: 2px !important;
                     margin: 3px 0 !important;
-                }}
-                .gw-main-bar {{
+                }
+                .gw-main-bar {
                     height: 18px !important;
                     background-color: #cbd5e1 !important;
                     border-radius: 4px !important;
                     border: 1px solid #94a3b8 !important;
                     display: flex !important;
                     overflow: hidden !important;
-                    position: relative !important;
                     margin-top: 4px !important;
-                }}
-                .gw-main-blue {{ background: linear-gradient(90deg, #0284c7, #38bdf8) !important; height: 100% !important; }}
-                .gw-main-red {{ background: linear-gradient(90deg, #dc2626, #f87171) !important; height: 100% !important; }}
-                .gw-main-bar-text {{
+                }
+                .gw-main-blue { background: linear-gradient(90deg, #0284c7, #38bdf8) !important; height: 100% !important; }
+                .gw-main-red { background: linear-gradient(90deg, #dc2626, #f87171) !important; height: 100% !important; }
+                .gw-main-bar-text {
                     position: absolute !important; width: 100% !important; text-align: center !important; line-height: 18px !important;
                     font-size: 10px !important; font-weight: bold !important; color: #ffffff !important; text-shadow: 1px 1px 2px #000 !important;
-                }}
+                    left: 0; top: 0;
+                }
 
-                /* KARTU ITEM GUILD WAR (HALAMAN KANAN) */
-                .gw-card {{
+                /* KARTU ITEM GUILD WAR */
+                .gw-card {
                     background-color: #fffdf5 !important;
                     border: 1.5px solid #fde68a !important;
                     border-radius: 6px !important;
                     padding: 8px 10px !important;
                     margin-bottom: 8px !important;
-                    box-shadow: 0 2px 4px rgba(180, 83, 9, 0.08) !important;
-                }}
-                .gw-card-header {{ 
+                    box-shadow: 0 2px 4px rgba(180, 83, 9, 0.1) !important;
+                }
+                .gw-card-header { 
                     display: flex !important; 
                     justify-content: space-between !important; 
                     align-items: center !important; 
                     margin-bottom: 4px !important; 
-                }}
-                .gw-card-title {{ 
+                }
+                .gw-card-title { 
                     font-size: 12px !important; 
                     font-weight: bold !important; 
                     color: #451a03 !important;
-                }}
-                .gw-mvp {{ 
+                }
+                .gw-mvp { 
                     font-size: 9px !important; 
                     background-color: #fef3c7 !important; 
                     color: #b45309 !important; 
@@ -3212,32 +3230,32 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     padding: 2px 6px !important; 
                     border-radius: 4px !important; 
                     font-weight: bold !important; 
-                }}
-                .gw-bar-container {{
+                }
+                .gw-bar-container {
                     height: 14px !important; 
                     background-color: #cbd5e1 !important; 
                     border-radius: 3px !important; 
                     border: 1px solid #94a3b8 !important;
                     display: flex !important; 
                     overflow: hidden !important; 
-                    position: relative !important;
-                }}
-                .gw-bar-blue {{ background: linear-gradient(90deg, #2563eb, #60a5fa) !important; height: 100% !important; }}
-                .gw-bar-red {{ background: linear-gradient(90deg, #dc2626, #f87171) !important; height: 100% !important; }}
-                .gw-bar-text {{
+                }
+                .gw-bar-blue { background: linear-gradient(90deg, #2563eb, #60a5fa) !important; height: 100% !important; }
+                .gw-bar-red { background: linear-gradient(90deg, #dc2626, #f87171) !important; height: 100% !important; }
+                .gw-bar-text {
                     position: absolute !important; width: 100% !important; text-align: center !important; line-height: 14px !important;
                     font-size: 9px !important; font-weight: bold !important; color: #ffffff !important; text-shadow: 1px 1px 2px #000 !important;
-                }}
-                .gw-card-footer {{ 
+                    left: 0; top: 0;
+                }
+                .gw-card-footer { 
                     font-size: 10px !important; 
                     color: #78350f !important; 
                     margin-top: 4px !important; 
                     font-weight: 700 !important; 
-                }}
+                }
             </style>
             """
 
-            # Konstruksi HTML Gabungan secara Bersih
+            # Konstruksi HTML Gabungan
             html_open_tugas = (
                 f'{css_gw}'
                 f'<div class="rpg-open-book-container">'
@@ -3252,25 +3270,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 f'<h3 class="open-page-title">⚔️ GUILD WAR ARENA</h3>'
                 f'<p class="open-page-sub">Pertempuran Performa Bulanan</p>'
                 f'<div class="open-book-divider"></div>'
-                f'<div class="gw-header-box">'
-                f'<div class="gw-match-title">'
-                f'<span class="gw-team-blue">🛡️ ACHIV: {total_blue_pts_int} PTS</span>'
-                f'<span class="gw-vs">⚔️</span>'
-                f'<span class="gw-team-red">TARGET: {total_red_pts_int} PTS 🎯</span>'
-                f'</div>'
-                f'<div class="gw-status-text">{match_status}</div>'
-                f'<div class="gw-main-bar">'
-                f'<div class="gw-main-blue" style="width: {header_blue_pct}%;"></div>'
-                f'<div class="gw-main-red" style="width: {header_red_pct}%;"></div>'
-                f'<div class="gw-main-bar-text">{total_blue_pts_int} / {total_red_pts_int} PTS</div>'
-                f'</div>'
-                f'</div>'
+                f'{html_header_box}'
                 f'{html_kanan_items}'
                 f'<div class="open-page-footer">Halaman Kanan • Guild War</div>'
                 f'</div>'
                 f'</div>'
             )
 
+            st.markdown(html_open_tugas, unsafe_allow_html=True)
 
         elif page_num == 3:
             # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
