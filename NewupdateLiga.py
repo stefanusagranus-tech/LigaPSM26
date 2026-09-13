@@ -3504,8 +3504,39 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             
 
         elif page_num == 4:
+            # 1. Pastikan fungsi pembantu format_row sudah terdefinisi
+            def format_row(rank, nama, skor):
+                badge = "👑" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else f"#{rank}"
+                return f"""
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255, 253, 245, 0.9); border: 1px solid #fde68a; padding: 6px 10px; margin-bottom: 6px; border-radius: 6px;">
+                    <div style="font-size: 11px; font-weight: bold; color: #78350f;">
+                        <span style="margin-right: 6px;">{badge}</span>{nama}
+                    </div>
+                    <div style="font-size: 11px; font-weight: 800; color: #b45309;">
+                        {skor} PTS
+                    </div>
+                </div>
+                """
+
+            # 2. Fallback jika dummy_9_personil belum dibuat di bagian atas
+            if 'dummy_9_personil' not in locals():
+                dummy_9_personil = [
+                    ("Rizki Gunawan", 120),
+                    ("Adelia Pratiwi", 95),
+                    ("Ahmad Zaki", 88),
+                    ("Budi Santoso", 75),
+                    ("Siti Aminah", 70),
+                    ("Dewi Lestari", 65),
+                    ("Eko Prasetyo", 60),
+                    ("Fajar Nugraha", 55),
+                    ("Gita Gutawa", 50)
+                ]
+
+            # 3. Render Baris
             rows_pps_13 = "".join([format_row(i + 1, n, s) for i, (n, s) in enumerate(dummy_9_personil[:3])])
             rows_pps_49 = "".join([format_row(i + 4, n, s) for i, (n, s) in enumerate(dummy_9_personil[3:])])
+
+            # 4. Perakitan HTML Halaman 4
             html_open_tugas = f"""
             <div class="rpg-open-book-container">
                 <div class="rpg-book-page rpg-book-page-left">
@@ -3524,6 +3555,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 </div>
             </div>
             """
+
 
         elif page_num == 5:
             sueger_data = [(n, f"{int(s.replace(' Pcs',''))+5} Pcs") for n, s in dummy_9_personil]
