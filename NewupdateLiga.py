@@ -3228,7 +3228,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             )
 
         #============================================================= batas =======================================#
-        elif page_num == 3:
+        elif page_num == 4:
             # 1. Ambil Username Aktif
             current_user_name = st.session_state.get("user_name", st.session_state.get("username", ""))
 
@@ -3313,7 +3313,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 position: relative;
             }
 
-            /* Podium Style Medieval (Gaya Panggung Kerajaan) */
+            /* Balok Podium Medieval Berbingkai */
             .podium-1 {
                 height: 175px;
                 background: linear-gradient(180deg, #fef08a 0%, #d97706 100%);
@@ -3373,7 +3373,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 border-radius: 10px;
             }
 
-            /* --- STYLING LIST KANAN & ZONA MERAH --- */
+            /* --- LIST KANAN & ZONA MERAH --- */
             .rpg-list-container {
                 display: flex;
                 flex-direction: column;
@@ -3433,7 +3433,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             if 'active_period' not in locals() and 'active_period' not in globals():
                 active_period = st.session_state.get("active_period", "Periode Aktif")
 
-            # 3. LOGIKA DATA PERINGKAT (QTY PERIODE vs ACHIV KASIR 1 BULAN FULL)
+            # 3. OLAH DATA PERINGKAT (QTY PERIODE vs ACHIV BULANAN)
             sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
             sales_item_df = st.session_state.get("sales_item_df", pd.DataFrame())
             
@@ -3459,20 +3459,18 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     for _, r in grouped_qty.iterrows():
                         qty_dict[r["person_name"]] = int(r["actual_qty"])
 
-            # --- B. ACHIEVEMENT (AKUMULASI 1 BULAN FULL & FIX BUG VISUAL) ---
+            # --- B. ACHIEVEMENT (AKUMULASI 1 BULAN FULL & TANPA BUG VISUAL) ---
             achiv_dict = {}
             if not sales_person_df.empty and "person_name" in sales_person_df.columns:
                 sp_month = sales_person_df.copy()
                 sp_month["person_name"] = sp_month["person_name"].astype(str).str.strip()
                 sp_month["actual_qty"] = pd.to_numeric(sp_month.get("actual_qty", 0), errors="coerce").fillna(0)
                 
-                # Identifikasi kolom item
                 sp_item_key = next((k for k in ["item_id", "item_code", "kode_item", "item_name", "nama_item", "sku"] if k in sp_month.columns), "GENERAL")
                 sp_month["clean_item"] = sp_month[sp_item_key].astype(str).str.strip() if sp_item_key != "GENERAL" else "GENERAL"
                 sp_month["clean_pid"] = sp_month["period_id"].astype(str).str.strip() if "period_id" in sp_month.columns else ""
 
-                # FIX BUG: Kita hitung achievement per (personil + period_id + item) secara independen
-                # Agar achievement di Periode 1 dan Periode 2 di bulan yang sama terhitung semuanya secara terpisah
+                # Group per (personil + period_id + item) agar capaian tiap periode di bulan tersebut terhitung terpisah
                 aggregated_sales = sp_month.groupby(["person_name", "clean_pid", "clean_item"])["actual_qty"].sum().reset_index()
 
                 target_map = {}
@@ -3489,7 +3487,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                             if pd.notna(tval):
                                 target_map[(pid, ival)] = tval
 
-                # Evaluasi capaian target untuk SETIAP periode & item di bulan tersebut
                 for _, row in aggregated_sales.iterrows():
                     p_name = row["person_name"]
                     pid = row["clean_pid"]
@@ -3497,15 +3494,25 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     total_act = row["actual_qty"]
                     
                     target_val = target_map.get((pid, ival), 0)
-                    
-                    # Jika tercapai di periode tersebut, tambah +1 ke total achievement 1 bulan personil
                     if total_act >= target_val and target_val > 0:
                         achiv_dict[p_name] = achiv_dict.get(p_name, 0) + 1
 
-            # 4. BUILD PODIUM MEDIEVAL (KIRI)
-            def make_podium_item(rank_idx, class_name, crown_icon):
-                if len(ranking_list) > rank_idx:
-                    n, q, a = ranking_list[rank_idx]
+            # --- C. GABUNG DAN URUTKAN RANKING ---
+            ranking_list = []
+            all_names = set(master_personil) | set(qty_dict.keys()) | set(achiv_dict.keys())
+            for name in all_names:
+                if not name: continue
+                ranking_list.append((name, qty_dict.get(name, 0), achiv_dict.get(name, 0)))
+
+            ranking_list = sorted(ranking_list, key=lambda x: x[1], reverse=True)
+
+            if not ranking_list:
+                ranking_list = [("Ksatriya Arthur", 98, 3), ("Lancelot", 92, 2), ("Galahad", 85, 1), ("Parsifal", 78, 0), ("Gawain", 70, 0), ("Tristan", 65, 0), ("Bors", 60, 0), ("Kay", 55, 0), ("Bedivere", 50, 0)]
+
+            # 4. FUNGSI PEMBUAT ELEMENT PODIUM (AMUNISI BEBAS ERROR SCOPE)
+            def make_podium_item(rank_idx, class_name, crown_icon, r_list):
+                if len(r_list) > rank_idx:
+                    n, q, a = r_list[rank_idx]
                     is_me = (n.lower() == str(current_user_name).lower())
                     me_cls = "rpg-user-me" if is_me else ""
                     you_badge = '<span style="background:#2563eb; color:white; font-size:8px; padding:1px 4px; border-radius:4px; margin-top:2px;">KAMU</span>' if is_me else ""
@@ -3522,17 +3529,17 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     return html
                 return ""
 
+            # Generate HTML Podium Kiri (1-3)
             podium_html = '<div class="podium-wrapper">'
-            podium_html += make_podium_item(1, "podium-2", "🥈")
-            podium_html += make_podium_item(0, "podium-1", "👑")
-            podium_html += make_podium_item(2, "podium-3", "🥉")
+            podium_html += make_podium_item(1, "podium-2", "🥈", ranking_list)
+            podium_html += make_podium_item(0, "podium-1", "👑", ranking_list)
+            podium_html += make_podium_item(2, "podium-3", "🥉", ranking_list)
             podium_html += '</div>'
 
-            # 5. BUILD LIST PERINGKAT KANAN + EXACT 3 TERBAWAH ZONA MERAH
+            # 5. GENERATE LIST KANAN (4-9) + EXACT 3 TERBAWAH ZONA MERAH
             rest_html = '<div class="rpg-list-container">'
             total_personil = len(ranking_list)
-            # FIX: Zona Merah dipasang TEPAT HANYA 3 PERSONIL TERBAWAH dari total list
-            danger_cutoff_rank = total_personil - 2
+            danger_cutoff_rank = max(4, total_personil - 2)
 
             for i, (n, q, a) in enumerate(ranking_list[3:9]):
                 rank = i + 4
@@ -3540,7 +3547,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 me_class = "rpg-user-me" if is_me else ""
                 you_badge = '<span style="background: #2563eb; color: white; font-size: 8px; padding: 1px 4px; border-radius: 4px; margin-left: 4px;">KAMU</span>' if is_me else ""
                 
-                # Hanya 3 terbawah (misal peringkat 7, 8, 9 jika total ada 9 orang)
                 is_danger = rank >= danger_cutoff_rank
                 row_style = "danger-zone-row" if is_danger else ""
                 danger_tag = '<span class="danger-zone-badge">⚠️ ZONA MERAH</span>' if is_danger else ""
@@ -3559,7 +3565,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             
             rest_html += '</div>'
 
-            # 6. RENDER DUA HALAMAN BUKU
+            # 6. RENDER KEDUA HALAMAN BUKU
             html_open_tugas = (
                 f'<div class="rpg-open-book-container">'
                 f'<div class="rpg-book-page">'
