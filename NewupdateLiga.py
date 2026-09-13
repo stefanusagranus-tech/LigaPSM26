@@ -3506,17 +3506,50 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         #=============================================batas biar gak psimh===================================================#
         
         elif page_num == 4:
-            # 1. Definisikan format_row
+            # 1. Ambil nama user aktif (Fallback jika tidak ada)
+            current_user_name = st.session_state.get('user_name', 'Lancelot')  # Ganti/sesuaikan key session_state kamu
+
+            # 2. Definisikan format_row yang lebih menarik & interaktif dengan Highlight User
             def format_row(rank, nama, skor):
-                badge = "👑" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else f"#{rank}"
+                is_me = (nama.lower() == current_user_name.lower())
+                
+                # Penentuan Badge & Styling Berdasarkan Peringkat
+                if rank == 1:
+                    badge = "👑"
+                    badge_bg = "#fef3c7"
+                    badge_border = "#f59e0b"
+                    rank_cls = "top-1"
+                elif rank == 2:
+                    badge = "🥈"
+                    badge_bg = "#f1f5f9"
+                    badge_border = "#94a3b8"
+                    rank_cls = "top-2"
+                elif rank == 3:
+                    badge = "🥉"
+                    badge_bg = "#ffedd5"
+                    badge_border = "#d97706"
+                    rank_cls = "top-3"
+                else:
+                    badge = f"#{rank}"
+                    badge_bg = "#f3f4f6"
+                    badge_border = "#cbd5e1"
+                    rank_cls = "top-other"
+
+                # Efek Highlight khusus jika ini adalah Username User
+                user_highlight = "border: 2px solid #2563eb !important; background: #eff6ff !important; transform: scale(1.02);" if is_me else ""
+                you_badge = '<span style="background: #2563eb; color: white; font-size: 9px; padding: 2px 6px; border-radius: 10px; margin-left: 6px; font-weight: bold;">KAMU</span>' if is_me else ""
+
                 return (
-                    f'<div class="rpg-row-card">'
-                    f'<div class="rpg-row-name"><span>{badge}</span>{nama}</div>'
-                    f'<div class="rpg-row-score">{skor} PTS</div>'
+                    f'<div class="rpg-rank-card {rank_cls}" style="{user_highlight}">'
+                    f'<div style="display: flex; align-items: center; gap: 10px;">'
+                    f'<div style="background: {badge_bg}; border: 1px solid {badge_border}; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: #451a03;">{badge}</div>'
+                    f'<div style="font-size: 12px; font-weight: 800; color: #451a03;">{nama} {you_badge}</div>'
+                    f'</div>'
+                    f'<div style="font-size: 12px; font-weight: 900; color: #b45309;">{skor} <span style="font-size: 10px; font-weight: normal; color: #78350f;">PTS</span></div>'
                     f'</div>'
                 )
 
-            # 2. Data Dummy Fallback
+            # 3. Data Dummy Fallback
             if 'dummy_9_personil' not in locals():
                 dummy_9_personil = [
                     ("Ksatriya Arthur", 98),
@@ -3530,77 +3563,57 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     ("Bedivere", 50)
                 ]
 
-            # 3. Render Baris Data
+            # 4. Render Baris Data
             rows_pps_13 = "".join([format_row(i + 1, n, s) for i, (n, s) in enumerate(dummy_9_personil[:3])])
             rows_pps_49 = "".join([format_row(i + 4, n, s) for i, (n, s) in enumerate(dummy_9_personil[3:])])
 
-            # 4. CSS OVERRIDE GLOBAL CONTAINER & NAGA WATERMARK
-            css_force_visible = """
+            # 5. CSS REVISI: PAKSA NAGA JADI WATERMARK TRANSPARAN & RECTIFY Z-INDEX
+            css_rank_fix = """
             <style>
-                /* Netralkan opacity pada wrapper utama buku */
-                .rpg-open-book-container, 
-                .rpg-book-page, 
-                .rpg-book-page-left, 
-                .rpg-book-page-right {
-                    opacity: 1 !important;
-                    filter: none !important;
-                }
-
-                /* Turunkan layer watermark naga ke paling belakang */
+                /* Paksa semua gambar/svg naga di dalam buku menjadi watermark tipis */
+                .rpg-book-page img,
+                .rpg-book-page svg,
                 .rpg-book-page::before,
-                .rpg-book-page::after,
                 .rpg-book-page-left::before,
                 .rpg-book-page-right::before {
+                    position: absolute !important;
                     z-index: 0 !important;
-                    opacity: 0.08 !important; /* Naga dibikin sangat tipis di background */
+                    opacity: 0.06 !important; /* Dibuat samar 6% sebagai watermark background */
                     pointer-events: none !important;
                 }
 
-                /* STYLING KARTU BARIS TERANG & TAJAM */
-                .rpg-row-card {
+                /* Pastikan Judul & Teks Berada di Depan Watermark */
+                .open-page-title, .open-page-sub, .open-book-divider, .open-page-footer {
                     position: relative !important;
-                    z-index: 10 !important;
+                    z-index: 5 !important;
+                    color: #451a03 !important;
+                }
+
+                /* STYLING KARTU RANKING */
+                .rpg-rank-card {
+                    position: relative !important;
+                    z-index: 5 !important;
                     display: flex !important;
                     justify-content: space-between !important;
                     align-items: center !important;
-                    background-color: #ffffff !important;
-                    border: 1.5px solid #d97706 !important;
+                    background: #ffffff !important;
+                    border: 1.5px solid #fde68a !important;
                     padding: 8px 12px !important;
                     margin-bottom: 8px !important;
-                    border-radius: 6px !important;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.08) !important;
-                    opacity: 1 !important;
+                    border-radius: 8px !important;
+                    box-shadow: 0 2px 4px rgba(180, 83, 9, 0.08) !important;
+                    transition: all 0.2s ease !important;
                 }
 
-                .rpg-row-name {
-                    font-size: 12px !important;
-                    font-weight: 800 !important;
-                    color: #291003 !important; /* Cokelat Sangat Pekat */
-                    opacity: 1 !important;
-                    display: flex !important;
-                    align-items: center !important;
-                    gap: 8px !important;
-                }
-
-                .rpg-row-score {
-                    font-size: 12px !important;
-                    font-weight: 900 !important;
-                    color: #b45309 !important; /* Warna PTS Emas/Cokelat Terang */
-                    opacity: 1 !important;
-                }
-
-                .open-page-title, .open-page-sub, .open-page-footer {
-                    position: relative !important;
-                    z-index: 10 !important;
-                    opacity: 1 !important;
-                    color: #451a03 !important;
-                }
+                .rpg-rank-card.top-1 { border-color: #f59e0b !important; background: #fffdf5 !important; }
+                .rpg-rank-card.top-2 { border-color: #cbd5e1 !important; }
+                .rpg-rank-card.top-3 { border-color: #f97316 !important; }
             </style>
             """
 
-            # 5. Perakitan HTML
+            # 6. Perakitan HTML
             html_open_tugas = (
-                f'{css_force_visible}'
+                f'{css_rank_fix}'
                 f'<div class="rpg-open-book-container">'
                 f'<div class="rpg-book-page rpg-book-page-left">'
                 f'<h3 class="open-page-title">🛡️ PPS (1-3)</h3>'
