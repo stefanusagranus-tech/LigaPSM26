@@ -3996,31 +3996,355 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
         #================================================batas=====================================================#
 
-        elif page_num == 5:
-            sueger_data = [(n, f"{int(s.replace(' Pcs',''))+5} Pcs") for n, s in dummy_9_personil]
-            rows_sueger_13 = "".join([format_row(i + 1, n, s) for i, (n, s) in enumerate(sueger_data[:3])])
-            rows_sueger_49 = "".join([format_row(i + 4, n, s) for i, (n, s) in enumerate(sueger_data[3:])])
-            html_open_tugas = f"""
-            <div class="rpg-open-book-container">
-                <div class="rpg-book-page rpg-book-page-left">
-                    <h3 class="open-page-title">⚡ SUEGER (1-3)</h3>
-                    <p class="open-page-sub">Top 3 Poin Sueger</p>
-                    <div class="open-book-divider"></div>
-                    {rows_sueger_13}
-                    <div class="open-page-footer">Halaman Kiri • Sueger 1-3</div>
-                </div>
-                <div class="rpg-book-page rpg-book-page-right">
-                    <h3 class="open-page-title">⚡ SUEGER (4-9)</h3>
-                    <p class="open-page-sub">Daftar Lanjutan Sueger</p>
-                    <div class="open-book-divider"></div>
-                    {rows_sueger_49}
-                    <div class="open-page-footer">Halaman Kanan • Sueger 4-9</div>
-                </div>
-            </div>
-            """
+        elif page_num == 5:  # Sesuaikan nomor halaman Sueger kamu (misal page_num == 5)
+            # 1. Ambil Username Aktif
+            current_user_name = st.session_state.get("user_name", st.session_state.get("username", ""))
 
-        st.markdown(html_open_tugas, unsafe_allow_html=True)
-        st.stop()
+            # 2. STYLING CSS SUEGER PODIUM & LIST ITEM
+            rpg_badge_style = """
+            <style>
+            .rpg-open-book-container {
+                display: flex;
+                flex-direction: row;
+                gap: 20px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            @media (max-width: 768px) {
+                .rpg-open-book-container {
+                    flex-direction: column !important;
+                    gap: 15px;
+                }
+            }
+
+            .rpg-book-page {
+                flex: 1;
+                background: #fdf6e2;
+                border: 3px solid #d4af37;
+                border-radius: 8px;
+                padding: 16px;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                min-height: 500px;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .rpg-book-page::before {
+                content: "";
+                position: absolute;
+                top: 0; left: 0; width: 100%; height: 100%;
+                background-image: url("https://img.pikbest.com/png-images/20250303/fierce-dragon-silhouette--e2-80-93-stylized-black-and-white-mythical-beast-illustration_11570728.png!bw800");
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: 85% auto;
+                opacity: 0.08 !important;
+                pointer-events: none;
+                z-index: 0;
+            }
+
+            /* --- PODIUM SUEGER --- */
+            .podium-wrapper {
+                display: flex;
+                align-items: flex-end;
+                justify-content: center;
+                gap: 8px;
+                margin-top: auto;
+                margin-bottom: 10px;
+                position: relative;
+                z-index: 2;
+                width: 100%;
+            }
+
+            .podium-slot {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                min-width: 0;
+            }
+
+            .podium-card {
+                width: 100%;
+                border-radius: 6px 6px 0 0;
+                padding: 8px 4px;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+                box-shadow: 0 -3px 10px rgba(0,0,0,0.25), inset 0 1px 2px rgba(255,255,255,0.4);
+                position: relative;
+            }
+
+            .podium-1 {
+                height: 205px;
+                background: linear-gradient(180deg, #fef08a 0%, #d97706 100%);
+                border: 2.5px solid #78350f;
+                border-bottom: none;
+            }
+            .podium-2 {
+                height: 170px;
+                background: linear-gradient(180deg, #f8fafc 0%, #64748b 100%);
+                border: 2.5px solid #334155;
+                border-bottom: none;
+            }
+            .podium-3 {
+                height: 145px;
+                background: linear-gradient(180deg, #ffedd5 0%, #c2410c 100%);
+                border: 2.5px solid #7c2d12;
+                border-bottom: none;
+            }
+
+            .podium-rank-tag {
+                font-size: 14px;
+                font-weight: 900;
+                color: #1e1b4b;
+                text-shadow: 0px 1px 0px rgba(255,255,255,0.8);
+            }
+
+            .podium-name {
+                font-size: 11px;
+                font-weight: 800;
+                color: #0f172a;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 95%;
+                margin-top: 3px;
+                background: rgba(255, 255, 255, 0.5);
+                padding: 2px 4px;
+                border-radius: 4px;
+            }
+
+            .podium-sub-detail {
+                font-size: 9px;
+                font-weight: 700;
+                color: #334155;
+                margin-top: 4px;
+                background: rgba(255, 255, 255, 0.7);
+                padding: 2px 4px;
+                border-radius: 4px;
+                width: 92%;
+                line-height: 1.2;
+            }
+
+            .podium-score {
+                font-size: 13px;
+                font-weight: 900;
+                color: #1e1103;
+                margin-top: 4px;
+                text-shadow: 0px 1px 0px rgba(255,255,255,0.6);
+            }
+
+            /* --- LIST KANAN --- */
+            .rpg-list-container {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+                position: relative;
+                z-index: 2;
+                overflow-y: auto;
+                max-height: 380px;
+                padding-right: 2px;
+            }
+
+            .rpg-normal-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 8px 10px;
+                border: 1.5px solid #cbd5e1;
+                background: #ffffff;
+                border-radius: 6px;
+                color: #020617 !important;
+                font-size: 12px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+                flex-shrink: 0;
+            }
+
+            .danger-zone-row {
+                background: #fff5f5 !important;
+                border: 1.5px solid #fca5a5 !important;
+                color: #991b1b !important;
+            }
+            .danger-zone-badge {
+                background: #fee2e2;
+                color: #dc2626;
+                font-size: 9px;
+                padding: 2px 5px;
+                border-radius: 4px;
+                font-weight: 800;
+                border: 1px solid #f87171;
+            }
+
+            .rpg-user-me {
+                outline: 2.5px solid #2563eb !important;
+                outline-offset: -1px;
+            }
+
+            .open-page-title { color: #3b1104 !important; text-align: center; font-weight: bold; margin-bottom: 2px; position: relative; z-index: 2; font-size: 16px; }
+            .open-page-sub { color: #5c2406 !important; text-align: center; font-size: 11px; margin-bottom: 8px; position: relative; z-index: 2; font-weight: 600; }
+            .open-book-divider { border-bottom: 2px solid #d4af37; margin-bottom: 10px; position: relative; z-index: 2; }
+            .open-page-footer { margin-top: auto; text-align: right; font-size: 10px; color: #5c2406 !important; font-family: monospace; padding-top: 6px; font-weight: bold; position: relative; z-index: 2; }
+            </style>
+            """
+            st.markdown(rpg_badge_style, unsafe_allow_html=True)
+
+            active_period = st.session_state.get("active_period", "Periode Sueger Aktif")
+
+            # 3. OLAH DATA KASIR: MASTER_PERSONIL SEBAGAI ACUAN UTAMA
+            sales_pps_df = st.session_state.get("sales_pps_df", st.session_state.get("SALES_PPS", pd.DataFrame()))
+            periode_pps_df = st.session_state.get("periode_pps_df", st.session_state.get("PERIODE_PPS", pd.DataFrame()))
+            master_personil_df = st.session_state.get("master_personil_df", st.session_state.get("MASTER_PERSONIL", pd.DataFrame()))
+
+            # Filter Bulan Aktif dari PERIODE_PPS
+            valid_month_dates = None
+            if not periode_pps_df.empty and "start_date" in periode_pps_df.columns:
+                try:
+                    p_pps = periode_pps_df.copy()
+                    p_pps["start_dt"] = pd.to_datetime(p_pps["start_date"], errors="coerce")
+                    active_dates = p_pps[p_pps["status"].astype(str).str.lower() == "aktif"]["start_dt"].dropna()
+                    if not active_dates.empty:
+                        ref_month = active_dates.iloc[0].month
+                        ref_year = active_dates.iloc[0].year
+                        valid_month_dates = (ref_month, ref_year)
+                except Exception:
+                    valid_month_dates = None
+
+            kasir_summary = {}
+
+            # A. Masukkan semua personil aktif dari MASTER_PERSONIL (Default 0)
+            if not master_personil_df.empty:
+                mp_df = master_personil_df.copy()
+                if "active" in mp_df.columns:
+                    mp_df = mp_df[pd.to_numeric(mp_df["active"], errors="coerce") == 1]
+                    
+                if "person_name" in mp_df.columns:
+                    for p_name in mp_df["person_name"].dropna().astype(str).str.strip().unique():
+                        if p_name and p_name.lower() != "nan":
+                            kasir_summary[p_name] = {"syarat": 0, "redeem": 0, "achiv": 0.0}
+
+            # B. Ambil dan akumulasikan data Sueger dari SALES_PPS (syarat_sueger & redeem_sueger)
+            if not sales_pps_df.empty:
+                sp_df = sales_pps_df.copy()
+                kasir_col = next((c for c in ["kasir_name", "staff_name", "person_name"] if c in sp_df.columns), None)
+                
+                if kasir_col and "syarat_sueger" in sp_df.columns and "redeem_sueger" in sp_df.columns:
+                    sp_df["clean_kasir"] = sp_df[kasir_col].astype(str).str.strip()
+                    sp_df["syarat_sueger"] = pd.to_numeric(sp_df["syarat_sueger"], errors="coerce").fillna(0)
+                    sp_df["redeem_sueger"] = pd.to_numeric(sp_df["redeem_sueger"], errors="coerce").fillna(0)
+
+                    # Filter Berdasarkan Bulan Aktif
+                    date_col = next((c for c in ["updated_at", "start_date", "tanggal"] if c in sp_df.columns), None)
+                    if date_col and valid_month_dates:
+                        sp_df["dt_check"] = pd.to_datetime(sp_df[date_col], errors="coerce")
+                        sp_df = sp_df[(sp_df["dt_check"].dt.month == valid_month_dates[0]) & (sp_df["dt_check"].dt.year == valid_month_dates[1])]
+
+                    grouped = sp_df.groupby("clean_kasir")[["syarat_sueger", "redeem_sueger"]].sum().reset_index()
+
+                    for _, r in grouped.iterrows():
+                        k_name = r["clean_kasir"]
+                        if not k_name or k_name.lower() == "nan":
+                            continue
+                        syarat_val = int(r["syarat_sueger"])
+                        redeem_val = int(r["redeem_sueger"])
+                        
+                        # Hitung Persentase Achievement (%): (redeem / syarat) * 100
+                        achiv_val = (redeem_val / syarat_val * 100) if syarat_val > 0 else 0.0
+                        
+                        kasir_summary[k_name] = {
+                            "syarat": syarat_val, 
+                            "redeem": redeem_val, 
+                            "achiv": round(achiv_val, 1)
+                        }
+
+            # C. Susun Peringkat Berdasarkan % Achievement Tertinggi
+            ranking_list = []
+            for k_name, val in kasir_summary.items():
+                ranking_list.append((k_name, val["syarat"], val["redeem"], val["achiv"]))
+
+            ranking_list = sorted(ranking_list, key=lambda x: x[3], reverse=True)
+
+            # 4. FUNGSI ELEMENT PODIUM
+            def make_podium_item(rank_idx, class_name, crown_icon, r_list):
+                if len(r_list) > rank_idx:
+                    n, syarat, redeem, achiv = r_list[rank_idx]
+                    is_me = (n.lower() == str(current_user_name).lower())
+                    me_cls = "rpg-user-me" if is_me else ""
+                    you_badge = '<span style="background:#2563eb; color:white; font-size:8px; padding:1px 4px; border-radius:4px; margin-top:2px;">KAMU</span>' if is_me else ""
+                    
+                    html = f'<div class="podium-slot">'
+                    html += f'<div style="font-size:22px; margin-bottom:2px; z-index:3;">{crown_icon}</div>'
+                    html += f'<div class="podium-card {class_name} {me_cls}">'
+                    html += f'<div class="podium-rank-tag">#{rank_idx+1}</div>'
+                    html += f'<div class="podium-name" title="{n}">{n}</div>'
+                    html += f'{you_badge}'
+                    html += f'<div class="podium-sub-detail">Syarat: {syarat}<br>Redeem: {redeem}</div>'
+                    html += f'<div class="podium-score">{achiv}%</div>'
+                    html += f'</div></div>'
+                    return html
+                return ""
+
+            podium_html = '<div class="podium-wrapper">'
+            podium_html += make_podium_item(1, "podium-2", "🥈", ranking_list)
+            podium_html += make_podium_item(0, "podium-1", "👑", ranking_list)
+            podium_html += make_podium_item(2, "podium-3", "🥉", ranking_list)
+            podium_html += '</div>'
+
+            # 5. GENERATE LIST KANAN (PERINGKAT 4 SAMPAI SELESAI)
+            rest_html = '<div class="rpg-list-container">'
+            total_personil = len(ranking_list)
+            danger_cutoff_rank = max(4, total_personil - 1)
+
+            for i, (n, syarat, redeem, achiv) in enumerate(ranking_list[3:]):
+                rank = i + 4
+                is_me = (n.lower() == str(current_user_name).lower())
+                me_class = "rpg-user-me" if is_me else ""
+                you_badge = '<span style="background: #2563eb; color: white; font-size: 8px; padding: 1px 4px; border-radius: 4px; margin-left: 4px;">KAMU</span>' if is_me else ""
+                
+                is_danger = rank >= danger_cutoff_rank
+                row_style = "danger-zone-row" if is_danger else ""
+                danger_tag = '<span class="danger-zone-badge">⚠️ ZONA MERAH</span>' if is_danger else ""
+                rank_icon = "🔻" if is_danger else "🛡️"
+
+                rest_html += f'<div class="rpg-normal-row {row_style} {me_class}">'
+                rest_html += f'<div style="display: flex; flex-direction: column; gap: 2px; overflow: hidden;">'
+                rest_html += f'<div style="display: flex; align-items: center; gap: 4px;">'
+                rest_html += f'<span>{rank_icon}</span>'
+                rest_html += f'<span style="font-weight:bold;">#{rank}</span>'
+                rest_html += f'<span style="font-weight:bold; overflow: hidden; text-overflow: ellipsis;" title="{n}">{n}</span>'
+                rest_html += f'{you_badge}{danger_tag}'
+                rest_html += f'</div>'
+                rest_html += f'<div style="font-size: 10px; color: #475569; padding-left: 20px;">Syarat: <b>{syarat}</b> | Redeem: <b>{redeem}</b></div>'
+                rest_html += f'</div>'
+                rest_html += f'<div style="flex-shrink: 0; margin-left: 6px; font-weight: 900; font-size: 13px; color: #0f172a;">{achiv}%</div>'
+                rest_html += f'</div>'
+            
+            rest_html += '</div>'
+
+            # 6. RENDER HALAMAN BUKU SUEGER
+            html_open_tugas = (
+                f'<div class="rpg-open-book-container">'
+                f'<div class="rpg-book-page">'
+                f'<h3 class="open-page-title">🥤 SUEGER TOP (1-3)</h3>'
+                f'<p class="open-page-sub">Periode: {active_period}</p>'
+                f'<div class="open-book-divider"></div>'
+                f'{podium_html}'
+                f'<div class="open-page-footer">Halaman Kiri • Sueger 1-3</div>'
+                f'</div>'
+                f'<div class="rpg-book-page">'
+                f'<h3 class="open-page-title">🥤 SUEGER (4+)</h3>'
+                f'<p class="open-page-sub">Kelanjutan Peringkat Kasir Sueger</p>'
+                f'<div class="open-book-divider"></div>'
+                f'{rest_html}'
+                f'<div class="open-page-footer">Halaman Kanan • Sueger 4+</div>'
+                f'</div>'
+                f'</div>'
+            )
 
        
     #===============================================================================#
