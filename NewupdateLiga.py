@@ -3049,7 +3049,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             match_status = "VICTORY" if total_blue_points >= total_red_points else "IN BATTLE"
             status_color = "#eab308" if match_status == "VICTORY" else "#ef4444"
 
-            # 6. RENDER HTML DUA HALAMAN
+            # 6. RENDER HTML DUA HALAMAN (TEMA KREM PARCHMENT PERGAMEN)
             html_kiri_str = "".join([
                 f'<div class="rpg-item-card">'
                 f'<div><div class="item-title">{x["icon"]} {x["p_name"]} <span class="{x["badge_cls"]}">{x["badge_txt"]}</span></div>'
@@ -3080,39 +3080,69 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             html_kanan_str = f'''
             <style>
                 .gw-header-box {{
-                    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-                    border: 2px solid #334155; border-radius: 8px; padding: 10px; margin-bottom: 10px; text-align: center;
+                    background: #fffbeb;
+                    border: 2px solid #f59e0b;
+                    border-radius: 8px;
+                    padding: 8px 12px;
+                    margin-bottom: 10px;
+                    text-align: center;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
                 }}
-                .gw-match-title {{ display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: #f8fafc; }}
-                .gw-team-blue {{ color: #38bdf8; font-size: 13px; }}
-                .gw-team-red {{ color: #f87171; font-size: 13px; }}
-                .gw-vs {{ font-size: 14px; color: #94a3b8; margin: 0 6px; }}
-                .gw-status-text {{ font-size: 11px; font-weight: 900; color: {status_color}; letter-spacing: 2px; margin: 2px 0; }}
+                .gw-match-title {{
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    font-weight: bold;
+                    font-family: monospace, sans-serif;
+                }}
+                .gw-team-blue {{ color: #0284c7; font-size: 13px; font-weight: 800; }}
+                .gw-team-red {{ color: #dc2626; font-size: 13px; font-weight: 800; }}
+                .gw-vs {{ font-size: 14px; color: #78350f; margin: 0 6px; }}
+                .gw-status-text {{
+                    font-size: 11px;
+                    font-weight: 900;
+                    color: {status_color};
+                    letter-spacing: 2px;
+                    margin: 2px 0;
+                }}
                 .gw-main-bar {{
-                    height: 16px; background: #0f172a; border-radius: 4px; border: 1px solid #475569;
-                    display: flex; overflow: hidden; position: relative; margin-top: 4px;
+                    height: 16px;
+                    background: #e2e8f0;
+                    border-radius: 4px;
+                    border: 1px solid #cbd5e1;
+                    display: flex;
+                    overflow: hidden;
+                    position: relative;
+                    margin-top: 4px;
                 }}
                 .gw-main-blue {{ background: linear-gradient(90deg, #0284c7, #38bdf8); height: 100%; }}
-                .gw-main-red {{ background: linear-gradient(90deg, #dc2626, #ef4444); height: 100%; }}
+                .gw-main-red {{ background: linear-gradient(90deg, #dc2626, #f87171); height: 100%; }}
                 .gw-main-bar-text {{
                     position: absolute; width: 100%; text-align: center; line-height: 16px;
                     font-size: 10px; font-weight: bold; color: #ffffff; text-shadow: 1px 1px 2px #000;
                 }}
-                .gw-card {{ background: #1e293b; border: 1px solid #334155; border-radius: 6px; padding: 6px 8px; margin-bottom: 6px; }}
+                .gw-card {{
+                    background: #fffdf5;
+                    border: 1px solid #fef3c7;
+                    border-radius: 6px;
+                    padding: 6px 10px;
+                    margin-bottom: 6px;
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+                }}
                 .gw-card-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }}
-                .gw-card-title {{ font-size: 11px; font-weight: bold; color: #f1f5f9; }}
-                .gw-mvp {{ font-size: 9px; background: #374151; color: #fde047; padding: 1px 5px; border-radius: 3px; font-weight: bold; }}
+                .gw-card-title {{ font-size: 11px; font-weight: bold; color: #78350f; }}
+                .gw-mvp {{ font-size: 9px; background: #fef3c7; color: #b45309; border: 1px solid #fde68a; padding: 1px 5px; border-radius: 3px; font-weight: bold; }}
                 .gw-bar-container {{
-                    height: 12px; background: #0f172a; border-radius: 3px; border: 1px solid #475569;
+                    height: 13px; background: #e2e8f0; border-radius: 3px; border: 1px solid #cbd5e1;
                     display: flex; overflow: hidden; position: relative;
                 }}
-                .gw-bar-blue {{ background: linear-gradient(90deg, #1d4ed8, #3b82f6); height: 100%; }}
-                .gw-bar-red {{ background: linear-gradient(90deg, #b91c1c, #ef4444); height: 100%; }}
+                .gw-bar-blue {{ background: linear-gradient(90deg, #2563eb, #60a5fa); height: 100%; }}
+                .gw-bar-red {{ background: linear-gradient(90deg, #dc2626, #f87171); height: 100%; }}
                 .gw-bar-text {{
-                    position: absolute; width: 100%; text-align: center; line-height: 12px;
+                    position: absolute; width: 100%; text-align: center; line-height: 13px;
                     font-size: 9px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000;
                 }}
-                .gw-card-footer {{ font-size: 9px; color: #94a3b8; margin-top: 2px; }}
+                .gw-card-footer {{ font-size: 9px; color: #92400e; margin-top: 2px; font-weight: 500; }}
             </style>
 
             <div class="gw-header-box">
@@ -3132,7 +3162,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             {html_kanan_items}
             '''
 
-            # GAMBUNGKAN DUA HALAMAN KE VARIABEL html_open_tugas
+            # GABUNGKAN DUA HALAMAN KE VARIABEL html_open_tugas
             html_open_tugas = (
                 f'<div class="rpg-open-book-container">'
                 f'<div class="rpg-book-page rpg-book-page-left">'
@@ -3151,6 +3181,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 f'</div>'
                 f'</div>'
             )
+
         elif page_num == 3:
             # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
             rpg_badge_style = """
