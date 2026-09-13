@@ -3048,7 +3048,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             
             match_status = "VICTORY" if total_blue_points >= total_red_points else "IN BATTLE"
             status_color = "#eab308" if match_status == "VICTORY" else "#ef4444"
-            
+
             # 6. RENDER HTML DUA HALAMAN (FIX WATERMARK OVERLAY & Z-INDEX)
             # Render Halaman Kiri (Target PPS)
             html_kiri_str = "".join([
@@ -3227,11 +3227,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 f'</div>'
             )
 
-<<<<<<< HEAD
-=======
-            st.markdown(html_open_tugas, unsafe_allow_html=True)
-
->>>>>>> 43c725bfe443b81e5e20a73de9746ddcb7b2e316
         elif page_num == 3:
             # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
             rpg_badge_style = """
