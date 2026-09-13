@@ -3487,57 +3487,77 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     for _, r in grouped_qty.iterrows():
                         qty_dict[r["person_name"]] = int(r["actual_qty"])
 
-            # --- B. ACHIEVEMENT (AKUMULASI BULAN BERJALAN & FIX ALL MATCHING BUGS) ---
+            # --- B. ACHIEVEMENT (AKUMULASI HANYA BULAN AKTIF DARI SHEET PERIODE) ---
             achiv_dict = {}
             if not sales_person_df.empty and "person_name" in sales_person_df.columns:
                 sp_month = sales_person_df.copy()
-                
-                # 1. Standardisasi String
-                sp_month["person_name"] = sp_month["person_name"].astype(str).str.strip()
-                sp_month["actual_qty"] = pd.to_numeric(sp_month.get("actual_qty", 0), errors="coerce").fillna(0)
                 sp_month["clean_pid"] = sp_month["period_id"].astype(str).str.strip() if "period_id" in sp_month.columns else ""
+
+                # 1. CARI SEMUA PERIOD_ID YANG SE-BULAN DENGAN TARGET_PERIOD_ID
+                valid_month_pids = set()
                 
-                # Ambil Item ID (Gunakan item_id sesuai sheet Excel)
-                item_col_sp = next((c for c in ["item_id", "item_code", "kode_item"] if c in sp_month.columns), "item_name")
-                sp_month["clean_item"] = sp_month[item_col_sp].astype(str).str.strip()
-
-                # 2. Pemetaan Target dari SALES_ITEM (Cocokkan Key secara Presisi)
-                target_map = {}
-                if not sales_item_df.empty:
-                    item_df = sales_item_df.copy()
+                if not periods_df.empty and target_pid_clean:
+                    p_df = periods_df.copy()
+                    p_df["clean_pid"] = p_df["period_id"].astype(str).str.strip()
                     
-                    # Deteksi Kolom Target & Item ID di Sales Item
-                    t_col = next((c for c in item_df.columns if "target_kasir" in c.lower() or "get_kasir" in c.lower() or ("target" in c.lower() and "kasir" in c.lower())), None)
-                    item_col_si = next((c for c in ["item_id", "item_code", "kode_item"] if c in item_df.columns), "item_name")
-
-                    if t_col:
-                        for _, r in item_df.iterrows():
-                            pid = str(r.get("period_id", "")).strip()
-                            ival = str(r.get(item_col_si, "")).strip()
-                            tval = pd.to_numeric(r.get(t_col, 0), errors="coerce")
-                            if pd.notna(tval) and tval > 0:
-                                target_map[(pid, ival)] = tval
-
-                # 3. Aggregasi Penjualan Per (Personil + Period + Item)
-                aggregated_sales = sp_month.groupby(["person_name", "clean_pid", "clean_item"])["actual_qty"].sum().reset_index()
-
-                # 4. Hitung Achievement
-                for _, row in aggregated_sales.iterrows():
-                    p_name = row["person_name"]
-                    pid = row["clean_pid"]
-                    ival = row["clean_item"]
-                    total_act = row["actual_qty"]
+                    # Cari baris periode yang sedang dipilih/aktif
+                    active_row = p_df[p_df["clean_pid"] == target_pid_clean]
                     
-                    # Cari target berdasarkan (period_id, item_id)
-                    target_val = target_map.get((pid, ival), 0)
-                    
-                    # Jika tidak ketemu pakai period_id, coba cari target berdasarkan item_id saja (fallback)
-                    if target_val == 0:
-                        target_val = next((v for (p, i), v in target_map.items() if i == ival), 0)
+                    if not active_row.empty and "start_date" in active_row.columns:
+                        # Ambil Bulan & Tahun dari Periode Aktif
+                        active_date = pd.to_datetime(active_row["start_date"].iloc[0], errors="coerce")
+                        
+                        if pd.notna(active_date):
+                            p_df["start_dt"] = pd.to_datetime(p_df["start_date"], errors="coerce")
+                            # Filter: Ambil period_id yang Bulan & Tahunnya SAMA SAJA
+                            same_month_mask = (p_df["start_dt"].dt.month == active_date.month) & (p_df["start_dt"].dt.year == active_date.year)
+                            valid_month_pids = set(p_df[same_month_mask]["clean_pid"].unique())
+                
+                # Fallback jika sheet PERIODE tidak terbaca: Filter berdasarkan Karakter Pertama Kode (Misal: 'S' untuk September, 'P' untuk Agustus)
+                if not valid_month_pids and target_pid_clean:
+                    prefix = target_pid_clean[0] # Mengambil huruf depan 'S' atau 'P'
+                    valid_month_pids = {pid for pid in sp_month["clean_pid"].unique() if str(pid).startswith(prefix)}
 
-                    # Jika Aktual Penjualan Kasir >= Target Item
-                    if target_val > 0 and total_act >= target_val:
-                        achiv_dict[p_name] = achiv_dict.get(p_name, 0) + 1
+                # 2. FILTER TRANSAKSI HANYA UNTUK BULAN TERSEBUT
+                if valid_month_pids:
+                    sp_month = sp_month[sp_month["clean_pid"].isin(valid_month_pids)]
+
+                # 3. PROSES HITUNG ACHIEVEMENT SEPERTI BIASA
+                if not sp_month.empty:
+                    sp_month["person_name"] = sp_month["person_name"].astype(str).str.strip()
+                    sp_month["actual_qty"] = pd.to_numeric(sp_month.get("actual_qty", 0), errors="coerce").fillna(0)
+                    
+                    item_col_sp = next((c for c in ["item_id", "item_code", "kode_item"] if c in sp_month.columns), "item_name")
+                    sp_month["clean_item"] = sp_month[item_col_sp].astype(str).str.strip()
+
+                    target_map = {}
+                    if not sales_item_df.empty:
+                        item_df = sales_item_df.copy()
+                        t_col = next((c for c in item_df.columns if "target_kasir" in c.lower() or "get_kasir" in c.lower() or ("target" in c.lower() and "kasir" in c.lower())), None)
+                        item_col_si = next((c for c in ["item_id", "item_code", "kode_item"] if c in item_df.columns), "item_name")
+
+                        if t_col:
+                            for _, r in item_df.iterrows():
+                                pid = str(r.get("period_id", "")).strip()
+                                ival = str(r.get(item_col_si, "")).strip()
+                                tval = pd.to_numeric(r.get(t_col, 0), errors="coerce")
+                                if pd.notna(tval) and tval > 0:
+                                    target_map[(pid, ival)] = tval
+
+                    aggregated_sales = sp_month.groupby(["person_name", "clean_pid", "clean_item"])["actual_qty"].sum().reset_index()
+
+                    for _, row in aggregated_sales.iterrows():
+                        p_name = row["person_name"]
+                        pid = row["clean_pid"]
+                        ival = row["clean_item"]
+                        total_act = row["actual_qty"]
+                        
+                        target_val = target_map.get((pid, ival), 0)
+                        if target_val == 0:
+                            target_val = next((v for (p, i), v in target_map.items() if i == ival), 0)
+
+                        if target_val > 0 and total_act >= target_val:
+                            achiv_dict[p_name] = achiv_dict.get(p_name, 0) + 1
 
             # --- C. GABUNG DAN URUTKAN RANKING ---
             ranking_list = []
