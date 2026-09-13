@@ -3235,7 +3235,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             # 2. STYLING CSS RPG: PODIUM TOP 3, ZONA MERAH, & RESPONSIVE MOBILE FIX
             rpg_badge_style = """
             <style>
-            /* Container Utama Buku (Responsif untuk HP/Desktop) */
             .rpg-open-book-container {
                 display: flex;
                 flex-direction: row;
@@ -3246,7 +3245,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             @media (max-width: 768px) {
                 .rpg-open-book-container {
-                    flex-direction: column !important; /* Di HP stacked ke bawah supaya lega */
+                    flex-direction: column !important;
                     gap: 15px;
                 }
             }
@@ -3262,7 +3261,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 flex-direction: column;
                 min-height: 480px;
                 position: relative;
-                overflow: hidden; /* Mencegah elemen keluar halaman */
+                overflow: hidden;
             }
 
             /* Watermark Naga Pudar */
@@ -3279,7 +3278,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 z-index: 0;
             }
 
-            /* --- LAYOUT PODIUM TOP 3 --- */
+            /* --- PODIUM TOP 3 --- */
             .podium-wrapper {
                 display: flex;
                 align-items: flex-end;
@@ -3298,7 +3297,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 flex-direction: column;
                 align-items: center;
                 text-align: center;
-                min-width: 0; /* Mencegah overflow flex item */
+                min-width: 0;
             }
 
             .podium-card {
@@ -3339,7 +3338,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 color: #1e293b;
                 white-space: nowrap;
                 overflow: hidden;
-                text-overflow: ellipsis; /* Titik-titik (...) jika nama kepanjangan */
+                text-overflow: ellipsis;
                 max-width: 95%;
                 margin-top: 4px;
             }
@@ -3358,7 +3357,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 gap: 6px;
                 position: relative;
                 z-index: 2;
-                overflow-y: auto; /* Agar tidak terpotong di Android/iOS */
+                overflow-y: auto;
                 max-height: 360px;
                 padding-right: 2px;
             }
@@ -3479,39 +3478,36 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             if not ranking_list:
                 ranking_list = [("Ksatriya Arthur", 98, 3), ("Lancelot", 92, 2), ("Galahad", 85, 1), ("Parsifal", 78, 0), ("Gawain", 70, 0), ("Tristan", 65, 0), ("Bors", 60, 0), ("Kay", 55, 0), ("Bedivere", 50, 0)]
 
-            # 4. MEMBUAT KOMPONEN PODIUM TOP 3 (KIRI)
+            # 4. MEMBUAT KOMPONEN PODIUM TOP 3 (KIRI) - FORMAT SATU BARIS BEBAS BREAK
             def make_podium_item(rank_idx, class_name, crown_icon):
                 if len(ranking_list) > rank_idx:
                     n, q, a = ranking_list[rank_idx]
                     is_me = (n.lower() == str(current_user_name).lower())
                     me_cls = "rpg-user-me" if is_me else ""
                     you_badge = '<span style="background:#2563eb; color:white; font-size:8px; padding:1px 4px; border-radius:4px;">KAMU</span>' if is_me else ""
-                    return f'''
-                    <div class="podium-slot">
-                        <div style="font-size:20px; margin-bottom:-5px; z-index:3;">{crown_icon}</div>
-                        <div class="podium-card {class_name} {me_cls}">
-                            <div style="font-size:14px; font-weight:900;">#{rank_idx+1}</div>
-                            <div class="podium-name" title="{n}">{n}</div>
-                            {you_badge}
-                            <div class="podium-score">{q} <span style="font-size:9px; font-weight:normal;">Pcs</span></div>
-                            <div style="font-size:9px; color:#065f46; font-weight:bold; margin-top:2px;">✨ {a} Achiv</div>
-                        </div>
-                    </div>
-                    '''
+                    
+                    html = f'<div class="podium-slot">'
+                    html += f'<div style="font-size:20px; margin-bottom:2px; z-index:3;">{crown_icon}</div>'
+                    html += f'<div class="podium-card {class_name} {me_cls}">'
+                    html += f'<div style="font-size:14px; font-weight:900;">#{rank_idx+1}</div>'
+                    html += f'<div class="podium-name" title="{n}">{n}</div>'
+                    html += f'{you_badge}'
+                    html += f'<div class="podium-score">{q} <span style="font-size:9px; font-weight:normal;">Pcs</span></div>'
+                    html += f'<div style="font-size:9px; color:#065f46; font-weight:bold; margin-top:2px;">✨ {a} Achiv</div>'
+                    html += f'</div></div>'
+                    return html
                 return ""
 
-            podium_html = f'''
-            <div class="podium-wrapper">
-                {make_podium_item(1, "podium-2", "🥈")}
-                {make_podium_item(0, "podium-1", "👑")}
-                {make_podium_item(2, "podium-3", "🥉")}
-            </div>
-            '''
+            podium_html = '<div class="podium-wrapper">'
+            podium_html += make_podium_item(1, "podium-2", "🥈")
+            podium_html += make_podium_item(0, "podium-1", "👑")
+            podium_html += make_podium_item(2, "podium-3", "🥉")
+            podium_html += '</div>'
 
-            # 5. MEMBUAT LIST PERINGKAT 4-9 (KANAN) + ZONA MERAH (3 TERBAWAH)
+            # 5. MEMBUAT LIST PERINGKAT 4-9 (KANAN) + ZONA MERAH
             rest_html = '<div class="rpg-list-container">'
             total_personil = len(ranking_list)
-            danger_cutoff = max(4, total_personil - 3) # Peringkat terbawah dipeta ke Zona Merah
+            danger_cutoff = max(4, total_personil - 3)
 
             for i, (n, q, a) in enumerate(ranking_list[3:9]):
                 rank = i + 4
@@ -3519,26 +3515,22 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 me_class = "rpg-user-me" if is_me else ""
                 you_badge = '<span style="background: #2563eb; color: white; font-size: 8px; padding: 1px 4px; border-radius: 4px; margin-left: 4px;">KAMU</span>' if is_me else ""
                 
-                # Cek apakah masuk 3 terbawah (Zona Merah)
                 is_danger = rank >= danger_cutoff
                 row_style = "danger-zone-row" if is_danger else ""
                 danger_tag = '<span class="danger-zone-badge">⚠️ ZONA MERAH</span>' if is_danger else ""
                 rank_icon = "🔻" if is_danger else "🛡️"
-
                 score_label = f"{q} Pcs <span style='font-size:10px; color:#065f46; font-weight:bold;'>(✨ {a} Achiv)</span>"
 
-                rest_html += f'''
-                <div class="rpg-normal-row {row_style} {me_class}">
-                    <div style="display: flex; align-items: center; gap: 4px; overflow: hidden; white-space: nowrap;">
-                        <span>{rank_icon}</span>
-                        <span style="font-weight:bold;">#{rank}</span>
-                        <span style="overflow: hidden; text-overflow: ellipsis;" title="{n}">{n}</span>
-                        {you_badge}
-                        {danger_tag}
-                    </div>
-                    <div style="flex-shrink: 0; margin-left: 6px;">{score_label}</div>
-                </div>
-                '''
+                rest_html += f'<div class="rpg-normal-row {row_style} {me_class}">'
+                rest_html += f'<div style="display: flex; align-items: center; gap: 4px; overflow: hidden; white-space: nowrap;">'
+                rest_html += f'<span>{rank_icon}</span>'
+                rest_html += f'<span style="font-weight:bold;">#{rank}</span>'
+                rest_html += f'<span style="overflow: hidden; text-overflow: ellipsis;" title="{n}">{n}</span>'
+                rest_html += f'{you_badge}{danger_tag}'
+                rest_html += f'</div>'
+                rest_html += f'<div style="flex-shrink: 0; margin-left: 6px;">{score_label}</div>'
+                rest_html += f'</div>'
+            
             rest_html += '</div>'
 
             # 6. RENDER KEDUA HALAMAN BUKU
@@ -3560,7 +3552,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 f'</div>'
                 f'</div>'
             )
-        
+
+            
         #=============================================batas biar gak psimh===================================================#
         
         elif page_num == 4:
