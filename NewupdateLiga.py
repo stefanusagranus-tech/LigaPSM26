@@ -3996,7 +3996,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
         #================================================batas=====================================================#
 
-        elif page_num == 5:  # Sesuaikan nomor halaman Sueger kamu (misal page_num == 5)
+        elif page_num == 5
             # 1. Ambil Username Aktif
             current_user_name = st.session_state.get("user_name", st.session_state.get("username", ""))
 
@@ -4345,10 +4345,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 f'</div>'
                 f'</div>'
             )
+        st.markdown(html_open_tugas, unsafe_allow_html=True)
+        st.stop()
 
-            st.markdown(html_open_tugas, unsafe_allow_html=True)
-            st.stop()
-
+       
     #===============================================================================#
      # ⛺ JALUR C: BERANDA UTAMA 3 KARTU CAMP (YANG HARUSNYA MUNCUL DI AWAL)
     #==============================================================================#
