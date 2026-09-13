@@ -3433,11 +3433,39 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             if 'active_period' not in locals() and 'active_period' not in globals():
                 active_period = st.session_state.get("active_period", "Periode Aktif")
 
-            # 3. OLAH DATA PERINGKAT (QTY PERIODE vs ACHIV BULANAN)
+            # 3. OLAH DATA PERINGKAT (QTY PERIODE vs ACHIV REALTME BULANAN DARI SHEET PERIODE)
             sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
             sales_item_df = st.session_state.get("sales_item_df", pd.DataFrame())
+            periods_df = st.session_state.get("periods_df", pd.DataFrame())
             
             target_pid_clean = str(target_period_id).strip() if ('target_period_id' in locals() and target_period_id) else ""
+
+            # --- AMBIL PILTER PERIOD_ID UNTUK BULAN YANG SAMA DARI SHEET PERIODE ---
+            valid_month_pids = set()
+            if not periods_df.empty and target_pid_clean and "period_id" in periods_df.columns:
+                periods_copy = periods_df.copy()
+                periods_copy["clean_pid"] = periods_copy["period_id"].astype(str).str.strip()
+                
+                # Ambil tanggal dari start_date periode aktif
+                curr_row = periods_copy[periods_copy["clean_pid"] == target_pid_clean]
+                if not curr_row.empty and "start_date" in curr_row.columns:
+                    try:
+                        ref_date = pd.to_datetime(curr_row["start_date"].iloc[0])
+                        periods_copy["start_dt"] = pd.to_datetime(periods_copy["start_date"], errors="coerce")
+                        
+                        # Filter period_id mana saja yang bulan & tahunnya sama dengan periode aktif
+                        same_month_df = periods_copy[
+                            (periods_copy["start_dt"].dt.month == ref_date.month) & 
+                            (periods_copy["start_dt"].dt.year == ref_date.year)
+                        ]
+                        valid_month_pids = set(same_month_df["clean_pid"].unique())
+                    except Exception:
+                        valid_month_pids = {target_pid_clean}
+                else:
+                    valid_month_pids = {target_pid_clean}
+            else:
+                if target_pid_clean:
+                    valid_month_pids = {target_pid_clean}
 
             master_personil = []
             if "master_personil_df" in st.session_state and not st.session_state["master_personil_df"].empty:
@@ -3445,7 +3473,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             elif not sales_person_df.empty and "person_name" in sales_person_df.columns:
                 master_personil = sales_person_df["person_name"].dropna().astype(str).str.strip().unique().tolist()
 
-            # --- A. TOTAL QTY PCS (HANYA PERIODE AKTIF) ---
+            # --- A. TOTAL QTY PCS (HANYA PERIODE AKTIF SPESIFIK) ---
             qty_dict = {}
             if not sales_person_df.empty and "person_name" in sales_person_df.columns:
                 sp_period = sales_person_df.copy()
@@ -3459,43 +3487,50 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     for _, r in grouped_qty.iterrows():
                         qty_dict[r["person_name"]] = int(r["actual_qty"])
 
-            # --- B. ACHIEVEMENT (AKUMULASI 1 BULAN FULL & TANPA BUG VISUAL) ---
+            # --- B. ACHIEVEMENT (AKUMULASI BULAN BERJALAN SESUAI PERIOD_ID DI SHEET PERIODE) ---
             achiv_dict = {}
             if not sales_person_df.empty and "person_name" in sales_person_df.columns:
                 sp_month = sales_person_df.copy()
-                sp_month["person_name"] = sp_month["person_name"].astype(str).str.strip()
-                sp_month["actual_qty"] = pd.to_numeric(sp_month.get("actual_qty", 0), errors="coerce").fillna(0)
-                
-                sp_item_key = next((k for k in ["item_id", "item_code", "kode_item", "item_name", "nama_item", "sku"] if k in sp_month.columns), "GENERAL")
-                sp_month["clean_item"] = sp_month[sp_item_key].astype(str).str.strip() if sp_item_key != "GENERAL" else "GENERAL"
                 sp_month["clean_pid"] = sp_month["period_id"].astype(str).str.strip() if "period_id" in sp_month.columns else ""
 
-                # Group per (personil + period_id + item) agar capaian tiap periode di bulan tersebut terhitung terpisah
-                aggregated_sales = sp_month.groupby(["person_name", "clean_pid", "clean_item"])["actual_qty"].sum().reset_index()
+                # Filter transaksi HANYA untuk period_id dalam bulan berjalan (misal S01 dan S02 untuk September)
+                if valid_month_pids:
+                    sp_month = sp_month[sp_month["clean_pid"].isin(valid_month_pids)]
 
-                target_map = {}
-                if not sales_item_df.empty:
-                    item_df = sales_item_df.copy()
-                    t_col = next((col for col in item_df.columns if "target_kasir" in col.lower() or ("target" in col.lower() and "kasir" in col.lower())), None)
-                    it_key = next((k for k in ["item_id", "item_code", "kode_item", "item_name", "nama_item", "sku"] if k in item_df.columns), None)
+                if not sp_month.empty:
+                    sp_month["person_name"] = sp_month["person_name"].astype(str).str.strip()
+                    sp_month["actual_qty"] = pd.to_numeric(sp_month.get("actual_qty", 0), errors="coerce").fillna(0)
                     
-                    if t_col:
-                        for _, r in item_df.iterrows():
-                            pid = str(r.get("period_id", "")).strip()
-                            ival = str(r.get(it_key, "")).strip() if it_key else ""
-                            tval = pd.to_numeric(r.get(t_col, 0), errors="coerce")
-                            if pd.notna(tval):
-                                target_map[(pid, ival)] = tval
+                    sp_item_key = next((k for k in ["item_id", "item_code", "kode_item", "item_name", "nama_item", "sku"] if k in sp_month.columns), "GENERAL")
+                    sp_month["clean_item"] = sp_month[sp_item_key].astype(str).str.strip() if sp_item_key != "GENERAL" else "GENERAL"
 
-                for _, row in aggregated_sales.iterrows():
-                    p_name = row["person_name"]
-                    pid = row["clean_pid"]
-                    ival = row["clean_item"]
-                    total_act = row["actual_qty"]
-                    
-                    target_val = target_map.get((pid, ival), 0)
-                    if total_act >= target_val and target_val > 0:
-                        achiv_dict[p_name] = achiv_dict.get(p_name, 0) + 1
+                    # Hitung total penjualan per (personil + period_id + item_id)
+                    aggregated_sales = sp_month.groupby(["person_name", "clean_pid", "clean_item"])["actual_qty"].sum().reset_index()
+
+                    target_map = {}
+                    if not sales_item_df.empty:
+                        item_df = sales_item_df.copy()
+                        t_col = next((col for col in item_df.columns if "target_kasir" in col.lower() or "target_qty" in col.lower() or ("target" in col.lower() and "kasir" in col.lower())), "target_kasir")
+                        it_key = next((k for k in ["item_id", "item_code", "kode_item", "item_name", "nama_item", "sku"] if k in item_df.columns), None)
+                        
+                        if t_col in item_df.columns:
+                            for _, r in item_df.iterrows():
+                                pid = str(r.get("period_id", "")).strip()
+                                ival = str(r.get(it_key, "")).strip() if it_key else ""
+                                tval = pd.to_numeric(r.get(t_col, 0), errors="coerce")
+                                if pd.notna(tval):
+                                    target_map[(pid, ival)] = tval
+
+                    # Evaluasi Achievement
+                    for _, row in aggregated_sales.iterrows():
+                        p_name = row["person_name"]
+                        pid = row["clean_pid"]
+                        ival = row["clean_item"]
+                        total_act = row["actual_qty"]
+                        
+                        target_val = target_map.get((pid, ival), 0)
+                        if total_act >= target_val and target_val > 0:
+                            achiv_dict[p_name] = achiv_dict.get(p_name, 0) + 1
 
             # --- C. GABUNG DAN URUTKAN RANKING ---
             ranking_list = []
@@ -3509,7 +3544,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             if not ranking_list:
                 ranking_list = [("Ksatriya Arthur", 98, 3), ("Lancelot", 92, 2), ("Galahad", 85, 1), ("Parsifal", 78, 0), ("Gawain", 70, 0), ("Tristan", 65, 0), ("Bors", 60, 0), ("Kay", 55, 0), ("Bedivere", 50, 0)]
 
-            # 4. FUNGSI PEMBUAT ELEMENT PODIUM (AMUNISI BEBAS ERROR SCOPE)
+            # 4. FUNGSI PEMBUAT ELEMENT PODIUM
             def make_podium_item(rank_idx, class_name, crown_icon, r_list):
                 if len(r_list) > rank_idx:
                     n, q, a = r_list[rank_idx]
@@ -3584,6 +3619,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 f'</div>'
                 f'</div>'
             )
+
             
         #=============================================batas biar gak psimh===================================================#
         
