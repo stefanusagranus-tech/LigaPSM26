@@ -2943,11 +2943,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     "achiv_color": achiv_color, "achiv": achiv
                 })
 
-            # 5. OLAH DATA HALAMAN KANAN (MONTHLY GUILD PERFORMANCE - SEPTEMBER ONLY)
-            psm_target = 0.0
-            psm_actual = 0.0
-            psm_mvp = "-"
-            
+            # 5. OLAH DATA HALAMAN KANAN (GUILD WAR SYSTEM)
+    
             # A. Filter period_id September dari sheet PERIODE
             sept_period_ids = []
             if not periods_df.empty:
@@ -2961,57 +2958,51 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     if not sept_periods.empty and "period_id" in sept_periods.columns:
                         sept_period_ids = sept_periods["period_id"].astype(str).str.strip().tolist()
 
-            # B. Target PSM dari sheet SALES_ITEM berdasarkan period_id September
+            # B. Target & Actual PSM (Bulan September)
+            psm_target, psm_actual, psm_mvp = 0.0, 0.0, "-"
             if not sales_item_df.empty and "target_qty" in sales_item_df.columns:
-                if "period_id" in sales_item_df.columns and sept_period_ids:
-                    f_item_sept = sales_item_df[sales_item_df["period_id"].astype(str).str.strip().isin(sept_period_ids)]
-                else:
-                    f_item_sept = sales_item_df
-                
+                f_item_sept = sales_item_df[sales_item_df["period_id"].astype(str).str.strip().isin(sept_period_ids)] if sept_period_ids and "period_id" in sales_item_df.columns else sales_item_df
                 psm_target = float(pd.to_numeric(f_item_sept["target_qty"], errors="coerce").sum())
 
-            # C. Penjualan & MVP PSM dari sheet SALES_PERSONIL berdasarkan period_id September
             if not sales_person_df.empty and "actual_qty" in sales_person_df.columns:
-                if "period_id" in sales_person_df.columns and sept_period_ids:
-                    f_person_sept = sales_person_df[sales_person_df["period_id"].astype(str).str.strip().isin(sept_period_ids)]
-                else:
-                    f_person_sept = sales_person_df
-                
+                f_person_sept = sales_person_df[sales_person_df["period_id"].astype(str).str.strip().isin(sept_period_ids)] if sept_period_ids and "period_id" in sales_person_df.columns else sales_person_df
                 psm_actual = float(pd.to_numeric(f_person_sept["actual_qty"], errors="coerce").sum())
-                
                 p_col = "person_name" if "person_name" in f_person_sept.columns else ("staff_name" if "staff_name" in f_person_sept.columns else "")
                 if p_col:
                     grp_psm = f_person_sept.groupby(p_col)["actual_qty"].sum()
                     if not grp_psm.empty and grp_psm.max() > 0:
                         psm_mvp = str(grp_psm.idxmax()).title()
 
-            # D. Definisi Program Halaman Kanan
+            # C. Definisi Program dengan Bobot Poin
             programs = [
-                {"name": "PSM / Target Item", "key": "psm", "target": psm_target, "actual": psm_actual, "mvp": psm_mvp},
-                {"name": "PWP", "key": "pwp", "col_act": "qty_pwp"},
-                {"name": "Serba Gratis (SG)", "key": "serba", "col_act": "qty_sg"},
-                {"name": "Suegeer (Target 50%)", "key": "suegeer", "col_act": "qty_suegeer"}
+                {"name": "PSM Assault", "key": "psm", "weight": 20, "target": psm_target, "actual": psm_actual, "mvp": psm_mvp},
+                {"name": "PWP Siege", "key": "pwp", "weight": 25, "col_act": "qty_pwp"},
+                {"name": "Serba Gratis (SG)", "key": "serba", "weight": 30, "col_act": "qty_sg"},
+                {"name": "Suegeer Strike", "key": "suegeer", "weight": 0, "col_act": "qty_suegeer"}
             ]
 
             items_kanan_list = []
-            total_m_target = 0
-            total_m_actual = 0
+            total_blue_points = 0.0
+            total_red_points = 75.0  # 20 + 25 + 30
 
             for p in programs:
                 p_key = p["key"]
+                weight = p["weight"]
+                
                 if p_key == "psm":
                     p_target = p["target"]
                     p_actual = p["actual"]
                     mvp_name = p["mvp"]
                 elif p_key == "suegeer":
+                    # Perhitungan Baru Suegeer: Redeem vs Syarat (Redeem / Syarat * 100%)
                     s_col = "syarat_sueger" if "syarat_sueger" in sales_pps_df.columns else "syarat_suegeer"
                     r_col = "redeem_sueger" if "redeem_sueger" in sales_pps_df.columns else "redeem_suegeer"
                     
                     p_syarat = float(pd.to_numeric(sales_pps_df[s_col], errors="coerce").sum()) if not sales_pps_df.empty and s_col in sales_pps_df.columns else 0.0
                     p_redeem = float(pd.to_numeric(sales_pps_df[r_col], errors="coerce").sum()) if not sales_pps_df.empty and r_col in sales_pps_df.columns else 0.0
-                    p_target = p_syarat * 0.5
-                    p_actual = p_redeem
                     
+                    p_target = p_syarat
+                    p_actual = p_redeem
                     mvp_name = "-"
                     if not sales_pps_df.empty and "kasir_name" in sales_pps_df.columns and s_col in sales_pps_df.columns and r_col in sales_pps_df.columns:
                         grp = sales_pps_df.groupby("kasir_name")[[s_col, r_col]].sum()
@@ -3027,11 +3018,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         if t_row.empty and p_key == "serba":
                             t_row = periods_pps_df[periods_pps_df["period_name"].astype(str).str.lower().str.contains("sg")]
                     
-                    if not t_row.empty and "target_total" in t_row.columns:
-                        p_target = float(pd.to_numeric(t_row["target_total"].iloc[0], errors="coerce"))
-                    else:
-                        p_target = 0.0
-                        
+                    p_target = float(pd.to_numeric(t_row["target_total"].iloc[0], errors="coerce")) if not t_row.empty and "target_total" in t_row.columns else 0.0
                     col_name = p["col_act"]
                     p_actual = float(pd.to_numeric(sales_pps_df[col_name], errors="coerce").sum()) if not sales_pps_df.empty and col_name in sales_pps_df.columns else 0.0
                     
@@ -3041,66 +3028,124 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         if not grp.empty and grp.max() > 0:
                             mvp_name = str(grp.idxmax()).title()
 
-                total_m_target += p_target
-                total_m_actual += p_actual
-                
+                # Calculation Achiv % & Points
                 p_achiv = (p_actual / p_target * 100) if p_target > 0 else 0
-                pct_blue = min(100.0, p_achiv)
-                pct_red = max(0.0, 100.0 - pct_blue)
+                achiv_ratio = (p_actual / p_target) if p_target > 0 else 0
+                
+                # Akumulasi poin header (Hanya PSM, PWP, SG)
+                if weight > 0:
+                    total_blue_points += (achiv_ratio * weight)
+
+                # Bar Visual Calculation (Gambar 2: segmented / ratio bar)
+                blue_flex = min(100.0, p_achiv)
+                red_flex = max(0.0, 100.0 - blue_flex)
 
                 items_kanan_list.append({
-                    "name": p["name"], "mvp": mvp_name, "pct_blue": pct_blue,
-                    "p_achiv": p_achiv, "pct_red": pct_red, "p_actual": int(p_actual),
-                    "p_target": int(p_target)
+                    "name": p["name"], "mvp": mvp_name, "p_achiv": p_achiv,
+                    "p_actual": int(p_actual), "p_target": int(p_target),
+                    "blue_flex": blue_flex, "red_flex": red_flex,
+                    "is_suegeer": (p_key == "suegeer")
                 })
 
-            total_m_achiv = (total_m_actual / total_m_target * 100) if total_m_target > 0 else 0
-            total_m_gap = int(max(0, total_m_target - total_m_actual))
+            # Header Guild War Bar Ratio (Gambar 1)
+            total_blue_pts_int = int(round(total_blue_points))
+            total_red_pts_int = int(total_red_points)
+            
+            header_total_scale = max(1.0, total_blue_points + total_red_points)
+            header_blue_pct = (total_blue_points / header_total_scale) * 100
+            header_red_pct = 100 - header_blue_pct
+            
+            match_status = "VICTORY" if total_blue_points >= total_red_points else "IN BATTLE"
+            status_color = "#eab308" if match_status == "VICTORY" else "#ef4444"
 
-            # 6. HTML RENDER
-            html_kiri_str = "".join([
-                f'<div class="rpg-item-card">'
-                f'<div><div class="item-title">{x["icon"]} {x["p_name"]} <span class="{x["badge_cls"]}">{x["badge_txt"]}</span></div>'
-                f'<div class="item-stats">{x["info_syarat"]}</div></div>'
-                f'<div style="text-align: right;"><div style="font-size: 14px; font-weight: bold; color: {x["achiv_color"]};">{x["achiv"]:.1f}%</div></div>'
-                f'</div>'
-                for x in items_kiri_list
-            ]) if items_kiri_list else '<div style="color:#78350f; font-size:12px; text-align:center; margin-top:20px;"><i>Belum ada data Target PPS aktif.</i></div>'
-                    
-            html_kanan_str = "".join([
-                f'<div class="rpg-item-card">'
-                f'<div>'
-                f'<div class="item-title">🗡️ {y["name"]} <span class="rpg-badge rpg-badge-gold">👑 MVP: {y["mvp"]}</span></div>'
-                f'<div class="item-stats">Target: {y["p_target"]} | Aktual: {y["p_actual"]}</div>'
-                f'</div>'
-                f'<div style="text-align: right;">'
-                f'<div style="font-size: 14px; font-weight: bold; color: #1d4ed8;">{y["p_achiv"]:.1f}%</div>'
-                f'</div>'
-                f'</div>'
-                for y in items_kanan_list
-            ]) if items_kanan_list else '<div style="color:#78350f; font-size:12px; text-align:center; margin-top:20px;"><i>Belum ada data Posisi Pahlawan.</i></div>'
+            # 6. HTML RENDER GUILD WAR
+            html_kanan_items = ""
+            for item in items_kanan_list:
+                label_stat = f"Redeem: {item['p_actual']} / Syarat: {item['p_target']}" if item["is_suegeer"] else f"Hit: {item['p_actual']} / Target: {item['p_target']}"
+                
+                html_kanan_items += f'''
+                <div class="gw-card">
+                    <div class="gw-card-header">
+                        <span class="gw-card-title">⚔️ {item['name']}</span>
+                        <span class="gw-mvp">👑 MVP: {item['mvp']}</span>
+                    </div>
+                    <div class="gw-bar-container">
+                        <div class="gw-bar-blue" style="width: {item['blue_flex']}%;"></div>
+                        <div class="gw-bar-red" style="width: {item['red_flex']}%;"></div>
+                        <div class="gw-bar-text">{item['p_achiv']:.1f}%</div>
+                    </div>
+                    <div class="gw-card-footer">{label_stat}</div>
+                </div>
+                '''
 
-            html_open_tugas = (
-                f'<div class="rpg-open-book-container">'
+            html_kanan_str = f'''
+            <style>
+                .gw-header-box {{
+                    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+                    border: 2px solid #334155;
+                    border-radius: 8px;
+                    padding: 12px;
+                    margin-bottom: 12px;
+                    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5);
+                    text-align: center;
+                }}
+                .gw-match-title {{
+                    display: flex; justify-content: space-between; align-items: center;
+                    font-family: 'monospace', sans-serif; font-weight: bold; color: #f8fafc;
+                }}
+                .gw-team-blue {{ color: #38bdf8; font-size: 14px; text-shadow: 0 0 5px #0284c7; }}
+                .gw-team-red {{ color: #f87171; font-size: 14px; text-shadow: 0 0 5px #dc2626; }}
+                .gw-vs {{ font-size: 16px; color: #94a3b8; margin: 0 8px; }}
+                .gw-status-text {{ font-size: 11px; font-weight: 900; color: {status_color}; letter-spacing: 2px; margin: 4px 0; }}
                 
-                f'<div class="rpg-book-page rpg-book-page-left">'
-                f'<h3 class="open-page-title">🛡️ TARGET PPS</h3>'
-                f'<p class="open-page-sub">Rincian Target Harian ({active_period_pps_name})</p>'
-                f'<div class="open-book-divider"></div>'
-                f'{html_kiri_str}'
-                f'<div class="open-page-footer">Halaman Kiri • Target PPS</div>'
-                f'</div>'
+                .gw-main-bar {{
+                    height: 18px; background: #0f172a; border-radius: 4px; border: 1px solid #475569;
+                    display: flex; overflow: hidden; position: relative; margin-top: 4px;
+                }}
+                .gw-main-blue {{ background: linear-gradient(90deg, #0284c7, #38bdf8); height: 100%; transition: width 0.5s; }}
+                .gw-main-red {{ background: linear-gradient(90deg, #dc2626, #ef4444); height: 100%; transition: width 0.5s; }}
+                .gw-main-bar-text {{
+                    position: absolute; width: 100%; text-align: center; line-height: 18px;
+                    font-size: 11px; font-weight: bold; color: #ffffff; text-shadow: 1px 1px 2px #000;
+                }}
+
+                .gw-card {{
+                    background: #1e293b; border: 1px solid #334155; border-radius: 6px;
+                    padding: 8px 10px; margin-bottom: 8px;
+                }}
+                .gw-card-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }}
+                .gw-card-title {{ font-size: 12px; font-weight: bold; color: #f1f5f9; }}
+                .gw-mvp {{ font-size: 10px; background: #374151; color: #fde047; padding: 2px 6px; border-radius: 4px; font-weight: bold; }}
                 
-                f'<div class="rpg-book-page rpg-book-page-right">'
-                f'<h3 class="open-page-title">📍 POSISI PAHLAWAN</h3>'
-                f'<p class="open-page-sub">Status Performa Guild Bulanan</p>'
-                f'<div class="open-book-divider"></div>'
-                f'{html_kanan_str}'
-                f'<div class="open-page-footer">Halaman Kanan • Posisi Pahlawan</div>'
-                f'</div>'
-                
-                f'</div>'
-            )
+                .gw-bar-container {{
+                    height: 14px; background: #0f172a; border-radius: 3px; border: 1px solid #475569;
+                    display: flex; overflow: hidden; position: relative;
+                }}
+                .gw-bar-blue {{ background: linear-gradient(90deg, #1d4ed8, #3b82f6); height: 100%; }}
+                .gw-bar-red {{ background: linear-gradient(90deg, #b91c1c, #ef4444); height: 100%; }}
+                .gw-bar-text {{
+                    position: absolute; width: 100%; text-align: center; line-height: 14px;
+                    font-size: 10px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000;
+                }}
+                .gw-card-footer {{ font-size: 10px; color: #94a3b8; margin-top: 3px; }}
+            </style>
+
+            <div class="gw-header-box">
+                <div class="gw-match-title">
+                    <span class="gw-team-blue">🛡️ ACHIV: {total_blue_pts_int} PTS</span>
+                    <span class="gw-vs">⚔️</span>
+                    <span class="gw-team-red">TARGET: {total_red_pts_int} PTS 🎯</span>
+                </div>
+                <div class="gw-status-text">{match_status}</div>
+                <div class="gw-main-bar">
+                    <div class="gw-main-blue" style="width: {header_blue_pct}%;"></div>
+                    <div class="gw-main-red" style="width: {header_red_pct}%;"></div>
+                    <div class="gw-main-bar-text">{total_blue_pts_int} / {total_red_pts_int} PTS</div>
+                </div>
+            </div>
+            
+            {html_kanan_items}
+            '''
 
         elif page_num == 3:
             # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
