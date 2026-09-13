@@ -2884,7 +2884,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     except Exception:
                         time_factor = 50.0
 
-            # 4. OLAH DATA HALAMAN KIRI (TARGET PPS HARIAN)
+            # 4. OLAH DATA HALAMAN KIRI (TARGET PPS HARIAN) - FIX SAFE SUM UNTUK USER/NIK
             items_kiri_list = []
             icon_list = ["🛡️", "⚡", "🗡️", "🏹", "📜"]
             
@@ -2893,7 +2893,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 p_lower = p_name.lower()
                 icon = icon_list[idx % len(icon_list)]
                 
-                # Penanganan fleksibel nama kolom sueger / suegeer
                 col_syarat_sgr = "syarat_sueger" if "syarat_sueger" in r else "syarat_suegeer"
                 col_redeem_sgr = "redeem_sueger" if "redeem_sueger" in r else "redeem_suegeer"
 
@@ -2908,9 +2907,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     if not is_admin and not f_sales.empty:
                         s_col = "syarat_sueger" if "syarat_sueger" in f_sales.columns else "syarat_suegeer"
                         r_col = "redeem_sueger" if "redeem_sueger" in f_sales.columns else "redeem_suegeer"
-                        syarat_val = float(pd.to_numeric(f_sales.get(s_col, 0), errors="coerce").sum())
-                        redeem_val = float(pd.to_numeric(f_sales.get(r_col, 0), errors="coerce").sum())
-                        actual_val = float(pd.to_numeric(f_sales.get("qty_suegeer", 0), errors="coerce").sum())
+                        
+                        syarat_val = float(pd.to_numeric(f_sales[s_col], errors="coerce").sum()) if s_col in f_sales.columns else 0.0
+                        redeem_val = float(pd.to_numeric(f_sales[r_col], errors="coerce").sum()) if r_col in f_sales.columns else 0.0
+                        actual_val = float(pd.to_numeric(f_sales["qty_suegeer"], errors="coerce").sum()) if "qty_suegeer" in f_sales.columns else 0.0
                     else:
                         actual_val = float(pd.to_numeric(r.get("actual_qty", 0), errors="coerce"))
 
@@ -2927,7 +2927,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     elif ("serba" in p_lower or "sg" in p_lower) and "qty_sg" in f_sales.columns: q_col = "qty_sg"
                     elif "cemilan" in p_lower and "cemilan_ceban" in f_sales.columns: q_col = "cemilan_ceban"
                     
-                    actual_val = float(pd.to_numeric(f_sales[q_col], errors="coerce").sum()) if not f_sales.empty and q_col in f_sales.columns else 0
+                    actual_val = float(pd.to_numeric(f_sales[q_col], errors="coerce").sum()) if not f_sales.empty and q_col in f_sales.columns else 0.0
                     achiv = (actual_val / target_val * 100) if target_val > 0 else 0
                     gap = max(0, target_val - actual_val)
                     info_syarat = f"Target: {int(target_val)} Pcs | Aktual: <b>{int(actual_val)}</b>"
@@ -2943,42 +2943,50 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     "achiv_color": achiv_color, "achiv": achiv
                 })
 
-           # 5. OLAH DATA HALAMAN KANAN (MONTHLY GUILD PERFORMANCE)
+            # 5. OLAH DATA HALAMAN KANAN (MONTHLY GUILD PERFORMANCE - DINAMIS BULAN BERJALAN)
             
-            # A. PSM Target & Aktual (Filter Berdasarkan Tabel Periods/Periode September)
             psm_target = 0.0
             psm_actual = 0.0
             psm_mvp = "-"
             
-            # 1. Ambil seluruh list period_id khusus bulan September (awalan 'S' atau tanggal di bulan 9)
-            sept_period_ids = []
-            if not periods_df.empty:
-                # Pastikan kolom start_date berformat datetime
+            # 1. Ambil list period_id bulan berjalan otomatis (Sep, Okt, Nov, dst.)
+            current_month_period_ids = []
+            if not periods_df.empty and "start_date" in periods_df.columns:
                 p_df = periods_df.copy()
-                if "start_date" in p_df.columns:
-                    p_df["start_date"] = pd.to_datetime(p_df["start_date"], errors="coerce")
-                    # Filter periode yang jatuh di bulan September
-                    sept_periods = p_df[p_df["start_date"].dt.month == 9]
-                    if not sept_periods.empty and "period_id" in sept_periods.columns:
-                        sept_period_ids = sept_periods["period_id"].astype(str).str.strip().tolist()
-
-            # 2. Hitung Target PSM dari sales_item_df berdasarkan period_id September
-            if not sales_item_df.empty and "period_id" in sales_item_df.columns and "target_qty" in sales_item_df.columns:
-                f_item_sept = sales_item_df[sales_item_df["period_id"].astype(str).str.strip().isin(sept_period_ids)]
-                psm_target = float(pd.to_numeric(f_item_sept["target_qty"], errors="coerce").sum())
-            elif not sales_item_df.empty and "target_qty" in sales_item_df.columns:
-                # Fallback jika sales_item_df tidak punya kolom period_id
-                psm_target = float(pd.to_numeric(sales_item_df["target_qty"], errors="coerce").sum())
-
-            # 3. Hitung Aktual & MVP PSM dari sales_person_df berdasarkan period_id September
-            if not sales_person_df.empty and "period_id" in sales_person_df.columns and "actual_qty" in sales_person_df.columns:
-                f_person_sept = sales_person_df[sales_person_df["period_id"].astype(str).str.strip().isin(sept_period_ids)]
-                psm_actual = float(pd.to_numeric(f_person_sept["actual_qty"], errors="coerce").sum())
+                p_df["start_date"] = pd.to_datetime(p_df["start_date"], errors="coerce")
                 
-                # Cari MVP PSM September
-                p_col = "staff_name" if "staff_name" in f_person_sept.columns else ("person_name" if "person_name" in f_person_sept.columns else "")
+                # Cari bulan dari periode aktif saat ini
+                active_month = pd.Timestamp.now().month
+                if not active_period_id.strip() == "":
+                    act_row = p_df[p_df["period_id"].astype(str).str.strip() == active_period_id]
+                    if not act_row.empty and not pd.isna(act_row.iloc[0]["start_date"]):
+                        active_month = act_row.iloc[0]["start_date"].month
+                
+                # Filter periode yang berada pada bulan tersebut
+                curr_periods = p_df[p_df["start_date"].dt.month == active_month]
+                if not curr_periods.empty and "period_id" in curr_periods.columns:
+                    current_month_period_ids = curr_periods["period_id"].astype(str).str.strip().tolist()
+
+            # 2. Hitung Target PSM berdasarkan period_id bulan aktif
+            if not sales_item_df.empty and "target_qty" in sales_item_df.columns:
+                if "period_id" in sales_item_df.columns and current_month_period_ids:
+                    f_item = sales_item_df[sales_item_df["period_id"].astype(str).str.strip().isin(current_month_period_ids)]
+                else:
+                    f_item = sales_item_df
+                psm_target = float(pd.to_numeric(f_item["target_qty"], errors="coerce").sum())
+
+            # 3. Hitung Aktual & MVP PSM berdasarkan period_id bulan aktif
+            if not sales_person_df.empty and "actual_qty" in sales_person_df.columns:
+                if "period_id" in sales_person_df.columns and current_month_period_ids:
+                    f_person = sales_person_df[sales_person_df["period_id"].astype(str).str.strip().isin(current_month_period_ids)]
+                else:
+                    f_person = sales_person_df
+                    
+                psm_actual = float(pd.to_numeric(f_person["actual_qty"], errors="coerce").sum())
+                
+                p_col = "staff_name" if "staff_name" in f_person.columns else ("person_name" if "person_name" in f_person.columns else "")
                 if p_col:
-                    grp_psm = f_person_sept.groupby(p_col)["actual_qty"].sum()
+                    grp_psm = f_person.groupby(p_col)["actual_qty"].sum()
                     if not grp_psm.empty and grp_psm.max() > 0:
                         psm_mvp = str(grp_psm.idxmax()).title()
 
@@ -3004,8 +3012,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     s_col = "syarat_sueger" if "syarat_sueger" in sales_pps_df.columns else "syarat_suegeer"
                     r_col = "redeem_sueger" if "redeem_sueger" in sales_pps_df.columns else "redeem_suegeer"
                     
-                    p_syarat = float(pd.to_numeric(sales_pps_df[s_col], errors="coerce").sum()) if not sales_pps_df.empty and s_col in sales_pps_df.columns else 0
-                    p_redeem = float(pd.to_numeric(sales_pps_df[r_col], errors="coerce").sum()) if not sales_pps_df.empty and r_col in sales_pps_df.columns else 0
+                    p_syarat = float(pd.to_numeric(sales_pps_df[s_col], errors="coerce").sum()) if not sales_pps_df.empty and s_col in sales_pps_df.columns else 0.0
+                    p_redeem = float(pd.to_numeric(sales_pps_df[r_col], errors="coerce").sum()) if not sales_pps_df.empty and r_col in sales_pps_df.columns else 0.0
                     p_target = p_syarat * 0.5
                     p_actual = p_redeem
                     
@@ -3018,7 +3026,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                             if not grp.empty and grp["ach"].max() > 0:
                                 mvp_name = str(grp["ach"].idxmax()).title()
                 else:
-                    # Pencarian Target di PERIODE_PPS (Support 'serba' maupun 'sg')
                     t_row = pd.DataFrame()
                     if not periods_pps_df.empty and "period_name" in periods_pps_df.columns:
                         t_row = periods_pps_df[periods_pps_df["period_name"].astype(str).str.lower().str.contains(p_key)]
@@ -3031,7 +3038,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         p_target = 0.0
                         
                     col_name = p["col_act"]
-                    p_actual = float(pd.to_numeric(sales_pps_df[col_name], errors="coerce").sum()) if not sales_pps_df.empty and col_name in sales_pps_df.columns else 0
+                    p_actual = float(pd.to_numeric(sales_pps_df[col_name], errors="coerce").sum()) if not sales_pps_df.empty and col_name in sales_pps_df.columns else 0.0
                     
                     mvp_name = "-"
                     if not sales_pps_df.empty and "kasir_name" in sales_pps_df.columns and col_name in sales_pps_df.columns:
@@ -3055,9 +3062,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             total_m_achiv = (total_m_actual / total_m_target * 100) if total_m_target > 0 else 0
             total_m_gap = int(max(0, total_m_target - total_m_actual))
 
-            # 6. HTML RENDER (PRESISI SAMA DENGAN STRUKTUR HALAMAN KIRI)
-    
-            # --- HALAMAN KIRI ---
+            # 6. HTML RENDER
             html_kiri_str = "".join([
                 f'<div class="rpg-item-card">'
                 f'<div><div class="item-title">{x["icon"]} {x["p_name"]} <span class="{x["badge_cls"]}">{x["badge_txt"]}</span></div>'
@@ -3067,7 +3072,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 for x in items_kiri_list
             ]) if items_kiri_list else '<div style="color:#78350f; font-size:12px; text-align:center; margin-top:20px;"><i>Belum ada data Target PPS aktif.</i></div>'
                     
-            # --- HALAMAN KANAN (STRUKTUR STRUKTUR DIBUAT 100% SAMA SEPERTI KIRI) ---
             html_kanan_str = "".join([
                 f'<div class="rpg-item-card">'
                 f'<div>'
@@ -3081,11 +3085,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 for y in items_kanan_list
             ]) if items_kanan_list else '<div style="color:#78350f; font-size:12px; text-align:center; margin-top:20px;"><i>Belum ada data Posisi Pahlawan.</i></div>'
 
-            # --- STRUKTUR BUKU UTAMA (TANPA CONTAINER TAMBAHAN DI KANAN) ---
             html_open_tugas = (
                 f'<div class="rpg-open-book-container">'
                 
-                # Halaman Kiri
                 f'<div class="rpg-book-page rpg-book-page-left">'
                 f'<h3 class="open-page-title">🛡️ TARGET PPS</h3>'
                 f'<p class="open-page-sub">Rincian Target Harian ({active_period_pps_name})</p>'
@@ -3094,7 +3096,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 f'<div class="open-page-footer">Halaman Kiri • Target PPS</div>'
                 f'</div>'
                 
-                # Halaman Kanan (Menggunakan struktur murni sama persis dengan kiri)
                 f'<div class="rpg-book-page rpg-book-page-right">'
                 f'<h3 class="open-page-title">📍 POSISI PAHLAWAN</h3>'
                 f'<p class="open-page-sub">Status Performa Guild Bulanan</p>'
@@ -3105,7 +3106,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 
                 f'</div>'
             )
-
+            
         elif page_num == 3:
             # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
             rpg_badge_style = """
