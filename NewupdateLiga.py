@@ -3227,106 +3227,183 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 f'</div>'
             )
 
+        #============================================================= batas =======================================#
         elif page_num == 3:
-            # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
+            # 1. Ambil Username Aktif
+            current_user_name = st.session_state.get("user_name", st.session_state.get("username", ""))
+
+            # 2. STYLING CSS RPG: PODIUM TOP 3, ZONA MERAH, & RESPONSIVE MOBILE FIX
             rpg_badge_style = """
             <style>
+            /* Container Utama Buku (Responsif untuk HP/Desktop) */
             .rpg-open-book-container {
                 display: flex;
+                flex-direction: row;
                 gap: 20px;
                 width: 100%;
+                box-sizing: border-box;
             }
+
+            @media (max-width: 768px) {
+                .rpg-open-book-container {
+                    flex-direction: column !important; /* Di HP stacked ke bawah supaya lega */
+                    gap: 15px;
+                }
+            }
+
             .rpg-book-page {
                 flex: 1;
                 background: #fdf6e2;
                 border: 3px solid #d4af37;
                 border-radius: 8px;
-                padding: 20px;
+                padding: 16px;
                 box-sizing: border-box;
                 display: flex;
                 flex-direction: column;
                 min-height: 480px;
                 position: relative;
-                overflow: hidden;
+                overflow: hidden; /* Mencegah elemen keluar halaman */
             }
+
+            /* Watermark Naga Pudar */
             .rpg-book-page::before {
                 content: "";
                 position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
+                top: 0; left: 0; width: 100%; height: 100%;
                 background-image: url("https://img.pikbest.com/png-images/20250303/fierce-dragon-silhouette--e2-80-93-stylized-black-and-white-mythical-beast-illustration_11570728.png!bw800");
                 background-repeat: no-repeat;
                 background-position: center;
-                background-size: 80% auto;
-                opacity: 0.14;
+                background-size: 85% auto;
+                opacity: 0.08 !important;
                 pointer-events: none;
+                z-index: 0;
             }
-            .rpg-badge-1 {
-                background: linear-gradient(135deg, #fef08a 0%, #eab308 100%);
-                border: 2px solid #713f12;
-                box-shadow: 0 0 10px rgba(234, 179, 8, 0.6);
-                color: #1c1402 !important;
-                font-weight: bold;
+
+            /* --- LAYOUT PODIUM TOP 3 --- */
+            .podium-wrapper {
+                display: flex;
+                align-items: flex-end;
+                justify-content: center;
+                gap: 8px;
+                margin-top: auto;
+                margin-bottom: 10px;
+                position: relative;
+                z-index: 2;
+                width: 100%;
             }
-            .rpg-badge-2 {
-                background: linear-gradient(135deg, #f1f5f9 0%, #94a3b8 100%);
+
+            .podium-slot {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                min-width: 0; /* Mencegah overflow flex item */
+            }
+
+            .podium-card {
+                width: 100%;
+                border-radius: 8px 8px 0 0;
+                padding: 8px 4px;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+                box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+                position: relative;
+            }
+
+            .podium-1 {
+                height: 170px;
+                background: linear-gradient(180deg, #fef08a 0%, #eab308 100%);
+                border: 2px solid #b45309;
+                border-bottom: none;
+            }
+            .podium-2 {
+                height: 135px;
+                background: linear-gradient(180deg, #f1f5f9 0%, #94a3b8 100%);
                 border: 2px solid #475569;
-                box-shadow: 0 0 8px rgba(148, 163, 184, 0.5);
-                color: #090d16 !important;
-                font-weight: bold;
+                border-bottom: none;
             }
-            .rpg-badge-3 {
-                background: linear-gradient(135deg, #fed7aa 0%, #c2410c 100%);
-                border: 2px solid #7c2d12;
-                box-shadow: 0 0 8px rgba(249, 115, 22, 0.5);
-                color: #260a02 !important;
-                font-weight: bold;
+            .podium-3 {
+                height: 110px;
+                background: linear-gradient(180deg, #fed7aa 0%, #c2410c 100%);
+                border: 2px solid #9a3412;
+                border-bottom: none;
             }
+
+            .podium-name {
+                font-size: 11px;
+                font-weight: 800;
+                color: #1e293b;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis; /* Titik-titik (...) jika nama kepanjangan */
+                max-width: 95%;
+                margin-top: 4px;
+            }
+
+            .podium-score {
+                font-size: 11px;
+                font-weight: 900;
+                color: #431407;
+                margin-top: 2px;
+            }
+
+            /* --- STYLING LIST KANAN & ZONA MERAH --- */
+            .rpg-list-container {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+                position: relative;
+                z-index: 2;
+                overflow-y: auto; /* Agar tidak terpotong di Android/iOS */
+                max-height: 360px;
+                padding-right: 2px;
+            }
+
             .rpg-normal-row {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                padding: 8px 12px;
-                margin-bottom: 6px;
-                border: 1px solid #94a3b8;
+                padding: 8px 10px;
+                border: 1.5px solid #cbd5e1;
                 background: #ffffff;
                 border-radius: 6px;
                 color: #020617 !important;
-                font-size: 13px;
-                font-weight: 600;
-            }
-            .open-page-title {
-                color: #3b1104 !important;
-                text-align: center;
-                font-weight: bold;
-                margin-bottom: 4px;
-                z-index: 1;
-            }
-            .open-page-sub {
-                color: #5c2406 !important;
-                text-align: center;
                 font-size: 12px;
-                margin-bottom: 12px;
-                z-index: 1;
                 font-weight: 600;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+                flex-shrink: 0;
             }
-            .open-book-divider {
-                border-bottom: 2px solid #d4af37;
-                margin-bottom: 15px;
-                z-index: 1;
+
+            /* ZONA MERAH (3 TERBAWAH) */
+            .danger-zone-row {
+                background: #fff5f5 !important;
+                border: 1.5px solid #fca5a5 !important;
+                color: #991b1b !important;
             }
-            .open-page-footer {
-                margin-top: auto;
-                text-align: right;
-                font-size: 10px;
-                color: #5c2406 !important;
-                font-family: monospace;
-                padding-top: 10px;
-                font-weight: bold;
-                z-index: 1;
+            .danger-zone-badge {
+                background: #fee2e2;
+                color: #dc2626;
+                font-size: 9px;
+                padding: 2px 5px;
+                border-radius: 4px;
+                font-weight: 800;
+                border: 1px solid #f87171;
             }
+
+            /* HIGHLIGHT USER AKTIF */
+            .rpg-user-me {
+                outline: 2.5px solid #2563eb !important;
+                outline-offset: -1px;
+            }
+
+            .open-page-title { color: #3b1104 !important; text-align: center; font-weight: bold; margin-bottom: 2px; position: relative; z-index: 2; font-size: 16px; }
+            .open-page-sub { color: #5c2406 !important; text-align: center; font-size: 11px; margin-bottom: 8px; position: relative; z-index: 2; font-weight: 600; }
+            .open-book-divider { border-bottom: 2px solid #d4af37; margin-bottom: 10px; position: relative; z-index: 2; }
+            .open-page-footer { margin-top: auto; text-align: right; font-size: 10px; color: #5c2406 !important; font-family: monospace; padding-top: 6px; font-weight: bold; position: relative; z-index: 2; }
             </style>
             """
             st.markdown(rpg_badge_style, unsafe_allow_html=True)
@@ -3334,7 +3411,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             if 'active_period' not in locals() and 'active_period' not in globals():
                 active_period = st.session_state.get("active_period", "Periode Aktif")
 
-            # --- LOGIKA DATA HALAMAN 3 ---
+            # 3. LOGIKA DATA PERINGKAT
             sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
             sales_item_df = st.session_state.get("sales_item_df", pd.DataFrame())
             periods_df = st.session_state.get("periods_df", pd.DataFrame())
@@ -3348,7 +3425,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             qty_dict = {}
             if not sales_person_df.empty and "person_name" in sales_person_df.columns:
                 sp_period = sales_person_df.copy()
-                if target_period_id and "period_id" in sp_period.columns:
+                if 'target_period_id' in locals() and target_period_id and "period_id" in sp_period.columns:
                     sp_period = sp_period[sp_period["period_id"].astype(str).str.strip() == str(target_period_id).strip()]
                 
                 if not sp_period.empty:
@@ -3358,49 +3435,15 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     for _, r in grouped_qty.iterrows():
                         qty_dict[r["person_name"]] = int(r["actual_qty"])
 
-            current_year = today.year
-            current_month = today.month
-            month_period_ids = set()
-            
-            if not periods_df.empty and "period_id" in periods_df.columns:
-                for _, r in periods_df.iterrows():
-                    try:
-                        s_date = pd.to_datetime(r.get("start_date", "")).date()
-                        if s_date.year == current_year and s_date.month == current_month:
-                            month_period_ids.add(str(r.get("period_id", "")).strip())
-                    except Exception:
-                        pass
-                
-                if not month_period_ids:
-                    for _, r in periods_df.iterrows():
-                        pid = str(r.get("period_id", "")).strip()
-                        pname = str(r.get("period_name", "")).lower()
-                        if "s0" in pid.lower() or "sep" in pname or "september" in pname:
-                            month_period_ids.add(pid)
-
             achiv_dict = {}
             if not sales_person_df.empty and "person_name" in sales_person_df.columns:
                 sp_month = sales_person_df.copy()
-                
-                if "period_id" in sp_month.columns and month_period_ids:
-                    sp_month["clean_pid"] = sp_month["period_id"].astype(str).str.strip()
-                    sp_month = sp_month[sp_month["clean_pid"].isin(month_period_ids)]
-                
                 if not sp_month.empty:
                     sp_month["person_name"] = sp_month["person_name"].astype(str).str.strip()
                     sp_month["actual_qty"] = pd.to_numeric(sp_month.get("actual_qty", 0), errors="coerce").fillna(0)
                     
-                    sp_item_key = None
-                    for k in ["item_id", "item_code", "kode_item", "item_name", "nama_item", "sku"]:
-                        if k in sp_month.columns:
-                            sp_item_key = k
-                            break
-                    
-                    if sp_item_key:
-                        sp_month["clean_item"] = sp_month[sp_item_key].astype(str).str.strip()
-                    else:
-                        sp_month["clean_item"] = "GENERAL"
-
+                    sp_item_key = next((k for k in ["item_id", "item_code", "kode_item", "item_name", "nama_item", "sku"] if k in sp_month.columns), "GENERAL")
+                    sp_month["clean_item"] = sp_month[sp_item_key].astype(str).str.strip() if sp_item_key != "GENERAL" else "GENERAL"
                     sp_month["clean_pid"] = sp_month["period_id"].astype(str).str.strip() if "period_id" in sp_month.columns else ""
 
                     aggregated_sales = sp_month.groupby(["person_name", "clean_pid", "clean_item"])["actual_qty"].sum().reset_index()
@@ -3408,17 +3451,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     target_map = {}
                     if not sales_item_df.empty:
                         item_df = sales_item_df.copy()
-                        t_col = None
-                        for col in item_df.columns:
-                            if "target_kasir" in col.lower() or ("target" in col.lower() and "kasir" in col.lower()):
-                                t_col = col
-                                break
-                        
-                        it_key = None
-                        for k in ["item_id", "item_code", "kode_item", "item_name", "nama_item", "sku"]:
-                            if k in item_df.columns:
-                                it_key = k
-                                break
+                        t_col = next((col for col in item_df.columns if "target_kasir" in col.lower() or ("target" in col.lower() and "kasir" in col.lower())), None)
+                        it_key = next((k for k in ["item_id", "item_code", "kode_item", "item_name", "nama_item", "sku"] if k in item_df.columns), None)
                         
                         if t_col:
                             for _, r in item_df.iterrows():
@@ -3429,79 +3463,103 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                                     target_map[(pid, ival)] = tval
 
                     for _, row in aggregated_sales.iterrows():
-                        p_name = row["person_name"]
-                        pid = row["clean_pid"]
-                        ival = row["clean_item"]
-                        total_act = row["actual_qty"]
-                        
+                        p_name, pid, ival, total_act = row["person_name"], row["clean_pid"], row["clean_item"], row["actual_qty"]
                         target_val = target_map.get((pid, ival), 0)
-                        if pd.isna(target_val):
-                            target_val = 0
-
                         if total_act >= target_val and target_val > 0:
                             achiv_dict[p_name] = achiv_dict.get(p_name, 0) + 1
 
             ranking_list = []
             all_names = set(master_personil) | set(qty_dict.keys()) | set(achiv_dict.keys())
             for name in all_names:
-                if not name:
-                    continue
-                q = qty_dict.get(name, 0)
-                a = achiv_dict.get(name, 0)
-                ranking_list.append((name, q, a))
+                if not name: continue
+                ranking_list.append((name, qty_dict.get(name, 0), achiv_dict.get(name, 0)))
 
             ranking_list = sorted(ranking_list, key=lambda x: x[1], reverse=True)
 
-            formatted_ranking = []
-            for name, qty, achiv_count in ranking_list:
-                score_label = f"{qty} Pcs <span style='font-size:10px; color:#065f46; font-weight:bold;'>(✨ {achiv_count} Achiv)</span>"
-                formatted_ranking.append((name, score_label))
+            if not ranking_list:
+                ranking_list = [("Ksatriya Arthur", 98, 3), ("Lancelot", 92, 2), ("Galahad", 85, 1), ("Parsifal", 78, 0), ("Gawain", 70, 0), ("Tristan", 65, 0), ("Bors", 60, 0), ("Kay", 55, 0), ("Bedivere", 50, 0)]
 
-            if not formatted_ranking:
-                dummy_9_personil = [("Agent 1", "0 Pcs"), ("Agent 2", "0 Pcs"), ("Agent 3", "0 Pcs"), ("Agent 4", "0 Pcs"), ("Agent 5", "0 Pcs"), ("Agent 6", "0 Pcs"), ("Agent 7", "0 Pcs"), ("Agent 8", "0 Pcs"), ("Agent 9", "0 Pcs")]
-                formatted_ranking = [(n, s + " <span style='font-size:10px; color:#b45309; font-weight:bold;'>(✨ 0 Achiv)</span>") for n, s in dummy_9_personil]
+            # 4. MEMBUAT KOMPONEN PODIUM TOP 3 (KIRI)
+            def make_podium_item(rank_idx, class_name, crown_icon):
+                if len(ranking_list) > rank_idx:
+                    n, q, a = ranking_list[rank_idx]
+                    is_me = (n.lower() == str(current_user_name).lower())
+                    me_cls = "rpg-user-me" if is_me else ""
+                    you_badge = '<span style="background:#2563eb; color:white; font-size:8px; padding:1px 4px; border-radius:4px;">KAMU</span>' if is_me else ""
+                    return f'''
+                    <div class="podium-slot">
+                        <div style="font-size:20px; margin-bottom:-5px; z-index:3;">{crown_icon}</div>
+                        <div class="podium-card {class_name} {me_cls}">
+                            <div style="font-size:14px; font-weight:900;">#{rank_idx+1}</div>
+                            <div class="podium-name" title="{n}">{n}</div>
+                            {you_badge}
+                            <div class="podium-score">{q} <span style="font-size:9px; font-weight:normal;">Pcs</span></div>
+                            <div style="font-size:9px; color:#065f46; font-weight:bold; margin-top:2px;">✨ {a} Achiv</div>
+                        </div>
+                    </div>
+                    '''
+                return ""
 
-            # --- PERULANGAN HTML AMAN TANPA FUNGSI ---
-            top_3_html = ""
-            for i, (n, s) in enumerate(formatted_ranking[:3]):
-                rank = i + 1
-                if rank == 1:
-                    b_class, icon = "rpg-badge-1", "👑 "
-                elif rank == 2:
-                    b_class, icon = "rpg-badge-2", "🥈 "
-                else:
-                    b_class, icon = "rpg-badge-3", "🥉 "
-                
-                top_3_html += f'<div class="{b_class}" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; margin-bottom: 8px; border-radius: 6px; position: relative; z-index: 1;"><div style="display: flex; align-items: center; gap: 6px; font-size: 13px;"><span>{icon}<strong>#{rank}</strong></span><span>{n}</span></div><div style="font-size: 13px;">{s}</div></div>'
+            podium_html = f'''
+            <div class="podium-wrapper">
+                {make_podium_item(1, "podium-2", "🥈")}
+                {make_podium_item(0, "podium-1", "👑")}
+                {make_podium_item(2, "podium-3", "🥉")}
+            </div>
+            '''
 
-            rest_html = ""
-            for i, (n, s) in enumerate(formatted_ranking[3:9]):
+            # 5. MEMBUAT LIST PERINGKAT 4-9 (KANAN) + ZONA MERAH (3 TERBAWAH)
+            rest_html = '<div class="rpg-list-container">'
+            total_personil = len(ranking_list)
+            danger_cutoff = max(4, total_personil - 3) # Peringkat terbawah dipeta ke Zona Merah
+
+            for i, (n, q, a) in enumerate(ranking_list[3:9]):
                 rank = i + 4
-                rest_html += f'<div class="rpg-normal-row" style="position: relative; z-index: 1;"><div style="display: flex; align-items: center; gap: 6px;"><span>🛡️</span><span><strong>#{rank}</strong> | {n}</span></div><div>{s}</div></div>'
+                is_me = (n.lower() == str(current_user_name).lower())
+                me_class = "rpg-user-me" if is_me else ""
+                you_badge = '<span style="background: #2563eb; color: white; font-size: 8px; padding: 1px 4px; border-radius: 4px; margin-left: 4px;">KAMU</span>' if is_me else ""
+                
+                # Cek apakah masuk 3 terbawah (Zona Merah)
+                is_danger = rank >= danger_cutoff
+                row_style = "danger-zone-row" if is_danger else ""
+                danger_tag = '<span class="danger-zone-badge">⚠️ ZONA MERAH</span>' if is_danger else ""
+                rank_icon = "🔻" if is_danger else "🛡️"
 
-            if not rest_html:
-                rest_html = "<div style='color:#78350f; font-size:12px; text-align:center; margin-top:20px; position: relative; z-index: 1;'><i>Tidak ada personil lanjutan.</i></div>"
+                score_label = f"{q} Pcs <span style='font-size:10px; color:#065f46; font-weight:bold;'>(✨ {a} Achiv)</span>"
 
-            # --- RENDER STRUKTUR UTAMA ---
+                rest_html += f'''
+                <div class="rpg-normal-row {row_style} {me_class}">
+                    <div style="display: flex; align-items: center; gap: 4px; overflow: hidden; white-space: nowrap;">
+                        <span>{rank_icon}</span>
+                        <span style="font-weight:bold;">#{rank}</span>
+                        <span style="overflow: hidden; text-overflow: ellipsis;" title="{n}">{n}</span>
+                        {you_badge}
+                        {danger_tag}
+                    </div>
+                    <div style="flex-shrink: 0; margin-left: 6px;">{score_label}</div>
+                </div>
+                '''
+            rest_html += '</div>'
+
+            # 6. RENDER KEDUA HALAMAN BUKU
             html_open_tugas = (
-                '<div class="rpg-open-book-container">'
-                '<div class="rpg-book-page">'
-                '<h3 class="open-page-title">⚔️ PSM TOP (1-3)</h3>'
+                f'<div class="rpg-open-book-container">'
+                f'<div class="rpg-book-page">'
+                f'<h3 class="open-page-title">⚔️ PSM TOP (1-3)</h3>'
                 f'<p class="open-page-sub">Periode: {active_period}</p>'
-                '<div class="open-book-divider"></div>'
-                f'{top_3_html}'
-                '<div class="open-page-footer">Halaman Kiri • PSM 1-3</div>'
-                '</div>'
-                '<div class="rpg-book-page">'
-                '<h3 class="open-page-title">⚔️ PSM (4-9)</h3>'
-                '<p class="open-page-sub">Kelanjutan Peringkat Periode</p>'
-                '<div class="open-book-divider"></div>'
+                f'<div class="open-book-divider"></div>'
+                f'{podium_html}'
+                f'<div class="open-page-footer">Halaman Kiri • PSM 1-3</div>'
+                f'</div>'
+                f'<div class="rpg-book-page">'
+                f'<h3 class="open-page-title">⚔️ PSM (4-9)</h3>'
+                f'<p class="open-page-sub">Kelanjutan Peringkat Periode</p>'
+                f'<div class="open-book-divider"></div>'
                 f'{rest_html}'
-                '<div class="open-page-footer">Halaman Kanan • PSM 4-9</div>'
-                '</div>'
-                '</div>'
+                f'<div class="open-page-footer">Halaman Kanan • PSM 4-9</div>'
+                f'</div>'
+                f'</div>'
             )
-            
         
         #=============================================batas biar gak psimh===================================================#
         
