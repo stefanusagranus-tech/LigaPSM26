@@ -3506,13 +3506,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         #=============================================batas biar gak psimh===================================================#
         
         elif page_num == 4:
-            # 1. Definisikan format_row dengan Z-Index Tinggi & Background Solid Putih
+            # 1. Definisikan format_row
             def format_row(rank, nama, skor):
                 badge = "👑" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else f"#{rank}"
                 return (
-                    f'<div style="position: relative !important; z-index: 10 !important; display: flex; justify-content: space-between; align-items: center; background-color: #ffffff !important; border: 1.5px solid #d97706 !important; padding: 8px 12px; margin-bottom: 8px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">'
-                    f'<div style="font-size: 12px; font-weight: 900; color: #3b1a0e !important; opacity: 1 !important;"><span style="margin-right: 8px;">{badge}</span>{nama}</div>'
-                    f'<div style="font-size: 12px; font-weight: 900; color: #b45309 !important; opacity: 1 !important;">{skor} PTS</div>'
+                    f'<div class="rpg-row-card">'
+                    f'<div class="rpg-row-name"><span>{badge}</span>{nama}</div>'
+                    f'<div class="rpg-row-score">{skor} PTS</div>'
                     f'</div>'
                 )
 
@@ -3534,30 +3534,90 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             rows_pps_13 = "".join([format_row(i + 1, n, s) for i, (n, s) in enumerate(dummy_9_personil[:3])])
             rows_pps_49 = "".join([format_row(i + 4, n, s) for i, (n, s) in enumerate(dummy_9_personil[3:])])
 
-            # 4. Perakitan HTML Halaman 4 dengan CSS Override Layer Naga
+            # 4. CSS OVERRIDE GLOBAL CONTAINER & NAGA WATERMARK
+            css_force_visible = """
+            <style>
+                /* Netralkan opacity pada wrapper utama buku */
+                .rpg-open-book-container, 
+                .rpg-book-page, 
+                .rpg-book-page-left, 
+                .rpg-book-page-right {
+                    opacity: 1 !important;
+                    filter: none !important;
+                }
+
+                /* Turunkan layer watermark naga ke paling belakang */
+                .rpg-book-page::before,
+                .rpg-book-page::after,
+                .rpg-book-page-left::before,
+                .rpg-book-page-right::before {
+                    z-index: 0 !important;
+                    opacity: 0.08 !important; /* Naga dibikin sangat tipis di background */
+                    pointer-events: none !important;
+                }
+
+                /* STYLING KARTU BARIS TERANG & TAJAM */
+                .rpg-row-card {
+                    position: relative !important;
+                    z-index: 10 !important;
+                    display: flex !important;
+                    justify-content: space-between !important;
+                    align-items: center !important;
+                    background-color: #ffffff !important;
+                    border: 1.5px solid #d97706 !important;
+                    padding: 8px 12px !important;
+                    margin-bottom: 8px !important;
+                    border-radius: 6px !important;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.08) !important;
+                    opacity: 1 !important;
+                }
+
+                .rpg-row-name {
+                    font-size: 12px !important;
+                    font-weight: 800 !important;
+                    color: #291003 !important; /* Cokelat Sangat Pekat */
+                    opacity: 1 !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    gap: 8px !important;
+                }
+
+                .rpg-row-score {
+                    font-size: 12px !important;
+                    font-weight: 900 !important;
+                    color: #b45309 !important; /* Warna PTS Emas/Cokelat Terang */
+                    opacity: 1 !important;
+                }
+
+                .open-page-title, .open-page-sub, .open-page-footer {
+                    position: relative !important;
+                    z-index: 10 !important;
+                    opacity: 1 !important;
+                    color: #451a03 !important;
+                }
+            </style>
+            """
+
+            # 5. Perakitan HTML
             html_open_tugas = (
-                f'<style>'
-                f'.rpg-book-page-left *, .rpg-book-page-right * {{ opacity: 1 !important; visibility: visible !important; }}'
-                f'</style>'
+                f'{css_force_visible}'
                 f'<div class="rpg-open-book-container">'
-                f'<div class="rpg-book-page rpg-book-page-left" style="position: relative; z-index: 1;">'
-                f'<h3 class="open-page-title" style="position: relative; z-index: 10;">🛡️ PPS (1-3)</h3>'
-                f'<p class="open-page-sub" style="position: relative; z-index: 10;">Top 3 Pahlawan PPS</p>'
-                f'<div class="open-book-divider" style="position: relative; z-index: 10;"></div>'
+                f'<div class="rpg-book-page rpg-book-page-left">'
+                f'<h3 class="open-page-title">🛡️ PPS (1-3)</h3>'
+                f'<p class="open-page-sub">Top 3 Pahlawan PPS</p>'
+                f'<div class="open-book-divider"></div>'
                 f'{rows_pps_13}'
-                f'<div class="open-page-footer" style="position: relative; z-index: 10;">Halaman Kiri • PPS 1-3</div>'
+                f'<div class="open-page-footer">Halaman Kiri • PPS 1-3</div>'
                 f'</div>'
-                f'<div class="rpg-book-page rpg-book-page-right" style="position: relative; z-index: 1;">'
-                f'<h3 class="open-page-title" style="position: relative; z-index: 10;">🛡️ PPS (4-9)</h3>'
-                f'<p class="open-page-sub" style="position: relative; z-index: 10;">Daftar Lanjutan PPS</p>'
-                f'<div class="open-book-divider" style="position: relative; z-index: 10;"></div>'
+                f'<div class="rpg-book-page rpg-book-page-right">'
+                f'<h3 class="open-page-title">🛡️ PPS (4-9)</h3>'
+                f'<p class="open-page-sub">Daftar Lanjutan PPS</p>'
+                f'<div class="open-book-divider"></div>'
                 f'{rows_pps_49}'
-                f'<div class="open-page-footer" style="position: relative; z-index: 10;">Halaman Kanan • PPS 4-9</div>'
+                f'<div class="open-page-footer">Halaman Kanan • PPS 4-9</div>'
                 f'</div>'
                 f'</div>'
             )
-
-            st.markdown(html_open_tugas, unsafe_allow_html=True)
 
         #================================================batas=====================================================#
 
