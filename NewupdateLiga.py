@@ -2884,7 +2884,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     except Exception:
                         time_factor = 50.0
 
-            # 4. OLAH DATA HALAMAN KIRI (TARGET PPS HARIAN) - AMAN UNTUK NIK USER
+            # 4. OLAH DATA HALAMAN KIRI (TARGET PPS HARIAN)
             items_kiri_list = []
             icon_list = ["🛡️", "⚡", "🗡️", "🏹", "📜"]
             
@@ -2944,8 +2944,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 })
 
             # 5. OLAH DATA HALAMAN KANAN (GUILD WAR SYSTEM)
-    
-            # A. Filter period_id September dari sheet PERIODE
             sept_period_ids = []
             if not periods_df.empty:
                 p_df = periods_df.copy()
@@ -2958,7 +2956,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     if not sept_periods.empty and "period_id" in sept_periods.columns:
                         sept_period_ids = sept_periods["period_id"].astype(str).str.strip().tolist()
 
-            # B. Target & Actual PSM (Bulan September)
             psm_target, psm_actual, psm_mvp = 0.0, 0.0, "-"
             if not sales_item_df.empty and "target_qty" in sales_item_df.columns:
                 f_item_sept = sales_item_df[sales_item_df["period_id"].astype(str).str.strip().isin(sept_period_ids)] if sept_period_ids and "period_id" in sales_item_df.columns else sales_item_df
@@ -2973,7 +2970,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     if not grp_psm.empty and grp_psm.max() > 0:
                         psm_mvp = str(grp_psm.idxmax()).title()
 
-            # C. Definisi Program dengan Bobot Poin
             programs = [
                 {"name": "PSM Assault", "key": "psm", "weight": 20, "target": psm_target, "actual": psm_actual, "mvp": psm_mvp},
                 {"name": "PWP Siege", "key": "pwp", "weight": 25, "col_act": "qty_pwp"},
@@ -2983,7 +2979,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             items_kanan_list = []
             total_blue_points = 0.0
-            total_red_points = 75.0  # 20 + 25 + 30
+            total_red_points = 75.0
 
             for p in programs:
                 p_key = p["key"]
@@ -2994,7 +2990,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     p_actual = p["actual"]
                     mvp_name = p["mvp"]
                 elif p_key == "suegeer":
-                    # Perhitungan Baru Suegeer: Redeem vs Syarat (Redeem / Syarat * 100%)
                     s_col = "syarat_sueger" if "syarat_sueger" in sales_pps_df.columns else "syarat_suegeer"
                     r_col = "redeem_sueger" if "redeem_sueger" in sales_pps_df.columns else "redeem_suegeer"
                     
@@ -3028,15 +3023,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         if not grp.empty and grp.max() > 0:
                             mvp_name = str(grp.idxmax()).title()
 
-                # Calculation Achiv % & Points
                 p_achiv = (p_actual / p_target * 100) if p_target > 0 else 0
                 achiv_ratio = (p_actual / p_target) if p_target > 0 else 0
                 
-                # Akumulasi poin header (Hanya PSM, PWP, SG)
                 if weight > 0:
                     total_blue_points += (achiv_ratio * weight)
 
-                # Bar Visual Calculation (Gambar 2: segmented / ratio bar)
                 blue_flex = min(100.0, p_achiv)
                 red_flex = max(0.0, 100.0 - blue_flex)
 
@@ -3047,7 +3039,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     "is_suegeer": (p_key == "suegeer")
                 })
 
-            # Header Guild War Bar Ratio (Gambar 1)
             total_blue_pts_int = int(round(total_blue_points))
             total_red_pts_int = int(total_red_points)
             
@@ -3058,11 +3049,19 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             match_status = "VICTORY" if total_blue_points >= total_red_points else "IN BATTLE"
             status_color = "#eab308" if match_status == "VICTORY" else "#ef4444"
 
-            # 6. HTML RENDER GUILD WAR
+            # 6. RENDER HTML DUA HALAMAN
+            html_kiri_str = "".join([
+                f'<div class="rpg-item-card">'
+                f'<div><div class="item-title">{x["icon"]} {x["p_name"]} <span class="{x["badge_cls"]}">{x["badge_txt"]}</span></div>'
+                f'<div class="item-stats">{x["info_syarat"]}</div></div>'
+                f'<div style="text-align: right;"><div style="font-size: 14px; font-weight: bold; color: {x["achiv_color"]};">{x["achiv"]:.1f}%</div></div>'
+                f'</div>'
+                for x in items_kiri_list
+            ]) if items_kiri_list else '<div style="color:#78350f; font-size:12px; text-align:center; margin-top:20px;"><i>Belum ada data Target PPS aktif.</i></div>'
+
             html_kanan_items = ""
             for item in items_kanan_list:
                 label_stat = f"Redeem: {item['p_actual']} / Syarat: {item['p_target']}" if item["is_suegeer"] else f"Hit: {item['p_actual']} / Target: {item['p_target']}"
-                
                 html_kanan_items += f'''
                 <div class="gw-card">
                     <div class="gw-card-header">
@@ -3082,52 +3081,38 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             <style>
                 .gw-header-box {{
                     background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-                    border: 2px solid #334155;
-                    border-radius: 8px;
-                    padding: 12px;
-                    margin-bottom: 12px;
-                    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5);
-                    text-align: center;
+                    border: 2px solid #334155; border-radius: 8px; padding: 10px; margin-bottom: 10px; text-align: center;
                 }}
-                .gw-match-title {{
-                    display: flex; justify-content: space-between; align-items: center;
-                    font-family: 'monospace', sans-serif; font-weight: bold; color: #f8fafc;
-                }}
-                .gw-team-blue {{ color: #38bdf8; font-size: 14px; text-shadow: 0 0 5px #0284c7; }}
-                .gw-team-red {{ color: #f87171; font-size: 14px; text-shadow: 0 0 5px #dc2626; }}
-                .gw-vs {{ font-size: 16px; color: #94a3b8; margin: 0 8px; }}
-                .gw-status-text {{ font-size: 11px; font-weight: 900; color: {status_color}; letter-spacing: 2px; margin: 4px 0; }}
-                
+                .gw-match-title {{ display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: #f8fafc; }}
+                .gw-team-blue {{ color: #38bdf8; font-size: 13px; }}
+                .gw-team-red {{ color: #f87171; font-size: 13px; }}
+                .gw-vs {{ font-size: 14px; color: #94a3b8; margin: 0 6px; }}
+                .gw-status-text {{ font-size: 11px; font-weight: 900; color: {status_color}; letter-spacing: 2px; margin: 2px 0; }}
                 .gw-main-bar {{
-                    height: 18px; background: #0f172a; border-radius: 4px; border: 1px solid #475569;
+                    height: 16px; background: #0f172a; border-radius: 4px; border: 1px solid #475569;
                     display: flex; overflow: hidden; position: relative; margin-top: 4px;
                 }}
-                .gw-main-blue {{ background: linear-gradient(90deg, #0284c7, #38bdf8); height: 100%; transition: width 0.5s; }}
-                .gw-main-red {{ background: linear-gradient(90deg, #dc2626, #ef4444); height: 100%; transition: width 0.5s; }}
+                .gw-main-blue {{ background: linear-gradient(90deg, #0284c7, #38bdf8); height: 100%; }}
+                .gw-main-red {{ background: linear-gradient(90deg, #dc2626, #ef4444); height: 100%; }}
                 .gw-main-bar-text {{
-                    position: absolute; width: 100%; text-align: center; line-height: 18px;
-                    font-size: 11px; font-weight: bold; color: #ffffff; text-shadow: 1px 1px 2px #000;
+                    position: absolute; width: 100%; text-align: center; line-height: 16px;
+                    font-size: 10px; font-weight: bold; color: #ffffff; text-shadow: 1px 1px 2px #000;
                 }}
-
-                .gw-card {{
-                    background: #1e293b; border: 1px solid #334155; border-radius: 6px;
-                    padding: 8px 10px; margin-bottom: 8px;
-                }}
-                .gw-card-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }}
-                .gw-card-title {{ font-size: 12px; font-weight: bold; color: #f1f5f9; }}
-                .gw-mvp {{ font-size: 10px; background: #374151; color: #fde047; padding: 2px 6px; border-radius: 4px; font-weight: bold; }}
-                
+                .gw-card {{ background: #1e293b; border: 1px solid #334155; border-radius: 6px; padding: 6px 8px; margin-bottom: 6px; }}
+                .gw-card-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }}
+                .gw-card-title {{ font-size: 11px; font-weight: bold; color: #f1f5f9; }}
+                .gw-mvp {{ font-size: 9px; background: #374151; color: #fde047; padding: 1px 5px; border-radius: 3px; font-weight: bold; }}
                 .gw-bar-container {{
-                    height: 14px; background: #0f172a; border-radius: 3px; border: 1px solid #475569;
+                    height: 12px; background: #0f172a; border-radius: 3px; border: 1px solid #475569;
                     display: flex; overflow: hidden; position: relative;
                 }}
                 .gw-bar-blue {{ background: linear-gradient(90deg, #1d4ed8, #3b82f6); height: 100%; }}
                 .gw-bar-red {{ background: linear-gradient(90deg, #b91c1c, #ef4444); height: 100%; }}
                 .gw-bar-text {{
-                    position: absolute; width: 100%; text-align: center; line-height: 14px;
-                    font-size: 10px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000;
+                    position: absolute; width: 100%; text-align: center; line-height: 12px;
+                    font-size: 9px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000;
                 }}
-                .gw-card-footer {{ font-size: 10px; color: #94a3b8; margin-top: 3px; }}
+                .gw-card-footer {{ font-size: 9px; color: #94a3b8; margin-top: 2px; }}
             </style>
 
             <div class="gw-header-box">
@@ -3147,6 +3132,25 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             {html_kanan_items}
             '''
 
+            # GAMBUNGKAN DUA HALAMAN KE VARIABEL html_open_tugas
+            html_open_tugas = (
+                f'<div class="rpg-open-book-container">'
+                f'<div class="rpg-book-page rpg-book-page-left">'
+                f'<h3 class="open-page-title">🛡️ TARGET PPS</h3>'
+                f'<p class="open-page-sub">Rincian Target Harian ({active_period_pps_name})</p>'
+                f'<div class="open-book-divider"></div>'
+                f'{html_kiri_str}'
+                f'<div class="open-page-footer">Halaman Kiri • Target PPS</div>'
+                f'</div>'
+                f'<div class="rpg-book-page rpg-book-page-right">'
+                f'<h3 class="open-page-title">⚔️ GUILD WAR ARENA</h3>'
+                f'<p class="open-page-sub">Pertempuran Performa Bulanan</p>'
+                f'<div class="open-book-divider"></div>'
+                f'{html_kanan_str}'
+                f'<div class="open-page-footer">Halaman Kanan • Guild War</div>'
+                f'</div>'
+                f'</div>'
+            )
         elif page_num == 3:
             # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
             rpg_badge_style = """
