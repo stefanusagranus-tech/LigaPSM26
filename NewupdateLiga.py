@@ -3048,57 +3048,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             
             match_status = "VICTORY" if total_blue_points >= total_red_points else "IN BATTLE"
             status_color = "#eab308" if match_status == "VICTORY" else "#ef4444"
-
-            # 6. RENDER HTML DUA HALAMAN (FIXED CSS & STRING PARSING)
-            # Render item halaman kiri
-            html_kiri_str = "".join([
-                f'<div class="rpg-item-card">'
-                f'<div><div class="item-title">{x["icon"]} {x["p_name"]} <span class="{x["badge_cls"]}">{x["badge_txt"]}</span></div>'
-                f'<div class="item-stats">{x["info_syarat"]}</div></div>'
-                f'<div style="text-align: right;"><div style="font-size: 14px; font-weight: bold; color: {x["achiv_color"]};">{x["achiv"]:.1f}%</div></div>'
-                f'</div>'
-                for x in items_kiri_list
-            ]) if items_kiri_list else '<div style="color:#78350f; font-size:12px; text-align:center; margin-top:20px;"><i>Belum ada data Target PPS aktif.</i></div>'
-
-            # Render item halaman kanan (Guild War Cards) - Dipastikan tanpa newline liar
-            gw_cards_list = []
-            for item in items_kanan_list:
-                label_stat = f"Redeem: {item['p_actual']} / Syarat: {item['p_target']}" if item["is_suegeer"] else f"Hit: {item['p_actual']} / Target: {item['p_target']}"
-                card_html = (
-                    f'<div class="gw-card">'
-                    f'<div class="gw-card-header">'
-                    f'<span class="gw-card-title">⚔️ {item["name"]}</span>'
-                    f'<span class="gw-mvp">👑 MVP: {item["mvp"]}</span>'
-                    f'</div>'
-                    f'<div class="gw-bar-container">'
-                    f'<div class="gw-bar-blue" style="width: {item["blue_flex"]}%;"></div>'
-                    f'<div class="gw-bar-red" style="width: {item["red_flex"]}%;"></div>'
-                    f'<div class="gw-bar-text">{item["p_achiv"]:.1f}%</div>'
-                    f'</div>'
-                    f'<div class="gw-card-footer">{label_stat}</div>'
-                    f'</div>'
-                )
-                gw_cards_list.append(card_html)
             
-            html_kanan_items = "".join(gw_cards_list)
-
-            # Header Arena Box
-            html_header_box = (
-                f'<div class="gw-header-box">'
-                f'<div class="gw-match-title">'
-                f'<span class="gw-team-blue">🛡️ ACHIV: {total_blue_pts_int} PTS</span>'
-                f'<span class="gw-vs">⚔️</span>'
-                f'<span class="gw-team-red">TARGET: {total_red_pts_int} PTS 🎯</span>'
-                f'</div>'
-                f'<div class="gw-status-text" style="color: {status_color};">{match_status}</div>'
-                f'<div class="gw-main-bar">'
-                f'<div class="gw-main-blue" style="width: {header_blue_pct}%;"></div>'
-                f'<div class="gw-main-red" style="width: {header_red_pct}%;"></div>'
-                f'<div class="gw-main-bar-text">{total_blue_pts_int} / {total_red_pts_int} PTS</div>'
-                f'</div>'
-                f'</div>'
-            )
-
             # 6. RENDER HTML DUA HALAMAN (FIX WATERMARK OVERLAY & Z-INDEX)
             # Render Halaman Kiri (Target PPS)
             html_kiri_str = "".join([
@@ -3277,8 +3227,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 f'</div>'
             )
 
+<<<<<<< HEAD
+=======
             st.markdown(html_open_tugas, unsafe_allow_html=True)
 
+>>>>>>> 43c725bfe443b81e5e20a73de9746ddcb7b2e316
         elif page_num == 3:
             # --- STYLING CSS RPG BADGE FRAME & UI (WATERMARK NAGA PROPORSIONAL & TERANG) ---
             rpg_badge_style = """
