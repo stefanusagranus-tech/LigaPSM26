@@ -3996,7 +3996,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
         #================================================batas=====================================================#
 
-        elif page_num == 5
+        elif page_num == 5:
             # 1. Ambil Username Aktif
             current_user_name = st.session_state.get("user_name", st.session_state.get("username", ""))
 
