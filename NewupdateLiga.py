@@ -3649,7 +3649,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             
         #=============================================batas biar gak psimh===================================================#
-        
         elif page_num == 4:
             # 1. Ambil Username Aktif
             current_user_name = st.session_state.get("user_name", st.session_state.get("username", ""))
@@ -3850,12 +3849,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             active_period = st.session_state.get("active_period", "Periode PPS Aktif")
 
-            # 3. OLAH DATA KASIR DARI SHEET SALES_PPS & PERIODE_PPS
+            # 3. OLAH DATA KASIR: MASTER_PERSONIL SEBAGAI ACUAN UTAMA
             sales_pps_df = st.session_state.get("sales_pps_df", st.session_state.get("SALES_PPS", pd.DataFrame()))
             periode_pps_df = st.session_state.get("periode_pps_df", st.session_state.get("PERIODE_PPS", pd.DataFrame()))
-            master_personil_df = st.session_state.get("master_personil_df", pd.DataFrame())
+            master_personil_df = st.session_state.get("master_personil_df", st.session_state.get("MASTER_PERSONIL", pd.DataFrame()))
 
-            # Filter Periode Aktif Bulan Berjalan dari PERIODE_PPS
+            # A. Filter Bulan Aktif dari PERIODE_PPS
             valid_month_dates = None
             if not periode_pps_df.empty and "start_date" in periode_pps_df.columns:
                 try:
@@ -3869,56 +3868,54 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 except Exception:
                     valid_month_dates = None
 
-            # Pengolahan Data Penjualan Kasir
             kasir_summary = {}
 
-            # Masukkan seluruh Master Personil awal agar score 0 tetap muncul
-            if not master_personil_df.empty and "person_name" in master_personil_df.columns:
-                for p_name in master_personil_df["person_name"].dropna().astype(str).str.strip().unique():
-                    if p_name:
-                        kasir_summary[p_name] = {"pwp": 0, "sg": 0, "total": 0}
+            # B. MASUKKAN SEMUA PERSONIL AKTIF DARI MASTER_PERSONIL DULU (Default 0 Pcs)
+            if not master_personil_df.empty:
+                mp_df = master_personil_df.copy()
+                if "active" in mp_df.columns:
+                    mp_df = mp_df[pd.to_numeric(mp_df["active"], errors="coerce") == 1]
+                    
+                if "person_name" in mp_df.columns:
+                    for p_name in mp_df["person_name"].dropna().astype(str).str.strip().unique():
+                        if p_name and p_name.lower() != "nan":
+                            kasir_summary[p_name] = {"pwp": 0, "sg": 0, "total": 0}
 
-            if not sales_pps_df.empty and "kasir_name" in sales_pps_df.columns:
+            # C. UPDATE ATAU TIMPA DENGAN TRANSAKSI PENJUALAN PPS DARI SALES_PPS
+            if not sales_pps_df.empty:
                 sp_df = sales_pps_df.copy()
-                sp_df["kasir_name"] = sp_df["kasir_name"].astype(str).str.strip()
-                sp_df["qty_pwp"] = pd.to_numeric(sp_df.get("qty_pwp", 0), errors="coerce").fillna(0)
-                sp_df["qty_sg"] = pd.to_numeric(sp_df.get("qty_sg", 0), errors="coerce").fillna(0)
+                kasir_col = next((c for c in ["kasir_name", "staff_name", "person_name"] if c in sp_df.columns), None)
                 
-                # Filter Tanggal jika ada kolom updated_at / tanggal
-                date_col = next((c for c in ["updated_at", "tanggal_input", "tanggal"] if c in sp_df.columns), None)
-                if date_col and valid_month_dates:
-                    sp_df["dt_check"] = pd.to_datetime(sp_df[date_col], errors="coerce")
-                    sp_df = sp_df[(sp_df["dt_check"].dt.month == valid_month_dates[0]) & (sp_df["dt_check"].dt.year == valid_month_dates[1])]
+                if kasir_col:
+                    sp_df["clean_kasir"] = sp_df[kasir_col].astype(str).str.strip()
+                    sp_df["qty_pwp"] = pd.to_numeric(sp_df.get("qty_pwp", 0), errors="coerce").fillna(0)
+                    sp_df["qty_sg"] = pd.to_numeric(sp_df.get("qty_sg", 0), errors="coerce").fillna(0)
 
-                grouped = sp_df.groupby("kasir_name")[["qty_pwp", "qty_sg"]].sum().reset_index()
+                    # Filter Berdasarkan Bulan Aktif
+                    date_col = next((c for c in ["updated_at", "start_date", "tanggal"] if c in sp_df.columns), None)
+                    if date_col and valid_month_dates:
+                        sp_df["dt_check"] = pd.to_datetime(sp_df[date_col], errors="coerce")
+                        sp_df = sp_df[(sp_df["dt_check"].dt.month == valid_month_dates[0]) & (sp_df["dt_check"].dt.year == valid_month_dates[1])]
 
-                for _, r in grouped.iterrows():
-                    k_name = r["kasir_name"]
-                    if not k_name: continue
-                    pwp_val = int(r["qty_pwp"])
-                    sg_val = int(r["qty_sg"])
-                    tot_val = pwp_val + sg_val
-                    kasir_summary[k_name] = {"pwp": pwp_val, "sg": sg_val, "total": tot_val}
+                    grouped = sp_df.groupby("clean_kasir")[["qty_pwp", "qty_sg"]].sum().reset_index()
 
-            # Urutkan berdasarkan Qty Keseluruhan (PWP + SG)
+                    for _, r in grouped.iterrows():
+                        k_name = r["clean_kasir"]
+                        if not k_name or k_name.lower() == "nan":
+                            continue
+                        pwp_val = int(r["qty_pwp"])
+                        sg_val = int(r["qty_sg"])
+                        tot_val = pwp_val + sg_val
+                        
+                        # Masukkan ke dictionary (otomatis menimpa default 0 jika sudah ada di master, atau menambah baru jika belum ada)
+                        kasir_summary[k_name] = {"pwp": pwp_val, "sg": sg_val, "total": tot_val}
+
+            # D. SUSUN PERINGKAT BERDASARKAN TOTAL TERBANYAK
             ranking_list = []
             for k_name, val in kasir_summary.items():
                 ranking_list.append((k_name, val["pwp"], val["sg"], val["total"]))
 
             ranking_list = sorted(ranking_list, key=lambda x: x[3], reverse=True)
-
-            if not ranking_list:
-                ranking_list = [
-                    ("ARIS APRILIANTO", 15, 8, 23),
-                    ("ILHAM PRIANDIKA", 13, 1, 14),
-                    ("ADELIA PRATIWI", 5, 11, 16),
-                    ("RIZKI GUNAWAN", 12, 16, 28),
-                    ("TIKA", 7, 7, 14),
-                    ("AHMAD ZAKI SYABANI ZEN", 4, 32, 36),
-                    ("KUSDEWI TIA NINGRUM", 2, 0, 2),
-                    ("SUBEKTI PANDU YULIANTO", 0, 0, 0)
-                ]
-                ranking_list = sorted(ranking_list, key=lambda x: x[3], reverse=True)
 
             # 4. FUNGSI ELEMENT PODIUM
             def make_podium_item(rank_idx, class_name, crown_icon, r_list):
@@ -3946,12 +3943,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             podium_html += make_podium_item(2, "podium-3", "🥉", ranking_list)
             podium_html += '</div>'
 
-            # 5. GENERATE LIST KANAN (4-9) & ZONA MERAH
+            # 5. GENERATE LIST KANAN (PERINGKAT 4 SAMPAI SELESAI / TERMASUK #9 DST)
             rest_html = '<div class="rpg-list-container">'
             total_personil = len(ranking_list)
-            danger_cutoff_rank = max(4, total_personil - 2)
+            danger_cutoff_rank = max(4, total_personil - 1)  # 2 orang terbawah masuk zona merah
 
-            for i, (n, pwp, sg, tot) in enumerate(ranking_list[3:9]):
+            for i, (n, pwp, sg, tot) in enumerate(ranking_list[3:]):
                 rank = i + 4
                 is_me = (n.lower() == str(current_user_name).lower())
                 me_class = "rpg-user-me" if is_me else ""
@@ -3981,18 +3978,18 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             html_open_tugas = (
                 f'<div class="rpg-open-book-container">'
                 f'<div class="rpg-book-page">'
-                f'<h3 class="open-page-title">⚔️ PWP DAN SG TOP (1-3)</h3>'
+                f'<h3 class="open-page-title">⚔️ PPS TOP (1-3)</h3>'
                 f'<p class="open-page-sub">Periode: {active_period}</p>'
                 f'<div class="open-book-divider"></div>'
                 f'{podium_html}'
                 f'<div class="open-page-footer">Halaman Kiri • PPS 1-3</div>'
                 f'</div>'
                 f'<div class="rpg-book-page">'
-                f'<h3 class="open-page-title">⚔️ PWP DAN SG (4-9)</h3>'
+                f'<h3 class="open-page-title">⚔️ PPS (4+)</h3>'
                 f'<p class="open-page-sub">Kelanjutan Peringkat Kasir PPS</p>'
                 f'<div class="open-book-divider"></div>'
                 f'{rest_html}'
-                f'<div class="open-page-footer">Halaman Kanan • PPS 4-9</div>'
+                f'<div class="open-page-footer">Halaman Kanan • PPS 4+</div>'
                 f'</div>'
                 f'</div>'
             )
