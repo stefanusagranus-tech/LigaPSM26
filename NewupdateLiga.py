@@ -3232,7 +3232,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             # 1. Ambil Username Aktif
             current_user_name = st.session_state.get("user_name", st.session_state.get("username", ""))
 
-            # 2. STYLING CSS RPG: PODIUM TOP 3, ZONA MERAH, & RESPONSIVE MOBILE FIX
+            # 2. STYLING CSS MEDIEVAL PODIUM, ZONA MERAH, & MOBILE FIX
             rpg_badge_style = """
             <style>
             .rpg-open-book-container {
@@ -3278,7 +3278,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 z-index: 0;
             }
 
-            /* --- PODIUM TOP 3 --- */
+            /* --- PODIUM MEDIEVAL TOP 3 --- */
             .podium-wrapper {
                 display: flex;
                 align-items: flex-end;
@@ -3302,52 +3302,75 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             .podium-card {
                 width: 100%;
-                border-radius: 8px 8px 0 0;
+                border-radius: 6px 6px 0 0;
                 padding: 8px 4px;
                 box-sizing: border-box;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 justify-content: flex-start;
-                box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+                box-shadow: 0 -3px 10px rgba(0,0,0,0.25), inset 0 1px 2px rgba(255,255,255,0.4);
                 position: relative;
             }
 
+            /* Podium Style Medieval (Gaya Panggung Kerajaan) */
             .podium-1 {
-                height: 170px;
-                background: linear-gradient(180deg, #fef08a 0%, #eab308 100%);
-                border: 2px solid #b45309;
+                height: 175px;
+                background: linear-gradient(180deg, #fef08a 0%, #d97706 100%);
+                border: 2.5px solid #78350f;
                 border-bottom: none;
             }
             .podium-2 {
-                height: 135px;
-                background: linear-gradient(180deg, #f1f5f9 0%, #94a3b8 100%);
-                border: 2px solid #475569;
+                height: 140px;
+                background: linear-gradient(180deg, #f8fafc 0%, #64748b 100%);
+                border: 2.5px solid #334155;
                 border-bottom: none;
             }
             .podium-3 {
-                height: 110px;
-                background: linear-gradient(180deg, #fed7aa 0%, #c2410c 100%);
-                border: 2px solid #9a3412;
+                height: 115px;
+                background: linear-gradient(180deg, #ffedd5 0%, #c2410c 100%);
+                border: 2.5px solid #7c2d12;
                 border-bottom: none;
+            }
+
+            .podium-rank-tag {
+                font-size: 15px;
+                font-weight: 900;
+                color: #1e1b4b;
+                text-shadow: 0px 1px 0px rgba(255,255,255,0.8);
             }
 
             .podium-name {
                 font-size: 11px;
                 font-weight: 800;
-                color: #1e293b;
+                color: #0f172a;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 max-width: 95%;
-                margin-top: 4px;
+                margin-top: 3px;
+                background: rgba(255, 255, 255, 0.45);
+                padding: 2px 5px;
+                border-radius: 4px;
+                border: 1px solid rgba(0,0,0,0.1);
             }
 
             .podium-score {
-                font-size: 11px;
+                font-size: 12px;
                 font-weight: 900;
-                color: #431407;
+                color: #1e1103;
+                margin-top: 4px;
+                text-shadow: 0px 1px 0px rgba(255,255,255,0.6);
+            }
+
+            .podium-achiv {
+                font-size: 10px;
+                color: #064e3b;
+                font-weight: 800;
                 margin-top: 2px;
+                background: rgba(255,255,255,0.65);
+                padding: 1px 5px;
+                border-radius: 10px;
             }
 
             /* --- STYLING LIST KANAN & ZONA MERAH --- */
@@ -3377,7 +3400,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 flex-shrink: 0;
             }
 
-            /* ZONA MERAH (3 TERBAWAH) */
+            /* ZONA MERAH (EXACT 3 TERBAWAH) */
             .danger-zone-row {
                 background: #fff5f5 !important;
                 border: 1.5px solid #fca5a5 !important;
@@ -3410,22 +3433,25 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             if 'active_period' not in locals() and 'active_period' not in globals():
                 active_period = st.session_state.get("active_period", "Periode Aktif")
 
-            # 3. LOGIKA DATA PERINGKAT
+            # 3. LOGIKA DATA PERINGKAT (FILTER PERIODE AKTIF REALTIME)
             sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
             sales_item_df = st.session_state.get("sales_item_df", pd.DataFrame())
             periods_df = st.session_state.get("periods_df", pd.DataFrame())
             
+            target_pid_clean = str(target_period_id).strip() if ('target_period_id' in locals() and target_period_id) else ""
+
             master_personil = []
             if "master_personil_df" in st.session_state and not st.session_state["master_personil_df"].empty:
                 master_personil = st.session_state["master_personil_df"]["person_name"].dropna().astype(str).str.strip().unique().tolist()
             elif not sales_person_df.empty and "person_name" in sales_person_df.columns:
                 master_personil = sales_person_df["person_name"].dropna().astype(str).str.strip().unique().tolist()
 
+            # Total Qty (Hanya Periode Aktif)
             qty_dict = {}
             if not sales_person_df.empty and "person_name" in sales_person_df.columns:
                 sp_period = sales_person_df.copy()
-                if 'target_period_id' in locals() and target_period_id and "period_id" in sp_period.columns:
-                    sp_period = sp_period[sp_period["period_id"].astype(str).str.strip() == str(target_period_id).strip()]
+                if target_pid_clean and "period_id" in sp_period.columns:
+                    sp_period = sp_period[sp_period["period_id"].astype(str).str.strip() == target_pid_clean]
                 
                 if not sp_period.empty:
                     sp_period["person_name"] = sp_period["person_name"].astype(str).str.strip()
@@ -3434,9 +3460,15 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     for _, r in grouped_qty.iterrows():
                         qty_dict[r["person_name"]] = int(r["actual_qty"])
 
+            # Achievement Count (Hanya Periode Aktif / Realtime September)
             achiv_dict = {}
             if not sales_person_df.empty and "person_name" in sales_person_df.columns:
                 sp_month = sales_person_df.copy()
+                
+                # FIX: Filter ketat agar data achiv hanya mengambil data periode aktif (September)
+                if target_pid_clean and "period_id" in sp_month.columns:
+                    sp_month = sp_month[sp_month["period_id"].astype(str).str.strip() == target_pid_clean]
+
                 if not sp_month.empty:
                     sp_month["person_name"] = sp_month["person_name"].astype(str).str.strip()
                     sp_month["actual_qty"] = pd.to_numeric(sp_month.get("actual_qty", 0), errors="coerce").fillna(0)
@@ -3478,22 +3510,22 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             if not ranking_list:
                 ranking_list = [("Ksatriya Arthur", 98, 3), ("Lancelot", 92, 2), ("Galahad", 85, 1), ("Parsifal", 78, 0), ("Gawain", 70, 0), ("Tristan", 65, 0), ("Bors", 60, 0), ("Kay", 55, 0), ("Bedivere", 50, 0)]
 
-            # 4. MEMBUAT KOMPONEN PODIUM TOP 3 (KIRI) - FORMAT SATU BARIS BEBAS BREAK
+            # 4. BUILD PODIUM MEDIEVAL (KIRI)
             def make_podium_item(rank_idx, class_name, crown_icon):
                 if len(ranking_list) > rank_idx:
                     n, q, a = ranking_list[rank_idx]
                     is_me = (n.lower() == str(current_user_name).lower())
                     me_cls = "rpg-user-me" if is_me else ""
-                    you_badge = '<span style="background:#2563eb; color:white; font-size:8px; padding:1px 4px; border-radius:4px;">KAMU</span>' if is_me else ""
+                    you_badge = '<span style="background:#2563eb; color:white; font-size:8px; padding:1px 4px; border-radius:4px; margin-top:2px;">KAMU</span>' if is_me else ""
                     
                     html = f'<div class="podium-slot">'
-                    html += f'<div style="font-size:20px; margin-bottom:2px; z-index:3;">{crown_icon}</div>'
+                    html += f'<div style="font-size:22px; margin-bottom:2px; z-index:3;">{crown_icon}</div>'
                     html += f'<div class="podium-card {class_name} {me_cls}">'
-                    html += f'<div style="font-size:14px; font-weight:900;">#{rank_idx+1}</div>'
+                    html += f'<div class="podium-rank-tag">#{rank_idx+1}</div>'
                     html += f'<div class="podium-name" title="{n}">{n}</div>'
                     html += f'{you_badge}'
-                    html += f'<div class="podium-score">{q} <span style="font-size:9px; font-weight:normal;">Pcs</span></div>'
-                    html += f'<div style="font-size:9px; color:#065f46; font-weight:bold; margin-top:2px;">✨ {a} Achiv</div>'
+                    html += f'<div class="podium-score">{q} Pcs</div>'
+                    html += f'<div class="podium-achiv">✨ {a} Achiv</div>'
                     html += f'</div></div>'
                     return html
                 return ""
@@ -3504,10 +3536,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             podium_html += make_podium_item(2, "podium-3", "🥉")
             podium_html += '</div>'
 
-            # 5. MEMBUAT LIST PERINGKAT 4-9 (KANAN) + ZONA MERAH
+            # 5. BUILD LIST PERINGKAT KANAN + EXACT 3 TERBAWAH ZONA MERAH
             rest_html = '<div class="rpg-list-container">'
             total_personil = len(ranking_list)
-            danger_cutoff = max(4, total_personil - 3)
+            # FIX: Zona Merah dipasang TEPAT HANYA 3 PERSONIL TERBAWAH dari total list
+            danger_cutoff_rank = total_personil - 2
 
             for i, (n, q, a) in enumerate(ranking_list[3:9]):
                 rank = i + 4
@@ -3515,7 +3548,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 me_class = "rpg-user-me" if is_me else ""
                 you_badge = '<span style="background: #2563eb; color: white; font-size: 8px; padding: 1px 4px; border-radius: 4px; margin-left: 4px;">KAMU</span>' if is_me else ""
                 
-                is_danger = rank >= danger_cutoff
+                # Hanya 3 terbawah (misal peringkat 7, 8, 9 jika total ada 9 orang)
+                is_danger = rank >= danger_cutoff_rank
                 row_style = "danger-zone-row" if is_danger else ""
                 danger_tag = '<span class="danger-zone-badge">⚠️ ZONA MERAH</span>' if is_danger else ""
                 rank_icon = "🔻" if is_danger else "🛡️"
@@ -3533,7 +3567,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             
             rest_html += '</div>'
 
-            # 6. RENDER KEDUA HALAMAN BUKU
+            # 6. RENDER DUA HALAMAN BUKU
             html_open_tugas = (
                 f'<div class="rpg-open-book-container">'
                 f'<div class="rpg-book-page">'
@@ -3552,7 +3586,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 f'</div>'
                 f'</div>'
             )
-
             
         #=============================================batas biar gak psimh===================================================#
         
