@@ -3049,7 +3049,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             match_status = "VICTORY" if total_blue_points >= total_red_points else "IN BATTLE"
             status_color = "#eab308" if match_status == "VICTORY" else "#ef4444"
 
-            # 6. RENDER HTML DUA HALAMAN (TEMA KREM PARCHMENT PERGAMEN)
+            # 6. RENDER HTML DUA HALAMAN (CSS DIPINDAHKAN KE ATAS)
             html_kiri_str = "".join([
                 f'<div class="rpg-item-card">'
                 f'<div><div class="item-title">{x["icon"]} {x["p_name"]} <span class="{x["badge_cls"]}">{x["badge_txt"]}</span></div>'
@@ -3078,73 +3078,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 '''
 
             html_kanan_str = f'''
-            <style>
-                .gw-header-box {{
-                    background: #fffbeb;
-                    border: 2px solid #f59e0b;
-                    border-radius: 8px;
-                    padding: 8px 12px;
-                    margin-bottom: 10px;
-                    text-align: center;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-                }}
-                .gw-match-title {{
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    font-weight: bold;
-                    font-family: monospace, sans-serif;
-                }}
-                .gw-team-blue {{ color: #0284c7; font-size: 13px; font-weight: 800; }}
-                .gw-team-red {{ color: #dc2626; font-size: 13px; font-weight: 800; }}
-                .gw-vs {{ font-size: 14px; color: #78350f; margin: 0 6px; }}
-                .gw-status-text {{
-                    font-size: 11px;
-                    font-weight: 900;
-                    color: {status_color};
-                    letter-spacing: 2px;
-                    margin: 2px 0;
-                }}
-                .gw-main-bar {{
-                    height: 16px;
-                    background: #e2e8f0;
-                    border-radius: 4px;
-                    border: 1px solid #cbd5e1;
-                    display: flex;
-                    overflow: hidden;
-                    position: relative;
-                    margin-top: 4px;
-                }}
-                .gw-main-blue {{ background: linear-gradient(90deg, #0284c7, #38bdf8); height: 100%; }}
-                .gw-main-red {{ background: linear-gradient(90deg, #dc2626, #f87171); height: 100%; }}
-                .gw-main-bar-text {{
-                    position: absolute; width: 100%; text-align: center; line-height: 16px;
-                    font-size: 10px; font-weight: bold; color: #ffffff; text-shadow: 1px 1px 2px #000;
-                }}
-                .gw-card {{
-                    background: #fffdf5;
-                    border: 1px solid #fef3c7;
-                    border-radius: 6px;
-                    padding: 6px 10px;
-                    margin-bottom: 6px;
-                    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-                }}
-                .gw-card-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }}
-                .gw-card-title {{ font-size: 11px; font-weight: bold; color: #78350f; }}
-                .gw-mvp {{ font-size: 9px; background: #fef3c7; color: #b45309; border: 1px solid #fde68a; padding: 1px 5px; border-radius: 3px; font-weight: bold; }}
-                .gw-bar-container {{
-                    height: 13px; background: #e2e8f0; border-radius: 3px; border: 1px solid #cbd5e1;
-                    display: flex; overflow: hidden; position: relative;
-                }}
-                .gw-bar-blue {{ background: linear-gradient(90deg, #2563eb, #60a5fa); height: 100%; }}
-                .gw-bar-red {{ background: linear-gradient(90deg, #dc2626, #f87171); height: 100%; }}
-                .gw-bar-text {{
-                    position: absolute; width: 100%; text-align: center; line-height: 13px;
-                    font-size: 9px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000;
-                }}
-                .gw-card-footer {{ font-size: 9px; color: #92400e; margin-top: 2px; font-weight: 500; }}
-            </style>
-
             <div class="gw-header-box">
                 <div class="gw-match-title">
                     <span class="gw-team-blue">🛡️ ACHIV: {total_blue_pts_int} PTS</span>
@@ -3158,12 +3091,82 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     <div class="gw-main-bar-text">{total_blue_pts_int} / {total_red_pts_int} PTS</div>
                 </div>
             </div>
-            
             {html_kanan_items}
             '''
 
-            # GABUNGKAN DUA HALAMAN KE VARIABEL html_open_tugas
+            # STYLESHEET DITULIS Terpisah DENGAN ESCAPED BRACKETS {{ }}
+            css_gw = f'''
+            <style>
+                .gw-header-box {{
+                    background: #fffbeb !important;
+                    border: 2px solid #f59e0b !important;
+                    border-radius: 8px !important;
+                    padding: 8px 12px !important;
+                    margin-bottom: 10px !important;
+                    text-align: center !important;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+                }}
+                .gw-match-title {{
+                    display: flex !important;
+                    justify-content: space-between !important;
+                    align-items: center !important;
+                    font-weight: bold !important;
+                    font-family: monospace, sans-serif !important;
+                }}
+                .gw-team-blue {{ color: #0284c7 !important; font-size: 13px !important; font-weight: 800 !important; }}
+                .gw-team-red {{ color: #dc2626 !important; font-size: 13px !important; font-weight: 800 !important; }}
+                .gw-vs {{ font-size: 14px !important; color: #78350f !important; margin: 0 6px !important; }}
+                .gw-status-text {{
+                    font-size: 11px !important;
+                    font-weight: 900 !important;
+                    color: {status_color} !important;
+                    letter-spacing: 2px !important;
+                    margin: 2px 0 !important;
+                }}
+                .gw-main-bar {{
+                    height: 16px !important;
+                    background: #e2e8f0 !important;
+                    border-radius: 4px !important;
+                    border: 1px solid #cbd5e1 !important;
+                    display: flex !important;
+                    overflow: hidden !important;
+                    position: relative !important;
+                    margin-top: 4px !important;
+                }}
+                .gw-main-blue {{ background: linear-gradient(90deg, #0284c7, #38bdf8) !important; height: 100% !important; }}
+                .gw-main-red {{ background: linear-gradient(90deg, #dc2626, #f87171) !important; height: 100% !important; }}
+                .gw-main-bar-text {{
+                    position: absolute !important; width: 100% !important; text-align: center !important; line-height: 16px !important;
+                    font-size: 10px !important; font-weight: bold !important; color: #ffffff !important; text-shadow: 1px 1px 2px #000 !important;
+                }}
+                .gw-card {{
+                    background: #fffdf5 !important;
+                    border: 1px solid #fef3c7 !important;
+                    border-radius: 6px !important;
+                    padding: 6px 10px !important;
+                    margin-bottom: 6px !important;
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.03) !important;
+                }}
+                .gw-card-header {{ display: flex !important; justify-content: space-between !important; align-items: center !important; margin-bottom: 3px !important; }}
+                .gw-card-title {{ font-size: 11px !important; font-weight: bold !important; color: #78350f !important; }}
+                .gw-mvp {{ font-size: 9px !important; background: #fef3c7 !important; color: #b45309 !important; border: 1px solid #fde68a !important; padding: 1px 5px !important; border-radius: 3px !important; font-weight: bold !important; }}
+                .gw-bar-container {{
+                    height: 13px !important; background: #e2e8f0 !important; border-radius: 3px !important; border: 1px solid #cbd5e1 !important;
+                    display: flex !important; overflow: hidden !important; position: relative !important;
+                }}
+                .gw-bar-blue {{ background: linear-gradient(90deg, #2563eb, #60a5fa) !important; height: 100% !important; }}
+                .gw-bar-red {{ background: linear-gradient(90deg, #dc2626, #f87171) !important; height: 100% !important; }}
+                .gw-bar-text {{
+                    position: absolute !important; width: 100% !important; text-align: center !important; line-height: 13px !important;
+                    font-size: 9px !important; font-weight: bold !important; color: #fff !important; text-shadow: 1px 1px 2px #000 !important;
+                }}
+                .gw-card-footer {{ font-size: 9px !important; color: #92400e !important; margin-top: 2px !important; font-weight: 500 !important; }}
+            </style>
+            '''
+
+            # GABUNGKAN SEMUA SECARA RAPI
             html_open_tugas = (
+                f'{css_gw}'
                 f'<div class="rpg-open-book-container">'
                 f'<div class="rpg-book-page rpg-book-page-left">'
                 f'<h3 class="open-page-title">🛡️ TARGET PPS</h3>'
