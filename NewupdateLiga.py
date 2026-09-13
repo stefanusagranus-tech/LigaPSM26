@@ -3502,15 +3502,17 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 '</div>'
             )
             
-        #======================================================================================================#
+        
+        #=============================================batas biar gak psimh===================================================#
+        
         elif page_num == 4:
-            # 1. Definisikan format_row TANPA BARIS BARU (Disatukan dalam 1 baris)
+            # 1. Definisikan format_row dengan Z-Index Tinggi & Background Solid Putih
             def format_row(rank, nama, skor):
                 badge = "👑" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else f"#{rank}"
                 return (
-                    f'<div style="display: flex; justify-content: space-between; align-items: center; background: #fffdf5; border: 1px solid #fde68a; padding: 6px 10px; margin-bottom: 6px; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">'
-                    f'<div style="font-size: 11px; font-weight: bold; color: #451a03;"><span style="margin-right: 6px;">{badge}</span>{nama}</div>'
-                    f'<div style="font-size: 11px; font-weight: 800; color: #b45309;">{skor} PTS</div>'
+                    f'<div style="position: relative !important; z-index: 10 !important; display: flex; justify-content: space-between; align-items: center; background-color: #ffffff !important; border: 1.5px solid #d97706 !important; padding: 8px 12px; margin-bottom: 8px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">'
+                    f'<div style="font-size: 12px; font-weight: 900; color: #3b1a0e !important; opacity: 1 !important;"><span style="margin-right: 8px;">{badge}</span>{nama}</div>'
+                    f'<div style="font-size: 12px; font-weight: 900; color: #b45309 !important; opacity: 1 !important;">{skor} PTS</div>'
                     f'</div>'
                 )
 
@@ -3518,39 +3520,44 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             if 'dummy_9_personil' not in locals():
                 dummy_9_personil = [
                     ("Ksatriya Arthur", 98),
-                    ("Lancelot", 85),
-                    ("Gawain", 78),
-                    ("Budi Santoso", 75),
-                    ("Siti Aminah", 70),
-                    ("Dewi Lestari", 65),
-                    ("Eko Prasetyo", 60),
-                    ("Fajar Nugraha", 55),
-                    ("Gita Gutawa", 50)
+                    ("Lancelot", 92),
+                    ("Galahad", 85),
+                    ("Parsifal", 78),
+                    ("Gawain", 70),
+                    ("Tristan", 65),
+                    ("Bors", 60),
+                    ("Kay", 55),
+                    ("Bedivere", 50)
                 ]
 
-            # 3. Render Baris Tanpa Newline Liar
+            # 3. Render Baris Data
             rows_pps_13 = "".join([format_row(i + 1, n, s) for i, (n, s) in enumerate(dummy_9_personil[:3])])
             rows_pps_49 = "".join([format_row(i + 4, n, s) for i, (n, s) in enumerate(dummy_9_personil[3:])])
 
-            # 4. Perakitan HTML Halaman 4 (String Gabungan 1 Line)
+            # 4. Perakitan HTML Halaman 4 dengan CSS Override Layer Naga
             html_open_tugas = (
+                f'<style>'
+                f'.rpg-book-page-left *, .rpg-book-page-right * {{ opacity: 1 !important; visibility: visible !important; }}'
+                f'</style>'
                 f'<div class="rpg-open-book-container">'
-                f'<div class="rpg-book-page rpg-book-page-left">'
-                f'<h3 class="open-page-title">🛡️ PPS (1-3)</h3>'
-                f'<p class="open-page-sub">Top 3 Pahlawan PPS</p>'
-                f'<div class="open-book-divider"></div>'
+                f'<div class="rpg-book-page rpg-book-page-left" style="position: relative; z-index: 1;">'
+                f'<h3 class="open-page-title" style="position: relative; z-index: 10;">🛡️ PPS (1-3)</h3>'
+                f'<p class="open-page-sub" style="position: relative; z-index: 10;">Top 3 Pahlawan PPS</p>'
+                f'<div class="open-book-divider" style="position: relative; z-index: 10;"></div>'
                 f'{rows_pps_13}'
-                f'<div class="open-page-footer">Halaman Kiri • PPS 1-3</div>'
+                f'<div class="open-page-footer" style="position: relative; z-index: 10;">Halaman Kiri • PPS 1-3</div>'
                 f'</div>'
-                f'<div class="rpg-book-page rpg-book-page-right">'
-                f'<h3 class="open-page-title">🛡️ PPS (4-9)</h3>'
-                f'<p class="open-page-sub">Daftar Lanjutan PPS</p>'
-                f'<div class="open-book-divider"></div>'
+                f'<div class="rpg-book-page rpg-book-page-right" style="position: relative; z-index: 1;">'
+                f'<h3 class="open-page-title" style="position: relative; z-index: 10;">🛡️ PPS (4-9)</h3>'
+                f'<p class="open-page-sub" style="position: relative; z-index: 10;">Daftar Lanjutan PPS</p>'
+                f'<div class="open-book-divider" style="position: relative; z-index: 10;"></div>'
                 f'{rows_pps_49}'
-                f'<div class="open-page-footer">Halaman Kanan • PPS 4-9</div>'
+                f'<div class="open-page-footer" style="position: relative; z-index: 10;">Halaman Kanan • PPS 4-9</div>'
                 f'</div>'
                 f'</div>'
             )
+
+            st.markdown(html_open_tugas, unsafe_allow_html=True)
 
         #================================================batas=====================================================#
 
