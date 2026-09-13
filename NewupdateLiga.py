@@ -2686,20 +2686,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     st.rerun()
 
         # ==========================================
-        # 🐛 DEBUG MODE PANEL
-        # ==========================================
-        DEBUG_MODE = True  
-        if DEBUG_MODE:
-            with st.expander("🛠️ Panel Debug - Kitab Misi Guild", expanded=False):
-                st.json({
-                    "tanggal_hari_ini": str(today),
-                    "periode_aktif": active_period,
-                    "bulan_aktif": current_month_name,
-                    "kitab_misi_page": page_num,
-                    "total_sheets": TOTAL_SHEETS
-                })
-
-        # ==========================================
         # 🛠️ HELPER FORMATTING RANKING
         # ==========================================
         def format_row_top3(rank, name, score):
