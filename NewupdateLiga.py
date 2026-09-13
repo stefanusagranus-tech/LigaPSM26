@@ -4346,7 +4346,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 f'</div>'
             )
 
-       
+            st.markdown(html_open_tugas, unsafe_allow_html=True)
+
     #===============================================================================#
      # ⛺ JALUR C: BERANDA UTAMA 3 KARTU CAMP (YANG HARUSNYA MUNCUL DI AWAL)
     #==============================================================================#
