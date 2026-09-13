@@ -3504,6 +3504,32 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             
 
         elif page_num == 4:
+            # 1. Definisikan format_row TANPA BARIS BARU (Disatukan dalam 1 baris)
+            def format_row(rank, nama, skor):
+                badge = "👑" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else f"#{rank}"
+                return (
+                    f'<div style="display: flex; justify-content: space-between; align-items: center; background: #fffdf5; border: 1px solid #fde68a; padding: 6px 10px; margin-bottom: 6px; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">'
+                    f'<div style="font-size: 11px; font-weight: bold; color: #451a03;"><span style="margin-right: 6px;">{badge}</span>{nama}</div>'
+                    f'<div style="font-size: 11px; font-weight: 800; color: #b45309;">{skor} PTS</div>'
+                    f'</div>'
+                )
+
+            # 2. Data Dummy Fallback
+            if 'dummy_9_personil' not in locals():
+                dummy_9_personil = [
+                    ("Ksatriya Arthur", 98),
+                    ("Lancelot", 85),
+                    ("Gawain", 78),
+                    ("Budi Santoso", 75),
+                    ("Siti Aminah", 70),
+                    ("Dewi Lestari", 65),
+                    ("Eko Prasetyo", 60),
+                    ("Fajar Nugraha", 55),
+                    ("Gita Gutawa", 50)
+                ]
+
+            # 3. Render Baris Tanpa Newline Liar
+=======
             # 1. Pastikan fungsi pembantu format_row sudah terdefinisi
             def format_row(rank, nama, skor):
                 badge = "👑" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else f"#{rank}"
@@ -3533,8 +3559,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 ]
 
             # 3. Render Baris
+>>>>>>> 32ceee5cd4124e6d595970baa53c46d1ee21b07a
             rows_pps_13 = "".join([format_row(i + 1, n, s) for i, (n, s) in enumerate(dummy_9_personil[:3])])
             rows_pps_49 = "".join([format_row(i + 4, n, s) for i, (n, s) in enumerate(dummy_9_personil[3:])])
+<<<<<<< HEAD
+=======
 
             # 4. Perakitan HTML Halaman 4
             html_open_tugas = f"""
@@ -3555,8 +3584,32 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 </div>
             </div>
             """
+>>>>>>> 32ceee5cd4124e6d595970baa53c46d1ee21b07a
 
+<<<<<<< HEAD
+            # 4. Perakitan HTML Halaman 4 (String Gabungan 1 Line)
+            html_open_tugas = (
+                f'<div class="rpg-open-book-container">'
+                f'<div class="rpg-book-page rpg-book-page-left">'
+                f'<h3 class="open-page-title">🛡️ PPS (1-3)</h3>'
+                f'<p class="open-page-sub">Top 3 Pahlawan PPS</p>'
+                f'<div class="open-book-divider"></div>'
+                f'{rows_pps_13}'
+                f'<div class="open-page-footer">Halaman Kiri • PPS 1-3</div>'
+                f'</div>'
+                f'<div class="rpg-book-page rpg-book-page-right">'
+                f'<h3 class="open-page-title">🛡️ PPS (4-9)</h3>'
+                f'<p class="open-page-sub">Daftar Lanjutan PPS</p>'
+                f'<div class="open-book-divider"></div>'
+                f'{rows_pps_49}'
+                f'<div class="open-page-footer">Halaman Kanan • PPS 4-9</div>'
+                f'</div>'
+                f'</div>'
+            )
 
+=======
+
+>>>>>>> 32ceee5cd4124e6d595970baa53c46d1ee21b07a
         elif page_num == 5:
             sueger_data = [(n, f"{int(s.replace(' Pcs',''))+5} Pcs") for n, s in dummy_9_personil]
             rows_sueger_13 = "".join([format_row(i + 1, n, s) for i, (n, s) in enumerate(sueger_data[:3])])
