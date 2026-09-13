@@ -3099,24 +3099,29 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 f'</div>'
             )
 
-            # CSS Murni tanpa f-string untuk mencegah error bracket Streamlit/Python
+            # CSS GW DIBUAT SOLID DENGAN TARGET SPECIFIC OVERRIDE
             css_gw = """
             <style>
+                /* Force container halaman kanan agar konten tidak pudar */
+                .rpg-book-page-right * {
+                    opacity: 1 !important;
+                }
+
+                /* HEADER GUILD WAR ARENA */
                 .gw-header-box {
-                    background: rgba(255, 251, 235, 0.95) !important;
-                    border: 2px solid #d97706 !important;
+                    background-color: #fffbeb !important;
+                    border: 2px solid #b45309 !important;
                     border-radius: 8px !important;
                     padding: 8px 12px !important;
                     margin-bottom: 12px !important;
                     text-align: center !important;
-                    box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.08) !important;
                 }
                 .gw-match-title {
                     display: flex !important;
                     justify-content: space-between !important;
                     align-items: center !important;
                     font-weight: 800 !important;
-                    font-family: sans-serif !important;
                 }
                 .gw-team-blue { color: #0284c7 !important; font-size: 13px !important; font-weight: 900 !important; }
                 .gw-team-red { color: #dc2626 !important; font-size: 13px !important; font-weight: 900 !important; }
@@ -3129,7 +3134,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 }
                 .gw-main-bar {
                     height: 18px !important;
-                    background: #cbd5e1 !important;
+                    background-color: #e2e8f0 !important;
                     border-radius: 4px !important;
                     border: 1px solid #94a3b8 !important;
                     display: flex !important;
@@ -3143,28 +3148,57 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     position: absolute !important; width: 100% !important; text-align: center !important; line-height: 18px !important;
                     font-size: 10px !important; font-weight: bold !important; color: #ffffff !important; text-shadow: 1px 1px 2px #000 !important;
                 }
+
+                /* KARTU ITEM GUILD WAR (PENJELAS TEKS & BACKGROUND SOLID) */
                 .gw-card {
-                    background: rgba(255, 253, 245, 0.95) !important;
-                    border: 1px solid #fcd34d !important;
+                    background-color: #fffdf5 !important;
+                    border: 1.5px solid #fde68a !important;
                     border-radius: 6px !important;
                     padding: 8px 10px !important;
                     margin-bottom: 8px !important;
-                    box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
+                    box-shadow: 0 2px 4px rgba(180, 83, 9, 0.08) !important;
                 }
-                .gw-card-header { display: flex !important; justify-content: space-between !important; align-items: center !important; margin-bottom: 4px !important; }
-                .gw-card-title { font-size: 12px !important; font-weight: bold !important; color: #78350f !important; }
-                .gw-mvp { font-size: 9px !important; background: #fef3c7 !important; color: #b45309 !important; border: 1px solid #fde68a !important; padding: 2px 6px !important; border-radius: 4px !important; font-weight: bold !important; }
+                .gw-card-header { 
+                    display: flex !important; 
+                    justify-content: space-between !important; 
+                    align-items: center !important; 
+                    margin-bottom: 4px !important; 
+                }
+                .gw-card-title { 
+                    font-size: 12px !important; 
+                    font-weight: bold !important; 
+                    color: #451a03 !important; /* Cokelat Tua Tegas */
+                }
+                .gw-mvp { 
+                    font-size: 9px !important; 
+                    background-color: #fef3c7 !important; 
+                    color: #b45309 !important; 
+                    border: 1px solid #fde68a !important; 
+                    padding: 2px 6px !important; 
+                    border-radius: 4px !important; 
+                    font-weight: bold !important; 
+                }
                 .gw-bar-container {
-                    height: 14px !important; background: #e2e8f0 !important; border-radius: 3px !important; border: 1px solid #cbd5e1 !important;
-                    display: flex !important; overflow: hidden !important; position: relative !important;
+                    height: 14px !important; 
+                    background-color: #cbd5e1 !important; 
+                    border-radius: 3px !important; 
+                    border: 1px solid #94a3b8 !important;
+                    display: flex !important; 
+                    overflow: hidden !important; 
+                    position: relative !important;
                 }
                 .gw-bar-blue { background: linear-gradient(90deg, #2563eb, #60a5fa) !important; height: 100% !important; }
                 .gw-bar-red { background: linear-gradient(90deg, #dc2626, #f87171) !important; height: 100% !important; }
                 .gw-bar-text {
                     position: absolute !important; width: 100% !important; text-align: center !important; line-height: 14px !important;
-                    font-size: 9px !important; font-weight: bold !important; color: #fff !important; text-shadow: 1px 1px 2px #000 !important;
+                    font-size: 9px !important; font-weight: bold !important; color: #ffffff !important; text-shadow: 1px 1px 2px #000 !important;
                 }
-                .gw-card-footer { font-size: 10px !important; color: #78350f !important; margin-top: 3px !important; font-weight: 600 !important; }
+                .gw-card-footer { 
+                    font-size: 10px !important; 
+                    color: #78350f !important; 
+                    margin-top: 4px !important; 
+                    font-weight: 700 !important; 
+                }
             </style>
             """
 
