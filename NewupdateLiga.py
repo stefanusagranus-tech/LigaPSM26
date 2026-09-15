@@ -953,6 +953,8 @@ if st.sidebar.button(logout_text, use_container_width=True, key="logout_sidebar"
     st.session_state.username = ""
     st.rerun()
 
+
+# =============================================================================
 # =============================================================================
 # 8. HEADER UTAMA DENGAN NOTIFIKASI SHIFT / PERSONIL BELUM INPUT
 # =============================================================================
@@ -978,48 +980,44 @@ else:
         ):
             df_pps = st.session_state.sales_pps_df.copy()
 
-            # Deteksi otomatis nama kolom tanggal dan shift yang tersedia
+            # Cari nama kolom tanggal & shift secara otomatis
             col_date = next(
                 (
-                    col
-                    for col in ["updated_at", "tanggal", "date"]
-                    if col in df_pps.columns
+                    c
+                    for c in ["updated_at", "tanggal", "date"]
+                    if c in df_pps.columns
                 ),
                 None,
             )
             col_shift = next(
                 (
-                    col
-                    for col in ["shift", "shift_name", "nama_shift"]
-                    if col in df_pps.columns
+                    c
+                    for c in ["shift", "shift_name", "nama_shift"]
+                    if c in df_pps.columns
                 ),
                 None,
             )
 
             if col_date and col_shift:
-                # 1. Konversi tanggal (WIB)
+                # Ambil tanggal hari ini dari variabel waktu_wib yang sudah kamu buat di atas
+                today_date = waktu_wib.date()
+
                 df_pps["clean_date"] = pd.to_datetime(
                     df_pps[col_date], errors="coerce"
                 ).dt.date
-                today_date = pd.Timestamp.now(tz="Asia/Jakarta").date()
-
-                # 2. Filter data hari ini
                 df_today = df_pps[df_pps["clean_date"] == today_date]
 
-                # 3. Cek shift yang terisi
                 shifts_found = (
                     df_today[col_shift].dropna().astype(str).unique()
                 )
 
-                # Format penyesuaian angka (misal jika kolom shift cuma berisi angka 1, 2, 3 atau 'Shift 1')
-                all_shifts = {"Shift 1", "Shift 2", "Shift 3"}
+                all_shifts = ["Shift 1", "Shift 2", "Shift 3"]
                 missing_shifts = [
                     s
-                    for s in sorted(all_shifts)
-                    if not any(str(s) in str(found) for found in shifts_found)
+                    for s in all_shifts
+                    if not any(s in str(found) for found in shifts_found)
                 ]
 
-                # 4. Status Teks
                 if len(df_today) == 0:
                     unfilled_info = "⚠️ Belum ada input hari ini"
                     badge_bg = "rgba(245, 158, 11, 0.15)"
@@ -1031,112 +1029,18 @@ else:
                     badge_border = "#ef4444"
                     badge_text_color = "#fca5a5"
             else:
-                unfilled_info = "ℹ️ Kolom tanggal/shift tdk ditemukan"
+                unfilled_info = "ℹ️ Kolom updated_at / shift tdk ada"
         else:
             unfilled_info = "⚠️ Data sales pps kosong"
     except Exception as e:
         unfilled_info = "⚠️ Cek data gagal"
 
-    current_time_str = pd.Timestamp.now(tz="Asia/Jakarta").strftime(
-        "%d/%m/%Y | %H:%M WIB"
-    )
-
-    st.markdown(
-        f"""
-        <div style='background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%); padding: 16px 24px; border-radius: 12px; border: 1px solid #38bdf8; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;'>
-# =============================================================================
-# 8. HEADER UTAMA DENGAN NOTIFIKASI SHIFT / PERSONIL BELUM INPUT
-# =============================================================================
-is_di_dalam_camp = (
-    "portal_prep_ready" in st.session_state and st.session_state.portal_prep_ready
-) or (
-    "current_camp_menu" in st.session_state
-    and st.session_state["current_camp_menu"] == "status"
-)
-
-if is_di_dalam_camp:
-    pass
-else:
-    unfilled_info = "✅ Semua shift aman"
-    badge_bg = "rgba(16, 185, 129, 0.15)"
-    badge_border = "#10b981"
-    badge_text_color = "#34d399"
-
-    try:
-        if (
-            "sales_pps_df" in st.session_state
-            and not st.session_state.sales_pps_df.empty
-        ):
-            df_pps = st.session_state.sales_pps_df.copy()
-
-            # Deteksi otomatis nama kolom tanggal dan shift yang tersedia
-            col_date = next(
-                (
-                    col
-                    for col in ["updated_at", "tanggal", "date"]
-                    if col in df_pps.columns
-                ),
-                None,
-            )
-            col_shift = next(
-                (
-                    col
-                    for col in ["shift", "shift_name", "nama_shift"]
-                    if col in df_pps.columns
-                ),
-                None,
-            )
-
-            if col_date and col_shift:
-                # 1. Konversi tanggal (WIB)
-                df_pps["clean_date"] = pd.to_datetime(
-                    df_pps[col_date], errors="coerce"
-                ).dt.date
-                today_date = pd.Timestamp.now(tz="Asia/Jakarta").date()
-
-                # 2. Filter data hari ini
-                df_today = df_pps[df_pps["clean_date"] == today_date]
-
-                # 3. Cek shift yang terisi
-                shifts_found = (
-                    df_today[col_shift].dropna().astype(str).unique()
-                )
-
-                # Format penyesuaian angka (misal jika kolom shift cuma berisi angka 1, 2, 3 atau 'Shift 1')
-                all_shifts = {"Shift 1", "Shift 2", "Shift 3"}
-                missing_shifts = [
-                    s
-                    for s in sorted(all_shifts)
-                    if not any(str(s) in str(found) for found in shifts_found)
-                ]
-
-                # 4. Status Teks
-                if len(df_today) == 0:
-                    unfilled_info = "⚠️ Belum ada input hari ini"
-                    badge_bg = "rgba(245, 158, 11, 0.15)"
-                    badge_border = "#f59e0b"
-                    badge_text_color = "#fbbf24"
-                elif missing_shifts:
-                    unfilled_info = f"⚠️ Belum: {', '.join(missing_shifts)}"
-                    badge_bg = "rgba(239, 68, 68, 0.15)"
-                    badge_border = "#ef4444"
-                    badge_text_color = "#fca5a5"
-            else:
-                unfilled_info = "ℹ️ Kolom tanggal/shift tdk ditemukan"
-        else:
-            unfilled_info = "⚠️ Data sales pps kosong"
-    except Exception as e:
-        unfilled_info = "⚠️ Cek data gagal"
-
-    current_time_str = pd.Timestamp.now(tz="Asia/Jakarta").strftime(
-        "%d/%m/%Y | %H:%M WIB"
-    )
-
+    # HTML Header Utama (Emoji diganti ke Unicode escape agar aman dari SyntaxError)
     st.markdown(
         f"""
         <div style='background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%); padding: 16px 24px; border-radius: 12px; border: 1px solid #38bdf8; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;'>
             <div>
-                <h2 style='margin:0; color:#ffffff; font-size: 22px;'>📊 PSM TOKO SALES MONITORING</h2>
+                <h2 style='margin:0; color:#ffffff; font-size: 22px;'>\U0001F4CA PSM TOKO SALES MONITORING</h2>
                 <p style='margin:0; color:#38bdf8; font-size: 13px;'>Sistem Analisis & Optimasi Pencapaian Target Toko</p>
             </div>
             <div style='display: flex; align-items: center; gap: 15px;'>
@@ -1146,13 +1050,14 @@ else:
                 </div>
                 <div style='text-align: right;'>
                     <p style='margin:0; color:#94a3b8; font-size: 9px; font-weight:bold;'>WAKTU REALTIME</p>
-                    <p style='margin:0; color:#38bdf8; font-size: 12px; font-weight:bold;'>⏰ {current_time_str}</p>
+                    <p style='margin:0; color:#38bdf8; font-size: 12px; font-weight:bold;'>\U000023F0 {current_time_str}</p>
                 </div>
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
+    
 
 # ==========================================
 # 9. MODUL TAB / SUB MENU
