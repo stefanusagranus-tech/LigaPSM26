@@ -2822,7 +2822,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 </div>
             </div>
             """.format(active_period=active_period, items_html_left=items_html_left, items_html_right=items_html_right)
-
+        #batas========================================================================================================#
         elif page_num == 2:
             # 1. AMBIL DATA DARI SESSION STATE
             periods_df = st.session_state.get("periods_df", pd.DataFrame())
@@ -2835,34 +2835,58 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             user_role = str(st.session_state.get("role", "user")).strip().lower()
             is_admin = (user_role == "admin" or current_user == "admin")
 
-            # 2. CARI PERIODE AKTIF UTAMA & DATES
-            active_period_id = ""
-            if not periods_df.empty:
-                active_p = periods_df[periods_df["status"].astype(str).str.strip().str.lower() == "aktif"] if "status" in periods_df.columns else pd.DataFrame()
-                if not active_p.empty:
-                    active_period_id = str(active_p.iloc[0].get("period_id", "")).strip()
-                else:
-                    active_period_id = str(periods_df.iloc[0].get("period_id", "")).strip()
+            # 2. TENTUKAN BULAN & MODE REKAP H+1 (Tanggal 1 Cek Hasil Bulan Lalu)
+            t_today = pd.Timestamp.now().date()
+            
+            if t_today.day == 1:
+                eval_month = t_today.month - 1 if t_today.month > 1 else 12
+                eval_year = t_today.year if t_today.month > 1 else t_today.year - 1
+                is_recap_mode = True
+                recap_title_note = " (REKAP FINAL BULAN LALU)"
+            else:
+                eval_month = t_today.month
+                eval_year = t_today.year
+                is_recap_mode = False
+                recap_title_note = ""
 
-            # 3. HITUNG TIME FACTOR & AMBIL DATA PPS AKTIF (HALAMAN KIRI)
+            # Random Icon Musuh (Bisa menggunakan seed berdasarkan bulan/tahun agar stabil sepanjang bulan tersebut)
+            import random
+            enemy_pool = ["👹", "💀", "🕷️", "🐉", "🦇", "🧟", "🧙‍♂️", "🧛‍♂️"]
+            # Gunakan gabungan tahun & bulan sebagai seed agar icon musuh tidak berubah-ubah setiap refresh di bulan yang sama
+            random.seed(eval_year * 100 + eval_month)
+            current_enemy_icon = random.choice(enemy_pool)
+            blue_guild_icon = "🐉" # Logo guild biru konsisten Naga
+
+            # 3. CARI PERIODE AKTIF UTAMA & DATES (HALAMAN KIRI)
             active_pps_rows = []
             active_period_pps_name = "Program PPS"
             time_factor = 50.0
             
             if not periods_pps_df.empty:
-                for _, r in periods_pps_df.iterrows():
-                    if str(r.get("status", "")).strip().lower() == "aktif":
-                        active_pps_rows.append(r)
-                if not active_pps_rows:
+                p_df_pps = periods_pps_df.copy()
+                p_df_pps["start_date"] = pd.to_datetime(p_df_pps["start_date"], errors="coerce").dt.date
+                p_df_pps["end_date"] = pd.to_datetime(p_df_pps["end_date"], errors="coerce").dt.date
+                
+                current_pps = p_df_pps[
+                    (p_df_pps["start_date"] <= t_today) & 
+                    (p_df_pps["end_date"] >= t_today) &
+                    (p_df_pps["status"].astype(str).str.strip().str.lower() == "aktif")
+                ]
+                
+                if current_pps.empty:
+                    current_pps = p_df_pps[p_df_pps["status"].astype(str).str.strip().str.lower() == "aktif"]
+                    
+                if not current_pps.empty:
+                    active_pps_rows = [row for _, row in current_pps.iterrows()]
+                else:
                     active_pps_rows = [periods_pps_df.iloc[0]]
                     
                 if active_pps_rows:
                     r_act = active_pps_rows[0]
                     active_period_pps_name = str(r_act.get("period_name", "Program PPS"))
                     try:
-                        s_date = pd.to_datetime(r_act.get("start_date")).date()
-                        e_date = pd.to_datetime(r_act.get("end_date")).date()
-                        t_today = pd.Timestamp.now().date()
+                        s_date = r_act.get("start_date")
+                        e_date = r_act.get("end_date")
                         total_days = (e_date - s_date).days + 1
                         passed_days = (t_today - s_date).days + 1
                         passed_days = max(1, min(passed_days, total_days))
@@ -2936,11 +2960,19 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 if "start_date" in p_df.columns:
                     p_df["start_date"] = pd.to_datetime(p_df["start_date"], errors="coerce")
                     sept_periods = p_df[
-                        (p_df["start_date"].dt.month == 9) | 
+                        (p_df["start_date"].dt.month == eval_month) | 
                         (p_df["period_id"].astype(str).str.strip().str.upper().str.startswith("S"))
                     ]
                     if not sept_periods.empty and "period_id" in sept_periods.columns:
                         sept_period_ids = sept_periods["period_id"].astype(str).str.strip().tolist()
+
+            sept_pps_ids = []
+            if not periods_pps_df.empty and "start_date" in periods_pps_df.columns:
+                pps_temp = periods_pps_df.copy()
+                pps_temp["start_date"] = pd.to_datetime(pps_temp["start_date"], errors="coerce")
+                sept_pps = pps_temp[pps_temp["start_date"].dt.month == eval_month]
+                if not sept_pps.empty and "period_id" in sept_pps.columns:
+                    sept_pps_ids = sept_pps["period_id"].astype(str).str.strip().tolist()
 
             psm_target, psm_actual, psm_mvp = 0.0, 0.0, "-"
             if not sales_item_df.empty and "target_qty" in sales_item_df.columns:
@@ -2965,7 +2997,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             items_kanan_list = []
             total_blue_points = 0.0
-            total_red_points = 75.0
 
             for p in programs:
                 p_key = p["key"]
@@ -2993,13 +3024,17 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                             if not grp.empty and grp["ach"].max() > 0:
                                 mvp_name = str(grp["ach"].idxmax()).title()
                 else:
-                    t_row = pd.DataFrame()
+                    t_rows = pd.DataFrame()
                     if not periods_pps_df.empty and "period_name" in periods_pps_df.columns:
-                        t_row = periods_pps_df[periods_pps_df["period_name"].astype(str).str.lower().str.contains(p_key)]
-                        if t_row.empty and p_key == "serba":
-                            t_row = periods_pps_df[periods_pps_df["period_name"].astype(str).str.lower().str.contains("sg")]
+                        mask = periods_pps_df["period_name"].astype(str).str.lower().str.contains(p_key)
+                        if p_key == "serba":
+                            mask = mask | periods_pps_df["period_name"].astype(str).str.lower().str.contains("sg")
+                        t_rows = periods_pps_df[mask]
+                        
+                        if sept_pps_ids and "period_id" in t_rows.columns:
+                            t_rows = t_rows[t_rows["period_id"].astype(str).str.strip().isin(sept_pps_ids)]
                     
-                    p_target = float(pd.to_numeric(t_row["target_total"].iloc[0], errors="coerce")) if not t_row.empty and "target_total" in t_row.columns else 0.0
+                    p_target = float(pd.to_numeric(t_rows["target_total"], errors="coerce").sum()) if not t_rows.empty and "target_total" in t_rows.columns else 0.0
                     col_name = p["col_act"]
                     p_actual = float(pd.to_numeric(sales_pps_df[col_name], errors="coerce").sum()) if not sales_pps_df.empty and col_name in sales_pps_df.columns else 0.0
                     
@@ -3025,18 +3060,26 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     "is_suegeer": (p_key == "suegeer")
                 })
 
+            # Poin Maksimal 75 (Aturan: Jika Biru Naik, Merah Berkurang)
+            total_blue_points = min(75.0, total_blue_points)
             total_blue_pts_int = int(round(total_blue_points))
-            total_red_pts_int = int(total_red_points)
+            total_red_pts_int = max(0, 75 - total_blue_pts_int)
             
-            header_total_scale = max(1.0, total_blue_points + total_red_points)
-            header_blue_pct = (total_blue_points / header_total_scale) * 100
+            header_blue_pct = (total_blue_points / 75.0) * 100
             header_red_pct = 100 - header_blue_pct
             
-            match_status = "VICTORY" if total_blue_points >= total_red_points else "IN BATTLE"
-            status_color = "#eab308" if match_status == "VICTORY" else "#ef4444"
+            # Penentuan Status Victory / Defeat
+            if total_blue_points > total_red_pts_int:
+                match_status = "VICTORY 🏆"
+                status_color = "#16a34a"
+            elif total_red_pts_int > total_blue_points:
+                match_status = "DEFEAT 💀"
+                status_color = "#dc2626"
+            else:
+                match_status = "DRAW ⚔️"
+                status_color = "#eab308"
 
-            # 6. RENDER HTML DUA HALAMAN (FIX WATERMARK OVERLAY & Z-INDEX)
-            # Render Halaman Kiri (Target PPS)
+            # 6. RENDER HTML DUA HALAMAN
             html_kiri_str = "".join([
                 f'<div class="rpg-item-card">'
                 f'<div><div class="item-title">{x["icon"]} {x["p_name"]} <span class="{x["badge_cls"]}">{x["badge_txt"]}</span></div>'
@@ -3046,7 +3089,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 for x in items_kiri_list
             ]) if items_kiri_list else '<div style="color:#78350f; font-size:12px; text-align:center; margin-top:20px;"><i>Belum ada data Target PPS aktif.</i></div>'
 
-            # Render Halaman Kanan (Guild War Cards)
             html_kanan_items = ""
             for item in items_kanan_list:
                 label_stat = f"Redeem: {item['p_actual']} / Syarat: {item['p_target']}" if item["is_suegeer"] else f"Hit: {item['p_actual']} / Target: {item['p_target']}"
@@ -3065,13 +3107,15 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     f'</div>'
                 )
 
-            # Header Box Guild War
             html_header_box = (
                 f'<div class="gw-header-box">'
+                f'<div style="font-size: 10px; font-weight: bold; color: #b45309; margin-bottom: 2px;">'
+                f'ARENA GUILD WAR{recap_title_note}'
+                f'</div>'
                 f'<div class="gw-match-title">'
-                f'<span class="gw-team-blue">🛡️ ACHIV: {total_blue_pts_int} PTS</span>'
-                f'<span class="gw-vs">⚔️</span>'
-                f'<span class="gw-team-red">TARGET: {total_red_pts_int} PTS 🎯</span>'
+                f'<span class="gw-team-blue">{blue_guild_icon} ACHIV: {total_blue_pts_int} PTS</span>'
+                f'<span class="gw-vs">VS</span>'
+                f'<span class="gw-team-red">{current_enemy_icon} TARGET: {total_red_pts_int} PTS</span>'
                 f'</div>'
                 f'<div class="gw-status-text" style="color: {status_color} !important;">{match_status}</div>'
                 f'<div class="gw-main-bar">'
@@ -3082,10 +3126,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 f'</div>'
             )
 
-            # CSS PERBAIKAN: Memaksa Z-Index Naik Ke Depan Watermark
             css_gw = """
             <style>
-                /* Paksa container halaman kanan & semua elemen didalamnya agar selalu di depan watermark */
                 .rpg-book-page-right {
                     position: relative !important;
                     z-index: 1 !important;
@@ -3095,8 +3137,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     z-index: 5 !important;
                     opacity: 1 !important;
                 }
-
-                /* HEADER GUILD WAR ARENA */
                 .gw-header-box {
                     background-color: #fffbeb !important;
                     border: 2px solid #b45309 !important;
@@ -3114,7 +3154,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 }
                 .gw-team-blue { color: #0284c7 !important; font-size: 13px !important; font-weight: 900 !important; }
                 .gw-team-red { color: #dc2626 !important; font-size: 13px !important; font-weight: 900 !important; }
-                .gw-vs { font-size: 14px !important; color: #78350f !important; margin: 0 6px !important; }
+                .gw-vs { font-size: 12px !important; color: #78350f !important; margin: 0 6px !important; }
                 .gw-status-text {
                     font-size: 11px !important;
                     font-weight: 900 !important;
@@ -3137,8 +3177,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     font-size: 10px !important; font-weight: bold !important; color: #ffffff !important; text-shadow: 1px 1px 2px #000 !important;
                     left: 0; top: 0;
                 }
-
-                /* KARTU ITEM GUILD WAR */
                 .gw-card {
                     background-color: #fffdf5 !important;
                     border: 1.5px solid #fde68a !important;
@@ -3153,27 +3191,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     align-items: center !important; 
                     margin-bottom: 4px !important; 
                 }
-                .gw-card-title { 
-                    font-size: 12px !important; 
-                    font-weight: bold !important; 
-                    color: #451a03 !important;
-                }
+                .gw-card-title { font-size: 12px !important; font-weight: bold !important; color: #451a03 !important; }
                 .gw-mvp { 
-                    font-size: 9px !important; 
-                    background-color: #fef3c7 !important; 
-                    color: #b45309 !important; 
-                    border: 1px solid #fde68a !important; 
-                    padding: 2px 6px !important; 
-                    border-radius: 4px !important; 
-                    font-weight: bold !important; 
+                    font-size: 9px !important; background-color: #fef3c7 !important; color: #b45309 !important; 
+                    border: 1px solid #fde68a !important; padding: 2px 6px !important; border-radius: 4px !important; font-weight: bold !important; 
                 }
                 .gw-bar-container {
-                    height: 14px !important; 
-                    background-color: #cbd5e1 !important; 
-                    border-radius: 3px !important; 
-                    border: 1px solid #94a3b8 !important;
-                    display: flex !important; 
-                    overflow: hidden !important; 
+                    height: 14px !important; background-color: #cbd5e1 !important; border-radius: 3px !important; 
+                    border: 1px solid #94a3b8 !important; display: flex !important; overflow: hidden !important; 
                 }
                 .gw-bar-blue { background: linear-gradient(90deg, #2563eb, #60a5fa) !important; height: 100% !important; }
                 .gw-bar-red { background: linear-gradient(90deg, #dc2626, #f87171) !important; height: 100% !important; }
@@ -3182,16 +3207,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     font-size: 9px !important; font-weight: bold !important; color: #ffffff !important; text-shadow: 1px 1px 2px #000 !important;
                     left: 0; top: 0;
                 }
-                .gw-card-footer { 
-                    font-size: 10px !important; 
-                    color: #78350f !important; 
-                    margin-top: 4px !important; 
-                    font-weight: 700 !important; 
-                }
+                .gw-card-footer { font-size: 10px !important; color: #78350f !important; margin-top: 4px !important; font-weight: 700 !important; }
             </style>
             """
 
-            # Konstruksi HTML Gabungan
             html_open_tugas = (
                 f'{css_gw}'
                 f'<div class="rpg-open-book-container">'
