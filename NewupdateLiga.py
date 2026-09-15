@@ -956,46 +956,76 @@ if st.sidebar.button(logout_text, use_container_width=True, key="logout_sidebar"
 # =============================================================================
 # 8. HEADER UTAMA DENGAN NOTIFIKASI SHIFT / PERSONIL BELUM INPUT
 # =============================================================================
-is_di_dalam_camp = ("portal_prep_ready" in st.session_state and st.session_state.portal_prep_ready) or \
-                    ("current_camp_menu" in st.session_state and st.session_state["current_camp_menu"] == "status")
+is_di_dalam_camp = (
+    "portal_prep_ready" in st.session_state and st.session_state.portal_prep_ready
+) or (
+    "current_camp_menu" in st.session_state
+    and st.session_state["current_camp_menu"] == "status"
+)
 
 if is_di_dalam_camp:
     pass
 else:
-   # Logika Deteksi Shift / Personil yang Belum Input Hari Ini (Aman & Tepat Kolom)
+    # Logika Deteksi Shift / Personil yang Belum Input Hari Ini (Presisi WIB & Nama Shift)
     unfilled_info = "✅ Semua shift aman"
     badge_bg = "rgba(16, 185, 129, 0.15)"
     badge_border = "#10b981"
     badge_text_color = "#34d399"
-    
+
     try:
-        if "sales_pps_df" in st.session_state and not st.session_state.sales_pps_df.empty:
+        if (
+            "sales_pps_df" in st.session_state
+            and not st.session_state.sales_pps_df.empty
+        ):
             df_pps = st.session_state.sales_pps_df.copy()
-            
-            if "updated_at" in df_pps.columns:
-                # Konversi kolom updated_at menjadi tipe tanggal
-                df_pps["clean_date"] = pd.to_datetime(df_pps["updated_at"], errors="coerce").dt.date
-                today_date = pd.Timestamp.now().date()
-                
-                # Filter data khusus hari ini
+
+            if (
+                "updated_at" in df_pps.columns
+                and "shift_name" in df_pps.columns
+            ):
+                # 1. Konversi tanggal dengan Timezone WIB (UTC+7) agar pas pergantian jam 12 malam
+                df_pps["clean_date"] = pd.to_datetime(
+                    df_pps["updated_at"], errors="coerce"
+                ).dt.date
+                today_date = (
+                    pd.Timestamp.now(tz="Asia/Jakarta").date()
+                )  # Menggunakan waktu WIB
+
+                # 2. Filter data khusus hari ini
                 df_today = df_pps[df_pps["clean_date"] == today_date]
-                
-                # Standar operasional: misalnya ada 3 shift per hari (atau sesuaikan target jumlah entri harian Anda)
-                total_expected_shift = 3 
-                current_input_count = len(df_today)
-                missing_shifts = max(0, total_expected_shift - current_input_count)
-                
-                if missing_shifts > 0:
-                    unfilled_info = f"⚠️ Ada {missing_shifts} shift belum input"
+
+                # 3. Cek daftar shift unik yang sudah terinput hari ini
+                shifts_found = (
+                    df_today["shift_name"].dropna().astype(str).unique()
+                )
+
+                # Daftar shift wajib
+                all_shifts = {"Shift 1", "Shift 2", "Shift 3"}
+                missing_shifts = list(all_shifts - set(shifts_found))
+                missing_shifts.sort()
+
+                # 4. Penentuan Status Notifikasi
+                if len(df_today) == 0:
+                    unfilled_info = "⚠️ Belum ada input hari ini"
+                    badge_bg = "rgba(245, 158, 11, 0.15)"
+                    badge_border = "#f59e0b"
+                    badge_text_color = "#fbbf24"
+                elif missing_shifts:
+                    unfilled_info = f"⚠️ Belum: {', '.join(missing_shifts)}"
                     badge_bg = "rgba(239, 68, 68, 0.15)"
                     badge_border = "#ef4444"
                     badge_text_color = "#fca5a5"
             else:
-                unfilled_info = "ℹ️ Kolom updated_at tdk ada"
+                unfilled_info = "ℹ️ Kolom updated_at / shift_name tdk ada"
         else:
-            unfilled_info = "ℹ️ Data sales pps kosong"
+            unfilled_info = "⚠️ Data sales pps kosong"
     except Exception as e:
         unfilled_info = "⚠️ Cek data gagal"
+
+    # Pastikan current_time_str terdefinisi dengan jam WIB
+    current_time_str = pd.Timestamp.now(tz="Asia/Jakarta").strftime(
+        "%d/%m/%Y | %H:%M WIB"
+    )
 
     st.markdown(
         f"""
