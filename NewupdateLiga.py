@@ -962,40 +962,44 @@ is_di_dalam_camp = ("portal_prep_ready" in st.session_state and st.session_state
 if is_di_dalam_camp:
     pass
 else:
-    # Logika Deteksi Shift / Personil yang Belum Input Hari Ini
+   # Logika Deteksi Shift / Personil yang Belum Input Hari Ini (Aman dari Error)
     unfilled_info = "✅ Semua shift aman"
     badge_bg = "rgba(16, 185, 129, 0.15)"
     badge_border = "#10b981"
     badge_text_color = "#34d399"
     
     try:
-        if not sales_pps_df.empty and "updated_at" in sales_pps_df.columns:
-            sales_pps_df["clean_date"] = pd.to_datetime(sales_pps_df["updated_at"], errors="coerce").dt.date
-            today_date = pd.Timestamp.now().date()
+        if not sales_pps_df.empty:
+            # Cari kolom tanggal secara otomatis di sales_pps_df
+            date_col = None
+            for col in ["updated_at", "tanggal_input", "date", "created_at"]:
+                if col in sales_pps_df.columns:
+                    date_col = col
+                    break
             
-            # Filter data khusus hari ini
-            df_today = sales_pps_df[sales_pps_df["clean_date"] == today_date]
-            
-            # Asumsi standar operasional: ada 6 entri (shift/personil) per hari
-            total_expected_shift = 6 
-            current_input_count = len(df_today)
-            missing_shifts = max(0, total_expected_shift - current_input_count)
-            
-            if missing_shifts > 0:
-                unfilled_info = f"⚠️ Ada {missing_shifts} shift belum input"
-                badge_bg = "rgba(239, 68, 68, 0.15)"
-                badge_border = "#ef4444"
-                badge_text_color = "#fca5a5"
+            if date_col:
+                sales_pps_df["clean_date"] = pd.to_datetime(sales_pps_df[date_col], errors="coerce").dt.date
+                today_date = pd.Timestamp.now().date()
+                
+                # Filter data khusus hari ini
+                df_today = sales_pps_df[sales_pps_df["clean_date"] == today_date]
+                
+                # Asumsi standar operasional: ada 6 entri (shift/personil) per hari
+                total_expected_shift = 6 
+                current_input_count = len(df_today)
+                missing_shifts = max(0, total_expected_shift - current_input_count)
+                
+                if missing_shifts > 0:
+                    unfilled_info = f"⚠️ Ada {missing_shifts} shift belum input"
+                    badge_bg = "rgba(239, 68, 68, 0.15)"
+                    badge_border = "#ef4444"
+                    badge_text_color = "#fca5a5"
+            else:
+                unfilled_info = "ℹ️ Kolom tanggal tidak ditemukan"
         else:
-            unfilled_info = "⚠️ Data sales kosong"
-            badge_bg = "rgba(234, 179, 8, 0.15)"
-            badge_border = "#eab308"
-            badge_text_color = "#fde047"
-    except Exception:
+            unfilled_info = "ℹ️ Data sales kosong"
+    except Exception as e:
         unfilled_info = "⚠️ Cek data gagal"
-        badge_bg = "rgba(234, 179, 8, 0.15)"
-        badge_border = "#eab308"
-        badge_text_color = "#fde047"
 
     st.markdown(
         f"""
