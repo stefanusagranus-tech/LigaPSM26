@@ -953,12 +953,8 @@ if st.sidebar.button(logout_text, use_container_width=True, key="logout_sidebar"
     st.session_state.username = ""
     st.rerun()
 
-# ==========================================
-# 8. HEADER UTAMA (Tombol Menyatu di Banner)
-# ==========================================
-
 # =============================================================================
-# 8. HEADER UTAMA (DIKUNCI AGAR TIDAK BOCOR KE PREPARATION CAMP ATAU STATUS CARD)
+# 8. HEADER UTAMA DENGAN NOTIFIKASI SHIFT / PERSONIL BELUM INPUT
 # =============================================================================
 is_di_dalam_camp = ("portal_prep_ready" in st.session_state and st.session_state.portal_prep_ready) or \
                     ("current_camp_menu" in st.session_state and st.session_state["current_camp_menu"] == "status")
@@ -966,16 +962,59 @@ is_di_dalam_camp = ("portal_prep_ready" in st.session_state and st.session_state
 if is_di_dalam_camp:
     pass
 else:
+    # Logika Deteksi Shift / Personil yang Belum Input Hari Ini
+    unfilled_info = "✅ Semua shift aman"
+    badge_bg = "rgba(16, 185, 129, 0.15)"
+    badge_border = "#10b981"
+    badge_text_color = "#34d399"
+    
+    try:
+        if not sales_pps_df.empty and "updated_at" in sales_pps_df.columns:
+            sales_pps_df["clean_date"] = pd.to_datetime(sales_pps_df["updated_at"], errors="coerce").dt.date
+            today_date = pd.Timestamp.now().date()
+            
+            # Filter data khusus hari ini
+            df_today = sales_pps_df[sales_pps_df["clean_date"] == today_date]
+            
+            # Asumsi standar operasional: ada 6 entri (shift/personil) per hari
+            total_expected_shift = 6 
+            current_input_count = len(df_today)
+            missing_shifts = max(0, total_expected_shift - current_input_count)
+            
+            if missing_shifts > 0:
+                unfilled_info = f"⚠️ Ada {missing_shifts} shift belum input"
+                badge_bg = "rgba(239, 68, 68, 0.15)"
+                badge_border = "#ef4444"
+                badge_text_color = "#fca5a5"
+        else:
+            unfilled_info = "⚠️ Data sales kosong"
+            badge_bg = "rgba(234, 179, 8, 0.15)"
+            badge_border = "#eab308"
+            badge_text_color = "#fde047"
+    except Exception:
+        unfilled_info = "⚠️ Cek data gagal"
+        badge_bg = "rgba(234, 179, 8, 0.15)"
+        badge_border = "#eab308"
+        badge_text_color = "#fde047"
+
     st.markdown(
         f"""
-        <div style='background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%); padding: 16px 24px 16px 60px; border-radius: 12px; border: 1px solid #38bdf8; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; position: relative;'>
+        <div style='background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%); padding: 16px 24px; border-radius: 12px; border: 1px solid #38bdf8; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;'>
             <div>
-                <h2 style='margin:0; color:#ffffff; font-size: 24px;'>📊 PSM TOKO SALES MONITORING</h2>
+                <h2 style='margin:0; color:#ffffff; font-size: 22px;'>📊 PSM TOKO SALES MONITORING</h2>
                 <p style='margin:0; color:#38bdf8; font-size: 13px;'>Sistem Analisis & Optimasi Pencapaian Target Toko</p>
             </div>
-            <div style='text-align: right;'>
-                <p style='margin:0; color:#94a3b8; font-size: 11px; font-weight:bold;'>WAKTU REALTIME SISTEM</p>
-                <p style='margin:0; color:#38bdf8; font-size: 14px; font-weight:bold;'>⏰ {current_time_str}</p>
+            <div style='display: flex; align-items: center; gap: 15px;'>
+                <!-- Kotak Notifikasi Status Shift -->
+                <div style='background: {badge_bg}; border: 1px solid {badge_border}; padding: 6px 12px; border-radius: 8px; text-align: right;'>
+                    <p style='margin:0; color:#94a3b8; font-size: 9px; font-weight:bold;'>STATUS INPUT SHIFT</p>
+                    <p style='margin:0; color:{badge_text_color}; font-size: 12px; font-weight:bold;'>{unfilled_info}</p>
+                </div>
+                <!-- Waktu Realtime -->
+                <div style='text-align: right;'>
+                    <p style='margin:0; color:#94a3b8; font-size: 9px; font-weight:bold;'>WAKTU REALTIME</p>
+                    <p style='margin:0; color:#38bdf8; font-size: 12px; font-weight:bold;'>⏰ {current_time_str}</p>
+                </div>
             </div>
         </div>
         """,
