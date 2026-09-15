@@ -962,30 +962,26 @@ is_di_dalam_camp = ("portal_prep_ready" in st.session_state and st.session_state
 if is_di_dalam_camp:
     pass
 else:
-   # Logika Deteksi Shift / Personil yang Belum Input Hari Ini (Aman dari Error)
+   # Logika Deteksi Shift / Personil yang Belum Input Hari Ini (Aman & Tepat Kolom)
     unfilled_info = "✅ Semua shift aman"
     badge_bg = "rgba(16, 185, 129, 0.15)"
     badge_border = "#10b981"
     badge_text_color = "#34d399"
     
     try:
-        if not sales_pps_df.empty:
-            # Cari kolom tanggal secara otomatis di sales_pps_df
-            date_col = None
-            for col in ["updated_at", "tanggal_input", "date", "created_at"]:
-                if col in sales_pps_df.columns:
-                    date_col = col
-                    break
+        if "sales_pps_df" in st.session_state and not st.session_state.sales_pps_df.empty:
+            df_pps = st.session_state.sales_pps_df.copy()
             
-            if date_col:
-                sales_pps_df["clean_date"] = pd.to_datetime(sales_pps_df[date_col], errors="coerce").dt.date
+            if "updated_at" in df_pps.columns:
+                # Konversi kolom updated_at menjadi tipe tanggal
+                df_pps["clean_date"] = pd.to_datetime(df_pps["updated_at"], errors="coerce").dt.date
                 today_date = pd.Timestamp.now().date()
                 
                 # Filter data khusus hari ini
-                df_today = sales_pps_df[sales_pps_df["clean_date"] == today_date]
+                df_today = df_pps[df_pps["clean_date"] == today_date]
                 
-                # Asumsi standar operasional: ada 6 entri (shift/personil) per hari
-                total_expected_shift = 6 
+                # Standar operasional: misalnya ada 3 shift per hari (atau sesuaikan target jumlah entri harian Anda)
+                total_expected_shift = 3 
                 current_input_count = len(df_today)
                 missing_shifts = max(0, total_expected_shift - current_input_count)
                 
@@ -995,9 +991,9 @@ else:
                     badge_border = "#ef4444"
                     badge_text_color = "#fca5a5"
             else:
-                unfilled_info = "ℹ️ Kolom tanggal tidak ditemukan"
+                unfilled_info = "ℹ️ Kolom updated_at tdk ada"
         else:
-            unfilled_info = "ℹ️ Data sales kosong"
+            unfilled_info = "ℹ️ Data sales pps kosong"
     except Exception as e:
         unfilled_info = "⚠️ Cek data gagal"
 
