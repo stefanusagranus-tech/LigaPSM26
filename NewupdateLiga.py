@@ -6841,7 +6841,7 @@ elif selected_tab == "⚙️ Pengaturan & Master":
             st.write("Tabel atau metrik monitoring pencapaian sales akan ditampilkan di sini.")
 
    # SUB TAB 4: INPUT & PENGATURAN PERIODE PPS & SUEGER
-    elif selected_master_sub == "🎯 PPS & Sueger":
+    elif selected_master_sub == "📦 PPS & Sueger":
         st.markdown(
             "<h4 style='color: #c084fc;'>🎯 Input & Pengaturan Periode PPS &"
             " Sueger</h4>",
@@ -7149,7 +7149,7 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                 st.info("Belum ada data periode yang tercatat di tabel `PERIODE_PPS`.")
 
     # --- SUB TAB 5: GENERATOR REPORT SUMMARY WHATSAPP (PERBAIKAN LOGIKA AKURAT) ---
-    elif selected_master_sub == "📊 Status & Summary":
+    elif selected_master_sub == "📈 Status & Summary":
         st.markdown(
             "<h4 style='color: #00ff88;'>📊 Status Database & Generator Report WhatsApp</h4>",
             unsafe_allow_html=True,
