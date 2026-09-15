@@ -956,7 +956,7 @@ if st.sidebar.button(logout_text, use_container_width=True, key="logout_sidebar"
 
 # =============================================================================
 # =============================================================================
-# 8. HEADER UTAMA DENGAN NOTIFIKASI SHIFT / PERSONIL BELUM INPUT
+# 8. HEADER UTAMA DENGAN DEBUG & NOTIFIKASI SHIFT
 # =============================================================================
 is_di_dalam_camp = (
     "portal_prep_ready" in st.session_state and st.session_state.portal_prep_ready
@@ -965,58 +965,30 @@ is_di_dalam_camp = (
     and st.session_state["current_camp_menu"] == "status"
 )
 
-if is_di_dalam_camp:
-    pass
-else:
+if not is_di_dalam_camp:
     unfilled_info = "✅ Semua shift aman"
     badge_bg = "rgba(16, 185, 129, 0.15)"
     badge_border = "#10b981"
     badge_text_color = "#34d399"
 
     try:
-        if (
-            "sales_pps_df" in st.session_state
-            and not st.session_state.sales_pps_df.empty
-        ):
+        if "sales_pps_df" in st.session_state and not st.session_state.sales_pps_df.empty:
             df_pps = st.session_state.sales_pps_df.copy()
 
-            # Cari nama kolom tanggal & shift secara otomatis
-            col_date = next(
-                (
-                    c
-                    for c in ["updated_at", "tanggal", "date"]
-                    if c in df_pps.columns
-                ),
-                None,
-            )
-            col_shift = next(
-                (
-                    c
-                    for c in ["shift", "shift_name", "nama_shift"]
-                    if c in df_pps.columns
-                ),
-                None,
-            )
+            cols_lower = {str(col).lower().strip(): col for col in df_pps.columns}
 
-            if col_date and col_shift:
-                # Ambil tanggal hari ini dari variabel waktu_wib yang sudah kamu buat di atas
+            col_date_name = next((cols_lower[k] for k in ["updated_at", "tanggal", "date", "timestamp", "waktu"] if k in cols_lower), None)
+            col_shift_name = next((cols_lower[k] for k in ["shift", "shift_name", "nama_shift", "shift ", "personil"] if k in cols_lower), None)
+
+            if col_date_name and col_shift_name:
+                df_pps["clean_date"] = pd.to_datetime(df_pps[col_date_name], errors="coerce").dt.date
                 today_date = waktu_wib.date()
-
-                df_pps["clean_date"] = pd.to_datetime(
-                    df_pps[col_date], errors="coerce"
-                ).dt.date
+                
                 df_today = df_pps[df_pps["clean_date"] == today_date]
-
-                shifts_found = (
-                    df_today[col_shift].dropna().astype(str).unique()
-                )
+                shifts_found = df_today[col_shift_name].dropna().astype(str).unique()
 
                 all_shifts = ["Shift 1", "Shift 2", "Shift 3"]
-                missing_shifts = [
-                    s
-                    for s in all_shifts
-                    if not any(s in str(found) for found in shifts_found)
-                ]
+                missing_shifts = [s for s in all_shifts if not any(s.lower() in str(f).lower() for f in shifts_found)]
 
                 if len(df_today) == 0:
                     unfilled_info = "⚠️ Belum ada input hari ini"
@@ -1029,16 +1001,19 @@ else:
                     badge_border = "#ef4444"
                     badge_text_color = "#fca5a5"
             else:
-                unfilled_info = "ℹ️ Kolom updated_at / shift tdk ada"
+                unfilled_info = "ℹ️ Data sheet terdeteksi tanpa kolom Shift/Tanggal"
         else:
-            unfilled_info = "⚠️ Data sales pps kosong"
+            unfilled_info = "⚠️ Memuat Data Sales..."
+            badge_bg = "rgba(245, 158, 11, 0.15)"
+            badge_border = "#f59e0b"
+            badge_text_color = "#fbbf24"
     except Exception as e:
         unfilled_info = "⚠️ Cek data gagal"
 
-    # HTML Header Utama (Emoji diganti ke Unicode escape agar aman dari SyntaxError)
+    # Tampilan Banner Header
     st.markdown(
         f"""
-        <div style='background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%); padding: 16px 24px; border-radius: 12px; border: 1px solid #38bdf8; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;'>
+        <div style='background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%); padding: 16px 24px; border-radius: 12px; border: 1px solid #38bdf8; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;'>
             <div>
                 <h2 style='margin:0; color:#ffffff; font-size: 22px;'>\U0001F4CA PSM TOKO SALES MONITORING</h2>
                 <p style='margin:0; color:#38bdf8; font-size: 13px;'>Sistem Analisis & Optimasi Pencapaian Target Toko</p>
@@ -1057,6 +1032,19 @@ else:
         """,
         unsafe_allow_html=True,
     )
+
+    # Widget Debug Tepat di Bawah Header
+    with st.expander("🔍 DEBUG DATA: Klik untuk melihat kolom & isi sales_pps_df"):
+        if "sales_pps_df" in st.session_state:
+            st.write("**Tipe Data:**", type(st.session_state.sales_pps_df))
+            if hasattr(st.session_state.sales_pps_df, "columns"):
+                st.write("**Daftar Nama Kolom:**", list(st.session_state.sales_pps_df.columns))
+                st.write("**5 Baris Teratas Data:**", st.session_state.sales_pps_df.head())
+            else:
+                st.write("**Isi sales_pps_df (Bukan DataFrame):**", st.session_state.sales_pps_df)
+        else:
+            st.warning("⚠️ 'sales_pps_df' belum ada di st.session_state!")
+            
     
 
 # ==========================================
