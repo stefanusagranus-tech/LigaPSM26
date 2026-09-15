@@ -6461,8 +6461,7 @@ elif selected_tab == "⚙️ Pengaturan & Master":
     # =========================================================================
     if selected_master_sub == "🎛️ Pengaturan PSM":
         
-        selected_psm_sub = st.selectbox(
-            "Pilih Sub Menu PSM",
+        selected_psm_sub = st.radio(
             [
                 "➕ Tambah Item & Target",
                 "⚙️ Pengaturan & Edit Item",
