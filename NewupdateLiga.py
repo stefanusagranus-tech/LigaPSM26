@@ -17,7 +17,6 @@ from streamlit_gsheets import GSheetsConnection
 import streamlit as st
 import streamlit.components.v1 as components
 import textwrap
-from streamlit_sweetalert import sweetalert
 
 
 # ==========================================
