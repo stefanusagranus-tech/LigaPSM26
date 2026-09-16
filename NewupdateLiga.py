@@ -5397,50 +5397,56 @@ elif selected_tab == "📝 Input Data":
     else:
         periods_dict = {"Periode Utama": "P01"}
 
-    # =========================================================================
-    # ULTIMATE VINTAGE GOLD FRAME RADIO (STREAMLIT LATEST VERSION FIX)
-    # =========================================================================
+# =========================================================================
+# DEBUG & ULTIMATE VINTAGE GOLD FRAME FIX
+# =========================================================================
     st.markdown(
         """
     <style>
-        /* 1. Atur container radio agar berjejer horizontal & rapi */
+        /* 1. Atur container radio group */
         div[data-testid="stRadio"] > div[role="radiogroup"] {
             display: flex !important;
             flex-direction: row !important;
             flex-wrap: wrap !important;
-            gap: 10px !important;
+            gap: 12px !important;
             justify-content: center !important;
             align-items: center !important;
             width: 100% !important;
         }
     
-        /* 2. Targetkan SEMUA elemen tombol radio versi baru (BaseWeb UI) */
+        /* 2. PAKSA BINGKAI EMAS PADA SEMUA LABEL RADIO */
+        div[data-testid="stRadio"] div[role="radiogroup"] > label,
         div[data-testid="stRadio"] [data-baseweb="radio"] {
+            /* Latar belakang & Bingkai Emas */
             background: linear-gradient(180deg, #3d2612 0%, #241408 100%) !important;
             border: 2px solid #d4af37 !important;
             box-shadow: 0 0 0 1px #5c3a1e, 0 4px 8px rgba(0, 0, 0, 0.7), inset 0 0 6px rgba(212, 175, 55, 0.25) !important;
             border-radius: 8px !important;
-            padding: 10px 14px !important;
-            margin: 0 !important;
-            cursor: pointer !important;
-            flex: 1 1 28% !important;
-            min-width: 120px !important;
-            display: flex !important;
+            
+            /* Ukuran & Padding Wajib */
+            padding: 12px 18px !important;
+            margin: 5px !important;
+            min-width: 130px !important;
+            
+            /* Flexbox Alignment */
+            display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
             text-align: center !important;
-            transition: all 0.2s ease-in-out !important;
+            cursor: pointer !important;
+            
+            /* DEBUG: Jika bingkai masih tidak kelihatan, border merah ini akan membuktikannya */
+            outline: 1px solid red !important;
         }
     
-        /* 3. Sembunyikan bulat/bullet radio bawaan Streamlit secara mutlak */
-        div[data-testid="stRadio"] [data-baseweb="radio"] > div:first-child,
-        div[data-testid="stRadio"] [data-baseweb="radio"] input {
+        /* 3. Sembunyikan bullet/dot radio asli */
+        div[data-testid="stRadio"] div[role="radiogroup"] label > div:first-child,
+        div[data-testid="stRadio"] [data-baseweb="radio"] > div:first-child {
             display: none !important;
-            width: 0 !important;
-            height: 0 !important;
         }
     
-        /* 4. Format Teks di dalam Bingkai Emas */
+        /* 4. Formatting Teks & Mencegah Background Putih/Transparan Bawaan */
+        div[data-testid="stRadio"] label *,
         div[data-testid="stRadio"] [data-baseweb="radio"] * {
             color: #f3e5ab !important;
             font-family: 'Georgia', serif !important;
@@ -5451,40 +5457,25 @@ elif selected_tab == "📝 Input Data":
             background: transparent !important;
         }
     
-        /* 5. EFEK HOVER (Saat Disentuh/Kursor Di Atas Tombol) */
+        /* 5. HOVER & ACTIVE STATE */
+        div[data-testid="stRadio"] label:hover,
         div[data-testid="stRadio"] [data-baseweb="radio"]:hover {
             border-color: #ffe57f !important;
             background: linear-gradient(180deg, #54351a 0%, #361e0c 100%) !important;
-            box-shadow: 0 0 12px rgba(255, 229, 127, 0.6), inset 0 0 8px rgba(255, 229, 127, 0.3) !important;
-            transform: translateY(-2px) !important;
+            box-shadow: 0 0 12px rgba(255, 229, 127, 0.6) !important;
         }
     
-        /* 6. EFEK TOMBOL AKTIF / TERPILIH (CHECKED STATE) */
-        div[data-testid="stRadio"] [data-baseweb="radio"]:has(input:checked),
-        div[data-testid="stRadio"] [data-baseweb="radio"][aria-checked="true"] {
+        div[data-testid="stRadio"] label:has(input:checked),
+        div[data-testid="stRadio"] [aria-checked="true"] {
             background: linear-gradient(180deg, #855325 0%, #4a2d12 100%) !important;
             border: 2px solid #fff3b0 !important;
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.9), inset 0 0 10px rgba(255, 243, 176, 0.5) !important;
-        }
-    
-        div[data-testid="stRadio"] [data-baseweb="radio"]:has(input:checked) *,
-        div[data-testid="stRadio"] [data-baseweb="radio"][aria-checked="true"] * {
-            color: #ffffff !important;
-            text-shadow: 0 0 5px rgba(255, 243, 176, 0.8) !important;
-        }
-    
-        /* 7. Pertahankan Menu Sidebar agar Tetap Vertikal Normal */
-        section[data-testid="stSidebar"] div[data-testid="stRadio"] > div[role="radiogroup"] {
-            flex-direction: column !important;
-        }
-        section[data-testid="stSidebar"] div[data-testid="stRadio"] [data-baseweb="radio"] {
-            flex: 1 1 100% !important;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.9) !important;
         }
     </style>
     """,
         unsafe_allow_html=True,
     )
-    
+
     active_sub_tab = st.radio(
         "Pilih Menu Navigasi",
         ["⚡ Multi Input Sales", "🎯 Input Sales PPS", "📱 Salin Format WA"],
