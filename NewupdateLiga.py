@@ -668,34 +668,40 @@ st.markdown(
     }
 
     /* -------------------------------------------------------------------------
-       8. ST.RADIO KERAJAAN (HORIZONTAL BINGKAI EMAS VINTAGE)
-       ------------------------------------------------------------------------- */
-    /* Menghilangkan bullet lingkaran radio bawaan secara mutlak */
-    div[data-testid="stRadio"] input[type="radio"],
-    div[data-testid="stRadio"] div[role="radiogroup"] label > div:first-child,
-    div[data-testid="stRadio"] div[role="radiogroup"] div:has(> input[type="radio"]) {
-        display: none !important;
+   8. ST.RADIO KERAJAAN (FIX BINGKAI PERMANEN)
+   ------------------------------------------------------------------------- */
+
+    /* Hanya sembunyikan lingkaran dot & input bawaan, BUKAN div pembungkusnya */
+    div[data-testid="stRadio"] input[type="radio"] {
+        position: absolute !important;
+        opacity: 0 !important;
         width: 0 !important;
         height: 0 !important;
-        margin: 0 !important;
+        pointer-events: none !important;
     }
-
-    /* Ubah container menjadi Flex Horizontal */
+    
+    div[data-testid="stRadio"] [data-testid="stRadioButtonCustomIcon"],
+    div[data-testid="stRadio"] div[role="radiogroup"] label > div:first-child {
+        display: none !important;
+    }
+    
+    /* Container Flex Horizontal */
     div[data-testid="stRadio"] div[role="radiogroup"] {
         display: flex !important;
-        flex-direction: row !important; /* Berjejer ke samping */
+        flex-direction: row !important;
         flex-wrap: wrap !important;
         gap: 12px !important;
         justify-content: center !important;
         width: 100% !important;
     }
-
-    /* Ubah tiap item label radio menjadi tombol Bingkai Emas Vintage */
-    div[data-testid="stRadio"] div[role="radiogroup"] > label {
+    
+    /* Tampilan Bingkai Emas Permanen (Default & Unchecked) */
+    div[data-testid="stRadio"] div[role="radiogroup"] label,
+    div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"] {
         background: linear-gradient(180deg, #162447 0%, #0c1427 100%) !important;
         border: 1.5px solid #9a7b38 !important;
         border-radius: 8px !important;
-        flex: 1 1 28% !important; /* Membuat item terbagi rata di mobile/desktop */
+        flex: 1 1 28% !important;
         min-width: 130px !important;
         height: 48px !important;
         padding: 0 12px !important;
@@ -709,10 +715,10 @@ st.markdown(
         transition: all 0.25s ease-in-out !important;
         box-sizing: border-box !important;
     }
-
-    /* Memaksa warna dan font teks di dalam label */
+    
+    /* Format Teks */
     div[data-testid="stRadio"] div[role="radiogroup"] label *,
-    div[data-testid="stRadio"] div[role="radiogroup"] label p {
+    div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"] * {
         color: #f1e5c7 !important;
         font-family: 'Cinzel', serif !important;
         font-weight: 700 !important;
@@ -722,34 +728,38 @@ st.markdown(
         padding: 0 !important;
         background: transparent !important;
     }
-
-    /* Efek Hover (Saat Kursor Mengarah ke Tombol) */
-    div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
+    
+    /* Hover State */
+    div[data-testid="stRadio"] div[role="radiogroup"] label:hover,
+    div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"]:hover {
         border-color: #d4af37 !important;
         background: linear-gradient(180deg, #1f315c 0%, #101b33 100%) !important;
         box-shadow: 0 0 12px rgba(212, 175, 55, 0.5) !important;
         transform: translateY(-2px) !important;
     }
-
-    /* Efek Tombol Terpilih (Checked State) */
-    div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked),
-    div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {
+    
+    /* Checked / Selected State (Emas Terang Menyala) */
+    div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked),
+    div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"]:has(input:checked),
+    div[data-testid="stRadio"] div[role="radiogroup"] [aria-checked="true"] {
         background: linear-gradient(135deg, #b8860b 0%, #785805 100%) !important;
         border: 1.5px solid #f7e7b4 !important;
         box-shadow: 0 0 15px rgba(212, 175, 55, 0.8), inset 0 0 8px rgba(255, 243, 176, 0.4) !important;
     }
-
-    div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) *,
-    div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] * {
+    
+    div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) *,
+    div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"]:has(input:checked) *,
+    div[data-testid="stRadio"] div[role="radiogroup"] [aria-checked="true"] * {
         color: #ffffff !important;
         text-shadow: 0 0 5px rgba(255, 255, 255, 0.8), 1px 1px 2px #000 !important;
     }
-
-    /* Khusus Radio di dalam Sidebar tetap vertikal agar tidak berantakan */
+    
+    /* Layout Sidebar Tetap Vertikal */
     [data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] {
         flex-direction: column !important;
     }
-    [data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] > label {
+    [data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label,
+    [data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"] {
         flex: 1 1 100% !important;
     }
 
