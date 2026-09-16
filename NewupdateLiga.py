@@ -668,10 +668,10 @@ st.markdown(
     }
 
     /* -------------------------------------------------------------------------
-   8. ST.RADIO KERAJAAN (FIX BINGKAI PERMANEN)
-   ------------------------------------------------------------------------- */
-
-    /* Hanya sembunyikan lingkaran dot & input bawaan, BUKAN div pembungkusnya */
+       8. ST.RADIO KERAJAAN (SIMETRIS, TIDAK GEPENG & COMFY CLICK)
+       ------------------------------------------------------------------------- */
+    
+    /* Sembunyikan lingkaran/dot radio bawaan */
     div[data-testid="stRadio"] input[type="radio"] {
         position: absolute !important;
         opacity: 0 !important;
@@ -685,27 +685,32 @@ st.markdown(
         display: none !important;
     }
     
-    /* Container Flex Horizontal */
+    /* Container Flex Horizontal dengan Jarak Proporsional */
     div[data-testid="stRadio"] div[role="radiogroup"] {
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: wrap !important;
         gap: 12px !important;
         justify-content: center !important;
+        align-items: stretch !important; /* Membuat tinggi semua tombol sejajar otomatis */
         width: 100% !important;
+        margin: 8px 0 !important;
     }
     
-    /* Tampilan Bingkai Emas Permanen (Default & Unchecked) */
+    /* Tampilan Bingkai Emas (Ukuran Seragam & Proporsional) */
     div[data-testid="stRadio"] div[role="radiogroup"] label,
     div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"] {
         background: linear-gradient(180deg, #162447 0%, #0c1427 100%) !important;
         border: 1.5px solid #9a7b38 !important;
-        border-radius: 8px !important;
-        flex: 1 1 28% !important;
-        min-width: 130px !important;
-        height: 48px !important;
-        padding: 0 12px !important;
+        border-radius: 10px !important;
+        
+        /* PENGATURAN UKURAN SERAGAM & TIDAK GEPENG */
+        flex: 1 1 200px !important;       /* Mengisi ruang dengan batas minimal 200px */
+        max-width: 100% !important;       /* Supaya tidak melebihi layar di HP kecil */
+        min-height: 52px !important;      /* Tinggi yang pas dan nyaman di-tap jari */
+        padding: 10px 16px !important;    /* Area sentuh lega */
         margin: 0 !important;
+        
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
@@ -716,20 +721,22 @@ st.markdown(
         box-sizing: border-box !important;
     }
     
-    /* Format Teks */
+    /* Format Teks Proporsional */
     div[data-testid="stRadio"] div[role="radiogroup"] label *,
     div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"] * {
         color: #f1e5c7 !important;
         font-family: 'Cinzel', serif !important;
         font-weight: 700 !important;
-        font-size: clamp(11px, 2.2vw, 13px) !important;
-        line-height: 1.2 !important;
+        font-size: 12px !important;
+        letter-spacing: 0.5px !important;
+        line-height: 1.3 !important;
         margin: 0 !important;
         padding: 0 !important;
         background: transparent !important;
+        word-break: break-word !important; /* Supaya teks panjang rapi terbagi ke baris baru */
     }
     
-    /* Hover State */
+    /* Efek Hover */
     div[data-testid="stRadio"] div[role="radiogroup"] label:hover,
     div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"]:hover {
         border-color: #d4af37 !important;
@@ -738,7 +745,7 @@ st.markdown(
         transform: translateY(-2px) !important;
     }
     
-    /* Checked / Selected State (Emas Terang Menyala) */
+    /* Efek Tombol Terpilih (Active State) */
     div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked),
     div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"]:has(input:checked),
     div[data-testid="stRadio"] div[role="radiogroup"] [aria-checked="true"] {
@@ -754,7 +761,7 @@ st.markdown(
         text-shadow: 0 0 5px rgba(255, 255, 255, 0.8), 1px 1px 2px #000 !important;
     }
     
-    /* Layout Sidebar Tetap Vertikal */
+    /* Khusus Radio di Sidebar */
     [data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] {
         flex-direction: column !important;
     }
