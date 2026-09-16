@@ -956,7 +956,7 @@ if st.sidebar.button(logout_text, use_container_width=True, key="logout_sidebar"
 
 # =============================================================================
 # =============================================================================
-# 8. HEADER UTAMA MEDIEVAL ROYAL GUILD DESIGN (BALANCED 3-LINE LAYOUT)
+# 8. HEADER UTAMA MEDIEVAL ROYAL GUILD DESIGN (BALANCED SIDE-BOXES)
 # =============================================================================
 import pandas as pd
 import streamlit as st
@@ -1059,7 +1059,7 @@ if not is_di_dalam_camp:
             color: #f1e5c7;
         }}
 
-        /* UKIRAN SUDUT EMAS (ROYAL EMBELLISHMENTS) */
+        /* UKIRAN SUDUT EMAS */
         .corner-ornament {{
             position: absolute;
             color: #d4af37;
@@ -1073,7 +1073,7 @@ if not is_di_dalam_camp:
         .bottom-left {{ bottom: 3px; left: 5px; }}
         .bottom-right {{ bottom: 3px; right: 5px; }}
 
-        /* BARIS 1: JUDUL DASHBOARD */
+        /* BARIS ATAS: JUDUL DASHBOARD */
         .guild-title-box {{
             text-align: center;
             margin-bottom: 8px;
@@ -1095,10 +1095,10 @@ if not is_di_dalam_camp:
             letter-spacing: 0.3px;
         }}
 
-        /* BARIS 2: DUA KOTAK SIMETRIS DENGAN UKURAN PERSIS SAMA */
+        /* BARIS BAWAH: DUA KOTAK SIMETRIS */
         .bottom-row {{
             display: flex;
-            align-items: stretch; /* Memastikan tinggi kotak kiri & kanan persis sama */
+            align-items: stretch;
             justify-content: space-between;
             gap: 10px;
             width: 100%;
@@ -1117,7 +1117,6 @@ if not is_di_dalam_camp:
             justify-content: center;
         }}
 
-        /* FORMAT TEKS UMUM */
         .box-title {{
             font-size: 8px;
             color: #e5c158;
@@ -1153,16 +1152,46 @@ if not is_di_dalam_camp:
             100% {{ transform: translate(-100%, 0); }}
         }}
 
-        /* FORMAT VERTIKAL TIGA BARIS (KANAN) */
-        .right-box {{
+        /* KANAN: FLEX LAYOUT UNTUK MENGISI SISI KIRI & KANAN KOTAK */
+        .time-box-wrapper {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }}
+
+        /* IKON JAM PASIR BESAR DI SISI KIRI KOTAK KANAN */
+        .hourglass-container {{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-right: 8px;
+        }}
+
+        .hourglass-spin {{
+            font-size: 20px;
+            display: inline-block;
+            filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.8));
+            animation: spinHourglass 2.5s infinite ease-in-out;
+        }}
+
+        @keyframes spinHourglass {{
+            0% {{ transform: rotate(0deg); }}
+            50% {{ transform: rotate(180deg); }}
+            100% {{ transform: rotate(180deg); }}
+        }}
+
+        /* SISI KANAN TEKS WAKTU */
+        .right-clock-content {{
             text-align: right;
+            flex: 1;
         }}
 
         .greeting-text {{
             font-size: 9px;
             color: #fcd34d;
             font-weight: bold;
-            margin-bottom: 2px;
+            margin-bottom: 1px;
         }}
 
         .digital-clock {{
@@ -1177,11 +1206,11 @@ if not is_di_dalam_camp:
         .digital-date {{
             font-size: 9px;
             color: #cbd5e1;
-            margin-top: 2px;
+            margin-top: 1px;
             font-weight: bold;
         }}
 
-        /* RESPONSIVE LAYOUT (LAPTOP/DESKTOP) */
+        /* RESPONSIVE LAYOUT */
         @media (min-width: 650px) {{
             .guild-title {{
                 font-size: 18px;
@@ -1204,27 +1233,30 @@ if not is_di_dalam_camp:
             .marquee-text {{
                 font-size: 11px;
             }}
+            .hourglass-spin {{
+                font-size: 24px;
+            }}
         }}
     </style>
     </head>
     <body>
 
     <div class="royal-outer-frame">
-        <!-- ORNAMEN SUDUT BINGKAI -->
+        <!-- ORNAMEN SUDUT -->
         <div class="corner-ornament top-left">⚜</div>
         <div class="corner-ornament top-right">⚜</div>
         <div class="corner-ornament bottom-left">⚜</div>
         <div class="corner-ornament bottom-right">⚜</div>
 
-        <!-- BARIS ATAS: JUDUL -->
+        <!-- BARIS ATAS: JUDUL DASHBOARD -->
         <div class="guild-title-box">
             <h1 class="guild-title">⚔️ Dashboard Toko Karang Satria ⚔️</h1>
             <div class="guild-subtitle">Sistem Analisis & Optimasi Pencapaian Target Toko</div>
         </div>
 
-        <!-- BARIS BAWAH: KANAN DAN KIRI PRESISI SIMETRIS -->
+        <!-- BARIS BAWAH: STATUS SHIFT & JAM REALTIME -->
         <div class="bottom-row">
-            <!-- KIRI: RUNNING TEXT MONITORING -->
+            <!-- KIRI: STATUS INPUT SHIFT -->
             <div class="royal-side-box">
                 <div class="box-title">📜 STATUS INPUT SHIFT</div>
                 <div class="marquee-container">
@@ -1232,11 +1264,21 @@ if not is_di_dalam_camp:
                 </div>
             </div>
 
-            <!-- KANAN: UCAPAN WAKTU -> JAM DIGITAL -> HARI & TANGGAL -->
-            <div class="royal-side-box right-box">
-                <div class="greeting-text" id="timeGreeting">🌙 Selamat Malam</div>
-                <div class="digital-clock" id="liveClock">00:00:00 WIB</div>
-                <div class="digital-date" id="liveDate">Senin, 01/01/2026</div>
+            <!-- KANAN: JAM PASIR GLOWING (KIRI) + JAM DIGITAL & UCAPAN (KANAN) -->
+            <div class="royal-side-box">
+                <div class="time-box-wrapper">
+                    <!-- SISI KIRI KOTAK KANAN: JAM PASIR BERPUTAR -->
+                    <div class="hourglass-container">
+                        <span class="hourglass-spin">⏳</span>
+                    </div>
+                    
+                    <!-- SISI KANAN KOTAK KANAN: DETAIL WAKTU -->
+                    <div class="right-clock-content">
+                        <div class="greeting-text" id="timeGreeting">🌙 Selamat Malam</div>
+                        <div class="digital-clock" id="liveClock">00:00:00 WIB</div>
+                        <div class="digital-date" id="liveDate">Senin, 01/01/2026</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1246,7 +1288,7 @@ if not is_di_dalam_camp:
             const now = new Date();
             const hoursNum = now.getHours();
             
-            // 1. Logika Ucapan Waktu Dinamis + Icon
+            // 1. Logika Ucapan Waktu Dinamis
             let greeting = "🌙 Selamat Malam";
             if (hoursNum >= 4 && hoursNum < 11) {{
                 greeting = "🌅 Selamat Pagi";
@@ -1257,13 +1299,13 @@ if not is_di_dalam_camp:
             }}
             document.getElementById('timeGreeting').textContent = greeting;
 
-            // 2. Format Jam Digital (HH:MM:SS WIB)
+            // 2. Format Jam Digital
             const hours = String(hoursNum).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
             document.getElementById('liveClock').textContent = `${{hours}}:${{minutes}}:${{seconds}} WIB`;
 
-            // 3. Format Hari & Tanggal (Hari, DD/MM/YYYY)
+            // 3. Format Hari & Tanggal
             const daysArr = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
             const dayName = daysArr[now.getDay()];
             
@@ -1283,7 +1325,7 @@ if not is_di_dalam_camp:
     """
 
     components.html(rpg_header_html, height=175)
-                            
+    
     
 # ==========================================
 # 9. MODUL TAB / SUB MENU
