@@ -956,8 +956,10 @@ if st.sidebar.button(logout_text, use_container_width=True, key="logout_sidebar"
 
 # =============================================================================
 # =============================================================================
-# 8. HEADER UTAMA DENGAN NOTIFIKASI SHIFT (SOLVED)
+# 8. HEADER UTAMA DENGAN NOTIFIKASI SHIFT (MEDIEVAL RPG DESIGN)
 # =============================================================================
+import streamlit.components.v1 as components
+
 is_di_dalam_camp = (
     "portal_prep_ready" in st.session_state and st.session_state.portal_prep_ready
 ) or (
@@ -988,7 +990,7 @@ if not is_di_dalam_camp:
                 shifts_found = df_today[col_shift_name].dropna().astype(str).unique()
 
                 # Cek shift (Shift 1, Shift 2, Shift 3)
-                all_shifts = ["1", "2", "3"] # Mengakomodasi jika bernilai angka atau "Shift 1"
+                all_shifts = ["1", "2", "3"]
                 missing_shifts = []
 
                 for s in ["Shift 1", "Shift 2", "Shift 3"]:
@@ -1016,28 +1018,213 @@ if not is_di_dalam_camp:
     except Exception as e:
         unfilled_info = "⚠️ Cek data gagal"
 
-    # Tampilan Banner Header Utama
-    st.markdown(
-        f"""
-        <div style='background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%); padding: 16px 24px; border-radius: 12px; border: 1px solid #38bdf8; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;'>
-            <div>
-                <h2 style='margin:0; color:#ffffff; font-size: 22px;'>\U0001F4CA PSM TOKO SALES MONITORING</h2>
-                <p style='margin:0; color:#38bdf8; font-size: 13px;'>Sistem Analisis & Optimasi Pencapaian Target Toko</p>
-            </div>
-            <div style='display: flex; align-items: center; gap: 15px;'>
-                <div style='background: {badge_bg}; border: 1px solid {badge_border}; padding: 6px 12px; border-radius: 8px; text-align: right;'>
-                    <p style='margin:0; color:#94a3b8; font-size: 9px; font-weight:bold;'>STATUS INPUT SHIFT</p>
-                    <p style='margin:0; color:{badge_text_color}; font-size: 12px; font-weight:bold;'>{unfilled_info}</p>
+    # HTML & JS Component untuk Tampilan Medieval Guild Header
+    rpg_header_html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&family=Quicksand:wght@600;700&display=swap');
+
+        body {{
+            margin: 0;
+            padding: 0;
+            background-color: transparent;
+            font-family: 'Quicksand', sans-serif;
+        }}
+
+        .rpg-header-container {{
+            background: linear-gradient(180deg, #161224 0%, #0b0914 100%);
+            border: 2px solid #c9a050;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(201, 160, 80, 0.25), inset 0 0 15px rgba(0, 0, 0, 0.9);
+            padding: 12px 16px;
+            box-sizing: border-box;
+            color: #e2d8b7;
+        }}
+
+        .rpg-grid {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+        }}
+
+        /* SIDE BOX: KANAN & KIRI */
+        .side-box {{
+            width: 100%;
+            background: rgba(20, 16, 30, 0.7);
+            border: 1px solid #4a3e25;
+            border-radius: 8px;
+            padding: 8px 12px;
+            box-sizing: border-box;
+        }}
+
+        /* KIRI: RUNNING TEXT SHIFT */
+        .status-title {{
+            font-size: 9px;
+            color: #d4af37;
+            font-weight: bold;
+            letter-spacing: 0.8px;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }}
+        
+        .marquee-container {{
+            overflow: hidden;
+            white-space: nowrap;
+            width: 100%;
+            background: {badge_bg};
+            border: 1px solid {badge_border};
+            border-radius: 5px;
+            padding: 4px 0;
+        }}
+
+        .marquee-text {{
+            display: inline-block;
+            padding-left: 100%;
+            animation: marquee 10s linear infinite;
+            color: {badge_text_color};
+            font-size: 11px;
+            font-weight: bold;
+        }}
+
+        @keyframes marquee {{
+            0%   {{ transform: translate(0, 0); }}
+            100% {{ transform: translate(-100%, 0); }}
+        }}
+
+        /* TENGAH: JUDUL RPG GUILD */
+        .guild-title-box {{
+            text-align: center;
+        }}
+
+        .guild-title {{
+            font-family: 'MedievalSharp', serif;
+            font-size: 17px;
+            color: #f3e5ab;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.7), 2px 2px 4px #000;
+            margin: 0;
+            letter-spacing: 0.5px;
+        }}
+
+        .guild-subtitle {{
+            font-size: 10px;
+            color: #38bdf8;
+            margin-top: 2px;
+        }}
+
+        /* KANAN: JAM DIGITAL & JAM PASIR */
+        .time-box {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }}
+
+        .clock-text {{
+            text-align: right;
+        }}
+
+        .digital-clock {{
+            font-family: monospace;
+            font-size: 15px;
+            font-weight: bold;
+            color: #38bdf8;
+            text-shadow: 0 0 6px rgba(56, 189, 248, 0.4);
+            line-height: 1;
+        }}
+
+        .digital-date {{
+            font-size: 10px;
+            color: #94a3b8;
+            margin-top: 3px;
+            font-weight: bold;
+        }}
+
+        .hourglass-icon {{
+            font-size: 18px;
+            display: inline-block;
+            animation: spinHourglass 2s infinite ease-in-out;
+        }}
+
+        @keyframes spinHourglass {{
+            0% {{ transform: rotate(0deg); }}
+            50% {{ transform: rotate(180deg); }}
+            100% {{ transform: rotate(180deg); }}
+        }}
+
+        /* DESKTOP LAYOUT (LANSCAPE & LAPTOP) */
+        @media (min-width: 768px) {{
+            .rpg-grid {{
+                flex-direction: row;
+                justify-content: space-between;
+            }}
+            .side-box {{
+                width: 28%;
+            }}
+            .guild-title-box {{
+                width: 42%;
+            }}
+            .guild-title {{
+                font-size: 20px;
+            }}
+        }}
+    </style>
+    </head>
+    <body>
+    <div class="rpg-header-container">
+        <div class="rpg-grid">
+            <!-- KIRI: STATUS INPUT (RUNNING TEXT DINAMIS) -->
+            <div class="side-box">
+                <div class="status-title">📜 STATUS INPUT SHIFT</div>
+                <div class="marquee-container">
+                    <span class="marquee-text">{unfilled_info}</span>
                 </div>
-                <div style='text-align: right;'>
-                    <p style='margin:0; color:#94a3b8; font-size: 9px; font-weight:bold;'>WAKTU REALTIME</p>
-                    <p style='margin:0; color:#38bdf8; font-size: 12px; font-weight:bold;'>\U000023F0 {current_time_str}</p>
+            </div>
+            <!-- TENGAH: JUDUL DASHBOARD -->
+            <div class="guild-title-box">
+                <h1 class="guild-title">⚔️ Dashboard Toko Karang Satria ⚔️</h1>
+                <div class="guild-subtitle">Sistem Analisis & Optimasi Pencapaian Target Toko</div>
+            </div>
+            <!-- KANAN: JAM PASIR & JAM DIGITAL REALTIME -->
+            <div class="side-box time-box">
+                <div class="hourglass-icon">⏳</div>
+                <div class="clock-text">
+                    <div class="digital-clock" id="liveClock">00:00:00 WIB</div>
+                    <div class="digital-date" id="liveDate">01/01/2026</div>
                 </div>
             </div>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    </div>
+    <script>
+        function updateClock() {{
+            const now = new Date();
+            
+            // Format Jam (HH:MM:SS WIB)
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('liveClock').textContent = `${{hours}}:${{minutes}}:${{seconds}} WIB`;
+
+            // Format Tanggal (DD/MM/YYYY)
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            document.getElementById('liveDate').textContent = `${{day}}/${{month}}/${{year}}`;
+        }}
+
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+
+    </body>
+    </html>
+    """
+
+    # Render Komponen Header di Streamlit
+    components.html(rpg_header_html, height=135)
+        
     
 # ==========================================
 # 9. MODUL TAB / SUB MENU
