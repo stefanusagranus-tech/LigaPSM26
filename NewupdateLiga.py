@@ -956,8 +956,10 @@ if st.sidebar.button(logout_text, use_container_width=True, key="logout_sidebar"
 
 # =============================================================================
 # =============================================================================
-# 8. HEADER UTAMA DENGAN NOTIFIKASI SHIFT (MEDIEVAL RPG DESIGN)
+# 8. HEADER UTAMA DENGAN NOTIFIKASI SHIFT (MEDIEVAL RPG DESIGN - FIX LAYOUT)
 # =============================================================================
+import pandas as pd
+import streamlit as st
 import streamlit.components.v1 as components
 
 is_di_dalam_camp = (
@@ -974,28 +976,36 @@ if not is_di_dalam_camp:
     badge_text_color = "#34d399"
 
     try:
-        if "sales_pps_df" in st.session_state and not st.session_state.sales_pps_df.empty:
+        if (
+            "sales_pps_df" in st.session_state
+            and not st.session_state.sales_pps_df.empty
+        ):
             df_pps = st.session_state.sales_pps_df.copy()
 
             col_date_name = "updated_at"
             col_shift_name = "shift_personil"
 
-            if col_date_name in df_pps.columns and col_shift_name in df_pps.columns:
-                # Konversi tanggal
-                df_pps["clean_date"] = pd.to_datetime(df_pps[col_date_name], errors="coerce").dt.date
-                today_date = waktu_wib.date()
-                
-                # Filter data hari ini
+            if (
+                col_date_name in df_pps.columns
+                and col_shift_name in df_pps.columns
+            ):
+                df_pps["clean_date"] = pd.to_datetime(
+                    df_pps[col_date_name], errors="coerce"
+                ).dt.date
+                today_date = pd.Timestamp.now(tz="Asia/Jakarta").date()
+
                 df_today = df_pps[df_pps["clean_date"] == today_date]
-                shifts_found = df_today[col_shift_name].dropna().astype(str).unique()
+                shifts_found = (
+                    df_today[col_shift_name].dropna().astype(str).unique()
+                )
 
-                # Cek shift (Shift 1, Shift 2, Shift 3)
-                all_shifts = ["1", "2", "3"]
                 missing_shifts = []
-
                 for s in ["Shift 1", "Shift 2", "Shift 3"]:
                     num = s.split()[-1]
-                    if not any(s.lower() in found.lower() or num == found.strip() for found in shifts_found):
+                    if not any(
+                        s.lower() in found.lower() or num == found.strip()
+                        for found in shifts_found
+                    ):
                         missing_shifts.append(s)
 
                 if len(df_today) == 0:
@@ -1009,7 +1019,7 @@ if not is_di_dalam_camp:
                     badge_border = "#ef4444"
                     badge_text_color = "#fca5a5"
             else:
-                unfilled_info = "ℹ️ Kolom updated_at / shift_personil tdk ada"
+                unfilled_info = "ℹ️ Kolom data tidak ditemukan"
         else:
             unfilled_info = "⚠️ Memuat Data Sales..."
             badge_bg = "rgba(245, 158, 11, 0.15)"
@@ -1018,19 +1028,24 @@ if not is_di_dalam_camp:
     except Exception as e:
         unfilled_info = "⚠️ Cek data gagal"
 
-    # HTML & JS Component untuk Tampilan Medieval Guild Header
     rpg_header_html = f"""
     <!DOCTYPE html>
     <html>
     <head>
+    <meta charset="UTF-8">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&family=Quicksand:wght@600;700&display=swap');
 
-        body {{
+        * {{
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
+        }}
+
+        body {{
             background-color: transparent;
             font-family: 'Quicksand', sans-serif;
+            overflow: hidden;
         }}
 
         .rpg-header-container {{
@@ -1038,39 +1053,60 @@ if not is_di_dalam_camp:
             border: 2px solid #c9a050;
             border-radius: 12px;
             box-shadow: 0 0 15px rgba(201, 160, 80, 0.25), inset 0 0 15px rgba(0, 0, 0, 0.9);
-            padding: 12px 16px;
-            box-sizing: border-box;
+            padding: 10px 14px;
             color: #e2d8b7;
         }}
 
-        .rpg-grid {{
+        /* 1. BAGIAN ATAS: JUDUL MURNI */
+        .guild-title-box {{
+            text-align: center;
+            margin-bottom: 8px;
+        }}
+
+        .guild-title {{
+            font-family: 'MedievalSharp', serif;
+            font-size: 16px;
+            color: #f3e5ab;
+            text-shadow: 0 0 8px rgba(212, 175, 55, 0.7), 2px 2px 4px #000;
+            margin: 0;
+            letter-spacing: 0.5px;
+        }}
+
+        .guild-subtitle {{
+            font-size: 9px;
+            color: #38bdf8;
+            margin-top: 1px;
+        }}
+
+        /* 2. BAGIAN BAWAH: BARIS SEJAJAR (STATUS SHIFT & JAM) */
+        .bottom-row {{
             display: flex;
-            flex-direction: column;
             align-items: center;
-            gap: 12px;
+            justify-content: space-between;
+            gap: 10px;
             width: 100%;
         }}
 
-        /* SIDE BOX: KANAN & KIRI */
+        /* SIDE BOX UMUM */
         .side-box {{
-            width: 100%;
+            flex: 1;
             background: rgba(20, 16, 30, 0.7);
             border: 1px solid #4a3e25;
             border-radius: 8px;
-            padding: 8px 12px;
-            box-sizing: border-box;
+            padding: 6px 10px;
+            min-width: 0; /* Mencegah overflow flex item */
         }}
 
-        /* KIRI: RUNNING TEXT SHIFT */
+        /* STATUS INPUT SHIFT (KIRI) */
         .status-title {{
-            font-size: 9px;
+            font-size: 8px;
             color: #d4af37;
             font-weight: bold;
-            letter-spacing: 0.8px;
-            margin-bottom: 4px;
+            letter-spacing: 0.5px;
+            margin-bottom: 3px;
             text-transform: uppercase;
         }}
-        
+
         .marquee-container {{
             overflow: hidden;
             white-space: nowrap;
@@ -1078,7 +1114,7 @@ if not is_di_dalam_camp:
             background: {badge_bg};
             border: 1px solid {badge_border};
             border-radius: 5px;
-            padding: 4px 0;
+            padding: 2px 0;
         }}
 
         .marquee-text {{
@@ -1086,7 +1122,7 @@ if not is_di_dalam_camp:
             padding-left: 100%;
             animation: marquee 10s linear infinite;
             color: {badge_text_color};
-            font-size: 11px;
+            font-size: 10px;
             font-weight: bold;
         }}
 
@@ -1095,27 +1131,7 @@ if not is_di_dalam_camp:
             100% {{ transform: translate(-100%, 0); }}
         }}
 
-        /* TENGAH: JUDUL RPG GUILD */
-        .guild-title-box {{
-            text-align: center;
-        }}
-
-        .guild-title {{
-            font-family: 'MedievalSharp', serif;
-            font-size: 17px;
-            color: #f3e5ab;
-            text-shadow: 0 0 10px rgba(212, 175, 55, 0.7), 2px 2px 4px #000;
-            margin: 0;
-            letter-spacing: 0.5px;
-        }}
-
-        .guild-subtitle {{
-            font-size: 10px;
-            color: #38bdf8;
-            margin-top: 2px;
-        }}
-
-        /* KANAN: JAM DIGITAL & JAM PASIR */
+        /* JAM & TANGGAL (KANAN) */
         .time-box {{
             display: flex;
             align-items: center;
@@ -1124,26 +1140,28 @@ if not is_di_dalam_camp:
 
         .clock-text {{
             text-align: right;
+            width: 100%;
         }}
 
         .digital-clock {{
             font-family: monospace;
-            font-size: 15px;
+            font-size: 12px;
             font-weight: bold;
             color: #38bdf8;
             text-shadow: 0 0 6px rgba(56, 189, 248, 0.4);
-            line-height: 1;
+            line-height: 1.1;
         }}
 
         .digital-date {{
-            font-size: 10px;
+            font-size: 9px;
             color: #94a3b8;
-            margin-top: 3px;
+            margin-top: 1px;
             font-weight: bold;
         }}
 
         .hourglass-icon {{
-            font-size: 18px;
+            font-size: 14px;
+            margin-right: 6px;
             display: inline-block;
             animation: spinHourglass 2s infinite ease-in-out;
         }}
@@ -1154,40 +1172,46 @@ if not is_di_dalam_camp:
             100% {{ transform: rotate(180deg); }}
         }}
 
-        /* DESKTOP LAYOUT (LANSCAPE & LAPTOP) */
-        @media (min-width: 768px) {{
-            .rpg-grid {{
-                flex-direction: row;
-                justify-content: space-between;
-            }}
-            .side-box {{
-                width: 28%;
-            }}
-            .guild-title-box {{
-                width: 42%;
-            }}
+        @media (min-width: 650px) {{
             .guild-title {{
-                font-size: 20px;
+                font-size: 18px;
+            }}
+            .guild-subtitle {{
+                font-size: 11px;
+            }}
+            .digital-clock {{
+                font-size: 14px;
+            }}
+            .digital-date {{
+                font-size: 10px;
+            }}
+            .status-title {{
+                font-size: 9px;
+            }}
+            .marquee-text {{
+                font-size: 11px;
             }}
         }}
     </style>
     </head>
     <body>
+
     <div class="rpg-header-container">
-        <div class="rpg-grid">
-            <!-- KIRI: STATUS INPUT (RUNNING TEXT DINAMIS) -->
+        <!-- BARIS ATAS: JUDUL -->
+        <div class="guild-title-box">
+            <h1 class="guild-title">⚔️ Dashboard Toko Karang Satria ⚔️</h1>
+            <div class="guild-subtitle">Sistem Analisis & Optimasi Pencapaian Target Toko</div>
+        </div>
+
+        <!-- BARIS BAWAH: KIRI STATUS SHIFT | KANAN JAM DIGITAL -->
+        <div class="bottom-row">
             <div class="side-box">
                 <div class="status-title">📜 STATUS INPUT SHIFT</div>
                 <div class="marquee-container">
                     <span class="marquee-text">{unfilled_info}</span>
                 </div>
             </div>
-            <!-- TENGAH: JUDUL DASHBOARD -->
-            <div class="guild-title-box">
-                <h1 class="guild-title">⚔️ Dashboard Toko Karang Satria ⚔️</h1>
-                <div class="guild-subtitle">Sistem Analisis & Optimasi Pencapaian Target Toko</div>
-            </div>
-            <!-- KANAN: JAM PASIR & JAM DIGITAL REALTIME -->
+
             <div class="side-box time-box">
                 <div class="hourglass-icon">⏳</div>
                 <div class="clock-text">
@@ -1197,17 +1221,16 @@ if not is_di_dalam_camp:
             </div>
         </div>
     </div>
+
     <script>
         function updateClock() {{
             const now = new Date();
             
-            // Format Jam (HH:MM:SS WIB)
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
             document.getElementById('liveClock').textContent = `${{hours}}:${{minutes}}:${{seconds}} WIB`;
 
-            // Format Tanggal (DD/MM/YYYY)
             const day = String(now.getDate()).padStart(2, '0');
             const month = String(now.getMonth() + 1).padStart(2, '0');
             const year = now.getFullYear();
@@ -1222,9 +1245,11 @@ if not is_di_dalam_camp:
     </html>
     """
 
-    # Render Komponen Header di Streamlit
-    components.html(rpg_header_html, height=135)
-        
+    # Menggunakan height=160 agar jam dan container tidak terpotong bawahnya
+    components.html(rpg_header_html, height=160)
+    
+
+
     
 # ==========================================
 # 9. MODUL TAB / SUB MENU
