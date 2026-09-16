@@ -668,9 +668,9 @@ st.markdown(
     }
 
     /* -------------------------------------------------------------------------
-       8. ST.RADIO KERAJAAN (SIMETRIS, TIDAK GEPENG & COMFY CLICK)
-       ------------------------------------------------------------------------- */
-    
+   8. ST.RADIO KERAJAAN (PAS, PROPORSIONAL & SERAGAM)
+   ------------------------------------------------------------------------- */
+
     /* Sembunyikan lingkaran/dot radio bawaan */
     div[data-testid="stRadio"] input[type="radio"] {
         position: absolute !important;
@@ -685,30 +685,30 @@ st.markdown(
         display: none !important;
     }
     
-    /* Container Flex Horizontal dengan Jarak Proporsional */
+    /* Container Flex Horizontal */
     div[data-testid="stRadio"] div[role="radiogroup"] {
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: wrap !important;
-        gap: 12px !important;
+        gap: 10px !important;
         justify-content: center !important;
-        align-items: stretch !important; /* Membuat tinggi semua tombol sejajar otomatis */
+        align-items: center !important;
         width: 100% !important;
-        margin: 8px 0 !important;
+        margin: 6px 0 !important;
     }
     
-    /* Tampilan Bingkai Emas (Ukuran Seragam & Proporsional) */
+    /* Tampilan Bingkai Emas Pas & Ramping */
     div[data-testid="stRadio"] div[role="radiogroup"] label,
     div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"] {
         background: linear-gradient(180deg, #162447 0%, #0c1427 100%) !important;
         border: 1.5px solid #9a7b38 !important;
-        border-radius: 10px !important;
+        border-radius: 8px !important;
         
-        /* PENGATURAN UKURAN SERAGAM & TIDAK GEPENG */
-        flex: 1 1 200px !important;       /* Mengisi ruang dengan batas minimal 200px */
-        max-width: 100% !important;       /* Supaya tidak melebihi layar di HP kecil */
-        min-height: 52px !important;      /* Tinggi yang pas dan nyaman di-tap jari */
-        padding: 10px 16px !important;    /* Area sentuh lega */
+        /* UKURAN DILOCK AGAR PAS & SERAGAM */
+        flex: 0 1 auto !important;          /* Tidak membesar berlebihan */
+        width: 155px !important;            /* Lebar dikunci sama untuk semua tombol */
+        height: 44px !important;           /* Tinggi ringkas & pas di jari */
+        padding: 0 8px !important;
         margin: 0 !important;
         
         display: flex !important;
@@ -716,58 +716,57 @@ st.markdown(
         justify-content: center !important;
         text-align: center !important;
         cursor: pointer !important;
-        box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6), 0 4px 6px rgba(0, 0, 0, 0.4) !important;
-        transition: all 0.25s ease-in-out !important;
+        box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.6), 0 3px 5px rgba(0, 0, 0, 0.4) !important;
+        transition: all 0.2s ease-in-out !important;
         box-sizing: border-box !important;
     }
     
-    /* Format Teks Proporsional */
+    /* Format Teks */
     div[data-testid="stRadio"] div[role="radiogroup"] label *,
     div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"] * {
         color: #f1e5c7 !important;
         font-family: 'Cinzel', serif !important;
         font-weight: 700 !important;
-        font-size: 12px !important;
-        letter-spacing: 0.5px !important;
-        line-height: 1.3 !important;
+        font-size: 11px !important;
+        letter-spacing: 0.3px !important;
+        line-height: 1.2 !important;
         margin: 0 !important;
         padding: 0 !important;
         background: transparent !important;
-        word-break: break-word !important; /* Supaya teks panjang rapi terbagi ke baris baru */
     }
     
-    /* Efek Hover */
+    /* Hover State */
     div[data-testid="stRadio"] div[role="radiogroup"] label:hover,
     div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"]:hover {
         border-color: #d4af37 !important;
         background: linear-gradient(180deg, #1f315c 0%, #101b33 100%) !important;
-        box-shadow: 0 0 12px rgba(212, 175, 55, 0.5) !important;
-        transform: translateY(-2px) !important;
+        box-shadow: 0 0 10px rgba(212, 175, 55, 0.5) !important;
+        transform: translateY(-1px) !important;
     }
     
-    /* Efek Tombol Terpilih (Active State) */
+    /* Active State (Klik/Terpilih) */
     div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked),
     div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"]:has(input:checked),
     div[data-testid="stRadio"] div[role="radiogroup"] [aria-checked="true"] {
         background: linear-gradient(135deg, #b8860b 0%, #785805 100%) !important;
         border: 1.5px solid #f7e7b4 !important;
-        box-shadow: 0 0 15px rgba(212, 175, 55, 0.8), inset 0 0 8px rgba(255, 243, 176, 0.4) !important;
+        box-shadow: 0 0 12px rgba(212, 175, 55, 0.8), inset 0 0 6px rgba(255, 243, 176, 0.4) !important;
     }
     
     div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) *,
     div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"]:has(input:checked) *,
     div[data-testid="stRadio"] div[role="radiogroup"] [aria-checked="true"] * {
         color: #ffffff !important;
-        text-shadow: 0 0 5px rgba(255, 255, 255, 0.8), 1px 1px 2px #000 !important;
+        text-shadow: 0 0 4px rgba(255, 255, 255, 0.8), 1px 1px 2px #000 !important;
     }
     
-    /* Khusus Radio di Sidebar */
+    /* Sidebar Radio Tetap Vertikal */
     [data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] {
         flex-direction: column !important;
     }
     [data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label,
     [data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"] {
-        flex: 1 1 100% !important;
+        width: 100% !important;
     }
 
     /* -------------------------------------------------------------------------
