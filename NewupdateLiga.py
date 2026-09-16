@@ -733,43 +733,44 @@ st.markdown(
     }
     
     /* =========================================================================
-       B. FLOATING PILL NAVBAR (PROPORSIONAL, SIMETRIS & CENTER)
+       B. FLOATING PILL NAVBAR (KONSEP PERTAMA - CENTER & IKON LEBIH BESAR)
        ========================================================================= */
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] {
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
-        justify-content: space-between !important;
+        justify-content: center !important;         /* Posisi Tepat di Tengah */
         align-items: center !important;
-        gap: 4px !important;
+        gap: 6px !important;
         
         background: #09101f !important;
         border: 1.5px solid #2d3f66 !important;
         border-radius: 50px !important;
-        padding: 4px !important;
-        margin: 12px auto !important;
+        padding: 6px 8px !important;
         
-        width: 100% !important;
-        max-width: 320px !important;               /* Lebar Pas untuk HP */
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5) !important;
+        /* Lock Rata Tengah Sempurna */
+        margin: 12px auto !important;
+        width: fit-content !important;
+        max-width: 90% !important;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5) !important;
     }
     
-    /* ITEM TOMBOL */
+    /* ITEM TOMBOL (Aktiv & Non-Aktif) */
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label,
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"] {
         background: transparent !important;
         border: none !important;
         border-radius: 30px !important;
-        height: 36px !important;
-        padding: 0 8px !important;
+        height: 42px !important;                    /* Area Klik Ditingkatkan */
+        min-width: 44px !important;                 /* Touch Target Pas untuk Jari */
+        padding: 0 12px !important;
         margin: 0 !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         cursor: pointer !important;
-        transition: all 0.25s ease-in-out !important;
-        flex: 1 1 0px !important;                   /* Membagi ruang dengan seimbang */
-        min-width: 0 !important;
+        transition: all 0.3s ease-in-out !important;
+        flex: 0 0 auto !important;
     }
     
     /* Sembunyikan Teks pada Opsi Tidak Aktif */
@@ -779,38 +780,44 @@ st.markdown(
         color: transparent !important;
     }
     
+    /* IKON / LOGO DIPERBESAR SAAT TIDAK AKTIF */
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label p::first-letter,
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label span::first-letter {
-        font-size: 15px !important;
-        color: #8a99ad !important;
+        font-size: 20px !important;                  /* Ikon Lebih Besar & Jelas */
+        color: #a0aec0 !important;
+    }
+    
+    /* Hover State */
+    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover p::first-letter,
+    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover span::first-letter {
+        color: #d4af37 !important;
     }
     
     /* =========================================================================
-       C. ACTIVE STATE (KAPSUL EMAS PRESISI)
+       C. ACTIVE STATE (KAPSUL EMAS AKTIF)
        ========================================================================= */
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked),
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] [aria-checked="true"] {
         background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%) !important;
-        box-shadow: 0 2px 10px rgba(212, 175, 55, 0.4) !important;
-        flex: 2 1 0px !important;                   /* Memberi porsi lebih lebar untuk tombol aktif */
+        padding: 0 16px !important;
+        box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4) !important;
     }
     
+    /* TEKS & IKON PADA TOMBOL AKTIF */
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) p,
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) span,
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] [aria-checked="true"] p,
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] [aria-checked="true"] span {
-        font-size: 10px !important;
+        font-size: 11px !important;
         font-family: 'Cinzel', serif !important;
         font-weight: 800 !important;
         color: #0d1527 !important;
         white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
     }
     
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) p::first-letter,
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) span::first-letter {
-        font-size: 11px !important;
+        font-size: 16px !important;                  /* Ukuran Ikon Menyesuaikan Teks Saat Aktif */
         color: #0d1527 !important;
     }
 
