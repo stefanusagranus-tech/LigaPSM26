@@ -733,23 +733,33 @@ st.markdown(
     }
     
     /* =========================================================================
-       B. FLOATING PILL NAVBAR (KONSEP PERTAMA - CENTER & IKON LEBIH BESAR)
-       ========================================================================= */
+   B. FLOATING PILL NAVBAR - FIX PRESISI TENGAH LAYAR
+   ========================================================================= */
+    /* Wrapper Bawaan Streamlit Dipaksa Center */
+    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        width: 100% !important;
+        margin: 0 auto !important;
+    }
+    
+    /* Kapsul Utama */
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] {
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
-        justify-content: center !important;         /* Posisi Tepat di Tengah */
+        justify-content: center !important;
         align-items: center !important;
         gap: 6px !important;
         
         background: #09101f !important;
         border: 1.5px solid #2d3f66 !important;
         border-radius: 50px !important;
-        padding: 6px 8px !important;
+        padding: 6px 10px !important;
         
-        /* Lock Rata Tengah Sempurna */
-        margin: 12px auto !important;
+        /* Lock Center Mutlak */
+        margin: 10px auto !important;
         width: fit-content !important;
         max-width: 90% !important;
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5) !important;
@@ -761,8 +771,8 @@ st.markdown(
         background: transparent !important;
         border: none !important;
         border-radius: 30px !important;
-        height: 42px !important;                    /* Area Klik Ditingkatkan */
-        min-width: 44px !important;                 /* Touch Target Pas untuk Jari */
+        height: 42px !important;
+        min-width: 44px !important;
         padding: 0 12px !important;
         margin: 0 !important;
         display: flex !important;
@@ -780,10 +790,10 @@ st.markdown(
         color: transparent !important;
     }
     
-    /* IKON / LOGO DIPERBESAR SAAT TIDAK AKTIF */
+    /* IKON / LOGO PADA MENU NON-AKTIF */
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label p::first-letter,
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label span::first-letter {
-        font-size: 20px !important;                  /* Ikon Lebih Besar & Jelas */
+        font-size: 20px !important;
         color: #a0aec0 !important;
     }
     
@@ -794,7 +804,7 @@ st.markdown(
     }
     
     /* =========================================================================
-       C. ACTIVE STATE (KAPSUL EMAS AKTIF)
+       C. ACTIVE STATE (KAPSUL EMAS TERPILIH)
        ========================================================================= */
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked),
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] [aria-checked="true"] {
@@ -817,7 +827,7 @@ st.markdown(
     
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) p::first-letter,
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) span::first-letter {
-        font-size: 16px !important;                  /* Ukuran Ikon Menyesuaikan Teks Saat Aktif */
+        font-size: 16px !important;
         color: #0d1527 !important;
     }
 
