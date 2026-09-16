@@ -5398,11 +5398,12 @@ elif selected_tab == "📝 Input Data":
         periods_dict = {"Periode Utama": "P01"}
 
     # =========================================================================
-    # ULTIMATE VINTAGE GOLD FRAME RADIO (OVERRIDE GLOBAL STREAMLIT)
+    # ULTIMATE VINTAGE GOLD FRAME RADIO (STABLE FOR ALL BROWSERS)
     # =========================================================================
-    st.markdown("""
+    st.markdown(
+        """
     <style>
-        /* 1. Atur container radio group menjadi flex horizontal & wrap jika di HP */
+        /* 1. Atur container radio group menjadi flex horizontal & wrap */
         div[data-testid="stRadio"] > div[role="radiogroup"] {
             display: flex !important;
             flex-direction: row !important;
@@ -5413,23 +5414,25 @@ elif selected_tab == "📝 Input Data":
             width: 100% !important;
         }
 
-        /* 2. Sembunyikan bulat radio bawaan Streamlit secara mutlak */
-        div[data-testid="stRadio"] div[role="radiogroup"] input[type="radio"],
-        div[data-testid="stRadio"] div[role="radiogroup"] [data-testid="stMarkdownContainer"] ~ div,
-        div[data-testid="stRadio"] div[role="radiogroup"] label > div:first-child {
+        /* 2. Sembunyikan lingkaran radio / bullet dot bawaan Streamlit secara mutlak */
+        div[data-testid="stRadio"] div[role="radiogroup"] label > div:first-child,
+        div[data-testid="stRadio"] div[role="radiogroup"] [data-testid="stRadioButtonCustomIcon"] {
             display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+            margin: 0 !important;
         }
 
-        /* 3. Ubah seluruh wadah Label menjadi Tombol Bingkai Emas Vintage */
+        /* 3. Styling Utama Tombol Bingkai Emas Vintage */
         div[data-testid="stRadio"] div[role="radiogroup"] > label {
             background: linear-gradient(180deg, #3d2612 0%, #241408 100%) !important;
             border: 2px solid #d4af37 !important;
             box-shadow: 0 0 0 1px #5c3a1e, 0 4px 8px rgba(0, 0, 0, 0.7), inset 0 0 6px rgba(212, 175, 55, 0.25) !important;
             border-radius: 8px !important;
-            padding: 10px 16px !important;
+            padding: 10px 14px !important;
             margin: 0 !important;
             cursor: pointer !important;
-            flex: 1 1 30% !important; /* Membuat tombol sejajar berjejer */
+            flex: 1 1 28% !important;
             min-width: 120px !important;
             display: flex !important;
             align-items: center !important;
@@ -5438,20 +5441,21 @@ elif selected_tab == "📝 Input Data":
             transition: all 0.2s ease-in-out !important;
         }
 
-        /* 4. Format Teks di dalam Label */
+        /* 4. Format Teks di dalam Tombol */
         div[data-testid="stRadio"] div[role="radiogroup"] > label p,
         div[data-testid="stRadio"] div[role="radiogroup"] > label div {
             color: #f3e5ab !important;
             font-family: 'Georgia', serif !important;
             font-weight: bold !important;
-            font-size: 13px !important;
+            font-size: 11px !important;
             letter-spacing: 0.5px !important;
             text-transform: uppercase !important;
             margin: 0 !important;
             padding: 0 !important;
+            background: transparent !important;
         }
 
-        /* 5. EFEK HOVER (Saat Disentuh Kursor) */
+        /* 5. EFEK HOVER (Saat Disentuh Kursor/Jari) */
         div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
             border-color: #ffe57f !important;
             background: linear-gradient(180deg, #54351a 0%, #361e0c 100%) !important;
@@ -5459,21 +5463,27 @@ elif selected_tab == "📝 Input Data":
             transform: translateY(-2px) !important;
         }
 
-        /* 6. EFEK ACTIVE / SELECTED (Saat Radio Terpilih) */
-        div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked),
-        div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {
+        /* 6. EFEK TERPILIH (ACTIVE STATE) - KOMPATIBEL UNTUK SEMUA HP & BROWSER */
+        /* Metode A: Modern Selector (:has) */
+        div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) {
             background: linear-gradient(180deg, #855325 0%, #4a2d12 100%) !important;
             border: 2px solid #fff3b0 !important;
             box-shadow: 0 0 15px rgba(212, 175, 55, 0.9), inset 0 0 10px rgba(255, 243, 176, 0.5) !important;
         }
-
-        div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) p,
-        div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] p {
+        div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) p {
             color: #ffffff !important;
             text-shadow: 0 0 5px rgba(255, 243, 176, 0.8) !important;
         }
 
-        /* 7. Jaga menu Sidebar agar tetap standar vertikal */
+        /* Metode B: Fallback Sibling Selector (Jika :has() tidak didukung HP) */
+        div[data-testid="stRadio"] div[role="radiogroup"] input:checked ~ div p,
+        div[data-testid="stRadio"] div[role="radiogroup"] input:checked ~ p {
+            color: #ffffff !important;
+            text-shadow: 0 0 5px rgba(255, 243, 176, 0.8) !important;
+            font-weight: 900 !important;
+        }
+
+        /* 7. Pertahankan Menu Sidebar agar Tetap Vertikal */
         section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] {
             flex-direction: column !important;
         }
@@ -5481,17 +5491,21 @@ elif selected_tab == "📝 Input Data":
             flex: 1 1 100% !important;
         }
     </style>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     active_sub_tab = st.radio(
         "Pilih Menu Navigasi",
         ["⚡ Multi Input Sales", "🎯 Input Sales PPS", "📱 Salin Format WA"],
         horizontal=True,
         label_visibility="collapsed",
-        key="custom_sub_tabs"
+        key="custom_sub_tabs",
     )
-    
-    st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+
+    st.markdown(
+        "<div style='margin-top: 15px;'></div>", unsafe_allow_html=True
+    )
 
     # --- Helper Functions & Dialogs ---
     def get_period_date_bounds(p_id):
