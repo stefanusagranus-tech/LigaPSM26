@@ -511,22 +511,44 @@ def check_login(input_username, input_password):
 
 
 # ==========================================
+import streamlit as st
+
 # =============================================================================
-# 5. CUSTOM CSS UNIVERSAL (ROYAL GUILD / RPG FANTASY THEME)
+# CUSTOM CSS UNIVERSAL (ROYAL GUILD / RPG FANTASY THEME)
 # =============================================================================
 st.markdown(
     """
 <style>
     @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&family=Quicksand:wght@600;700&family=Cinzel:wght@600;700;800&display=swap');
 
-    /* BASE APP & BACKGROUND KERAJAAN */
+    /* -------------------------------------------------------------------------
+       1. BASE APP & BACKGROUND KERAJAAN
+       ------------------------------------------------------------------------- */
     .stApp {
         background: radial-gradient(circle at top, #162447 0%, #0b0f19 70%, #05070c 100%) !important;
         color: #f1e5c7 !important;
         font-family: 'Quicksand', sans-serif !important;
     }
     
-    /* LABEL WIDGET (TEKS INSTRUKSI & JUDUL INPUT) */
+    /* SCROLLBAR KERAJAAN */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #0b0f19;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #9a7b38;
+        border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #d4af37;
+    }
+
+    /* -------------------------------------------------------------------------
+       2. LABEL & WIDGET TEKS
+       ------------------------------------------------------------------------- */
     label, p[data-testid="stWidgetLabel"], div[data-testid="stWidgetLabel"] label, label p {
         color: #f7e7b4 !important;
         font-family: 'Cinzel', serif !important;
@@ -536,7 +558,9 @@ st.markdown(
         text-shadow: 0 0 5px rgba(212, 175, 55, 0.3) !important;
     }
     
-    /* INPUT BOX & DROPDOWN (FIELD TEKS/SELECT) */
+    /* -------------------------------------------------------------------------
+       3. INPUT BOX & DROPDOWN (FIELD TEKS/SELECT/DATE)
+       ------------------------------------------------------------------------- */
     div[data-baseweb="input"] input, 
     div[data-baseweb="select"] input,
     div[data-baseweb="select"] span {
@@ -554,8 +578,10 @@ st.markdown(
     div[data-baseweb="input"] svg, div[data-baseweb="select"] svg {
         fill: #d4af37 !important;
     }
-    
-    /* METRICS / KARTU STATISTIK (BINGKAI KERAJAAN) */
+
+    /* -------------------------------------------------------------------------
+       4. METRICS / KARTU STATISTIK (BINGKAI KERAJAAN)
+       ------------------------------------------------------------------------- */
     div[data-testid="stMetric"] {
         background: radial-gradient(circle, #1a2636 0%, #0e1726 100%) !important;
         border: 2px solid #d4af37 !important;
@@ -579,7 +605,58 @@ st.markdown(
         font-size: 28px !important;
     }
 
-    /* SIDEBAR KERAJAAN */
+    /* -------------------------------------------------------------------------
+       5. ST.EXPANDER (GULUNGAN MISTIS / EXPANDER KERAJAAN)
+       ------------------------------------------------------------------------- */
+    div[data-testid="stExpander"] {
+        background: rgba(12, 20, 39, 0.85) !important;
+        border: 1.5px solid #9a7b38 !important;
+        border-radius: 10px !important;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(0, 0, 0, 0.6) !important;
+        overflow: hidden !important;
+        margin-bottom: 12px !important;
+    }
+    div[data-testid="stExpander"] summary {
+        background: linear-gradient(90deg, #162447 0%, #0d172e 100%) !important;
+        color: #f7e7b4 !important;
+        font-family: 'Cinzel', serif !important;
+        font-weight: 700 !important;
+        font-size: 14px !important;
+        border-bottom: 1px solid #9a7b38 !important;
+        padding: 10px 16px !important;
+        transition: all 0.25s ease !important;
+    }
+    div[data-testid="stExpander"] summary:hover {
+        background: linear-gradient(90deg, #1f315c 0%, #121e3a 100%) !important;
+        color: #ffffff !important;
+        text-shadow: 0 0 8px rgba(212, 175, 55, 0.6) !important;
+    }
+    div[data-testid="stExpander"] summary svg {
+        fill: #d4af37 !important;
+    }
+    div[data-testid="stExpander"] [data-testid="stExpanderDetails"] {
+        padding: 16px !important;
+        background: rgba(8, 13, 25, 0.6) !important;
+    }
+
+    /* -------------------------------------------------------------------------
+       6. ST.DATAFRAME / ST.TABLE (GULUNGAN DATA & KATALOG GUILD)
+       ------------------------------------------------------------------------- */
+    div[data-testid="stDataFrame"], div[data-testid="stTable"] {
+        background-color: rgba(10, 17, 34, 0.9) !important;
+        border: 1.5px solid #d4af37 !important;
+        border-radius: 10px !important;
+        box-shadow: 0 0 15px rgba(212, 175, 55, 0.2), inset 0 0 15px rgba(0, 0, 0, 0.8) !important;
+        padding: 4px !important;
+    }
+    /* Dynamic table header / glide data grid override */
+    div[data-testid="stDataFrame"] iframe {
+        border-radius: 8px !important;
+    }
+
+    /* -------------------------------------------------------------------------
+       7. SIDEBAR KERAJAAN
+       ------------------------------------------------------------------------- */
     [data-testid="stSidebar"] {
         background: linear-gradient(180deg, #0c1427 0%, #05070c 100%) !important;
         border-right: 2px solid #9a7b38 !important;
@@ -590,9 +667,9 @@ st.markdown(
         font-weight: 600 !important;
     }
 
-    /* ========================================================================= */
-    /* ST.RADIO KERAJAAN (UKURAN SERAGAM, PRESISI & SIMETRIS)                   */
-    /* ========================================================================= */
+    /* -------------------------------------------------------------------------
+       8. ST.RADIO KERAJAAN (UKURAN SERAGAM, PRESISI & SIMETRIS)
+       ------------------------------------------------------------------------- */
     div[data-testid="stRadio"] input[type="radio"],
     div[data-testid="stRadio"] div[role="radiogroup"] div:has(> input[type="radio"]) {
         display: none !important;
@@ -607,27 +684,20 @@ st.markdown(
         background: linear-gradient(180deg, #162447 0%, #0c1427 100%) !important;
         border: 1px solid #9a7b38 !important;
         border-radius: 10px !important;
-        
-        /* Kunci Ukuran Seragam & Presisi */
         width: 100% !important;
         height: 52px !important;
         padding: 0 16px !important;
         margin-bottom: 0 !important;
-        
-        /* Perataan Teks Presisi */
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         text-align: center !important;
-        
-        /* Font & Warna */
         color: #f1e5c7 !important;
         font-family: 'Cinzel', serif !important;
         font-weight: 700 !important;
         font-size: clamp(11px, 2.5vw, 13px) !important;
         line-height: 1.2 !important;
         word-break: break-word !important;
-        
         cursor: pointer !important;
         transition: all 0.25s ease-in-out !important;
         box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6), 0 4px 6px rgba(0, 0, 0, 0.4) !important;
@@ -648,7 +718,9 @@ st.markdown(
         text-shadow: 0 0 4px #000 !important;
     }
 
-    /* TOMBOL ST.BUTTON (TOMBOL EKSEKUSI GUILD) */
+    /* -------------------------------------------------------------------------
+       9. TOMBOL ST.BUTTON (TOMBOL EKSEKUSI GUILD)
+       ------------------------------------------------------------------------- */
     div.stButton > button, div.stFormSubmitButton > button {
         background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%) !important;
         color: #f7e7b4 !important;
@@ -665,7 +737,9 @@ st.markdown(
         box-shadow: 0 0 18px rgba(212, 175, 55, 0.7) !important;
     }
 
-    /* TAB CONTROL KERAJAAN */
+    /* -------------------------------------------------------------------------
+       10. TAB CONTROL KERAJAAN
+       ------------------------------------------------------------------------- */
     div[data-baseweb="tab-list"] button {
         background-color: transparent !important;
     }
@@ -684,7 +758,9 @@ st.markdown(
         box-shadow: 0 0 8px rgba(212, 175, 55, 0.8) !important;
     }
 
-    /* HEADER KERAJAAN (ROYAL FRAME STYLES) */
+    /* -------------------------------------------------------------------------
+       11. HEADER KERAJAAN (ROYAL FRAME STYLES)
+       ------------------------------------------------------------------------- */
     .royal-outer-frame {
         position: relative;
         background: radial-gradient(circle, #162447 0%, #0c1427 100%);
@@ -772,6 +848,7 @@ if "logged_in" not in st.session_state:
 if "username" not in st.session_state:
     st.session_state.username = ""
     
+
 # ==========================================
 # 6. HALAMAN LOGIN
 # ==========================================
