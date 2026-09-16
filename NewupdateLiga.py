@@ -511,148 +511,256 @@ def check_login(input_username, input_password):
 
 
 # ==========================================
-# 5. CUSTOM CSS (NEON DARK THEME + TAB FIX)
-# ==========================================
+# =============================================================================
+# 5. CUSTOM CSS UNIVERSAL (ROYAL GUILD / RPG FANTASY THEME)
+# =============================================================================
 st.markdown(
     """
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&family=Quicksand:wght@600;700&family=Cinzel:wght@600;700;800&display=swap');
+
+    /* BASE APP & BACKGROUND KERAJAAN */
     .stApp {
-        background-color: #0b0f19;
-        color: #f8fafc;
-        font-family: 'Inter', sans-serif;
+        background: radial-gradient(circle at top, #162447 0%, #0b0f19 70%, #05070c 100%) !important;
+        color: #f1e5c7 !important;
+        font-family: 'Quicksand', sans-serif !important;
     }
     
-    /* Label Widget Biasa (Kecuali yang di dalam tab) */
+    /* LABEL WIDGET (TEKS INSTRUKSI & JUDUL INPUT) */
     label, p[data-testid="stWidgetLabel"], div[data-testid="stWidgetLabel"] label, label p {
-        color: #38bdf8 !important;
-        font-weight: 600 !important;
-        font-size: 14px !important;
+        color: #f7e7b4 !important;
+        font-family: 'Cinzel', serif !important;
+        font-weight: 700 !important;
+        font-size: 13px !important;
+        letter-spacing: 0.5px !important;
+        text-shadow: 0 0 5px rgba(212, 175, 55, 0.3) !important;
     }
     
+    /* INPUT BOX & DROPDOWN (FIELD TEKS/SELECT) */
     div[data-baseweb="input"] input, 
     div[data-baseweb="select"] input,
     div[data-baseweb="select"] span {
-        color: #ffffff !important;
+        color: #f1e5c7 !important;
         background-color: transparent !important;
         font-weight: bold !important;
     }
     div[data-baseweb="input"] > div, 
     div[data-baseweb="select"] > div {
-        background-color: #0d1117 !important;
-        border: 1.5px solid #00f0ff !important;
+        background-color: rgba(10, 17, 34, 0.85) !important;
+        border: 1.5px solid #9a7b38 !important;
         border-radius: 8px !important;
+        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8) !important;
     }
-    div[data-baseweb="input"] svg {
-        fill: #00f0ff !important;
+    div[data-baseweb="input"] svg, div[data-baseweb="select"] svg {
+        fill: #d4af37 !important;
     }
+    
+    /* METRICS / KARTU STATISTIK (BINGKAI KERAJAAN) */
     div[data-testid="stMetric"] {
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-        border: 1px solid #38bdf8;
-        padding: 16px;
-        border-radius: 12px;
-        box-shadow: 0 0 15px rgba(56, 189, 248, 0.25);
+        background: radial-gradient(circle, #1a2636 0%, #0e1726 100%) !important;
+        border: 2px solid #d4af37 !important;
+        padding: 16px !important;
+        border-radius: 12px !important;
+        box-shadow: 0 0 15px rgba(212, 175, 55, 0.25), inset 0 0 15px rgba(0, 0, 0, 0.7) !important;
+        position: relative !important;
     }
     div[data-testid="stMetric"] label {
-        color: #94a3b8 !important;
-        font-weight: 700;
-        font-size: 13px;
-        letter-spacing: 0.5px;
+        color: #cbd5e1 !important;
+        font-family: 'Quicksand', sans-serif !important;
+        font-weight: 700 !important;
+        font-size: 12px !important;
+        letter-spacing: 0.5px !important;
     }
     div[data-testid="stMetric"] [data-testid="stMetricValue"] {
-        color: #38bdf8 !important;
-        text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
-        font-weight: 800;
-        font-size: 26px;
+        color: #f7e7b4 !important;
+        text-shadow: 0 0 10px rgba(212, 175, 55, 0.6), 1px 1px 3px #000 !important;
+        font-family: 'MedievalSharp', serif !important;
+        font-weight: 800 !important;
+        font-size: 28px !important;
     }
+
+    /* SIDEBAR KERAJAAN */
     [data-testid="stSidebar"] {
-        background-color: #0f172a;
-        border-right: 1px solid #1e293b;
+        background: linear-gradient(180deg, #0c1427 0%, #05070c 100%) !important;
+        border-right: 2px solid #9a7b38 !important;
+        box-shadow: 5px 0 15px rgba(0, 0, 0, 0.5) !important;
     }
     [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] label {
-        color: #ffffff !important;
-        font-weight: 600;
+        color: #f1e5c7 !important;
+        font-weight: 600 !important;
     }
+
+    /* ========================================================================= */
+    /* ST.RADIO KERAJAAN (UKURAN SERAGAM, PRESISI & SIMETRIS)                   */
+    /* ========================================================================= */
     div[data-testid="stRadio"] input[type="radio"],
     div[data-testid="stRadio"] div[role="radiogroup"] div:has(> input[type="radio"]) {
         display: none !important;
     }
+    div[data-testid="stRadio"] div[role="radiogroup"] {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 10px !important;
+        width: 100% !important;
+    }
     div[data-testid="stRadio"] div[role="radiogroup"] > label {
-        background-color: #1e293b;
-        border: 1px solid #334155;
-        padding: 12px 18px;
-        border-radius: 10px;
-        margin-bottom: 8px;
-        color: #ffffff !important;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.25s ease-in-out;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-        display: block;
+        background: linear-gradient(180deg, #162447 0%, #0c1427 100%) !important;
+        border: 1px solid #9a7b38 !important;
+        border-radius: 10px !important;
+        
+        /* Kunci Ukuran Seragam & Presisi */
+        width: 100% !important;
+        height: 52px !important;
+        padding: 0 16px !important;
+        margin-bottom: 0 !important;
+        
+        /* Perataan Teks Presisi */
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        
+        /* Font & Warna */
+        color: #f1e5c7 !important;
+        font-family: 'Cinzel', serif !important;
+        font-weight: 700 !important;
+        font-size: clamp(11px, 2.5vw, 13px) !important;
+        line-height: 1.2 !important;
+        word-break: break-word !important;
+        
+        cursor: pointer !important;
+        transition: all 0.25s ease-in-out !important;
+        box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6), 0 4px 6px rgba(0, 0, 0, 0.4) !important;
+        box-sizing: border-box !important;
     }
     div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
-        border-color: #38bdf8;
-        background-color: #334155;
-        box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
-        transform: translateY(-1px);
+        border-color: #d4af37 !important;
+        background: linear-gradient(180deg, #1f315c 0%, #101b33 100%) !important;
+        box-shadow: 0 0 12px rgba(212, 175, 55, 0.4) !important;
+        transform: translateY(-1px) !important;
     }
     div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"],
     div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) {
-        background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
-        border: 1px solid #38bdf8 !important;
-        box-shadow: 0 0 18px rgba(56, 189, 248, 0.6) !important;
+        background: linear-gradient(135deg, #b8860b 0%, #785805 100%) !important;
+        border: 1px solid #f7e7b4 !important;
+        box-shadow: 0 0 15px rgba(212, 175, 55, 0.7) !important;
         color: #ffffff !important;
+        text-shadow: 0 0 4px #000 !important;
     }
+
+    /* TOMBOL ST.BUTTON (TOMBOL EKSEKUSI GUILD) */
     div.stButton > button, div.stFormSubmitButton > button {
-        background-color: #080c14 !important;
-        color: #ffffff !important;
-        border: 2px solid #00f0ff !important;
+        background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%) !important;
+        color: #f7e7b4 !important;
+        border: 1.5px solid #d4af37 !important;
         border-radius: 8px !important;
+        font-family: 'Cinzel', serif !important;
         font-weight: bold !important;
-        box-shadow: 0 0 10px rgba(0, 240, 255, 0.3) !important;
+        box-shadow: 0 0 10px rgba(212, 175, 55, 0.2) !important;
         transition: all 0.3s ease !important;
     }
     div.stButton > button:hover, div.stFormSubmitButton > button:hover {
-        background-color: #00f0ff !important;
-        color: #080c14 !important;
-        box-shadow: 0 0 20px rgba(0, 240, 255, 0.8) !important;
-    }
-    [data-testid="stSidebar"] div[data-testid="stButton"] > button {
-        background-color: #0f172a !important;
-        color: #ef4444 !important;
-        border: 1px solid #ef4444 !important;
-    }
-    [data-testid="stSidebar"] div[data-testid="stButton"] > button:hover {
-        background-color: #ef4444 !important;
-        color: #ffffff !important;
-        box-shadow: 0 0 12px rgba(239, 68, 68, 0.5) !important;
+        background: linear-gradient(180deg, #d4af37 0%, #9a7b38 100%) !important;
+        color: #0b0f19 !important;
+        box-shadow: 0 0 18px rgba(212, 175, 55, 0.7) !important;
     }
 
-    /* ========================================================================= */
-    /* JURUS PAMUNGKAS: FORCE COLOR TAB STREAMLIT                                */
-    /* ========================================================================= */
-    
-    /* Targetkan seluruh elemen di dalam container tab */
+    /* TAB CONTROL KERAJAAN */
     div[data-baseweb="tab-list"] button {
         background-color: transparent !important;
     }
-    
-    /* Memaksa warna teks SEMUA tab menjadi terang (#b0c4de) */
     div[data-baseweb="tab-list"] button div[data-testid="stMarkdownContainer"] p {
-        color: #b0c4de !important;
-        font-weight: 500 !important;
+        color: #94a3b8 !important;
+        font-family: 'Cinzel', serif !important;
+        font-weight: 600 !important;
     }
-
-    /* Memaksa warna teks tab yang sedang AKTIF menjadi hijau neon (#00ff88) */
     div[data-baseweb="tab-list"] button[aria-selected="true"] div[data-testid="stMarkdownContainer"] p {
-        color: #00ff88 !important;
-        font-weight: 700 !important;
+        color: #f7e7b4 !important;
+        font-weight: 800 !important;
+        text-shadow: 0 0 8px rgba(212, 175, 55, 0.6) !important;
+    }
+    div[data-baseweb="tab-highlight"] {
+        background-color: #d4af37 !important;
+        box-shadow: 0 0 8px rgba(212, 175, 55, 0.8) !important;
     }
 
-    /* Garis bawah/indikator tab aktif */
-    div[data-baseweb="tab-highlight"] {
-        background-color: #00ff88 !important;
+    /* HEADER KERAJAAN (ROYAL FRAME STYLES) */
+    .royal-outer-frame {
+        position: relative;
+        background: radial-gradient(circle, #162447 0%, #0c1427 100%);
+        border: 3px double #d4af37;
+        border-radius: 14px;
+        box-shadow: 0 0 15px rgba(212, 175, 55, 0.35), inset 0 0 20px rgba(0, 0, 0, 0.8);
+        padding: 10px 14px;
+        color: #f1e5c7;
+        font-family: 'Quicksand', sans-serif;
+    }
+    .corner-ornament { position: absolute; color: #d4af37; font-size: 10px; line-height: 1; opacity: 0.85; pointer-events: none; }
+    .top-left { top: 3px; left: 5px; }
+    .top-right { top: 3px; right: 5px; }
+    .bottom-left { bottom: 3px; left: 5px; }
+    .bottom-right { bottom: 3px; right: 5px; }
+    .guild-title-box { text-align: center; margin-bottom: 8px; }
+    .guild-title {
+        font-family: 'MedievalSharp', serif;
+        font-size: 16px;
+        color: #f7e7b4;
+        text-shadow: 0 0 8px rgba(212, 175, 55, 0.8), 2px 2px 4px #000;
+        margin: 0;
+        letter-spacing: 0.8px;
+    }
+    .guild-subtitle { font-size: 9px; color: #38bdf8; margin-top: 1px; letter-spacing: 0.3px; }
+    .bottom-row { display: flex; align-items: stretch; justify-content: space-between; gap: 10px; width: 100%; }
+    .royal-side-box {
+        flex: 1;
+        background: rgba(10, 17, 34, 0.75);
+        border: 1px solid #9a7b38;
+        border-radius: 8px;
+        padding: 6px 10px;
+        min-width: 0;
+        box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .box-title { font-size: 8px; color: #e5c158; font-weight: bold; letter-spacing: 0.6px; margin-bottom: 3px; text-transform: uppercase; }
+    .marquee-container { overflow: hidden; white-space: nowrap; width: 100%; border-radius: 5px; padding: 2px 0; margin-top: 2px; }
+    .marquee-text { display: inline-block; padding-left: 100%; animation: marquee 10s linear infinite; font-size: 10px; font-weight: bold; }
 
-        
+    @keyframes marquee {
+        0%   { transform: translate(0, 0); }
+        100% { transform: translate(-100%, 0); }
+    }
+
+    .time-box-wrapper { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+    .hourglass-container { display: flex; align-items: center; justify-content: center; padding-right: 8px; }
+    .hourglass-spin {
+        font-size: 20px;
+        display: inline-block;
+        filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.8));
+        animation: spinHourglass 2.5s infinite ease-in-out;
+    }
+
+    @keyframes spinHourglass {
+        0% { transform: rotate(0deg); }
+        50% { transform: rotate(180deg); }
+        100% { transform: rotate(180deg); }
+    }
+
+    .right-clock-content { text-align: right; flex: 1; }
+    .greeting-text { font-size: 9px; color: #fcd34d; font-weight: bold; margin-bottom: 1px; }
+    .digital-clock { font-family: monospace; font-size: 13px; font-weight: bold; color: #38bdf8; text-shadow: 0 0 6px rgba(56, 189, 248, 0.5); line-height: 1.1; }
+    .digital-date { font-size: 9px; color: #cbd5e1; margin-top: 1px; font-weight: bold; }
+
+    @media (min-width: 650px) {
+        .guild-title { font-size: 18px; }
+        .guild-subtitle { font-size: 11px; }
+        .greeting-text { font-size: 10px; }
+        .digital-clock { font-size: 14px; }
+        .digital-date { font-size: 10px; }
+        .box-title { font-size: 9px; }
+        .marquee-text { font-size: 11px; }
+        .hourglass-spin { font-size: 24px; }
     }
 </style>
 """,
@@ -660,11 +768,10 @@ st.markdown(
 )
 
 if "logged_in" not in st.session_state:
-  st.session_state.logged_in = False
+    st.session_state.logged_in = False
 if "username" not in st.session_state:
-  st.session_state.username = ""
-
-
+    st.session_state.username = ""
+    
 # ==========================================
 # 6. HALAMAN LOGIN
 # ==========================================
