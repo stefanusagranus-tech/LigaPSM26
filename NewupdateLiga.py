@@ -668,54 +668,89 @@ st.markdown(
     }
 
     /* -------------------------------------------------------------------------
-       8. ST.RADIO KERAJAAN (UKURAN SERAGAM, PRESISI & SIMETRIS)
+       8. ST.RADIO KERAJAAN (HORIZONTAL BINGKAI EMAS VINTAGE)
        ------------------------------------------------------------------------- */
+    /* Menghilangkan bullet lingkaran radio bawaan secara mutlak */
     div[data-testid="stRadio"] input[type="radio"],
+    div[data-testid="stRadio"] div[role="radiogroup"] label > div:first-child,
     div[data-testid="stRadio"] div[role="radiogroup"] div:has(> input[type="radio"]) {
         display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        margin: 0 !important;
     }
+
+    /* Ubah container menjadi Flex Horizontal */
     div[data-testid="stRadio"] div[role="radiogroup"] {
         display: flex !important;
-        flex-direction: column !important;
-        gap: 10px !important;
+        flex-direction: row !important; /* Berjejer ke samping */
+        flex-wrap: wrap !important;
+        gap: 12px !important;
+        justify-content: center !important;
         width: 100% !important;
     }
+
+    /* Ubah tiap item label radio menjadi tombol Bingkai Emas Vintage */
     div[data-testid="stRadio"] div[role="radiogroup"] > label {
         background: linear-gradient(180deg, #162447 0%, #0c1427 100%) !important;
-        border: 1px solid #9a7b38 !important;
-        border-radius: 10px !important;
-        width: 100% !important;
-        height: 52px !important;
-        padding: 0 16px !important;
-        margin-bottom: 0 !important;
+        border: 1.5px solid #9a7b38 !important;
+        border-radius: 8px !important;
+        flex: 1 1 28% !important; /* Membuat item terbagi rata di mobile/desktop */
+        min-width: 130px !important;
+        height: 48px !important;
+        padding: 0 12px !important;
+        margin: 0 !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         text-align: center !important;
+        cursor: pointer !important;
+        box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6), 0 4px 6px rgba(0, 0, 0, 0.4) !important;
+        transition: all 0.25s ease-in-out !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Memaksa warna dan font teks di dalam label */
+    div[data-testid="stRadio"] div[role="radiogroup"] label *,
+    div[data-testid="stRadio"] div[role="radiogroup"] label p {
         color: #f1e5c7 !important;
         font-family: 'Cinzel', serif !important;
         font-weight: 700 !important;
-        font-size: clamp(11px, 2.5vw, 13px) !important;
+        font-size: clamp(11px, 2.2vw, 13px) !important;
         line-height: 1.2 !important;
-        word-break: break-word !important;
-        cursor: pointer !important;
-        transition: all 0.25s ease-in-out !important;
-        box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6), 0 4px 6px rgba(0, 0, 0, 0.4) !important;
-        box-sizing: border-box !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: transparent !important;
     }
+
+    /* Efek Hover (Saat Kursor Mengarah ke Tombol) */
     div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
         border-color: #d4af37 !important;
         background: linear-gradient(180deg, #1f315c 0%, #101b33 100%) !important;
-        box-shadow: 0 0 12px rgba(212, 175, 55, 0.4) !important;
-        transform: translateY(-1px) !important;
+        box-shadow: 0 0 12px rgba(212, 175, 55, 0.5) !important;
+        transform: translateY(-2px) !important;
     }
-    div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"],
-    div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) {
+
+    /* Efek Tombol Terpilih (Checked State) */
+    div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked),
+    div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {
         background: linear-gradient(135deg, #b8860b 0%, #785805 100%) !important;
-        border: 1px solid #f7e7b4 !important;
-        box-shadow: 0 0 15px rgba(212, 175, 55, 0.7) !important;
+        border: 1.5px solid #f7e7b4 !important;
+        box-shadow: 0 0 15px rgba(212, 175, 55, 0.8), inset 0 0 8px rgba(255, 243, 176, 0.4) !important;
+    }
+
+    div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) *,
+    div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] * {
         color: #ffffff !important;
-        text-shadow: 0 0 4px #000 !important;
+        text-shadow: 0 0 5px rgba(255, 255, 255, 0.8), 1px 1px 2px #000 !important;
+    }
+
+    /* Khusus Radio di dalam Sidebar tetap vertikal agar tidak berantakan */
+    [data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] {
+        flex-direction: column !important;
+    }
+    [data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] > label {
+        flex: 1 1 100% !important;
     }
 
     /* -------------------------------------------------------------------------
@@ -5448,13 +5483,13 @@ elif selected_tab == "📝 Input Data":
     </style>
     """, unsafe_allow_html=True)
 
-    active_sub_tab = st.radio(
-        "Pilih Menu Navigasi",
-        ["⚡ Multi Input Sales", "🎯 Input Sales PPS", "📱 Salin Format WA"],
-        horizontal=True,
-        label_visibility="collapsed",
-        key="custom_sub_tabs"
+    menu = st.radio(
+    "PILIH MENU NAVIGASI",
+    ["⚡ MULTI INPUT SALES", "🎯 INPUT SALES PPS", "📱 SALIN FORMAT WA"],
+    horizontal=True,
+    key="main_navigation_menu",
     )
+
     
     st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
 
