@@ -510,9 +510,6 @@ def check_login(input_username, input_password):
   return False
 
 
-# ==========================================
-import streamlit as st
-
 # =============================================================================
 # CUSTOM CSS UNIVERSAL (ROYAL GUILD / RPG FANTASY THEME)
 # =============================================================================
@@ -668,10 +665,10 @@ st.markdown(
     }
 
     /* -------------------------------------------------------------------------
-    8. ST.RADIO NAVIGASI (SIDEBAR PRESISI & FLOATING PILL NAVBAR MOBILE)
-     ------------------------------------------------------------------------- */
-    
-    /* Sembunyikan Radio Dot Asli */
+   8. FIX ULTIMATE: SIDEBAR PRESISI SAMA & FLOATING PILL ICON-ONLY NAVBAR
+   ------------------------------------------------------------------------- */
+
+    /* Sembunyikan Radio Dot Asli Streamlit */
     div[data-testid="stRadio"] input[type="radio"] {
         position: absolute !important;
         opacity: 0 !important;
@@ -685,116 +682,145 @@ st.markdown(
         display: none !important;
     }
     
-    /* ==========================================
-       A. SIDEBAR (PRESISI SAMA DENGAN TUTUP SIDEBAR)
-       ========================================== */
-    [data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] {
+    /* =========================================================================
+       A. SIDEBAR: LOCK PRESISI 100% SAMA BESAR DENGAN TOMBOL TUTUP SIDEBAR
+       ========================================================================= */
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] {
         display: flex !important;
         flex-direction: column !important;
         gap: 10px !important;
         width: 100% !important;
+        align-items: stretch !important;
         padding: 0 !important;
         margin: 0 !important;
     }
     
-    [data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label,
-    [data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"] {
-        width: 100% !important;            /* Lebar 100% sama dengan tombol Tutup Sidebar */
-        height: 42px !important;           /* Tinggi presisi */
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label,
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"] {
+        width: 100% !important;              /* Paksa 100% Lebar Sidebar */
+        max-width: 100% !important;
+        min-width: 100% !important;
+        height: 44px !important;             /* Tinggi Presisi Sama Rata */
         background: linear-gradient(180deg, #162447 0%, #0c1427 100%) !important;
         border: 1.5px solid #9a7b38 !important;
-        border-radius: 8px !important;      /* Lengkungan sama dengan tombol Tutup Sidebar */
+        border-radius: 8px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         text-align: center !important;
         margin: 0 !important;
-        padding: 0 12px !important;
+        padding: 0 10px !important;
         box-sizing: border-box !important;
         cursor: pointer !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+        box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.4) !important;
     }
     
-    /* Format Teks Sidebar */
-    [data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label * {
+    /* Teks Sidebar Tetap Rapi Di Tengah */
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label * {
         color: #f1e5c7 !important;
         font-family: 'Cinzel', serif !important;
         font-size: 11px !important;
         font-weight: 700 !important;
         letter-spacing: 0.5px !important;
+        white-space: nowrap !important;
     }
     
-    /* ==========================================
-       B. MAIN AREA (FLOATING PILL NAV BAR - GAMBAR 3)
-       ========================================== */
-    /* Container Utama Kapsul Melayang */
-    [data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] {
+    /* Active State Sidebar */
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) {
+        background: linear-gradient(135deg, #b8860b 0%, #785805 100%) !important;
+        border-color: #f7e7b4 !important;
+        box-shadow: 0 0 12px rgba(212, 175, 55, 0.6) !important;
+    }
+    
+    /* =========================================================================
+       B. FLOATING PILL NAVBAR: HANYA IKON KETIKA UNCHECKED, TEKS MUNCUL SAAT CHECKED
+       ========================================================================= */
+    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] {
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
-        justify-content: space-around !important;
+        justify-content: center !important;
         align-items: center !important;
+        gap: 8px !important;
         
-        background: #0d1527 !important;            /* Warna Dasar Kapsul */
+        background: #09101f !important;            /* Kapsul Dasar Gelap */
         border: 1.5px solid #2d3f66 !important;
-        border-radius: 50px !important;            /* Shape Kapsul Bulat Sempurna */
-        padding: 6px !important;
-        margin: 10px auto !important;
-        max-width: 380px !important;               /* Lebar Pas & Tidak Kebesaran */
-        width: 100% !important;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5) !important;
+        border-radius: 50px !important;
+        padding: 6px 10px !important;
+        margin: 12px auto !important;
+        width: fit-content !important;             /* Kapsul Menyesuaikan Isi Secara Ringkas */
+        max-width: 95% !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
     }
     
-    /* Item Tombol dalam Kapsul (Default Non-Aktif / Hanya Ikon) */
-    [data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label,
-    [data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"] {
+    /* ITEM TOMBOL (DEFAULT: NON-AKTIF / HANYA IKON) */
+    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label,
+    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"] {
         background: transparent !important;
         border: none !important;
         border-radius: 30px !important;
         height: 38px !important;
-        padding: 0 12px !important;
+        width: 38px !important;                     /* Default Kapsul Bulat Presisi untuk Ikon saja */
+        padding: 0 !important;
         margin: 0 !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         cursor: pointer !important;
+        overflow: hidden !important;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        flex: 0 1 auto !important;
+        flex: 0 0 auto !important;
     }
     
-    /* Teks Mengikuti & Mengecil Pas */
-    [data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label * {
+    /* Sembunyikan Teks pada Menu Non-Aktif (Hanya Ambil Ikon Pertama) */
+    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label p,
+    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label span {
+        font-size: 0px !important;                   /* Sembunyikan Teks Lengkap */
+        color: transparent !important;
+    }
+    
+    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label p::first-letter,
+    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label span::first-letter {
+        font-size: 16px !important;                  /* Hanya Tampilkan Ikon/Emoji Pertama */
         color: #8a99ad !important;
-        font-family: 'Cinzel', serif !important;
-        font-weight: 700 !important;
-        font-size: 10px !important;
-        white-space: nowrap !important;
-        transition: color 0.3s ease !important;
     }
     
-    /* HOVER STATE */
-    [data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover * {
+    /* Hover Effect pada Ikon Non-Aktif */
+    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover {
+        background: rgba(255, 255, 255, 0.05) !important;
+    }
+    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover p::first-letter {
         color: #d4af37 !important;
     }
     
-    /* ACTIVE STATE (MENU TERPILIH - KAPSUL PUTIH/EMAS MENYALA) */
-    [data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked),
-    [data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"]:has(input:checked),
-    [data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] [aria-checked="true"] {
+    /* =========================================================================
+       C. ACTIVE STATE: KAPSUL EMAS MEMANJANG & TAMPILKAN TEKS NAMA BAR
+       ========================================================================= */
+    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked),
+    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] [aria-checked="true"] {
         background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%) !important; /* Warna Kapsul Aktif */
-        box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4) !important;
-        padding: 0 16px !important;                /* Melebar Otomatis Saat Aktif */
+        width: auto !important;                     /* Otomatis Memanjang Saat Terpilih */
+        padding: 0 16px !important;                /* Memberi Ruang Teks */
+        box-shadow: 0 4px 14px rgba(212, 175, 55, 0.5) !important;
     }
     
-    /* Teks & Ikon pada Menu Aktif */
-    [data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) *,
-    [data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"]:has(input:checked) *,
-    [data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] [aria-checked="true"] * {
-        color: #0d1527 !important;                  /* Warna Teks Gelap Kontras */
+    /* Tampilkan Teks & Ikon Utuh Saat Terpilih/Diklik */
+    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) p,
+    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) span,
+    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] [aria-checked="true"] p,
+    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] [aria-checked="true"] span {
+        font-size: 11px !important;                 /* Tampilkan Teks Kembali */
+        font-family: 'Cinzel', serif !important;
         font-weight: 800 !important;
-        font-size: 10px !important;
+        color: #0d1527 !important;                  /* Warna Teks Gelap Kontras Di Atas Emas */
+        white-space: nowrap !important;
     }
-
+    
+    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) p::first-letter,
+    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) span::first-letter {
+        font-size: 13px !important;
+        color: #0d1527 !important;
+    }
 
     /* -------------------------------------------------------------------------
        9. TOMBOL ST.BUTTON (TOMBOL EKSEKUSI GUILD)
@@ -1216,14 +1242,10 @@ if st.sidebar.button(logout_text, use_container_width=True, key="logout_sidebar"
     st.rerun()
 
 
-# =============================================================================
+
 # =============================================================================
 # 8. HEADER UTAMA MEDIEVAL ROYAL GUILD DESIGN (BALANCED SIDE-BOXES)
 # =============================================================================
-import pandas as pd
-import streamlit as st
-import streamlit.components.v1 as components
-
 is_di_dalam_camp = (
     "portal_prep_ready" in st.session_state and st.session_state.portal_prep_ready
 ) or (
