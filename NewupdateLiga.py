@@ -733,48 +733,36 @@ st.markdown(
     }
     
     /* =========================================================================
-       B. FLOATING PILL NAVBAR (PAKSI PRESISI TENGAH)
-       ========================================================================= */
-    
-    /* 1. Container Induk Streamlit dipaksa Vertikal & Rata Tengah */
+   PAKSA NAVBAR & TULISAN JUDUL KE TENGAH PRESISI
+   ========================================================================= */
+
+    /* 1. Ratatengahkan Wrapper / Wadah Induk Komponen Radio */
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] {
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
         justify-content: center !important;
+        text-align: center !important;
         width: 100% !important;
-        margin: 0 auto !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
     }
     
-    /* 2. Sembunyikan Label Bawaan yang Bikin Terdorong Samping */
+    /* 2. Tulisan "PILIH MENU NAVIGASI" (Label Streamlit) Bikin Tengah */
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] > label,
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] [data-testid="stWidgetLabel"] {
-        display: none !important;
-        visibility: hidden !important;
-        height: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
+        text-align: center !important;
+        width: 100% !important;
+        justify-content: center !important;
+        display: flex !important;
+        margin-bottom: 6px !important;
     }
     
-    /* 3. Kapsul Utama Presisi di Tengah Layar */
+    /* 3. Kapsul Floating Pill Dikunci di Tengah */
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
         justify-content: center !important;
-        align-items: center !important;
-        gap: 6px !important;
-        
-        background: #09101f !important;
-        border: 1.5px solid #2d3f66 !important;
-        border-radius: 50px !important;
-        padding: 6px 10px !important;
-        
-        /* Margin Auto Kunci Poros Tengah */
-        margin: 6px auto 16px auto !important;
-        width: fit-content !important;
-        max-width: 95% !important;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5) !important;
     }
 
     /* =========================================================================
