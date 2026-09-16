@@ -668,9 +668,9 @@ st.markdown(
     }
 
     /* -------------------------------------------------------------------------
-   8. ST.RADIO KERAJAAN (PAS, PROPORSIONAL & SERAGAM)
-   ------------------------------------------------------------------------- */
-
+       8. ST.RADIO KERAJAAN (PRESISI, UKURAN BORDER SAMA & 1 BARIS SEJAJAR)
+       ------------------------------------------------------------------------- */
+    
     /* Sembunyikan lingkaran/dot radio bawaan */
     div[data-testid="stRadio"] input[type="radio"] {
         position: absolute !important;
@@ -685,30 +685,30 @@ st.markdown(
         display: none !important;
     }
     
-    /* Container Flex Horizontal */
+    /* Container Flex Horizontal - Paksa 1 Baris Sejajar */
     div[data-testid="stRadio"] div[role="radiogroup"] {
         display: flex !important;
         flex-direction: row !important;
-        flex-wrap: wrap !important;
-        gap: 10px !important;
-        justify-content: center !important;
+        flex-wrap: nowrap !important;        /* Wajib 1 baris, dilarang turun ke bawah */
+        gap: 6px !important;                 /* Jarak antar border presisi */
+        justify-content: center !important;  /* Posisi simetris di tengah */
         align-items: center !important;
         width: 100% !important;
         margin: 6px 0 !important;
     }
     
-    /* Tampilan Bingkai Emas Pas & Ramping */
+    /* Tampilan Bingkai Emas (UKURAN BORDER KONSISTEN & PRESISI SAMA) */
     div[data-testid="stRadio"] div[role="radiogroup"] label,
     div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"] {
         background: linear-gradient(180deg, #162447 0%, #0c1427 100%) !important;
         border: 1.5px solid #9a7b38 !important;
         border-radius: 8px !important;
         
-        /* UKURAN DILOCK AGAR PAS & SERAGAM */
-        flex: 0 1 auto !important;          /* Tidak membesar berlebihan */
-        width: 155px !important;            /* Lebar dikunci sama untuk semua tombol */
-        height: 44px !important;           /* Tinggi ringkas & pas di jari */
-        padding: 0 8px !important;
+        /* DILOCK AGAR BORDER 100% SAMA BESAR & SEJAJAR */
+        flex: 1 1 0px !important;            /* Membagi lebar container secara rata & simetris */
+        min-width: 0 !important;             /* Mencegah overflow */
+        height: 44px !important;            /* Tinggi border pasti sama */
+        padding: 0 4px !important;           /* Padding ramping */
         margin: 0 !important;
         
         display: flex !important;
@@ -721,18 +721,21 @@ st.markdown(
         box-sizing: border-box !important;
     }
     
-    /* Format Teks */
+    /* Format Teks Mengikuti Ukuran Border secara Otomatis */
     div[data-testid="stRadio"] div[role="radiogroup"] label *,
     div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"] * {
         color: #f1e5c7 !important;
         font-family: 'Cinzel', serif !important;
         font-weight: 700 !important;
-        font-size: 11px !important;
-        letter-spacing: 0.3px !important;
-        line-height: 1.2 !important;
+        font-size: clamp(8px, 2.2vw, 11px) !important; /* Font mengecil otomatis di HP agar muat presisi */
+        line-height: 1.15 !important;
         margin: 0 !important;
         padding: 0 !important;
         background: transparent !important;
+        white-space: normal !important;      /* Teks panjang boleh membagi kata agar tetap berada di dalam border */
+        word-break: break-word !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
     }
     
     /* Hover State */
@@ -741,7 +744,6 @@ st.markdown(
         border-color: #d4af37 !important;
         background: linear-gradient(180deg, #1f315c 0%, #101b33 100%) !important;
         box-shadow: 0 0 10px rgba(212, 175, 55, 0.5) !important;
-        transform: translateY(-1px) !important;
     }
     
     /* Active State (Klik/Terpilih) */
@@ -760,13 +762,15 @@ st.markdown(
         text-shadow: 0 0 4px rgba(255, 255, 255, 0.8), 1px 1px 2px #000 !important;
     }
     
-    /* Sidebar Radio Tetap Vertikal */
+    /* Sidebar Radio (Vertikal Presisi) */
     [data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] {
         flex-direction: column !important;
+        gap: 8px !important;
     }
     [data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label,
     [data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"] {
         width: 100% !important;
+        flex: 1 1 100% !important;
     }
 
     /* -------------------------------------------------------------------------
