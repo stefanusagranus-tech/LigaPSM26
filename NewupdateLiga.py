@@ -5557,7 +5557,6 @@ elif selected_tab == "📝 Input Data":
     )
 
     active_sub_tab = st.radio(
-        "Pilih Menu Navigasi",
         ["⚡ Multi Input Sales", "🎯 Input Sales PPS", "📱 Salin Format WA"],
         horizontal=True,
         label_visibility="collapsed",
