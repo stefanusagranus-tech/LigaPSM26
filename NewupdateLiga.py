@@ -5483,13 +5483,13 @@ elif selected_tab == "📝 Input Data":
     </style>
     """, unsafe_allow_html=True)
 
-    menu = st.radio(
-    "PILIH MENU NAVIGASI",
-    ["⚡ MULTI INPUT SALES", "🎯 INPUT SALES PPS", "📱 SALIN FORMAT WA"],
-    horizontal=True,
-    key="main_navigation_menu",
+    active_sub_tab = st.radio(
+        "Pilih Menu Navigasi",
+        ["⚡ Multi Input Sales", "🎯 Input Sales PPS", "📱 Salin Format WA"],
+        horizontal=True,
+        label_visibility="collapsed",
+        key="custom_sub_tabs"
     )
-
     
     st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
 
