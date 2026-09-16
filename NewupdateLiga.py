@@ -733,92 +733,84 @@ st.markdown(
     }
     
     /* =========================================================================
-       B. FLOATING PILL NAVBAR: HANYA IKON KETIKA UNCHECKED, TEKS MUNCUL SAAT CHECKED
+       B. FLOATING PILL NAVBAR (PROPORSIONAL, SIMETRIS & CENTER)
        ========================================================================= */
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] {
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
-        justify-content: center !important;
+        justify-content: space-between !important;
         align-items: center !important;
-        gap: 8px !important;
+        gap: 4px !important;
         
-        background: #09101f !important;            /* Kapsul Dasar Gelap */
+        background: #09101f !important;
         border: 1.5px solid #2d3f66 !important;
         border-radius: 50px !important;
-        padding: 6px 10px !important;
+        padding: 4px !important;
         margin: 12px auto !important;
-        width: fit-content !important;             /* Kapsul Menyesuaikan Isi Secara Ringkas */
-        max-width: 95% !important;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
+        
+        width: 100% !important;
+        max-width: 320px !important;               /* Lebar Pas untuk HP */
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5) !important;
     }
     
-    /* ITEM TOMBOL (DEFAULT: NON-AKTIF / HANYA IKON) */
+    /* ITEM TOMBOL */
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label,
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"] {
         background: transparent !important;
         border: none !important;
         border-radius: 30px !important;
-        height: 38px !important;
-        width: 38px !important;                     /* Default Kapsul Bulat Presisi untuk Ikon saja */
-        padding: 0 !important;
+        height: 36px !important;
+        padding: 0 8px !important;
         margin: 0 !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         cursor: pointer !important;
-        overflow: hidden !important;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        flex: 0 0 auto !important;
+        transition: all 0.25s ease-in-out !important;
+        flex: 1 1 0px !important;                   /* Membagi ruang dengan seimbang */
+        min-width: 0 !important;
     }
     
-    /* Sembunyikan Teks pada Menu Non-Aktif (Hanya Ambil Ikon Pertama) */
+    /* Sembunyikan Teks pada Opsi Tidak Aktif */
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label p,
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label span {
-        font-size: 0px !important;                   /* Sembunyikan Teks Lengkap */
+        font-size: 0px !important;
         color: transparent !important;
     }
     
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label p::first-letter,
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label span::first-letter {
-        font-size: 16px !important;                  /* Hanya Tampilkan Ikon/Emoji Pertama */
+        font-size: 15px !important;
         color: #8a99ad !important;
     }
     
-    /* Hover Effect pada Ikon Non-Aktif */
-    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover {
-        background: rgba(255, 255, 255, 0.05) !important;
-    }
-    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover p::first-letter {
-        color: #d4af37 !important;
-    }
-    
     /* =========================================================================
-       C. ACTIVE STATE: KAPSUL EMAS MEMANJANG & TAMPILKAN TEKS NAMA BAR
+       C. ACTIVE STATE (KAPSUL EMAS PRESISI)
        ========================================================================= */
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked),
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] [aria-checked="true"] {
-        background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%) !important; /* Warna Kapsul Aktif */
-        width: auto !important;                     /* Otomatis Memanjang Saat Terpilih */
-        padding: 0 16px !important;                /* Memberi Ruang Teks */
-        box-shadow: 0 4px 14px rgba(212, 175, 55, 0.5) !important;
+        background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%) !important;
+        box-shadow: 0 2px 10px rgba(212, 175, 55, 0.4) !important;
+        flex: 2 1 0px !important;                   /* Memberi porsi lebih lebar untuk tombol aktif */
     }
     
-    /* Tampilkan Teks & Ikon Utuh Saat Terpilih/Diklik */
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) p,
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) span,
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] [aria-checked="true"] p,
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] [aria-checked="true"] span {
-        font-size: 11px !important;                 /* Tampilkan Teks Kembali */
+        font-size: 10px !important;
         font-family: 'Cinzel', serif !important;
         font-weight: 800 !important;
-        color: #0d1527 !important;                  /* Warna Teks Gelap Kontras Di Atas Emas */
+        color: #0d1527 !important;
         white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
     }
     
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) p::first-letter,
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) span::first-letter {
-        font-size: 13px !important;
+        font-size: 11px !important;
         color: #0d1527 !important;
     }
 
