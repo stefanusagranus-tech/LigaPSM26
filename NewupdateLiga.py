@@ -831,6 +831,7 @@ st.markdown(
         color: #0d1527 !important;
     }
 
+
     /* -------------------------------------------------------------------------
        9. TOMBOL ST.BUTTON (TOMBOL EKSEKUSI GUILD)
        ------------------------------------------------------------------------- */
@@ -5557,6 +5558,7 @@ elif selected_tab == "📝 Input Data":
     )
 
     active_sub_tab = st.radio(
+        "",
         ["⚡ Multi Input Sales", "🎯 Input Sales PPS", "📱 Salin Format WA"],
         horizontal=True,
         label_visibility="collapsed",
