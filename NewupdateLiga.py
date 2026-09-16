@@ -5363,74 +5363,87 @@ elif selected_tab == "📝 Input Data":
         periods_dict = {"Periode Utama": "P01"}
 
     # =========================================================================
-    # RENDER CUSTOM RADIO MENU (VINTAGE GOLD RPG FRAME THEME)
+    # ULTIMATE VINTAGE GOLD FRAME RADIO (OVERRIDE GLOBAL STREAMLIT)
     # =========================================================================
     st.markdown("""
     <style>
-        /* Paksa container radio menjadi layout horizontal */
-        div.block-container div[data-testid="stRadio"] div[role="radiogroup"] {
+        /* 1. Atur container radio group menjadi flex horizontal & wrap jika di HP */
+        div[data-testid="stRadio"] > div[role="radiogroup"] {
             display: flex !important;
             flex-direction: row !important;
+            flex-wrap: wrap !important;
             gap: 10px !important;
-            justify-content: center;
-            align-items: center;
+            justify-content: center !important;
+            align-items: center !important;
+            width: 100% !important;
         }
 
-        /* Styling tombol bergaya Vintage Frame Emas */
-        div.block-container div[data-testid="stRadio"] div[role="radiogroup"] > label {
+        /* 2. Sembunyikan bulat radio bawaan Streamlit secara mutlak */
+        div[data-testid="stRadio"] div[role="radiogroup"] input[type="radio"],
+        div[data-testid="stRadio"] div[role="radiogroup"] [data-testid="stMarkdownContainer"] ~ div,
+        div[data-testid="stRadio"] div[role="radiogroup"] label > div:first-child {
+            display: none !important;
+        }
+
+        /* 3. Ubah seluruh wadah Label menjadi Tombol Bingkai Emas Vintage */
+        div[data-testid="stRadio"] div[role="radiogroup"] > label {
             background: linear-gradient(180deg, #3d2612 0%, #241408 100%) !important;
-            border: 2px solid #d4af37 !important; /* Border Warna Emas Klasik */
-            outline: 1px solid #5c3a1e !important; /* Double border effect */
-            outline-offset: -4px !important;
-            border-radius: 6px !important;
-            padding: 10px 14px !important;
-            color: #f3e5ab !important; /* Warna teks Krem Emas */
+            border: 2px solid #d4af37 !important;
+            box-shadow: 0 0 0 1px #5c3a1e, 0 4px 8px rgba(0, 0, 0, 0.7), inset 0 0 6px rgba(212, 175, 55, 0.25) !important;
+            border-radius: 8px !important;
+            padding: 10px 16px !important;
+            margin: 0 !important;
+            cursor: pointer !important;
+            flex: 1 1 30% !important; /* Membuat tombol sejajar berjejer */
+            min-width: 120px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            transition: all 0.2s ease-in-out !important;
+        }
+
+        /* 4. Format Teks di dalam Label */
+        div[data-testid="stRadio"] div[role="radiogroup"] > label p,
+        div[data-testid="stRadio"] div[role="radiogroup"] > label div {
+            color: #f3e5ab !important;
             font-family: 'Georgia', serif !important;
             font-weight: bold !important;
             font-size: 13px !important;
             letter-spacing: 0.5px !important;
-            text-transform: uppercase;
-            white-space: nowrap !important;
-            cursor: pointer;
-            flex: 1;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            text-align: center;
-            min-height: 48px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6), inset 0 0 5px rgba(212, 175, 55, 0.2) !important;
-            transition: all 0.2s ease-in-out !important;
+            text-transform: uppercase !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
 
-        /* Sembunyikan bulat radio bawaan Streamlit */
-        div.block-container div[data-testid="stRadio"] div[role="radiogroup"] input[type="radio"] {
-            display: none !important;
-        }
-
-        /* HOVER: Efek Kilatan Emas Terang */
-        div.block-container div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
+        /* 5. EFEK HOVER (Saat Disentuh Kursor) */
+        div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
             border-color: #ffe57f !important;
-            color: #ffffff !important;
             background: linear-gradient(180deg, #54351a 0%, #361e0c 100%) !important;
-            box-shadow: 0 0 12px rgba(255, 229, 127, 0.5), inset 0 0 8px rgba(255, 229, 127, 0.3) !important;
-            transform: translateY(-2px);
+            box-shadow: 0 0 12px rgba(255, 229, 127, 0.6), inset 0 0 8px rgba(255, 229, 127, 0.3) !important;
+            transform: translateY(-2px) !important;
         }
 
-        /* ACTIVE / SELECTED: Frame Emas Menyala Terang */
-        div.block-container div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"],
-        div.block-container div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) {
+        /* 6. EFEK ACTIVE / SELECTED (Saat Radio Terpilih) */
+        div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked),
+        div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {
             background: linear-gradient(180deg, #855325 0%, #4a2d12 100%) !important;
             border: 2px solid #fff3b0 !important;
-            color: #ffffff !important;
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.8), inset 0 0 10px rgba(255, 243, 176, 0.5) !important;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.9), inset 0 0 10px rgba(255, 243, 176, 0.5) !important;
         }
 
-        /* Jaga agar menu Sidebar tetap vertikal standar */
+        div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) p,
+        div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] p {
+            color: #ffffff !important;
+            text-shadow: 0 0 5px rgba(255, 243, 176, 0.8) !important;
+        }
+
+        /* 7. Jaga menu Sidebar agar tetap standar vertikal */
         section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] {
             flex-direction: column !important;
         }
-        section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] input[type="radio"] {
-            display: inline-block !important;
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] > label {
+            flex: 1 1 100% !important;
         }
     </style>
     """, unsafe_allow_html=True)
