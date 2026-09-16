@@ -1252,375 +1252,6 @@ if st.sidebar.button(logout_text, use_container_width=True, key="logout_sidebar"
     st.rerun()
 
 
-
-# =============================================================================
-# 8. HEADER UTAMA MEDIEVAL ROYAL GUILD DESIGN (BALANCED SIDE-BOXES)
-# =============================================================================
-is_di_dalam_camp = (
-    "portal_prep_ready" in st.session_state and st.session_state.portal_prep_ready
-) or (
-    "current_camp_menu" in st.session_state
-    and st.session_state["current_camp_menu"] == "status"
-)
-
-if not is_di_dalam_camp:
-    unfilled_info = "✅ Semua shift aman"
-    badge_bg = "rgba(16, 185, 129, 0.15)"
-    badge_border = "#10b981"
-    badge_text_color = "#34d399"
-
-    try:
-        if (
-            "sales_pps_df" in st.session_state
-            and not st.session_state.sales_pps_df.empty
-        ):
-            df_pps = st.session_state.sales_pps_df.copy()
-
-            col_date_name = "updated_at"
-            col_shift_name = "shift_personil"
-
-            if (
-                col_date_name in df_pps.columns
-                and col_shift_name in df_pps.columns
-            ):
-                df_pps["clean_date"] = pd.to_datetime(
-                    df_pps[col_date_name], errors="coerce"
-                ).dt.date
-                today_date = pd.Timestamp.now(tz="Asia/Jakarta").date()
-
-                df_today = df_pps[df_pps["clean_date"] == today_date]
-                shifts_found = (
-                    df_today[col_shift_name].dropna().astype(str).unique()
-                )
-
-                missing_shifts = []
-                for s in ["Shift 1", "Shift 2", "Shift 3"]:
-                    num = s.split()[-1]
-                    if not any(
-                        s.lower() in found.lower() or num == found.strip()
-                        for found in shifts_found
-                    ):
-                        missing_shifts.append(s)
-
-                if len(df_today) == 0:
-                    unfilled_info = "⚠️ Belum ada input hari ini"
-                    badge_bg = "rgba(245, 158, 11, 0.15)"
-                    badge_border = "#f59e0b"
-                    badge_text_color = "#fbbf24"
-                elif missing_shifts:
-                    unfilled_info = f"⚠️ Belum: {', '.join(missing_shifts)}"
-                    badge_bg = "rgba(239, 68, 68, 0.15)"
-                    badge_border = "#ef4444"
-                    badge_text_color = "#fca5a5"
-            else:
-                unfilled_info = "ℹ️ Kolom data tidak ditemukan"
-        else:
-            unfilled_info = "⚠️ Memuat Data Sales..."
-            badge_bg = "rgba(245, 158, 11, 0.15)"
-            badge_border = "#f59e0b"
-            badge_text_color = "#fbbf24"
-    except Exception as e:
-        unfilled_info = "⚠️ Cek data gagal"
-
-    rpg_header_html = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-    <meta charset="UTF-8">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&family=Quicksand:wght@600;700&display=swap');
-
-        * {{
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }}
-
-        body {{
-            background-color: transparent;
-            font-family: 'Quicksand', sans-serif;
-            overflow: hidden;
-        }}
-
-        /* BINGKAI UTAMA ROYAL KERAJAAN */
-        .royal-outer-frame {{
-            position: relative;
-            background: radial-gradient(circle, #162447 0%, #0c1427 100%);
-            border: 3px double #d4af37;
-            border-radius: 14px;
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.35), inset 0 0 20px rgba(0, 0, 0, 0.8);
-            padding: 10px 14px;
-            color: #f1e5c7;
-        }}
-
-        /* UKIRAN SUDUT EMAS */
-        .corner-ornament {{
-            position: absolute;
-            color: #d4af37;
-            font-size: 10px;
-            line-height: 1;
-            opacity: 0.85;
-            pointer-events: none;
-        }}
-        .top-left {{ top: 3px; left: 5px; }}
-        .top-right {{ top: 3px; right: 5px; }}
-        .bottom-left {{ bottom: 3px; left: 5px; }}
-        .bottom-right {{ bottom: 3px; right: 5px; }}
-
-        /* BARIS ATAS: JUDUL DASHBOARD */
-        .guild-title-box {{
-            text-align: center;
-            margin-bottom: 8px;
-        }}
-
-        .guild-title {{
-            font-family: 'MedievalSharp', serif;
-            font-size: 16px;
-            color: #f7e7b4;
-            text-shadow: 0 0 8px rgba(212, 175, 55, 0.8), 2px 2px 4px #000;
-            margin: 0;
-            letter-spacing: 0.8px;
-        }}
-
-        .guild-subtitle {{
-            font-size: 9px;
-            color: #38bdf8;
-            margin-top: 1px;
-            letter-spacing: 0.3px;
-        }}
-
-        /* BARIS BAWAH: DUA KOTAK SIMETRIS */
-        .bottom-row {{
-            display: flex;
-            align-items: stretch;
-            justify-content: space-between;
-            gap: 10px;
-            width: 100%;
-        }}
-
-        .royal-side-box {{
-            flex: 1;
-            background: rgba(10, 17, 34, 0.75);
-            border: 1px solid #9a7b38;
-            border-radius: 8px;
-            padding: 6px 10px;
-            min-width: 0;
-            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }}
-
-        .box-title {{
-            font-size: 8px;
-            color: #e5c158;
-            font-weight: bold;
-            letter-spacing: 0.6px;
-            margin-bottom: 3px;
-            text-transform: uppercase;
-        }}
-
-        /* RUNNING TEXT (KIRI) */
-        .marquee-container {{
-            overflow: hidden;
-            white-space: nowrap;
-            width: 100%;
-            background: {badge_bg};
-            border: 1px solid {badge_border};
-            border-radius: 5px;
-            padding: 2px 0;
-            margin-top: 2px;
-        }}
-
-        .marquee-text {{
-            display: inline-block;
-            padding-left: 100%;
-            animation: marquee 10s linear infinite;
-            color: {badge_text_color};
-            font-size: 10px;
-            font-weight: bold;
-        }}
-
-        @keyframes marquee {{
-            0%   {{ transform: translate(0, 0); }}
-            100% {{ transform: translate(-100%, 0); }}
-        }}
-
-        /* KANAN: FLEX LAYOUT UNTUK MENGISI SISI KIRI & KANAN KOTAK */
-        .time-box-wrapper {{
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-        }}
-
-        /* IKON JAM PASIR BESAR DI SISI KIRI KOTAK KANAN */
-        .hourglass-container {{
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding-right: 8px;
-        }}
-
-        .hourglass-spin {{
-            font-size: 20px;
-            display: inline-block;
-            filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.8));
-            animation: spinHourglass 2.5s infinite ease-in-out;
-        }}
-
-        @keyframes spinHourglass {{
-            0% {{ transform: rotate(0deg); }}
-            50% {{ transform: rotate(180deg); }}
-            100% {{ transform: rotate(180deg); }}
-        }}
-
-        /* SISI KANAN TEKS WAKTU */
-        .right-clock-content {{
-            text-align: right;
-            flex: 1;
-        }}
-
-        .greeting-text {{
-            font-size: 9px;
-            color: #fcd34d;
-            font-weight: bold;
-            margin-bottom: 1px;
-        }}
-
-        .digital-clock {{
-            font-family: monospace;
-            font-size: 13px;
-            font-weight: bold;
-            color: #38bdf8;
-            text-shadow: 0 0 6px rgba(56, 189, 248, 0.5);
-            line-height: 1.1;
-        }}
-
-        .digital-date {{
-            font-size: 9px;
-            color: #cbd5e1;
-            margin-top: 1px;
-            font-weight: bold;
-        }}
-
-        /* RESPONSIVE LAYOUT */
-        @media (min-width: 650px) {{
-            .guild-title {{
-                font-size: 18px;
-            }}
-            .guild-subtitle {{
-                font-size: 11px;
-            }}
-            .greeting-text {{
-                font-size: 10px;
-            }}
-            .digital-clock {{
-                font-size: 14px;
-            }}
-            .digital-date {{
-                font-size: 10px;
-            }}
-            .box-title {{
-                font-size: 9px;
-            }}
-            .marquee-text {{
-                font-size: 11px;
-            }}
-            .hourglass-spin {{
-                font-size: 24px;
-            }}
-        }}
-    </style>
-    </head>
-    <body>
-
-    <div class="royal-outer-frame">
-        <!-- ORNAMEN SUDUT -->
-        <div class="corner-ornament top-left">⚜</div>
-        <div class="corner-ornament top-right">⚜</div>
-        <div class="corner-ornament bottom-left">⚜</div>
-        <div class="corner-ornament bottom-right">⚜</div>
-
-        <!-- BARIS ATAS: JUDUL DASHBOARD -->
-        <div class="guild-title-box">
-            <h1 class="guild-title">⚔️ Dashboard Toko Karang Satria ⚔️</h1>
-            <div class="guild-subtitle">Sistem Analisis & Optimasi Pencapaian Target Toko</div>
-        </div>
-
-        <!-- BARIS BAWAH: STATUS SHIFT & JAM REALTIME -->
-        <div class="bottom-row">
-            <!-- KIRI: STATUS INPUT SHIFT -->
-            <div class="royal-side-box">
-                <div class="box-title">📜 STATUS INPUT SHIFT</div>
-                <div class="marquee-container">
-                    <span class="marquee-text">{unfilled_info}</span>
-                </div>
-            </div>
-
-            <!-- KANAN: JAM PASIR GLOWING (KIRI) + JAM DIGITAL & UCAPAN (KANAN) -->
-            <div class="royal-side-box">
-                <div class="time-box-wrapper">
-                    <!-- SISI KIRI KOTAK KANAN: JAM PASIR BERPUTAR -->
-                    <div class="hourglass-container">
-                        <span class="hourglass-spin">⏳</span>
-                    </div>
-                    
-                    <!-- SISI KANAN KOTAK KANAN: DETAIL WAKTU -->
-                    <div class="right-clock-content">
-                        <div class="greeting-text" id="timeGreeting">🌙 Selamat Malam</div>
-                        <div class="digital-clock" id="liveClock">00:00:00 WIB</div>
-                        <div class="digital-date" id="liveDate">Senin, 01/01/2026</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        function updateClock() {{
-            const now = new Date();
-            const hoursNum = now.getHours();
-            
-            // 1. Logika Ucapan Waktu Dinamis
-            let greeting = "🌙 Selamat Malam";
-            if (hoursNum >= 4 && hoursNum < 11) {{
-                greeting = "🌅 Selamat Pagi";
-            }} else if (hoursNum >= 11 && hoursNum < 15) {{
-                greeting = "☀️ Selamat Siang";
-            }} else if (hoursNum >= 15 && hoursNum < 18) {{
-                greeting = "🌇 Selamat Sore";
-            }}
-            document.getElementById('timeGreeting').textContent = greeting;
-
-            // 2. Format Jam Digital
-            const hours = String(hoursNum).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            document.getElementById('liveClock').textContent = `${{hours}}:${{minutes}}:${{seconds}} WIB`;
-
-            // 3. Format Hari & Tanggal
-            const daysArr = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-            const dayName = daysArr[now.getDay()];
-            
-            const day = String(now.getDate()).padStart(2, '0');
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const year = now.getFullYear();
-            
-            document.getElementById('liveDate').textContent = `${{dayName}}, ${{day}}/${{month}}/${{year}}`;
-        }}
-
-        setInterval(updateClock, 1000);
-        updateClock();
-    </script>
-
-    </body>
-    </html>
-    """
-
-    components.html(rpg_header_html, height=175)
-    
-    
 # ==========================================
 # 9. MODUL TAB / SUB MENU
 # ==========================================
@@ -5199,14 +4830,355 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 # MENU UTAMA: GAYA RPG RESPONSIVE (PORTAL GUILD ONLY)
 # =========================================================================
 if selected_tab == "🏠 Menu Utama":
-    import time
-    
+
+    # -------------------------------------------------------------------------
+    # 1. RENDER HEADER UTAMA MEDIEVAL ROYAL GUILD (HANYA DI TAB MENU UTAMA)
+    # -------------------------------------------------------------------------
+    is_di_dalam_camp = (
+        "portal_prep_ready" in st.session_state
+        and st.session_state.portal_prep_ready
+    ) or (
+        "current_camp_menu" in st.session_state
+        and st.session_state["current_camp_menu"] == "status"
+    )
+
+    if not is_di_dalam_camp:
+        unfilled_info = "✅ Semua shift aman"
+        badge_bg = "rgba(16, 185, 129, 0.15)"
+        badge_border = "#10b981"
+        badge_text_color = "#34d399"
+
+        try:
+            if (
+                "sales_pps_df" in st.session_state
+                and not st.session_state.sales_pps_df.empty
+            ):
+                df_pps = st.session_state.sales_pps_df.copy()
+
+                col_date_name = "updated_at"
+                col_shift_name = "shift_personil"
+
+                if (
+                    col_date_name in df_pps.columns
+                    and col_shift_name in df_pps.columns
+                ):
+                    df_pps["clean_date"] = pd.to_datetime(
+                        df_pps[col_date_name], errors="coerce"
+                    ).dt.date
+                    today_date = pd.Timestamp.now(tz="Asia/Jakarta").date()
+
+                    df_today = df_pps[df_pps["clean_date"] == today_date]
+                    shifts_found = (
+                        df_today[col_shift_name].dropna().astype(str).unique()
+                    )
+
+                    missing_shifts = []
+                    for s in ["Shift 1", "Shift 2", "Shift 3"]:
+                        num = s.split()[-1]
+                        if not any(
+                            s.lower() in found.lower() or num == found.strip()
+                            for found in shifts_found
+                        ):
+                            missing_shifts.append(s)
+
+                    if len(df_today) == 0:
+                        unfilled_info = "⚠️ Belum ada input hari ini"
+                        badge_bg = "rgba(245, 158, 11, 0.15)"
+                        badge_border = "#f59e0b"
+                        badge_text_color = "#fbbf24"
+                    elif missing_shifts:
+                        unfilled_info = f"⚠️ Belum: {', '.join(missing_shifts)}"
+                        badge_bg = "rgba(239, 68, 68, 0.15)"
+                        badge_border = "#ef4444"
+                        badge_text_color = "#fca5a5"
+                else:
+                    unfilled_info = "ℹ️ Kolom data tidak ditemukan"
+            else:
+                unfilled_info = "⚠️ Memuat Data Sales..."
+                badge_bg = "rgba(245, 158, 11, 0.15)"
+                badge_border = "#f59e0b"
+                badge_text_color = "#fbbf24"
+        except Exception as e:
+            unfilled_info = "⚠️ Cek data gagal"
+
+        rpg_header_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <meta charset="UTF-8">
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&family=Quicksand:wght@600;700&display=swap');
+
+            * {{
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }}
+
+            body {{
+                background-color: transparent;
+                font-family: 'Quicksand', sans-serif;
+                overflow: hidden;
+            }}
+
+            /* BINGKAI UTAMA ROYAL KERAJAAN */
+            .royal-outer-frame {{
+                position: relative;
+                background: radial-gradient(circle, #162447 0%, #0c1427 100%);
+                border: 3px double #d4af37;
+                border-radius: 14px;
+                box-shadow: 0 0 15px rgba(212, 175, 55, 0.35), inset 0 0 20px rgba(0, 0, 0, 0.8);
+                padding: 10px 14px;
+                color: #f1e5c7;
+                margin-bottom: 5px;
+            }}
+
+            /* UKIRAN SUDUT EMAS */
+            .corner-ornament {{
+                position: absolute;
+                color: #d4af37;
+                font-size: 10px;
+                line-height: 1;
+                opacity: 0.85;
+                pointer-events: none;
+            }}
+            .top-left {{ top: 3px; left: 5px; }}
+            .top-right {{ top: 3px; right: 5px; }}
+            .bottom-left {{ bottom: 3px; left: 5px; }}
+            .bottom-right {{ bottom: 3px; right: 5px; }}
+
+            /* BARIS ATAS: JUDUL DASHBOARD */
+            .guild-title-box {{
+                text-align: center;
+                margin-bottom: 8px;
+            }}
+
+            .guild-title {{
+                font-family: 'MedievalSharp', serif;
+                font-size: 16px;
+                color: #f7e7b4;
+                text-shadow: 0 0 8px rgba(212, 175, 55, 0.8), 2px 2px 4px #000;
+                margin: 0;
+                letter-spacing: 0.8px;
+            }}
+
+            .guild-subtitle {{
+                font-size: 9px;
+                color: #38bdf8;
+                margin-top: 1px;
+                letter-spacing: 0.3px;
+            }}
+
+            /* BARIS BAWAH: DUA KOTAK SIMETRIS */
+            .bottom-row {{
+                display: flex;
+                align-items: stretch;
+                justify-content: space-between;
+                gap: 10px;
+                width: 100%;
+            }}
+
+            .royal-side-box {{
+                flex: 1;
+                background: rgba(10, 17, 34, 0.75);
+                border: 1px solid #9a7b38;
+                border-radius: 8px;
+                padding: 6px 10px;
+                min-width: 0;
+                box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6);
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }}
+
+            .box-title {{
+                font-size: 8px;
+                color: #e5c158;
+                font-weight: bold;
+                letter-spacing: 0.6px;
+                margin-bottom: 3px;
+                text-transform: uppercase;
+            }}
+
+            /* RUNNING TEXT (KIRI) */
+            .marquee-container {{
+                overflow: hidden;
+                white-space: nowrap;
+                width: 100%;
+                background: {badge_bg};
+                border: 1px solid {badge_border};
+                border-radius: 5px;
+                padding: 2px 0;
+                margin-top: 2px;
+            }}
+
+            .marquee-text {{
+                display: inline-block;
+                padding-left: 100%;
+                animation: marquee 10s linear infinite;
+                color: {badge_text_color};
+                font-size: 10px;
+                font-weight: bold;
+            }}
+
+            @keyframes marquee {{
+                0%   {{ transform: translate(0, 0); }}
+                100% {{ transform: translate(-100%, 0); }}
+            }}
+
+            /* KANAN: FLEX LAYOUT UNTUK MENGISI SISI KIRI & KANAN KOTAK */
+            .time-box-wrapper {{
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                width: 100%;
+            }}
+
+            .hourglass-container {{
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding-right: 8px;
+            }}
+
+            .hourglass-spin {{
+                font-size: 20px;
+                display: inline-block;
+                filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.8));
+                animation: spinHourglass 2.5s infinite ease-in-out;
+            }}
+
+            @keyframes spinHourglass {{
+                0% {{ transform: rotate(0deg); }}
+                50% {{ transform: rotate(180deg); }}
+                100% {{ transform: rotate(180deg); }}
+            }}
+
+            .right-clock-content {{
+                text-align: right;
+                flex: 1;
+            }}
+
+            .greeting-text {{
+                font-size: 9px;
+                color: #fcd34d;
+                font-weight: bold;
+                margin-bottom: 1px;
+            }}
+
+            .digital-clock {{
+                font-family: monospace;
+                font-size: 13px;
+                font-weight: bold;
+                color: #38bdf8;
+                text-shadow: 0 0 6px rgba(56, 189, 248, 0.5);
+                line-height: 1.1;
+            }}
+
+            .digital-date {{
+                font-size: 9px;
+                color: #cbd5e1;
+                margin-top: 1px;
+                font-weight: bold;
+            }}
+
+            @media (min-width: 650px) {{
+                .guild-title {{ font-size: 18px; }}
+                .guild-subtitle {{ font-size: 11px; }}
+                .greeting-text {{ font-size: 10px; }}
+                .digital-clock {{ font-size: 14px; }}
+                .digital-date {{ font-size: 10px; }}
+                .box-title {{ font-size: 9px; }}
+                .marquee-text {{ font-size: 11px; }}
+                .hourglass-spin {{ font-size: 24px; }}
+            }}
+        </style>
+        </head>
+        <body>
+
+        <div class="royal-outer-frame">
+            <div class="corner-ornament top-left">⚜</div>
+            <div class="corner-ornament top-right">⚜</div>
+            <div class="corner-ornament bottom-left">⚜</div>
+            <div class="corner-ornament bottom-right">⚜</div>
+
+            <div class="guild-title-box">
+                <h1 class="guild-title">⚔️ Dashboard Toko Karang Satria ⚔️</h1>
+                <div class="guild-subtitle">Sistem Analisis & Optimasi Pencapaian Target Toko</div>
+            </div>
+
+            <div class="bottom-row">
+                <div class="royal-side-box">
+                    <div class="box-title">📜 STATUS INPUT SHIFT</div>
+                    <div class="marquee-container">
+                        <span class="marquee-text">{unfilled_info}</span>
+                    </div>
+                </div>
+
+                <div class="royal-side-box">
+                    <div class="time-box-wrapper">
+                        <div class="hourglass-container">
+                            <span class="hourglass-spin">⏳</span>
+                        </div>
+                        <div class="right-clock-content">
+                            <div class="greeting-text" id="timeGreeting">🌙 Selamat Malam</div>
+                            <div class="digital-clock" id="liveClock">00:00:00 WIB</div>
+                            <div class="digital-date" id="liveDate">Senin, 01/01/2026</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function updateClock() {{
+                const now = new Date();
+                const hoursNum = now.getHours();
+                
+                let greeting = "🌙 Selamat Malam";
+                if (hoursNum >= 4 && hoursNum < 11) {{
+                    greeting = "🌅 Selamat Pagi";
+                }} else if (hoursNum >= 11 && hoursNum < 15) {{
+                    greeting = "☀️ Selamat Siang";
+                }} else if (hoursNum >= 15 && hoursNum < 18) {{
+                    greeting = "🌇 Selamat Sore";
+                }}
+                document.getElementById('timeGreeting').textContent = greeting;
+
+                const hours = String(hoursNum).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                document.getElementById('liveClock').textContent = `${{hours}}:${{minutes}}:${{seconds}} WIB`;
+
+                const daysArr = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                const dayName = daysArr[now.getDay()];
+                
+                const day = String(now.getDate()).padStart(2, '0');
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const year = now.getFullYear();
+                
+                document.getElementById('liveDate').textContent = `${{dayName}}, ${{day}}/${{month}}/${{year}}`;
+            }}
+
+            setInterval(updateClock, 1000);
+            updateClock();
+        </script>
+
+        </body>
+        </html>
+        """
+
+        components.html(rpg_header_html, height=175)
+
+    # -------------------------------------------------------------------------
+    # 2. STYLING UNTUK KARTU RPG UTAMA
+    # -------------------------------------------------------------------------
     st.markdown(
         """
         <style>
             .rpg-grid-container {
                 width: 100%;
-                margin-top: 15px;
+                margin-top: 10px;
             }
             .rpg-card-center-fixed {
                 background: linear-gradient(135deg, rgba(15, 23, 42, 0.75) 0%, rgba(30, 41, 59, 0.95) 100%);
@@ -5297,17 +5269,11 @@ if selected_tab == "🏠 Menu Utama":
         unsafe_allow_html=True,
     )
 
-    st.markdown(
-        "<h3 style='color: #00f0ff; text-align: center; margin-top: 15px; font-weight:700;"
-        " text-shadow: 0 0 10px rgba(0,240,255,0.3); font-size: 20px;'>🕹️ SILAHKAN PILIH JALUR PETUALANGANMU</h3>",
-        unsafe_allow_html=True,
-    )
-
     st.markdown("<div class='rpg-grid-container'>", unsafe_allow_html=True)
 
     col_game1, col_game2 = st.columns(2)
 
-    # 🏰 KARTU 1: ENTER GUILD (FIXED TELEPORTASI PORTAL BERHASIL)
+    # 🏰 KARTU 1: ENTER GUILD
     with col_game1:
         st.markdown(
             """
@@ -5320,14 +5286,13 @@ if selected_tab == "🏠 Menu Utama":
         """,
             unsafe_allow_html=True,
         )
-        
+
         if "portal_guild_ready" not in st.session_state:
             st.session_state.portal_guild_ready = False
-            
+
         if st.button("Masuk Markas Guild ➔", use_container_width=True, key="btn_enter_dungeon_fixed"):
             placeholder = st.empty()
             with placeholder.container():
-                # Suntikkan gaya CSS animasi berputar murni untuk menggerakkan grafik lingkaran sihir SVG
                 st.markdown(
                     """
                     <style>
@@ -5345,7 +5310,6 @@ if selected_tab == "🏠 Menu Utama":
                     </style>
                     
                     <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
-                        <!-- Grafik Vektor Matematika Lingkaran Sihir (Dijamin 100% anti-pecah kotak kaku) -->
                         <div class="magic-portal-container">
                             <svg width="180" height="180" viewBox="0 0 180 180" style="position: absolute;">
                                 <circle cx="90" cy="90" r="80" class="outer-vector" stroke="#00f0ff" stroke-width="3" stroke-dasharray="12, 8" fill="none" />
@@ -5360,17 +5324,17 @@ if selected_tab == "🏠 Menu Utama":
                     """, 
                     unsafe_allow_html=True
                 )
-                
-                # Progress bar khidmat berjalan perlahan (~4 detik)
+
                 progress_bar = st.progress(0)
                 for percent_complete in range(100):
                     time.sleep(0.04) 
                     progress_bar.progress(percent_complete + 1)
-            
+
             placeholder.empty()
             st.session_state.portal_guild_ready = True
             st.rerun()
-        
+
+    # 🎒 KARTU 2: PREPARATION CAMP
     with col_game2:
         st.markdown(
             """
@@ -5383,11 +5347,10 @@ if selected_tab == "🏠 Menu Utama":
         """,
             unsafe_allow_html=True,
         )
-        
-        # Menginisialisasi variabel state camp jika belum terdaftar
+
         if "portal_prep_ready" not in st.session_state:
             st.session_state.portal_prep_ready = False
-            
+
         if st.button("Buka Rapor Personil Toko ➔", use_container_width=True, key="btn_enter_prep_fixed"):
             placeholder = st.empty()
             with placeholder.container():
@@ -5425,13 +5388,12 @@ if selected_tab == "🏠 Menu Utama":
                 for percent_complete in range(100):
                     time.sleep(0.04) 
                     progress_bar.progress(percent_complete + 1)
-            
-            # 🚀 KUNCI PENGALIHAN UTAMA: Memaksa Streamlit membuka halaman 3 kartu utama tenda perkemahan
+
             placeholder.empty()
-            
-            st.session_state.current_camp_menu = "main" # 🎯 Mengunci target ke menu utama perkemahan
+
+            st.session_state.current_camp_menu = "main"
             st.session_state.portal_prep_ready = True
-            
+
             st.rerun()
 
     
