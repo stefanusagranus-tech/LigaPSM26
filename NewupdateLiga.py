@@ -733,18 +733,30 @@ st.markdown(
     }
     
     /* =========================================================================
-   B. FLOATING PILL NAVBAR - FIX PRESISI TENGAH LAYAR
-   ========================================================================= */
-    /* Wrapper Bawaan Streamlit Dipaksa Center */
+       B. FLOATING PILL NAVBAR (PAKSI PRESISI TENGAH)
+       ========================================================================= */
+    
+    /* 1. Container Induk Streamlit dipaksa Vertikal & Rata Tengah */
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] {
         display: flex !important;
-        justify-content: center !important;
+        flex-direction: column !important;
         align-items: center !important;
+        justify-content: center !important;
         width: 100% !important;
         margin: 0 auto !important;
     }
     
-    /* Kapsul Utama */
+    /* 2. Sembunyikan Label Bawaan yang Bikin Terdorong Samping */
+    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] > label,
+    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] [data-testid="stWidgetLabel"] {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* 3. Kapsul Utama Presisi di Tengah Layar */
     div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] {
         display: flex !important;
         flex-direction: row !important;
@@ -758,51 +770,13 @@ st.markdown(
         border-radius: 50px !important;
         padding: 6px 10px !important;
         
-        /* Lock Center Mutlak */
-        margin: 10px auto !important;
+        /* Margin Auto Kunci Poros Tengah */
+        margin: 6px auto 16px auto !important;
         width: fit-content !important;
-        max-width: 90% !important;
+        max-width: 95% !important;
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5) !important;
     }
-    
-    /* ITEM TOMBOL (Aktiv & Non-Aktif) */
-    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label,
-    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"] {
-        background: transparent !important;
-        border: none !important;
-        border-radius: 30px !important;
-        height: 42px !important;
-        min-width: 44px !important;
-        padding: 0 12px !important;
-        margin: 0 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        cursor: pointer !important;
-        transition: all 0.3s ease-in-out !important;
-        flex: 0 0 auto !important;
-    }
-    
-    /* Sembunyikan Teks pada Opsi Tidak Aktif */
-    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label p,
-    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label span {
-        font-size: 0px !important;
-        color: transparent !important;
-    }
-    
-    /* IKON / LOGO PADA MENU NON-AKTIF */
-    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label p::first-letter,
-    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label span::first-letter {
-        font-size: 20px !important;
-        color: #a0aec0 !important;
-    }
-    
-    /* Hover State */
-    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover p::first-letter,
-    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover span::first-letter {
-        color: #d4af37 !important;
-    }
-    
+
     /* =========================================================================
        C. ACTIVE STATE (KAPSUL EMAS TERPILIH)
        ========================================================================= */
