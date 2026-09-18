@@ -2105,98 +2105,110 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
                  
         # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (3 GULUNGAN SEJAJAR PENUH & HALL OF FAME)
+        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (3 GULUNGAN SEJAJAR PENUH + BACKDROP ANIMASI MIYAZAKI)
         # =========================================================================
         if st.session_state.get("campaign_sub_page", "resepsionis_utama") == "resepsionis_utama":
             
-            st.markdown("<h2 class='guild-lobby-title' style='text-shadow: 0 0 15px rgba(251,191,36,0.5); color: #fef08a; text-align: center; font-family: monospace;'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
-            st.markdown("<p class='guild-lobby-sub' style='color: #cbd5e1; text-align: center; font-family: monospace; margin-bottom: 30px;'>Pilih gulungan maklumat di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
-        
-            # --- 🎨 SIHIR CSS: MEMAKSA TOMBOL AKSI MELEBAR SEJAJAR & PENUH DI MOBILE ---
+            # --- 🌌 SUNTIK GAMBAR LATAR BELAKANG DARI STABLE DIFFUSION WEB ---
+            # Alamat gambar langsung dari aset Stable Diffusion bernuansa Miyazaki Guild Hall
+            url_gambar_latar = "https://stablediffusionweb.com"
+            
             st.markdown(
-                """
+                f"""
                 <style>
-                    /* Wadah kotak kartu bernuansa medieval */
-                    .rpg-card-box {
+                    /* 🌌 MENYUNTIKKAN GAMBAR LATAR BELAKANG SECARA ABSOLUT PADA HALAMAN INI */
+                    .stApp {{
+                        background-image: linear-gradient(rgba(15, 23, 42, 0.82), rgba(15, 23, 42, 0.82)), url("{url_gambar_latar}") !important;
+                        background-size: cover !important;
+                        background-position: center !important;
+                        background-repeat: no-repeat !important;
+                        background-attachment: fixed !important;
+                    }}
+                    
+                    /* Wadah kotak kartu bernuansa medieval (Sesuai gaya Preparation Camp Anda) */
+                    .rpg-card-box {{
                         background: linear-gradient(135deg, #0f172a 0%, #1e1b18 100%) !important;
                         border: 2px solid #b45309 !important;
                         border-top: 6px solid #d97706 !important; /* Aksen kayu jepit atas */
                         border-radius: 12px !important;
                         padding: 25px 20px 15px 20px !important;
-                        margin-bottom: 0px !important; /* Dinetralkan agar menempel rapi dengan tombol bawahnya */
-                        box-shadow: 0 4px 15px rgba(0,0,0,0.5), inset 0 0 15px rgba(251, 191, 36, 0.02) !important;
+                        margin-bottom: 0px !important; /* Di-nol-kan agar menyatu dengan tombol navigasi bawah */
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.6), inset 0 0 15px rgba(251, 191, 36, 0.02) !important;
                         text-align: center;
                         max-width: 480px;
                         margin-left: auto;
                         margin-right: auto;
-                    }
+                    }}
                     
                     /* Animasi Emoji Mengambang Lembut */
-                    .rpg-card-emoji {
+                    .rpg-card-emoji {{
                         font-size: 38px;
                         line-height: 1;
                         margin-bottom: 12px;
                         display: inline-block;
                         animation: floatScrollBtn 2.5s infinite ease-in-out;
-                    }
+                    }}
                     
                     /* Teks Judul Kartu */
-                    .rpg-card-title {
+                    .rpg-card-title {{
                         font-family: monospace;
                         font-size: 15px;
                         font-weight: bold;
                         color: #fbbf24;
                         margin-bottom: 10px;
                         letter-spacing: 0.5px;
-                    }
+                    }}
                     
                     /* Teks Deskripsi Kartu */
-                    .rpg-card-desc {
+                    .rpg-card-desc {{
                         font-family: monospace;
                         font-size: 12px;
                         line-height: 1.6;
                         color: #cbd5e1;
                         margin-bottom: 5px;
-                    }
+                    }}
                     
-                    /* 🎯 BLOCK UTAMA UNTUK MEMAKSA TOMBOL MELEBAR SEJAJAR DENGAN KARTU DI ATASNYA */
-                    div.rpg-action-btn-block {
+                    /* 🎯 CONTATINER UNTUK MEMAKSA TOMBOL AKSI SEJAJAR PENUH HORIZONTAL */
+                    div.rpg-action-btn-block {{
                         max-width: 480px !important;
-                        margin: -2px auto 35px auto !important; /* Menarik tombol ke atas agar menyatu tanpa celah hampa */
+                        margin: -2px auto 35px auto !important; /* Menarik tombol ke atas agar menempel pas tanpa celah hampa */
                         width: 100% !important;
                         display: block !important;
-                    }
+                    }}
                     
-                    div.rpg-action-btn-block button {
+                    div.rpg-action-btn-block button {{
                         background: rgba(180, 83, 9, 0.15) !important;
                         border: 2px solid #b45309 !important;
-                        border-top: none !important; /* Menghilangkan border atas agar menyambung mulus dengan box */
-                        border-radius: 0px 0px 12px 12px !important; /* Membulatkan hanya sudut bawah */
+                        border-top: none !important; /* Menghilangkan border atas agar menempel mulus dengan box */
+                        border-radius: 0px 0px 12px 12px !important; /* Lengkungan hanya di sudut bawah */
                         color: #fde047 !important;
                         font-family: monospace !important;
                         font-size: 13px !important;
                         font-weight: bold !important;
                         padding: 12px 20px !important;
                         transition: all 0.3s ease !important;
-                        width: 100% !important; /* Paksa melebar 100% mengikuti kontainer */
+                        width: 100% !important; /* Paksa melebar penuh mengikuti kontainer */
                         display: block !important;
-                    }
+                    }}
                     
                     /* Efek Hover Tombol Aksi */
-                    div.rpg-action-btn-block button:hover {
+                    div.rpg-action-btn-block button:hover {{
                         background: #b45309 !important;
                         color: #ffffff !important;
                         box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3) !important;
-                    }
+                    }}
         
-                    @keyframes floatScrollBtn {
-                        0%, 100% { transform: translateY(0); filter: drop-shadow(0 0 4px rgba(251,191,36,0.3)); }
-                        50% { transform: translateY(-4px); filter: drop-shadow(0 0 10px rgba(251,191,36,0.6)); }
-                    }
+                    @keyframes floatScrollBtn {{
+                        0%, 100% {{ transform: translateY(0); filter: drop-shadow(0 0 4px rgba(251,191,36,0.3)); }}
+                        50% {{ transform: translateY(-4px); filter: drop-shadow(0 0 10px rgba(251,191,36,0.6)); }}
+                    }}
                 </style>
                 """,
                 unsafe_allow_html=True
             )
+        
+            st.markdown("<h2 class='guild-lobby-title' style='text-shadow: 0 0 15px rgba(251,191,36,0.5); color: #fef08a; text-align: center; font-family: monospace;'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
+            st.markdown("<p class='guild-lobby-sub' style='color: #cbd5e1; text-align: center; font-family: monospace; margin-bottom: 30px;'>Pilih gulungan maklumat di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
         
             # --- 🏗️ KARTU 1: JURNAL BURUAN INDIVIDU ---
             st.markdown(
@@ -2208,7 +2220,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 </div>
                 """, unsafe_allow_html=True
             )
-            # Tombol Navigasi Panjang Sejajar Penuh
             st.markdown("<div class='rpg-action-btn-block'>", unsafe_allow_html=True)
             if st.button("Buka Catatan ➔", key="btn_go_to_jurnal_buruan_camp_style"):
                 st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
@@ -2226,7 +2237,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 </div>
                 """, unsafe_allow_html=True
             )
-            # Tombol Navigasi Panjang Sejajar Penuh
             st.markdown("<div class='rpg-action-btn-block'>", unsafe_allow_html=True)
             if st.button("Periksa Kitab ➔", key="btn_go_to_kitab_misi_camp_style"):
                 st.session_state["campaign_sub_page"] = "view_buku_tugas"
@@ -2234,7 +2244,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.markdown("</div>", unsafe_allow_html=True)
         
         
-            # --- 🏗️ KARTU 3: HALL OF FAME (GULUNGAN BARU) ---
+            # --- 🏗️ KARTU 3: HALL OF FAME ALIANSI ---
             st.markdown(
                 """
                 <div class='rpg-card-box'>
@@ -2244,10 +2254,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 </div>
                 """, unsafe_allow_html=True
             )
-            # Tombol Navigasi Panjang Sejajar Penuh
             st.markdown("<div class='rpg-action-btn-block'>", unsafe_allow_html=True)
             if st.button("Lihat Papan Peringkat ➔", key="btn_go_to_hall_of_fame"):
-                # Silakan sesuaikan target string halaman hall of fame Anda di bawah ini
                 st.session_state["campaign_sub_page"] = "view_hall_of_fame"
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
@@ -2262,7 +2270,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.markdown("</div>", unsafe_allow_html=True)
          
             st.stop()
-
 
         # =========================================================================
         # 📘 JURNAL BURUAN INDIVIDU (PEMISAHAN RANKING: TINGKAT LEVEL = RANKING PPS, RANKING PENJUALAN = RANKING PSM)
