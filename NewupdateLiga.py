@@ -3566,7 +3566,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.markdown("<h2 class='hof-page-title'>👑 HALL OF FAME PSM 👑</h2>", unsafe_allow_html=True)
             st.markdown("<p class='hof-page-sub'>Peringkat penjualan item terbaik per periode</p>", unsafe_allow_html=True)
 
-            # ==== CAROUSEL KARTU ====
+            # ==== CAROUSEl KARTU ====
             kartu_parts = ["<div class='hof-carousel-wrapper'>"]
             for key in ["kartu1", "kartu2", "kartu3"]:
                 d = data_dummy[key]
