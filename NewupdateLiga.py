@@ -2319,97 +2319,150 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 # 🎬 ANIMASI MASUK ALTAR HALL OF FAME
                 placeholder_altar = st.empty()
                 with placeholder_altar.container():
+                    # 1️⃣ STYLE BLOCK — TERPISAH, TIDAK NESTED DI DALAM DIV
                     st.markdown(
                         """
-                        <div style='background-color: #0a0d1a; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; overflow: hidden;'>
-                            
-                            <!-- 🌟 RING CAHAYA EMAS BERPUSING -->
-                            <div class="altar-portal-container" style="position: relative; width: 220px; height: 220px; display: flex; justify-content: center; align-items: center;">
+                        <style>
+                            @keyframes altarBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+                            @keyframes altarSpinCW { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                            @keyframes altarSpinCCW { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+                            @keyframes altarPulse {
+                                0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px #d97706); }
+                                50% { transform: scale(1.12); filter: drop-shadow(0 0 30px #fbbf24); }
+                            }
+                            @keyframes altarSparkFloat {
+                                0% { transform: translateY(0) scale(0.6); opacity: 0; }
+                                50% { opacity: 1; }
+                                100% { transform: translateY(-60px) scale(1.2); opacity: 0; }
+                            }
+                            @keyframes altarShimmer {
+                                0% { background-position: 0% 50%; }
+                                100% { background-position: 300% 50%; }
+                            }
+                            @keyframes altarGrowFill {
+                                0% { width: 0%; }
+                                100% { width: 100%; }
+                            }
+
+                            .altar-overlay {
+                                background-color: #0a0d1a;
+                                position: fixed; top: 0; left: 0;
+                                width: 100vw; height: 100vh;
+                                z-index: 999999;
+                                display: flex; flex-direction: column;
+                                justify-content: center; align-items: center;
+                                color: white; overflow: hidden;
+                            }
+                            .altar-portal-container {
+                                position: relative; width: 220px; height: 220px;
+                                display: flex; justify-content: center; align-items: center;
+                            }
+                            .altar-outer-ring {
+                                transform-origin: 110px 110px;
+                                animation: altarSpinCW 10s infinite linear;
+                                filter: drop-shadow(0 0 12px #d97706);
+                            }
+                            .altar-mid-ring {
+                                transform-origin: 110px 110px;
+                                animation: altarSpinCCW 6s infinite linear;
+                                filter: drop-shadow(0 0 10px #fbbf24);
+                            }
+                            .altar-inner-ring {
+                                transform-origin: 110px 110px;
+                                animation: altarSpinCW 4s infinite linear;
+                                filter: drop-shadow(0 0 8px #fef08a);
+                            }
+                            .altar-triangle {
+                                transform-origin: 110px 110px;
+                                animation: altarSpinCCW 12s infinite linear;
+                                filter: drop-shadow(0 0 10px #d97706);
+                            }
+                            .altar-core-icon {
+                                position: absolute; font-size: 65px; z-index: 10;
+                                animation: altarPulse 2s infinite ease-in-out;
+                            }
+                            .altar-spark {
+                                position: absolute; color: #fbbf24; font-size: 16px; font-weight: bold;
+                                filter: drop-shadow(0 0 8px #fef08a);
+                            }
+                            .altar-spark-1 { top: 20px; left: 50px; animation: altarSparkFloat 2.5s infinite ease-out; }
+                            .altar-spark-2 { top: 30px; right: 55px; animation: altarSparkFloat 3s infinite ease-out 0.5s; }
+                            .altar-spark-3 { bottom: 40px; left: 80px; animation: altarSparkFloat 2.8s infinite ease-out 1s; }
+                            .altar-title {
+                                color: #fbbf24; font-family: monospace;
+                                animation: altarBlink 1.5s infinite;
+                                font-size: 22px; margin-top: 40px;
+                                letter-spacing: 2px;
+                                text-shadow: 0 0 20px rgba(251,191,36,0.6);
+                                text-align: center; padding: 0 20px;
+                            }
+                            .altar-sub {
+                                color: #64748b; font-size: 13px; margin-top: 8px;
+                                font-family: monospace; text-align: center; padding: 0 20px;
+                            }
+                            .altar-progress-wrapper { margin-top: 30px; width: 280px; }
+                            .altar-progress-bg {
+                                width: 100%; height: 14px;
+                                background: rgba(15, 23, 42, 0.9);
+                                border: 2px solid #b45309; border-radius: 8px;
+                                overflow: hidden;
+                                box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 0 15px rgba(180, 83, 9, 0.3);
+                            }
+                            .altar-progress-fill {
+                                height: 100%; width: 0%; border-radius: 6px;
+                                background: linear-gradient(90deg, #78350f, #d97706, #fbbf24, #fef08a, #fbbf24, #d97706, #78350f);
+                                background-size: 300% 100%;
+                                animation: altarShimmer 1.5s infinite linear, altarGrowFill 2.2s forwards ease-out;
+                                box-shadow: 0 0 15px rgba(251, 191, 36, 0.8);
+                            }
+                            .altar-progress-pct {
+                                color: #fbbf24; font-family: monospace;
+                                font-size: 12px; font-weight: bold;
+                                text-align: center; margin-top: 8px;
+                            }
+                        </style>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
+                    # 2️⃣ HTML DIV — TERPISAH, LEBIH SEDERHANA
+                    st.markdown(
+                        """
+                        <div class="altar-overlay">
+                            <div class="altar-portal-container">
                                 <svg width="220" height="220" viewBox="0 0 220 220" style="position: absolute;">
                                     <circle cx="110" cy="110" r="100" class="altar-outer-ring" stroke="#d97706" stroke-width="3" stroke-dasharray="15, 10" fill="none" />
                                     <circle cx="110" cy="110" r="75" class="altar-mid-ring" stroke="#fbbf24" stroke-width="2" stroke-dasharray="5, 8" fill="none" />
                                     <circle cx="110" cy="110" r="50" class="altar-inner-ring" stroke="#fef08a" stroke-width="2" fill="none" />
                                     <polygon points="110,30 180,150 40,150" class="altar-triangle" stroke="#d97706" stroke-width="1.5" fill="none" />
                                 </svg>
-                                
-                                <!-- 🏛️ IKON ALTAR / PORTAL DI TENGAH -->
                                 <div class="altar-core-icon">🏛️</div>
-                                
-                                <!-- ✨ PARTIKEL CAHAYA -->
                                 <div class="altar-spark altar-spark-1">✦</div>
                                 <div class="altar-spark altar-spark-2">✦</div>
                                 <div class="altar-spark altar-spark-3">✦</div>
                             </div>
-                            
-                            <!-- 🏷️ TEKS ANIMASI -->
-                            <h1 style='color: #fbbf24; font-family: monospace; animation: altarBlink 1.5s infinite; font-size: 22px; margin-top: 40px; letter-spacing: 2px; text-shadow: 0 0 20px rgba(251,191,36,0.6); text-align: center; padding: 0 20px;'>🚪 MEMBUKA PINTU ALTAR... 🚪</h1>
-                            <p id="altar-status-text" style='color: #64748b; font-size: 13px; margin-top: 8px; font-family: monospace; text-align: center; padding: 0 20px;'>Menyatukan cahaya prasasti kuno dan mengaktifkan ruang Hall of Fame...</p>
-                            
-                            <!-- ⏳ PROGRESS BAR ALTAR -->
-                            <div class="altar-progress-wrapper" style="margin-top: 30px; width: 280px;">
+                            <h1 class="altar-title">🚪 MEMBUKA PINTU ALTAR... 🚪</h1>
+                            <p class="altar-sub">Menyatukan cahaya prasasti kuno dan mengaktifkan ruang Hall of Fame...</p>
+                            <div class="altar-progress-wrapper">
                                 <div class="altar-progress-bg">
                                     <div class="altar-progress-fill"></div>
                                 </div>
-                                <div id="altar-progress-pct" style="color: #fbbf24; font-family: monospace; font-size: 12px; font-weight: bold; text-align: center; margin-top: 8px;">ACTIVATING: 0%</div>
+                                <div class="altar-progress-pct">ACTIVATING: 100%</div>
                             </div>
-                            
-                            <style>
-                                @keyframes altarBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
-                                @keyframes altarSpinCW { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-                                @keyframes altarSpinCCW { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
-                                @keyframes altarPulse { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px #d97706); } 50% { transform: scale(1.12); filter: drop-shadow(0 0 30px #fbbf24); } }
-                                @keyframes altarSparkFloat { 0% { transform: translateY(0) scale(0.6); opacity: 0; } 50% { opacity: 1; } 100% { transform: translateY(-60px) scale(1.2); opacity: 0; } }
-                                
-                                .altar-outer-ring { transform-origin: 110px 110px; animation: altarSpinCW 10s infinite linear; filter: drop-shadow(0 0 12px #d97706); }
-                                .altar-mid-ring { transform-origin: 110px 110px; animation: altarSpinCCW 6s infinite linear; filter: drop-shadow(0 0 10px #fbbf24); }
-                                .altar-inner-ring { transform-origin: 110px 110px; animation: altarSpinCW 4s infinite linear; filter: drop-shadow(0 0 8px #fef08a); }
-                                .altar-triangle { transform-origin: 110px 110px; animation: altarSpinCCW 12s infinite linear; filter: drop-shadow(0 0 10px #d97706); }
-                                
-                                .altar-core-icon { position: absolute; font-size: 65px; z-index: 10; animation: altarPulse 2s infinite ease-in-out; }
-                                
-                                .altar-spark { position: absolute; color: #fbbf24; font-size: 16px; font-weight: bold; filter: drop-shadow(0 0 8px #fef08a); }
-                                .altar-spark-1 { top: 20px; left: 50px; animation: altarSparkFloat 2.5s infinite ease-out; }
-                                .altar-spark-2 { top: 30px; right: 55px; animation: altarSparkFloat 3s infinite ease-out 0.5s; }
-                                .altar-spark-3 { bottom: 40px; left: 80px; animation: altarSparkFloat 2.8s infinite ease-out 1s; }
-                                
-                                .altar-progress-bg {
-                                    width: 100%; height: 14px; background: rgba(15, 23, 42, 0.9);
-                                    border: 2px solid #b45309; border-radius: 8px; overflow: hidden;
-                                    box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 0 15px rgba(180, 83, 9, 0.3);
-                                }
-                                .altar-progress-fill {
-                                    height: 100%; width: 0%; border-radius: 6px;
-                                    background: linear-gradient(90deg, #78350f, #d97706, #fbbf24, #fef08a, #fbbf24, #d97706, #78350f);
-                                    background-size: 300% 100%;
-                                    animation: altarShimmer 1.5s infinite linear, altarGrowFill 2.2s forwards ease-out;
-                                    box-shadow: 0 0 15px rgba(251, 191, 36, 0.8);
-                                }
-                                @keyframes altarShimmer { 0% { background-position: 0% 50%; } 100% { background-position: 300% 50%; } }
-                                @keyframes altarGrowFill { 0% { width: 0%; } 100% { width: 100%; } }
-                            </style>
                         </div>
                         """,
                         unsafe_allow_html=True
                     )
-                    
-                    # Simulasi progress 0-100% selama ~2.2 detik
-                    progress_altar = st.progress(0)
-                    for pct in range(100):
-                        time.sleep(0.022)
-                        progress_altar.progress(pct + 1)
-                        if pct == 35:
-                            st.markdown("<script>window.parent.document.getElementById('altar-status-text').innerHTML = 'Mengukir nama-nama pahlawan ke prasasti...'; window.parent.document.getElementById('altar-progress-pct').innerHTML = 'ACTIVATING: 36%';</script>", unsafe_allow_html=True)
-                        elif pct == 70:
-                            st.markdown("<script>window.parent.document.getElementById('altar-status-text').innerHTML = 'Menyatukan cahaya emas dan membuka pintu utama...'; window.parent.document.getElementById('altar-progress-pct').innerHTML = 'ACTIVATING: 71%';</script>", unsafe_allow_html=True)
-                        elif pct == 95:
-                            st.markdown("<script>window.parent.document.getElementById('altar-status-text').innerHTML = 'Ruang Hall of Fame siap dibuka!'; window.parent.document.getElementById('altar-progress-pct').innerHTML = 'ACTIVATING: 100%';</script>", unsafe_allow_html=True)
-                
+
+                    # ⏱️ Tunggu animasi selesai (2.2 detik)
+                    time.sleep(2.4)
+
                 placeholder_altar.empty()
-                
+
                 st.session_state["campaign_sub_page"] = "view_hall_of_fame"
                 st.session_state["hof_sub_page"] = None
                 st.rerun()
-        
+                
             # ↩️ KEMBALI
             st.markdown("<br><hr style='border-color: rgba(251, 191, 36, 0.3); margin: 15px 0;'><br>", unsafe_allow_html=True)
             if st.button("⬅️ KEMBALI KE BERANDA KOTA", use_container_width=True, key="btn_exit_reception_lobby_camp_style"):
@@ -3060,6 +3113,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.markdown("</div>", unsafe_allow_html=True)
 
             st.markdown("<br><hr style='border-color: rgba(251, 191, 36, 0.3); margin: 15px 0;'><br>", unsafe_allow_html=True)
+            
             if st.button("⬅️ KEMBALI KE RESEPSIONIS", key="btn_hof_back", use_container_width=True):
                 st.session_state["campaign_sub_page"] = "resepsionis_utama"
                 st.session_state["hof_sub_page"] = None
