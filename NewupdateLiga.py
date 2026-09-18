@@ -2105,127 +2105,155 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
                  
         # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (TOMBOL NATIVE + CSS OVERRIDE ANTI-LOGOUT)
+        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (VISUAL KUSTOM + TOMBOL TRANSPARAN AMAN)
         # =========================================================================
         if st.session_state.get("campaign_sub_page", "resepsionis_utama") == "resepsionis_utama":
             
             st.markdown("<h2 class='guild-lobby-title' style='text-shadow: 0 0 15px rgba(251,191,36,0.5); color: #fef08a; text-align: center; font-family: monospace;'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub' style='color: #cbd5e1; text-align: center; font-family: monospace; margin-bottom: 30px;'>Pilih gulungan maklumat di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
         
-            # --- 🎨 OVERRIDE CSS SANGAT SPESIFIK: MENGUBAH TOMBOL STREAMLIT MENJADI PAPAN PERKAMEN ---
+            # --- 🎨 SIHIR CSS: MENGUBAH TOMBOL ASLI MENJADI TRANSPARAN DAN MENUMPANG DI ATAS KARTU HTML ---
             st.markdown(
                 """
                 <style>
-                    /* 1. Paksa area ini menyusun tombol ke bawah secara vertikal & rapi di tengah */
-                    div.medieval-scroll-zone {
-                        display: flex !important;
-                        flex-direction: column !important;
-                        gap: 25px !important;
-                        width: 100% !important;
-                        max-width: 480px !important;
-                        margin: 0 auto !important;
+                    /* Container pembungkus utama agar tersusun vertikal ke bawah */
+                    .scroll-wrapper-zone {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 25px;
+                        width: 100%;
+                        max-width: 480px;
+                        margin: 0 auto;
+                        position: relative;
                     }
                     
-                    /* 2. Mengubah total gaya fisik Tombol Streamlit di dalam zona medieval */
-                    div.medieval-scroll-zone button {
+                    /* Komponen Papan Perkamen Visual (Hanya untuk Dilihat) */
+                    .scroll-visual-box {
                         background: linear-gradient(135deg, #0f172a 0%, #1e1b18 100%) !important;
                         border: 2px solid #b45309 !important;
-                        border-top: 8px solid #d97706 !important; /* Pasak Kayu Magis */
+                        border-top: 8px solid #d97706 !important; /* Pasak Kayu Kuno */
                         border-radius: 6px 6px 16px 16px !important;
-                        min-height: 150px !important;
                         padding: 22px 20px !important;
-                        box-shadow: 0 0 20px rgba(180, 83, 9, 0.3) !important;
-                        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
-                        white-space: normal !important;
-                        width: 100% !important;
+                        box-shadow: 0 0 20px rgba(180, 83, 9, 0.3), inset 0 0 15px rgba(251, 191, 36, 0.05) !important;
+                        text-align: center;
+                        pointer-events: none; /* Klik akan menembus ke tombol di bawahnya */
+                        position: relative;
+                        z-index: 1;
+                        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
                     }
                     
-                    /* 3. Efek Hover Mengambang Keemasan pada Tombol */
-                    div.medieval-scroll-zone button:hover {
-                        transform: translateY(-4px) scale(1.02) !important;
-                        border-color: #fbbf24 !important;
-                        border-top-color: #fbbf24 !important;
-                        box-shadow: 0 0 25px rgba(251, 191, 36, 0.6) !important;
+                    /* Gaya Emoji Mengambang Kuno */
+                    .visual-emoji {
+                        font-size: 38px;
+                        line-height: 1;
+                        margin-bottom: 10px;
+                        display: inline-block;
+                        animation: floatScrollBtn 2.5s infinite ease-in-out;
                     }
                     
-                    /* 4. Memaksa format teks di dalam tombol agar menuruti aturan kustom kita */
-                    div.medieval-scroll-zone button div[data-testid="stMarkdownContainer"] p {
-                        font-family: monospace !important;
-                        text-align: center !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
+                    .visual-title {
+                        font-family: monospace;
+                        font-size: 15px;
+                        font-weight: bold;
+                        color: #fbbf24;
+                        margin-bottom: 8px;
+                        display: block;
                     }
                     
-                    /* 5. Dekorasi Teks & Judul Gulungan */
-                    .scroll-text-title {
-                        font-size: 15px !important;
-                        font-weight: bold !important;
-                        color: #fbbf24 !important;
-                        display: block !important;
-                        margin: 10px 0 8px 0 !important;
-                    }
-                    
-                    /* 6. Deskripsi Kuno */
-                    .scroll-text-desc {
-                        font-size: 11.5px !important;
-                        line-height: 1.5 !important;
-                        color: #f1f5f9 !important;
-                        display: block !important;
-                        white-space: normal !important;
-                    }
-                    
-                    /* 7. Animasi Emoji Mengambang pada Baris Pertama */
-                    div.medieval-scroll-zone button div[data-testid="stMarkdownContainer"] p::first-line {
-                        font-size: 38px !important;
-                        line-height: 1.4 !important;
-                        display: inline-block !important;
-                        animation: floatScrollBtn 2.5s infinite ease-in-out !important;
+                    .visual-desc {
+                        font-family: monospace;
+                        font-size: 11.5px;
+                        line-height: 1.5;
+                        color: #f1f5f9;
+                        margin: 0;
+                        display: block;
                     }
                     
                     @keyframes floatScrollBtn {
                         0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 4px rgba(251,191,36,0.3)); }
                         50% { transform: translateY(-4px) scale(1.05); filter: drop-shadow(0 0 12px rgba(251,191,36,0.7)); }
                     }
+        
+                    /* 🕵️‍♂️ OPERASI SILUMAN: PAKSA TOMBOL STREAMLIT MENJADI TRANSPARAN SEMPURNA DI ATAS KARTU */
+                    div.rpg-invisible-trigger {
+                        margin-top: -155px !important; /* Menarik tombol ke atas agar menumpuk pas di atas visual-box */
+                        position: relative;
+                        z-index: 2; /* Berada di atas lapisan visual box agar bisa menerima sentuhan klik */
+                    }
+                    
+                    div.rpg-invisible-trigger button {
+                        background: transparent !important;
+                        border: 2px solid transparent !important;
+                        color: transparent !important; /* Sembunyikan teks bawaan tombol */
+                        min-height: 145px !important;
+                        width: 100% !important;
+                        cursor: pointer !important;
+                        box-shadow: none !important;
+                    }
+                    
+                    /* Hubungkan Efek Hover Tombol Asli agar Memicu Perubahan Visual Box di Bawahnya */
+                    .scroll-wrapper-zone:hover .scroll-visual-box {
+                        transform: translateY(-4px) scale(1.02);
+                        border-color: #fbbf24 !important;
+                        border-top-color: #fbbf24 !important;
+                        box-shadow: 0 0 25px rgba(251, 191, 36, 0.6) !important;
+                    }
                 </style>
                 """,
                 unsafe_allow_html=True
             )
         
-            # --- 📦 FORMAT ISI TEKS PAPAN GULUNGAN (MENGGUNAKAN TAG SPAN AGAR AMAN BENTROK STR) ---
-            isi_gulungan_buruan = (
-                "📘\n"
-                "<span class='scroll-text-title'>📜 JURNAL BURUAN INDIVIDU 📜</span>"
-                "<span class='scroll-text-desc'>Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin hasil buruan, tingkat level pahlawan, dan rekap performa penjualan harian Anda.</span>"
+            # --- 🏗️ STRUKTUR BLOK GULUNGAN 1: JURNAL BURUAN ---
+            st.markdown("<div class='scroll-wrapper-zone'>", unsafe_allow_html=True)
+            # Tampilan Visual Cantik
+            st.markdown(
+                """
+                <div class='scroll-visual-box'>
+                    <div class='visual-emoji'>📘</div>
+                    <div class='visual-title'>📜 JURNAL BURUAN INDIVIDU 📜</div>
+                    <div class='visual-desc'>Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin hasil buruan, tingkat level pahlawan, dan rekap performa penjualan harian Anda.</div>
+                </div>
+                """, unsafe_allow_html=True
             )
-            
-            isi_gulungan_misi = (
-                "🔮 ⚔️\n"
-                "<span class='scroll-text-title'>📜 KITAB MISI & QUIZ GUILD 📜</span>"
-                "<span class='scroll-text-desc'>Cek papan pengumuman maklumat aliansi untuk memantau target pencapaian toko harian, daftar quest mingguan PSM, serta tantangan kuis berkala.</span>"
-            )
-        
-            # --- 🏗️ RENDER MENU DENGAN ZONA TOMBOL TERISOLASI ---
-            st.markdown("<div class='medieval-scroll-zone'>", unsafe_allow_html=True)
-            
-            # Tombol 1: Jurnal Buruan
-            if st.button(isi_gulungan_buruan, use_container_width=True, key="btn_rpg_final_jurnal_buruan"):
+            # Tombol Trigger Transparan (Klik Asli Python)
+            st.markdown("<div class='rpg-invisible-trigger'>", unsafe_allow_html=True)
+            if st.button("TRIGGER_BURUAN", use_container_width=True, key="btn_trigger_jurnal_buruan_final"):
                 st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
                 st.rerun()
-                
-            # Tombol 2: Kitab Misi
-            if st.button(isi_gulungan_misi, use_container_width=True, key="btn_rpg_final_kitab_misi"):
+            st.markdown("</div></div>", unsafe_allow_html=True)
+        
+            st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True) # Jarak Antar Papan
+        
+            # --- 🏗️ STRUKTUR BLOK GULUNGAN 2: KITAB MISI ---
+            st.markdown("<div class='scroll-wrapper-zone'>", unsafe_allow_html=True)
+            # Tampilan Visual Cantik
+            st.markdown(
+                """
+                <div class='scroll-visual-box'>
+                    <div class='visual-emoji'>🔮 ⚔️</div>
+                    <div class='visual-title'>📜 KITAB MISI & QUIZ GUILD 📜</div>
+                    <div class='visual-desc'>Cek papan pengumuman maklumat aliansi untuk memantau target pencapaian toko harian, daftar quest mingguan PSM, serta tantangan kuis berkala.</div>
+                </div>
+                """, unsafe_allow_html=True
+            )
+            # Tombol Trigger Transparan (Klik Asli Python)
+            st.markdown("<div class='rpg-invisible-trigger'>", unsafe_allow_html=True)
+            if st.button("TRIGGER_MISI", use_container_width=True, key="btn_trigger_kitab_misi_final"):
                 st.session_state["campaign_sub_page"] = "view_buku_tugas"
                 st.rerun()
-                
-            st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown("</div></div>", unsafe_allow_html=True)
         
-            # --- ↩️ TOMBOL KEMBALI KEMAH ---
+        
+            # --- ↩️ TOMBOL KEMBALI KEMAH (Menggunakan Tombol Normal Bawaan Anda) ---
             st.markdown("<br><hr style='border-color: rgba(251, 191, 36, 0.3); margin: 15px 0;'><br>", unsafe_allow_html=True)
-            if st.button("⬅️ KEMBALI KE BERANDA KOTA", use_container_width=True, key="btn_exit_campaign_lobby_final_ver"):
+            st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
+            if st.button("⬅️ KEMBALI KE BERANDA KOTA", use_container_width=True, key="btn_exit_campaign_lobby_final_fixed"):
                 st.session_state.current_camp_menu = "main"
                 st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
          
             st.stop()
+
 
         # =========================================================================
         # 📘 JURNAL BURUAN INDIVIDU (PEMISAHAN RANKING: TINGKAT LEVEL = RANKING PPS, RANKING PENJUALAN = RANKING PSM)
