@@ -17,6 +17,8 @@ from streamlit_gsheets import GSheetsConnection
 import streamlit as st
 import streamlit.components.v1 as components
 import textwrap
+import streamlit as st
+st.write("Streamlit version:", st.__version__)
 
 
 # ==========================================
