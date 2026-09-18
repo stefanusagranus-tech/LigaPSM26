@@ -3121,8 +3121,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             st.stop()
     
-               # =========================================================================
-        # 👑 HALAMAN 3A: HALL OF FAME PSM (FASE A - CAROUSEL SNAP + KARTU KLIK)
+        # =========================================================================
+        # 👑 HALAMAN 3A: HALL OF FAME PSM (EKSLUSIF + SNAP + DOTS + TABEL)
         # =========================================================================
         elif (
             st.session_state.get("campaign_sub_page") == "view_hall_of_fame"
@@ -3131,125 +3131,114 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             url_gambar_latar = "https://i.imgur.com/kMo29aW.jpeg"
 
-                        # ==== DUMMY DATA — 6 KARTU (v2) ====
-            st.session_state["hof_dummy_data_v2"] = {
-                "periode_1": {
-                    "label": "📅 16 - 23 SEP 2026",
-                    "short": "PERIODE 1",
-                    "alltime": False,
-                    "data": [
-                        ("ADELIA PRATIWI", 46),
-                        ("RIZKI GUNAWAN", 38),
-                        ("TIKA", 21),
-                        ("ILHAM PRIANDIKA", 20),
-                        ("ARIS APRILIANTO", 15),
-                        ("SUBEKTI PANDU YULIANTO", 12),
-                        ("KUSDEWI TIA NINGRUM", 10),
-                        ("AHMAD ZAKI SYABANI ZEN", 8),
-                        ("REZA PURNAMA AGUSTIN", 6),
-                    ],
-                    "top_item": "MINYAK GORENG 2L",
-                    "top_item_qty": 8,
-                },
-                "periode_2": {
-                    "label": "📅 08 - 15 SEP 2026",
-                    "short": "PERIODE 2",
-                    "alltime": False,
-                    "data": [
-                        ("RIZKI GUNAWAN", 52),
-                        ("ADELIA PRATIWI", 44),
-                        ("ILHAM PRIANDIKA", 30),
-                        ("TIKA", 28),
-                        ("ARIS APRILIANTO", 22),
-                        ("AHMAD ZAKI SYABANI ZEN", 18),
-                        ("REZA PURNAMA AGUSTIN", 15),
-                        ("SUBEKTI PANDU YULIANTO", 12),
-                        ("KUSDEWI TIA NINGRUM", 8),
-                    ],
-                    "top_item": "BERAS PREMIUM 5KG",
-                    "top_item_qty": 6,
-                },
-                "periode_3": {
-                    "label": "📅 01 - 07 SEP 2026",
-                    "short": "PERIODE 3",
-                    "alltime": False,
-                    "data": [
-                        ("TIKA", 38),
-                        ("ILHAM PRIANDIKA", 35),
-                        ("ADELIA PRATIWI", 30),
-                        ("RIZKI GUNAWAN", 25),
-                        ("SUBEKTI PANDU YULIANTO", 22),
-                        ("ARIS APRILIANTO", 18),
-                        ("KUSDEWI TIA NINGRUM", 14),
-                        ("AHMAD ZAKI SYABANI ZEN", 10),
-                        ("REZA PURNAMA AGUSTIN", 7),
-                    ],
-                    "top_item": "GULA PASIR 1KG",
-                    "top_item_qty": 9,
-                },
-                "periode_4": {
-                    "label": "📅 24 - 31 AUG 2026",
-                    "short": "PERIODE 4",
-                    "alltime": False,
-                    "data": [
-                        ("ILHAM PRIANDIKA", 48),
-                        ("TIKA", 42),
-                        ("RIZKI GUNAWAN", 36),
-                        ("ADELIA PRATIWI", 30),
-                        ("ARIS APRILIANTO", 24),
-                        ("SUBEKTI PANDU YULIANTO", 18),
-                        ("KUSDEWI TIA NINGRUM", 14),
-                        ("REZA PURNAMA AGUSTIN", 10),
-                        ("AHMAD ZAKI SYABANI ZEN", 6),
-                    ],
-                    "top_item": "TEPUNG SEGITIGA",
-                    "top_item_qty": 7,
-                },
-                "bulanan": {
-                    "label": "📆 SEPTEMBER 2026",
-                    "short": "BULANAN",
-                    "alltime": False,
-                    "data": [
-                        ("ADELIA PRATIWI", 120),
-                        ("RIZKI GUNAWAN", 115),
-                        ("TIKA", 105),
-                        ("ILHAM PRIANDIKA", 85),
-                        ("ARIS APRILIANTO", 61),
-                        ("SUBEKTI PANDU YULIANTO", 42),
-                        ("KUSDEWI TIA NINGRUM", 32),
-                        ("AHMAD ZAKI SYABANI ZEN", 24),
-                        ("REZA PURNAMA AGUSTIN", 19),
-                    ],
-                    "top_item": "MINYAK GORENG 2L",
-                    "top_item_qty": 22,
-                },
-                "alltime": {
-                    "label": "🏆 ALL TIME",
-                    "short": "ALL TIME",
-                    "alltime": True,
-                    "data": [
-                        ("TIKA", 189),
-                        ("ADELIA PRATIWI", 175),
-                        ("RIZKI GUNAWAN", 168),
-                        ("ILHAM PRIANDIKA", 145),
-                        ("ARIS APRILIANTO", 132),
-                        ("SUBEKTI PANDU YULIANTO", 118),
-                        ("KUSDEWI TIA NINGRUM", 102),
-                        ("AHMAD ZAKI SYABANI ZEN", 95),
-                        ("REZA PURNAMA AGUSTIN", 88),
-                    ],
-                    "top_item": "GULA PASIR 1KG",
-                    "top_item_qty": 24,
-                },
-            }
+            # ==== DUMMY DATA — 6 KARTU ====
+            if "hof_dummy_data" not in st.session_state:
+                st.session_state["hof_dummy_data"] = {
+                    "periode_1": {
+                        "label": "📅 16 - 23 SEP 2026",
+                        "short": "PERIODE 1",
+                        "alltime": False,
+                        "data": [
+                            ("ADELIA PRATIWI", 46),
+                            ("RIZKI GUNAWAN", 38),
+                            ("TIKA", 21),
+                            ("ILHAM PRIANDIKA", 20),
+                            ("ARIS APRILIANTO", 15),
+                            ("SUBEKTI PANDU YULIANTO", 12),
+                            ("KUSDEWI TIA NINGRUM", 10),
+                            ("AHMAD ZAKI SYABANI ZEN", 8),
+                            ("REZA PURNAMA AGUSTIN", 6),
+                        ],
+                    },
+                    "periode_2": {
+                        "label": "📅 08 - 15 SEP 2026",
+                        "short": "PERIODE 2",
+                        "alltime": False,
+                        "data": [
+                            ("RIZKI GUNAWAN", 52),
+                            ("ADELIA PRATIWI", 44),
+                            ("ILHAM PRIANDIKA", 30),
+                            ("TIKA", 28),
+                            ("ARIS APRILIANTO", 22),
+                            ("AHMAD ZAKI SYABANI ZEN", 18),
+                            ("REZA PURNAMA AGUSTIN", 15),
+                            ("SUBEKTI PANDU YULIANTO", 12),
+                            ("KUSDEWI TIA NINGRUM", 8),
+                        ],
+                    },
+                    "periode_3": {
+                        "label": "📅 01 - 07 SEP 2026",
+                        "short": "PERIODE 3",
+                        "alltime": False,
+                        "data": [
+                            ("TIKA", 38),
+                            ("ILHAM PRIANDIKA", 35),
+                            ("ADELIA PRATIWI", 30),
+                            ("RIZKI GUNAWAN", 25),
+                            ("SUBEKTI PANDU YULIANTO", 22),
+                            ("ARIS APRILIANTO", 18),
+                            ("KUSDEWI TIA NINGRUM", 14),
+                            ("AHMAD ZAKI SYABANI ZEN", 10),
+                            ("REZA PURNAMA AGUSTIN", 7),
+                        ],
+                    },
+                    "periode_4": {
+                        "label": "📅 24 - 31 AUG 2026",
+                        "short": "PERIODE 4",
+                        "alltime": False,
+                        "data": [
+                            ("ILHAM PRIANDIKA", 48),
+                            ("TIKA", 42),
+                            ("RIZKI GUNAWAN", 36),
+                            ("ADELIA PRATIWI", 30),
+                            ("ARIS APRILIANTO", 24),
+                            ("SUBEKTI PANDU YULIANTO", 18),
+                            ("KUSDEWI TIA NINGRUM", 14),
+                            ("REZA PURNAMA AGUSTIN", 10),
+                            ("AHMAD ZAKI SYABANI ZEN", 6),
+                        ],
+                    },
+                    "bulanan": {
+                        "label": "📆 SEPTEMBER 2026",
+                        "short": "BULANAN",
+                        "alltime": False,
+                        "data": [
+                            ("ADELIA PRATIWI", 120),
+                            ("RIZKI GUNAWAN", 115),
+                            ("TIKA", 105),
+                            ("ILHAM PRIANDIKA", 85),
+                            ("ARIS APRILIANTO", 61),
+                            ("SUBEKTI PANDU YULIANTO", 42),
+                            ("KUSDEWI TIA NINGRUM", 32),
+                            ("AHMAD ZAKI SYABANI ZEN", 24),
+                            ("REZA PURNAMA AGUSTIN", 19),
+                        ],
+                    },
+                    "alltime": {
+                        "label": "🏆 ALL TIME",
+                        "short": "ALL TIME",
+                        "alltime": True,
+                        "data": [
+                            ("TIKA", 189),
+                            ("ADELIA PRATIWI", 175),
+                            ("RIZKI GUNAWAN", 168),
+                            ("ILHAM PRIANDIKA", 145),
+                            ("ARIS APRILIANTO", 132),
+                            ("SUBEKTI PANDU YULIANTO", 118),
+                            ("KUSDEWI TIA NINGRUM", 102),
+                            ("AHMAD ZAKI SYABANI ZEN", 95),
+                            ("REZA PURNAMA AGUSTIN", 88),
+                        ],
+                    },
+                }
 
-            data_dummy = st.session_state["hof_dummy_data_v2"]
+            data_dummy = st.session_state["hof_dummy_data"]
 
             # ==== STATE ====
             if "hof_selected_period" not in st.session_state:
                 st.session_state["hof_selected_period"] = "periode_1"
-            if "hof_detail_open" not in st.session_state:
-                st.session_state["hof_detail_open"] = False
+            if "hof_table_open" not in st.session_state:
+                st.session_state["hof_table_open"] = False
 
             # ==== FUNGSI AVATAR AUTO-HASH ====
             import hashlib
@@ -3262,241 +3251,258 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 h = int(hashlib.md5(name.upper().encode()).hexdigest(), 16)
                 return list_avatar_rpg[h % len(list_avatar_rpg)]
 
-            # ==== CSS ====
+            # ==== CSS UTAMA ====
             st.markdown("""
-            <style>
-            @keyframes hofTitleGlow {
-                0%, 100% { text-shadow: 0 0 15px rgba(251, 191, 36, 0.5); }
-                50% { text-shadow: 0 0 25px rgba(251, 191, 36, 0.9), 0 0 40px rgba(251, 191, 36, 0.5); }
-            }
-            @keyframes crownFloat {
-                0%, 100% { transform: translateY(0) rotate(0deg); filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.7)); }
-                50% { transform: translateY(-6px) rotate(-3deg); filter: drop-shadow(0 0 25px rgba(251, 191, 36, 1)); }
-            }
-            @keyframes sparkleFloat1 {
-                0%, 100% { transform: translateY(0) scale(0.8); opacity: 0.5; }
-                50% { transform: translateY(-10px) scale(1.2); opacity: 1; }
-            }
-            @keyframes sparkleFloat2 {
-                0%, 100% { transform: translateY(-5px) scale(1); opacity: 0.7; }
-                50% { transform: translateY(5px) scale(0.8); opacity: 0.3; }
-            }
-            @keyframes avatarBob {
-                0%, 100% { transform: translateY(0); }
-                50% { transform: translateY(-3px); }
-            }
-            @keyframes cardEnter {
-                0% { opacity: 0; transform: translateY(30px) scale(0.95); }
-                100% { opacity: 1; transform: translateY(0) scale(1); }
-            }
-            @keyframes cardGlow {
-                0%, 100% { box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 15px rgba(212, 175, 55, 0.3); }
-                50% { box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 35px rgba(212, 175, 55, 0.6); }
-            }
+                <style>
+                @keyframes hofTitleGlow {
+                    0%, 100% { text-shadow: 0 0 15px rgba(251, 191, 36, 0.5); }
+                    50% { text-shadow: 0 0 25px rgba(251, 191, 36, 0.9), 0 0 40px rgba(251, 191, 36, 0.5); }
+                }
+                @keyframes crownFloat {
+                    0%, 100% { transform: translateY(0) rotate(0deg); filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.7)); }
+                    50% { transform: translateY(-6px) rotate(-3deg); filter: drop-shadow(0 0 25px rgba(251, 191, 36, 1)); }
+                }
+                @keyframes sparkleFloat1 {
+                    0%, 100% { transform: translateY(0) scale(0.8); opacity: 0.5; }
+                    50% { transform: translateY(-10px) scale(1.2); opacity: 1; }
+                }
+                @keyframes sparkleFloat2 {
+                    0%, 100% { transform: translateY(-5px) scale(1); opacity: 0.7; }
+                    50% { transform: translateY(5px) scale(0.8); opacity: 0.3; }
+                }
+                @keyframes avatarBob {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-3px); }
+                }
+                @keyframes cardEnter {
+                    0% { opacity: 0; transform: translateY(30px) scale(0.95); }
+                    100% { opacity: 1; transform: translateY(0) scale(1); }
+                }
+                @keyframes cardGlow {
+                    0%, 100% { box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 15px rgba(212, 175, 55, 0.3); }
+                    50% { box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 35px rgba(212, 175, 55, 0.6); }
+                }
 
-            .hof-page-title {
-                text-align: center; color: #fef08a; font-family: monospace;
-                font-size: 22px; font-weight: 900; margin: 0 0 5px 0;
-                animation: hofTitleGlow 3s infinite ease-in-out;
-            }
-            .hof-page-sub {
-                text-align: center; color: #cbd5e1; font-family: monospace;
-                font-size: 11.5px; margin-bottom: 25px;
-            }
+                .hof-page-title {
+                    text-align: center; color: #fef08a; font-family: monospace;
+                    font-size: 22px; font-weight: 900; margin: 0 0 5px 0;
+                    animation: hofTitleGlow 3s infinite ease-in-out;
+                }
+                .hof-page-sub {
+                    text-align: center; color: #cbd5e1; font-family: monospace;
+                    font-size: 11.5px; margin-bottom: 25px;
+                }
 
-            .hof-carousel-wrapper {
-                display: flex;
-                flex-direction: row;
-                flex-wrap: nowrap;
-                gap: 14px;
-                padding: 15px 10px 25px 10px;
-                justify-content: flex-start;
-                overflow-x: auto;
-                overflow-y: visible;
-                scroll-snap-type: x mandatory;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: none;
-                width: 100%;
-                box-sizing: border-box;
-            }
-            .hof-carousel-wrapper::-webkit-scrollbar { display: none; }
+                /* CAROUSEL SNAP */
+                .hof-carousel-wrapper {
+                    display: flex;
+                    flex-direction: row;
+                    flex-wrap: nowrap;
+                    gap: 14px;
+                    padding: 15px 10px 25px 10px;
+                    justify-content: flex-start;
+                    overflow-x: auto;
+                    overflow-y: visible;
+                    scroll-snap-type: x mandatory;
+                    -webkit-overflow-scrolling: touch;
+                    scrollbar-width: none;
+                    width: 100%;
+                    box-sizing: border-box;
+                }
+                .hof-carousel-wrapper::-webkit-scrollbar { display: none; }
 
-            .hof-card {
-                flex: 0 0 auto;
-                width: 260px;
-                min-width: 260px;
-                max-width: 260px;
-                min-height: 400px;
-                scroll-snap-align: center;
-                position: relative;
-                background: linear-gradient(160deg, #0f172a 0%, #1a1410 50%, #0f172a 100%);
-                border-radius: 18px;
-                padding: 3px;
-                animation: cardEnter 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards,
-                        cardGlow 4s infinite ease-in-out 1s;
-                box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 15px rgba(212, 175, 55, 0.3);
-                transition: transform 0.3s ease, box-shadow 0.3s ease;
-            }
-            .hof-card-inner {
-                background: linear-gradient(160deg, #0a0d1a 0%, #15110a 100%);
-                border: 2px solid #d4af37;
-                border-radius: 16px;
-                padding: 20px 18px 18px 18px;
-                position: relative;
-                min-height: 394px;
-                box-shadow: inset 0 0 20px rgba(212, 175, 55, 0.08);
-            }
-            .hof-ornament {
-                position: absolute; color: #d4af37; font-size: 14px; line-height: 1;
-                filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.8)); z-index: 5;
-            }
-            .hof-orn-tl { top: 6px; left: 8px; }
-            .hof-orn-tr { top: 6px; right: 8px; }
-            .hof-orn-bl { bottom: 6px; left: 8px; }
-            .hof-orn-br { bottom: 6px; right: 8px; }
-            .hof-period-badge {
-                text-align: center;
-                background: linear-gradient(90deg, rgba(180, 83, 9, 0.4), rgba(251, 191, 36, 0.3), rgba(180, 83, 9, 0.4));
-                border: 1px solid #d4af37; border-radius: 8px;
-                padding: 6px 10px; font-family: monospace;
-                font-size: 10px; font-weight: 900; color: #fef08a;
-                letter-spacing: 1px; margin-bottom: 15px;
-                text-shadow: 0 0 6px rgba(254, 240, 138, 0.5);
-            }
-            .hof-crown-box { text-align: center; position: relative; height: 55px; margin-bottom: 5px; }
-            .hof-crown { font-size: 38px; display: inline-block; animation: crownFloat 2.5s infinite ease-in-out; }
-            .hof-sparkle { position: absolute; color: #fef08a; font-size: 12px; filter: drop-shadow(0 0 6px #fbbf24); }
-            .hof-sparkle-1 { top: 5px; left: 60px; animation: sparkleFloat1 2s infinite ease-in-out; }
-            .hof-sparkle-2 { top: 15px; right: 60px; animation: sparkleFloat2 2.3s infinite ease-in-out 0.3s; }
-            .hof-sparkle-3 { bottom: 0px; left: 90px; animation: sparkleFloat1 2.6s infinite ease-in-out 0.7s; }
-            .hof-avatar-wrapper { text-align: center; margin: 8px 0 12px 0; }
-            .hof-avatar-circle {
-                display: inline-flex; justify-content: center; align-items: center;
-                width: 62px; height: 62px; border-radius: 50%;
-                background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
-                border: 2.5px solid #d4af37; font-size: 30px;
-                box-shadow: 0 0 15px rgba(212, 175, 55, 0.5), inset 0 0 10px rgba(0, 0, 0, 0.6);
-                animation: avatarBob 2.5s infinite ease-in-out;
-            }
-            .hof-champion-name {
-                text-align: center; font-family: monospace; font-size: 14px; font-weight: 900;
-                color: #ffffff; letter-spacing: 0.5px; margin-bottom: 5px;
-                text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
-                line-height: 1.2; word-break: break-word;
-            }
-            .hof-champion-qty {
-                text-align: center; font-family: monospace; font-size: 15px; font-weight: 900;
-                color: #fbbf24; margin-bottom: 12px;
-                text-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
-            }
-            .hof-card-divider {
-                height: 1px; background: linear-gradient(90deg, transparent, #d4af37, transparent);
-                margin: 10px 0 12px 0; opacity: 0.6;
-            }
-            .hof-top-item-label {
-                text-align: center; font-family: monospace; font-size: 9px; color: #94a3b8;
-                letter-spacing: 1px; margin-bottom: 5px; text-transform: uppercase;
-            }
-            .hof-top-item-name {
-                text-align: center; font-family: monospace; font-size: 11px; font-weight: bold;
-                color: #cbd5e1; line-height: 1.3; margin-bottom: 3px; padding: 0 5px;
-                word-break: break-word;
-            }
-            .hof-top-item-qty {
-                text-align: center; font-family: monospace; font-size: 10px; color: #10b981;
-                font-weight: bold; margin-bottom: 15px;
-            }
-            .hof-card-alltime .hof-period-badge {
-                background: linear-gradient(90deg, rgba(212, 175, 55, 0.5), rgba(254, 240, 138, 0.4), rgba(212, 175, 55, 0.5));
-                color: #0f172a; text-shadow: none;
-            }
-            .hof-card-alltime .hof-crown {
-                filter: drop-shadow(0 0 25px rgba(251, 191, 36, 1)) drop-shadow(0 0 40px rgba(251, 191, 36, 0.6));
-            }
+                .hof-card {
+                    flex: 0 0 auto;
+                    width: 280px;
+                    min-width: 280px;
+                    max-width: 280px;
+                    min-height: 420px;
+                    scroll-snap-align: center;
+                    position: relative;
+                    background: linear-gradient(160deg, #0f172a 0%, #1a1410 50%, #0f172a 100%);
+                    border-radius: 18px;
+                    padding: 3px;
+                    animation: cardEnter 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards,
+                            cardGlow 4s infinite ease-in-out 1s;
+                    box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 15px rgba(212, 175, 55, 0.3);
+                    transition: transform 0.3s ease, box-shadow 0.3s ease;
+                }
+                .hof-card-inner {
+                    background: linear-gradient(160deg, #0a0d1a 0%, #15110a 100%);
+                    border: 2px solid #d4af37;
+                    border-radius: 16px;
+                    padding: 25px 20px 20px 20px;
+                    position: relative;
+                    min-height: 414px;
+                    box-shadow: inset 0 0 20px rgba(212, 175, 55, 0.08);
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                }
+                .hof-ornament {
+                    position: absolute; color: #d4af37; font-size: 16px; line-height: 1;
+                    filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.8)); z-index: 5;
+                }
+                .hof-orn-tl { top: 8px; left: 10px; }
+                .hof-orn-tr { top: 8px; right: 10px; }
+                .hof-orn-bl { bottom: 8px; left: 10px; }
+                .hof-orn-br { bottom: 8px; right: 10px; }
+                .hof-period-badge {
+                    text-align: center;
+                    background: linear-gradient(90deg, rgba(180, 83, 9, 0.4), rgba(251, 191, 36, 0.3), rgba(180, 83, 9, 0.4));
+                    border: 1px solid #d4af37; border-radius: 8px;
+                    padding: 7px 12px; font-family: monospace;
+                    font-size: 11px; font-weight: 900; color: #fef08a;
+                    letter-spacing: 1px; margin-bottom: 20px;
+                    text-shadow: 0 0 6px rgba(254, 240, 138, 0.5);
+                    width: 100%;
+                    box-sizing: border-box;
+                }
+                .hof-crown-box { text-align: center; position: relative; height: 70px; margin-bottom: 8px; width: 100%; }
+                .hof-crown { font-size: 48px; display: inline-block; animation: crownFloat 2.5s infinite ease-in-out; }
+                .hof-sparkle { position: absolute; color: #fef08a; font-size: 14px; filter: drop-shadow(0 0 6px #fbbf24); }
+                .hof-sparkle-1 { top: 5px; left: 30%; animation: sparkleFloat1 2s infinite ease-in-out; }
+                .hof-sparkle-2 { top: 20px; right: 30%; animation: sparkleFloat2 2.3s infinite ease-in-out 0.3s; }
+                .hof-sparkle-3 { bottom: 0px; left: 50%; transform: translateX(-50%); animation: sparkleFloat1 2.6s infinite ease-in-out 0.7s; }
+                .hof-avatar-wrapper { text-align: center; margin: 10px 0 15px 0; }
+                .hof-avatar-circle {
+                    display: inline-flex; justify-content: center; align-items: center;
+                    width: 80px; height: 80px; border-radius: 50%;
+                    background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
+                    border: 3px solid #d4af37; font-size: 40px;
+                    box-shadow: 0 0 20px rgba(212, 175, 55, 0.5), inset 0 0 10px rgba(0, 0, 0, 0.6);
+                    animation: avatarBob 2.5s infinite ease-in-out;
+                }
+                .hof-champion-name {
+                    text-align: center; font-family: monospace; font-size: 16px; font-weight: 900;
+                    color: #ffffff; letter-spacing: 0.5px; margin-bottom: 12px;
+                    text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+                    line-height: 1.3; word-break: break-word;
+                }
+                .hof-champion-qty {
+                    text-align: center; font-family: monospace; font-size: 22px; font-weight: 900;
+                    color: #fbbf24;
+                    text-shadow: 0 0 15px rgba(251, 191, 36, 0.8);
+                }
+                .hof-card-alltime .hof-period-badge {
+                    background: linear-gradient(90deg, rgba(212, 175, 55, 0.5), rgba(254, 240, 138, 0.4), rgba(212, 175, 55, 0.5));
+                    color: #0f172a; text-shadow: none;
+                }
+                .hof-card-alltime .hof-crown {
+                    filter: drop-shadow(0 0 25px rgba(251, 191, 36, 1)) drop-shadow(0 0 40px rgba(251, 191, 36, 0.6));
+                }
+                .hof-card.hof-card-selected .hof-card-inner {
+                    box-shadow: inset 0 0 30px rgba(251, 191, 36, 0.2), 0 0 40px rgba(251, 191, 36, 0.5);
+                    border: 3px solid #fbbf24;
+                }
 
-            .hof-card.hof-card-selected {
-                transform: scale(1.05) translateY(-5px);
-                box-shadow: 0 12px 35px rgba(0,0,0,0.8), 0 0 45px rgba(251, 191, 36, 0.8);
-                border: 3px solid #fbbf24;
-            }
+                /* DOTS */
+                .st-key-hof_dots_radio {
+                    display: flex !important;
+                    justify-content: center !important;
+                    margin: 10px 0 15px 0 !important;
+                }
+                .st-key-hof_dots_radio div[role="radiogroup"] {
+                    display: flex !important;
+                    flex-direction: row !important;
+                    justify-content: center !important;
+                    align-items: center !important;
+                    gap: 14px !important;
+                    background: rgba(15, 23, 42, 0.6) !important;
+                    border: 1.5px solid rgba(180, 83, 9, 0.4) !important;
+                    border-radius: 20px !important;
+                    padding: 12px 20px !important;
+                    width: fit-content !important;
+                    margin: 0 auto !important;
+                }
+                .st-key-hof_dots_radio div[role="radiogroup"] input[type="radio"] {
+                    display: none !important;
+                }
+                .st-key-hof_dots_radio div[role="radiogroup"] > label > div:first-child {
+                    display: none !important;
+                }
+                .st-key-hof_dots_radio div[role="radiogroup"] > label p {
+                    display: none !important;
+                }
+                .st-key-hof_dots_radio div[role="radiogroup"] > label {
+                    width: 14px !important;
+                    height: 14px !important;
+                    min-width: 14px !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    border-radius: 50% !important;
+                    background: rgba(180, 83, 9, 0.3) !important;
+                    border: 2px solid #b45309 !important;
+                    cursor: pointer !important;
+                    transition: all 0.3s ease !important;
+                    display: inline-block !important;
+                    position: relative !important;
+                }
+                .st-key-hof_dots_radio div[role="radiogroup"] > label:hover {
+                    background: rgba(251, 191, 36, 0.5) !important;
+                    transform: scale(1.2) !important;
+                }
+                .st-key-hof_dots_radio div[role="radiogroup"] > label:has(input:checked) {
+                    background: #fbbf24 !important;
+                    border-color: #fef08a !important;
+                    box-shadow: 0 0 15px rgba(251, 191, 36, 0.9) !important;
+                    transform: scale(1.4) !important;
+                }
 
-            div[data-testid="stButton"] {
-                max-width: 480px !important;
-                margin: 6px auto 10px auto !important;
-                padding: 0 !important;
-            }
-            div[data-testid="stButton"] > button {
-                border-radius: 12px !important;
-                font-family: monospace !important;
-                font-size: 12px !important;
-                font-weight: bold !important;
-                padding: 11px 16px !important;
-                width: 100% !important;
-                display: block !important;
-                transition: all 0.3s ease !important;
-            }
-            .st-key-btn_hof_psm_back button {
-                background: rgba(100, 116, 139, 0.15) !important;
-                border: 2px solid #475569 !important;
-                color: #cbd5e1 !important;
-            }
-            .st-key-btn_hof_psm_back button:hover {
-                background: #475569 !important; color: #ffffff !important;
-            }
+                /* TOMBOL */
+                div[data-testid="stButton"] {
+                    max-width: 480px !important;
+                    margin: 8px auto 10px auto !important;
+                    padding: 0 !important;
+                }
+                div[data-testid="stButton"] > button {
+                    border-radius: 12px !important;
+                    font-family: monospace !important;
+                    font-size: 13px !important;
+                    font-weight: bold !important;
+                    padding: 13px 20px !important;
+                    width: 100% !important;
+                    display: block !important;
+                    transition: all 0.3s ease !important;
+                }
+                .st-key-btn_hof_psm_back button {
+                    background: rgba(100, 116, 139, 0.15) !important;
+                    border: 2px solid #475569 !important;
+                    color: #cbd5e1 !important;
+                }
+                .st-key-btn_hof_psm_back button:hover {
+                    background: #475569 !important; color: #ffffff !important;
+                }
+                .st-key-btn_open_table button {
+                    background: linear-gradient(135deg, rgba(180, 83, 9, 0.6), rgba(251, 191, 36, 0.4), rgba(180, 83, 9, 0.6)) !important;
+                    border: 2px solid #fbbf24 !important;
+                    color: #fef08a !important;
+                    font-size: 13px !important;
+                    padding: 14px 20px !important;
+                    letter-spacing: 1.5px !important;
+                    text-shadow: 0 0 8px rgba(254, 240, 138, 0.8) !important;
+                    box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4) !important;
+                }
+                .st-key-btn_open_table button:hover {
+                    background: #fbbf24 !important;
+                    color: #0f172a !important;
+                    box-shadow: 0 6px 25px rgba(251, 191, 36, 0.9) !important;
+                    text-shadow: none !important;
+                }
 
-            .st-key-btn_open_detail button {
-                background: linear-gradient(135deg, rgba(180, 83, 9, 0.6), rgba(251, 191, 36, 0.4), rgba(180, 83, 9, 0.6)) !important;
-                border: 2px solid #fbbf24 !important;
-                color: #fef08a !important;
-                font-size: 13px !important;
-                padding: 14px 20px !important;
-                letter-spacing: 1.5px !important;
-                text-shadow: 0 0 8px rgba(254, 240, 138, 0.8) !important;
-                box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4) !important;
-            }
-            .st-key-btn_open_detail button:hover {
-                background: #fbbf24 !important;
-                color: #0f172a !important;
-                box-shadow: 0 6px 25px rgba(251, 191, 36, 0.9) !important;
-                text-shadow: none !important;
-            }
+                @media (max-width: 600px) {
+                    .hof-card { width: 260px; min-width: 260px; max-width: 260px; }
+                }
+                @media (max-width: 380px) {
+                    .hof-card { width: 240px; min-width: 240px; max-width: 240px; }
+                }
+                </style>
+                """, unsafe_allow_html=True)
 
-            /* Tombol pemilih kartu kecil */
-            .st-key-btn_sel_periode_1 button,
-            .st-key-btn_sel_periode_2 button,
-            .st-key-btn_sel_periode_3 button,
-            .st-key-btn_sel_periode_4 button,
-            .st-key-btn_sel_bulanan button,
-            .st-key-btn_sel_alltime button {
-                background: rgba(180, 83, 9, 0.2) !important;
-                border: 1.5px solid #b45309 !important;
-                color: #fde047 !important;
-                font-size: 10px !important;
-                padding: 8px 4px !important;
-                border-radius: 8px !important;
-            }
-            .st-key-btn_sel_periode_1 button:hover,
-            .st-key-btn_sel_periode_2 button:hover,
-            .st-key-btn_sel_periode_3 button:hover,
-            .st-key-btn_sel_periode_4 button:hover,
-            .st-key-btn_sel_bulanan button:hover,
-            .st-key-btn_sel_alltime button:hover {
-                background: #b45309 !important;
-                color: #ffffff !important;
-            }
-
-            @media (max-width: 600px) {
-                .hof-card { width: 240px; min-width: 240px; max-width: 240px; }
-            }
-            @media (max-width: 380px) {
-                .hof-card { width: 220px; min-width: 220px; max-width: 220px; }
-            }
-            </style>
-            """, unsafe_allow_html=True)
-
-            # ==== BACKGROUND ====
-            st.markdown(
-                f"""
+                            # ==== BACKGROUND ====
+                            st.markdown(
+                                f"""
                 <style>
                 .stApp {{
                     background-image: linear-gradient(rgba(10, 13, 26, 0.85), rgba(10, 13, 26, 0.92)), url("{url_gambar_latar}") !important;
@@ -3524,7 +3530,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             # ==== CAROUSEL KARTU (6 KARTU) ====
             urutan_kartu = ["periode_1", "periode_2", "periode_3", "periode_4", "bulanan", "alltime"]
-            selected_key = st.session_state.get("hof_selected_period") or "periode_1"
+            selected_key = st.session_state.get("hof_selected_period", "periode_1")
 
             kartu_parts = ["<div class='hof-carousel-wrapper'>"]
             for key in urutan_kartu:
@@ -3553,10 +3559,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     "</div>"
                     "<div class='hof-champion-name'>" + top1_name + "</div>"
                     "<div class='hof-champion-qty'>" + str(top1_qty) + " Pcs</div>"
-                    "<div class='hof-card-divider'></div>"
-                    "<div class='hof-top-item-label'>📦 Item Terlaris</div>"
-                    "<div class='hof-top-item-name'>" + d['top_item'] + "</div>"
-                    "<div class='hof-top-item-qty'>" + str(d['top_item_qty']) + " Qty</div>"
                     "</div>"
                     "</div>"
                 )
@@ -3564,59 +3566,445 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             kartu_html = "".join(kartu_parts).strip()
             st.markdown(kartu_html, unsafe_allow_html=True)
 
-            # ==== PETUNJUK ====
+            # ==== DOTS ====
+            default_idx = urutan_kartu.index(selected_key) if selected_key in urutan_kartu else 0
+            selected_dot = st.radio(
+                "Pilih Kartu",
+                options=urutan_kartu,
+                index=default_idx,
+                key="hof_dots_radio",
+                label_visibility="collapsed",
+                horizontal=True
+            )
+
+            if selected_dot != st.session_state.get("hof_selected_period"):
+                st.session_state["hof_selected_period"] = selected_dot
+                st.rerun()
+
+            # ==== JS AUTO-SCROLL ====
+            active_idx_js = urutan_kartu.index(selected_dot)
             st.markdown(
-                "<p style='text-align:center; color:#94a3b8; font-family:monospace; "
-                "font-size:10px; letter-spacing:1px; margin-top:5px; margin-bottom:8px;'>"
-                "👇 PILIH KARTU UNTUK LIHAT DETAIL 👇</p>",
+                "<script>"
+                "(function() {"
+                "  var wrapper = document.querySelector('.hof-carousel-wrapper');"
+                "  if (!wrapper) return;"
+                "  var cards = wrapper.querySelectorAll('.hof-card');"
+                "  var activeIdx = " + str(active_idx_js) + ";"
+                "  if (cards.length > activeIdx) {"
+                "    setTimeout(function() {"
+                "      cards[activeIdx].scrollIntoView({behavior: 'smooth', block: 'nearest', inline: 'center'});"
+                "    }, 100);"
+                "  }"
+                "})();"
+                "</script>",
                 unsafe_allow_html=True
             )
 
-            # ==== 6 TOMBOL PEMILIH KARTU ====
-            cols = st.columns(6)
-            labels_short = ["P1", "P2", "P3", "P4", "BULAN", "ALL"]
-            for idx, key in enumerate(urutan_kartu):
-                with cols[idx]:
-                    if st.button(
-                        labels_short[idx],
-                        key="btn_sel_" + key,
-                        use_container_width=True
-                    ):
-                        st.session_state["hof_selected_period"] = key
-                        st.rerun()
-
-            # ==== TOMBOL DETAIL ====
+            # ==== TOMBOL LIHAT TABEL LENGKAP + LOADING EMAS ====
             d_active = data_dummy[selected_key]
             if st.button(
-                "🔍 LIHAT DETAIL — " + d_active["short"],
-                key="btn_open_detail",
+                "📊 LIHAT TABEL LENGKAP — " + d_active["short"],
+                key="btn_open_table",
                 use_container_width=True
             ):
-                st.session_state["hof_detail_open"] = True
+                placeholder_loading = st.empty()
+                with placeholder_loading.container():
+                    st.markdown("""
+                        <style>
+                        @keyframes sandSpin {
+                            0%, 100% { transform: rotate(0deg); }
+                            50% { transform: rotate(180deg); }
+                        }
+                        @keyframes progressShimmer {
+                            0% { background-position: 0% 50%; }
+                            100% { background-position: 300% 50%; }
+                        }
+                        @keyframes progressGrow {
+                            0% { width: 0%; }
+                            100% { width: 100%; }
+                        }
+                        @keyframes titleBlink {
+                            0%, 100% { opacity: 1; }
+                            50% { opacity: 0.5; }
+                        }
+                        @keyframes glowPulse {
+                            0%, 100% { filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.8)); }
+                            50% { filter: drop-shadow(0 0 40px rgba(254, 240, 138, 1)); }
+                        }
+                        .tbl-loading-overlay {
+                            background-color: #0a0d1a;
+                            position: fixed; top: 0; left: 0;
+                            width: 100vw; height: 100vh;
+                            z-index: 999999;
+                            display: flex; flex-direction: column;
+                            justify-content: center; align-items: center;
+                            color: white; overflow: hidden;
+                        }
+                        .tbl-loading-card {
+                            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(45, 35, 15, 0.95) 100%);
+                            border: 2px solid #d4af37;
+                            border-top: 6px solid #fbbf24;
+                            border-radius: 12px;
+                            padding: 40px 30px 35px 30px;
+                            text-align: center;
+                            max-width: 480px;
+                            width: 90%;
+                            box-shadow: 0 10px 40px rgba(212, 175, 55, 0.4), inset 0 0 30px rgba(251, 191, 36, 0.08);
+                            display: flex; flex-direction: column;
+                            justify-content: center; align-items: center;
+                        }
+                        .tbl-sand-icon {
+                            font-size: 70px;
+                            display: inline-block;
+                            animation: sandSpin 3s infinite ease-in-out, glowPulse 2s infinite ease-in-out;
+                            margin-bottom: 20px;
+                        }
+                        .tbl-loading-title {
+                            color: #fef08a; font-family: monospace;
+                            font-size: 16px; font-weight: 900;
+                            letter-spacing: 1.5px;
+                            margin: 10px 0 8px 0;
+                            animation: titleBlink 2s infinite ease-in-out;
+                            text-shadow: 0 0 15px rgba(251, 191, 36, 0.8);
+                            text-align: center;
+                        }
+                        .tbl-loading-sub {
+                            color: #cbd5e1; font-family: monospace;
+                            font-size: 11.5px; line-height: 1.7;
+                            max-width: 360px;
+                            margin: 0 auto 25px auto;
+                            text-align: center;
+                        }
+                        .tbl-progress-wrapper {
+                            width: 280px; max-width: 85vw;
+                            margin: 10px auto 0 auto;
+                        }
+                        .tbl-progress-bg {
+                            width: 100%; height: 16px;
+                            background: rgba(15, 23, 42, 0.9);
+                            border: 2px solid #b45309;
+                            border-radius: 10px;
+                            overflow: hidden;
+                            box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 0 15px rgba(180, 83, 9, 0.4);
+                        }
+                        .tbl-progress-fill {
+                            height: 100%;
+                            border-radius: 8px;
+                            background: linear-gradient(90deg, #78350f, #d97706, #fbbf24, #fef08a, #fbbf24, #d97706, #78350f);
+                            background-size: 300% 100%;
+                            animation: progressShimmer 1.8s infinite linear, progressGrow 2.2s forwards ease-out;
+                            box-shadow: 0 0 15px rgba(251, 191, 36, 0.9);
+                        }
+                        .tbl-progress-pct {
+                            color: #fef08a; font-family: monospace;
+                            font-size: 12px; font-weight: bold;
+                            text-align: center; margin-top: 12px;
+                            letter-spacing: 1px;
+                            text-shadow: 0 0 10px rgba(251, 191, 36, 0.7);
+                        }
+                        </style>
+                        <div class="tbl-loading-overlay">
+                        <div class="tbl-loading-card">
+                        <div class="tbl-sand-icon">⏳</div>
+                        <div class="tbl-loading-title">📜 MEMBUKA GULUNGAN DATA 📜</div>
+                        <div class="tbl-loading-sub">
+                        Menyusun prasasti peringkat lengkap pahlawan guild.<br>
+                        Data para juara sedang dipahat pada lembaran emas...
+                        </div>
+                        <div class="tbl-progress-wrapper">
+                        <div class="tbl-progress-bg">
+                        <div class="tbl-progress-fill"></div>
+                        </div>
+                        <div class="tbl-progress-pct">FORGING PROGRESS: 100%</div>
+                        </div>
+                        </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                    pb = st.progress(0)
+                    for pct in range(100):
+                        time.sleep(0.022)
+                        pb.progress(pct + 1)
+
+                placeholder_loading.empty()
+                st.session_state["hof_table_open"] = True
                 st.rerun()
 
-            # ==== PANEL DETAIL — PLACEHOLDER ====
-            if st.session_state.get("hof_detail_open"):
-                st.markdown(
-                    "<div style='background: rgba(15, 23, 42, 0.9); "
-                    "border: 2px dashed #fbbf24; border-radius: 12px; "
-                    "padding: 20px; margin-top: 15px; text-align: center; "
-                    "color: #fbbf24; font-family: monospace; font-size: 12px;'>"
-                    "🚧 Panel detail akan hadir di Fase B 🚧<br><br>"
-                    "<span style='color: #94a3b8;'>Kartu aktif: " + d_active["short"] + "</span>"
-                    "</div>",
-                    unsafe_allow_html=True
-                )
-                if st.button("✖️ TUTUP DETAIL", key="btn_close_detail", use_container_width=True):
-                    st.session_state["hof_detail_open"] = False
-                    st.rerun()
+            # ==== AUTO-REDIRECT KE TABEL ====
+            if st.session_state.get("hof_table_open", False):
+                st.session_state["hof_sub_page"] = "hof_table_psm"
+                st.session_state["hof_table_open"] = False
+                st.rerun()
 
             # ==== TOMBOL KEMBALI ====
             st.markdown("<br>", unsafe_allow_html=True)
             if st.button("⬅️ KEMBALI KE HALL OF FAME", key="btn_hof_psm_back", use_container_width=True):
                 st.session_state["hof_sub_page"] = None
                 st.session_state["hof_selected_period"] = "periode_1"
-                st.session_state["hof_detail_open"] = False
+                st.rerun()
+
+            st.stop()
+
+        # =========================================================================
+        # 📊 HALAMAN 3A-2: TABEL LENGKAP PERINGKAT PSM (EMAS)
+        # =========================================================================
+        elif (
+            st.session_state.get("campaign_sub_page") == "view_hall_of_fame"
+            and st.session_state.get("hof_sub_page") == "hof_table_psm"
+        ):
+
+            url_gambar_latar = "https://i.imgur.com/kMo29aW.jpeg"
+
+            # ==== AMBIL DATA ====
+            data_dummy = st.session_state.get("hof_dummy_data", {})
+            selected_key = st.session_state.get("hof_selected_period", "periode_1")
+            d = data_dummy.get(selected_key, {})
+            ranking = d.get("data", [])
+            label = d.get("label", "-")
+            short = d.get("short", "-")
+
+            # ==== FUNGSI AVATAR ====
+            import hashlib
+            def get_avatar_table(name):
+                list_avatar_rpg = [
+                    "🧙‍♂️", "🧝‍♂️", "🧝‍♀️", "⚔️", "🎯", "🛡️", "🦁", "🦅",
+                    "🐺", "👑", "💎", "🔮", "🔥", "🏹", "🪄", "🗡️",
+                    "⚗️", "🧛‍♂️", "🧟‍♂️", "🐉", "🦉", "🐻", "🦊", "🦌"
+                ]
+                h = int(hashlib.md5(name.upper().encode()).hexdigest(), 16)
+                return list_avatar_rpg[h % len(list_avatar_rpg)]
+
+            # ==== CSS ====
+            st.markdown("""
+                <style>
+                @keyframes tblEnter {
+                    0% { opacity: 0; transform: translateY(20px); }
+                    100% { opacity: 1; transform: translateY(0); }
+                }
+                .tbl-page-title {
+                    text-align: center; color: #fef08a; font-family: monospace;
+                    font-size: 22px; font-weight: 900; margin: 0 0 5px 0;
+                    text-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
+                }
+                .tbl-page-sub {
+                    text-align: center; color: #cbd5e1; font-family: monospace;
+                    font-size: 11.5px; margin-bottom: 20px;
+                }
+                .tbl-wrapper {
+                    max-width: 620px;
+                    margin: 0 auto;
+                    background: linear-gradient(160deg, #0a0d1a 0%, #15110a 100%);
+                    border: 2px solid #d4af37;
+                    border-radius: 16px;
+                    padding: 20px 15px;
+                    box-shadow: 0 8px 30px rgba(0,0,0,0.7), inset 0 0 25px rgba(212, 175, 55, 0.08);
+                    animation: tblEnter 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+                    position: relative;
+                }
+                .tbl-ornament {
+                    position: absolute; color: #d4af37; font-size: 16px; line-height: 1;
+                    filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.9));
+                }
+                .tbl-orn-tl { top: 8px; left: 10px; }
+                .tbl-orn-tr { top: 8px; right: 10px; }
+                .tbl-orn-bl { bottom: 8px; left: 10px; }
+                .tbl-orn-br { bottom: 8px; right: 10px; }
+                .tbl-header-row {
+                    display: grid;
+                    grid-template-columns: 50px 50px 1fr 90px;
+                    gap: 8px;
+                    padding: 10px 12px;
+                    background: linear-gradient(90deg, rgba(180, 83, 9, 0.5), rgba(251, 191, 36, 0.3), rgba(180, 83, 9, 0.5));
+                    border: 1.5px solid #d4af37;
+                    border-radius: 8px;
+                    margin-bottom: 12px;
+                    font-family: monospace;
+                    font-size: 11px;
+                    font-weight: 900;
+                    color: #fef08a;
+                    letter-spacing: 1px;
+                    text-transform: uppercase;
+                }
+                .tbl-row {
+                    display: grid;
+                    grid-template-columns: 50px 50px 1fr 90px;
+                    gap: 8px;
+                    padding: 10px 12px;
+                    background: rgba(15, 23, 42, 0.6);
+                    border: 1.5px solid rgba(180, 83, 9, 0.4);
+                    border-radius: 8px;
+                    margin-bottom: 6px;
+                    align-items: center;
+                    font-family: monospace;
+                    font-size: 13px;
+                    color: #e2e8f0;
+                    transition: all 0.2s ease;
+                }
+                .tbl-row:hover {
+                    background: rgba(180, 83, 9, 0.15);
+                    border-color: #d4af37;
+                }
+                .tbl-row.row-1 {
+                    background: linear-gradient(90deg, rgba(254, 240, 138, 0.15), rgba(217, 119, 6, 0.25)) !important;
+                    border-color: #fbbf24 !important;
+                }
+                .tbl-row.row-2 {
+                    background: linear-gradient(90deg, rgba(203, 213, 225, 0.1), rgba(100, 116, 139, 0.2)) !important;
+                    border-color: #94a3b8 !important;
+                }
+                .tbl-row.row-3 {
+                    background: linear-gradient(90deg, rgba(255, 237, 213, 0.1), rgba(194, 65, 12, 0.2)) !important;
+                    border-color: #ea580c !important;
+                }
+                .tbl-rank {
+                    font-weight: 900;
+                    color: #fbbf24;
+                    text-align: center;
+                    font-size: 14px;
+                }
+                .tbl-avatar {
+                    font-size: 22px;
+                    text-align: center;
+                }
+                .tbl-name {
+                    font-weight: bold;
+                    color: #ffffff;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+                .tbl-score {
+                    font-weight: 900;
+                    color: #fbbf24;
+                    text-align: right;
+                    font-size: 14px;
+                }
+                .tbl-footer {
+                    text-align: center;
+                    color: #94a3b8;
+                    font-family: monospace;
+                    font-size: 10px;
+                    margin-top: 15px;
+                    padding-top: 12px;
+                    border-top: 1px solid rgba(212, 175, 55, 0.3);
+                    letter-spacing: 1px;
+                }
+                @media (max-width: 500px) {
+                    .tbl-header-row, .tbl-row {
+                        grid-template-columns: 40px 40px 1fr 70px;
+                        font-size: 11px;
+                    }
+                    .tbl-avatar { font-size: 18px; }
+                    .tbl-rank, .tbl-score { font-size: 12px; }
+                }
+                div[data-testid="stButton"] {
+                    max-width: 480px !important;
+                    margin: 8px auto 10px auto !important;
+                    padding: 0 !important;
+                }
+                div[data-testid="stButton"] > button {
+                    border-radius: 12px !important;
+                    font-family: monospace !important;
+                    font-size: 13px !important;
+                    font-weight: bold !important;
+                    padding: 13px 20px !important;
+                    width: 100% !important;
+                    display: block !important;
+                }
+                .st-key-btn_table_back button {
+                    background: rgba(100, 116, 139, 0.15) !important;
+                    border: 2px solid #475569 !important;
+                    color: #cbd5e1 !important;
+                }
+                .st-key-btn_table_back button:hover {
+                    background: #475569 !important; color: #ffffff !important;
+                }
+                </style>
+                """, unsafe_allow_html=True)
+
+                            st.markdown(
+                                f"""
+                <style>
+                .stApp {{
+                    background-image: linear-gradient(rgba(10, 13, 26, 0.88), rgba(10, 13, 26, 0.95)), url("{url_gambar_latar}") !important;
+                    background-size: cover !important;
+                    background-position: center !important;
+                    background-repeat: no-repeat !important;
+                    background-attachment: fixed !important;
+                }}
+                .main .block-container {{
+                    background-color: transparent !important;
+                    max-width: 900px !important;
+                    padding-top: 3% !important;
+                    padding-left: 8px !important;
+                    padding-right: 8px !important;
+                }}
+                div[data-testid="stVerticalBlock"] {{ gap: 0rem !important; }}
+                </style>
+                """,
+                unsafe_allow_html=True
+            )
+
+            # ==== HEADER ====
+            st.markdown("<h2 class='tbl-page-title'>📊 TABEL LENGKAP PERINGKAT 📊</h2>", unsafe_allow_html=True)
+            st.markdown("<p class='tbl-page-sub'>" + label + "</p>", unsafe_allow_html=True)
+
+            # ==== TABEL ====
+            if ranking:
+                baris_html = (
+                    "<div class='tbl-wrapper'>"
+                    "<div class='tbl-ornament tbl-orn-tl'>⚜️</div>"
+                    "<div class='tbl-ornament tbl-orn-tr'>⚜️</div>"
+                    "<div class='tbl-ornament tbl-orn-bl'>⚜️</div>"
+                    "<div class='tbl-ornament tbl-orn-br'>⚜️</div>"
+                    "<div class='tbl-header-row'>"
+                    "<div style='text-align:center;'>#</div>"
+                    "<div style='text-align:center;'>👤</div>"
+                    "<div>NAMA PAHLAWAN</div>"
+                    "<div style='text-align:right;'>QTY</div>"
+                    "</div>"
+                )
+
+                for idx, (name, qty) in enumerate(ranking):
+                    rank_num = idx + 1
+                    rank_cls = ""
+                    if rank_num == 1:
+                        rank_cls = "row-1"
+                        rank_label = "🥇"
+                    elif rank_num == 2:
+                        rank_cls = "row-2"
+                        rank_label = "🥈"
+                    elif rank_num == 3:
+                        rank_cls = "row-3"
+                        rank_label = "🥉"
+                    else:
+                        rank_label = str(rank_num)
+
+                    av = get_avatar_table(name)
+
+                    baris_html += (
+                        "<div class='tbl-row " + rank_cls + "'>"
+                        "<div class='tbl-rank'>" + rank_label + "</div>"
+                        "<div class='tbl-avatar'>" + av + "</div>"
+                        "<div class='tbl-name'>" + name + "</div>"
+                        "<div class='tbl-score'>" + str(qty) + " Pcs</div>"
+                        "</div>"
+                    )
+
+                baris_html += (
+                    "<div class='tbl-footer'>"
+                    "Halaman Peringkat Lengkap • " + short +
+                    "</div>"
+                    "</div>"
+                )
+                st.markdown(baris_html, unsafe_allow_html=True)
+            else:
+                st.info("Belum ada data peringkat untuk periode ini.")
+
+            # ==== TOMBOL KEMBALI ====
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("⬅️ KEMBALI KE HALL OF FAME PSM", key="btn_table_back", use_container_width=True):
+                st.session_state["hof_sub_page"] = "hof_psm"
                 st.rerun()
 
             st.stop()
