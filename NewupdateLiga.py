@@ -3482,6 +3482,382 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             st.stop()
     
+        # =========================================================================
+        # ⚔️ HALAMAN 3B: HALL OF FAME PWP & SG (PLACEHOLDER)
+        # =========================================================================
+        elif (
+            st.session_state.get("campaign_sub_page") == "view_hall_of_fame"
+            and st.session_state.get("hof_sub_page") == "hof_pps"
+        ):
+
+            url_gambar_latar = "https://i.imgur.com/kMo29aW.jpeg"
+
+            st.markdown(
+                """
+                <style>
+                    @keyframes sandSpin {
+                        0%, 100% { transform: rotate(0deg); }
+                        50% { transform: rotate(180deg); }
+                    }
+                    @keyframes progressShimmer {
+                        0% { background-position: 0% 50%; }
+                        100% { background-position: 300% 50%; }
+                    }
+                    @keyframes progressGrow {
+                        0% { width: 0%; }
+                        100% { width: 40%; }
+                    }
+                    @keyframes titleBlink {
+                        0%, 100% { opacity: 1; }
+                        50% { opacity: 0.5; }
+                    }
+                    @keyframes placeholderEnter {
+                        0% { opacity: 0; transform: scale(0.94); }
+                        100% { opacity: 1; transform: scale(1); }
+                    }
+
+                    .placeholder-wrapper {
+                        animation: placeholderEnter 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+                    }
+                    .placeholder-title {
+                        text-align: center; color: #d8b4fe; font-family: monospace;
+                        font-size: 22px; font-weight: 900;
+                        text-shadow: 0 0 15px rgba(168, 85, 247, 0.6);
+                        margin: 0 0 5px 0;
+                    }
+                    .placeholder-sub {
+                        text-align: center; color: #cbd5e1; font-family: monospace;
+                        font-size: 11.5px; margin-bottom: 25px;
+                    }
+                    .placeholder-card {
+                        background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(45, 22, 60, 0.95) 100%);
+                        border: 2px solid #7c3aed;
+                        border-top: 6px solid #a855f7;
+                        border-radius: 12px;
+                        padding: 35px 25px 30px 25px;
+                        text-align: center;
+                        max-width: 480px;
+                        margin: 0 auto;
+                        box-shadow: 0 10px 40px rgba(124, 58, 237, 0.3), inset 0 0 30px rgba(168, 85, 247, 0.08);
+                        min-height: 380px;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        align-items: center;
+                    }
+                    .sand-icon {
+                        font-size: 65px;
+                        display: inline-block;
+                        animation: sandSpin 3s infinite ease-in-out;
+                        filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.8));
+                        margin-bottom: 15px;
+                    }
+                    .placeholder-headline {
+                        color: #d8b4fe; font-family: monospace;
+                        font-size: 15px; font-weight: 900;
+                        letter-spacing: 1px; margin: 15px 0 10px 0;
+                        animation: titleBlink 2s infinite ease-in-out;
+                        text-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+                    }
+                    .placeholder-desc {
+                        color: #cbd5e1; font-family: monospace;
+                        font-size: 11.5px; line-height: 1.7;
+                        max-width: 360px; margin: 0 auto 20px auto;
+                    }
+                    .progress-wrapper {
+                        width: 280px;
+                        margin: 15px auto 0 auto;
+                    }
+                    .progress-bg {
+                        width: 100%; height: 16px;
+                        background: rgba(15, 23, 42, 0.9);
+                        border: 2px solid #7c3aed;
+                        border-radius: 10px;
+                        overflow: hidden;
+                        box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 0 15px rgba(124, 58, 237, 0.3);
+                    }
+                    .progress-fill {
+                        height: 100%;
+                        border-radius: 8px;
+                        background: linear-gradient(90deg, #4c1d95, #7c3aed, #a855f7, #d8b4fe, #a855f7, #7c3aed, #4c1d95);
+                        background-size: 300% 100%;
+                        animation: progressShimmer 1.8s infinite linear, progressGrow 1.5s forwards ease-out;
+                        box-shadow: 0 0 15px rgba(168, 85, 247, 0.8);
+                    }
+                    .progress-pct {
+                        color: #d8b4fe; font-family: monospace;
+                        font-size: 12px; font-weight: bold;
+                        text-align: center; margin-top: 10px;
+                        text-shadow: 0 0 8px rgba(168, 85, 247, 0.6);
+                    }
+
+                    div[data-testid="stButton"] {
+                        max-width: 480px !important;
+                        margin: 20px auto 15px auto !important;
+                        padding: 0 !important;
+                    }
+                    div[data-testid="stButton"] > button {
+                        border-radius: 12px !important;
+                        font-family: monospace !important;
+                        font-size: 13px !important;
+                        font-weight: bold !important;
+                        padding: 12px 20px !important;
+                        width: 100% !important;
+                        display: block !important;
+                        transition: all 0.3s ease !important;
+                    }
+                    .st-key-btn_hof_pps_back button {
+                        background: rgba(100, 116, 139, 0.15) !important;
+                        border: 2px solid #475569 !important;
+                        color: #cbd5e1 !important;
+                    }
+                    .st-key-btn_hof_pps_back button:hover {
+                        background: #475569 !important;
+                        color: #ffffff !important;
+                    }
+                </style>
+                """,
+                unsafe_allow_html=True
+            )
+
+            st.markdown(
+                f"""
+                <style>
+                    .stApp {{
+                        background-image: linear-gradient(rgba(10, 13, 26, 0.88), rgba(10, 13, 26, 0.92)), url("{url_gambar_latar}") !important;
+                        background-size: cover !important;
+                        background-position: center !important;
+                        background-repeat: no-repeat !important;
+                        background-attachment: fixed !important;
+                    }}
+                    .main .block-container {{
+                        background-color: transparent !important;
+                        max-width: 700px !important;
+                        padding-top: 3% !important;
+                    }}
+                    div[data-testid="stVerticalBlock"] {{ gap: 0rem !important; }}
+                </style>
+                """,
+                unsafe_allow_html=True
+            )
+
+            st.markdown("<div class='placeholder-wrapper'>", unsafe_allow_html=True)
+
+            st.markdown("<h2 class='placeholder-title'>⚔️ HALL OF FAME PWP & SG ⚔️</h2>", unsafe_allow_html=True)
+            st.markdown("<p class='placeholder-sub'>Papan kehormatan pahlawan program PWP & Serba Gratis</p>", unsafe_allow_html=True)
+
+            st.markdown("""
+                <div class='placeholder-card'>
+                    <div class='sand-icon'>⏳</div>
+                    <div class='placeholder-headline'>🔮 SEDANG DALAM MASA RANCANGAN 🔮</div>
+                    <div class='placeholder-desc'>
+                        Papan peringkat PWP & Serba Gratis masih dalam ritual penyempurnaan oleh para tetua guild.<br><br>
+                        Data pahlawan sedang dikumpulkan dan akan dipahat pada prasasti kehormatan.
+                    </div>
+                    <div class='progress-wrapper'>
+                        <div class='progress-bg'>
+                            <div class='progress-fill'></div>
+                        </div>
+                        <div class='progress-pct'>FORGING PROGRESS: 40%</div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+
+            st.markdown("</div>", unsafe_allow_html=True)
+
+            if st.button("⬅️ KEMBALI KE HALL OF FAME", key="btn_hof_pps_back", use_container_width=True):
+                st.session_state["hof_sub_page"] = None
+                st.rerun()
+
+            st.stop()
+
+        # =========================================================================
+        # 🍃 HALAMAN 3C: HALL OF FAME SUEGER (PLACEHOLDER)
+        # =========================================================================
+        elif (
+            st.session_state.get("campaign_sub_page") == "view_hall_of_fame"
+            and st.session_state.get("hof_sub_page") == "hof_sueger"
+        ):
+
+            url_gambar_latar = "https://i.imgur.com/kMo29aW.jpeg"
+
+            st.markdown(
+                """
+                <style>
+                    @keyframes sandSpin {
+                        0%, 100% { transform: rotate(0deg); }
+                        50% { transform: rotate(180deg); }
+                    }
+                    @keyframes progressShimmer {
+                        0% { background-position: 0% 50%; }
+                        100% { background-position: 300% 50%; }
+                    }
+                    @keyframes progressGrow {
+                        0% { width: 0%; }
+                        100% { width: 40%; }
+                    }
+                    @keyframes titleBlink {
+                        0%, 100% { opacity: 1; }
+                        50% { opacity: 0.5; }
+                    }
+                    @keyframes placeholderEnter {
+                        0% { opacity: 0; transform: scale(0.94); }
+                        100% { opacity: 1; transform: scale(1); }
+                    }
+                    .placeholder-wrapper {
+                        animation: placeholderEnter 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+                    }
+                    .placeholder-title {
+                        text-align: center; color: #6ee7b7; font-family: monospace;
+                        font-size: 22px; font-weight: 900;
+                        text-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
+                        margin: 0 0 5px 0;
+                    }
+                    .placeholder-sub {
+                        text-align: center; color: #cbd5e1; font-family: monospace;
+                        font-size: 11.5px; margin-bottom: 25px;
+                    }
+                    .placeholder-card {
+                        background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(20, 50, 40, 0.95) 100%);
+                        border: 2px solid #059669;
+                        border-top: 6px solid #10b981;
+                        border-radius: 12px;
+                        padding: 35px 25px 30px 25px;
+                        text-align: center;
+                        max-width: 480px;
+                        margin: 0 auto;
+                        box-shadow: 0 10px 40px rgba(5, 150, 105, 0.3), inset 0 0 30px rgba(16, 185, 129, 0.08);
+                        min-height: 380px;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        align-items: center;
+                    }
+                    .sand-icon {
+                        font-size: 65px;
+                        display: inline-block;
+                        animation: sandSpin 3s infinite ease-in-out;
+                        filter: drop-shadow(0 0 20px rgba(16, 185, 129, 0.8));
+                        margin-bottom: 15px;
+                    }
+                    .placeholder-headline {
+                        color: #6ee7b7; font-family: monospace;
+                        font-size: 15px; font-weight: 900;
+                        letter-spacing: 1px; margin: 15px 0 10px 0;
+                        animation: titleBlink 2s infinite ease-in-out;
+                        text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+                    }
+                    .placeholder-desc {
+                        color: #cbd5e1; font-family: monospace;
+                        font-size: 11.5px; line-height: 1.7;
+                        max-width: 360px; margin: 0 auto 20px auto;
+                    }
+                    .progress-wrapper {
+                        width: 280px;
+                        margin: 15px auto 0 auto;
+                    }
+                    .progress-bg {
+                        width: 100%; height: 16px;
+                        background: rgba(15, 23, 42, 0.9);
+                        border: 2px solid #059669;
+                        border-radius: 10px;
+                        overflow: hidden;
+                        box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 0 15px rgba(5, 150, 105, 0.3);
+                    }
+                    .progress-fill {
+                        height: 100%;
+                        border-radius: 8px;
+                        background: linear-gradient(90deg, #064e3b, #059669, #10b981, #6ee7b7, #10b981, #059669, #064e3b);
+                        background-size: 300% 100%;
+                        animation: progressShimmer 1.8s infinite linear, progressGrow 1.5s forwards ease-out;
+                        box-shadow: 0 0 15px rgba(16, 185, 129, 0.8);
+                    }
+                    .progress-pct {
+                        color: #6ee7b7; font-family: monospace;
+                        font-size: 12px; font-weight: bold;
+                        text-align: center; margin-top: 10px;
+                        text-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+                    }
+                    div[data-testid="stButton"] {
+                        max-width: 480px !important;
+                        margin: 20px auto 15px auto !important;
+                        padding: 0 !important;
+                    }
+                    div[data-testid="stButton"] > button {
+                        border-radius: 12px !important;
+                        font-family: monospace !important;
+                        font-size: 13px !important;
+                        font-weight: bold !important;
+                        padding: 12px 20px !important;
+                        width: 100% !important;
+                        display: block !important;
+                        transition: all 0.3s ease !important;
+                    }
+                    .st-key-btn_hof_sueger_back button {
+                        background: rgba(100, 116, 139, 0.15) !important;
+                        border: 2px solid #475569 !important;
+                        color: #cbd5e1 !important;
+                    }
+                    .st-key-btn_hof_sueger_back button:hover {
+                        background: #475569 !important;
+                        color: #ffffff !important;
+                    }
+                </style>
+                """,
+                unsafe_allow_html=True
+            )
+
+            st.markdown(
+                f"""
+                <style>
+                    .stApp {{
+                        background-image: linear-gradient(rgba(10, 13, 26, 0.88), rgba(10, 13, 26, 0.92)), url("{url_gambar_latar}") !important;
+                        background-size: cover !important;
+                        background-position: center !important;
+                        background-repeat: no-repeat !important;
+                        background-attachment: fixed !important;
+                    }}
+                    .main .block-container {{
+                        background-color: transparent !important;
+                        max-width: 700px !important;
+                        padding-top: 3% !important;
+                    }}
+                    div[data-testid="stVerticalBlock"] {{ gap: 0rem !important; }}
+                </style>
+                """,
+                unsafe_allow_html=True
+            )
+
+            st.markdown("<div class='placeholder-wrapper'>", unsafe_allow_html=True)
+
+            st.markdown("<h2 class='placeholder-title'>🍃 HALL OF FAME SUEGER 🍃</h2>", unsafe_allow_html=True)
+            st.markdown("<p class='placeholder-sub'>Papan pencapaian kasir program Sueger</p>", unsafe_allow_html=True)
+
+            st.markdown("""
+                <div class='placeholder-card'>
+                    <div class='sand-icon'>⏳</div>
+                    <div class='placeholder-headline'>🔮 SEDANG DALAM MASA RANCANGAN 🔮</div>
+                    <div class='placeholder-desc'>
+                        Papan pencapaian Sueger masih dalam ritual penyempurnaan oleh para tetua guild.<br><br>
+                        Prasasti kehormatan akan dipahat setelah data achievement terkumpul lengkap.
+                    </div>
+                    <div class='progress-wrapper'>
+                        <div class='progress-bg'>
+                            <div class='progress-fill'></div>
+                        </div>
+                        <div class='progress-pct'>FORGING PROGRESS: 40%</div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+
+            st.markdown("</div>", unsafe_allow_html=True)
+
+            if st.button("⬅️ KEMBALI KE HALL OF FAME", key="btn_hof_sueger_back", use_container_width=True):
+                st.session_state["hof_sub_page"] = None
+                st.rerun()
+
+            st.stop()
+        
         
         # ==============================================================================
         # 🚪 KONDISI 3: BUKU TERBUKA - KITAB MISI GUILD (DENGAN ISOLASI CSS WRAPPER)
