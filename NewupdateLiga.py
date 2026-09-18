@@ -2105,128 +2105,135 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
                  
         # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (HTML KUSTOM TOTAL - ANTI-UPDATE STREAMLIT)
+        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (HTML ISOLASI TOTAL + AMAN LOGIN)
         # =========================================================================
         if st.session_state.get("campaign_sub_page", "resepsionis_utama") == "resepsionis_utama":
             
             st.markdown("<h2 class='guild-lobby-title' style='text-shadow: 0 0 15px rgba(251,191,36,0.5); color: #fef08a; text-align: center; font-family: monospace;'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub' style='color: #cbd5e1; text-align: center; font-family: monospace; margin-bottom: 30px;'>Pilih gulungan maklumat di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
         
-            # --- 🏗️ LOGIKA NAVIGASI CLIK VIA URL PARAMETER ---
-            # Membaca jika ada trigger klik dari komponen HTML di bawah
-            query_params = st.query_params
-            if "go_to_page" in query_params:
-                target_page = query_params["go_to_page"]
-                # Hapus parameter agar tidak stuck looping
-                del st.query_params["go_to_page"]
-                
-                if target_page == "buku_pencapaian":
-                    st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
-                    st.rerun()
-                elif target_page == "buku_tugas":
-                    st.session_state["campaign_sub_page"] = "view_buku_tugas"
-                    st.rerun()
+            # --- 🗺️ PENANGKAP SINYAL KLIK (ANTI RESET LOGIN) ---
+            # Membuat widget penampung nilai klik yang tersembunyi
+            if "rpg_click_trigger" not in st.session_state:
+                st.session_state["rpg_click_trigger"] = ""
         
-            # --- 🎨 DESAIN PERKAMEN GANTUNG MURNI (TAHAN TERHADAP CSS GLOBAL) ---
-            st.markdown(
-                """
-                <style>
-                    /* Container Utama Gulungan */
-                    .scroll-container {
-                        display: flex;
-                        flex-direction: column;
-                        gap: 25px;
-                        width: 100%;
-                        max-width: 480px;
-                        margin: 0 auto;
-                    }
-                    
-                    /* Komponen Kartu Papan Gulungan Meniru Link */
-                    .medieval-scroll-card {
-                        background: linear-gradient(135deg, #0f172a 0%, #1e1b18 100%) !important;
-                        border: 2px solid #b45309 !important;
-                        border-top: 8px solid #d97706 !important; /* Pasak Kayu */
-                        border-radius: 6px 6px 16px 16px !important;
-                        padding: 22px 20px !important;
-                        box-shadow: 0 0 20px rgba(180, 83, 9, 0.3), inset 0 0 15px rgba(251, 191, 36, 0.05) !important;
-                        text-align: center;
-                        text-decoration: none !important;
-                        display: block;
-                        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-                        cursor: pointer;
-                    }
-                    
-                    /* Efek Hover Mengambang Keemasan */
-                    .medieval-scroll-card:hover {
-                        transform: translateY(-4px) scale(1.02);
-                        border-color: #fbbf24 !important;
-                        border-top-color: #fbbf24 !important;
-                        box-shadow: 0 0 25px rgba(251, 191, 36, 0.6), inset 0 0 15px rgba(251, 191, 36, 0.2) !important;
-                    }
-                    
-                    /* Gaya Emoji */
-                    .scroll-emoji {
-                        font-size: 38px;
-                        line-height: 1;
-                        margin-bottom: 10px;
-                        display: inline-block;
-                        animation: floatScroll 2.5s infinite ease-in-out;
-                    }
-                    
-                    /* Gaya Judul Gulungan */
-                    .scroll-title {
-                        font-family: monospace;
-                        font-size: 15px;
-                        font-weight: bold;
-                        color: #fbbf24;
-                        margin-bottom: 8px;
-                    }
-                    
-                    /* Gaya Deskripsi Kuno */
-                    .scroll-desc {
-                        font-family: monospace;
-                        font-size: 12px;
-                        line-height: 1.5;
-                        color: #f1f5f9;
-                        margin: 0;
-                    }
-                    
-                    @keyframes floatScroll {
-                        0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 4px rgba(251,191,36,0.3)); }
-                        50% { transform: translateY(-5px) scale(1.05); filter: drop-shadow(0 0 12px rgba(251,191,36,0.7)); }
-                    }
-                </style>
-                
-                <div class="scroll-container">
-                    <!-- GULUNGAN 1: JURNAL BURUAN -->
-                    <a href="?go_to_page=buku_pencapaian" target="_self" class="medieval-scroll-card">
-                        <div class="scroll-emoji">📘</div>
-                        <div class="scroll-title">📜 JURNAL BURUAN INDIVIDU 📜</div>
-                        <div class="scroll-desc">Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin hasil buruan, tingkat level pahlawan, dan rekap performa penjualan harian Anda.</div>
-                    </a>
-                    
-                    <!-- GULUNGAN 2: KITAB MISI -->
-                    <a href="?go_to_page=buku_tugas" target="_self" class="medieval-scroll-card">
-                        <div class="scroll-emoji">🔮 ⚔️</div>
-                        <div class="scroll-title">📜 KITAB MISI & QUIZ GUILD 📜</div>
-                        <div class="scroll-desc">Cek papan pengumuman maklumat aliansi untuk memantau target pencapaian toko harian, daftar quest mingguan PSM, serta tantangan kuis berkala.</div>
-                    </a>
+            # Logika perpindahan halaman saat menerima sinyal dari gulungan HTML
+            if st.session_state["rpg_click_trigger"] == "buku_pencapaian":
+                st.session_state["rpg_click_trigger"] = "" # Reset trigger
+                st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
+                st.rerun()
+            elif st.session_state["rpg_click_trigger"] == "buku_tugas":
+                st.session_state["rpg_click_trigger"] = "" # Reset trigger
+                st.session_state["campaign_sub_page"] = "view_buku_tugas"
+                st.rerun()
+        
+            # --- 🎨 STRUKTUR HTML & CSS MURNI DI DALAM IFRAME ISOLASI ---
+            html_menu_code = """
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                    background: transparent;
+                    overflow: hidden;
+                }
+                .scroll-container {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 25px;
+                    width: 100%;
+                    max-width: 480px;
+                    margin: 0 auto;
+                    padding: 5px;
+                    box-sizing: border-box;
+                }
+                .medieval-scroll-card {
+                    background: linear-gradient(135deg, #0f172a 0%, #1e1b18 100%) !important;
+                    border: 2px solid #b45309 !important;
+                    border-top: 8px solid #d97706 !important;
+                    border-radius: 6px 6px 16px 16px !important;
+                    padding: 22px 20px !important;
+                    box-shadow: 0 0 20px rgba(180, 83, 9, 0.3), inset 0 0 15px rgba(251, 191, 36, 0.05) !important;
+                    text-align: center;
+                    display: block;
+                    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+                    cursor: pointer;
+                    user-select: none;
+                }
+                .medieval-scroll-card:hover {
+                    transform: translateY(-4px) scale(1.02);
+                    border-color: #fbbf24 !important;
+                    border-top-color: #fbbf24 !important;
+                    box-shadow: 0 0 25px rgba(251, 191, 36, 0.6), inset 0 0 15px rgba(251, 191, 36, 0.2) !important;
+                }
+                .scroll-emoji {
+                    font-size: 38px;
+                    line-height: 1;
+                    margin-bottom: 10px;
+                    display: inline-block;
+                    animation: floatScroll 2.5s infinite ease-in-out;
+                }
+                .scroll-title {
+                    font-family: monospace;
+                    font-size: 15px;
+                    font-weight: bold;
+                    color: #fbbf24;
+                    margin-bottom: 8px;
+                }
+                .scroll-desc {
+                    font-family: monospace;
+                    font-size: 12px;
+                    line-height: 1.5;
+                    color: #f1f5f9;
+                    margin: 0;
+                }
+                @keyframes floatScroll {
+                    0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 4px rgba(251,191,36,0.3)); }
+                    50% { transform: translateY(-5px) scale(1.05); filter: drop-shadow(0 0 12px rgba(251,191,36,0.7)); }
+                }
+            </style>
+            
+            <div class="scroll-container">
+                <!-- GULUNGAN 1: JURNAL BURUAN -->
+                <div class="medieval-scroll-card" onclick="kirimSinyal('buku_pencapaian')">
+                    <div class="scroll-emoji">📘</div>
+                    <div class="scroll-title">📜 JURNAL BURUAN INDIVIDU 📜</div>
+                    <div class="scroll-desc">Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin hasil buruan, tingkat level pahlawan, dan rekap performa penjualan harian Anda.</div>
                 </div>
-                """,
-                unsafe_allow_html=True
-            )
+                
+                <!-- GULUNGAN 2: KITAB MISI -->
+                <div class="medieval-scroll-card" onclick="kirimSinyal('buku_tugas')">
+                    <div class="scroll-emoji">🔮 ⚔️</div>
+                    <div class="scroll-title">📜 KITAB MISI & QUIZ GUILD 📜</div>
+                    <div class="scroll-desc">Cek papan pengumuman maklumat aliansi untuk memantau target pencapaian toko harian, daftar quest mingguan PSM, serta tantangan kuis berkala.</div>
+                </div>
+            </div>
+        
+            <script>
+                // Fungsi magis mengirim data langsung ke Python tanpa refresh URL dasar
+                function kirimSinyal(targetHalaman) {
+                    window.parent.postMessage({
+                        type: 'streamlit:setComponentValue',
+                        value: targetHalaman
+                    }, '*');
+                }
+            </script>
+            """
+        
+            # Memuat HTML Komponen secara terisolasi (Tinggi disesuaikan agar pas memuat 2 kartu di HP)
+            respon_klik = components.html(html_menu_code, height=440, scrolling=False)
+            
+            # Jika ada respon klik dari iframe, masukkan ke session_state trigger
+            if respon_klik:
+                st.session_state["rpg_click_trigger"] = respon_klik
+                st.rerun()
         
             # --- ↩️ TOMBOL KEMBALI KEMAH ---
             st.markdown("<br><hr style='border-color: rgba(251, 191, 36, 0.3); margin: 15px 0;'><br>", unsafe_allow_html=True)
-            st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
             if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_html_ver"):
                 st.session_state.current_camp_menu = "main"
                 st.rerun()
-            st.markdown("</div>", unsafe_allow_html=True)
          
             st.stop()
-
-
 
         # =========================================================================
         # 📘 JURNAL BURUAN INDIVIDU (PEMISAHAN RANKING: TINGKAT LEVEL = RANKING PPS, RANKING PENJUALAN = RANKING PSM)
