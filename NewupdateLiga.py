@@ -2105,14 +2105,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
                  
         # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (TAMPILAN ELEGAN MENGIKUTI PREPARATION CAMP)
+        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (3 GULUNGAN SEJAJAR PENUH & HALL OF FAME)
         # =========================================================================
         if st.session_state.get("campaign_sub_page", "resepsionis_utama") == "resepsionis_utama":
             
             st.markdown("<h2 class='guild-lobby-title' style='text-shadow: 0 0 15px rgba(251,191,36,0.5); color: #fef08a; text-align: center; font-family: monospace;'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub' style='color: #cbd5e1; text-align: center; font-family: monospace; margin-bottom: 30px;'>Pilih gulungan maklumat di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
         
-            # --- 🎨 SIHIR CSS: MENYELARASKAN DENGAN STYLE PREPARATION CAMP ANTA-BENTROK ---
+            # --- 🎨 SIHIR CSS: MEMAKSA TOMBOL AKSI MELEBAR SEJAJAR & PENUH DI MOBILE ---
             st.markdown(
                 """
                 <style>
@@ -2122,10 +2122,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         border: 2px solid #b45309 !important;
                         border-top: 6px solid #d97706 !important; /* Aksen kayu jepit atas */
                         border-radius: 12px !important;
-                        padding: 25px 20px 10px 20px !important;
-                        margin-bottom: 25px !important;
+                        padding: 25px 20px 15px 20px !important;
+                        margin-bottom: 0px !important; /* Dinetralkan agar menempel rapi dengan tombol bawahnya */
                         box-shadow: 0 4px 15px rgba(0,0,0,0.5), inset 0 0 15px rgba(251, 191, 36, 0.02) !important;
                         text-align: center;
+                        max-width: 480px;
+                        margin-left: auto;
+                        margin-right: auto;
                     }
                     
                     /* Animasi Emoji Mengambang Lembut */
@@ -2153,31 +2156,37 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         font-size: 12px;
                         line-height: 1.6;
                         color: #cbd5e1;
-                        margin-bottom: 15px;
+                        margin-bottom: 5px;
                     }
                     
-                    /* 🎯 RE-DESAIN KHUSUS TOMBOL NAVIGASI DI DALAM KARTU RESEPSIONIS */
-                    div.rpg-action-btn button {
+                    /* 🎯 BLOCK UTAMA UNTUK MEMAKSA TOMBOL MELEBAR SEJAJAR DENGAN KARTU DI ATASNYA */
+                    div.rpg-action-btn-block {
+                        max-width: 480px !important;
+                        margin: -2px auto 35px auto !important; /* Menarik tombol ke atas agar menyatu tanpa celah hampa */
+                        width: 100% !important;
+                        display: block !important;
+                    }
+                    
+                    div.rpg-action-btn-block button {
                         background: rgba(180, 83, 9, 0.15) !important;
-                        border: 1px solid #b45309 !important;
+                        border: 2px solid #b45309 !important;
+                        border-top: none !important; /* Menghilangkan border atas agar menyambung mulus dengan box */
+                        border-radius: 0px 0px 12px 12px !important; /* Membulatkan hanya sudut bawah */
                         color: #fde047 !important;
                         font-family: monospace !important;
-                        font-size: 12.5px !important;
+                        font-size: 13px !important;
                         font-weight: bold !important;
-                        padding: 8px 20px !important;
-                        border-radius: 6px !important;
+                        padding: 12px 20px !important;
                         transition: all 0.3s ease !important;
-                        margin: 0 auto !important;
+                        width: 100% !important; /* Paksa melebar 100% mengikuti kontainer */
                         display: block !important;
-                        width: auto !important; /* Tombol kecil proporsional di tengah */
                     }
                     
                     /* Efek Hover Tombol Aksi */
-                    div.rpg-action-btn button:hover {
+                    div.rpg-action-btn-block button:hover {
                         background: #b45309 !important;
                         color: #ffffff !important;
-                        box-shadow: 0 0 15px rgba(251, 191, 36, 0.4) !important;
-                        transform: translateY(-1px) !important;
+                        box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3) !important;
                     }
         
                     @keyframes floatScrollBtn {
@@ -2199,8 +2208,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 </div>
                 """, unsafe_allow_html=True
             )
-            # Penempatan Tombol Navigasi Persis di Bawah Kartu
-            st.markdown("<div class='rpg-action-btn' style='margin-top: -45px; margin-bottom: 35px;'>", unsafe_allow_html=True)
+            # Tombol Navigasi Panjang Sejajar Penuh
+            st.markdown("<div class='rpg-action-btn-block'>", unsafe_allow_html=True)
             if st.button("Buka Catatan ➔", key="btn_go_to_jurnal_buruan_camp_style"):
                 st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
                 st.rerun()
@@ -2217,23 +2226,43 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 </div>
                 """, unsafe_allow_html=True
             )
-            # Penempatan Tombol Navigasi Persis di Bawah Kartu
-            st.markdown("<div class='rpg-action-btn' style='margin-top: -45px; margin-bottom: 35px;'>", unsafe_allow_html=True)
+            # Tombol Navigasi Panjang Sejajar Penuh
+            st.markdown("<div class='rpg-action-btn-block'>", unsafe_allow_html=True)
             if st.button("Periksa Kitab ➔", key="btn_go_to_kitab_misi_camp_style"):
                 st.session_state["campaign_sub_page"] = "view_buku_tugas"
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
         
         
+            # --- 🏗️ KARTU 3: HALL OF FAME (GULUNGAN BARU) ---
+            st.markdown(
+                """
+                <div class='rpg-card-box'>
+                    <div class='rpg-card-emoji'>🏆 ✨</div>
+                    <div class='rpg-card-title'>HALL OF FAME ALIANSI</div>
+                    <div class='rpg-card-desc'>Lihat papan prasasti pahlawan tertinggi untuk memeriksa daftar peringkat petualang legendaris yang memiliki akumulasi buruan paling perkasa musim ini.</div>
+                </div>
+                """, unsafe_allow_html=True
+            )
+            # Tombol Navigasi Panjang Sejajar Penuh
+            st.markdown("<div class='rpg-action-btn-block'>", unsafe_allow_html=True)
+            if st.button("Lihat Papan Peringkat ➔", key="btn_go_to_hall_of_fame"):
+                # Silakan sesuaikan target string halaman hall of fame Anda di bawah ini
+                st.session_state["campaign_sub_page"] = "view_hall_of_fame"
+                st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
+        
+        
             # --- ↩️ TOMBOL KEMBALI KEMAH ---
             st.markdown("<br><hr style='border-color: rgba(251, 191, 36, 0.3); margin: 15px 0;'><br>", unsafe_allow_html=True)
-            st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
+            st.markdown("<div class='rpg-back-btn-box' style='max-width: 480px; margin: 0 auto;'>", unsafe_allow_html=True)
             if st.button("⬅️ KEMBALI KE BERANDA KOTA", use_container_width=True, key="btn_exit_reception_lobby_camp_style"):
                 st.session_state.current_camp_menu = "main"
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
          
             st.stop()
+
 
         # =========================================================================
         # 📘 JURNAL BURUAN INDIVIDU (PEMISAHAN RANKING: TINGKAT LEVEL = RANKING PPS, RANKING PENJUALAN = RANKING PSM)
