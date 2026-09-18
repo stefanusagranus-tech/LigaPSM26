@@ -3121,8 +3121,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             st.stop()
     
-        # =========================================================================
-        # 👑 HALAMAN 3A: HALL OF FAME PSM (FASE 4 - HYBRID + DETAIL)
+               # =========================================================================
+        # 👑 HALAMAN 3A: HALL OF FAME PSM (FASE A - CAROUSEL SNAP + KARTU KLIK)
         # =========================================================================
         elif (
             st.session_state.get("campaign_sub_page") == "view_hall_of_fame"
@@ -3131,12 +3131,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             url_gambar_latar = "https://i.imgur.com/kMo29aW.jpeg"
 
-            # ==== DUMMY DATA — 9 PERSONIL ====
-            # Struktur: {key: {"nama": str, "badge": str, "data": [(nama, qty), ...]}}
+            # ==== DUMMY DATA — 6 KARTU ====
             if "hof_dummy_data" not in st.session_state:
                 st.session_state["hof_dummy_data"] = {
-                    "kartu1": {
-                        "badge": "📅 16 - 23 SEP 2026",
+                    "periode_1": {
+                        "label": "📅 16 - 23 SEP 2026",
+                        "short": "PERIODE 1",
                         "alltime": False,
                         "data": [
                             ("ADELIA PRATIWI", 46),
@@ -3152,8 +3152,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         "top_item": "MINYAK GORENG 2L",
                         "top_item_qty": 8,
                     },
-                    "kartu2": {
-                        "badge": "📅 08 - 15 SEP 2026",
+                    "periode_2": {
+                        "label": "📅 08 - 15 SEP 2026",
+                        "short": "PERIODE 2",
                         "alltime": False,
                         "data": [
                             ("RIZKI GUNAWAN", 52),
@@ -3169,8 +3170,63 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         "top_item": "BERAS PREMIUM 5KG",
                         "top_item_qty": 6,
                     },
-                    "kartu3": {
-                        "badge": "🏆 ALL TIME",
+                    "periode_3": {
+                        "label": "📅 01 - 07 SEP 2026",
+                        "short": "PERIODE 3",
+                        "alltime": False,
+                        "data": [
+                            ("TIKA", 38),
+                            ("ILHAM PRIANDIKA", 35),
+                            ("ADELIA PRATIWI", 30),
+                            ("RIZKI GUNAWAN", 25),
+                            ("SUBEKTI PANDU YULIANTO", 22),
+                            ("ARIS APRILIANTO", 18),
+                            ("KUSDEWI TIA NINGRUM", 14),
+                            ("AHMAD ZAKI SYABANI ZEN", 10),
+                            ("REZA PURNAMA AGUSTIN", 7),
+                        ],
+                        "top_item": "GULA PASIR 1KG",
+                        "top_item_qty": 9,
+                    },
+                    "periode_4": {
+                        "label": "📅 24 - 31 AUG 2026",
+                        "short": "PERIODE 4",
+                        "alltime": False,
+                        "data": [
+                            ("ILHAM PRIANDIKA", 48),
+                            ("TIKA", 42),
+                            ("RIZKI GUNAWAN", 36),
+                            ("ADELIA PRATIWI", 30),
+                            ("ARIS APRILIANTO", 24),
+                            ("SUBEKTI PANDU YULIANTO", 18),
+                            ("KUSDEWI TIA NINGRUM", 14),
+                            ("REZA PURNAMA AGUSTIN", 10),
+                            ("AHMAD ZAKI SYABANI ZEN", 6),
+                        ],
+                        "top_item": "TEPUNG SEGITIGA",
+                        "top_item_qty": 7,
+                    },
+                    "bulanan": {
+                        "label": "📆 SEPTEMBER 2026",
+                        "short": "BULANAN",
+                        "alltime": False,
+                        "data": [
+                            ("ADELIA PRATIWI", 120),
+                            ("RIZKI GUNAWAN", 115),
+                            ("TIKA", 105),
+                            ("ILHAM PRIANDIKA", 85),
+                            ("ARIS APRILIANTO", 61),
+                            ("SUBEKTI PANDU YULIANTO", 42),
+                            ("KUSDEWI TIA NINGRUM", 32),
+                            ("AHMAD ZAKI SYABANI ZEN", 24),
+                            ("REZA PURNAMA AGUSTIN", 19),
+                        ],
+                        "top_item": "MINYAK GORENG 2L",
+                        "top_item_qty": 22,
+                    },
+                    "alltime": {
+                        "label": "🏆 ALL TIME",
+                        "short": "ALL TIME",
                         "alltime": True,
                         "data": [
                             ("TIKA", 189),
@@ -3190,11 +3246,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             data_dummy = st.session_state["hof_dummy_data"]
 
-            # ==== STATE: PERIODE YANG DIPILIH ====
+            # ==== STATE ====
             if "hof_selected_period" not in st.session_state:
-                st.session_state["hof_selected_period"] = None
+                st.session_state["hof_selected_period"] = "periode_1"
+            if "hof_detail_open" not in st.session_state:
+                st.session_state["hof_detail_open"] = False
 
-            # ==== FUNGSI: AVATAR AUTO-HASH ====
+            # ==== FUNGSI AVATAR AUTO-HASH ====
             import hashlib
             def get_avatar(name):
                 list_avatar_rpg = [
@@ -3207,358 +3265,257 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             # ==== CSS ====
             st.markdown("""
-                <style>
-                @keyframes hofTitleGlow {
-                    0%, 100% { text-shadow: 0 0 15px rgba(251, 191, 36, 0.5); }
-                    50% { text-shadow: 0 0 25px rgba(251, 191, 36, 0.9), 0 0 40px rgba(251, 191, 36, 0.5); }
-                }
-                @keyframes crownFloat {
-                    0%, 100% { transform: translateY(0) rotate(0deg); filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.7)); }
-                    50% { transform: translateY(-6px) rotate(-3deg); filter: drop-shadow(0 0 25px rgba(251, 191, 36, 1)); }
-                }
-                @keyframes sparkleFloat1 {
-                    0%, 100% { transform: translateY(0) scale(0.8); opacity: 0.5; }
-                    50% { transform: translateY(-10px) scale(1.2); opacity: 1; }
-                }
-                @keyframes sparkleFloat2 {
-                    0%, 100% { transform: translateY(-5px) scale(1); opacity: 0.7; }
-                    50% { transform: translateY(5px) scale(0.8); opacity: 0.3; }
-                }
-                @keyframes avatarBob {
-                    0%, 100% { transform: translateY(0); }
-                    50% { transform: translateY(-3px); }
-                }
-                @keyframes cardEnter {
-                    0% { opacity: 0; transform: translateY(30px) scale(0.95); }
-                    100% { opacity: 1; transform: translateY(0) scale(1); }
-                }
-                @keyframes cardGlow {
-                    0%, 100% { box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 15px rgba(212, 175, 55, 0.3); }
-                    50% { box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 35px rgba(212, 175, 55, 0.6); }
-                }
-                @keyframes panelEnter {
-                    0% { opacity: 0; transform: translateY(30px); }
-                    100% { opacity: 1; transform: translateY(0); }
-                }
-                @keyframes podiumPop {
-                    0% { transform: scaleY(0); opacity: 0; }
-                    100% { transform: scaleY(1); opacity: 1; }
-                }
+            <style>
+            @keyframes hofTitleGlow {
+                0%, 100% { text-shadow: 0 0 15px rgba(251, 191, 36, 0.5); }
+                50% { text-shadow: 0 0 25px rgba(251, 191, 36, 0.9), 0 0 40px rgba(251, 191, 36, 0.5); }
+            }
+            @keyframes crownFloat {
+                0%, 100% { transform: translateY(0) rotate(0deg); filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.7)); }
+                50% { transform: translateY(-6px) rotate(-3deg); filter: drop-shadow(0 0 25px rgba(251, 191, 36, 1)); }
+            }
+            @keyframes sparkleFloat1 {
+                0%, 100% { transform: translateY(0) scale(0.8); opacity: 0.5; }
+                50% { transform: translateY(-10px) scale(1.2); opacity: 1; }
+            }
+            @keyframes sparkleFloat2 {
+                0%, 100% { transform: translateY(-5px) scale(1); opacity: 0.7; }
+                50% { transform: translateY(5px) scale(0.8); opacity: 0.3; }
+            }
+            @keyframes avatarBob {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-3px); }
+            }
+            @keyframes cardEnter {
+                0% { opacity: 0; transform: translateY(30px) scale(0.95); }
+                100% { opacity: 1; transform: translateY(0) scale(1); }
+            }
+            @keyframes cardGlow {
+                0%, 100% { box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 15px rgba(212, 175, 55, 0.3); }
+                50% { box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 35px rgba(212, 175, 55, 0.6); }
+            }
 
-                .hof-page-title {
-                    text-align: center; color: #fef08a; font-family: monospace;
-                    font-size: 22px; font-weight: 900;
-                    margin: 0 0 5px 0;
-                    animation: hofTitleGlow 3s infinite ease-in-out;
-                }
-                .hof-page-sub {
-                    text-align: center; color: #cbd5e1; font-family: monospace;
-                    font-size: 11.5px; margin-bottom: 25px;
-                }
+            .hof-page-title {
+                text-align: center; color: #fef08a; font-family: monospace;
+                font-size: 22px; font-weight: 900; margin: 0 0 5px 0;
+                animation: hofTitleGlow 3s infinite ease-in-out;
+            }
+            .hof-page-sub {
+                text-align: center; color: #cbd5e1; font-family: monospace;
+                font-size: 11.5px; margin-bottom: 25px;
+            }
 
-                /* CAROUSEL */
-                .hof-carousel-wrapper {
-                    display: flex;
-                    flex-direction: row;
-                    flex-wrap: nowrap;
-                    gap: 14px;
-                    padding: 15px 10px 25px 10px;
-                    justify-content: center;
-                    overflow-x: auto;
-                    overflow-y: visible;
-                    scroll-snap-type: x mandatory;
-                    -webkit-overflow-scrolling: touch;
-                    scrollbar-width: thin;
-                    width: 100%;
-                    box-sizing: border-box;
-                }
-                .hof-carousel-wrapper::-webkit-scrollbar { height: 8px; }
-                .hof-carousel-wrapper::-webkit-scrollbar-track {
-                    background: rgba(15, 23, 42, 0.5); border-radius: 4px;
-                }
-                .hof-carousel-wrapper::-webkit-scrollbar-thumb {
-                    background: linear-gradient(90deg, #b45309, #fbbf24, #b45309);
-                    border-radius: 4px;
-                }
-                .hof-card {
-                    flex: 0 0 auto;
-                    width: 260px;
-                    min-width: 260px;
-                    max-width: 260px;
-                    min-height: 400px;
-                    scroll-snap-align: center;
-                    position: relative;
-                    background: linear-gradient(160deg, #0f172a 0%, #1a1410 50%, #0f172a 100%);
-                    border-radius: 18px;
-                    padding: 3px;
-                    animation: cardEnter 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards,
-                            cardGlow 4s infinite ease-in-out 1s;
-                    box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 15px rgba(212, 175, 55, 0.3);
-                }
-                .hof-card-inner {
-                    background: linear-gradient(160deg, #0a0d1a 0%, #15110a 100%);
-                    border: 2px solid #d4af37;
-                    border-radius: 16px;
-                    padding: 20px 18px 18px 18px;
-                    position: relative;
-                    min-height: 394px;
-                    box-shadow: inset 0 0 20px rgba(212, 175, 55, 0.08);
-                }
-                .hof-ornament {
-                    position: absolute; color: #d4af37; font-size: 14px; line-height: 1;
-                    filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.8)); z-index: 5;
-                }
-                .hof-orn-tl { top: 6px; left: 8px; }
-                .hof-orn-tr { top: 6px; right: 8px; }
-                .hof-orn-bl { bottom: 6px; left: 8px; }
-                .hof-orn-br { bottom: 6px; right: 8px; }
-                .hof-period-badge {
-                    text-align: center;
-                    background: linear-gradient(90deg, rgba(180, 83, 9, 0.4), rgba(251, 191, 36, 0.3), rgba(180, 83, 9, 0.4));
-                    border: 1px solid #d4af37; border-radius: 8px;
-                    padding: 6px 10px; font-family: monospace;
-                    font-size: 10px; font-weight: 900; color: #fef08a;
-                    letter-spacing: 1px; margin-bottom: 15px;
-                    text-shadow: 0 0 6px rgba(254, 240, 138, 0.5);
-                }
-                .hof-crown-box { text-align: center; position: relative; height: 55px; margin-bottom: 5px; }
-                .hof-crown {
-                    font-size: 38px; display: inline-block;
-                    animation: crownFloat 2.5s infinite ease-in-out;
-                }
-                .hof-sparkle { position: absolute; color: #fef08a; font-size: 12px; filter: drop-shadow(0 0 6px #fbbf24); }
-                .hof-sparkle-1 { top: 5px; left: 60px; animation: sparkleFloat1 2s infinite ease-in-out; }
-                .hof-sparkle-2 { top: 15px; right: 60px; animation: sparkleFloat2 2.3s infinite ease-in-out 0.3s; }
-                .hof-sparkle-3 { bottom: 0px; left: 90px; animation: sparkleFloat1 2.6s infinite ease-in-out 0.7s; }
-                .hof-avatar-wrapper { text-align: center; margin: 8px 0 12px 0; }
-                .hof-avatar-circle {
-                    display: inline-flex; justify-content: center; align-items: center;
-                    width: 62px; height: 62px; border-radius: 50%;
-                    background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
-                    border: 2.5px solid #d4af37; font-size: 30px;
-                    box-shadow: 0 0 15px rgba(212, 175, 55, 0.5), inset 0 0 10px rgba(0, 0, 0, 0.6);
-                    animation: avatarBob 2.5s infinite ease-in-out;
-                }
-                .hof-champion-name {
-                    text-align: center; font-family: monospace; font-size: 14px; font-weight: 900;
-                    color: #ffffff; letter-spacing: 0.5px; margin-bottom: 5px;
-                    text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
-                    line-height: 1.2; word-break: break-word;
-                }
-                .hof-champion-qty {
-                    text-align: center; font-family: monospace; font-size: 15px; font-weight: 900;
-                    color: #fbbf24; margin-bottom: 12px;
-                    text-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
-                }
-                .hof-card-divider {
-                    height: 1px;
-                    background: linear-gradient(90deg, transparent, #d4af37, transparent);
-                    margin: 10px 0 12px 0; opacity: 0.6;
-                }
-                .hof-top-item-label {
-                    text-align: center; font-family: monospace; font-size: 9px; color: #94a3b8;
-                    letter-spacing: 1px; margin-bottom: 5px; text-transform: uppercase;
-                }
-                .hof-top-item-name {
-                    text-align: center; font-family: monospace; font-size: 11px; font-weight: bold;
-                    color: #cbd5e1; line-height: 1.3; margin-bottom: 3px; padding: 0 5px;
-                    word-break: break-word;
-                }
-                .hof-top-item-qty {
-                    text-align: center; font-family: monospace; font-size: 10px; color: #10b981;
-                    font-weight: bold; margin-bottom: 15px;
-                }
-                .hof-detail-btn {
-                    display: block;
-                    background: linear-gradient(135deg, rgba(180, 83, 9, 0.5), rgba(251, 191, 36, 0.25), rgba(180, 83, 9, 0.5));
-                    border: 2px solid #d4af37; border-radius: 10px; padding: 10px;
-                    text-align: center; font-family: monospace; font-size: 11px; font-weight: 900;
-                    color: #fef08a; letter-spacing: 1.5px;
-                    text-shadow: 0 0 6px rgba(254, 240, 138, 0.6);
-                    cursor: pointer; transition: all 0.3s ease;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.4), inset 0 0 10px rgba(212, 175, 55, 0.1);
-                    margin-top: 15px;
-                }
-                .hof-card-alltime .hof-period-badge {
-                    background: linear-gradient(90deg, rgba(212, 175, 55, 0.5), rgba(254, 240, 138, 0.4), rgba(212, 175, 55, 0.5));
-                    color: #0f172a; text-shadow: none;
-                }
-                .hof-card-alltime .hof-crown {
-                    filter: drop-shadow(0 0 25px rgba(251, 191, 36, 1)) drop-shadow(0 0 40px rgba(251, 191, 36, 0.6));
-                }
+            .hof-carousel-wrapper {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                gap: 14px;
+                padding: 15px 10px 25px 10px;
+                justify-content: flex-start;
+                overflow-x: auto;
+                overflow-y: visible;
+                scroll-snap-type: x mandatory;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .hof-carousel-wrapper::-webkit-scrollbar { display: none; }
 
-                /* PANEL DETAIL */
-                .hof-panel-wrapper {
-                    background: linear-gradient(160deg, #0a0d1a 0%, #15110a 100%);
-                    border: 2px solid #d4af37;
-                    border-radius: 16px;
-                    padding: 22px 18px;
-                    margin-top: 15px;
-                    box-shadow: 0 8px 30px rgba(0,0,0,0.7), inset 0 0 25px rgba(212, 175, 55, 0.08);
-                    animation: panelEnter 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-                    position: relative;
-                }
-                .hof-panel-ornament {
-                    position: absolute; color: #d4af37; font-size: 16px; line-height: 1;
-                    filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.9));
-                }
-                .hof-panel-orn-tl { top: 8px; left: 10px; }
-                .hof-panel-orn-tr { top: 8px; right: 10px; }
-                .hof-panel-orn-bl { bottom: 8px; left: 10px; }
-                .hof-panel-orn-br { bottom: 8px; right: 10px; }
-                .hof-panel-title {
-                    text-align: center; color: #fbbf24; font-family: monospace;
-                    font-size: 16px; font-weight: 900;
-                    text-shadow: 0 0 12px rgba(251, 191, 36, 0.6);
-                    margin: 0 0 3px 0; letter-spacing: 1px;
-                }
-                .hof-panel-sub {
-                    text-align: center; color: #94a3b8; font-family: monospace;
-                    font-size: 11px; margin-bottom: 20px; font-style: italic;
-                }
-                .hof-panel-divider {
-                    height: 2px;
-                    background: linear-gradient(90deg, transparent, #d4af37, transparent);
-                    margin: 15px 0;
-                    opacity: 0.6;
-                }
+            .hof-card {
+                flex: 0 0 auto;
+                width: 260px;
+                min-width: 260px;
+                max-width: 260px;
+                min-height: 400px;
+                scroll-snap-align: center;
+                position: relative;
+                background: linear-gradient(160deg, #0f172a 0%, #1a1410 50%, #0f172a 100%);
+                border-radius: 18px;
+                padding: 3px;
+                animation: cardEnter 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards,
+                        cardGlow 4s infinite ease-in-out 1s;
+                box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 15px rgba(212, 175, 55, 0.3);
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+            }
+            .hof-card-inner {
+                background: linear-gradient(160deg, #0a0d1a 0%, #15110a 100%);
+                border: 2px solid #d4af37;
+                border-radius: 16px;
+                padding: 20px 18px 18px 18px;
+                position: relative;
+                min-height: 394px;
+                box-shadow: inset 0 0 20px rgba(212, 175, 55, 0.08);
+            }
+            .hof-ornament {
+                position: absolute; color: #d4af37; font-size: 14px; line-height: 1;
+                filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.8)); z-index: 5;
+            }
+            .hof-orn-tl { top: 6px; left: 8px; }
+            .hof-orn-tr { top: 6px; right: 8px; }
+            .hof-orn-bl { bottom: 6px; left: 8px; }
+            .hof-orn-br { bottom: 6px; right: 8px; }
+            .hof-period-badge {
+                text-align: center;
+                background: linear-gradient(90deg, rgba(180, 83, 9, 0.4), rgba(251, 191, 36, 0.3), rgba(180, 83, 9, 0.4));
+                border: 1px solid #d4af37; border-radius: 8px;
+                padding: 6px 10px; font-family: monospace;
+                font-size: 10px; font-weight: 900; color: #fef08a;
+                letter-spacing: 1px; margin-bottom: 15px;
+                text-shadow: 0 0 6px rgba(254, 240, 138, 0.5);
+            }
+            .hof-crown-box { text-align: center; position: relative; height: 55px; margin-bottom: 5px; }
+            .hof-crown { font-size: 38px; display: inline-block; animation: crownFloat 2.5s infinite ease-in-out; }
+            .hof-sparkle { position: absolute; color: #fef08a; font-size: 12px; filter: drop-shadow(0 0 6px #fbbf24); }
+            .hof-sparkle-1 { top: 5px; left: 60px; animation: sparkleFloat1 2s infinite ease-in-out; }
+            .hof-sparkle-2 { top: 15px; right: 60px; animation: sparkleFloat2 2.3s infinite ease-in-out 0.3s; }
+            .hof-sparkle-3 { bottom: 0px; left: 90px; animation: sparkleFloat1 2.6s infinite ease-in-out 0.7s; }
+            .hof-avatar-wrapper { text-align: center; margin: 8px 0 12px 0; }
+            .hof-avatar-circle {
+                display: inline-flex; justify-content: center; align-items: center;
+                width: 62px; height: 62px; border-radius: 50%;
+                background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
+                border: 2.5px solid #d4af37; font-size: 30px;
+                box-shadow: 0 0 15px rgba(212, 175, 55, 0.5), inset 0 0 10px rgba(0, 0, 0, 0.6);
+                animation: avatarBob 2.5s infinite ease-in-out;
+            }
+            .hof-champion-name {
+                text-align: center; font-family: monospace; font-size: 14px; font-weight: 900;
+                color: #ffffff; letter-spacing: 0.5px; margin-bottom: 5px;
+                text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+                line-height: 1.2; word-break: break-word;
+            }
+            .hof-champion-qty {
+                text-align: center; font-family: monospace; font-size: 15px; font-weight: 900;
+                color: #fbbf24; margin-bottom: 12px;
+                text-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
+            }
+            .hof-card-divider {
+                height: 1px; background: linear-gradient(90deg, transparent, #d4af37, transparent);
+                margin: 10px 0 12px 0; opacity: 0.6;
+            }
+            .hof-top-item-label {
+                text-align: center; font-family: monospace; font-size: 9px; color: #94a3b8;
+                letter-spacing: 1px; margin-bottom: 5px; text-transform: uppercase;
+            }
+            .hof-top-item-name {
+                text-align: center; font-family: monospace; font-size: 11px; font-weight: bold;
+                color: #cbd5e1; line-height: 1.3; margin-bottom: 3px; padding: 0 5px;
+                word-break: break-word;
+            }
+            .hof-top-item-qty {
+                text-align: center; font-family: monospace; font-size: 10px; color: #10b981;
+                font-weight: bold; margin-bottom: 15px;
+            }
+            .hof-card-alltime .hof-period-badge {
+                background: linear-gradient(90deg, rgba(212, 175, 55, 0.5), rgba(254, 240, 138, 0.4), rgba(212, 175, 55, 0.5));
+                color: #0f172a; text-shadow: none;
+            }
+            .hof-card-alltime .hof-crown {
+                filter: drop-shadow(0 0 25px rgba(251, 191, 36, 1)) drop-shadow(0 0 40px rgba(251, 191, 36, 0.6));
+            }
 
-                /* PODIUM */
-                .podium-wrapper {
-                    display: flex; align-items: flex-end; justify-content: center;
-                    gap: 8px; margin-top: 15px; margin-bottom: 10px; width: 100%;
-                }
-                .podium-slot {
-                    flex: 1; display: flex; flex-direction: column;
-                    align-items: center; text-align: center; min-width: 0;
-                    animation: podiumPop 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-                    transform-origin: bottom center;
-                }
-                .podium-slot:nth-child(1) { animation-delay: 0.1s; }
-                .podium-slot:nth-child(2) { animation-delay: 0s; }
-                .podium-slot:nth-child(3) { animation-delay: 0.2s; }
-                .podium-card {
-                    width: 100%; border-radius: 8px 8px 0 0; padding: 10px 6px;
-                    box-sizing: border-box; display: flex; flex-direction: column;
-                    align-items: center; justify-content: flex-start;
-                    box-shadow: 0 -3px 10px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.4);
-                    position: relative;
-                }
-                .podium-1 { height: 200px; background: linear-gradient(180deg, #fef08a 0%, #d97706 100%); border: 2.5px solid #78350f; border-bottom: none; }
-                .podium-2 { height: 165px; background: linear-gradient(180deg, #f8fafc 0%, #64748b 100%); border: 2.5px solid #334155; border-bottom: none; }
-                .podium-3 { height: 140px; background: linear-gradient(180deg, #ffedd5 0%, #c2410c 100%); border: 2.5px solid #7c2d12; border-bottom: none; }
-                .podium-rank-tag { font-size: 16px; font-weight: 900; color: #1e1b4b; }
-                .podium-avatar {
-                    display: inline-flex; justify-content: center; align-items: center;
-                    width: 42px; height: 42px; border-radius: 50%;
-                    background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
-                    border: 2px solid #78350f; font-size: 22px; margin: 4px 0;
-                    box-shadow: 0 0 8px rgba(0,0,0,0.4);
-                }
-                .podium-name {
-                    font-size: 10px; font-weight: 800; color: #0f172a;
-                    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-                    max-width: 95%; margin-top: 3px;
-                    background: rgba(255, 255, 255, 0.6);
-                    padding: 2px 5px; border-radius: 4px;
-                }
-                .podium-score {
-                    font-size: 13px; font-weight: 900; color: #1e1103; margin-top: 4px;
-                    text-shadow: 0px 1px 0px rgba(255,255,255,0.6);
-                }
+            .hof-card.hof-card-selected {
+                transform: scale(1.05) translateY(-5px);
+                box-shadow: 0 12px 35px rgba(0,0,0,0.8), 0 0 45px rgba(251, 191, 36, 0.8);
+                border: 3px solid #fbbf24;
+            }
 
-                /* LIST RANKING 4-9 */
-                .hof-ranking-list { display: flex; flex-direction: column; gap: 6px; margin-top: 15px; }
-                .hof-ranking-row {
-                    display: flex; justify-content: space-between; align-items: center;
-                    padding: 9px 12px; border: 1.5px solid #475569;
-                    background: rgba(15, 23, 42, 0.7); border-radius: 6px;
-                    color: #e2e8f0; font-size: 12px; font-family: monospace;
-                    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-                }
-                .hof-ranking-row-left { display: flex; align-items: center; gap: 8px; }
-                .hof-ranking-avatar { font-size: 18px; }
-                .hof-ranking-name { font-weight: bold; }
-                .hof-ranking-score { font-weight: 900; color: #fbbf24; }
+            div[data-testid="stButton"] {
+                max-width: 480px !important;
+                margin: 6px auto 10px auto !important;
+                padding: 0 !important;
+            }
+            div[data-testid="stButton"] > button {
+                border-radius: 12px !important;
+                font-family: monospace !important;
+                font-size: 12px !important;
+                font-weight: bold !important;
+                padding: 11px 16px !important;
+                width: 100% !important;
+                display: block !important;
+                transition: all 0.3s ease !important;
+            }
+            .st-key-btn_hof_psm_back button {
+                background: rgba(100, 116, 139, 0.15) !important;
+                border: 2px solid #475569 !important;
+                color: #cbd5e1 !important;
+            }
+            .st-key-btn_hof_psm_back button:hover {
+                background: #475569 !important; color: #ffffff !important;
+            }
 
-                /* TOMBOL */
-                div[data-testid="stButton"] {
-                    max-width: 480px !important;
-                    margin: 8px auto 12px auto !important;
-                    padding: 0 !important;
-                }
-                div[data-testid="stButton"] > button {
-                    border-radius: 12px !important;
-                    font-family: monospace !important;
-                    font-size: 12px !important;
-                    font-weight: bold !important;
-                    padding: 11px 16px !important;
-                    width: 100% !important;
-                    display: block !important;
-                    transition: all 0.3s ease !important;
-                }
-                .st-key-btn_hof_psm_back button {
-                    background: rgba(100, 116, 139, 0.15) !important;
-                    border: 2px solid #475569 !important;
-                    color: #cbd5e1 !important;
-                }
-                .st-key-btn_hof_psm_back button:hover {
-                    background: #475569 !important; color: #ffffff !important;
-                }
-                .st-key-btn_close_detail button {
-                    background: rgba(239, 68, 68, 0.15) !important;
-                    border: 2px solid #ef4444 !important;
-                    color: #fca5a5 !important;
-                    margin-top: 15px !important;
-                }
-                .st-key-btn_close_detail button:hover {
-                    background: #ef4444 !important; color: #ffffff !important;
-                    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.5) !important;
-                }
+            .st-key-btn_open_detail button {
+                background: linear-gradient(135deg, rgba(180, 83, 9, 0.6), rgba(251, 191, 36, 0.4), rgba(180, 83, 9, 0.6)) !important;
+                border: 2px solid #fbbf24 !important;
+                color: #fef08a !important;
+                font-size: 13px !important;
+                padding: 14px 20px !important;
+                letter-spacing: 1.5px !important;
+                text-shadow: 0 0 8px rgba(254, 240, 138, 0.8) !important;
+                box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4) !important;
+            }
+            .st-key-btn_open_detail button:hover {
+                background: #fbbf24 !important;
+                color: #0f172a !important;
+                box-shadow: 0 6px 25px rgba(251, 191, 36, 0.9) !important;
+                text-shadow: none !important;
+            }
 
-                /* MEDIA QUERIES */
-                @media (min-width: 900px) {
-                    .hof-carousel-wrapper {
-                        flex-wrap: wrap; justify-content: center; overflow-x: visible;
-                    }
-                    .hof-card { width: 280px; min-width: 280px; max-width: 280px; }
-                }
-                @media (max-width: 600px) {
-                    .hof-card { width: 240px; min-width: 240px; max-width: 240px; }
-                    .hof-carousel-wrapper {
-                        justify-content: flex-start;
-                        padding-left: 15px; padding-right: 15px;
-                    }
-                    .podium-1 { height: 175px; }
-                    .podium-2 { height: 145px; }
-                    .podium-3 { height: 125px; }
-                }
-                @media (max-width: 380px) {
-                    .hof-card { width: 220px; min-width: 220px; max-width: 220px; }
-                }
-                </style>
-                """, unsafe_allow_html=True)
+            /* Tombol pemilih kartu kecil */
+            .st-key-btn_sel_periode_1 button,
+            .st-key-btn_sel_periode_2 button,
+            .st-key-btn_sel_periode_3 button,
+            .st-key-btn_sel_periode_4 button,
+            .st-key-btn_sel_bulanan button,
+            .st-key-btn_sel_alltime button {
+                background: rgba(180, 83, 9, 0.2) !important;
+                border: 1.5px solid #b45309 !important;
+                color: #fde047 !important;
+                font-size: 10px !important;
+                padding: 8px 4px !important;
+                border-radius: 8px !important;
+            }
+            .st-key-btn_sel_periode_1 button:hover,
+            .st-key-btn_sel_periode_2 button:hover,
+            .st-key-btn_sel_periode_3 button:hover,
+            .st-key-btn_sel_periode_4 button:hover,
+            .st-key-btn_sel_bulanan button:hover,
+            .st-key-btn_sel_alltime button:hover {
+                background: #b45309 !important;
+                color: #ffffff !important;
+            }
 
+            @media (max-width: 600px) {
+                .hof-card { width: 240px; min-width: 240px; max-width: 240px; }
+            }
+            @media (max-width: 380px) {
+                .hof-card { width: 220px; min-width: 220px; max-width: 220px; }
+            }
+            </style>
+            """, unsafe_allow_html=True)
+
+            # ==== BACKGROUND ====
             st.markdown(
                 f"""
-                    <style>
-                    .stApp {{
-                        background-image: linear-gradient(rgba(10, 13, 26, 0.85), rgba(10, 13, 26, 0.92)), url("{url_gambar_latar}") !important;
-                        background-size: cover !important;
-                        background-position: center !important;
-                        background-repeat: no-repeat !important;
-                        background-attachment: fixed !important;
-                    }}
-                    .main .block-container {{
-                        background-color: transparent !important;
-                        max-width: 900px !important;
-                        padding-top: 3% !important;
-                        padding-left: 8px !important;
-                        padding-right: 8px !important;
-                    }}
-                    div[data-testid="stVerticalBlock"] {{ gap: 0rem !important; }}
-                    </style>
-                    """,
+                <style>
+                .stApp {{
+                    background-image: linear-gradient(rgba(10, 13, 26, 0.85), rgba(10, 13, 26, 0.92)), url("{url_gambar_latar}") !important;
+                    background-size: cover !important;
+                    background-position: center !important;
+                    background-repeat: no-repeat !important;
+                    background-attachment: fixed !important;
+                }}
+                .main .block-container {{
+                    background-color: transparent !important;
+                    max-width: 900px !important;
+                    padding-top: 3% !important;
+                    padding-left: 8px !important;
+                    padding-right: 8px !important;
+                }}
+                div[data-testid="stVerticalBlock"] {{ gap: 0rem !important; }}
+                </style>
+                """,
                 unsafe_allow_html=True
             )
 
@@ -3566,22 +3523,26 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.markdown("<h2 class='hof-page-title'>👑 HALL OF FAME PSM 👑</h2>", unsafe_allow_html=True)
             st.markdown("<p class='hof-page-sub'>Peringkat penjualan item terbaik per periode</p>", unsafe_allow_html=True)
 
-            # ==== CAROUSEl KARTU ====
+            # ==== CAROUSEL KARTU (6 KARTU) ====
+            urutan_kartu = ["periode_1", "periode_2", "periode_3", "periode_4", "bulanan", "alltime"]
+            selected_key = st.session_state.get("hof_selected_period") or "periode_1"
+
             kartu_parts = ["<div class='hof-carousel-wrapper'>"]
-            for key in ["kartu1", "kartu2", "kartu3"]:
+            for key in urutan_kartu:
                 d = data_dummy[key]
                 top1_name, top1_qty = d["data"][0]
                 top1_avatar = get_avatar(top1_name)
                 alltime_class = "hof-card-alltime" if d["alltime"] else ""
+                selected_class = "hof-card-selected" if key == selected_key else ""
 
                 kartu_parts.append(
-                    "<div class='hof-card " + alltime_class + "'>"
+                    "<div class='hof-card " + alltime_class + " " + selected_class + "'>"
                     "<div class='hof-card-inner'>"
                     "<div class='hof-ornament hof-orn-tl'>⚜️</div>"
                     "<div class='hof-ornament hof-orn-tr'>⚜️</div>"
                     "<div class='hof-ornament hof-orn-bl'>⚜️</div>"
                     "<div class='hof-ornament hof-orn-br'>⚜️</div>"
-                    "<div class='hof-period-badge'>" + d['badge'] + "</div>"
+                    "<div class='hof-period-badge'>" + d['label'] + "</div>"
                     "<div class='hof-crown-box'>"
                     "<span class='hof-sparkle hof-sparkle-1'>✦</span>"
                     "<span class='hof-crown'>👑</span>"
@@ -3604,101 +3565,59 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             kartu_html = "".join(kartu_parts).strip()
             st.markdown(kartu_html, unsafe_allow_html=True)
 
-            # ==== TOMBOL DETAIL PER KARTU ====
-            col_b1, col_b2, col_b3 = st.columns(3)
-            with col_b1:
-                if st.button("🔍 DETAIL PERIODE 1", key="btn_detail_k1", use_container_width=True):
-                    st.session_state["hof_selected_period"] = "kartu1"
-                    st.rerun()
-            with col_b2:
-                if st.button("🔍 DETAIL PERIODE 2", key="btn_detail_k2", use_container_width=True):
-                    st.session_state["hof_selected_period"] = "kartu2"
-                    st.rerun()
-            with col_b3:
-                if st.button("🔍 DETAIL ALL TIME", key="btn_detail_k3", use_container_width=True):
-                    st.session_state["hof_selected_period"] = "kartu3"
-                    st.rerun()
+            # ==== PETUNJUK ====
+            st.markdown(
+                "<p style='text-align:center; color:#94a3b8; font-family:monospace; "
+                "font-size:10px; letter-spacing:1px; margin-top:5px; margin-bottom:8px;'>"
+                "👇 PILIH KARTU UNTUK LIHAT DETAIL 👇</p>",
+                unsafe_allow_html=True
+            )
 
-            # ==== PANEL DETAIL ====
-            selected = st.session_state.get("hof_selected_period")
-            if selected and selected in data_dummy:
-                d = data_dummy[selected]
-                ranking = d["data"]
+            # ==== 6 TOMBOL PEMILIH KARTU ====
+            cols = st.columns(6)
+            labels_short = ["P1", "P2", "P3", "P4", "BULAN", "ALL"]
+            for idx, key in enumerate(urutan_kartu):
+                with cols[idx]:
+                    if st.button(
+                        labels_short[idx],
+                        key="btn_sel_" + key,
+                        use_container_width=True
+                    ):
+                        st.session_state["hof_selected_period"] = key
+                        st.rerun()
 
-                # Bangun podium
-                def make_podium(rank_idx, cls, crown, rlist):
-                    if len(rlist) > rank_idx:
-                        n, q = rlist[rank_idx]
-                        av = get_avatar(n)
-                        return (
-                            "<div class='podium-slot'>"
-                            "<div style='font-size:22px; margin-bottom:2px;'>" + crown + "</div>"
-                            "<div class='podium-card " + cls + "'>"
-                            "<div class='podium-rank-tag'>#" + str(rank_idx + 1) + "</div>"
-                            "<div class='podium-avatar'>" + av + "</div>"
-                            "<div class='podium-name'>" + n + "</div>"
-                            "<div class='podium-score'>" + str(q) + " Pcs</div>"
-                            "</div>"
-                            "</div>"
-                        )
-                    return ""
+            # ==== TOMBOL DETAIL ====
+            d_active = data_dummy[selected_key]
+            if st.button(
+                "🔍 LIHAT DETAIL — " + d_active["short"],
+                key="btn_open_detail",
+                use_container_width=True
+            ):
+                st.session_state["hof_detail_open"] = True
+                st.rerun()
 
-                podium_parts = ["<div class='podium-wrapper'>"]
-                podium_parts.append(make_podium(1, "podium-2", "🥈", ranking))
-                podium_parts.append(make_podium(0, "podium-1", "👑", ranking))
-                podium_parts.append(make_podium(2, "podium-3", "🥉", ranking))
-                podium_parts.append("</div>")
-                podium_html = "".join(podium_parts).strip()
-
-                # Bangun list ranking 4-9
-                list_parts = ["<div class='hof-ranking-list'>"]
-                for i, (n, q) in enumerate(ranking[3:9]):
-                    rank = i + 4
-                    av = get_avatar(n)
-                    list_parts.append(
-                        "<div class='hof-ranking-row'>"
-                        "<div class='hof-ranking-row-left'>"
-                        "<span>🛡️</span>"
-                        "<span style='font-weight:bold;'>#" + str(rank) + "</span>"
-                        "<span class='hof-ranking-avatar'>" + av + "</span>"
-                        "<span class='hof-ranking-name'>" + n + "</span>"
-                        "</div>"
-                        "<div class='hof-ranking-score'>" + str(q) + " Pcs</div>"
-                        "</div>"
-                    )
-                list_parts.append("</div>")
-                list_html = "".join(list_parts).strip()
-
-                # Bangun panel utama
-                panel_html = (
-                    "<div class='hof-panel-wrapper'>"
-                    "<div class='hof-panel-ornament hof-panel-orn-tl'>⚜️</div>"
-                    "<div class='hof-panel-ornament hof-panel-orn-tr'>⚜️</div>"
-                    "<div class='hof-panel-ornament hof-panel-orn-bl'>⚜️</div>"
-                    "<div class='hof-panel-ornament hof-panel-orn-br'>⚜️</div>"
-                    "<div class='hof-panel-title'>📜 DETAIL PERINGKAT</div>"
-                    "<div class='hof-panel-sub'>" + d['badge'] + "</div>"
-                    "<div class='hof-panel-divider'></div>"
-                    "<div style='text-align:center; color:#fbbf24; font-family:monospace; "
-                    "font-size:13px; font-weight:900; margin-top:10px;'>🏆 PODIUM TOP 3</div>"
-                    + podium_html +
-                    "<div class='hof-panel-divider'></div>"
-                    "<div style='text-align:center; color:#fbbf24; font-family:monospace; "
-                    "font-size:13px; font-weight:900;'>📜 PERINGKAT 4-9</div>"
-                    + list_html +
-                    "</div>"
+            # ==== PANEL DETAIL — PLACEHOLDER ====
+            if st.session_state.get("hof_detail_open"):
+                st.markdown(
+                    "<div style='background: rgba(15, 23, 42, 0.9); "
+                    "border: 2px dashed #fbbf24; border-radius: 12px; "
+                    "padding: 20px; margin-top: 15px; text-align: center; "
+                    "color: #fbbf24; font-family: monospace; font-size: 12px;'>"
+                    "🚧 Panel detail akan hadir di Fase B 🚧<br><br>"
+                    "<span style='color: #94a3b8;'>Kartu aktif: " + d_active["short"] + "</span>"
+                    "</div>",
+                    unsafe_allow_html=True
                 )
-                st.markdown(panel_html, unsafe_allow_html=True)
-
                 if st.button("✖️ TUTUP DETAIL", key="btn_close_detail", use_container_width=True):
-                    st.session_state["hof_selected_period"] = None
+                    st.session_state["hof_detail_open"] = False
                     st.rerun()
 
             # ==== TOMBOL KEMBALI ====
             st.markdown("<br>", unsafe_allow_html=True)
             if st.button("⬅️ KEMBALI KE HALL OF FAME", key="btn_hof_psm_back", use_container_width=True):
                 st.session_state["hof_sub_page"] = None
-                st.session_state["hof_selected_period"] = None
+                st.session_state["hof_selected_period"] = "periode_1"
+                st.session_state["hof_detail_open"] = False
                 st.rerun()
 
             st.stop()
