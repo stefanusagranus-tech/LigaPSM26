@@ -5625,106 +5625,400 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # 📄 5. KONTEN PER HALAMAN BUKU (Halaman 1)
         # ==========================================
         if page_num == 1:
-            periods_df = st.session_state.get("periods_df", pd.DataFrame())
-            target_period_id = ""
-            if not periods_df.empty:
-                for _, r in periods_df.iterrows():
-                    try:
-                        s_date = pd.to_datetime(r.get("start_date")).date()
-                        e_date = pd.to_datetime(r.get("end_date")).date()
-                        if s_date <= today <= e_date:
-                            target_period_id = str(r.get("period_id", "")).strip()
-                            break
-                    except Exception:
-                        pass
-                if not target_period_id:
-                    for _, r in periods_df.iterrows():
-                        p_name = str(r.get("period_name", "")).lower()
-                        if "8" in p_name and "15" in p_name and ("sep" in p_name or "september" in p_name):
-                            target_period_id = str(r.get("period_id", "")).strip()
-                            break
 
-            sales_item_df = st.session_state.get("sales_item_df", pd.DataFrame())
-            df_filtered_items = pd.DataFrame()
-            if not sales_item_df.empty and target_period_id:
-                df_filtered_items = sales_item_df[sales_item_df["period_id"].astype(str).str.strip() == target_period_id]
-            elif not sales_item_df.empty:
-                df_filtered_items = sales_item_df
+            # ==========================================
+            # 🗓️ FIX TANGGAL PERIODE — AMBIL DARI SHEET
+            # ==========================================
+            periods_df_page1 = st.session_state.get("periods_df", pd.DataFrame()).copy()
+            if not periods_df_page1.empty:
+                periods_df_page1.columns = periods_df_page1.columns.astype(str).str.strip().str.lower()
 
-            # Deteksi Role & User Aktif sesuai session
-            current_user = str(st.session_state.get("username", st.session_state.get("user", "admin"))).strip().lower()
-            user_role = str(st.session_state.get("role", "user")).strip().lower()
-            is_admin = (user_role == "admin" or current_user == "admin")
+            today_page1 = pd.Timestamp.now().date()
+            target_period_id_page1 = ""
+            target_period_label_page1 = ""
 
-            sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
-            actual_dict = {}
-            if not sales_person_df.empty:
-                sp_filtered = sales_person_df[sales_person_df["period_id"].astype(str).str.strip() == target_period_id] if target_period_id else sales_person_df
-                
-                # Jika bukan admin, filter berdasarkan nama kasir yang sedang login
-                if not is_admin:
-                    if not sp_filtered.empty and "person_name" in sp_filtered.columns:
-                        sp_filtered = sp_filtered[sp_filtered["person_name"].astype(str).str.strip().str.lower() == current_user]
-                
-                if not sp_filtered.empty and "item_id" in sp_filtered.columns and "actual_qty" in sp_filtered.columns:
-                    sp_filtered["actual_qty"] = pd.to_numeric(sp_filtered["actual_qty"], errors="coerce").fillna(0)
-                    actual_dict = sp_filtered.groupby("item_id")["actual_qty"].sum().to_dict()
+            if not periods_df_page1.empty and all(
+                c in periods_df_page1.columns for c in ["period_id", "start_date", "end_date"]
+            ):
+                periods_df_page1["start_dt"] = pd.to_datetime(periods_df_page1["start_date"], errors="coerce")
+                periods_df_page1["end_dt"] = pd.to_datetime(periods_df_page1["end_date"], errors="coerce")
+                periods_df_page1 = periods_df_page1.dropna(subset=["start_dt", "end_dt"])
 
-            items_html_left = ""
-            items_html_right = ""
-            render_items = []
-            if not df_filtered_items.empty:
-                for _, r in df_filtered_items.iterrows():
+                # Skip program PPS/Sueger/SG
+                periods_df_page1 = periods_df_page1[
+                    ~periods_df_page1["period_id"].astype(str).str.upper().str.contains(
+                        "PWP|SGR|SGS|CBN|PPS", na=False
+                    )
+                ]
+
+                # Cari periode aktif (hari ini masuk range)
+                aktif_rows_page1 = periods_df_page1[
+                    (periods_df_page1["start_dt"].dt.date <= today_page1) &
+                    (periods_df_page1["end_dt"].dt.date >= today_page1)
+                ]
+
+                if not aktif_rows_page1.empty:
+                    target_period_id_page1 = str(aktif_rows_page1.iloc[0]["period_id"]).strip()
+                    p_start = aktif_rows_page1.iloc[0]["start_dt"].date()
+                    p_end = aktif_rows_page1.iloc[0]["end_dt"].date()
+                    target_period_label_page1 = f"Periode {p_start.strftime('%d %b')} - {p_end.strftime('%d %b')}"
+                else:
+                    # Kalau tidak ada yang aktif, ambil periode terbaru
+                    latest_rows_page1 = periods_df_page1.sort_values("start_dt", ascending=False)
+                    if not latest_rows_page1.empty:
+                        target_period_id_page1 = str(latest_rows_page1.iloc[0]["period_id"]).strip()
+                        p_start = latest_rows_page1.iloc[0]["start_dt"].date()
+                        p_end = latest_rows_page1.iloc[0]["end_dt"].date()
+                        target_period_label_page1 = f"Periode {p_start.strftime('%d %b')} - {p_end.strftime('%d %b')}"
+
+            if not target_period_label_page1:
+                target_period_label_page1 = "Periode Aktif"
+
+            # ==========================================
+            # 📥 AMBIL DATA ITEM & TARGET
+            # ==========================================
+            sales_item_df_page1 = st.session_state.get("sales_item_df", pd.DataFrame()).copy()
+            if not sales_item_df_page1.empty:
+                sales_item_df_page1.columns = sales_item_df_page1.columns.astype(str).str.strip().str.lower()
+
+            current_user_page1 = str(
+                st.session_state.get("username", st.session_state.get("user", "admin"))
+            ).strip().lower()
+            user_role_page1 = str(st.session_state.get("role", "user")).strip().lower()
+            is_admin_page1 = (user_role_page1 == "admin" or current_user_page1 == "admin")
+
+            df_filtered_items_page1 = pd.DataFrame()
+            if not sales_item_df_page1.empty and target_period_id_page1:
+                df_filtered_items_page1 = sales_item_df_page1[
+                    sales_item_df_page1["period_id"].astype(str).str.strip() == target_period_id_page1
+                ]
+            elif not sales_item_df_page1.empty:
+                df_filtered_items_page1 = sales_item_df_page1
+
+            # ==========================================
+            # 📥 AMBIL ACTUAL QTY
+            # ==========================================
+            sales_person_df_page1 = st.session_state.get("sales_person_df", pd.DataFrame()).copy()
+            if not sales_person_df_page1.empty:
+                sales_person_df_page1.columns = sales_person_df_page1.columns.astype(str).str.strip().str.lower()
+
+            actual_dict_page1 = {}
+            if not sales_person_df_page1.empty:
+                sp_filtered_page1 = sales_person_df_page1[
+                    sales_person_df_page1["period_id"].astype(str).str.strip() == target_period_id_page1
+                ] if target_period_id_page1 and "period_id" in sales_person_df_page1.columns else sales_person_df_page1
+
+                if not is_admin_page1:
+                    if not sp_filtered_page1.empty and "person_name" in sp_filtered_page1.columns:
+                        sp_filtered_page1 = sp_filtered_page1[
+                            sp_filtered_page1["person_name"].astype(str).str.strip().str.lower() == current_user_page1
+                        ]
+
+                if not sp_filtered_page1.empty and "item_id" in sp_filtered_page1.columns and "actual_qty" in sp_filtered_page1.columns:
+                    sp_filtered_page1["actual_qty"] = pd.to_numeric(sp_filtered_page1["actual_qty"], errors="coerce").fillna(0)
+                    actual_dict_page1 = sp_filtered_page1.groupby("item_id")["actual_qty"].sum().to_dict()
+
+            # ==========================================
+            # 🏗️ BUILD LIST ITEM
+            # ==========================================
+            render_items_page1 = []
+            if not df_filtered_items_page1.empty:
+                for _, r in df_filtered_items_page1.iterrows():
                     item_id = str(r.get("item_id", "")).strip()
                     name = str(r.get("item_name", r.get("item_nam", "Item Misi")))
-                    
-                    # Logika Target: target_qty (Admin) vs target_kasir (Kasir)
-                    if is_admin:
+
+                    # Target: admin pakai target_qty, user pakai target_kasir
+                    if is_admin_page1:
                         target = int(pd.to_numeric(r.get("target_qty", 0), errors="coerce"))
                     else:
-                        target = int(pd.to_numeric(r.get("target_kasir", r.get("get_kasir", 0)), errors="coerce"))
-                    
-                    aktual = int(actual_dict.get(item_id, 0))
-                    render_items.append((name, target, aktual))
+                        target = int(pd.to_numeric(r.get("target_kasir", 0), errors="coerce"))
 
-            if not render_items:
-                render_items = [("Belum ada target item untuk periode ini", 0, 0)]
+                    aktual = int(actual_dict_page1.get(item_id, 0))
+                    render_items_page1.append((name, target, aktual))
 
-            for idx, (iname, itarget, iaktual) in enumerate(render_items):
+            if not render_items_page1:
+                render_items_page1 = [("Belum ada target item untuk periode ini", 0, 0)]
+
+            # ==========================================
+            # 📊 HITUNG TOTAL AKUMULASI
+            # ==========================================
+            total_target_page1 = sum(t for _, t, _ in render_items_page1)
+            total_aktual_page1 = sum(a for _, _, a in render_items_page1)
+            if total_target_page1 > 0:
+                total_pct_page1 = (total_aktual_page1 / total_target_page1) * 100
+            else:
+                total_pct_page1 = 0.0
+
+            # Hitung item tercapai
+            item_tercapai_page1 = sum(1 for _, t, a in render_items_page1 if t > 0 and a >= t)
+            total_item_count_page1 = len([1 for _, t, _ in render_items_page1 if t > 0])
+            total_gap_page1 = max(0, total_target_page1 - total_aktual_page1)
+
+            # Warna bar total
+            if total_pct_page1 >= 100:
+                total_bar_color_page1 = "linear-gradient(90deg, #059669, #10b981)"
+            elif total_pct_page1 >= 50:
+                total_bar_color_page1 = "linear-gradient(90deg, #ca8a04, #eab308)"
+            else:
+                total_bar_color_page1 = "linear-gradient(90deg, #dc2626, #ef4444)"
+
+            # ==========================================
+            # 🎨 BUILD HTML ITEM CARDS — SPLIT RATA
+            # ==========================================
+            total_items_page1 = len(render_items_page1)
+            half_page1 = (total_items_page1 + 1) // 2  # pembulatan ke atas
+
+            items_kiri_page1 = render_items_page1[:half_page1]
+            items_kanan_page1 = render_items_page1[half_page1:]
+
+            def build_item_card_page1(iname, itarget, iaktual):
                 gap = itarget - iaktual if itarget > 0 else 0
                 achiv = (iaktual / itarget) * 100 if itarget > 0 else 0
                 is_done = iaktual >= itarget if itarget > 0 else False
-                card_cls = "rpg-item-card completed" if is_done else "rpg-item-card"
-                badge = '<span class="badge-success">✨ SELESAI</span>' if is_done else '<span class="badge-warning">GAP: {}</span>'.format(gap)
-                achiv_color = '#065f46' if is_done else '#92400e'
-                card_markup = '<div class="{}"><div><div class="item-title">⚔️ {} {}</div><div class="item-stats">Target: {} | Aktual: <b>{}</b></div></div><div style="text-align: right;"><div style="font-size: 14px; font-weight: bold; color: {};">{:.1f}%</div></div></div>'.format(card_cls, iname, badge, itarget, iaktual, achiv_color, achiv)
-                if idx % 2 == 0:
-                    items_html_left += card_markup
+                achiv_visual = min(achiv, 100.0)
+
+                if is_done:
+                    bar_color = "linear-gradient(90deg, #059669, #10b981)"
+                    badge_html = "<span style='background:#059669; color:#ffffff; padding:2px 8px; border-radius:4px; font-size:9px; font-weight:bold;'>✅ SELESAI</span>"
+                    pct_color = "#059669"
+                elif achiv >= 50:
+                    bar_color = "linear-gradient(90deg, #ca8a04, #eab308)"
+                    badge_html = "<span style='background:#ca8a04; color:#ffffff; padding:2px 8px; border-radius:4px; font-size:9px; font-weight:bold;'>GAP: " + str(gap) + "</span>"
+                    pct_color = "#ca8a04"
                 else:
-                    items_html_right += card_markup
+                    bar_color = "linear-gradient(90deg, #dc2626, #ef4444)"
+                    badge_html = "<span style='background:#dc2626; color:#ffffff; padding:2px 8px; border-radius:4px; font-size:9px; font-weight:bold;'>GAP: " + str(gap) + "</span>"
+                    pct_color = "#dc2626"
 
-            if not items_html_right:
-                items_html_right = "<div style='color:#78350f; font-size:12px; text-align:center; margin-top:20px;'><i>Tidak ada item tambahan pada periode ini.</i></div>"
+                return (
+                    "<div class='rpg-item-card-v2'>"
+                    "<div class='rpg-item-header-v2'>"
+                    "<span class='rpg-item-name-v2'>⚔️ " + iname + "</span>"
+                    + badge_html +
+                    "</div>"
+                    "<div class='rpg-item-target-v2'>Target: <b>" + str(itarget) + "</b> | Aktual: <b>" + str(iaktual) + "</b></div>"
+                    "<div class='rpg-progress-wrap-v2'>"
+                    "<div class='rpg-progress-bg-v2'>"
+                    "<div class='rpg-progress-fill-v2' style='width:" + f"{achiv_visual:.1f}" + "%; background:" + bar_color + ";'></div>"
+                    "</div>"
+                    "<div class='rpg-progress-pct-v2' style='color:" + pct_color + ";'>" + f"{achiv:.1f}%" + "</div>"
+                    "</div>"
+                    "</div>"
+                )
 
-            # Layout Buku
-            html_open_tugas = """
-            <div class="rpg-open-book-container">
-                <div class="rpg-book-page rpg-book-page-left">
-                    <h3 class="open-page-title">🎯 TARGET ITEM (1)</h3>
-                    <p class="open-page-sub">Maklumat Target & Achiv ({active_period})</p>
-                    <div class="open-book-divider"></div>
-                    {items_html_left}
-                    <div class="open-page-footer">Halaman Kiri • Item Bagian 1</div>
-                </div>
-                <div class="rpg-book-page rpg-book-page-right">
-                    <h3 class="open-page-title">📍 POSISI PAHLAWAN</h3>
-                    <p class="open-page-sub">Kelanjutan Maklumat Target Item</p>
-                    <div class="open-book-divider"></div>
-                    {items_html_right}
-                    <div class="open-page-footer">Halaman Kanan • Item Bagian 2</div>
-                </div>
-            </div>
-            """.format(active_period=active_period, items_html_left=items_html_left, items_html_right=items_html_right)
+            items_html_left_page1 = "".join([build_item_card_page1(n, t, a) for n, t, a in items_kiri_page1])
+            items_html_right_page1 = "".join([build_item_card_page1(n, t, a) for n, t, a in items_kanan_page1])
+
+            if not items_html_right_page1:
+                items_html_right_page1 = "<div style='color:#78350f; font-size:12px; text-align:center; margin-top:20px; font-style:italic;'>✨ Tidak ada item tambahan pada periode ini.</div>"
+
+            # ==========================================
+            # 🎨 CSS
+            # ==========================================
+            css_page1 = """
+            <style>
+            .rpg-item-card-v2 {
+                background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+                border: 1px solid #d97706;
+                border-radius: 6px;
+                padding: 9px 11px;
+                margin-bottom: 8px;
+            }
+            .rpg-item-header-v2 {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 5px;
+            }
+            .rpg-item-name-v2 {
+                color: #451a03;
+                font-weight: bold;
+                font-size: 11.5px;
+                font-family: 'MedievalSharp', cursive;
+            }
+            .rpg-item-target-v2 {
+                font-size: 10px;
+                color: #78350f;
+                font-family: monospace;
+                margin-bottom: 5px;
+            }
+            .rpg-progress-wrap-v2 {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .rpg-progress-bg-v2 {
+                flex: 1;
+                height: 10px;
+                background: #e5e7eb;
+                border-radius: 5px;
+                overflow: hidden;
+                border: 1px solid #d1d5db;
+                box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+            }
+            .rpg-progress-fill-v2 {
+                height: 100%;
+                border-radius: 5px;
+                transition: width 0.5s ease;
+                box-shadow: 0 0 6px rgba(0,0,0,0.15);
+            }
+            .rpg-progress-pct-v2 {
+                font-family: monospace;
+                font-size: 11px;
+                font-weight: 900;
+                min-width: 42px;
+                text-align: right;
+            }
+
+            /* TOTAL AKUMULASI BOX */
+            .rpg-total-box-v2 {
+                background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+                border: 2px solid #b45309;
+                border-radius: 8px;
+                padding: 12px 14px;
+                margin-top: 14px;
+                text-align: center;
+                box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+            }
+            .rpg-total-title-v2 {
+                font-family: 'MedievalSharp', cursive;
+                font-size: 12px;
+                color: #78350f;
+                font-weight: bold;
+                letter-spacing: 1px;
+                margin-bottom: 10px;
+            }
+            .rpg-total-stats-v2 {
+                display: flex;
+                justify-content: space-around;
+                gap: 6px;
+                margin-bottom: 10px;
+            }
+            .rpg-total-stat-v2 {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                flex: 1;
+            }
+            .rpg-total-stat-label-v2 {
+                font-family: monospace;
+                font-size: 8.5px;
+                color: #92400e;
+                letter-spacing: 0.5px;
+                font-weight: bold;
+                margin-bottom: 2px;
+            }
+            .rpg-total-stat-value-v2 {
+                font-family: monospace;
+                font-size: 15px;
+                font-weight: 900;
+                color: #451a03;
+            }
+            .rpg-total-bar-wrap-v2 {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-top: 8px;
+                margin-bottom: 8px;
+            }
+            .rpg-total-bar-bg-v2 {
+                flex: 1;
+                height: 14px;
+                background: #e5e7eb;
+                border-radius: 7px;
+                overflow: hidden;
+                border: 1px solid #92400e;
+                box-shadow: inset 0 1px 3px rgba(0,0,0,0.15);
+            }
+            .rpg-total-bar-fill-v2 {
+                height: 100%;
+                border-radius: 7px;
+                transition: width 0.7s ease;
+                box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            }
+            .rpg-total-pct-v2 {
+                font-family: monospace;
+                font-size: 14px;
+                font-weight: 900;
+                color: #451a03;
+                min-width: 52px;
+                text-align: right;
+            }
+            .rpg-total-footer-v2 {
+                display: flex;
+                justify-content: space-around;
+                gap: 6px;
+                margin-top: 6px;
+                padding-top: 8px;
+                border-top: 1px dashed rgba(120, 53, 15, 0.3);
+            }
+            .rpg-total-footer-item-v2 {
+                font-family: monospace;
+                font-size: 9.5px;
+                color: #78350f;
+                font-weight: bold;
+            }
+            .rpg-total-footer-item-v2 b {
+                color: #451a03;
+                font-size: 11px;
+            }
+            </style>
+            """
+
+            # ==========================================
+            # 🏗️ HTML LENGKAP HALAMAN 1
+            # ==========================================
+            total_box_html_page1 = (
+                "<div class='rpg-total-box-v2'>"
+                "<div class='rpg-total-title-v2'>📊 TOTAL AKUMULASI PERIODE INI</div>"
+                "<div class='rpg-total-stats-v2'>"
+                "<div class='rpg-total-stat-v2'>"
+                "<span class='rpg-total-stat-label-v2'>TARGET</span>"
+                "<span class='rpg-total-stat-value-v2'>" + str(total_target_page1) + "</span>"
+                "</div>"
+                "<div class='rpg-total-stat-v2'>"
+                "<span class='rpg-total-stat-label-v2'>AKTUAL</span>"
+                "<span class='rpg-total-stat-value-v2'>" + str(total_aktual_page1) + "</span>"
+                "</div>"
+                "<div class='rpg-total-stat-v2'>"
+                "<span class='rpg-total-stat-label-v2'>ACHIEVEMENT</span>"
+                "<span class='rpg-total-stat-value-v2'>" + f"{total_pct_page1:.1f}%" + "</span>"
+                "</div>"
+                "</div>"
+                "<div class='rpg-total-bar-wrap-v2'>"
+                "<div class='rpg-total-bar-bg-v2'>"
+                "<div class='rpg-total-bar-fill-v2' style='width:" + f"{min(total_pct_page1, 100.0):.1f}" + "%; background:" + total_bar_color_page1 + ";'></div>"
+                "</div>"
+                "<div class='rpg-total-pct-v2'>" + f"{total_pct_page1:.1f}%" + "</div>"
+                "</div>"
+                "<div class='rpg-total-footer-v2'>"
+                "<div class='rpg-total-footer-item-v2'>📋 Tercapai: <b>" + str(item_tercapai_page1) + "/" + str(total_item_count_page1) + "</b></div>"
+                "<div class='rpg-total-footer-item-v2'>📉 Gap Total: <b>" + str(total_gap_page1) + "</b></div>"
+                "</div>"
+                "</div>"
+            )
+
+            html_open_tugas = (
+                css_page1 +
+                "<div class='rpg-open-book-container'>"
+                "<div class='rpg-book-page rpg-book-page-left'>"
+                "<h3 class='open-page-title'>🎯 TARGET ITEM</h3>"
+                "<p class='open-page-sub'>Maklumat Target & Achiv (" + target_period_label_page1 + ")</p>"
+                "<div class='open-book-divider'></div>"
+                + items_html_left_page1 +
+                "<div class='open-page-footer'>Halaman Kiri • Item Bagian 1</div>"
+                "</div>"
+                "<div class='rpg-book-page rpg-book-page-right'>"
+                "<h3 class='open-page-title'>⚔️ POSISI PAHLAWAN</h3>"
+                "<p class='open-page-sub'>Kelanjutan Maklumat Target Item</p>"
+                "<div class='open-book-divider'></div>"
+                + items_html_right_page1 +
+                total_box_html_page1 +
+                "<div class='open-page-footer'>Halaman Kanan • Item Bagian 2</div>"
+                "</div>"
+                "</div>"
+            )
+
         #batas========================================================================================================#
         elif page_num == 2:
             # 1. AMBIL DATA DARI SESSION STATE
