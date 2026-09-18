@@ -3122,159 +3122,294 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.stop()
     
         # =========================================================================
-        # 👑 HALAMAN 3A: HALL OF FAME PSM (BENERAN)
+        # 👑 HALAMAN 3A: HALL OF FAME PSM (FASE 1 - KARTU VISUAL)
         # =========================================================================
-        elif st.session_state.get("campaign_sub_page") == "view_hall_of_fame" and st.session_state.get("hof_sub_page") == "hof_psm":
+        elif (
+            st.session_state.get("campaign_sub_page") == "view_hall_of_fame"
+            and st.session_state.get("hof_sub_page") == "hof_psm"
+        ):
 
             url_gambar_latar = "https://i.imgur.com/kMo29aW.jpeg"
 
             st.markdown(
                 """
                 <style>
-                    @keyframes hofBookEnter {
-                        0% { opacity: 0; transform: scale(0.96); }
-                        100% { opacity: 1; transform: scale(1); }
+                    /* ============================================
+                       🎬 ANIMASI GLOBAL
+                       ============================================ */
+                    @keyframes hofTitleGlow {
+                        0%, 100% { text-shadow: 0 0 15px rgba(251, 191, 36, 0.5); }
+                        50% { text-shadow: 0 0 25px rgba(251, 191, 36, 0.9), 0 0 40px rgba(251, 191, 36, 0.5); }
                     }
+                    @keyframes crownFloat {
+                        0%, 100% { transform: translateY(0) rotate(0deg); filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.7)); }
+                        50% { transform: translateY(-6px) rotate(-3deg); filter: drop-shadow(0 0 25px rgba(251, 191, 36, 1)); }
+                    }
+                    @keyframes sparkleFloat1 {
+                        0%, 100% { transform: translateY(0) scale(0.8); opacity: 0.5; }
+                        50% { transform: translateY(-10px) scale(1.2); opacity: 1; }
+                    }
+                    @keyframes sparkleFloat2 {
+                        0%, 100% { transform: translateY(-5px) scale(1); opacity: 0.7; }
+                        50% { transform: translateY(5px) scale(0.8); opacity: 0.3; }
+                    }
+                    @keyframes avatarBob {
+                        0%, 100% { transform: translateY(0); }
+                        50% { transform: translateY(-3px); }
+                    }
+                    @keyframes cardEnter {
+                        0% { opacity: 0; transform: translateY(30px) scale(0.95); }
+                        100% { opacity: 1; transform: translateY(0) scale(1); }
+                    }
+                    @keyframes cardGlow {
+                        0%, 100% { box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 15px rgba(212, 175, 55, 0.3), inset 0 0 20px rgba(212, 175, 55, 0.05); }
+                        50% { box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 35px rgba(212, 175, 55, 0.6), inset 0 0 30px rgba(212, 175, 55, 0.15); }
+                    }
+
+                    /* ============================================
+                       🏷️ HEADER HALAMAN
+                       ============================================ */
                     .hof-page-title {
                         text-align: center; color: #fef08a; font-family: monospace;
                         font-size: 22px; font-weight: 900;
-                        text-shadow: 0 0 15px rgba(251, 191, 36, 0.5);
                         margin: 0 0 5px 0;
+                        animation: hofTitleGlow 3s infinite ease-in-out;
                     }
                     .hof-page-sub {
                         text-align: center; color: #cbd5e1; font-family: monospace;
-                        font-size: 11.5px; margin-bottom: 20px;
+                        font-size: 11.5px; margin-bottom: 25px;
                     }
 
-                    /* 🎠 CAROUSEL */
-                    .st-key-hof_psm_period_carousel div[role="radiogroup"] {
-                        display: flex; flex-direction: row; flex-wrap: nowrap;
-                        overflow-x: auto; gap: 8px;
-                        padding: 8px 4px 14px 4px;
+                    /* ============================================
+                       🎴 WRAPPER CAROUSEL (belum scroll, statis dulu)
+                       ============================================ */
+                    .hof-carousel-wrapper {
+                        display: flex;
+                        gap: 14px;
+                        padding: 15px 10px 25px 10px;
                         justify-content: flex-start;
-                        background: rgba(15, 23, 42, 0.55);
-                        border-radius: 10px;
-                        border: 1px solid rgba(180, 83, 9, 0.4);
+                        overflow-x: auto;
+                        overflow-y: visible;
+                        scroll-snap-type: x mandatory;
+                        scrollbar-width: thin;
                     }
-                    .st-key-hof_psm_period_carousel div[role="radiogroup"]::-webkit-scrollbar { height: 6px; }
-                    .st-key-hof_psm_period_carousel div[role="radiogroup"]::-webkit-scrollbar-thumb {
-                        background: #b45309; border-radius: 3px;
+                    .hof-carousel-wrapper::-webkit-scrollbar { height: 8px; }
+                    .hof-carousel-wrapper::-webkit-scrollbar-track {
+                        background: rgba(15, 23, 42, 0.5);
+                        border-radius: 4px;
                     }
-                    .st-key-hof_psm_period_carousel label {
-                        background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-                        border: 2px solid #b45309; border-radius: 8px;
-                        padding: 8px 14px; color: #fde047;
-                        font-family: monospace; font-size: 11px; font-weight: bold;
-                        white-space: nowrap; flex: 0 0 auto; cursor: pointer;
-                        transition: all 0.25s ease; margin: 0;
-                    }
-                    .st-key-hof_psm_period_carousel label:hover {
-                        border-color: #fbbf24;
-                        box-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
-                    }
-                    .st-key-hof_psm_period_carousel label:has(input:checked) {
-                        background: linear-gradient(135deg, #b45309 0%, #78350f 100%);
-                        border: 2px solid #fef08a; color: #ffffff;
-                        box-shadow: 0 0 15px rgba(251, 191, 36, 0.7);
-                    }
-                    .st-key-hof_psm_period_carousel input[type="radio"] { display: none !important; }
-                    .st-key-hof_psm_period_carousel div[role="radiogroup"] > label > div:first-child { display: none !important; }
-
-                    /* 📖 BUKU */
-                    .hof-book-container {
-                        background: #fdf6e2;
-                        border: 3px solid #d4af37;
-                        border-radius: 12px;
-                        padding: 18px;
-                        box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-                        position: relative; overflow: hidden;
-                        min-height: 480px;
-                        animation: hofBookEnter 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-                    }
-                    .hof-book-container::before {
-                        content: "";
-                        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-                        background-image: url("https://img.pikbest.com/png-images/20250303/fierce-dragon-silhouette--e2-80-93-stylized-black-and-white-mythical-beast-illustration_11570728.png!bw800");
-                        background-repeat: no-repeat; background-position: center; background-size: 85% auto;
-                        opacity: 0.07; pointer-events: none; z-index: 0;
-                    }
-                    .hof-book-header {
-                        text-align: center; font-family: monospace; font-size: 13px;
-                        color: #78350f; font-weight: bold; margin-bottom: 4px;
-                        position: relative; z-index: 2;
-                    }
-                    .hof-divider {
-                        border-bottom: 2px solid #d4af37; margin: 15px 0 5px 0;
-                        position: relative; z-index: 2;
+                    .hof-carousel-wrapper::-webkit-scrollbar-thumb {
+                        background: linear-gradient(90deg, #b45309, #fbbf24, #b45309);
+                        border-radius: 4px;
                     }
 
-                    /* 🏆 PODIUM */
-                    .podium-wrapper {
-                        display: flex; align-items: flex-end; justify-content: center;
-                        gap: 8px; margin-top: 20px; margin-bottom: 10px;
-                        position: relative; z-index: 2; width: 100%;
-                    }
-                    .podium-slot {
-                        flex: 1; display: flex; flex-direction: column;
-                        align-items: center; text-align: center; min-width: 0;
-                    }
-                    .podium-card {
-                        width: 100%; border-radius: 6px 6px 0 0; padding: 8px 4px;
-                        box-sizing: border-box; display: flex; flex-direction: column;
-                        align-items: center; justify-content: flex-start;
-                        box-shadow: 0 -3px 10px rgba(0,0,0,0.25), inset 0 1px 2px rgba(255,255,255,0.4);
+                    /* ============================================
+                       🎴 KARTU UTAMA
+                       ============================================ */
+                    .hof-card {
+                        flex: 0 0 auto;
+                        width: 260px;
+                        min-height: 400px;
+                        scroll-snap-align: center;
                         position: relative;
-                    }
-                    .podium-1 { height: 185px; background: linear-gradient(180deg, #fef08a 0%, #d97706 100%); border: 2.5px solid #78350f; border-bottom: none; }
-                    .podium-2 { height: 150px; background: linear-gradient(180deg, #f8fafc 0%, #64748b 100%); border: 2.5px solid #334155; border-bottom: none; }
-                    .podium-3 { height: 125px; background: linear-gradient(180deg, #ffedd5 0%, #c2410c 100%); border: 2.5px solid #7c2d12; border-bottom: none; }
-                    .podium-rank-tag { font-size: 15px; font-weight: 900; color: #1e1b4b; }
-                    .podium-name {
-                        font-size: 11px; font-weight: 800; color: #0f172a;
-                        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-                        max-width: 95%; margin-top: 3px;
-                        background: rgba(255, 255, 255, 0.5);
-                        padding: 2px 5px; border-radius: 4px;
-                    }
-                    .podium-score {
-                        font-size: 13px; font-weight: 900; color: #1e1103;
-                        margin-top: 4px;
-                        text-shadow: 0px 1px 0px rgba(255,255,255,0.6);
-                    }
-                    .podium-you-badge {
-                        background: #2563eb; color: white; font-size: 8px;
-                        padding: 1px 4px; border-radius: 4px; margin-top: 2px;
+                        background: linear-gradient(160deg, #0f172a 0%, #1a1410 50%, #0f172a 100%);
+                        border-radius: 18px;
+                        padding: 3px;
+                        animation: cardEnter 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards,
+                                   cardGlow 4s infinite ease-in-out 1s;
+                        box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 15px rgba(212, 175, 55, 0.3);
                     }
 
-                    /* 📜 LIST */
-                    .hof-list-container {
-                        display: flex; flex-direction: column; gap: 6px;
-                        position: relative; z-index: 2; margin-top: 20px;
-                    }
-                    .hof-normal-row {
-                        display: flex; justify-content: space-between;
-                        align-items: center; padding: 8px 12px;
-                        border: 1.5px solid #cbd5e1; background: #ffffff;
-                        border-radius: 6px; color: #020617;
-                        font-size: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-                        flex-shrink: 0; font-family: monospace;
-                    }
-                    .hof-user-me { outline: 2.5px solid #2563eb; outline-offset: -1px; }
-                    .hof-footer {
-                        text-align: right; font-size: 10px; color: #78350f;
-                        font-family: monospace; padding-top: 12px;
-                        font-weight: bold; position: relative; z-index: 2;
-                    }
-                    .hof-empty {
-                        text-align: center; color: #78350f; font-family: monospace;
-                        font-size: 12px; padding: 40px 20px;
-                        position: relative; z-index: 2;
+                    /* Border mewah double gold */
+                    .hof-card-inner {
+                        background: linear-gradient(160deg, #0a0d1a 0%, #15110a 100%);
+                        border: 2px solid #d4af37;
+                        border-radius: 16px;
+                        padding: 20px 18px 18px 18px;
+                        position: relative;
+                        min-height: 394px;
+                        box-shadow: inset 0 0 20px rgba(212, 175, 55, 0.08);
                     }
 
-                    /* TOMBOL */
+                    /* Corner ornaments */
+                    .hof-ornament {
+                        position: absolute;
+                        color: #d4af37;
+                        font-size: 14px;
+                        line-height: 1;
+                        filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.8));
+                        z-index: 5;
+                    }
+                    .hof-orn-tl { top: 6px; left: 8px; }
+                    .hof-orn-tr { top: 6px; right: 8px; }
+                    .hof-orn-bl { bottom: 6px; left: 8px; }
+                    .hof-orn-br { bottom: 6px; right: 8px; }
+
+                    /* Label periode */
+                    .hof-period-badge {
+                        text-align: center;
+                        background: linear-gradient(90deg, rgba(180, 83, 9, 0.4), rgba(251, 191, 36, 0.3), rgba(180, 83, 9, 0.4));
+                        border: 1px solid #d4af37;
+                        border-radius: 8px;
+                        padding: 6px 10px;
+                        font-family: monospace;
+                        font-size: 10px;
+                        font-weight: 900;
+                        color: #fef08a;
+                        letter-spacing: 1px;
+                        margin-bottom: 15px;
+                        text-shadow: 0 0 6px rgba(254, 240, 138, 0.5);
+                    }
+
+                    /* Crown + Sparkle */
+                    .hof-crown-box {
+                        text-align: center;
+                        position: relative;
+                        height: 55px;
+                        margin-bottom: 5px;
+                    }
+                    .hof-crown {
+                        font-size: 38px;
+                        display: inline-block;
+                        animation: crownFloat 2.5s infinite ease-in-out;
+                    }
+                    .hof-sparkle {
+                        position: absolute;
+                        color: #fef08a;
+                        font-size: 12px;
+                        filter: drop-shadow(0 0 6px #fbbf24);
+                    }
+                    .hof-sparkle-1 { top: 5px; left: 60px; animation: sparkleFloat1 2s infinite ease-in-out; }
+                    .hof-sparkle-2 { top: 15px; right: 60px; animation: sparkleFloat2 2.3s infinite ease-in-out 0.3s; }
+                    .hof-sparkle-3 { bottom: 0px; left: 90px; animation: sparkleFloat1 2.6s infinite ease-in-out 0.7s; }
+
+                    /* Avatar */
+                    .hof-avatar-wrapper {
+                        text-align: center;
+                        margin: 8px 0 12px 0;
+                    }
+                    .hof-avatar-circle {
+                        display: inline-flex;
+                        justify-content: center;
+                        align-items: center;
+                        width: 62px;
+                        height: 62px;
+                        border-radius: 50%;
+                        background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
+                        border: 2.5px solid #d4af37;
+                        font-size: 30px;
+                        box-shadow: 0 0 15px rgba(212, 175, 55, 0.5), inset 0 0 10px rgba(0, 0, 0, 0.6);
+                        animation: avatarBob 2.5s infinite ease-in-out;
+                    }
+
+                    /* Nama juara */
+                    .hof-champion-name {
+                        text-align: center;
+                        font-family: monospace;
+                        font-size: 14px;
+                        font-weight: 900;
+                        color: #ffffff;
+                        letter-spacing: 0.5px;
+                        margin-bottom: 5px;
+                        text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+                        line-height: 1.2;
+                        word-break: break-word;
+                    }
+                    .hof-champion-qty {
+                        text-align: center;
+                        font-family: monospace;
+                        font-size: 15px;
+                        font-weight: 900;
+                        color: #fbbf24;
+                        margin-bottom: 12px;
+                        text-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
+                    }
+
+                    /* Divider */
+                    .hof-card-divider {
+                        height: 1px;
+                        background: linear-gradient(90deg, transparent, #d4af37, transparent);
+                        margin: 10px 0 12px 0;
+                        opacity: 0.6;
+                    }
+
+                    /* Item terlaris */
+                    .hof-top-item-label {
+                        text-align: center;
+                        font-family: monospace;
+                        font-size: 9px;
+                        color: #94a3b8;
+                        letter-spacing: 1px;
+                        margin-bottom: 5px;
+                        text-transform: uppercase;
+                    }
+                    .hof-top-item-name {
+                        text-align: center;
+                        font-family: monospace;
+                        font-size: 11px;
+                        font-weight: bold;
+                        color: #cbd5e1;
+                        line-height: 1.3;
+                        margin-bottom: 3px;
+                        padding: 0 5px;
+                        word-break: break-word;
+                    }
+                    .hof-top-item-qty {
+                        text-align: center;
+                        font-family: monospace;
+                        font-size: 10px;
+                        color: #10b981;
+                        font-weight: bold;
+                        margin-bottom: 15px;
+                    }
+
+                    /* Tombol DETAIL */
+                    .hof-detail-btn {
+                        display: block;
+                        width: 100%;
+                        background: linear-gradient(135deg, rgba(180, 83, 9, 0.5), rgba(251, 191, 36, 0.25), rgba(180, 83, 9, 0.5));
+                        border: 2px solid #d4af37;
+                        border-radius: 10px;
+                        padding: 10px;
+                        text-align: center;
+                        font-family: monospace;
+                        font-size: 11px;
+                        font-weight: 900;
+                        color: #fef08a;
+                        letter-spacing: 1.5px;
+                        text-shadow: 0 0 6px rgba(254, 240, 138, 0.6);
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.4), inset 0 0 10px rgba(212, 175, 55, 0.1);
+                        margin-top: auto;
+                        position: absolute;
+                        bottom: 18px;
+                        left: 18px;
+                        right: 18px;
+                        width: calc(100% - 36px);
+                    }
+                    .hof-detail-btn:hover {
+                        background: linear-gradient(135deg, #b45309, #fbbf24, #b45309);
+                        color: #0f172a;
+                        box-shadow: 0 4px 18px rgba(251, 191, 36, 0.7), inset 0 0 15px rgba(254, 240, 138, 0.4);
+                        transform: translateY(-2px);
+                        text-shadow: none;
+                    }
+
+                    /* Label ALL TIME khusus */
+                    .hof-card-alltime .hof-period-badge {
+                        background: linear-gradient(90deg, rgba(212, 175, 55, 0.5), rgba(254, 240, 138, 0.4), rgba(212, 175, 55, 0.5));
+                        color: #0f172a;
+                        text-shadow: none;
+                    }
+                    .hof-card-alltime .hof-crown {
+                        filter: drop-shadow(0 0 25px rgba(251, 191, 36, 1)) drop-shadow(0 0 40px rgba(251, 191, 36, 0.6));
+                    }
+
+                    /* Tombol kembali */
                     div[data-testid="stButton"] {
                         max-width: 480px !important;
-                        margin: 8px auto 15px auto !important;
+                        margin: 15px auto 15px auto !important;
                         padding: 0 !important;
                     }
                     div[data-testid="stButton"] > button {
@@ -3293,7 +3428,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         color: #cbd5e1 !important;
                     }
                     .st-key-btn_hof_psm_back button:hover {
-                        background: #475569 !important; color: #ffffff !important;
+                        background: #475569 !important;
+                        color: #ffffff !important;
+                        box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4) !important;
                     }
                 </style>
                 """,
@@ -3304,7 +3441,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 f"""
                 <style>
                     .stApp {{
-                        background-image: linear-gradient(rgba(10, 13, 26, 0.85), rgba(10, 13, 26, 0.9)), url("{url_gambar_latar}") !important;
+                        background-image: linear-gradient(rgba(10, 13, 26, 0.85), rgba(10, 13, 26, 0.92)), url("{url_gambar_latar}") !important;
                         background-size: cover !important;
                         background-position: center !important;
                         background-repeat: no-repeat !important;
@@ -3312,8 +3449,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     }}
                     .main .block-container {{
                         background-color: transparent !important;
-                        max-width: 700px !important;
-                        padding-top: 2% !important;
+                        max-width: 900px !important;
+                        padding-top: 3% !important;
+                        padding-left: 8px !important;
+                        padding-right: 8px !important;
                     }}
                     div[data-testid="stVerticalBlock"] {{ gap: 0rem !important; }}
                 </style>
@@ -3321,160 +3460,123 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 unsafe_allow_html=True
             )
 
-            # ==== AMBIL DATA ====
-            periods_df = st.session_state.get("periods_df", pd.DataFrame()).copy()
-            sp_df = st.session_state.get("sales_person_df", pd.DataFrame()).copy()
-            for df in [periods_df, sp_df]:
-                if not df.empty:
-                    df.columns = df.columns.astype(str).str.strip().str.lower()
-
-            valid_periods = []
-            if not periods_df.empty and all(c in periods_df.columns for c in ["period_id", "period_name", "start_date", "end_date"]):
-                periods_df["start_dt"] = pd.to_datetime(periods_df["start_date"], errors="coerce")
-                periods_df["end_dt"] = pd.to_datetime(periods_df["end_date"], errors="coerce")
-                periods_df = periods_df.dropna(subset=["start_dt", "end_dt"]).sort_values("start_dt", ascending=False)
-                for _, r in periods_df.iterrows():
-                    p_id = str(r["period_id"]).strip()
-                    if any(x in p_id.upper() for x in ["PWP", "SGR", "SGS", "CBN", "PPS"]):
-                        continue
-                    valid_periods.append({
-                        "id": p_id,
-                        "name": str(r["period_name"]).strip(),
-                        "start": r["start_dt"].date(),
-                        "end": r["end_dt"].date(),
-                    })
-
-            today = datetime.now().date()
-            default_period_idx = 0
-            for i, p in enumerate(valid_periods):
-                if p["start"] <= today <= p["end"]:
-                    default_period_idx = i
-                    break
-
+            # ============ HEADER ============
             st.markdown("<h2 class='hof-page-title'>👑 HALL OF FAME PSM 👑</h2>", unsafe_allow_html=True)
-            st.markdown("<p class='hof-page-sub'>Peringkat penjualan item terbanyak per periode</p>", unsafe_allow_html=True)
+            st.markdown("<p class='hof-page-sub'>Peringkat penjualan item terbaik per periode</p>", unsafe_allow_html=True)
 
-            if not valid_periods:
-                st.markdown(
-                    "<div class='hof-book-container'><div class='hof-empty'>"
-                    "⚠️ Belum ada data periode PSM yang terdaftar di sheet PERIODE."
-                    "</div></div>",
-                    unsafe_allow_html=True
-                )
-                st.markdown("<br>", unsafe_allow_html=True)
-                if st.button("⬅️ KEMBALI KE HALL OF FAME", key="btn_hof_psm_back", use_container_width=True):
-                    st.session_state["hof_sub_page"] = None
-                    st.rerun()
-                st.stop()
+            # ============ KARTU-KARTU (HARDCODED DULU) ============
+            st.markdown(
+                """
+                <div class='hof-carousel-wrapper'>
 
-            # ==== CAROUSEL PERIODE ====
-            period_options = [f"📜 {p['name']}" for p in valid_periods]
-            selected_period_label = st.radio(
-                "Pilih Periode",
-                options=period_options,
-                index=default_period_idx,
-                key="hof_psm_period_carousel",
-                label_visibility="collapsed",
-                horizontal=True,
+                    <!-- KARTU 1: PERIODE TERBARU -->
+                    <div class='hof-card'>
+                        <div class='hof-card-inner'>
+                            <div class='hof-ornament hof-orn-tl'>⚜️</div>
+                            <div class='hof-ornament hof-orn-tr'>⚜️</div>
+                            <div class='hof-ornament hof-orn-bl'>⚜️</div>
+                            <div class='hof-ornament hof-orn-br'>⚜️</div>
+
+                            <div class='hof-period-badge'>📅 16 - 23 SEP 2026</div>
+
+                            <div class='hof-crown-box'>
+                                <span class='hof-sparkle hof-sparkle-1'>✦</span>
+                                <span class='hof-crown'>👑</span>
+                                <span class='hof-sparkle hof-sparkle-2'>✦</span>
+                                <span class='hof-sparkle hof-sparkle-3'>✦</span>
+                            </div>
+
+                            <div class='hof-avatar-wrapper'>
+                                <div class='hof-avatar-circle'>🧙‍♂️</div>
+                            </div>
+
+                            <div class='hof-champion-name'>ADELIA PRATIWI</div>
+                            <div class='hof-champion-qty'>46 Pcs</div>
+
+                            <div class='hof-card-divider'></div>
+
+                            <div class='hof-top-item-label'>📦 Item Terlaris</div>
+                            <div class='hof-top-item-name'>MINYAK GORENG 2L</div>
+                            <div class='hof-top-item-qty'>8 Qty</div>
+
+                            <div class='hof-detail-btn'>🔍 LIHAT DETAIL</div>
+                        </div>
+                    </div>
+
+                    <!-- KARTU 2: PERIODE SEBELUMNYA -->
+                    <div class='hof-card'>
+                        <div class='hof-card-inner'>
+                            <div class='hof-ornament hof-orn-tl'>⚜️</div>
+                            <div class='hof-ornament hof-orn-tr'>⚜️</div>
+                            <div class='hof-ornament hof-orn-bl'>⚜️</div>
+                            <div class='hof-ornament hof-orn-br'>⚜️</div>
+
+                            <div class='hof-period-badge'>📅 08 - 15 SEP 2026</div>
+
+                            <div class='hof-crown-box'>
+                                <span class='hof-sparkle hof-sparkle-1'>✦</span>
+                                <span class='hof-crown'>👑</span>
+                                <span class='hof-sparkle hof-sparkle-2'>✦</span>
+                                <span class='hof-sparkle hof-sparkle-3'>✦</span>
+                            </div>
+
+                            <div class='hof-avatar-wrapper'>
+                                <div class='hof-avatar-circle'>🧝‍♂️</div>
+                            </div>
+
+                            <div class='hof-champion-name'>RIZKI GUNAWAN</div>
+                            <div class='hof-champion-qty'>38 Pcs</div>
+
+                            <div class='hof-card-divider'></div>
+
+                            <div class='hof-top-item-label'>📦 Item Terlaris</div>
+                            <div class='hof-top-item-name'>BERAS PREMIUM 5KG</div>
+                            <div class='hof-top-item-qty'>6 Qty</div>
+
+                            <div class='hof-detail-btn'>🔍 LIHAT DETAIL</div>
+                        </div>
+                    </div>
+
+                    <!-- KARTU 3: ALL TIME -->
+                    <div class='hof-card hof-card-alltime'>
+                        <div class='hof-card-inner'>
+                            <div class='hof-ornament hof-orn-tl'>⚜️</div>
+                            <div class='hof-ornament hof-orn-tr'>⚜️</div>
+                            <div class='hof-ornament hof-orn-bl'>⚜️</div>
+                            <div class='hof-ornament hof-orn-br'>⚜️</div>
+
+                            <div class='hof-period-badge'>🏆 ALL TIME</div>
+
+                            <div class='hof-crown-box'>
+                                <span class='hof-sparkle hof-sparkle-1'>✦</span>
+                                <span class='hof-crown'>👑</span>
+                                <span class='hof-sparkle hof-sparkle-2'>✦</span>
+                                <span class='hof-sparkle hof-sparkle-3'>✦</span>
+                            </div>
+
+                            <div class='hof-avatar-wrapper'>
+                                <div class='hof-avatar-circle'>🦁</div>
+                            </div>
+
+                            <div class='hof-champion-name'>TIKA</div>
+                            <div class='hof-champion-qty'>189 Pcs</div>
+
+                            <div class='hof-card-divider'></div>
+
+                            <div class='hof-top-item-label'>📦 Item Terlaris</div>
+                            <div class='hof-top-item-name'>GULA PASIR 1KG</div>
+                            <div class='hof-top-item-qty'>24 Qty</div>
+
+                            <div class='hof-detail-btn'>🔍 LIHAT DETAIL</div>
+                        </div>
+                    </div>
+
+                </div>
+                """,
+                unsafe_allow_html=True
             )
-            selected_idx = period_options.index(selected_period_label)
-            selected_period = valid_periods[selected_idx]
-            selected_pid = selected_period["id"]
 
-            # ==== HITUNG RANKING ====
-            ranking_list = []
-            if not sp_df.empty and all(c in sp_df.columns for c in ["period_id", "person_name", "actual_qty"]):
-                sp_filtered = sp_df[sp_df["period_id"].astype(str).str.strip() == selected_pid].copy()
-                if not sp_filtered.empty:
-                    sp_filtered["person_name"] = sp_filtered["person_name"].astype(str).str.strip()
-                    sp_filtered["actual_qty"] = pd.to_numeric(sp_filtered["actual_qty"], errors="coerce").fillna(0)
-                    grouped = sp_filtered.groupby("person_name")["actual_qty"].sum().reset_index()
-                    grouped = grouped.sort_values("actual_qty", ascending=False).reset_index(drop=True)
-                    for _, r in grouped.iterrows():
-                        if int(r["actual_qty"]) > 0:
-                            ranking_list.append((str(r["person_name"]), int(r["actual_qty"])))
-
-            current_user = str(st.session_state.get("username", "")).strip().upper()
-
-            # ==== BUILD HTML ====
-            if not ranking_list:
-                book_content = (
-                    f"<div class='hof-book-container'>"
-                    f"<div class='hof-book-header'>{selected_period['name'].upper()}</div>"
-                    f"<div class='hof-divider'></div>"
-                    f"<div class='hof-empty'>🏜️ Belum ada transaksi PSM tercatat pada periode ini.<br><br>"
-                    f"Data akan muncul setelah ada input penjualan oleh personil.</div>"
-                    f"<div class='hof-footer'>Halaman Papan Peringkat PSM</div>"
-                    f"</div>"
-                )
-            else:
-                def make_podium_item(rank_idx, class_name, crown_icon, r_list):
-                    if len(r_list) > rank_idx:
-                        n, q = r_list[rank_idx]
-                        is_me = (n.upper() == current_user)
-                        me_cls = "hof-user-me" if is_me else ""
-                        you_badge = "<div class='podium-you-badge'>KAMU</div>" if is_me else ""
-                        html = f'<div class="podium-slot">'
-                        html += f'<div style="font-size:22px; margin-bottom:2px; z-index:3;">{crown_icon}</div>'
-                        html += f'<div class="podium-card {class_name} {me_cls}">'
-                        html += f'<div class="podium-rank-tag">#{rank_idx+1}</div>'
-                        html += f'<div class="podium-name" title="{n}">{n}</div>'
-                        html += f'{you_badge}'
-                        html += f'<div class="podium-score">{q} Pcs</div>'
-                        html += f'</div></div>'
-                        return html
-                    return ""
-
-                podium_html = '<div class="podium-wrapper">'
-                podium_html += make_podium_item(1, "podium-2", "🥈", ranking_list)
-                podium_html += make_podium_item(0, "podium-1", "👑", ranking_list)
-                podium_html += make_podium_item(2, "podium-3", "🥉", ranking_list)
-                podium_html += '</div>'
-
-                rest_html = '<div class="hof-list-container">'
-                for i, (n, q) in enumerate(ranking_list[3:9]):
-                    rank = i + 4
-                    is_me = (n.upper() == current_user)
-                    me_class = "hof-user-me" if is_me else ""
-                    you_badge = '<span style="background: #2563eb; color: white; font-size: 8px; padding: 1px 4px; border-radius: 4px; margin-left: 4px;">KAMU</span>' if is_me else ""
-                    rest_html += f'<div class="hof-normal-row {me_class}">'
-                    rest_html += f'<div style="display:flex; align-items:center; gap:6px;">'
-                    rest_html += f'<span>🛡️</span>'
-                    rest_html += f'<span style="font-weight:bold;">#{rank}</span>'
-                    rest_html += f'<span style="font-weight:bold;">{n}</span>'
-                    rest_html += f'{you_badge}'
-                    rest_html += f'</div>'
-                    rest_html += f'<div style="font-weight:900;">{q} Pcs</div>'
-                    rest_html += f'</div>'
-                rest_html += '</div>'
-
-                user_rank_html = ""
-                if current_user:
-                    for idx, (n, q) in enumerate(ranking_list):
-                        if n.upper() == current_user and idx >= 9:
-                            user_rank_html = (
-                                f'<div style="background: rgba(37, 99, 235, 0.15); border: 2px solid #2563eb; '
-                                f'border-radius: 8px; padding: 10px 14px; margin-top: 15px; text-align: center; '
-                                f'font-family: monospace; color: #1e3a8a; font-size: 12px; font-weight: bold; '
-                                f'position: relative; z-index: 2;">'
-                                f'📍 POSISI KAMU: <b>#{idx+1}</b> — {q} Pcs'
-                                f'</div>'
-                            )
-                            break
-
-                book_content = (
-                    f"<div class='hof-book-container'>"
-                    f"<div class='hof-book-header'>{selected_period['name'].upper()}</div>"
-                    f"<div class='hof-divider'></div>"
-                    f"{podium_html}"
-                    f"{rest_html}"
-                    f"{user_rank_html}"
-                    f"<div class='hof-footer'>Halaman Papan Peringkat PSM</div>"
-                    f"</div>"
-                )
-
-            st.markdown(book_content, unsafe_allow_html=True)
-
+            # ============ TOMBOL KEMBALI ============
             st.markdown("<br>", unsafe_allow_html=True)
             if st.button("⬅️ KEMBALI KE HALL OF FAME", key="btn_hof_psm_back", use_container_width=True):
                 st.session_state["hof_sub_page"] = None
