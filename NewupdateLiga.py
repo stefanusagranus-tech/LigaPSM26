@@ -2105,9 +2105,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
         # 👑 NAVIGATION STRUKTUR INTERNAL: JALUR NAVIGASI UTAMA BERURUTAN (FIXED)
         # =========================================================================
-                 
+                         
         # =========================================================================
-        # 🚪 MEJA RESEPSIONIS UTAMA — VERSI RAPI (JARAK KARTU & TOMBOL)
+        # 🚪 MEJA RESEPSIONIS UTAMA — VERSI FINAL (RAPAT)
         # =========================================================================
         
         if st.session_state.get("campaign_sub_page", "resepsionis_utama") == "resepsionis_utama":
@@ -2126,7 +2126,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         background-attachment: fixed !important;
                     }}
         
-                    /* 🏗️ KARTU — rounded penuh */
+                    /* 🏗️ KARTU */
                     .rpg-card-box {{
                         background: linear-gradient(135deg, #0f172a 0%, #1e1b18 100%) !important;
                         border: 2px solid #b45309 !important;
@@ -2183,14 +2183,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         margin-bottom: 0;
                     }}
         
-                    /* 🎯 WRAPPER TOMBOL */
+                    /* 🎯 WRAPPER TOMBOL — jarak diperkecil jadi 3px */
                     div[data-testid="stButton"] {{
                         max-width: 480px !important;
-                        margin: 8px auto 30px auto !important;  /* ← jarak 8px dari kartu */
+                        margin: 3px auto 30px auto !important;   /* ← 3px, lebih rapat */
                         padding: 0 !important;
                     }}
         
-                    /* 🔘 TOMBOL — rounded penuh, ada jarak */
+                    /* 🔘 TOMBOL */
                     div[data-testid="stButton"] > button {{
                         background: rgba(180, 83, 9, 0.15) !important;
                         border: 2px solid #b45309 !important;
@@ -2269,9 +2269,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 unsafe_allow_html=True
             )
         
-            # =====================================================================
             # 🏷️ JUDUL
-            # =====================================================================
             st.markdown(
                 "<h2 style='text-shadow: 0 0 15px rgba(251,191,36,0.5); color: #fef08a; "
                 "text-align: center; font-family: monospace; margin-bottom: 5px;'>"
@@ -2285,64 +2283,44 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 unsafe_allow_html=True
             )
         
-            # =====================================================================
-            # 🔵 KARTU 1 — JURNAL BURUAN
-            # =====================================================================
-            st.markdown(
-                """
+            # 🔵 KARTU 1
+            st.markdown("""
                 <div class='rpg-card-box rpg-card-blue'>
                     <div class='rpg-card-emoji'>📘</div>
                     <div class='rpg-card-title'>JURNAL BURUAN INDIVIDU</div>
                     <div class='rpg-card-desc'>Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin hasil buruan, tingkat level pahlawan, dan rekap performa penjualan harian Anda.</div>
                 </div>
-                """,
-                unsafe_allow_html=True
-            )
+            """, unsafe_allow_html=True)
             if st.button("Buka Catatan ➔", key="btn_go_to_jurnal_buruan_camp_style", use_container_width=True):
                 st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
                 st.rerun()
         
-            # =====================================================================
-            # 🟣 KARTU 2 — KITAB MISI
-            # =====================================================================
-            st.markdown(
-                """
+            # 🟣 KARTU 2
+            st.markdown("""
                 <div class='rpg-card-box rpg-card-purple'>
                     <div class='rpg-card-emoji'>🔮 ⚔️</div>
                     <div class='rpg-card-title'>KITAB MISI & QUIZ GUILD</div>
                     <div class='rpg-card-desc'>Cek papan pengumuman maklumat aliansi untuk memantau target pencapaian toko harian, daftar quest mingguan PSM, serta tantangan kuis berkala.</div>
                 </div>
-                """,
-                unsafe_allow_html=True
-            )
+            """, unsafe_allow_html=True)
             if st.button("Periksa Kitab ➔", key="btn_go_to_kitab_misi_camp_style", use_container_width=True):
                 st.session_state["campaign_sub_page"] = "view_buku_tugas"
                 st.rerun()
         
-            # =====================================================================
-            # 🟡 KARTU 3 — HALL OF FAME
-            # =====================================================================
-            st.markdown(
-                """
+            # 🟡 KARTU 3
+            st.markdown("""
                 <div class='rpg-card-box rpg-card-gold'>
                     <div class='rpg-card-emoji'>🏆 ✨</div>
                     <div class='rpg-card-title'>HALL OF FAME ALIANSI</div>
                     <div class='rpg-card-desc'>Lihat papan prasasti pahlawan tertinggi untuk memeriksa daftar peringkat petualang legendaris yang memiliki akumulasi buruan paling perkasa musim ini.</div>
                 </div>
-                """,
-                unsafe_allow_html=True
-            )
+            """, unsafe_allow_html=True)
             if st.button("Lihat Papan Peringkat ➔", key="btn_go_to_hall_of_fame", use_container_width=True):
                 st.session_state["campaign_sub_page"] = "view_hall_of_fame"
                 st.rerun()
         
-            # =====================================================================
             # ↩️ KEMBALI
-            # =====================================================================
-            st.markdown(
-                "<br><hr style='border-color: rgba(251, 191, 36, 0.3); margin: 15px 0;'><br>",
-                unsafe_allow_html=True
-            )
+            st.markdown("<br><hr style='border-color: rgba(251, 191, 36, 0.3); margin: 15px 0;'><br>", unsafe_allow_html=True)
             if st.button("⬅️ KEMBALI KE BERANDA KOTA", use_container_width=True, key="btn_exit_reception_lobby_camp_style"):
                 st.session_state.current_camp_menu = "main"
                 st.rerun()
