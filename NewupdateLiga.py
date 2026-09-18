@@ -3567,39 +3567,41 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.markdown("<p class='hof-page-sub'>Peringkat penjualan item terbaik per periode</p>", unsafe_allow_html=True)
 
             # ==== CAROUSEL KARTU ====
-            kartu_html = "<div class='hof-carousel-wrapper'>"
+            kartu_parts = ["<div class='hof-carousel-wrapper'>"]
             for key in ["kartu1", "kartu2", "kartu3"]:
                 d = data_dummy[key]
                 top1_name, top1_qty = d["data"][0]
                 top1_avatar = get_avatar(top1_name)
                 alltime_class = "hof-card-alltime" if d["alltime"] else ""
-                kartu_html += f"""
-                    <div class='hof-card {alltime_class}'>
-                    <div class='hof-card-inner'>
-                    <div class='hof-ornament hof-orn-tl'>⚜️</div>
-                    <div class='hof-ornament hof-orn-tr'>⚜️</div>
-                    <div class='hof-ornament hof-orn-bl'>⚜️</div>
-                    <div class='hof-ornament hof-orn-br'>⚜️</div>
-                    <div class='hof-period-badge'>{d['badge']}</div>
-                    <div class='hof-crown-box'>
-                    <span class='hof-sparkle hof-sparkle-1'>✦</span>
-                    <span class='hof-crown'>👑</span>
-                    <span class='hof-sparkle hof-sparkle-2'>✦</span>
-                    <span class='hof-sparkle hof-sparkle-3'>✦</span>
-                    </div>
-                    <div class='hof-avatar-wrapper'>
-                    <div class='hof-avatar-circle'>{top1_avatar}</div>
-                    </div>
-                    <div class='hof-champion-name'>{top1_name}</div>
-                    <div class='hof-champion-qty'>{top1_qty} Pcs</div>
-                    <div class='hof-card-divider'></div>
-                    <div class='hof-top-item-label'>📦 Item Terlaris</div>
-                    <div class='hof-top-item-name'>{d['top_item']}</div>
-                    <div class='hof-top-item-qty'>{d['top_item_qty']} Qty</div>
-                    </div>
-                    </div>
-                    """
-            kartu_html += "</div>"
+
+                kartu_parts.append(
+                    "<div class='hof-card " + alltime_class + "'>"
+                    "<div class='hof-card-inner'>"
+                    "<div class='hof-ornament hof-orn-tl'>⚜️</div>"
+                    "<div class='hof-ornament hof-orn-tr'>⚜️</div>"
+                    "<div class='hof-ornament hof-orn-bl'>⚜️</div>"
+                    "<div class='hof-ornament hof-orn-br'>⚜️</div>"
+                    "<div class='hof-period-badge'>" + d['badge'] + "</div>"
+                    "<div class='hof-crown-box'>"
+                    "<span class='hof-sparkle hof-sparkle-1'>✦</span>"
+                    "<span class='hof-crown'>👑</span>"
+                    "<span class='hof-sparkle hof-sparkle-2'>✦</span>"
+                    "<span class='hof-sparkle hof-sparkle-3'>✦</span>"
+                    "</div>"
+                    "<div class='hof-avatar-wrapper'>"
+                    "<div class='hof-avatar-circle'>" + top1_avatar + "</div>"
+                    "</div>"
+                    "<div class='hof-champion-name'>" + top1_name + "</div>"
+                    "<div class='hof-champion-qty'>" + str(top1_qty) + " Pcs</div>"
+                    "<div class='hof-card-divider'></div>"
+                    "<div class='hof-top-item-label'>📦 Item Terlaris</div>"
+                    "<div class='hof-top-item-name'>" + d['top_item'] + "</div>"
+                    "<div class='hof-top-item-qty'>" + str(d['top_item_qty']) + " Qty</div>"
+                    "</div>"
+                    "</div>"
+                )
+            kartu_parts.append("</div>")
+            kartu_html = "".join(kartu_parts).strip()
             st.markdown(kartu_html, unsafe_allow_html=True)
 
             # ==== TOMBOL DETAIL PER KARTU ====
@@ -3628,59 +3630,64 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     if len(rlist) > rank_idx:
                         n, q = rlist[rank_idx]
                         av = get_avatar(n)
-                        return f"""
-                            <div class='podium-slot'>
-                            <div style='font-size:22px; margin-bottom:2px;'>{crown}</div>
-                            <div class='podium-card {cls}'>
-                            <div class='podium-rank-tag'>#{rank_idx+1}</div>
-                            <div class='podium-avatar'>{av}</div>
-                            <div class='podium-name'>{n}</div>
-                            <div class='podium-score'>{q} Pcs</div>
-                            </div>
-                            </div>
-                            """
+                        return (
+                            "<div class='podium-slot'>"
+                            "<div style='font-size:22px; margin-bottom:2px;'>" + crown + "</div>"
+                            "<div class='podium-card " + cls + "'>"
+                            "<div class='podium-rank-tag'>#" + str(rank_idx + 1) + "</div>"
+                            "<div class='podium-avatar'>" + av + "</div>"
+                            "<div class='podium-name'>" + n + "</div>"
+                            "<div class='podium-score'>" + str(q) + " Pcs</div>"
+                            "</div>"
+                            "</div>"
+                        )
                     return ""
 
-                podium_html = "<div class='podium-wrapper'>"
-                podium_html += make_podium(1, "podium-2", "🥈", ranking)
-                podium_html += make_podium(0, "podium-1", "👑", ranking)
-                podium_html += make_podium(2, "podium-3", "🥉", ranking)
-                podium_html += "</div>"
+                podium_parts = ["<div class='podium-wrapper'>"]
+                podium_parts.append(make_podium(1, "podium-2", "🥈", ranking))
+                podium_parts.append(make_podium(0, "podium-1", "👑", ranking))
+                podium_parts.append(make_podium(2, "podium-3", "🥉", ranking))
+                podium_parts.append("</div>")
+                podium_html = "".join(podium_parts).strip()
 
                 # Bangun list ranking 4-9
-                list_html = "<div class='hof-ranking-list'>"
+                list_parts = ["<div class='hof-ranking-list'>"]
                 for i, (n, q) in enumerate(ranking[3:9]):
                     rank = i + 4
                     av = get_avatar(n)
-                    list_html += f"""
-                        <div class='hof-ranking-row'>
-                        <div class='hof-ranking-row-left'>
-                        <span>🛡️</span>
-                        <span style='font-weight:bold;'>#{rank}</span>
-                        <span class='hof-ranking-avatar'>{av}</span>
-                        <span class='hof-ranking-name'>{n}</span>
-                        </div>
-                        <div class='hof-ranking-score'>{q} Pcs</div>
-                        </div>
-                        """
-                list_html += "</div>"
+                    list_parts.append(
+                        "<div class='hof-ranking-row'>"
+                        "<div class='hof-ranking-row-left'>"
+                        "<span>🛡️</span>"
+                        "<span style='font-weight:bold;'>#" + str(rank) + "</span>"
+                        "<span class='hof-ranking-avatar'>" + av + "</span>"
+                        "<span class='hof-ranking-name'>" + n + "</span>"
+                        "</div>"
+                        "<div class='hof-ranking-score'>" + str(q) + " Pcs</div>"
+                        "</div>"
+                    )
+                list_parts.append("</div>")
+                list_html = "".join(list_parts).strip()
 
-                panel_html = f"""
-                    <div class='hof-panel-wrapper'>
-                    <div class='hof-panel-ornament hof-panel-orn-tl'>⚜️</div>
-                    <div class='hof-panel-ornament hof-panel-orn-tr'>⚜️</div>
-                    <div class='hof-panel-ornament hof-panel-orn-bl'>⚜️</div>
-                    <div class='hof-panel-ornament hof-panel-orn-br'>⚜️</div>
-                    <div class='hof-panel-title'>📜 DETAIL PERINGKAT</div>
-                    <div class='hof-panel-sub'>{d['badge']}</div>
-                    <div class='hof-panel-divider'></div>
-                    <div style='text-align:center; color:#fbbf24; font-family:monospace; font-size:13px; font-weight:900; margin-top:10px;'>🏆 PODIUM TOP 3</div>
-                    {podium_html}
-                    <div class='hof-panel-divider'></div>
-                    <div style='text-align:center; color:#fbbf24; font-family:monospace; font-size:13px; font-weight:900;'>📜 PERINGKAT 4-9</div>
-                    {list_html}
-                    </div>
-                    """
+                # Bangun panel utama
+                panel_html = (
+                    "<div class='hof-panel-wrapper'>"
+                    "<div class='hof-panel-ornament hof-panel-orn-tl'>⚜️</div>"
+                    "<div class='hof-panel-ornament hof-panel-orn-tr'>⚜️</div>"
+                    "<div class='hof-panel-ornament hof-panel-orn-bl'>⚜️</div>"
+                    "<div class='hof-panel-ornament hof-panel-orn-br'>⚜️</div>"
+                    "<div class='hof-panel-title'>📜 DETAIL PERINGKAT</div>"
+                    "<div class='hof-panel-sub'>" + d['badge'] + "</div>"
+                    "<div class='hof-panel-divider'></div>"
+                    "<div style='text-align:center; color:#fbbf24; font-family:monospace; "
+                    "font-size:13px; font-weight:900; margin-top:10px;'>🏆 PODIUM TOP 3</div>"
+                    + podium_html +
+                    "<div class='hof-panel-divider'></div>"
+                    "<div style='text-align:center; color:#fbbf24; font-family:monospace; "
+                    "font-size:13px; font-weight:900;'>📜 PERINGKAT 4-9</div>"
+                    + list_html +
+                    "</div>"
+                )
                 st.markdown(panel_html, unsafe_allow_html=True)
 
                 if st.button("✖️ TUTUP DETAIL", key="btn_close_detail", use_container_width=True):
