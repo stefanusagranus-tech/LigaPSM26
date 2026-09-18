@@ -2105,42 +2105,31 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
                  
         # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (VISUAL PREMIUM & SILUMAN SEMPURNA)
+        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (TAMPILAN ELEGAN MENGIKUTI PREPARATION CAMP)
         # =========================================================================
         if st.session_state.get("campaign_sub_page", "resepsionis_utama") == "resepsionis_utama":
             
             st.markdown("<h2 class='guild-lobby-title' style='text-shadow: 0 0 15px rgba(251,191,36,0.5); color: #fef08a; text-align: center; font-family: monospace;'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub' style='color: #cbd5e1; text-align: center; font-family: monospace; margin-bottom: 30px;'>Pilih gulungan maklumat di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
         
-            # --- 🎨 SIHIR CSS: PENYEMBUNYIAN TOMBOL TOTAL & TATA LETAK RESPONSIF MOBILE ---
+            # --- 🎨 SIHIR CSS: MENYELARASKAN DENGAN STYLE PREPARATION CAMP ANTA-BENTROK ---
             st.markdown(
                 """
                 <style>
-                    /* Container pembungkus utama kelompok gulungan */
-                    .scroll-block-wrapper {
-                        position: relative;
-                        width: 100%;
-                        max-width: 480px;
-                        margin: 0 auto 25px auto;
-                    }
-                    
-                    /* Komponen Papan Perkamen Visual (Lapisan Bawah) */
-                    .scroll-visual-box {
+                    /* Wadah kotak kartu bernuansa medieval */
+                    .rpg-card-box {
                         background: linear-gradient(135deg, #0f172a 0%, #1e1b18 100%) !important;
                         border: 2px solid #b45309 !important;
-                        border-top: 8px solid #d97706 !important; /* Pasak Kayu Kuno */
-                        border-radius: 6px 6px 16px 16px !important;
-                        padding: 22px 20px !important;
-                        box-shadow: 0 0 20px rgba(180, 83, 9, 0.3), inset 0 0 15px rgba(251, 191, 36, 0.05) !important;
+                        border-top: 6px solid #d97706 !important; /* Aksen kayu jepit atas */
+                        border-radius: 12px !important;
+                        padding: 25px 20px 10px 20px !important;
+                        margin-bottom: 25px !important;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.5), inset 0 0 15px rgba(251, 191, 36, 0.02) !important;
                         text-align: center;
-                        pointer-events: none; /* Sentuhan akan menembus ke tombol trigger */
-                        position: relative;
-                        z-index: 1;
-                        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
                     }
                     
-                    /* Gaya Animasi Emoji Mengambang Kuno */
-                    .visual-emoji {
+                    /* Animasi Emoji Mengambang Lembut */
+                    .rpg-card-emoji {
                         font-size: 38px;
                         line-height: 1;
                         margin-bottom: 12px;
@@ -2148,118 +2137,98 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         animation: floatScrollBtn 2.5s infinite ease-in-out;
                     }
                     
-                    .visual-title {
+                    /* Teks Judul Kartu */
+                    .rpg-card-title {
                         font-family: monospace;
-                        font-size: 14.5px;
+                        font-size: 15px;
                         font-weight: bold;
                         color: #fbbf24;
-                        margin-bottom: 8px;
-                        display: block;
+                        margin-bottom: 10px;
                         letter-spacing: 0.5px;
                     }
                     
-                    .visual-desc {
+                    /* Teks Deskripsi Kartu */
+                    .rpg-card-desc {
                         font-family: monospace;
-                        font-size: 11.5px;
+                        font-size: 12px;
                         line-height: 1.6;
                         color: #cbd5e1;
-                        margin: 0;
-                        display: block;
+                        margin-bottom: 15px;
                     }
                     
-                    @keyframes floatScrollBtn {
-                        0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 4px rgba(251,191,36,0.3)); }
-                        50% { transform: translateY(-5px) scale(1.05); filter: drop-shadow(0 0 12px rgba(251,191,36,0.7)); }
+                    /* 🎯 RE-DESAIN KHUSUS TOMBOL NAVIGASI DI DALAM KARTU RESEPSIONIS */
+                    div.rpg-action-btn button {
+                        background: rgba(180, 83, 9, 0.15) !important;
+                        border: 1px solid #b45309 !important;
+                        color: #fde047 !important;
+                        font-family: monospace !important;
+                        font-size: 12.5px !important;
+                        font-weight: bold !important;
+                        padding: 8px 20px !important;
+                        border-radius: 6px !important;
+                        transition: all 0.3s ease !important;
+                        margin: 0 auto !important;
+                        display: block !important;
+                        width: auto !important; /* Tombol kecil proporsional di tengah */
+                    }
+                    
+                    /* Efek Hover Tombol Aksi */
+                    div.rpg-action-btn button:hover {
+                        background: #b45309 !important;
+                        color: #ffffff !important;
+                        box-shadow: 0 0 15px rgba(251, 191, 36, 0.4) !important;
+                        transform: translateY(-1px) !important;
                     }
         
-                    /* 🕵️‍♂️ OPERASI SILUMAN TOTAL: KUNCI & LENYAPKAN TEKS TOMBOL STREAMLIT ORIGINAL */
-                    div.rpg-invisible-trigger {
-                        position: absolute !important;
-                        top: 0 !important;
-                        left: 0 !important;
-                        width: 100% !important;
-                        height: 100% !important;
-                        z-index: 2; /* Menutupi penuh visual-box agar menerima klik di semua sisi */
-                        margin: 0 !important;
-                        padding: 0 !important;
-                    }
-                    
-                    /* Paksa tombol asli Streamlit menjadi benar-benar transparan tak terlihat */
-                    div.rpg-invisible-trigger button {
-                        background: transparent !important;
-                        border: none !important;
-                        color: transparent !important; /* Lenyapkan tulisan TRIGGER dari layar */
-                        width: 100% !important;
-                        height: 100% !important;
-                        min-height: 160px !important;
-                        cursor: pointer !important;
-                        box-shadow: none !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
-                        font-size: 0px !important; /* Mencegah font menyembul */
-                    }
-                    
-                    /* Memicu perubahan visual pada papan ketika area pembungkus disentuh/di-hover */
-                    .scroll-block-wrapper:hover .scroll-visual-box {
-                        transform: translateY(-4px) scale(1.01);
-                        border-color: #fbbf24 !important;
-                        border-top-color: #fbbf24 !important;
-                        box-shadow: 0 0 25px rgba(251, 191, 36, 0.5), inset 0 0 15px rgba(251, 191, 36, 0.1) !important;
-                    }
-                    
-                    /* Efek responsif aktif saat tombol ditekan di layar HP */
-                    .scroll-block-wrapper:active .scroll-visual-box {
-                        transform: scale(0.99);
-                        box-shadow: 0 0 10px rgba(251, 191, 36, 0.3) !important;
+                    @keyframes floatScrollBtn {
+                        0%, 100% { transform: translateY(0); filter: drop-shadow(0 0 4px rgba(251,191,36,0.3)); }
+                        50% { transform: translateY(-4px); filter: drop-shadow(0 0 10px rgba(251,191,36,0.6)); }
                     }
                 </style>
                 """,
                 unsafe_allow_html=True
             )
         
-            # --- 🏗️ RENDER GULUNGAN 1: JURNAL BURUAN ---
-            st.markdown("<div class='scroll-block-wrapper'>", unsafe_allow_html=True)
-            # Tampilan Visual Cantik
+            # --- 🏗️ KARTU 1: JURNAL BURUAN INDIVIDU ---
             st.markdown(
                 """
-                <div class='scroll-visual-box'>
-                    <div class='visual-emoji'>📘</div>
-                    <div class='visual-title'>📜 JURNAL BURUAN INDIVIDU 📜</div>
-                    <div class='visual-desc'>Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin hasil buruan, tingkat level pahlawan, dan rekap performa penjualan harian Anda.</div>
+                <div class='rpg-card-box'>
+                    <div class='rpg-card-emoji'>📘</div>
+                    <div class='rpg-card-title'>JURNAL BURUAN INDIVIDU</div>
+                    <div class='rpg-card-desc'>Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin hasil buruan, tingkat level pahlawan, dan rekap performa penjualan harian Anda.</div>
                 </div>
                 """, unsafe_allow_html=True
             )
-            # Tombol Siluman Absolut (Deteksi klik Python murni di balik layar)
-            st.markdown("<div class='rpg-invisible-trigger'>", unsafe_allow_html=True)
-            if st.button("TRIGGER_BURUAN", use_container_width=True, key="btn_trigger_jurnal_buruan_premium"):
+            # Penempatan Tombol Navigasi Persis di Bawah Kartu
+            st.markdown("<div class='rpg-action-btn' style='margin-top: -45px; margin-bottom: 35px;'>", unsafe_allow_html=True)
+            if st.button("Buka Catatan ➔", key="btn_go_to_jurnal_buruan_camp_style"):
                 st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
                 st.rerun()
-            st.markdown("</div></div>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
         
-            # --- 🏗️ RENDER GULUNGAN 2: KITAB MISI ---
-            st.markdown("<div class='scroll-block-wrapper'>", unsafe_allow_html=True)
-            # Tampilan Visual Cantik
+        
+            # --- 🏗️ KARTU 2: KITAB MISI & QUIZ GUILD ---
             st.markdown(
                 """
-                <div class='scroll-visual-box'>
-                    <div class='visual-emoji'>🔮 ⚔️</div>
-                    <div class='visual-title'>📜 KITAB MISI & QUIZ GUILD 📜</div>
-                    <div class='visual-desc'>Cek papan pengumuman maklumat aliansi untuk memantau target pencapaian toko harian, daftar quest mingguan PSM, serta tantangan kuis berkala.</div>
+                <div class='rpg-card-box'>
+                    <div class='rpg-card-emoji'>🔮 ⚔️</div>
+                    <div class='rpg-card-title'>KITAB MISI & QUIZ GUILD</div>
+                    <div class='rpg-card-desc'>Cek papan pengumuman maklumat aliansi untuk memantau target pencapaian toko harian, daftar quest mingguan PSM, serta tantangan kuis berkala.</div>
                 </div>
                 """, unsafe_allow_html=True
             )
-            # Tombol Siluman Absolut (Deteksi klik Python murni di balik layar)
-            st.markdown("<div class='rpg-invisible-trigger'>", unsafe_allow_html=True)
-            if st.button("TRIGGER_MISI", use_container_width=True, key="btn_trigger_kitab_misi_premium"):
+            # Penempatan Tombol Navigasi Persis di Bawah Kartu
+            st.markdown("<div class='rpg-action-btn' style='margin-top: -45px; margin-bottom: 35px;'>", unsafe_allow_html=True)
+            if st.button("Periksa Kitab ➔", key="btn_go_to_kitab_misi_camp_style"):
                 st.session_state["campaign_sub_page"] = "view_buku_tugas"
                 st.rerun()
-            st.markdown("</div></div>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
         
         
-            # --- ↩️ TOMBOL KEMBALI KEMAH (Menggunakan Tombol Standar Navigasi Anda) ---
+            # --- ↩️ TOMBOL KEMBALI KEMAH ---
             st.markdown("<br><hr style='border-color: rgba(251, 191, 36, 0.3); margin: 15px 0;'><br>", unsafe_allow_html=True)
             st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
-            if st.button("⬅️ KEMBALI KE BERANDA KOTA", use_container_width=True, key="btn_exit_campaign_lobby_premium_fixed"):
+            if st.button("⬅️ KEMBALI KE BERANDA KOTA", use_container_width=True, key="btn_exit_reception_lobby_camp_style"):
                 st.session_state.current_camp_menu = "main"
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
