@@ -2107,18 +2107,25 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
                  
         # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (3 GULUNGAN SEJAJAR PENUH + BACKDROP ANIMASI MIYAZAKI)
+        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA
+        # 3 Gulungan + Backdrop Miyazaki + Warna Beda Per Kartu
+        # Streamlit 1.64.0 ✅
         # =========================================================================
+        
         if st.session_state.get("campaign_sub_page", "resepsionis_utama") == "resepsionis_utama":
-            
-            # --- 🌌 SUNTIK GAMBAR LATAR BELAKANG DARI STABLE DIFFUSION WEB ---
-            # Alamat gambar langsung dari aset Stable Diffusion bernuansa Miyazaki Guild Hall
-            url_gambar_latar = "https://stablediffusionweb.com"
-            
+        
+            # ---------------------------------------------------------------------
+            # 🌌 BACKGROUND IMAGE — Miyazaki Style Medieval Guild Hall
+            # ---------------------------------------------------------------------
+            url_gambar_latar = "https://i.imgur.com/9HTvsmJ.jpeg"
+        
+            # =====================================================================
+            # 🎨 SUNTIK CSS GLOBAL
+            # =====================================================================
             st.markdown(
                 f"""
                 <style>
-                    /* 🌌 MENYUNTIKKAN GAMBAR LATAR BELAKANG SECARA ABSOLUT PADA HALAMAN INI */
+                    /* 🌌 BACKGROUND HALAMAN */
                     .stApp {{
                         background-image: linear-gradient(rgba(15, 23, 42, 0.82), rgba(15, 23, 42, 0.82)), url("{url_gambar_latar}") !important;
                         background-size: cover !important;
@@ -2126,23 +2133,40 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         background-repeat: no-repeat !important;
                         background-attachment: fixed !important;
                     }}
-                    
-                    /* Wadah kotak kartu bernuansa medieval (Sesuai gaya Preparation Camp Anda) */
+        
+                    /* 🏗️ KARTU DASAR */
                     .rpg-card-box {{
                         background: linear-gradient(135deg, #0f172a 0%, #1e1b18 100%) !important;
                         border: 2px solid #b45309 !important;
-                        border-top: 6px solid #d97706 !important; /* Aksen kayu jepit atas */
-                        border-radius: 12px !important;
+                        border-top: 6px solid #d97706 !important;
+                        border-radius: 12px 12px 0 0 !important;
                         padding: 25px 20px 15px 20px !important;
-                        margin-bottom: 0px !important; /* Di-nol-kan agar menyatu dengan tombol navigasi bawah */
+                        margin-bottom: 0 !important;
                         box-shadow: 0 4px 15px rgba(0,0,0,0.6), inset 0 0 15px rgba(251, 191, 36, 0.02) !important;
                         text-align: center;
                         max-width: 480px;
                         margin-left: auto;
                         margin-right: auto;
                     }}
-                    
-                    /* Animasi Emoji Mengambang Lembut */
+        
+                    /* 🎨 VARIAN WARNA KARTU */
+                    .rpg-card-blue {{
+                        border: 2px solid #1d4ed8 !important;
+                        border-top: 6px solid #3b82f6 !important;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.6), inset 0 0 15px rgba(59, 130, 246, 0.05) !important;
+                    }}
+                    .rpg-card-purple {{
+                        border: 2px solid #7c3aed !important;
+                        border-top: 6px solid #a855f7 !important;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.6), inset 0 0 15px rgba(168, 85, 247, 0.05) !important;
+                    }}
+                    .rpg-card-gold {{
+                        border: 2px solid #b45309 !important;
+                        border-top: 6px solid #d97706 !important;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.6), inset 0 0 15px rgba(251, 191, 36, 0.05) !important;
+                    }}
+        
+                    /* ✨ EMOJI MENGAMBANG */
                     .rpg-card-emoji {{
                         font-size: 38px;
                         line-height: 1;
@@ -2150,8 +2174,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         display: inline-block;
                         animation: floatScrollBtn 2.5s infinite ease-in-out;
                     }}
-                    
-                    /* Teks Judul Kartu */
+        
+                    /* 📘 JUDUL KARTU */
                     .rpg-card-title {{
                         font-family: monospace;
                         font-size: 15px;
@@ -2160,8 +2184,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         margin-bottom: 10px;
                         letter-spacing: 0.5px;
                     }}
-                    
-                    /* Teks Deskripsi Kartu */
+        
+                    /* 📝 DESKRIPSI KARTU */
                     .rpg-card-desc {{
                         font-family: monospace;
                         font-size: 12px;
@@ -2169,108 +2193,229 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         color: #cbd5e1;
                         margin-bottom: 5px;
                     }}
-                    
-                    /* 🎯 CONTATINER UNTUK MEMAKSA TOMBOL AKSI SEJAJAR PENUH HORIZONTAL */
-                    div.rpg-action-btn-block {{
+        
+                    /* 🎯 WRAPPER TOMBOL STREAMLIT */
+                    div[data-testid="stButton"] {{
                         max-width: 480px !important;
-                        margin: -2px auto 35px auto !important; /* Menarik tombol ke atas agar menempel pas tanpa celah hampa */
-                        width: 100% !important;
-                        display: block !important;
+                        margin: 0 auto 35px auto !important;
+                        padding: 0 !important;
                     }}
-                    
-                    div.rpg-action-btn-block button {{
+        
+                    /* 🔘 TOMBOL DEFAULT (fallback) */
+                    div[data-testid="stButton"] > button {{
                         background: rgba(180, 83, 9, 0.15) !important;
                         border: 2px solid #b45309 !important;
-                        border-top: none !important; /* Menghilangkan border atas agar menempel mulus dengan box */
-                        border-radius: 0px 0px 12px 12px !important; /* Lengkungan hanya di sudut bawah */
+                        border-top: none !important;
+                        border-radius: 0 0 12px 12px !important;
                         color: #fde047 !important;
                         font-family: monospace !important;
                         font-size: 13px !important;
                         font-weight: bold !important;
                         padding: 12px 20px !important;
                         transition: all 0.3s ease !important;
-                        width: 100% !important; /* Paksa melebar penuh mengikuti kontainer */
+                        width: 100% !important;
                         display: block !important;
-                    }}
-                    
-                    /* Efek Hover Tombol Aksi */
-                    div.rpg-action-btn-block button:hover {{
-                        background: #b45309 !important;
-                        color: #ffffff !important;
-                        box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3) !important;
+                        margin-top: -2px !important;
                     }}
         
+                    /* ============================================
+                       🔵 TOMBOL 1 — JURNAL BURUAN (BIRU)
+                       ============================================ */
+                    .st-key-btn_go_to_jurnal_buruan_camp_style button {{
+                        background: rgba(29, 78, 216, 0.18) !important;
+                        border: 2px solid #1d4ed8 !important;
+                        border-top: none !important;
+                        border-radius: 0 0 12px 12px !important;
+                        color: #93c5fd !important;
+                        font-family: monospace !important;
+                        font-size: 13px !important;
+                        font-weight: bold !important;
+                        padding: 12px 20px !important;
+                        width: 100% !important;
+                        margin-top: -2px !important;
+                        transition: all 0.3s ease !important;
+                    }}
+                    .st-key-btn_go_to_jurnal_buruan_camp_style button:hover {{
+                        background: #1d4ed8 !important;
+                        color: #ffffff !important;
+                        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4) !important;
+                    }}
+        
+                    /* ============================================
+                       🟣 TOMBOL 2 — KITAB MISI (UNGU)
+                       ============================================ */
+                    .st-key-btn_go_to_kitab_misi_camp_style button {{
+                        background: rgba(124, 58, 237, 0.18) !important;
+                        border: 2px solid #7c3aed !important;
+                        border-top: none !important;
+                        border-radius: 0 0 12px 12px !important;
+                        color: #d8b4fe !important;
+                        font-family: monospace !important;
+                        font-size: 13px !important;
+                        font-weight: bold !important;
+                        padding: 12px 20px !important;
+                        width: 100% !important;
+                        margin-top: -2px !important;
+                        transition: all 0.3s ease !important;
+                    }}
+                    .st-key-btn_go_to_kitab_misi_camp_style button:hover {{
+                        background: #7c3aed !important;
+                        color: #ffffff !important;
+                        box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4) !important;
+                    }}
+        
+                    /* ============================================
+                       🟡 TOMBOL 3 — HALL OF FAME (EMAS)
+                       ============================================ */
+                    .st-key-btn_go_to_hall_of_fame button {{
+                        background: rgba(180, 83, 9, 0.18) !important;
+                        border: 2px solid #b45309 !important;
+                        border-top: none !important;
+                        border-radius: 0 0 12px 12px !important;
+                        color: #fde047 !important;
+                        font-family: monospace !important;
+                        font-size: 13px !important;
+                        font-weight: bold !important;
+                        padding: 12px 20px !important;
+                        width: 100% !important;
+                        margin-top: -2px !important;
+                        transition: all 0.3s ease !important;
+                    }}
+                    .st-key-btn_go_to_hall_of_fame button:hover {{
+                        background: #b45309 !important;
+                        color: #ffffff !important;
+                        box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4) !important;
+                    }}
+        
+                    /* ↩️ TOMBOL KEMBALI */
+                    .st-key-btn_exit_reception_lobby_camp_style button {{
+                        background: rgba(100, 116, 139, 0.15) !important;
+                        border: 2px solid #475569 !important;
+                        border-radius: 12px !important;
+                        color: #cbd5e1 !important;
+                        font-family: monospace !important;
+                        font-size: 13px !important;
+                        font-weight: bold !important;
+                        padding: 12px 20px !important;
+                        margin-top: 0 !important;
+                        transition: all 0.3s ease !important;
+                    }}
+                    .st-key-btn_exit_reception_lobby_camp_style button:hover {{
+                        background: #475569 !important;
+                        color: #ffffff !important;
+                        box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4) !important;
+                    }}
+        
+                    /* 🎬 ANIMASI MENGAMBANG */
                     @keyframes floatScrollBtn {{
-                        0%, 100% {{ transform: translateY(0); filter: drop-shadow(0 0 4px rgba(251,191,36,0.3)); }}
-                        50% {{ transform: translateY(-4px); filter: drop-shadow(0 0 10px rgba(251,191,36,0.6)); }}
+                        0%, 100% {{
+                            transform: translateY(0);
+                            filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.3));
+                        }}
+                        50% {{
+                            transform: translateY(-4px);
+                            filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.6));
+                        }}
                     }}
                 </style>
                 """,
                 unsafe_allow_html=True
             )
         
-            st.markdown("<h2 class='guild-lobby-title' style='text-shadow: 0 0 15px rgba(251,191,36,0.5); color: #fef08a; text-align: center; font-family: monospace;'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
-            st.markdown("<p class='guild-lobby-sub' style='color: #cbd5e1; text-align: center; font-family: monospace; margin-bottom: 30px;'>Pilih gulungan maklumat di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
+            # =====================================================================
+            # 🏷️ JUDUL HALAMAN
+            # =====================================================================
+            st.markdown(
+                "<h2 style='text-shadow: 0 0 15px rgba(251,191,36,0.5); color: #fef08a; "
+                "text-align: center; font-family: monospace; margin-bottom: 5px;'>"
+                "🛎️ GUILD RECEPTION DESK 🛎️</h2>",
+                unsafe_allow_html=True
+            )
+            st.markdown(
+                "<p style='color: #cbd5e1; text-align: center; font-family: monospace; "
+                "margin-bottom: 30px; font-size: 13px;'>"
+                "Pilih gulungan maklumat di bawah ini untuk memeriksa catatan log petualangan Anda.</p>",
+                unsafe_allow_html=True
+            )
         
-            # --- 🏗️ KARTU 1: JURNAL BURUAN INDIVIDU ---
+            # =====================================================================
+            # 🏗️ KARTU 1: JURNAL BURUAN INDIVIDU (BIRU 🔵)
+            # =====================================================================
             st.markdown(
                 """
-                <div class='rpg-card-box'>
+                <div class='rpg-card-box rpg-card-blue'>
                     <div class='rpg-card-emoji'>📘</div>
                     <div class='rpg-card-title'>JURNAL BURUAN INDIVIDU</div>
                     <div class='rpg-card-desc'>Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin hasil buruan, tingkat level pahlawan, dan rekap performa penjualan harian Anda.</div>
                 </div>
-                """, unsafe_allow_html=True
+                """,
+                unsafe_allow_html=True
             )
-            st.markdown("<div class='rpg-action-btn-block'>", unsafe_allow_html=True)
-            if st.button("Buka Catatan ➔", key="btn_go_to_jurnal_buruan_camp_style"):
+            if st.button(
+                "Buka Catatan ➔",
+                key="btn_go_to_jurnal_buruan_camp_style",
+                use_container_width=True
+            ):
                 st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
                 st.rerun()
-            st.markdown("</div>", unsafe_allow_html=True)
         
-        
-            # --- 🏗️ KARTU 2: KITAB MISI & QUIZ GUILD ---
+            # =====================================================================
+            # 🏗️ KARTU 2: KITAB MISI & QUIZ GUILD (UNGU 🟣)
+            # =====================================================================
             st.markdown(
                 """
-                <div class='rpg-card-box'>
+                <div class='rpg-card-box rpg-card-purple'>
                     <div class='rpg-card-emoji'>🔮 ⚔️</div>
                     <div class='rpg-card-title'>KITAB MISI & QUIZ GUILD</div>
                     <div class='rpg-card-desc'>Cek papan pengumuman maklumat aliansi untuk memantau target pencapaian toko harian, daftar quest mingguan PSM, serta tantangan kuis berkala.</div>
                 </div>
-                """, unsafe_allow_html=True
+                """,
+                unsafe_allow_html=True
             )
-            st.markdown("<div class='rpg-action-btn-block'>", unsafe_allow_html=True)
-            if st.button("Periksa Kitab ➔", key="btn_go_to_kitab_misi_camp_style"):
+            if st.button(
+                "Periksa Kitab ➔",
+                key="btn_go_to_kitab_misi_camp_style",
+                use_container_width=True
+            ):
                 st.session_state["campaign_sub_page"] = "view_buku_tugas"
                 st.rerun()
-            st.markdown("</div>", unsafe_allow_html=True)
         
-        
-            # --- 🏗️ KARTU 3: HALL OF FAME ALIANSI ---
+            # =====================================================================
+            # 🏗️ KARTU 3: HALL OF FAME ALIANSI (EMAS 🟡)
+            # =====================================================================
             st.markdown(
                 """
-                <div class='rpg-card-box'>
+                <div class='rpg-card-box rpg-card-gold'>
                     <div class='rpg-card-emoji'>🏆 ✨</div>
                     <div class='rpg-card-title'>HALL OF FAME ALIANSI</div>
                     <div class='rpg-card-desc'>Lihat papan prasasti pahlawan tertinggi untuk memeriksa daftar peringkat petualang legendaris yang memiliki akumulasi buruan paling perkasa musim ini.</div>
                 </div>
-                """, unsafe_allow_html=True
+                """,
+                unsafe_allow_html=True
             )
-            st.markdown("<div class='rpg-action-btn-block'>", unsafe_allow_html=True)
-            if st.button("Lihat Papan Peringkat ➔", key="btn_go_to_hall_of_fame"):
+            if st.button(
+                "Lihat Papan Peringkat ➔",
+                key="btn_go_to_hall_of_fame",
+                use_container_width=True
+            ):
                 st.session_state["campaign_sub_page"] = "view_hall_of_fame"
                 st.rerun()
-            st.markdown("</div>", unsafe_allow_html=True)
         
-        
-            # --- ↩️ TOMBOL KEMBALI KEMAH ---
-            st.markdown("<br><hr style='border-color: rgba(251, 191, 36, 0.3); margin: 15px 0;'><br>", unsafe_allow_html=True)
-            st.markdown("<div class='rpg-back-btn-box' style='max-width: 480px; margin: 0 auto;'>", unsafe_allow_html=True)
-            if st.button("⬅️ KEMBALI KE BERANDA KOTA", use_container_width=True, key="btn_exit_reception_lobby_camp_style"):
+            # =====================================================================
+            # ↩️ TOMBOL KEMBALI KE BERANDA KOTA
+            # =====================================================================
+            st.markdown(
+                "<br><hr style='border-color: rgba(251, 191, 36, 0.3); margin: 15px 0;'><br>",
+                unsafe_allow_html=True
+            )
+            if st.button(
+                "⬅️ KEMBALI KE BERANDA KOTA",
+                use_container_width=True,
+                key="btn_exit_reception_lobby_camp_style"
+            ):
                 st.session_state.current_camp_menu = "main"
                 st.rerun()
-            st.markdown("</div>", unsafe_allow_html=True)
-         
+        
             st.stop()
 
         # =========================================================================
