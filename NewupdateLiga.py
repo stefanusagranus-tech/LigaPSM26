@@ -3131,452 +3131,374 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             url_gambar_latar = "https://i.imgur.com/kMo29aW.jpeg"
 
-            st.markdown(
-                """
+            st.markdown("""
                 <style>
-                    /* ============================================
-                       🎬 ANIMASI GLOBAL
-                       ============================================ */
-                    @keyframes hofTitleGlow {
-                        0%, 100% { text-shadow: 0 0 15px rgba(251, 191, 36, 0.5); }
-                        50% { text-shadow: 0 0 25px rgba(251, 191, 36, 0.9), 0 0 40px rgba(251, 191, 36, 0.5); }
-                    }
-                    @keyframes crownFloat {
-                        0%, 100% { transform: translateY(0) rotate(0deg); filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.7)); }
-                        50% { transform: translateY(-6px) rotate(-3deg); filter: drop-shadow(0 0 25px rgba(251, 191, 36, 1)); }
-                    }
-                    @keyframes sparkleFloat1 {
-                        0%, 100% { transform: translateY(0) scale(0.8); opacity: 0.5; }
-                        50% { transform: translateY(-10px) scale(1.2); opacity: 1; }
-                    }
-                    @keyframes sparkleFloat2 {
-                        0%, 100% { transform: translateY(-5px) scale(1); opacity: 0.7; }
-                        50% { transform: translateY(5px) scale(0.8); opacity: 0.3; }
-                    }
-                    @keyframes avatarBob {
-                        0%, 100% { transform: translateY(0); }
-                        50% { transform: translateY(-3px); }
-                    }
-                    @keyframes cardEnter {
-                        0% { opacity: 0; transform: translateY(30px) scale(0.95); }
-                        100% { opacity: 1; transform: translateY(0) scale(1); }
-                    }
-                    @keyframes cardGlow {
-                        0%, 100% { box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 15px rgba(212, 175, 55, 0.3), inset 0 0 20px rgba(212, 175, 55, 0.05); }
-                        50% { box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 35px rgba(212, 175, 55, 0.6), inset 0 0 30px rgba(212, 175, 55, 0.15); }
-                    }
-
-                    /* ============================================
-                       🏷️ HEADER HALAMAN
-                       ============================================ */
-                    .hof-page-title {
-                        text-align: center; color: #fef08a; font-family: monospace;
-                        font-size: 22px; font-weight: 900;
-                        margin: 0 0 5px 0;
-                        animation: hofTitleGlow 3s infinite ease-in-out;
-                    }
-                    .hof-page-sub {
-                        text-align: center; color: #cbd5e1; font-family: monospace;
-                        font-size: 11.5px; margin-bottom: 25px;
-                    }
-
-                    /* ============================================
-                       🎴 WRAPPER CAROUSEL (belum scroll, statis dulu)
-                       ============================================ */
-                    .hof-carousel-wrapper {
-                        display: flex;
-                        gap: 14px;
-                        padding: 15px 10px 25px 10px;
-                        justify-content: flex-start;
-                        overflow-x: auto;
-                        overflow-y: visible;
-                        scroll-snap-type: x mandatory;
-                        scrollbar-width: thin;
-                    }
-                    .hof-carousel-wrapper::-webkit-scrollbar { height: 8px; }
-                    .hof-carousel-wrapper::-webkit-scrollbar-track {
-                        background: rgba(15, 23, 42, 0.5);
-                        border-radius: 4px;
-                    }
-                    .hof-carousel-wrapper::-webkit-scrollbar-thumb {
-                        background: linear-gradient(90deg, #b45309, #fbbf24, #b45309);
-                        border-radius: 4px;
-                    }
-
-                    /* ============================================
-                       🎴 KARTU UTAMA
-                       ============================================ */
-                    .hof-card {
-                        flex: 0 0 auto;
-                        width: 260px;
-                        min-height: 400px;
-                        scroll-snap-align: center;
-                        position: relative;
-                        background: linear-gradient(160deg, #0f172a 0%, #1a1410 50%, #0f172a 100%);
-                        border-radius: 18px;
-                        padding: 3px;
-                        animation: cardEnter 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards,
-                                   cardGlow 4s infinite ease-in-out 1s;
-                        box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 15px rgba(212, 175, 55, 0.3);
-                    }
-
-                    /* Border mewah double gold */
-                    .hof-card-inner {
-                        background: linear-gradient(160deg, #0a0d1a 0%, #15110a 100%);
-                        border: 2px solid #d4af37;
-                        border-radius: 16px;
-                        padding: 20px 18px 18px 18px;
-                        position: relative;
-                        min-height: 394px;
-                        box-shadow: inset 0 0 20px rgba(212, 175, 55, 0.08);
-                    }
-
-                    /* Corner ornaments */
-                    .hof-ornament {
-                        position: absolute;
-                        color: #d4af37;
-                        font-size: 14px;
-                        line-height: 1;
-                        filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.8));
-                        z-index: 5;
-                    }
-                    .hof-orn-tl { top: 6px; left: 8px; }
-                    .hof-orn-tr { top: 6px; right: 8px; }
-                    .hof-orn-bl { bottom: 6px; left: 8px; }
-                    .hof-orn-br { bottom: 6px; right: 8px; }
-
-                    /* Label periode */
-                    .hof-period-badge {
-                        text-align: center;
-                        background: linear-gradient(90deg, rgba(180, 83, 9, 0.4), rgba(251, 191, 36, 0.3), rgba(180, 83, 9, 0.4));
-                        border: 1px solid #d4af37;
-                        border-radius: 8px;
-                        padding: 6px 10px;
-                        font-family: monospace;
-                        font-size: 10px;
-                        font-weight: 900;
-                        color: #fef08a;
-                        letter-spacing: 1px;
-                        margin-bottom: 15px;
-                        text-shadow: 0 0 6px rgba(254, 240, 138, 0.5);
-                    }
-
-                    /* Crown + Sparkle */
-                    .hof-crown-box {
-                        text-align: center;
-                        position: relative;
-                        height: 55px;
-                        margin-bottom: 5px;
-                    }
-                    .hof-crown {
-                        font-size: 38px;
-                        display: inline-block;
-                        animation: crownFloat 2.5s infinite ease-in-out;
-                    }
-                    .hof-sparkle {
-                        position: absolute;
-                        color: #fef08a;
-                        font-size: 12px;
-                        filter: drop-shadow(0 0 6px #fbbf24);
-                    }
-                    .hof-sparkle-1 { top: 5px; left: 60px; animation: sparkleFloat1 2s infinite ease-in-out; }
-                    .hof-sparkle-2 { top: 15px; right: 60px; animation: sparkleFloat2 2.3s infinite ease-in-out 0.3s; }
-                    .hof-sparkle-3 { bottom: 0px; left: 90px; animation: sparkleFloat1 2.6s infinite ease-in-out 0.7s; }
-
-                    /* Avatar */
-                    .hof-avatar-wrapper {
-                        text-align: center;
-                        margin: 8px 0 12px 0;
-                    }
-                    .hof-avatar-circle {
-                        display: inline-flex;
-                        justify-content: center;
-                        align-items: center;
-                        width: 62px;
-                        height: 62px;
-                        border-radius: 50%;
-                        background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
-                        border: 2.5px solid #d4af37;
-                        font-size: 30px;
-                        box-shadow: 0 0 15px rgba(212, 175, 55, 0.5), inset 0 0 10px rgba(0, 0, 0, 0.6);
-                        animation: avatarBob 2.5s infinite ease-in-out;
-                    }
-
-                    /* Nama juara */
-                    .hof-champion-name {
-                        text-align: center;
-                        font-family: monospace;
-                        font-size: 14px;
-                        font-weight: 900;
-                        color: #ffffff;
-                        letter-spacing: 0.5px;
-                        margin-bottom: 5px;
-                        text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
-                        line-height: 1.2;
-                        word-break: break-word;
-                    }
-                    .hof-champion-qty {
-                        text-align: center;
-                        font-family: monospace;
-                        font-size: 15px;
-                        font-weight: 900;
-                        color: #fbbf24;
-                        margin-bottom: 12px;
-                        text-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
-                    }
-
-                    /* Divider */
-                    .hof-card-divider {
-                        height: 1px;
-                        background: linear-gradient(90deg, transparent, #d4af37, transparent);
-                        margin: 10px 0 12px 0;
-                        opacity: 0.6;
-                    }
-
-                    /* Item terlaris */
-                    .hof-top-item-label {
-                        text-align: center;
-                        font-family: monospace;
-                        font-size: 9px;
-                        color: #94a3b8;
-                        letter-spacing: 1px;
-                        margin-bottom: 5px;
-                        text-transform: uppercase;
-                    }
-                    .hof-top-item-name {
-                        text-align: center;
-                        font-family: monospace;
-                        font-size: 11px;
-                        font-weight: bold;
-                        color: #cbd5e1;
-                        line-height: 1.3;
-                        margin-bottom: 3px;
-                        padding: 0 5px;
-                        word-break: break-word;
-                    }
-                    .hof-top-item-qty {
-                        text-align: center;
-                        font-family: monospace;
-                        font-size: 10px;
-                        color: #10b981;
-                        font-weight: bold;
-                        margin-bottom: 15px;
-                    }
-
-                    /* Tombol DETAIL */
-                    .hof-detail-btn {
-                        display: block;
-                        width: 100%;
-                        background: linear-gradient(135deg, rgba(180, 83, 9, 0.5), rgba(251, 191, 36, 0.25), rgba(180, 83, 9, 0.5));
-                        border: 2px solid #d4af37;
-                        border-radius: 10px;
-                        padding: 10px;
-                        text-align: center;
-                        font-family: monospace;
-                        font-size: 11px;
-                        font-weight: 900;
-                        color: #fef08a;
-                        letter-spacing: 1.5px;
-                        text-shadow: 0 0 6px rgba(254, 240, 138, 0.6);
-                        cursor: pointer;
-                        transition: all 0.3s ease;
-                        box-shadow: 0 2px 8px rgba(0,0,0,0.4), inset 0 0 10px rgba(212, 175, 55, 0.1);
-                        margin-top: auto;
-                        position: absolute;
-                        bottom: 18px;
-                        left: 18px;
-                        right: 18px;
-                        width: calc(100% - 36px);
-                    }
-                    .hof-detail-btn:hover {
-                        background: linear-gradient(135deg, #b45309, #fbbf24, #b45309);
-                        color: #0f172a;
-                        box-shadow: 0 4px 18px rgba(251, 191, 36, 0.7), inset 0 0 15px rgba(254, 240, 138, 0.4);
-                        transform: translateY(-2px);
-                        text-shadow: none;
-                    }
-
-                    /* Label ALL TIME khusus */
-                    .hof-card-alltime .hof-period-badge {
-                        background: linear-gradient(90deg, rgba(212, 175, 55, 0.5), rgba(254, 240, 138, 0.4), rgba(212, 175, 55, 0.5));
-                        color: #0f172a;
-                        text-shadow: none;
-                    }
-                    .hof-card-alltime .hof-crown {
-                        filter: drop-shadow(0 0 25px rgba(251, 191, 36, 1)) drop-shadow(0 0 40px rgba(251, 191, 36, 0.6));
-                    }
-
-                    /* Tombol kembali */
-                    div[data-testid="stButton"] {
-                        max-width: 480px !important;
-                        margin: 15px auto 15px auto !important;
-                        padding: 0 !important;
-                    }
-                    div[data-testid="stButton"] > button {
-                        border-radius: 12px !important;
-                        font-family: monospace !important;
-                        font-size: 13px !important;
-                        font-weight: bold !important;
-                        padding: 12px 20px !important;
-                        width: 100% !important;
-                        display: block !important;
-                        transition: all 0.3s ease !important;
-                    }
-                    .st-key-btn_hof_psm_back button {
-                        background: rgba(100, 116, 139, 0.15) !important;
-                        border: 2px solid #475569 !important;
-                        color: #cbd5e1 !important;
-                    }
-                    .st-key-btn_hof_psm_back button:hover {
-                        background: #475569 !important;
-                        color: #ffffff !important;
-                        box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4) !important;
-                    }
+                @keyframes hofTitleGlow {
+                    0%, 100% { text-shadow: 0 0 15px rgba(251, 191, 36, 0.5); }
+                    50% { text-shadow: 0 0 25px rgba(251, 191, 36, 0.9), 0 0 40px rgba(251, 191, 36, 0.5); }
+                }
+                @keyframes crownFloat {
+                    0%, 100% { transform: translateY(0) rotate(0deg); filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.7)); }
+                    50% { transform: translateY(-6px) rotate(-3deg); filter: drop-shadow(0 0 25px rgba(251, 191, 36, 1)); }
+                }
+                @keyframes sparkleFloat1 {
+                    0%, 100% { transform: translateY(0) scale(0.8); opacity: 0.5; }
+                    50% { transform: translateY(-10px) scale(1.2); opacity: 1; }
+                }
+                @keyframes sparkleFloat2 {
+                    0%, 100% { transform: translateY(-5px) scale(1); opacity: 0.7; }
+                    50% { transform: translateY(5px) scale(0.8); opacity: 0.3; }
+                }
+                @keyframes avatarBob {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-3px); }
+                }
+                @keyframes cardEnter {
+                    0% { opacity: 0; transform: translateY(30px) scale(0.95); }
+                    100% { opacity: 1; transform: translateY(0) scale(1); }
+                }
+                @keyframes cardGlow {
+                    0%, 100% { box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 15px rgba(212, 175, 55, 0.3), inset 0 0 20px rgba(212, 175, 55, 0.05); }
+                    50% { box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 35px rgba(212, 175, 55, 0.6), inset 0 0 30px rgba(212, 175, 55, 0.15); }
+                }
+                .hof-page-title {
+                    text-align: center; color: #fef08a; font-family: monospace;
+                    font-size: 22px; font-weight: 900;
+                    margin: 0 0 5px 0;
+                    animation: hofTitleGlow 3s infinite ease-in-out;
+                }
+                .hof-page-sub {
+                    text-align: center; color: #cbd5e1; font-family: monospace;
+                    font-size: 11.5px; margin-bottom: 25px;
+                }
+                .hof-carousel-wrapper {
+                    display: flex;
+                    gap: 14px;
+                    padding: 15px 10px 25px 10px;
+                    justify-content: flex-start;
+                    overflow-x: auto;
+                    overflow-y: visible;
+                    scroll-snap-type: x mandatory;
+                    scrollbar-width: thin;
+                }
+                .hof-carousel-wrapper::-webkit-scrollbar { height: 8px; }
+                .hof-carousel-wrapper::-webkit-scrollbar-track {
+                    background: rgba(15, 23, 42, 0.5); border-radius: 4px;
+                }
+                .hof-carousel-wrapper::-webkit-scrollbar-thumb {
+                    background: linear-gradient(90deg, #b45309, #fbbf24, #b45309);
+                    border-radius: 4px;
+                }
+                .hof-card {
+                    flex: 0 0 auto;
+                    width: 260px;
+                    min-height: 400px;
+                    scroll-snap-align: center;
+                    position: relative;
+                    background: linear-gradient(160deg, #0f172a 0%, #1a1410 50%, #0f172a 100%);
+                    border-radius: 18px;
+                    padding: 3px;
+                    animation: cardEnter 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards,
+                               cardGlow 4s infinite ease-in-out 1s;
+                    box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 15px rgba(212, 175, 55, 0.3);
+                }
+                .hof-card-inner {
+                    background: linear-gradient(160deg, #0a0d1a 0%, #15110a 100%);
+                    border: 2px solid #d4af37;
+                    border-radius: 16px;
+                    padding: 20px 18px 18px 18px;
+                    position: relative;
+                    min-height: 394px;
+                    box-shadow: inset 0 0 20px rgba(212, 175, 55, 0.08);
+                }
+                .hof-ornament {
+                    position: absolute;
+                    color: #d4af37;
+                    font-size: 14px;
+                    line-height: 1;
+                    filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.8));
+                    z-index: 5;
+                }
+                .hof-orn-tl { top: 6px; left: 8px; }
+                .hof-orn-tr { top: 6px; right: 8px; }
+                .hof-orn-bl { bottom: 6px; left: 8px; }
+                .hof-orn-br { bottom: 6px; right: 8px; }
+                .hof-period-badge {
+                    text-align: center;
+                    background: linear-gradient(90deg, rgba(180, 83, 9, 0.4), rgba(251, 191, 36, 0.3), rgba(180, 83, 9, 0.4));
+                    border: 1px solid #d4af37;
+                    border-radius: 8px;
+                    padding: 6px 10px;
+                    font-family: monospace;
+                    font-size: 10px;
+                    font-weight: 900;
+                    color: #fef08a;
+                    letter-spacing: 1px;
+                    margin-bottom: 15px;
+                    text-shadow: 0 0 6px rgba(254, 240, 138, 0.5);
+                }
+                .hof-crown-box {
+                    text-align: center;
+                    position: relative;
+                    height: 55px;
+                    margin-bottom: 5px;
+                }
+                .hof-crown {
+                    font-size: 38px;
+                    display: inline-block;
+                    animation: crownFloat 2.5s infinite ease-in-out;
+                }
+                .hof-sparkle {
+                    position: absolute;
+                    color: #fef08a;
+                    font-size: 12px;
+                    filter: drop-shadow(0 0 6px #fbbf24);
+                }
+                .hof-sparkle-1 { top: 5px; left: 60px; animation: sparkleFloat1 2s infinite ease-in-out; }
+                .hof-sparkle-2 { top: 15px; right: 60px; animation: sparkleFloat2 2.3s infinite ease-in-out 0.3s; }
+                .hof-sparkle-3 { bottom: 0px; left: 90px; animation: sparkleFloat1 2.6s infinite ease-in-out 0.7s; }
+                .hof-avatar-wrapper {
+                    text-align: center;
+                    margin: 8px 0 12px 0;
+                }
+                .hof-avatar-circle {
+                    display: inline-flex;
+                    justify-content: center;
+                    align-items: center;
+                    width: 62px;
+                    height: 62px;
+                    border-radius: 50%;
+                    background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
+                    border: 2.5px solid #d4af37;
+                    font-size: 30px;
+                    box-shadow: 0 0 15px rgba(212, 175, 55, 0.5), inset 0 0 10px rgba(0, 0, 0, 0.6);
+                    animation: avatarBob 2.5s infinite ease-in-out;
+                }
+                .hof-champion-name {
+                    text-align: center;
+                    font-family: monospace;
+                    font-size: 14px;
+                    font-weight: 900;
+                    color: #ffffff;
+                    letter-spacing: 0.5px;
+                    margin-bottom: 5px;
+                    text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+                    line-height: 1.2;
+                    word-break: break-word;
+                }
+                .hof-champion-qty {
+                    text-align: center;
+                    font-family: monospace;
+                    font-size: 15px;
+                    font-weight: 900;
+                    color: #fbbf24;
+                    margin-bottom: 12px;
+                    text-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
+                }
+                .hof-card-divider {
+                    height: 1px;
+                    background: linear-gradient(90deg, transparent, #d4af37, transparent);
+                    margin: 10px 0 12px 0;
+                    opacity: 0.6;
+                }
+                .hof-top-item-label {
+                    text-align: center;
+                    font-family: monospace;
+                    font-size: 9px;
+                    color: #94a3b8;
+                    letter-spacing: 1px;
+                    margin-bottom: 5px;
+                    text-transform: uppercase;
+                }
+                .hof-top-item-name {
+                    text-align: center;
+                    font-family: monospace;
+                    font-size: 11px;
+                    font-weight: bold;
+                    color: #cbd5e1;
+                    line-height: 1.3;
+                    margin-bottom: 3px;
+                    padding: 0 5px;
+                    word-break: break-word;
+                }
+                .hof-top-item-qty {
+                    text-align: center;
+                    font-family: monospace;
+                    font-size: 10px;
+                    color: #10b981;
+                    font-weight: bold;
+                    margin-bottom: 15px;
+                }
+                .hof-detail-btn {
+                    display: block;
+                    background: linear-gradient(135deg, rgba(180, 83, 9, 0.5), rgba(251, 191, 36, 0.25), rgba(180, 83, 9, 0.5));
+                    border: 2px solid #d4af37;
+                    border-radius: 10px;
+                    padding: 10px;
+                    text-align: center;
+                    font-family: monospace;
+                    font-size: 11px;
+                    font-weight: 900;
+                    color: #fef08a;
+                    letter-spacing: 1.5px;
+                    text-shadow: 0 0 6px rgba(254, 240, 138, 0.6);
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.4), inset 0 0 10px rgba(212, 175, 55, 0.1);
+                    margin-top: 15px;
+                }
+                .hof-card-alltime .hof-period-badge {
+                    background: linear-gradient(90deg, rgba(212, 175, 55, 0.5), rgba(254, 240, 138, 0.4), rgba(212, 175, 55, 0.5));
+                    color: #0f172a;
+                    text-shadow: none;
+                }
+                .hof-card-alltime .hof-crown {
+                    filter: drop-shadow(0 0 25px rgba(251, 191, 36, 1)) drop-shadow(0 0 40px rgba(251, 191, 36, 0.6));
+                }
+                div[data-testid="stButton"] {
+                    max-width: 480px !important;
+                    margin: 15px auto 15px auto !important;
+                    padding: 0 !important;
+                }
+                div[data-testid="stButton"] > button {
+                    border-radius: 12px !important;
+                    font-family: monospace !important;
+                    font-size: 13px !important;
+                    font-weight: bold !important;
+                    padding: 12px 20px !important;
+                    width: 100% !important;
+                    display: block !important;
+                }
+                .st-key-btn_hof_psm_back button {
+                    background: rgba(100, 116, 139, 0.15) !important;
+                    border: 2px solid #475569 !important;
+                    color: #cbd5e1 !important;
+                }
+                .st-key-btn_hof_psm_back button:hover {
+                    background: #475569 !important;
+                    color: #ffffff !important;
+                }
+                </style>
+                """, unsafe_allow_html=True)
+                
+            st.markdown(
+                 f"""
+                <style>
+                .stApp {{
+                    background-image: linear-gradient(rgba(10, 13, 26, 0.85), rgba(10, 13, 26, 0.92)), url("{url_gambar_latar}") !important;
+                    background-size: cover !important;
+                    background-position: center !important;
+                    background-repeat: no-repeat !important;
+                    background-attachment: fixed !important;
+                }}
+                .main .block-container {{
+                    background-color: transparent !important;
+                    max-width: 900px !important;
+                    padding-top: 3% !important;
+                    padding-left: 8px !important;
+                    padding-right: 8px !important;
+                }}
+                div[data-testid="stVerticalBlock"] {{ gap: 0rem !important; }}
                 </style>
                 """,
-                unsafe_allow_html=True
-            )
-
-            st.markdown(
-                f"""
-                <style>
-                    .stApp {{
-                        background-image: linear-gradient(rgba(10, 13, 26, 0.85), rgba(10, 13, 26, 0.92)), url("{url_gambar_latar}") !important;
-                        background-size: cover !important;
-                        background-position: center !important;
-                        background-repeat: no-repeat !important;
-                        background-attachment: fixed !important;
-                    }}
-                    .main .block-container {{
-                        background-color: transparent !important;
-                        max-width: 900px !important;
-                        padding-top: 3% !important;
-                        padding-left: 8px !important;
-                        padding-right: 8px !important;
-                    }}
-                    div[data-testid="stVerticalBlock"] {{ gap: 0rem !important; }}
-                </style>
-                """,
-                unsafe_allow_html=True
-            )
-
-            # ============ HEADER ============
+                                unsafe_allow_html=True
+                            )
+                
             st.markdown("<h2 class='hof-page-title'>👑 HALL OF FAME PSM 👑</h2>", unsafe_allow_html=True)
             st.markdown("<p class='hof-page-sub'>Peringkat penjualan item terbaik per periode</p>", unsafe_allow_html=True)
-
-            # ============ KARTU-KARTU (HARDCODED DULU) ============
-            st.markdown(
-                """
-                <div class='hof-carousel-wrapper'>
-
-                    <!-- KARTU 1: PERIODE TERBARU -->
-                    <div class='hof-card'>
-                        <div class='hof-card-inner'>
-                            <div class='hof-ornament hof-orn-tl'>⚜️</div>
-                            <div class='hof-ornament hof-orn-tr'>⚜️</div>
-                            <div class='hof-ornament hof-orn-bl'>⚜️</div>
-                            <div class='hof-ornament hof-orn-br'>⚜️</div>
-
-                            <div class='hof-period-badge'>📅 16 - 23 SEP 2026</div>
-
-                            <div class='hof-crown-box'>
-                                <span class='hof-sparkle hof-sparkle-1'>✦</span>
-                                <span class='hof-crown'>👑</span>
-                                <span class='hof-sparkle hof-sparkle-2'>✦</span>
-                                <span class='hof-sparkle hof-sparkle-3'>✦</span>
-                            </div>
-
-                            <div class='hof-avatar-wrapper'>
-                                <div class='hof-avatar-circle'>🧙‍♂️</div>
-                            </div>
-
-                            <div class='hof-champion-name'>ADELIA PRATIWI</div>
-                            <div class='hof-champion-qty'>46 Pcs</div>
-
-                            <div class='hof-card-divider'></div>
-
-                            <div class='hof-top-item-label'>📦 Item Terlaris</div>
-                            <div class='hof-top-item-name'>MINYAK GORENG 2L</div>
-                            <div class='hof-top-item-qty'>8 Qty</div>
-
-                            <div class='hof-detail-btn'>🔍 LIHAT DETAIL</div>
-                        </div>
-                    </div>
-
-                    <!-- KARTU 2: PERIODE SEBELUMNYA -->
-                    <div class='hof-card'>
-                        <div class='hof-card-inner'>
-                            <div class='hof-ornament hof-orn-tl'>⚜️</div>
-                            <div class='hof-ornament hof-orn-tr'>⚜️</div>
-                            <div class='hof-ornament hof-orn-bl'>⚜️</div>
-                            <div class='hof-ornament hof-orn-br'>⚜️</div>
-
-                            <div class='hof-period-badge'>📅 08 - 15 SEP 2026</div>
-
-                            <div class='hof-crown-box'>
-                                <span class='hof-sparkle hof-sparkle-1'>✦</span>
-                                <span class='hof-crown'>👑</span>
-                                <span class='hof-sparkle hof-sparkle-2'>✦</span>
-                                <span class='hof-sparkle hof-sparkle-3'>✦</span>
-                            </div>
-
-                            <div class='hof-avatar-wrapper'>
-                                <div class='hof-avatar-circle'>🧝‍♂️</div>
-                            </div>
-
-                            <div class='hof-champion-name'>RIZKI GUNAWAN</div>
-                            <div class='hof-champion-qty'>38 Pcs</div>
-
-                            <div class='hof-card-divider'></div>
-
-                            <div class='hof-top-item-label'>📦 Item Terlaris</div>
-                            <div class='hof-top-item-name'>BERAS PREMIUM 5KG</div>
-                            <div class='hof-top-item-qty'>6 Qty</div>
-
-                            <div class='hof-detail-btn'>🔍 LIHAT DETAIL</div>
-                        </div>
-                    </div>
-
-                    <!-- KARTU 3: ALL TIME -->
-                    <div class='hof-card hof-card-alltime'>
-                        <div class='hof-card-inner'>
-                            <div class='hof-ornament hof-orn-tl'>⚜️</div>
-                            <div class='hof-ornament hof-orn-tr'>⚜️</div>
-                            <div class='hof-ornament hof-orn-bl'>⚜️</div>
-                            <div class='hof-ornament hof-orn-br'>⚜️</div>
-
-                            <div class='hof-period-badge'>🏆 ALL TIME</div>
-
-                            <div class='hof-crown-box'>
-                                <span class='hof-sparkle hof-sparkle-1'>✦</span>
-                                <span class='hof-crown'>👑</span>
-                                <span class='hof-sparkle hof-sparkle-2'>✦</span>
-                                <span class='hof-sparkle hof-sparkle-3'>✦</span>
-                            </div>
-
-                            <div class='hof-avatar-wrapper'>
-                                <div class='hof-avatar-circle'>🦁</div>
-                            </div>
-
-                            <div class='hof-champion-name'>TIKA</div>
-                            <div class='hof-champion-qty'>189 Pcs</div>
-
-                            <div class='hof-card-divider'></div>
-
-                            <div class='hof-top-item-label'>📦 Item Terlaris</div>
-                            <div class='hof-top-item-name'>GULA PASIR 1KG</div>
-                            <div class='hof-top-item-qty'>24 Qty</div>
-
-                            <div class='hof-detail-btn'>🔍 LIHAT DETAIL</div>
-                        </div>
-                    </div>
-
+                
+            st.markdown("<div class='hof-carousel-wrapper'>", unsafe_allow_html=True)
+                
+            st.markdown("""
+                <div class='hof-card'>
+                <div class='hof-card-inner'>
+                <div class='hof-ornament hof-orn-tl'>⚜️</div>
+                <div class='hof-ornament hof-orn-tr'>⚜️</div>
+                <div class='hof-ornament hof-orn-bl'>⚜️</div>
+                <div class='hof-ornament hof-orn-br'>⚜️</div>
+                <div class='hof-period-badge'>📅 16 - 23 SEP 2026</div>
+                <div class='hof-crown-box'>
+                <span class='hof-sparkle hof-sparkle-1'>✦</span>
+                <span class='hof-crown'>👑</span>
+                <span class='hof-sparkle hof-sparkle-2'>✦</span>
+                <span class='hof-sparkle hof-sparkle-3'>✦</span>
                 </div>
-                """,
-                unsafe_allow_html=True
-            )
+                <div class='hof-avatar-wrapper'>
+                <div class='hof-avatar-circle'>🧙‍♂️</div>
+                </div>
+                <div class='hof-champion-name'>ADELIA PRATIWI</div>
+                <div class='hof-champion-qty'>46 Pcs</div>
+                <div class='hof-card-divider'></div>
+                <div class='hof-top-item-label'>📦 Item Terlaris</div>
+                <div class='hof-top-item-name'>MINYAK GORENG 2L</div>
+                <div class='hof-top-item-qty'>8 Qty</div>
+                <div class='hof-detail-btn'>🔍 LIHAT DETAIL</div>
+                </div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # ==== KARTU 2 ====
+            st.markdown("""
+                <div class='hof-card'>
+                <div class='hof-card-inner'>
+                <div class='hof-ornament hof-orn-tl'>⚜️</div>
+                <div class='hof-ornament hof-orn-tr'>⚜️</div>
+                <div class='hof-ornament hof-orn-bl'>⚜️</div>
+                <div class='hof-ornament hof-orn-br'>⚜️</div>
+                <div class='hof-period-badge'>📅 08 - 15 SEP 2026</div>
+                <div class='hof-crown-box'>
+                <span class='hof-sparkle hof-sparkle-1'>✦</span>
+                <span class='hof-crown'>👑</span>
+                <span class='hof-sparkle hof-sparkle-2'>✦</span>
+                <span class='hof-sparkle hof-sparkle-3'>✦</span>
+                </div>
+                <div class='hof-avatar-wrapper'>
+                <div class='hof-avatar-circle'>🧝‍♂️</div>
+                </div>
+                <div class='hof-champion-name'>RIZKI GUNAWAN</div>
+                <div class='hof-champion-qty'>38 Pcs</div>
+                <div class='hof-card-divider'></div>
+                <div class='hof-top-item-label'>📦 Item Terlaris</div>
+                <div class='hof-top-item-name'>BERAS PREMIUM 5KG</div>
+                <div class='hof-top-item-qty'>6 Qty</div>
+                <div class='hof-detail-btn'>🔍 LIHAT DETAIL</div>
+                </div>
+                </div>
+                """, unsafe_allow_html=True)
 
-            # ============ TOMBOL KEMBALI ============
+            # ==== KARTU 3 ALL TIME ====
+            st.markdown("""
+                <div class='hof-card hof-card-alltime'>
+                <div class='hof-card-inner'>
+                <div class='hof-ornament hof-orn-tl'>⚜️</div>
+                <div class='hof-ornament hof-orn-tr'>⚜️</div>
+                <div class='hof-ornament hof-orn-bl'>⚜️</div>
+                <div class='hof-ornament hof-orn-br'>⚜️</div>
+                <div class='hof-period-badge'>🏆 ALL TIME</div>
+                <div class='hof-crown-box'>
+                <span class='hof-sparkle hof-sparkle-1'>✦</span>
+                <span class='hof-crown'>👑</span>
+                <span class='hof-sparkle hof-sparkle-2'>✦</span>
+                <span class='hof-sparkle hof-sparkle-3'>✦</span>
+                </div>
+                <div class='hof-avatar-wrapper'>
+                <div class='hof-avatar-circle'>🦁</div>
+                </div>
+                <div class='hof-champion-name'>TIKA</div>
+                <div class='hof-champion-qty'>189 Pcs</div>
+                <div class='hof-card-divider'></div>
+                <div class='hof-top-item-label'>📦 Item Terlaris</div>
+                <div class='hof-top-item-name'>GULA PASIR 1KG</div>
+                <div class='hof-top-item-qty'>24 Qty</div>
+                <div class='hof-detail-btn'>🔍 LIHAT DETAIL</div>
+                </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            # ==== WRAPPER PENUTUP ====
+            st.markdown("</div>", unsafe_allow_html=True)
+
+            # ==== TOMBOL KEMBALI ====
             st.markdown("<br>", unsafe_allow_html=True)
             if st.button("⬅️ KEMBALI KE HALL OF FAME", key="btn_hof_psm_back", use_container_width=True):
                 st.session_state["hof_sub_page"] = None
