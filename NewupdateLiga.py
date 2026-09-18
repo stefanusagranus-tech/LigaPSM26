@@ -3232,7 +3232,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     },
                 }
 
-            data_dummy = st.session_state["hof_dummy_data"]
+            data_dummy = st.session_state["hof_dummy_data_v2"]
 
             # ==== STATE ====
             if "hof_selected_period" not in st.session_state:
