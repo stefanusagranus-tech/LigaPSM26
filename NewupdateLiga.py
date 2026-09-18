@@ -2105,52 +2105,51 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
          
         # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (HANGING SCROLL / BOOK OVERRIDER)
+        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (CUSTOME CSS TOTAL KHUSUS HALAMAN INI)
         # =========================================================================
         if st.session_state.get("campaign_sub_page", "resepsionis_utama") == "resepsionis_utama":
-            st.markdown("<h2 class='guild-lobby-title' style='text-shadow: 0 0 15px rgba(251,191,36,0.5); color: #fef08a; text-align: center;'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
-            st.markdown("<p class='guild-lobby-sub' style='color: #cbd5e1; text-align: center;'>Pilih gulungan maklumat di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
             
-            # --- 🎨 SIHIR CSS TERISOLASI (HANYA BERLAKU UNTUK KEY: rpg_hanging_scroll_selector) ---
+            # --- 🎨 OVERRIDE CSS GLOBAL: HANYA AKTIF SAAT BERADA DI HALAMAN INI ---
             st.markdown(
                 """
                 <style>
-                    /* Mengunci target hanya pada widget radio yang memiliki elemen internal dengan key kita */
-                    div[data-testid="stRadio"]:has(div[data-element-instance-id*="rpg_hanging_scroll_selector"]),
-                    div[data-testid="stRadio"]:has(input[id*="rpg_hanging_scroll_selector"]) {
-                        display: flex !important;
+                    /* 1. Paksa Container Radio Agar Tersusun Kebawah (Vertikal) secara Mutlak */
+                    div[data-testid="stRadio"] > div {
                         flex-direction: column !important;
+                        gap: 25px !important;
                         align-items: center !important;
                         width: 100% !important;
-                        margin: 20px auto !important;
                     }
                     
-                    /* Mengatur susunan vertikal gulungan khusus di meja ini */
-                    div[data-testid="stRadio"]:has(input[id*="rpg_hanging_scroll_selector"]) [data-testid="stWidgetMarkdownContainer"] + div {
+                    /* Menargetkan pembungkus grup tombol radio versi Streamlit baru */
+                    div[data-testid="stRadio"] div[role="radiogroup"] {
                         display: flex !important;
-                        flex-direction: column !important; 
+                        flex-direction: column !important;
                         gap: 25px !important;
                         width: 100% !important;
                         max-width: 480px !important;
                         margin: 0 auto !important;
                     }
                     
-                    /* MUSNAHKAN BULATAN RADIO HANYA DI MEJA INI */
-                    div[data-testid="stRadio"]:has(input[id*="rpg_hanging_scroll_selector"]) input[type="radio"],
-                    div[data-testid="stRadio"]:has(input[id*="rpg_hanging_scroll_selector"]) [data-testid="stRadioButtonCustomCircle"],
-                    div[data-testid="stRadio"]:has(input[id*="rpg_hanging_scroll_selector"]) [data-testid="stVisualWidget"],
-                    div[data-testid="stRadio"]:has(input[id*="rpg_hanging_scroll_selector"]) label > div:first-child {
+                    /* 2. BUMI HANGUSKAN LINGKARAN RADIO & ELEMEN BAWAAN */
+                    div[data-testid="stRadio"] input[type="radio"],
+                    div[data-testid="stRadio"] [data-testid="stRadioButtonCustomCircle"],
+                    div[data-testid="stRadio"] [data-testid="stVisualWidget"],
+                    div[data-testid="stRadio"] label > div:first-child {
                         display: none !important;
                         opacity: 0 !important;
                         visibility: hidden !important;
-                        width: 0px !important; height: 0px !important; margin: 0 !important; padding: 0 !important;
+                        width: 0px !important; 
+                        height: 0px !important; 
+                        margin: 0 !important; 
+                        padding: 0 !important;
                     }
                     
-                    /* UBAH MENJADI PAPAN PERKAMEN GANTUNG HANYA DI MEJA INI */
-                    div[data-testid="stRadio"]:has(input[id*="rpg_hanging_scroll_selector"]) label {
+                    /* 3. SUNTIKKAN GAYA PAPAN PERKAMEN GANTUNG PADA SELURUH LABEL DI HALAMAN INI */
+                    div[data-testid="stRadio"] label {
                         background: linear-gradient(135deg, #0f172a 0%, #1e1b18 100%) !important;
                         border: 2px solid #b45309 !important;
-                        border-top: 8px solid #d97706 !important;
+                        border-top: 8px solid #d97706 !important; /* Pasak kayu magis */
                         border-radius: 6px 6px 16px 16px !important;
                         width: 100% !important;
                         min-height: 140px !important;
@@ -2167,16 +2166,16 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
                     }
                     
-                    /* Efek Hover Khusus */
-                    div[data-testid="stRadio"]:has(input[id*="rpg_hanging_scroll_selector"]) label:hover {
+                    /* 4. Efek Ayunan & Pendaran Emas Saat Di-Hover */
+                    div[data-testid="stRadio"] label:hover {
                         transform: translateY(-3px) scale(1.02) !important;
                         border-color: #fbbf24 !important;
                         border-top-color: #fbbf24 !important;
                         box-shadow: 0 0 25px rgba(251, 191, 36, 0.6), inset 0 0 15px rgba(251, 191, 36, 0.2) !important;
                     }
         
-                    /* Font Kontras Teks Gulungan Khusus */
-                    div[data-testid="stRadio"]:has(input[id*="rpg_hanging_scroll_selector"]) label [data-testid="stMarkdownContainer"] p {
+                    /* 5. Override Fontasi Isi Teks Gulungan agar Menuruti Aturan Kuno */
+                    div[data-testid="stRadio"] label [data-testid="stMarkdownContainer"] p {
                         font-family: monospace !important;
                         font-size: 12px !important;
                         line-height: 1.6 !important;
@@ -2185,8 +2184,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         padding: 0 !important;
                     }
                     
-                    /* Animasi Emoji Baris Pertama Khusus */
-                    div[data-testid="stRadio"]:has(input[id*="rpg_hanging_scroll_selector"]) label [data-testid="stMarkdownContainer"] p::first-line {
+                    /* 6. Animasi Emoji Mengambang Magis */
+                    div[data-testid="stRadio"] label [data-testid="stMarkdownContainer"] p::first-line {
                         font-size: 36px !important;
                         line-height: 1.4 !important;
                         display: inline-block !important;
@@ -2198,14 +2197,17 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         50% { transform: translateY(-4px) scale(1.05); filter: drop-shadow(0 0 16px rgba(251,191,36,0.8)); }
                     }
                     
-                    /* Sembunyikan Judul Variabel Bawaan Khusus */
-                    div[data-testid="stRadio"]:has(input[id*="rpg_hanging_scroll_selector"]) > label:first-child { 
+                    /* Sembunyikan Label Judul Bawaan Variabel */
+                    div[data-testid="stRadio"] > label:first-child { 
                         display: none !important; 
                     }
                 </style>
                 """, 
                 unsafe_allow_html=True
             )
+        
+            st.markdown("<h2 class='guild-lobby-title' style='text-shadow: 0 0 15px rgba(251,191,36,0.5); color: #fef08a; text-align: center;'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
+            st.markdown("<p class='guild-lobby-sub' style='color: #cbd5e1; text-align: center;'>Pilih gulungan maklumat di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
             
             # --- 📦 FORMAT TEKS GULUNGAN VERTIKAL ---
             gulungan_buruan = (
@@ -2227,7 +2229,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 elif pilihan == gulungan_misi:
                     st.session_state["campaign_sub_page"] = "view_buku_tugas"
         
-            # Widget di bawah ini menggunakan key yang dikunci oleh CSS di atas
+            # st.radio ini sekarang aman karena CSS di atas akan menimpa CSS global secara paksa saat halaman aktif
             pilihan_gulungan = st.radio(
                 "SELECT_HANGING_VAL",
                 options=[gulungan_buruan, gulungan_misi],
@@ -2250,7 +2252,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # 📘 JURNAL BURUAN INDIVIDU (PEMISAHAN RANKING: TINGKAT LEVEL = RANKING PPS, RANKING PENJUALAN = RANKING PSM)
         # =========================================================================
         elif st.session_state.get("campaign_sub_page") == "view_buku_pencapaian":
-            
             
             current_page = st.session_state.get("book_page_number", 1)
             username_hero = str(st.session_state.get("username", "RIZKI GUNAWAN")).strip().upper()
@@ -3329,7 +3330,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
                 blue_flex = min(100.0, p_achiv)
                 red_flex = max(0.0, 100.0 - blue_flex)
-
+                
                 items_kanan_list.append({
                     "name": p["name"], "mvp": mvp_name, "p_achiv": p_achiv,
                     "p_actual": int(p_actual), "p_target": int(p_target),
