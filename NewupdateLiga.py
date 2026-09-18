@@ -6834,9 +6834,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         qty_dict_p3[_r["person_clean"]] = int(_r["actual_qty"])
 
             # ==========================================
-            # 🏆 ACHIEVEMENT per KASIR (Bulan Ini — semua periode)
+            # 🏆 ACHIEVEMENT per KASIR (Bulan Ini)
             # ==========================================
-            # 1. Ambil target kasir per (periode, item) dari sales_item_df
+            # 1. Target map dari sales_item_df (periode bulan ini)
             target_map_p3 = {}
             if not sales_item_df_p3.empty and "period_id" in sales_item_df_p3.columns:
                 _si = sales_item_df_p3.copy()
@@ -6953,7 +6953,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 box-sizing: border-box;
                 min-height: 260px;
             }
-
             .podium-slot-sj-p3 {
                 display: flex;
                 flex-direction: column;
@@ -6967,7 +6966,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             .podium-slot-sj-p3.empty-sj-p3 {
                 visibility: hidden;
             }
-
             .podium-crown-sj-p3 {
                 font-size: 20px;
                 margin-bottom: 2px;
@@ -6982,7 +6980,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 0%, 100% { transform: translateY(0); }
                 50% { transform: translateY(-3px); }
             }
-
             .podium-avatar-sj-p3 {
                 width: 48px;
                 height: 48px;
@@ -7011,7 +7008,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 border: 3px solid #ea580c;
                 box-shadow: 0 0 12px rgba(234, 88, 12, 0.6), inset 0 0 10px rgba(0,0,0,0.6);
             }
-
             .podium-name-sj-p3 {
                 font-family: monospace;
                 font-size: 9px;
@@ -7045,7 +7041,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 margin-bottom: 5px;
                 display: inline-block;
             }
-
             .podium-block-sj-p3 {
                 width: 100%;
                 display: flex;
@@ -7081,7 +7076,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 color: #1e1103;
                 text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
             }
-
             .podium-you-badge-p3 {
                 position: absolute;
                 top: -2px;
@@ -7109,7 +7103,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 position: relative;
                 z-index: 20;
                 overflow-y: auto;
-                max-height: 420px;
+                max-height: 400px;
                 padding-right: 2px;
             }
             .rpg-normal-row-p3 {
@@ -7199,6 +7193,96 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 font-style: italic;
             }
 
+            /* ============================================
+            🎯 AVATAR EMOJI DI LIST 4-9
+            ============================================ */
+            .row-avatar-p3 {
+                font-size: 15px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 22px;
+                height: 22px;
+                min-width: 22px;
+                border-radius: 50%;
+                background: rgba(15, 23, 42, 0.08);
+                border: 1.5px solid #cbd5e1;
+                flex-shrink: 0;
+            }
+
+            /* ============================================
+            📍 PENANDA POSISI USER (Rank 10+)
+            ============================================ */
+            .user-rank-badge-p3 {
+                background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+                border: 2px solid #60a5fa;
+                border-radius: 8px;
+                padding: 8px 10px;
+                margin-top: 10px;
+                box-shadow: 0 3px 10px rgba(29, 78, 216, 0.3), inset 0 1px 2px rgba(255,255,255,0.2);
+                position: relative;
+                z-index: 25;
+            }
+            .user-rank-badge-title-p3 {
+                font-family: monospace;
+                font-size: 9px;
+                font-weight: 900;
+                color: #bfdbfe;
+                text-align: center;
+                letter-spacing: 1.5px;
+                margin-bottom: 6px;
+            }
+            .user-rank-badge-content-p3 {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 6px;
+                background: rgba(255, 255, 255, 0.1);
+                padding: 5px 8px;
+                border-radius: 5px;
+                border: 1px solid rgba(255, 255, 255, 0.15);
+            }
+            .user-rank-badge-avatar-p3 {
+                font-size: 18px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 26px;
+                height: 26px;
+                border-radius: 50%;
+                background: rgba(15, 23, 42, 0.4);
+                border: 1.5px solid #60a5fa;
+                flex-shrink: 0;
+            }
+            .user-rank-badge-num-p3 {
+                font-family: monospace;
+                font-size: 14px;
+                font-weight: 900;
+                color: #fbbf24;
+                text-shadow: 0 0 6px rgba(251, 191, 36, 0.6);
+                min-width: 32px;
+                text-align: center;
+            }
+            .user-rank-badge-name-p3 {
+                font-family: monospace;
+                font-size: 10px;
+                font-weight: 900;
+                color: #ffffff;
+                flex: 1;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                text-align: center;
+            }
+            .user-rank-badge-score-p3 {
+                font-family: monospace;
+                font-size: 9.5px;
+                font-weight: 800;
+                color: #bfdbfe;
+                text-align: right;
+                flex-shrink: 0;
+            }
+
             @media (max-width: 480px) {
                 .podium-sj-wrapper-p3 { min-height: 230px; gap: 4px; }
                 .podium-crown-sj-p3 { font-size: 17px; }
@@ -7210,6 +7294,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 .podium-achiv-sj-p3 { font-size: 8px; }
                 .podium-rank-num-sj-p3 { font-size: 14px; }
                 .rpg-normal-row-p3 { font-size: 10px; padding: 6px 8px; }
+                .row-avatar-p3 { font-size: 13px; width: 20px; height: 20px; min-width: 20px; }
             }
             </style>
             """
@@ -7256,7 +7341,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             podium_html_p3 += '</div>'
 
             # ==========================================
-            # 📜 BUILD LIST 4-9
+            # 📜 BUILD LIST 4-9 + Avatar + Penanda
             # ==========================================
             total_personil_p3 = len(ranking_list_p3)
             danger_cutoff_p3 = max(4, total_personil_p3 - 2)
@@ -7274,11 +7359,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     row_style = "danger-zone-row-p3" if is_danger else ""
                     danger_tag = '<span class="danger-zone-badge-p3">⚠️ ZONA MERAH</span>' if is_danger else ""
                     rank_icon = "🔻" if is_danger else "🛡️"
+                    _av = _get_avatar_p3(n)
 
                     list_html_p3 += (
                         "<div class='rpg-normal-row-p3 " + row_style + " " + me_class + "'>"
                         "<div class='row-left-p3'>"
                         "<div class='row-left-top-p3'>"
+                        "<span class='row-avatar-p3'>" + _av + "</span>"
                         "<span>" + rank_icon + "</span>"
                         "<span style='font-weight:bold;'>#" + str(rank_num) + "</span>"
                         "<span style='font-weight:bold; overflow:hidden; text-overflow:ellipsis;' title='" + n + "'>" + n + "</span>"
@@ -7295,6 +7382,36 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 list_html_p3 += "<div class='empty-data-p3'>📭 Belum ada data peringkat</div>"
 
             list_html_p3 += '</div>'
+
+            # ==========================================
+            # 🎯 PENANDA POSISI USER (Rank 10+)
+            # ==========================================
+            user_rank_p3 = -1
+            user_data_p3 = None
+
+            if current_user_clean_p3:
+                for _i, (_n, _q, _a) in enumerate(ranking_list_p3):
+                    if str(_n).upper() == current_user_clean_p3:
+                        user_rank_p3 = _i + 1
+                        user_data_p3 = (_n, _q, _a)
+                        break
+
+            user_rank_html_p3 = ""
+            if user_rank_p3 > 9 and user_data_p3:
+                _n_u, _q_u, _a_u = user_data_p3
+                _av_u = _get_avatar_p3(_n_u)
+
+                user_rank_html_p3 = (
+                    "<div class='user-rank-badge-p3'>"
+                    "<div class='user-rank-badge-title-p3'>📍 POSISI KAMU SAAT INI</div>"
+                    "<div class='user-rank-badge-content-p3'>"
+                    "<span class='user-rank-badge-avatar-p3'>" + _av_u + "</span>"
+                    "<span class='user-rank-badge-num-p3'>#" + str(user_rank_p3) + "</span>"
+                    "<span class='user-rank-badge-name-p3'>" + _n_u + "</span>"
+                    "<span class='user-rank-badge-score-p3'>" + str(_q_u) + " Pcs · ✨ " + str(_a_u) + "</span>"
+                    "</div>"
+                    "</div>"
+                )
 
             # ==========================================
             # 📄 HTML LENGKAP PAGE 3
@@ -7314,6 +7431,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 "<p class='open-page-sub'>Kelanjutan Peringkat Bulan Ini</p>"
                 "<div class='open-book-divider'></div>"
                 + list_html_p3 +
+                user_rank_html_p3 +
                 "<div class='open-page-footer'>Halaman Kanan • PSM 4-9</div>"
                 "</div>"
                 "</div>"
