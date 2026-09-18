@@ -3407,9 +3407,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.markdown("<h2 class='hof-page-title'>👑 HALL OF FAME PSM 👑</h2>", unsafe_allow_html=True)
             st.markdown("<p class='hof-page-sub'>Peringkat penjualan item terbaik per periode</p>", unsafe_allow_html=True)
                 
-            st.markdown("<div class='hof-carousel-wrapper'>", unsafe_allow_html=True)
-                
+                        # ==== CAROUSEL KARTU (1 BLOK) ====
             st.markdown("""
+                <div class='hof-carousel-wrapper'>
                 <div class='hof-card'>
                 <div class='hof-card-inner'>
                 <div class='hof-ornament hof-orn-tl'>⚜️</div>
@@ -3435,10 +3435,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 <div class='hof-detail-btn'>🔍 LIHAT DETAIL</div>
                 </div>
                 </div>
-                """, unsafe_allow_html=True)
-            
-            # ==== KARTU 2 ====
-            st.markdown("""
                 <div class='hof-card'>
                 <div class='hof-card-inner'>
                 <div class='hof-ornament hof-orn-tl'>⚜️</div>
@@ -3464,10 +3460,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 <div class='hof-detail-btn'>🔍 LIHAT DETAIL</div>
                 </div>
                 </div>
-                """, unsafe_allow_html=True)
-
-            # ==== KARTU 3 ALL TIME ====
-            st.markdown("""
                 <div class='hof-card hof-card-alltime'>
                 <div class='hof-card-inner'>
                 <div class='hof-ornament hof-orn-tl'>⚜️</div>
@@ -3493,10 +3485,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 <div class='hof-detail-btn'>🔍 LIHAT DETAIL</div>
                 </div>
                 </div>
+                </div>
                 """, unsafe_allow_html=True)
-
-            # ==== WRAPPER PENUTUP ====
-            st.markdown("</div>", unsafe_allow_html=True)
 
             # ==== TOMBOL KEMBALI ====
             st.markdown("<br>", unsafe_allow_html=True)
