@@ -4622,7 +4622,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.stop()
 
         # =========================================================================
-        # 🍃 HALAMAN 3C: HALL OF FAME SUEGER (PLACEHOLDER)
+        # 🍃 HALAMAN 3C: HALL OF FAME SUEGER (DATA REAL)
         # =========================================================================
         elif (
             st.session_state.get("campaign_sub_page") == "view_hall_of_fame"
@@ -4630,178 +4630,553 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         ):
 
             url_gambar_latar = "https://i.imgur.com/kMo29aW.jpeg"
+            import hashlib
 
-            st.markdown(
-                """
+            # ==== FUNGSI AVATAR ====
+            def get_avatar(name):
+                list_avatar_rpg = [
+                    "🧙‍♂️", "🧝‍♂️", "🧝‍♀️", "⚔️", "🎯", "🛡️", "🦁", "🦅",
+                    "🐺", "👑", "💎", "🔮", "🔥", "🏹", "🪄", "🗡️",
+                    "⚗️", "🧛‍♂️", "🧟‍♂️", "🐉", "🦉", "🐻", "🦊", "🦌"
+                ]
+                h = int(hashlib.md5(str(name).upper().encode()).hexdigest(), 16)
+                return list_avatar_rpg[h % len(list_avatar_rpg)]
+
+            # ==== CSS ====
+            st.markdown("""
                 <style>
-                    @keyframes sandSpin {
-                        0%, 100% { transform: rotate(0deg); }
-                        50% { transform: rotate(180deg); }
-                    }
-                    @keyframes progressShimmer {
-                        0% { background-position: 0% 50%; }
-                        100% { background-position: 300% 50%; }
-                    }
-                    @keyframes progressGrow {
-                        0% { width: 0%; }
-                        100% { width: 40%; }
-                    }
-                    @keyframes titleBlink {
-                        0%, 100% { opacity: 1; }
-                        50% { opacity: 0.5; }
-                    }
-                    @keyframes placeholderEnter {
-                        0% { opacity: 0; transform: scale(0.94); }
-                        100% { opacity: 1; transform: scale(1); }
-                    }
-                    .placeholder-wrapper {
-                        animation: placeholderEnter 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-                    }
-                    .placeholder-title {
-                        text-align: center; color: #6ee7b7; font-family: monospace;
-                        font-size: 22px; font-weight: 900;
-                        text-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
-                        margin: 0 0 5px 0;
-                    }
-                    .placeholder-sub {
-                        text-align: center; color: #cbd5e1; font-family: monospace;
-                        font-size: 11.5px; margin-bottom: 25px;
-                    }
-                    .placeholder-card {
-                        background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(20, 50, 40, 0.95) 100%);
-                        border: 2px solid #059669;
-                        border-top: 6px solid #10b981;
-                        border-radius: 12px;
-                        padding: 35px 25px 30px 25px;
-                        text-align: center;
-                        max-width: 480px;
-                        margin: 0 auto;
-                        box-shadow: 0 10px 40px rgba(5, 150, 105, 0.3), inset 0 0 30px rgba(16, 185, 129, 0.08);
-                        min-height: 380px;
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: center;
-                        align-items: center;
-                    }
-                    .sand-icon {
-                        font-size: 65px;
-                        display: inline-block;
-                        animation: sandSpin 3s infinite ease-in-out;
-                        filter: drop-shadow(0 0 20px rgba(16, 185, 129, 0.8));
-                        margin-bottom: 15px;
-                    }
-                    .placeholder-headline {
-                        color: #6ee7b7; font-family: monospace;
-                        font-size: 15px; font-weight: 900;
-                        letter-spacing: 1px; margin: 15px 0 10px 0;
-                        animation: titleBlink 2s infinite ease-in-out;
-                        text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
-                    }
-                    .placeholder-desc {
-                        color: #cbd5e1; font-family: monospace;
-                        font-size: 11.5px; line-height: 1.7;
-                        max-width: 360px; margin: 0 auto 20px auto;
-                    }
-                    .progress-wrapper {
-                        width: 280px;
-                        margin: 15px auto 0 auto;
-                    }
-                    .progress-bg {
-                        width: 100%; height: 16px;
-                        background: rgba(15, 23, 42, 0.9);
-                        border: 2px solid #059669;
-                        border-radius: 10px;
-                        overflow: hidden;
-                        box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 0 15px rgba(5, 150, 105, 0.3);
-                    }
-                    .progress-fill {
-                        height: 100%;
-                        border-radius: 8px;
-                        background: linear-gradient(90deg, #064e3b, #059669, #10b981, #6ee7b7, #10b981, #059669, #064e3b);
-                        background-size: 300% 100%;
-                        animation: progressShimmer 1.8s infinite linear, progressGrow 1.5s forwards ease-out;
-                        box-shadow: 0 0 15px rgba(16, 185, 129, 0.8);
-                    }
-                    .progress-pct {
-                        color: #6ee7b7; font-family: monospace;
-                        font-size: 12px; font-weight: bold;
-                        text-align: center; margin-top: 10px;
-                        text-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
-                    }
-                    div[data-testid="stButton"] {
-                        max-width: 480px !important;
-                        margin: 20px auto 15px auto !important;
-                        padding: 0 !important;
-                    }
-                    div[data-testid="stButton"] > button {
-                        border-radius: 12px !important;
-                        font-family: monospace !important;
-                        font-size: 13px !important;
-                        font-weight: bold !important;
-                        padding: 12px 20px !important;
-                        width: 100% !important;
-                        display: block !important;
-                        transition: all 0.3s ease !important;
-                    }
-                    .st-key-btn_hof_sueger_back button {
-                        background: rgba(100, 116, 139, 0.15) !important;
-                        border: 2px solid #475569 !important;
-                        color: #cbd5e1 !important;
-                    }
-                    .st-key-btn_hof_sueger_back button:hover {
-                        background: #475569 !important;
-                        color: #ffffff !important;
-                    }
-                </style>
-                """,
-                unsafe_allow_html=True
-            )
+                @keyframes crownFloat {
+                    0%, 100% { transform: translateY(0) rotate(0deg); }
+                    50% { transform: translateY(-6px) rotate(-3deg); }
+                }
+                @keyframes sparkleFloat1 {
+                    0%, 100% { transform: translateY(0) scale(0.8); opacity: 0.5; }
+                    50% { transform: translateY(-10px) scale(1.2); opacity: 1; }
+                }
+                @keyframes sparkleFloat2 {
+                    0%, 100% { transform: translateY(-5px) scale(1); opacity: 0.7; }
+                    50% { transform: translateY(5px) scale(0.8); opacity: 0.3; }
+                }
+                @keyframes avatarBob {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-3px); }
+                }
+                @keyframes cardEnter {
+                    0% { opacity: 0; transform: translateY(30px) scale(0.95); }
+                    100% { opacity: 1; transform: translateY(0) scale(1); }
+                }
+                @keyframes cardGlow {
+                    0%, 100% { box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 15px rgba(16, 185, 129, 0.3); }
+                    50% { box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 35px rgba(16, 185, 129, 0.6); }
+                }
+                @keyframes mysteryPulse {
+                    0%, 100% { filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.6)); transform: scale(1); }
+                    50% { filter: drop-shadow(0 0 30px rgba(16, 185, 129, 1)); transform: scale(1.08); }
+                }
+                @keyframes lockShake {
+                    0%, 100% { transform: rotate(0deg); }
+                    25% { transform: rotate(-5deg); }
+                    75% { transform: rotate(5deg); }
+                }
 
+                .hof-sgr-page-title {
+                    text-align: center; color: #6ee7b7; font-family: monospace;
+                    font-size: 22px; font-weight: 900; margin: 0 0 5px 0;
+                    text-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
+                }
+                .hof-sgr-page-sub {
+                    text-align: center; color: #cbd5e1; font-family: monospace;
+                    font-size: 11.5px; margin-bottom: 20px;
+                }
+
+                /* CAROUSEL */
+                .hof-carousel-wrapper {
+                    display: flex;
+                    flex-direction: row;
+                    flex-wrap: nowrap;
+                    gap: 14px;
+                    padding: 15px 20px 25px 20px;
+                    justify-content: flex-start;
+                    overflow-x: auto;
+                    overflow-y: visible;
+                    scroll-snap-type: x proximity;
+                    -webkit-overflow-scrolling: touch;
+                    scrollbar-width: thin;
+                    width: 100%;
+                    box-sizing: border-box;
+                }
+                .hof-carousel-wrapper::-webkit-scrollbar { height: 8px; }
+                .hof-carousel-wrapper::-webkit-scrollbar-track {
+                    background: rgba(15, 23, 42, 0.5);
+                    border-radius: 4px;
+                }
+                .hof-carousel-wrapper.warna-sgr::-webkit-scrollbar-thumb {
+                    background: linear-gradient(90deg, #064e3b, #10b981, #064e3b);
+                    border-radius: 4px;
+                }
+
+                .hof-card {
+                    flex: 0 0 auto;
+                    width: 280px;
+                    min-width: 280px;
+                    max-width: 280px;
+                    min-height: 420px;
+                    scroll-snap-align: center;
+                    position: relative;
+                    border-radius: 18px;
+                    padding: 3px;
+                    animation: cardEnter 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards,
+                            cardGlow 4s infinite ease-in-out 1s;
+                    transition: transform 0.3s ease;
+                }
+                .hof-card.warna-sgr {
+                    background: linear-gradient(160deg, #0f172a 0%, #0a1f16 50%, #0f172a 100%);
+                    box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 15px rgba(16, 185, 129, 0.3);
+                }
+                .hof-card.warna-sgr .hof-card-inner {
+                    background: linear-gradient(160deg, #0a0d1a 0%, #0a1f16 100%);
+                    border: 2px solid #10b981;
+                    box-shadow: inset 0 0 20px rgba(16, 185, 129, 0.08);
+                }
+
+                .hof-card-inner {
+                    border-radius: 16px;
+                    padding: 25px 20px 20px 20px;
+                    position: relative;
+                    min-height: 414px;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                }
+                .hof-ornament {
+                    position: absolute; font-size: 16px; line-height: 1; z-index: 5;
+                }
+                .warna-sgr .hof-ornament { color: #10b981; filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.8)); }
+                .hof-orn-tl { top: 8px; left: 10px; }
+                .hof-orn-tr { top: 8px; right: 10px; }
+                .hof-orn-bl { bottom: 8px; left: 10px; }
+                .hof-orn-br { bottom: 8px; right: 10px; }
+                .hof-period-badge {
+                    text-align: center;
+                    border-radius: 8px;
+                    padding: 7px 12px; font-family: monospace;
+                    font-size: 11px; font-weight: 900;
+                    letter-spacing: 1px; margin-bottom: 20px;
+                    width: 100%;
+                    box-sizing: border-box;
+                }
+                .warna-sgr .hof-period-badge {
+                    background: linear-gradient(90deg, rgba(6, 78, 59, 0.4), rgba(16, 185, 129, 0.3), rgba(6, 78, 59, 0.4));
+                    border: 1px solid #10b981;
+                    color: #6ee7b7;
+                    text-shadow: 0 0 6px rgba(110, 231, 183, 0.5);
+                }
+
+                .hof-crown-box { text-align: center; position: relative; height: 70px; margin-bottom: 8px; width: 100%; }
+                .hof-crown { font-size: 48px; display: inline-block; animation: crownFloat 2.5s infinite ease-in-out; }
+                .hof-sparkle { position: absolute; font-size: 14px; }
+                .warna-sgr .hof-sparkle { color: #6ee7b7; filter: drop-shadow(0 0 6px #10b981); }
+                .hof-sparkle-1 { top: 5px; left: 30%; animation: sparkleFloat1 2s infinite ease-in-out; }
+                .hof-sparkle-2 { top: 20px; right: 30%; animation: sparkleFloat2 2.3s infinite ease-in-out 0.3s; }
+                .hof-sparkle-3 { bottom: 0px; left: 50%; transform: translateX(-50%); animation: sparkleFloat1 2.6s infinite ease-in-out 0.7s; }
+
+                .hof-avatar-wrapper { text-align: center; margin: 10px 0 15px 0; }
+                .hof-avatar-circle {
+                    display: inline-flex; justify-content: center; align-items: center;
+                    width: 80px; height: 80px; border-radius: 50%;
+                    background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
+                    font-size: 40px;
+                    animation: avatarBob 2.5s infinite ease-in-out;
+                }
+                .warna-sgr .hof-avatar-circle {
+                    border: 3px solid #10b981;
+                    box-shadow: 0 0 20px rgba(16, 185, 129, 0.5), inset 0 0 10px rgba(0, 0, 0, 0.6);
+                }
+
+                .hof-champion-name {
+                    text-align: center; font-family: monospace; font-size: 16px; font-weight: 900;
+                    color: #ffffff; letter-spacing: 0.5px; margin-bottom: 12px;
+                    line-height: 1.3; word-break: break-word;
+                }
+                .hof-champion-qty {
+                    text-align: center; font-family: monospace; font-size: 22px; font-weight: 900;
+                }
+                .warna-sgr .hof-champion-qty {
+                    color: #10b981;
+                    text-shadow: 0 0 15px rgba(16, 185, 129, 0.8);
+                }
+
+                /* KARTU MISTERI */
+                .hof-card-mystery .hof-card-inner {
+                    background: linear-gradient(160deg, #0f0a1e 0%, #1a0d2e 50%, #0f0a1e 100%);
+                    border: 2px dashed #7c3aed;
+                    box-shadow: inset 0 0 30px rgba(124, 58, 237, 0.15);
+                }
+                .hof-mystery-icon {
+                    font-size: 70px;
+                    animation: mysteryPulse 2s infinite ease-in-out;
+                    margin-bottom: 15px;
+                }
+                .hof-mystery-lock {
+                    font-size: 35px;
+                    display: inline-block;
+                    animation: lockShake 2.5s infinite ease-in-out;
+                    margin-bottom: 10px;
+                }
+                .hof-mystery-title {
+                    text-align: center;
+                    color: #d8b4fe;
+                    font-family: monospace;
+                    font-size: 14px;
+                    font-weight: 900;
+                    letter-spacing: 1.5px;
+                    text-shadow: 0 0 12px rgba(168, 85, 247, 0.8);
+                    margin-bottom: 15px;
+                    line-height: 1.4;
+                }
+                .hof-mystery-sub {
+                    text-align: center;
+                    color: #94a3b8;
+                    font-family: monospace;
+                    font-size: 10.5px;
+                    line-height: 1.6;
+                    padding: 0 10px;
+                }
+                .hof-card-mystery .hof-period-badge {
+                    background: linear-gradient(90deg, rgba(124, 58, 237, 0.4), rgba(168, 85, 247, 0.3), rgba(124, 58, 237, 0.4));
+                    border: 1px solid #a855f7;
+                    color: #d8b4fe;
+                }
+
+                /* KARTU EMPTY */
+                .hof-card-empty .hof-card-inner {
+                    background: linear-gradient(160deg, #0f172a 0%, #13110a 100%);
+                    border: 2px dashed #475569;
+                }
+                .hof-empty-icon { font-size: 60px; opacity: 0.5; margin-bottom: 15px; }
+                .hof-empty-title {
+                    text-align: center; color: #94a3b8; font-family: monospace;
+                    font-size: 12px; font-weight: 900; letter-spacing: 1px; margin-bottom: 10px;
+                }
+                .hof-empty-sub {
+                    text-align: center; color: #64748b; font-family: monospace;
+                    font-size: 10.5px; line-height: 1.6; padding: 0 10px;
+                }
+
+                /* TOMBOL */
+                div[data-testid="stButton"] {
+                    max-width: 480px !important;
+                    margin: 8px auto 10px auto !important;
+                    padding: 0 !important;
+                }
+                div[data-testid="stButton"] > button {
+                    border-radius: 12px !important;
+                    font-family: monospace !important;
+                    font-size: 13px !important;
+                    font-weight: bold !important;
+                    padding: 13px 20px !important;
+                    width: 100% !important;
+                    display: block !important;
+                    transition: all 0.3s ease !important;
+                }
+                .st-key-btn_hof_sueger_back button {
+                    background: rgba(100, 116, 139, 0.15) !important;
+                    border: 2px solid #475569 !important;
+                    color: #cbd5e1 !important;
+                }
+                .st-key-btn_hof_sueger_back button:hover {
+                    background: #475569 !important; color: #ffffff !important;
+                }
+
+                @media (max-width: 600px) {
+                    .hof-card { width: 260px; min-width: 260px; max-width: 260px; }
+                    .hof-carousel-wrapper { padding: 15px 15px 25px 15px; }
+                }
+                @media (max-width: 380px) {
+                    .hof-card { width: 240px; min-width: 240px; max-width: 240px; }
+                }
+                </style>
+                """, unsafe_allow_html=True)
+
+            # ==== BACKGROUND ====
             st.markdown(
                 f"""
                 <style>
-                    .stApp {{
-                        background-image: linear-gradient(rgba(10, 13, 26, 0.88), rgba(10, 13, 26, 0.92)), url("{url_gambar_latar}") !important;
-                        background-size: cover !important;
-                        background-position: center !important;
-                        background-repeat: no-repeat !important;
-                        background-attachment: fixed !important;
-                    }}
-                    .main .block-container {{
-                        background-color: transparent !important;
-                        max-width: 700px !important;
-                        padding-top: 3% !important;
-                    }}
-                    div[data-testid="stVerticalBlock"] {{ gap: 0rem !important; }}
+                .stApp {{
+                    background-image: linear-gradient(rgba(10, 13, 26, 0.85), rgba(10, 13, 26, 0.92)), url("{url_gambar_latar}") !important;
+                    background-size: cover !important;
+                    background-position: center !important;
+                    background-repeat: no-repeat !important;
+                    background-attachment: fixed !important;
+                }}
+                .main .block-container {{
+                    background-color: transparent !important;
+                    max-width: 100% !important;
+                    padding-top: 3% !important;
+                    padding-left: 0 !important;
+                    padding-right: 0 !important;
+                }}
+                div[data-testid="stVerticalBlock"] {{ gap: 0rem !important; }}
                 </style>
                 """,
                 unsafe_allow_html=True
             )
 
-            st.markdown("<div class='placeholder-wrapper'>", unsafe_allow_html=True)
+            # ==== HEADER ====
+            st.markdown("<h2 class='hof-sgr-page-title'>🍃 HALL OF FAME SUEGER 🍃</h2>", unsafe_allow_html=True)
+            st.markdown("<p class='hof-sgr-page-sub'>Papan kehormatan program Sueger</p>", unsafe_allow_html=True)
 
-            st.markdown("<h2 class='placeholder-title'>🍃 HALL OF FAME SUEGER 🍃</h2>", unsafe_allow_html=True)
-            st.markdown("<p class='placeholder-sub'>Papan pencapaian kasir program Sueger</p>", unsafe_allow_html=True)
+            # ==== AMBIL DATA ====
+            df_pps_periode = st.session_state.get("periods_pps_df", pd.DataFrame()).copy()
+            df_sales_pps = st.session_state.get("sales_pps_df", pd.DataFrame()).copy()
 
-            st.markdown("""
-                <div class='placeholder-card'>
-                    <div class='sand-icon'>⏳</div>
-                    <div class='placeholder-headline'>🔮 SEDANG DALAM MASA RANCANGAN 🔮</div>
-                    <div class='placeholder-desc'>
-                        Papan pencapaian Sueger masih dalam ritual penyempurnaan oleh para tetua guild.<br><br>
-                        Prasasti kehormatan akan dipahat setelah data achievement terkumpul lengkap.
-                    </div>
-                    <div class='progress-wrapper'>
-                        <div class='progress-bg'>
-                            <div class='progress-fill'></div>
-                        </div>
-                        <div class='progress-pct'>FORGING PROGRESS: 40%</div>
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
+            for df in [df_pps_periode, df_sales_pps]:
+                if not df.empty:
+                    df.columns = df.columns.astype(str).str.strip().str.lower()
 
-            st.markdown("</div>", unsafe_allow_html=True)
+            today = datetime.now().date()
 
+            # ==== BANGUN KARTU DINAMIS DARI PERIODE_PPS yang SGR ====
+            kartu_periode = []
+            kartu_bulan = []
+            kartu_alltime = None
+
+            if not df_pps_periode.empty and all(
+                c in df_pps_periode.columns for c in ["period_id", "start_date", "end_date"]
+            ):
+                df_pps_periode["start_dt"] = pd.to_datetime(df_pps_periode["start_date"], errors="coerce")
+                df_pps_periode["end_dt"] = pd.to_datetime(df_pps_periode["end_date"], errors="coerce")
+                df_pps_periode = df_pps_periode.dropna(subset=["start_dt", "end_dt"])
+
+                # Filter hanya SGR (Sueger)
+                df_filter = df_pps_periode[
+                    df_pps_periode["period_id"].astype(str).str.upper().str.strip().str.startswith("SGR", na=False)
+                ]
+
+                df_filter = df_filter.sort_values("start_dt", ascending=True).reset_index(drop=True)
+
+                # === KARTU PERIODE ===
+                for _, row_p in df_filter.iterrows():
+                    p_id = str(row_p["period_id"]).strip()
+                    p_start = row_p["start_dt"].date()
+                    p_end = row_p["end_dt"].date()
+                    is_selesai = p_end < today
+
+                    if p_start.month == p_end.month:
+                        label_tgl = f"{p_start.day}-{p_end.day} {p_start.strftime('%b').upper()}"
+                    else:
+                        label_tgl = f"{p_start.day} {p_start.strftime('%b').upper()} - {p_end.day} {p_end.strftime('%b').upper()}"
+
+                    kartu_periode.append({
+                        "key": f"periode_{p_id}",
+                        "label": f"📅 {label_tgl}",
+                        "tipe": "periode",
+                        "start_date": p_start,
+                        "end_date": p_end,
+                        "is_active": not is_selesai,
+                    })
+
+                # === KARTU ALL TIME ===
+                df_selesai = df_filter[df_filter["end_dt"].dt.date < today]
+                if not df_selesai.empty:
+                    kartu_alltime = {
+                        "key": "alltime",
+                        "label": "🏆 ALL TIME",
+                        "tipe": "alltime",
+                        "periode_list": [
+                            {
+                                "start_date": r["start_dt"].date(),
+                                "end_date": r["end_dt"].date(),
+                            }
+                            for _, r in df_selesai.iterrows()
+                        ],
+                        "is_active": False,
+                    }
+
+                # === KARTU BULAN ===
+                if not df_selesai.empty:
+                    df_bulan = df_selesai.copy()
+                    df_bulan["bulan_key"] = df_bulan["start_dt"].dt.strftime("%Y-%m")
+                    df_bulan["bulan_label"] = df_bulan["start_dt"].dt.strftime("%B %Y").str.upper()
+
+                    bulan_unik = df_bulan[["bulan_key", "bulan_label"]].drop_duplicates().sort_values("bulan_key", ascending=True)
+
+                    for _, row_bulan in bulan_unik.iterrows():
+                        b_key = row_bulan["bulan_key"]
+                        b_label = row_bulan["bulan_label"]
+                        periode_bulan = df_bulan[df_bulan["bulan_key"] == b_key]
+
+                        kartu_bulan.append({
+                            "key": f"bulan_{b_key}",
+                            "label": f"📆 {b_label}",
+                            "tipe": "bulan",
+                            "periode_list": [
+                                {
+                                    "start_date": r["start_dt"].date(),
+                                    "end_date": r["end_dt"].date(),
+                                }
+                                for _, r in periode_bulan.iterrows()
+                            ],
+                            "is_active": False,
+                        })
+
+            kartu_list = kartu_periode + kartu_bulan
+            if kartu_alltime:
+                kartu_list.append(kartu_alltime)
+
+            # ==== HITUNG JUARA SUEGER ====
+            # Pakai kolom qty_sueger kalau ada, fallback ke redeem_sueger
+            def get_juara_sueger(kartu):
+                if df_sales_pps.empty:
+                    return None
+                if "kasir_name" not in df_sales_pps.columns:
+                    return None
+
+                # Cari kolom sueger
+                _kolom = None
+                for _c in ["qty_sueger", "redeem_sueger", "qty_suegeer", "redeem_suegeer"]:
+                    if _c in df_sales_pps.columns:
+                        _kolom = _c
+                        break
+                if _kolom is None:
+                    return None
+
+                # Cari kolom tanggal
+                _date_col = None
+                for _c in ["updated_at", "start_date", "tanggal", "date"]:
+                    if _c in df_sales_pps.columns:
+                        _date_col = _c
+                        break
+                if _date_col is None:
+                    return None
+
+                df_temp = df_sales_pps.copy()
+                df_temp["_start"] = pd.to_datetime(df_temp[_date_col], errors="coerce")
+                df_temp = df_temp.dropna(subset=["_start"])
+
+                if kartu["tipe"] == "periode":
+                    periode_list = [{
+                        "start_date": kartu["start_date"],
+                        "end_date": kartu["end_date"],
+                    }]
+                else:
+                    periode_list = kartu.get("periode_list", [])
+
+                if not periode_list:
+                    return None
+
+                mask = pd.Series([False] * len(df_temp), index=df_temp.index)
+                for p in periode_list:
+                    mask = mask | (
+                        (df_temp["_start"].dt.date >= p["start_date"]) &
+                        (df_temp["_start"].dt.date <= p["end_date"])
+                    )
+                df_temp = df_temp[mask]
+
+                if df_temp.empty:
+                    return None
+
+                df_temp["kasir_clean"] = df_temp["kasir_name"].astype(str).str.strip()
+                df_temp[_kolom] = pd.to_numeric(df_temp[_kolom], errors="coerce").fillna(0)
+
+                grouped = df_temp.groupby("kasir_clean")[_kolom].sum().reset_index()
+                grouped = grouped[grouped[_kolom] > 0]
+                if grouped.empty:
+                    return None
+
+                grouped = grouped.sort_values(_kolom, ascending=False).reset_index(drop=True)
+                top1 = grouped.iloc[0]
+
+                return {
+                    "nama": str(top1["kasir_clean"]),
+                    "qty": int(top1[_kolom]),
+                }
+
+            for k in kartu_list:
+                k["juara"] = get_juara_sueger(k)
+
+            total_kartu = len(kartu_list)
+
+            # ==== JIKA BELUM ADA KARTU ====
+            if total_kartu == 0:
+                st.markdown(
+                    "<div style='background: rgba(15,23,42,0.85); border: 2px dashed #10b981; "
+                    "border-radius: 12px; padding: 40px 20px; margin: 30px auto; max-width: 500px; "
+                    "text-align: center;'>"
+                    "<div style='font-size: 60px; opacity: 0.5; margin-bottom: 15px;'>📜</div>"
+                    "<div style='color: #10b981; font-family: monospace; font-size: 14px; font-weight: 900; "
+                    "letter-spacing: 1px; margin-bottom: 8px;'>BELUM ADA PERIODE SUEGER</div>"
+                    "<div style='color: #64748b; font-family: monospace; font-size: 11px; line-height: 1.6;'>"
+                    "Data periode akan muncul setelah admin mendaftarkan periode Sueger di sheet PERIODE_PPS."
+                    "</div></div>",
+                    unsafe_allow_html=True
+                )
+                st.markdown("<br>", unsafe_allow_html=True)
+                if st.button("⬅️ KEMBALI KE HALL OF FAME", key="btn_hof_sueger_back", use_container_width=True):
+                    st.session_state["hof_sub_page"] = None
+                    st.rerun()
+                st.stop()
+
+            # ==== CAROUSEL ====
+            kartu_parts = ["<div class='hof-carousel-wrapper warna-sgr'>"]
+
+            for idx, k in enumerate(kartu_list):
+                alltime_class = "hof-card-alltime" if k["tipe"] == "alltime" else ""
+
+                if k.get("is_active") and k["tipe"] == "periode":
+                    konten = (
+                        "<div class='hof-mystery-icon'>❓</div>"
+                        "<div class='hof-mystery-lock'>🔒</div>"
+                        "<div class='hof-mystery-title'>AWAITING FINAL RESULTS</div>"
+                        "<div class='hof-mystery-sub'>Prasasti juara akan dibuka setelah periode selesai (H+1).<br><br>"
+                        "Selesaikan pertempuran periode ini dulu!</div>"
+                    )
+                    card_cls = "hof-card hof-card-mystery warna-sgr"
+                elif k.get("juara"):
+                    juara = k["juara"]
+                    av = get_avatar(juara["nama"])
+                    konten = (
+                        "<div class='hof-crown-box'>"
+                        "<span class='hof-sparkle hof-sparkle-1'>✦</span>"
+                        "<span class='hof-crown'>🍃</span>"
+                        "<span class='hof-sparkle hof-sparkle-2'>✦</span>"
+                        "<span class='hof-sparkle hof-sparkle-3'>✦</span>"
+                        "</div>"
+                        "<div class='hof-avatar-wrapper'>"
+                        "<div class='hof-avatar-circle'>" + av + "</div>"
+                        "</div>"
+                        "<div class='hof-champion-name'>" + juara["nama"] + "</div>"
+                        "<div class='hof-champion-qty'>" + str(juara["qty"]) + " Pcs</div>"
+                    )
+                    card_cls = "hof-card warna-sgr " + alltime_class
+                else:
+                    konten = (
+                        "<div class='hof-empty-icon'>📭</div>"
+                        "<div class='hof-empty-title'>BELUM ADA PENJUALAN</div>"
+                        "<div class='hof-empty-sub'>Tidak ada data penjualan Sueger untuk periode ini.</div>"
+                    )
+                    card_cls = "hof-card hof-card-empty warna-sgr " + alltime_class
+
+                kartu_parts.append(
+                    "<div class='" + card_cls + "'>"
+                    "<div class='hof-card-inner'>"
+                    "<div class='hof-ornament hof-orn-tl'>⚜️</div>"
+                    "<div class='hof-ornament hof-orn-tr'>⚜️</div>"
+                    "<div class='hof-ornament hof-orn-bl'>⚜️</div>"
+                    "<div class='hof-ornament hof-orn-br'>⚜️</div>"
+                    "<div class='hof-period-badge'>" + k["label"] + "</div>"
+                    + konten +
+                    "</div>"
+                    "</div>"
+                )
+
+            kartu_parts.append("</div>")
+            kartu_html = "".join(kartu_parts).strip()
+            st.markdown(kartu_html, unsafe_allow_html=True)
+
+            # ==== TOMBOL KEMBALI ====
+            st.markdown("<br>", unsafe_allow_html=True)
             if st.button("⬅️ KEMBALI KE HALL OF FAME", key="btn_hof_sueger_back", use_container_width=True):
                 st.session_state["hof_sub_page"] = None
                 st.rerun()
