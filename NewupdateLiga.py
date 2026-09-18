@@ -5817,12 +5817,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             # ==========================================
             css_page1 = """
             <style>
-            .rpg-item-card-v2 {
+           .rpg-item-card-v2 {
                 background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
                 border: 1px solid #d97706;
                 border-radius: 6px;
                 padding: 9px 11px;
                 margin-bottom: 8px;
+                position: relative !important;   /* ← TAMBAH */
+                z-index: 10 !important;          /* ← TAMBAH */
             }
             .rpg-item-header-v2 {
                 display: flex;
@@ -5879,6 +5881,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 margin-top: 14px;
                 text-align: center;
                 box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+                position: relative !important;   /* ← TAMBAH */
+                z-index: 10 !important;          /* ← TAMBAH */
             }
             .rpg-total-title-v2 {
                 font-family: 'MedievalSharp', cursive;
