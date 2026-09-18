@@ -6748,10 +6748,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             t_today_p3 = pd.Timestamp.now().date()
 
             # ==========================================
-            # 🗓️ CARI PERIODE AKTIF
+            # 🗓️ CARI PERIODE AKTIF & SEMUA PERIODE BULAN INI
             # ==========================================
             target_period_id_p3 = ""
             target_period_label_p3 = ""
+            valid_month_pids_p3 = []
 
             if not periods_df_p3.empty and all(
                 c in periods_df_p3.columns for c in ["period_id", "start_date", "end_date"]
@@ -6777,6 +6778,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     _ps = _aktif_p3.iloc[0]["start_dt"].date()
                     _pe = _aktif_p3.iloc[0]["end_dt"].date()
                     target_period_label_p3 = f"Periode {_ps.strftime('%d %b')} - {_pe.strftime('%d %b')}"
+
+                    _bulan_aktif = _ps.month
+                    _tahun_aktif = _ps.year
+                    _same_month = periods_df_p3[
+                        (periods_df_p3["start_dt"].dt.month == _bulan_aktif) &
+                        (periods_df_p3["start_dt"].dt.year == _tahun_aktif)
+                    ]
+                    valid_month_pids_p3 = _same_month["period_id"].astype(str).str.strip().tolist()
                 else:
                     _latest_p3 = periods_df_p3.sort_values("start_dt", ascending=False)
                     if not _latest_p3.empty:
@@ -6784,6 +6793,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         _ps = _latest_p3.iloc[0]["start_dt"].date()
                         _pe = _latest_p3.iloc[0]["end_dt"].date()
                         target_period_label_p3 = f"Periode {_ps.strftime('%d %b')} - {_pe.strftime('%d %b')}"
+
+                        _bulan_aktif = _ps.month
+                        _tahun_aktif = _ps.year
+                        _same_month = periods_df_p3[
+                            (periods_df_p3["start_dt"].dt.month == _bulan_aktif) &
+                            (periods_df_p3["start_dt"].dt.year == _tahun_aktif)
+                        ]
+                        valid_month_pids_p3 = _same_month["period_id"].astype(str).str.strip().tolist()
 
             if not target_period_label_p3:
                 target_period_label_p3 = "Periode Aktif"
@@ -6819,24 +6836,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             # ==========================================
             # 🏆 ACHIEVEMENT per KASIR (Bulan Ini — semua periode)
             # ==========================================
-            # Ambil semua period_id bulan ini (untuk hitung achiv 1 bulan)
-            _valid_month_pids_p3 = []
-            if not periods_df_p3.empty and target_period_id_p3:
-                _curr_row = periods_df_p3[periods_df_p3["period_id"].astype(str).str.strip() == target_period_id_p3]
-                if not _curr_row.empty:
-                    _ref_date = _curr_row.iloc[0]["start_dt"]
-                    _same_month = periods_df_p3[
-                        (periods_df_p3["start_dt"].dt.month == _ref_date.month) &
-                        (periods_df_p3["start_dt"].dt.year == _ref_date.year)
-                    ]
-                    _valid_month_pids_p3 = _same_month["period_id"].astype(str).str.strip().tolist()
-
-            # Target map (periode aktif saja)
+            # 1. Ambil target kasir per (periode, item) dari sales_item_df
             target_map_p3 = {}
-            if not sales_item_df_p3.empty and target_period_id_p3 and "period_id" in sales_item_df_p3.columns:
-                _si = sales_item_df_p3[
-                    sales_item_df_p3["period_id"].astype(str).str.strip() == target_period_id_p3
-                ]
+            if not sales_item_df_p3.empty and "period_id" in sales_item_df_p3.columns:
+                _si = sales_item_df_p3.copy()
+
+                if valid_month_pids_p3:
+                    _si = _si[_si["period_id"].astype(str).str.strip().isin(valid_month_pids_p3)]
 
                 _item_col_si = None
                 for _c in ["item_id", "item_code", "kode_item"]:
@@ -6847,24 +6853,26 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 _target_col = None
                 for _c in _si.columns:
                     _c_low = _c.lower()
-                    if "target_kasir" in _c_low or ("target" in _c_low and "kasir" in _c_low):
+                    if "target_kasir" in _c_low or "get_kasir" in _c_low:
                         _target_col = _c
                         break
 
                 if _item_col_si and _target_col:
                     for _, _r in _si.iterrows():
+                        _pid = str(_r["period_id"]).strip()
                         _iid = str(_r[_item_col_si]).strip().replace(".0", "")
                         _tval = pd.to_numeric(_r[_target_col], errors="coerce")
                         if pd.notna(_tval) and _tval > 0:
-                            target_map_p3[_iid] = int(_tval)
+                            target_map_p3[(_pid, _iid)] = int(_tval)
 
-            # Hitung achiv per kasir (bulan ini, semua periode)
+            # 2. Hitung achiv per kasir
             achiv_dict_p3 = {}
             if not sales_person_df_p3.empty and "person_name" in sales_person_df_p3.columns and "actual_qty" in sales_person_df_p3.columns:
                 _sp_ach = sales_person_df_p3.copy()
-                if _valid_month_pids_p3 and "period_id" in _sp_ach.columns:
+
+                if valid_month_pids_p3 and "period_id" in _sp_ach.columns:
                     _sp_ach = _sp_ach[
-                        _sp_ach["period_id"].astype(str).str.strip().isin(_valid_month_pids_p3)
+                        _sp_ach["period_id"].astype(str).str.strip().isin(valid_month_pids_p3)
                     ]
 
                 _sp_ach["person_clean"] = _sp_ach["person_name"].astype(str).str.strip().str.upper()
@@ -6878,15 +6886,17 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
                 if _item_col_sp and target_map_p3 and not _sp_ach.empty:
                     _sp_ach["item_clean"] = _sp_ach[_item_col_sp].astype(str).str.strip().str.replace(".0", "", regex=False)
-                    # Agregasi per (kasir, item) — total qty 1 bulan
-                    _agg = _sp_ach.groupby(["person_clean", "item_clean"])["actual_qty"].sum().reset_index()
+                    _sp_ach["period_clean"] = _sp_ach["period_id"].astype(str).str.strip()
+
+                    _agg = _sp_ach.groupby(["person_clean", "period_clean", "item_clean"])["actual_qty"].sum().reset_index()
 
                     for _, _r in _agg.iterrows():
                         _kasir = _r["person_clean"]
+                        _pid = _r["period_clean"]
                         _item = _r["item_clean"]
                         _qty = _r["actual_qty"]
 
-                        _tgt = target_map_p3.get(_item, 0)
+                        _tgt = target_map_p3.get((_pid, _item), 0)
                         if _tgt > 0 and _qty >= _tgt:
                             achiv_dict_p3[_kasir] = achiv_dict_p3.get(_kasir, 0) + 1
 
@@ -6912,177 +6922,181 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             # ==========================================
             css_p3 = """
             <style>
-            /* ============================================
-            🎯 PODIUM VERTIKAL (Juara 1 di Atas)
-            ============================================ */
-            .podium-vertical-p3 {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 12px;
-                margin-top: 10px;
-                margin-bottom: 10px;
+            /* Override z-index untuk watermark */
+            .rpg-book-page-left-p3, .rpg-book-page-right-p3 {
+                position: relative;
+                z-index: 10;
+            }
+            .rpg-book-page-left-p3 *, .rpg-book-page-right-p3 * {
                 position: relative;
                 z-index: 15;
-                width: 100%;
+            }
+            .rpg-book-page-left-p3::before, .rpg-book-page-right-p3::before {
+                z-index: 5 !important;
             }
 
-            /* Juara 1 — Card Besar */
-            .champion-1-p3 {
+            /* ============================================
+            🏆 PODIUM SEJAJAR BEDA TINGGI
+            ============================================ */
+            .podium-sj-wrapper-p3 {
+                display: flex;
+                flex-direction: row;
+                align-items: flex-end;
+                justify-content: center;
+                gap: 6px;
+                margin-top: 12px;
+                margin-bottom: 8px;
+                position: relative;
+                z-index: 20;
+                width: 100%;
+                padding: 0 4px;
+                box-sizing: border-box;
+                min-height: 260px;
+            }
+
+            .podium-slot-sj-p3 {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                background: linear-gradient(180deg, #fef08a 0%, #fbbf24 50%, #d97706 100%);
-                border: 3px solid #78350f;
-                border-radius: 12px;
-                padding: 12px 16px 10px 16px;
-                box-shadow: 0 6px 15px rgba(120, 53, 15, 0.4), inset 0 1px 3px rgba(255, 255, 255, 0.5);
-                width: 75%;
-                max-width: 220px;
+                justify-content: flex-end;
+                flex: 1;
+                max-width: 33%;
+                text-align: center;
                 position: relative;
-                z-index: 20;
             }
-            .champion-1-crown-p3 {
-                font-size: 26px;
+            .podium-slot-sj-p3.empty-sj-p3 {
+                visibility: hidden;
+            }
+
+            .podium-crown-sj-p3 {
+                font-size: 20px;
                 margin-bottom: 2px;
-                filter: drop-shadow(0 0 5px rgba(255, 200, 0, 0.8));
+                filter: drop-shadow(0 0 5px rgba(255, 200, 0, 0.6));
+            }
+            .podium-crown-sj-p3.rank-1-sj-p3 {
+                font-size: 26px;
+                filter: drop-shadow(0 0 8px rgba(255, 200, 0, 0.9));
                 animation: crownBounceP3 2s infinite ease-in-out;
             }
             @keyframes crownBounceP3 {
                 0%, 100% { transform: translateY(0); }
                 50% { transform: translateY(-3px); }
             }
-            .champion-1-avatar-p3 {
-                width: 58px;
-                height: 58px;
+
+            .podium-avatar-sj-p3 {
+                width: 48px;
+                height: 48px;
                 border-radius: 50%;
                 background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
-                border: 3px solid #78350f;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 30px;
-                margin: 4px 0 6px 0;
-                box-shadow: 0 0 12px rgba(251, 191, 36, 0.6);
+                font-size: 24px;
+                margin: 4px 0 5px 0;
+                position: relative;
+                z-index: 25;
             }
-            .champion-1-name-p3 {
+            .podium-avatar-sj-p3.rank-1-sj-p3 {
+                width: 60px;
+                height: 60px;
+                font-size: 30px;
+                border: 3px solid #fbbf24;
+                box-shadow: 0 0 15px rgba(251, 191, 36, 0.7), inset 0 0 10px rgba(0,0,0,0.6);
+            }
+            .podium-avatar-sj-p3.rank-2-sj-p3 {
+                border: 3px solid #94a3b8;
+                box-shadow: 0 0 12px rgba(148, 163, 184, 0.6), inset 0 0 10px rgba(0,0,0,0.6);
+            }
+            .podium-avatar-sj-p3.rank-3-sj-p3 {
+                border: 3px solid #ea580c;
+                box-shadow: 0 0 12px rgba(234, 88, 12, 0.6), inset 0 0 10px rgba(0,0,0,0.6);
+            }
+
+            .podium-name-sj-p3 {
                 font-family: monospace;
-                font-size: 12px;
+                font-size: 9px;
                 font-weight: 900;
                 color: #1e1103;
                 text-align: center;
-                letter-spacing: 0.5px;
                 line-height: 1.2;
                 word-break: break-word;
                 max-width: 100%;
-                margin-bottom: 3px;
+                margin-bottom: 2px;
+                padding: 2px 3px;
+                background: rgba(255, 255, 255, 0.55);
+                border-radius: 4px;
             }
-            .champion-1-score-p3 {
+            .podium-score-sj-p3 {
                 font-family: monospace;
-                font-size: 15px;
+                font-size: 12px;
                 font-weight: 900;
                 color: #78350f;
                 text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
             }
-            .champion-1-achiv-p3 {
-                font-family: monospace;
-                font-size: 10px;
-                font-weight: 800;
-                color: #064e3b;
-                background: rgba(255, 255, 255, 0.6);
-                padding: 2px 8px;
-                border-radius: 10px;
-                margin-top: 3px;
-            }
-            .champion-you-p3 {
-                position: absolute;
-                top: 6px;
-                right: 8px;
-                background: #2563eb;
-                color: white;
-                font-size: 8px;
-                padding: 2px 5px;
-                border-radius: 4px;
-                font-weight: bold;
-                letter-spacing: 0.5px;
-            }
-            .champion-me-ring-p3 {
-                box-shadow: 0 0 0 3px #2563eb, 0 6px 15px rgba(37, 99, 235, 0.4);
-            }
-
-            /* Juara 2 & 3 — Sejajar */
-            .rank-2-3-row-p3 {
-                display: flex;
-                flex-direction: row;
-                justify-content: center;
-                gap: 12px;
-                width: 100%;
-            }
-            .champion-other-p3 {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                border-radius: 10px;
-                padding: 8px 10px 8px 10px;
-                width: 42%;
-                max-width: 110px;
-                position: relative;
-                z-index: 18;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-            }
-            .champion-2-p3 {
-                background: linear-gradient(180deg, #f8fafc 0%, #cbd5e1 50%, #64748b 100%);
-                border: 2.5px solid #334155;
-            }
-            .champion-3-p3 {
-                background: linear-gradient(180deg, #ffedd5 0%, #fdba74 50%, #c2410c 100%);
-                border: 2.5px solid #7c2d12;
-            }
-            .champion-other-crown-p3 {
-                font-size: 18px;
-                margin-bottom: 2px;
-            }
-            .champion-other-avatar-p3 {
-                width: 40px;
-                height: 40px;
-                border-radius: 50%;
-                background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 20px;
-                margin: 2px 0 4px 0;
-                box-shadow: 0 0 8px rgba(0,0,0,0.3);
-            }
-            .champion-2-p3 .champion-other-avatar-p3 { border: 2px solid #334155; }
-            .champion-3-p3 .champion-other-avatar-p3 { border: 2px solid #7c2d12; }
-            .champion-other-name-p3 {
-                font-family: monospace;
-                font-size: 9.5px;
-                font-weight: 900;
-                color: #0f172a;
-                text-align: center;
-                line-height: 1.2;
-                word-break: break-word;
-                max-width: 100%;
-                margin-bottom: 2px;
-            }
-            .champion-other-score-p3 {
-                font-family: monospace;
-                font-size: 12px;
-                font-weight: 900;
-                color: #1e1103;
-                text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
-            }
-            .champion-other-achiv-p3 {
+            .podium-achiv-sj-p3 {
                 font-family: monospace;
                 font-size: 9px;
                 font-weight: 800;
                 color: #064e3b;
-                background: rgba(255, 255, 255, 0.6);
-                padding: 1px 6px;
+                background: rgba(255, 255, 255, 0.7);
+                padding: 1px 5px;
                 border-radius: 8px;
                 margin-top: 2px;
+                margin-bottom: 5px;
+                display: inline-block;
+            }
+
+            .podium-block-sj-p3 {
+                width: 100%;
+                display: flex;
+                align-items: flex-start;
+                justify-content: center;
+                border-radius: 6px 6px 0 0;
+                border: 2.5px solid;
+                border-bottom: none;
+                margin-top: 0;
+                position: relative;
+                z-index: 15;
+                padding-top: 8px;
+            }
+            .podium-block-sj-p3.rank-1-sj-p3 {
+                background: linear-gradient(180deg, #fef08a 0%, #fbbf24 50%, #d97706 100%);
+                border-color: #78350f;
+                box-shadow: 0 -4px 12px rgba(120, 53, 15, 0.3), inset 0 1px 3px rgba(255, 255, 255, 0.5);
+            }
+            .podium-block-sj-p3.rank-2-sj-p3 {
+                background: linear-gradient(180deg, #f8fafc 0%, #cbd5e1 50%, #64748b 100%);
+                border-color: #334155;
+                box-shadow: 0 -3px 10px rgba(51, 65, 85, 0.25), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+            }
+            .podium-block-sj-p3.rank-3-sj-p3 {
+                background: linear-gradient(180deg, #ffedd5 0%, #fdba74 50%, #c2410c 100%);
+                border-color: #7c2d12;
+                box-shadow: 0 -3px 10px rgba(124, 45, 18, 0.25), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+            }
+            .podium-rank-num-sj-p3 {
+                font-family: monospace;
+                font-size: 18px;
+                font-weight: 900;
+                color: #1e1103;
+                text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+            }
+
+            .podium-you-badge-p3 {
+                position: absolute;
+                top: -2px;
+                right: 4px;
+                background: #2563eb;
+                color: white;
+                font-size: 7px;
+                padding: 2px 5px;
+                border-radius: 4px;
+                font-weight: bold;
+                letter-spacing: 0.5px;
+                z-index: 30;
+            }
+            .podium-me-ring-p3 {
+                box-shadow: 0 0 0 3px #2563eb, 0 0 15px rgba(37, 99, 235, 0.5) !important;
             }
 
             /* ============================================
@@ -7093,7 +7107,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 flex-direction: column;
                 gap: 5px;
                 position: relative;
-                z-index: 15;
+                z-index: 20;
                 overflow-y: auto;
                 max-height: 420px;
                 padding-right: 2px;
@@ -7149,12 +7163,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 overflow: hidden;
                 text-overflow: ellipsis;
             }
-            .row-left-bottom-p3 {
-                font-size: 9px;
-                color: #475569;
-                padding-left: 16px;
-                font-family: monospace;
-            }
             .row-score-p3 {
                 flex-shrink: 0;
                 margin-left: 5px;
@@ -7191,27 +7199,16 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 font-style: italic;
             }
 
-            /* Override z-index untuk watermark di page 3 */
-            .rpg-book-page-left-p3, .rpg-book-page-right-p3 {
-                position: relative;
-                z-index: 10;
-            }
-            .rpg-book-page-left-p3 *, .rpg-book-page-right-p3 * {
-                position: relative;
-                z-index: 15;
-            }
-            .rpg-book-page-left-p3::before, .rpg-book-page-right-p3::before {
-                z-index: 5 !important;
-            }
-
             @media (max-width: 480px) {
-                .champion-1-p3 { width: 85%; padding: 10px 12px 8px 12px; }
-                .champion-1-avatar-p3 { width: 50px; height: 50px; font-size: 26px; }
-                .champion-1-name-p3 { font-size: 11px; }
-                .champion-1-score-p3 { font-size: 13px; }
-                .champion-other-avatar-p3 { width: 34px; height: 34px; font-size: 17px; }
-                .champion-other-name-p3 { font-size: 8.5px; }
-                .champion-other-score-p3 { font-size: 10.5px; }
+                .podium-sj-wrapper-p3 { min-height: 230px; gap: 4px; }
+                .podium-crown-sj-p3 { font-size: 17px; }
+                .podium-crown-sj-p3.rank-1-sj-p3 { font-size: 22px; }
+                .podium-avatar-sj-p3 { width: 40px; height: 40px; font-size: 20px; }
+                .podium-avatar-sj-p3.rank-1-sj-p3 { width: 50px; height: 50px; font-size: 26px; }
+                .podium-name-sj-p3 { font-size: 8px; }
+                .podium-score-sj-p3 { font-size: 10.5px; }
+                .podium-achiv-sj-p3 { font-size: 8px; }
+                .podium-rank-num-sj-p3 { font-size: 14px; }
                 .rpg-normal-row-p3 { font-size: 10px; padding: 6px 8px; }
             }
             </style>
@@ -7228,69 +7225,35 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 _h = int(_hl.md5(str(name).upper().encode()).hexdigest(), 16)
                 return _list[_h % len(_list)]
 
-            podium_html_p3 = '<div class="podium-vertical-p3">'
+            def _make_podium_slot_p3(rank_idx, crown, slot_class, block_height, rlist):
+                if len(rlist) > rank_idx:
+                    n, q, a = rlist[rank_idx]
+                    is_me = (str(n).upper() == current_user_clean_p3)
+                    me_badge = "<div class='podium-you-badge-p3'>KAMU</div>" if is_me else ""
+                    me_class = "podium-me-ring-p3" if is_me else ""
+                    av = _get_avatar_p3(n)
+                    rank_num = rank_idx + 1
 
-            # Juara 1 (jika ada)
-            if len(ranking_list_p3) > 0:
-                _n1, _q1, _a1 = ranking_list_p3[0]
-                _is_me1 = (str(_n1).upper() == current_user_clean_p3)
-                _me_class1 = "champion-me-ring-p3" if _is_me1 else ""
-                _you1 = "<div class='champion-you-p3'>KAMU</div>" if _is_me1 else ""
-                _av1 = _get_avatar_p3(_n1)
+                    return (
+                        "<div class='podium-slot-sj-p3'>"
+                        + me_badge +
+                        "<div class='podium-crown-sj-p3 " + slot_class + "'>" + crown + "</div>"
+                        "<div class='podium-avatar-sj-p3 " + slot_class + " " + me_class + "'>" + av + "</div>"
+                        "<div class='podium-name-sj-p3' title='" + n + "'>" + n + "</div>"
+                        "<div class='podium-score-sj-p3'>" + str(q) + " Pcs</div>"
+                        "<div class='podium-achiv-sj-p3'>✨ " + str(a) + "</div>"
+                        "<div class='podium-block-sj-p3 " + slot_class + "' style='height:" + str(block_height) + "px;'>"
+                        "<span class='podium-rank-num-sj-p3'>#" + str(rank_num) + "</span>"
+                        "</div>"
+                        "</div>"
+                    )
+                return "<div class='podium-slot-sj-p3 empty-sj-p3'></div>"
 
-                podium_html_p3 += (
-                    "<div class='champion-1-p3 " + _me_class1 + "'>"
-                    + _you1 +
-                    "<div class='champion-1-crown-p3'>👑</div>"
-                    "<div class='champion-1-avatar-p3'>" + _av1 + "</div>"
-                    "<div class='champion-1-name-p3'>" + _n1 + "</div>"
-                    "<div class='champion-1-score-p3'>" + str(_q1) + " Pcs</div>"
-                    "<div class='champion-1-achiv-p3'>✨ " + str(_a1) + " Achiv</div>"
-                    "</div>"
-                )
-
-            # Juara 2 & 3
-            podium_html_p3 += '<div class="rank-2-3-row-p3">'
-
-            # Juara 2
-            if len(ranking_list_p3) > 1:
-                _n2, _q2, _a2 = ranking_list_p3[1]
-                _is_me2 = (str(_n2).upper() == current_user_clean_p3)
-                _me_class2 = "champion-me-ring-p3" if _is_me2 else ""
-                _you2 = "<div class='champion-you-p3'>KAMU</div>" if _is_me2 else ""
-                _av2 = _get_avatar_p3(_n2)
-
-                podium_html_p3 += (
-                    "<div class='champion-other-p3 champion-2-p3 " + _me_class2 + "'>"
-                    + _you2 +
-                    "<div class='champion-other-crown-p3'>🥈</div>"
-                    "<div class='champion-other-avatar-p3'>" + _av2 + "</div>"
-                    "<div class='champion-other-name-p3'>" + _n2 + "</div>"
-                    "<div class='champion-other-score-p3'>" + str(_q2) + " Pcs</div>"
-                    "<div class='champion-other-achiv-p3'>✨ " + str(_a2) + "</div>"
-                    "</div>"
-                )
-
-            # Juara 3
-            if len(ranking_list_p3) > 2:
-                _n3, _q3, _a3 = ranking_list_p3[2]
-                _is_me3 = (str(_n3).upper() == current_user_clean_p3)
-                _me_class3 = "champion-me-ring-p3" if _is_me3 else ""
-                _you3 = "<div class='champion-you-p3'>KAMU</div>" if _is_me3 else ""
-                _av3 = _get_avatar_p3(_n3)
-
-                podium_html_p3 += (
-                    "<div class='champion-other-p3 champion-3-p3 " + _me_class3 + "'>"
-                    + _you3 +
-                    "<div class='champion-other-crown-p3'>🥉</div>"
-                    "<div class='champion-other-avatar-p3'>" + _av3 + "</div>"
-                    "<div class='champion-other-name-p3'>" + _n3 + "</div>"
-                    "<div class='champion-other-score-p3'>" + str(_q3) + " Pcs</div>"
-                    "<div class='champion-other-achiv-p3'>✨ " + str(_a3) + "</div>"
-                    "</div>"
-                )
-
-            podium_html_p3 += '</div></div>'
+            podium_html_p3 = '<div class="podium-sj-wrapper-p3">'
+            podium_html_p3 += _make_podium_slot_p3(1, "🥈", "rank-2-sj-p3", 70, ranking_list_p3)
+            podium_html_p3 += _make_podium_slot_p3(0, "👑", "rank-1-sj-p3", 110, ranking_list_p3)
+            podium_html_p3 += _make_podium_slot_p3(2, "🥉", "rank-3-sj-p3", 55, ranking_list_p3)
+            podium_html_p3 += '</div>'
 
             # ==========================================
             # 📜 BUILD LIST 4-9
@@ -7348,7 +7311,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 "</div>"
                 "<div class='rpg-book-page rpg-book-page-right rpg-book-page-right-p3'>"
                 "<h3 class='open-page-title'>⚔️ PSM (4-9)</h3>"
-                "<p class='open-page-sub'>Kelanjutan Peringkat</p>"
+                "<p class='open-page-sub'>Kelanjutan Peringkat Bulan Ini</p>"
                 "<div class='open-book-divider'></div>"
                 + list_html_p3 +
                 "<div class='open-page-footer'>Halaman Kanan • PSM 4-9</div>"
