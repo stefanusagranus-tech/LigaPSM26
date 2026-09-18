@@ -2186,7 +2186,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     /* 🎯 WRAPPER TOMBOL — jarak diperkecil jadi 3px */
                     div[data-testid="stButton"] {{
                         max-width: 480px !important;
-                        margin: 10px auto 30px auto !important;   /* ← 3px, lebih rapat */
+                        margin: 12px auto 30px auto !important;   /* ← 3px, lebih rapat */
                         padding: 0 !important;
                     }}
         
