@@ -2911,7 +2911,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     st.rerun()
 
             
-                       # Memotong eksekusi halaman agar skrip di bawahnya tidak ikut terpanggil
+            # Memotong eksekusi halaman agar skrip di bawahnya tidak ikut terpanggil
             st.stop()
 
         # =========================================================================
@@ -3120,6 +3120,367 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 st.rerun()
 
             st.stop()
+    
+            # =========================================================================
+            # 👑 HALAMAN 3A: HALL OF FAME PSM (BENERAN)
+            # =========================================================================
+            elif st.session_state.get("campaign_sub_page") == "view_hall_of_fame" and st.session_state.get("hof_sub_page") == "hof_psm":
+    
+                url_gambar_latar = "https://i.imgur.com/kMo29aW.jpeg"
+    
+                st.markdown(
+                    """
+                    <style>
+                        @keyframes hofBookEnter {
+                            0% { opacity: 0; transform: scale(0.96); }
+                            100% { opacity: 1; transform: scale(1); }
+                        }
+                        .hof-page-title {
+                            text-align: center; color: #fef08a; font-family: monospace;
+                            font-size: 22px; font-weight: 900;
+                            text-shadow: 0 0 15px rgba(251, 191, 36, 0.5);
+                            margin: 0 0 5px 0;
+                        }
+                        .hof-page-sub {
+                            text-align: center; color: #cbd5e1; font-family: monospace;
+                            font-size: 11.5px; margin-bottom: 20px;
+                        }
+    
+                        /* 🎠 CAROUSEL */
+                        .st-key-hof_psm_period_carousel div[role="radiogroup"] {
+                            display: flex; flex-direction: row; flex-wrap: nowrap;
+                            overflow-x: auto; gap: 8px;
+                            padding: 8px 4px 14px 4px;
+                            justify-content: flex-start;
+                            background: rgba(15, 23, 42, 0.55);
+                            border-radius: 10px;
+                            border: 1px solid rgba(180, 83, 9, 0.4);
+                        }
+                        .st-key-hof_psm_period_carousel div[role="radiogroup"]::-webkit-scrollbar { height: 6px; }
+                        .st-key-hof_psm_period_carousel div[role="radiogroup"]::-webkit-scrollbar-thumb {
+                            background: #b45309; border-radius: 3px;
+                        }
+                        .st-key-hof_psm_period_carousel label {
+                            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+                            border: 2px solid #b45309; border-radius: 8px;
+                            padding: 8px 14px; color: #fde047;
+                            font-family: monospace; font-size: 11px; font-weight: bold;
+                            white-space: nowrap; flex: 0 0 auto; cursor: pointer;
+                            transition: all 0.25s ease; margin: 0;
+                        }
+                        .st-key-hof_psm_period_carousel label:hover {
+                            border-color: #fbbf24;
+                            box-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
+                        }
+                        .st-key-hof_psm_period_carousel label:has(input:checked) {
+                            background: linear-gradient(135deg, #b45309 0%, #78350f 100%);
+                            border: 2px solid #fef08a; color: #ffffff;
+                            box-shadow: 0 0 15px rgba(251, 191, 36, 0.7);
+                        }
+                        .st-key-hof_psm_period_carousel input[type="radio"] { display: none !important; }
+                        .st-key-hof_psm_period_carousel div[role="radiogroup"] > label > div:first-child { display: none !important; }
+    
+                        /* 📖 BUKU */
+                        .hof-book-container {
+                            background: #fdf6e2;
+                            border: 3px solid #d4af37;
+                            border-radius: 12px;
+                            padding: 18px;
+                            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+                            position: relative; overflow: hidden;
+                            min-height: 480px;
+                            animation: hofBookEnter 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+                        }
+                        .hof-book-container::before {
+                            content: "";
+                            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                            background-image: url("https://img.pikbest.com/png-images/20250303/fierce-dragon-silhouette--e2-80-93-stylized-black-and-white-mythical-beast-illustration_11570728.png!bw800");
+                            background-repeat: no-repeat; background-position: center; background-size: 85% auto;
+                            opacity: 0.07; pointer-events: none; z-index: 0;
+                        }
+                        .hof-book-header {
+                            text-align: center; font-family: monospace; font-size: 13px;
+                            color: #78350f; font-weight: bold; margin-bottom: 4px;
+                            position: relative; z-index: 2;
+                        }
+                        .hof-divider {
+                            border-bottom: 2px solid #d4af37; margin: 15px 0 5px 0;
+                            position: relative; z-index: 2;
+                        }
+    
+                        /* 🏆 PODIUM */
+                        .podium-wrapper {
+                            display: flex; align-items: flex-end; justify-content: center;
+                            gap: 8px; margin-top: 20px; margin-bottom: 10px;
+                            position: relative; z-index: 2; width: 100%;
+                        }
+                        .podium-slot {
+                            flex: 1; display: flex; flex-direction: column;
+                            align-items: center; text-align: center; min-width: 0;
+                        }
+                        .podium-card {
+                            width: 100%; border-radius: 6px 6px 0 0; padding: 8px 4px;
+                            box-sizing: border-box; display: flex; flex-direction: column;
+                            align-items: center; justify-content: flex-start;
+                            box-shadow: 0 -3px 10px rgba(0,0,0,0.25), inset 0 1px 2px rgba(255,255,255,0.4);
+                            position: relative;
+                        }
+                        .podium-1 { height: 185px; background: linear-gradient(180deg, #fef08a 0%, #d97706 100%); border: 2.5px solid #78350f; border-bottom: none; }
+                        .podium-2 { height: 150px; background: linear-gradient(180deg, #f8fafc 0%, #64748b 100%); border: 2.5px solid #334155; border-bottom: none; }
+                        .podium-3 { height: 125px; background: linear-gradient(180deg, #ffedd5 0%, #c2410c 100%); border: 2.5px solid #7c2d12; border-bottom: none; }
+                        .podium-rank-tag { font-size: 15px; font-weight: 900; color: #1e1b4b; }
+                        .podium-name {
+                            font-size: 11px; font-weight: 800; color: #0f172a;
+                            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+                            max-width: 95%; margin-top: 3px;
+                            background: rgba(255, 255, 255, 0.5);
+                            padding: 2px 5px; border-radius: 4px;
+                        }
+                        .podium-score {
+                            font-size: 13px; font-weight: 900; color: #1e1103;
+                            margin-top: 4px;
+                            text-shadow: 0px 1px 0px rgba(255,255,255,0.6);
+                        }
+                        .podium-you-badge {
+                            background: #2563eb; color: white; font-size: 8px;
+                            padding: 1px 4px; border-radius: 4px; margin-top: 2px;
+                        }
+    
+                        /* 📜 LIST */
+                        .hof-list-container {
+                            display: flex; flex-direction: column; gap: 6px;
+                            position: relative; z-index: 2; margin-top: 20px;
+                        }
+                        .hof-normal-row {
+                            display: flex; justify-content: space-between;
+                            align-items: center; padding: 8px 12px;
+                            border: 1.5px solid #cbd5e1; background: #ffffff;
+                            border-radius: 6px; color: #020617;
+                            font-size: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+                            flex-shrink: 0; font-family: monospace;
+                        }
+                        .hof-user-me { outline: 2.5px solid #2563eb; outline-offset: -1px; }
+                        .hof-footer {
+                            text-align: right; font-size: 10px; color: #78350f;
+                            font-family: monospace; padding-top: 12px;
+                            font-weight: bold; position: relative; z-index: 2;
+                        }
+                        .hof-empty {
+                            text-align: center; color: #78350f; font-family: monospace;
+                            font-size: 12px; padding: 40px 20px;
+                            position: relative; z-index: 2;
+                        }
+    
+                        /* TOMBOL */
+                        div[data-testid="stButton"] {
+                            max-width: 480px !important;
+                            margin: 8px auto 15px auto !important;
+                            padding: 0 !important;
+                        }
+                        div[data-testid="stButton"] > button {
+                            border-radius: 12px !important;
+                            font-family: monospace !important;
+                            font-size: 13px !important;
+                            font-weight: bold !important;
+                            padding: 12px 20px !important;
+                            width: 100% !important;
+                            display: block !important;
+                            transition: all 0.3s ease !important;
+                        }
+                        .st-key-btn_hof_psm_back button {
+                            background: rgba(100, 116, 139, 0.15) !important;
+                            border: 2px solid #475569 !important;
+                            color: #cbd5e1 !important;
+                        }
+                        .st-key-btn_hof_psm_back button:hover {
+                            background: #475569 !important; color: #ffffff !important;
+                        }
+                    </style>
+                    """,
+                    unsafe_allow_html=True
+                )
+    
+                st.markdown(
+                    f"""
+                    <style>
+                        .stApp {{
+                            background-image: linear-gradient(rgba(10, 13, 26, 0.85), rgba(10, 13, 26, 0.9)), url("{url_gambar_latar}") !important;
+                            background-size: cover !important;
+                            background-position: center !important;
+                            background-repeat: no-repeat !important;
+                            background-attachment: fixed !important;
+                        }}
+                        .main .block-container {{
+                            background-color: transparent !important;
+                            max-width: 700px !important;
+                            padding-top: 2% !important;
+                        }}
+                        div[data-testid="stVerticalBlock"] {{ gap: 0rem !important; }}
+                    </style>
+                    """,
+                    unsafe_allow_html=True
+                )
+    
+                # ==== AMBIL DATA ====
+                periods_df = st.session_state.get("periods_df", pd.DataFrame()).copy()
+                sp_df = st.session_state.get("sales_person_df", pd.DataFrame()).copy()
+                for df in [periods_df, sp_df]:
+                    if not df.empty:
+                        df.columns = df.columns.astype(str).str.strip().str.lower()
+    
+                valid_periods = []
+                if not periods_df.empty and all(c in periods_df.columns for c in ["period_id", "period_name", "start_date", "end_date"]):
+                    periods_df["start_dt"] = pd.to_datetime(periods_df["start_date"], errors="coerce")
+                    periods_df["end_dt"] = pd.to_datetime(periods_df["end_date"], errors="coerce")
+                    periods_df = periods_df.dropna(subset=["start_dt", "end_dt"]).sort_values("start_dt", ascending=False)
+                    for _, r in periods_df.iterrows():
+                        p_id = str(r["period_id"]).strip()
+                        if any(x in p_id.upper() for x in ["PWP", "SGR", "SGS", "CBN", "PPS"]):
+                            continue
+                        valid_periods.append({
+                            "id": p_id,
+                            "name": str(r["period_name"]).strip(),
+                            "start": r["start_dt"].date(),
+                            "end": r["end_dt"].date(),
+                        })
+    
+                today = datetime.now().date()
+                default_period_idx = 0
+                for i, p in enumerate(valid_periods):
+                    if p["start"] <= today <= p["end"]:
+                        default_period_idx = i
+                        break
+    
+                st.markdown("<h2 class='hof-page-title'>👑 HALL OF FAME PSM 👑</h2>", unsafe_allow_html=True)
+                st.markdown("<p class='hof-page-sub'>Peringkat penjualan item terbanyak per periode</p>", unsafe_allow_html=True)
+    
+                if not valid_periods:
+                    st.markdown(
+                        "<div class='hof-book-container'><div class='hof-empty'>"
+                        "⚠️ Belum ada data periode PSM yang terdaftar di sheet PERIODE."
+                        "</div></div>",
+                        unsafe_allow_html=True
+                    )
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    if st.button("⬅️ KEMBALI KE HALL OF FAME", key="btn_hof_psm_back", use_container_width=True):
+                        st.session_state["hof_sub_page"] = None
+                        st.rerun()
+                    st.stop()
+    
+                # ==== CAROUSEL PERIODE ====
+                period_options = [f"📜 {p['name']}" for p in valid_periods]
+                selected_period_label = st.radio(
+                    "Pilih Periode",
+                    options=period_options,
+                    index=default_period_idx,
+                    key="hof_psm_period_carousel",
+                    label_visibility="collapsed",
+                    horizontal=True,
+                )
+                selected_idx = period_options.index(selected_period_label)
+                selected_period = valid_periods[selected_idx]
+                selected_pid = selected_period["id"]
+    
+                # ==== HITUNG RANKING ====
+                ranking_list = []
+                if not sp_df.empty and all(c in sp_df.columns for c in ["period_id", "person_name", "actual_qty"]):
+                    sp_filtered = sp_df[sp_df["period_id"].astype(str).str.strip() == selected_pid].copy()
+                    if not sp_filtered.empty:
+                        sp_filtered["person_name"] = sp_filtered["person_name"].astype(str).str.strip()
+                        sp_filtered["actual_qty"] = pd.to_numeric(sp_filtered["actual_qty"], errors="coerce").fillna(0)
+                        grouped = sp_filtered.groupby("person_name")["actual_qty"].sum().reset_index()
+                        grouped = grouped.sort_values("actual_qty", ascending=False).reset_index(drop=True)
+                        for _, r in grouped.iterrows():
+                            if int(r["actual_qty"]) > 0:
+                                ranking_list.append((str(r["person_name"]), int(r["actual_qty"])))
+    
+                current_user = str(st.session_state.get("username", "")).strip().upper()
+    
+                # ==== BUILD HTML ====
+                if not ranking_list:
+                    book_content = (
+                        f"<div class='hof-book-container'>"
+                        f"<div class='hof-book-header'>{selected_period['name'].upper()}</div>"
+                        f"<div class='hof-divider'></div>"
+                        f"<div class='hof-empty'>🏜️ Belum ada transaksi PSM tercatat pada periode ini.<br><br>"
+                        f"Data akan muncul setelah ada input penjualan oleh personil.</div>"
+                        f"<div class='hof-footer'>Halaman Papan Peringkat PSM</div>"
+                        f"</div>"
+                    )
+                else:
+                    def make_podium_item(rank_idx, class_name, crown_icon, r_list):
+                        if len(r_list) > rank_idx:
+                            n, q = r_list[rank_idx]
+                            is_me = (n.upper() == current_user)
+                            me_cls = "hof-user-me" if is_me else ""
+                            you_badge = "<div class='podium-you-badge'>KAMU</div>" if is_me else ""
+                            html = f'<div class="podium-slot">'
+                            html += f'<div style="font-size:22px; margin-bottom:2px; z-index:3;">{crown_icon}</div>'
+                            html += f'<div class="podium-card {class_name} {me_cls}">'
+                            html += f'<div class="podium-rank-tag">#{rank_idx+1}</div>'
+                            html += f'<div class="podium-name" title="{n}">{n}</div>'
+                            html += f'{you_badge}'
+                            html += f'<div class="podium-score">{q} Pcs</div>'
+                            html += f'</div></div>'
+                            return html
+                        return ""
+    
+                    podium_html = '<div class="podium-wrapper">'
+                    podium_html += make_podium_item(1, "podium-2", "🥈", ranking_list)
+                    podium_html += make_podium_item(0, "podium-1", "👑", ranking_list)
+                    podium_html += make_podium_item(2, "podium-3", "🥉", ranking_list)
+                    podium_html += '</div>'
+    
+                    rest_html = '<div class="hof-list-container">'
+                    for i, (n, q) in enumerate(ranking_list[3:9]):
+                        rank = i + 4
+                        is_me = (n.upper() == current_user)
+                        me_class = "hof-user-me" if is_me else ""
+                        you_badge = '<span style="background: #2563eb; color: white; font-size: 8px; padding: 1px 4px; border-radius: 4px; margin-left: 4px;">KAMU</span>' if is_me else ""
+                        rest_html += f'<div class="hof-normal-row {me_class}">'
+                        rest_html += f'<div style="display:flex; align-items:center; gap:6px;">'
+                        rest_html += f'<span>🛡️</span>'
+                        rest_html += f'<span style="font-weight:bold;">#{rank}</span>'
+                        rest_html += f'<span style="font-weight:bold;">{n}</span>'
+                        rest_html += f'{you_badge}'
+                        rest_html += f'</div>'
+                        rest_html += f'<div style="font-weight:900;">{q} Pcs</div>'
+                        rest_html += f'</div>'
+                    rest_html += '</div>'
+    
+                    user_rank_html = ""
+                    if current_user:
+                        for idx, (n, q) in enumerate(ranking_list):
+                            if n.upper() == current_user and idx >= 9:
+                                user_rank_html = (
+                                    f'<div style="background: rgba(37, 99, 235, 0.15); border: 2px solid #2563eb; '
+                                    f'border-radius: 8px; padding: 10px 14px; margin-top: 15px; text-align: center; '
+                                    f'font-family: monospace; color: #1e3a8a; font-size: 12px; font-weight: bold; '
+                                    f'position: relative; z-index: 2;">'
+                                    f'📍 POSISI KAMU: <b>#{idx+1}</b> — {q} Pcs'
+                                    f'</div>'
+                                )
+                                break
+    
+                    book_content = (
+                        f"<div class='hof-book-container'>"
+                        f"<div class='hof-book-header'>{selected_period['name'].upper()}</div>"
+                        f"<div class='hof-divider'></div>"
+                        f"{podium_html}"
+                        f"{rest_html}"
+                        f"{user_rank_html}"
+                        f"<div class='hof-footer'>Halaman Papan Peringkat PSM</div>"
+                        f"</div>"
+                    )
+    
+                st.markdown(book_content, unsafe_allow_html=True)
+    
+                st.markdown("<br>", unsafe_allow_html=True)
+                if st.button("⬅️ KEMBALI KE HALL OF FAME", key="btn_hof_psm_back", use_container_width=True):
+                    st.session_state["hof_sub_page"] = None
+                    st.rerun()
+    
+                st.stop()
     
         # ==============================================================================
         # 🚪 KONDISI 3: BUKU TERBUKA - KITAB MISI GUILD (DENGAN ISOLASI CSS WRAPPER)
