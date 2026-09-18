@@ -6266,75 +6266,35 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         "is_selesai": is_selesai_p2,
                     })
 
-            # ==========================================
-            # ⚔️ KANAN: GUILD WAR ARENA
-            # ==========================================
-            # Periode PSM bulan ini
-            if not periods_df_p2.empty and "start_date" in periods_df_p2.columns:
-                periods_df_p2["start_dt"] = pd.to_datetime(periods_df_p2["start_date"], errors="coerce")
-                periods_df_p2["end_dt"] = pd.to_datetime(periods_df_p2["end_date"], errors="coerce")
-                _psm_bulan_ini = periods_df_p2[
-                    (periods_df_p2["start_dt"].dt.month == _bulan_ini_p2) &
-                    (periods_df_p2["start_dt"].dt.year == _tahun_ini_p2)
-                ]
-            else:
-                _psm_bulan_ini = pd.DataFrame()
-
-            # PSM: target & aktual (hanya periode yang sudah selesai)
-            psm_target_p2 = 0
-            psm_actual_p2 = 0
-            psm_mvp_p2 = "-"
-
-            if not _psm_bulan_ini.empty:
-                _psm_selesai_p2 = _psm_bulan_ini[_psm_bulan_ini["end_dt"].dt.date < t_today_p2]
-                _psm_ids_selesai_p2 = _psm_selesai_p2["period_id"].astype(str).str.strip().tolist()
-
-                if not sales_item_df_p2.empty and "target_qty" in sales_item_df_p2.columns and _psm_ids_selesai_p2:
-                    _fi = sales_item_df_p2[
-                        sales_item_df_p2["period_id"].astype(str).str.strip().isin(_psm_ids_selesai_p2)
-                    ]
-                    psm_target_p2 = int(pd.to_numeric(_fi["target_qty"], errors="coerce").fillna(0).sum())
-
-                if not sales_person_df_p2.empty and "actual_qty" in sales_person_df_p2.columns and _psm_ids_selesai_p2:
-                    _fp = sales_person_df_p2[
-                        sales_person_df_p2["period_id"].astype(str).str.strip().isin(_psm_ids_selesai_p2)
-                    ]
-                    psm_actual_p2 = int(pd.to_numeric(_fp["actual_qty"], errors="coerce").fillna(0).sum())
-                    if not _fp.empty and "person_name" in _fp.columns:
-                        _grp = _fp.groupby("person_name")["actual_qty"].sum()
-                        if not _grp.empty and _grp.max() > 0:
-                            psm_mvp_p2 = str(_grp.idxmax()).title()
-
-            # PWP: target & aktual (hanya periode selesai)
+                        # PWP: target & aktual (semua periode bulan ini)
             pwp_target_p2 = 0
             pwp_actual_p2 = 0
             pwp_mvp_p2 = "-"
 
-            if not periods_pps_df_p2.empty:
-                _f_pwp = periods_pps_df_p2[
-                    periods_pps_df_p2["period_id"].astype(str).str.upper().str.startswith("PWP", na=False) &
-                    (periods_pps_df_p2["start_dt"].dt.month == _bulan_ini_p2) &
-                    (periods_pps_df_p2["start_dt"].dt.year == _tahun_ini_p2)
-                ]
-                _f_pwp_selesai = _f_pwp[_f_pwp["end_dt"].dt.date < t_today_p2]
-                pwp_target_p2 = int(pd.to_numeric(_f_pwp_selesai["target_total"], errors="coerce").fillna(0).sum())
+            _f_pwp = periods_pps_df_p2[
+                periods_pps_df_p2["period_id"].astype(str).str.upper().str.startswith("PWP", na=False) &
+                (periods_pps_df_p2["start_dt"].dt.month == _bulan_ini_p2) &
+                (periods_pps_df_p2["start_dt"].dt.year == _tahun_ini_p2)
+            ]
+            _f_pwp_selesai = _f_pwp  # ← semua periode, tidak difilter
+            pwp_target_p2 = int(pd.to_numeric(_f_pwp_selesai["target_total"], errors="coerce").fillna(0).sum())
 
-                if not sales_pps_df_p2.empty and _date_col_p2 and "qty_pwp" in sales_pps_df_p2.columns and not _f_pwp_selesai.empty:
-                    _temp = sales_pps_df_p2.copy()
-                    _temp["_dt"] = pd.to_datetime(_temp[_date_col_p2], errors="coerce")
-                    _mask = pd.Series([False] * len(_temp), index=_temp.index)
-                    for _, _row in _f_pwp_selesai.iterrows():
-                        _s = _row["start_dt"].date()
-                        _e = _row["end_dt"].date()
-                        _mask = _mask | ((_temp["_dt"].dt.date >= _s) & (_temp["_dt"].dt.date <= _e))
-                    _temp = _temp[_mask]
-                    pwp_actual_p2 = int(pd.to_numeric(_temp["qty_pwp"], errors="coerce").fillna(0).sum())
-                    if "kasir_name" in _temp.columns and not _temp.empty:
-                        _grp = _temp.groupby("kasir_name")["qty_pwp"].sum()
-                        if not _grp.empty and _grp.max() > 0:
-                            pwp_mvp_p2 = str(_grp.idxmax()).title()
+            if not sales_pps_df_p2.empty and _date_col_p2 and "qty_pwp" in sales_pps_df_p2.columns and not _f_pwp_selesai.empty:
+                _temp = sales_pps_df_p2.copy()
+                _temp["_dt"] = pd.to_datetime(_temp[_date_col_p2], errors="coerce")
+                _mask = pd.Series([False] * len(_temp), index=_temp.index)
+                for _, _row in _f_pwp_selesai.iterrows():
+                    _s = _row["start_dt"].date()
+                    _e = _row["end_dt"].date()
+                    _mask = _mask | ((_temp["_dt"].dt.date >= _s) & (_temp["_dt"].dt.date <= _e))
+                _temp = _temp[_mask]
+                pwp_actual_p2 = int(pd.to_numeric(_temp["qty_pwp"], errors="coerce").fillna(0).sum())
+                if "kasir_name" in _temp.columns and not _temp.empty:
+                    _grp = _temp.groupby("kasir_name")["qty_pwp"].sum()
+                    if not _grp.empty and _grp.max() > 0:
+                        pwp_mvp_p2 = str(_grp.idxmax()).title()
 
-            # SG: target & aktual (hanya periode selesai)
+            # SG: target & aktual (semua periode bulan ini)
             sg_target_p2 = 0
             sg_actual_p2 = 0
             sg_mvp_p2 = "-"
@@ -6345,7 +6305,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     (periods_pps_df_p2["start_dt"].dt.month == _bulan_ini_p2) &
                     (periods_pps_df_p2["start_dt"].dt.year == _tahun_ini_p2)
                 ]
-                _f_sg_selesai = _f_sg[_f_sg["end_dt"].dt.date < t_today_p2]
+                _f_sg_selesai = _f_sg  # ← semua periode, tidak difilter
                 sg_target_p2 = int(pd.to_numeric(_f_sg_selesai["target_total"], errors="coerce").fillna(0).sum())
 
                 if not sales_pps_df_p2.empty and _date_col_p2 and "qty_sg" in sales_pps_df_p2.columns and not _f_sg_selesai.empty:
@@ -6363,7 +6323,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         if not _grp.empty and _grp.max() > 0:
                             sg_mvp_p2 = str(_grp.idxmax()).title()
 
-            # Sueger: syarat & redeem (hanya periode selesai)
+            # Sueger: syarat & redeem (semua periode bulan ini)
             sgr_syarat_p2 = 0
             sgr_redeem_p2 = 0
             sgr_mvp_p2 = "-"
@@ -6374,7 +6334,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     (periods_pps_df_p2["start_dt"].dt.month == _bulan_ini_p2) &
                     (periods_pps_df_p2["start_dt"].dt.year == _tahun_ini_p2)
                 ]
-                _f_sgr_selesai = _f_sgr[_f_sgr["end_dt"].dt.date < t_today_p2]
+                _f_sgr_selesai = _f_sgr  # ← semua periode, tidak difilter
 
                 if not sales_pps_df_p2.empty and _date_col_p2 and not _f_sgr_selesai.empty:
                     _temp = sales_pps_df_p2.copy()
