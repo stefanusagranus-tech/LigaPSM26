@@ -3583,7 +3583,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 st.rerun()
 
             st.stop()
-    
+
         # =========================================================================
         # ⚔️ HALAMAN 3B: HALL OF FAME PWP & SG (PLACEHOLDER)
         # =========================================================================
