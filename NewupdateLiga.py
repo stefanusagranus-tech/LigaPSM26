@@ -8104,354 +8104,670 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
         #================================================batas=====================================================#
 
+                # ==========================================
+        # 📄 HALAMAN 5: SUEGER TOP 1-3 + 4+
+        # ==========================================
         elif page_num == 5:
-            # 1. Ambil Username Aktif
-            current_user_name = st.session_state.get("user_name", st.session_state.get("username", ""))
 
-            # 2. STYLING CSS SUEGER PODIUM & LIST ITEM
-            rpg_badge_style = """
+            # ==========================================
+            # 📥 AMBIL DATA
+            # ==========================================
+            sales_pps_df_p5 = st.session_state.get("sales_pps_df", pd.DataFrame()).copy()
+            periods_pps_df_p5 = st.session_state.get("periods_pps_df", pd.DataFrame()).copy()
+            person_df_p5 = st.session_state.get("person_df", pd.DataFrame()).copy()
+
+            for _df in [sales_pps_df_p5, periods_pps_df_p5, person_df_p5]:
+                if not _df.empty:
+                    _df.columns = _df.columns.astype(str).str.strip().str.lower()
+
+            current_user_p5 = st.session_state.get("user_name", st.session_state.get("username", ""))
+            current_user_clean_p5 = str(current_user_p5).strip().upper()
+
+            t_today_p5 = pd.Timestamp.now().date()
+
+            # ==========================================
+            # 🗓️ CARI PERIODE SUEGER AKTIF
+            # ==========================================
+            target_period_label_p5 = "Periode Sueger Aktif"
+            valid_period_p5_ids = []
+
+            if not periods_pps_df_p5.empty and all(
+                c in periods_pps_df_p5.columns for c in ["period_id", "start_date", "end_date"]
+            ):
+                periods_pps_df_p5["start_dt"] = pd.to_datetime(periods_pps_df_p5["start_date"], errors="coerce")
+                periods_pps_df_p5["end_dt"] = pd.to_datetime(periods_pps_df_p5["end_date"], errors="coerce")
+                periods_pps_df_p5 = periods_pps_df_p5.dropna(subset=["start_dt", "end_dt"])
+
+                # Filter SGR only
+                _sgr_filter_p5 = periods_pps_df_p5[
+                    periods_pps_df_p5["period_id"].astype(str).str.upper().str.startswith("SGR", na=False)
+                ]
+
+                _aktif_p5 = _sgr_filter_p5[
+                    (_sgr_filter_p5["start_dt"].dt.date <= t_today_p5) &
+                    (_sgr_filter_p5["end_dt"].dt.date >= t_today_p5)
+                ]
+
+                if not _aktif_p5.empty:
+                    _ps = _aktif_p5.iloc[0]["start_dt"].date()
+                    _pe = _aktif_p5.iloc[0]["end_dt"].date()
+                    target_period_label_p5 = f"Periode {_ps.strftime('%d %b')} - {_pe.strftime('%d %b')}"
+
+                    for _, _r in _sgr_filter_p5.iterrows():
+                        _s = _r["start_dt"].date()
+                        _e = _r["end_dt"].date()
+                        if not (_e < _ps or _s > _pe):
+                            valid_period_p5_ids.append(str(_r["period_id"]).strip())
+                else:
+                    _latest_p5 = _sgr_filter_p5.sort_values("start_dt", ascending=False)
+                    if not _latest_p5.empty:
+                        _ps = _latest_p5.iloc[0]["start_dt"].date()
+                        _pe = _latest_p5.iloc[0]["end_dt"].date()
+                        target_period_label_p5 = f"Periode {_ps.strftime('%d %b')} - {_pe.strftime('%d %b')}"
+                        valid_period_p5_ids = [str(_latest_p5.iloc[0]["period_id"]).strip()]
+
+            # ==========================================
+            # 📅 FILTER TANGGAL
+            # ==========================================
+            _date_col_p5 = None
+            for _c in ["updated_at", "start_date", "tanggal", "date"]:
+                if not sales_pps_df_p5.empty and _c in sales_pps_df_p5.columns:
+                    _date_col_p5 = _c
+                    break
+
+            _rentang_p5 = []
+            if valid_period_p5_ids and not periods_pps_df_p5.empty:
+                for _pid in valid_period_p5_ids:
+                    _match = periods_pps_df_p5[
+                        periods_pps_df_p5["period_id"].astype(str).str.strip() == _pid
+                    ]
+                    if not _match.empty:
+                        _rentang_p5.append((
+                            _match.iloc[0]["start_dt"].date(),
+                            _match.iloc[0]["end_dt"].date(),
+                        ))
+
+            # ==========================================
+            # 👥 MASTER PERSONIL
+            # ==========================================
+            master_personil_p5 = []
+            if not person_df_p5.empty and "person_name" in person_df_p5.columns:
+                _mp = person_df_p5.copy()
+                if "active" in _mp.columns:
+                    _mp = _mp[pd.to_numeric(_mp["active"], errors="coerce") == 1]
+                master_personil_p5 = _mp["person_name"].dropna().astype(str).str.strip().str.upper().unique().tolist()
+
+            # ==========================================
+            # 🍃 HITUNG SUEGER per KASIR (periode aktif)
+            # ==========================================
+            kasir_summary_p5 = {}
+            for _k in master_personil_p5:
+                if _k:
+                    kasir_summary_p5[_k] = {"syarat": 0, "redeem": 0, "pct": 0.0}
+
+            if not sales_pps_df_p5.empty and _date_col_p5 and _rentang_p5:
+                _temp_p5 = sales_pps_df_p5.copy()
+                _temp_p5["_dt"] = pd.to_datetime(_temp_p5[_date_col_p5], errors="coerce")
+                _temp_p5 = _temp_p5.dropna(subset=["_dt"])
+
+                _mask_p5 = pd.Series([False] * len(_temp_p5), index=_temp_p5.index)
+                for _s, _e in _rentang_p5:
+                    _mask_p5 = _mask_p5 | (
+                        (_temp_p5["_dt"].dt.date >= _s) & (_temp_p5["_dt"].dt.date <= _e)
+                    )
+                _temp_p5 = _temp_p5[_mask_p5]
+
+                if not _temp_p5.empty and "kasir_name" in _temp_p5.columns:
+                    _temp_p5["kasir_clean"] = _temp_p5["kasir_name"].astype(str).str.strip().str.upper()
+
+                    _s_col_p5 = None
+                    for _cc in ["syarat_sueger", "syarat_suegeer"]:
+                        if _cc in _temp_p5.columns:
+                            _s_col_p5 = _cc
+                            break
+
+                    _r_col_p5 = None
+                    for _cc in ["redeem_sueger", "redeem_suegeer"]:
+                        if _cc in _temp_p5.columns:
+                            _r_col_p5 = _cc
+                            break
+
+                    if _s_col_p5 and _r_col_p5:
+                        _temp_p5[_s_col_p5] = pd.to_numeric(_temp_p5[_s_col_p5], errors="coerce").fillna(0)
+                        _temp_p5[_r_col_p5] = pd.to_numeric(_temp_p5[_r_col_p5], errors="coerce").fillna(0)
+
+                        _grp_p5 = _temp_p5.groupby("kasir_clean").agg(
+                            syarat=(_s_col_p5, "sum"),
+                            redeem=(_r_col_p5, "sum"),
+                        ).reset_index()
+
+                        for _, _r in _grp_p5.iterrows():
+                            _k = _r["kasir_clean"]
+                            _s_v = int(_r["syarat"])
+                            _r_v = int(_r["redeem"])
+                            _pct_v = (_r_v / _s_v * 100) if _s_v > 0 else 0.0
+                            kasir_summary_p5[_k] = {
+                                "syarat": _s_v,
+                                "redeem": _r_v,
+                                "pct": round(_pct_v, 1),
+                            }
+
+            # ==========================================
+            # 🏗️ SUSUN RANKING (by % desc)
+            # ==========================================
+            ranking_list_p5 = []
+            for _k, _v in kasir_summary_p5.items():
+                if _k:
+                    ranking_list_p5.append((_k, _v["syarat"], _v["redeem"], _v["pct"]))
+
+            ranking_list_p5 = sorted(ranking_list_p5, key=lambda x: x[3], reverse=True)
+
+            # ==========================================
+            # 🎨 CSS PAGE 5
+            # ==========================================
+            css_p5 = """
             <style>
-            .rpg-open-book-container {
+            .rpg-book-page-left-p5, .rpg-book-page-right-p5 {
+                position: relative;
+                z-index: 10;
+            }
+            .rpg-book-page-left-p5 *, .rpg-book-page-right-p5 * {
+                position: relative;
+                z-index: 15;
+            }
+            .rpg-book-page-left-p5::before, .rpg-book-page-right-p5::before {
+                z-index: 5 !important;
+            }
+
+            .podium-sj-wrapper-p5 {
                 display: flex;
                 flex-direction: row;
-                gap: 20px;
-                width: 100%;
-                box-sizing: border-box;
-            }
-
-            @media (max-width: 768px) {
-                .rpg-open-book-container {
-                    flex-direction: column !important;
-                    gap: 15px;
-                }
-            }
-
-            .rpg-book-page {
-                flex: 1;
-                background: #fdf6e2;
-                border: 3px solid #d4af37;
-                border-radius: 8px;
-                padding: 16px;
-                box-sizing: border-box;
-                display: flex;
-                flex-direction: column;
-                min-height: 500px;
-                position: relative;
-                overflow: hidden;
-            }
-
-            .rpg-book-page::before {
-                content: "";
-                position: absolute;
-                top: 0; left: 0; width: 100%; height: 100%;
-                background-image: url("https://img.pikbest.com/png-images/20250303/fierce-dragon-silhouette--e2-80-93-stylized-black-and-white-mythical-beast-illustration_11570728.png!bw800");
-                background-repeat: no-repeat;
-                background-position: center;
-                background-size: 85% auto;
-                opacity: 0.08 !important;
-                pointer-events: none;
-                z-index: 0;
-            }
-
-            /* --- PODIUM SUEGER --- */
-            .podium-wrapper {
-                display: flex;
                 align-items: flex-end;
                 justify-content: center;
-                gap: 8px;
-                margin-top: auto;
-                margin-bottom: 10px;
+                gap: 6px;
+                margin-top: 12px;
+                margin-bottom: 8px;
                 position: relative;
-                z-index: 2;
+                z-index: 20;
                 width: 100%;
-            }
-
-            .podium-slot {
-                flex: 1;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                text-align: center;
-                min-width: 0;
-            }
-
-            .podium-card {
-                width: 100%;
-                border-radius: 6px 6px 0 0;
-                padding: 8px 4px;
+                padding: 0 4px;
                 box-sizing: border-box;
+                min-height: 270px;
+            }
+            .podium-slot-sj-p5 {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                justify-content: flex-start;
-                box-shadow: 0 -3px 10px rgba(0,0,0,0.25), inset 0 1px 2px rgba(255,255,255,0.4);
+                justify-content: flex-end;
+                flex: 1;
+                max-width: 33%;
+                text-align: center;
                 position: relative;
             }
-
-            .podium-1 {
-                height: 205px;
-                background: linear-gradient(180deg, #fef08a 0%, #d97706 100%);
-                border: 2.5px solid #78350f;
-                border-bottom: none;
+            .podium-slot-sj-p5.empty-sj-p5 {
+                visibility: hidden;
             }
-            .podium-2 {
-                height: 170px;
-                background: linear-gradient(180deg, #f8fafc 0%, #64748b 100%);
-                border: 2.5px solid #334155;
-                border-bottom: none;
+            .podium-crown-sj-p5 {
+                font-size: 20px;
+                margin-bottom: 2px;
+                filter: drop-shadow(0 0 5px rgba(255, 200, 0, 0.6));
             }
-            .podium-3 {
-                height: 145px;
-                background: linear-gradient(180deg, #ffedd5 0%, #c2410c 100%);
-                border: 2.5px solid #7c2d12;
-                border-bottom: none;
+            .podium-crown-sj-p5.rank-1-sj-p5 {
+                font-size: 26px;
+                filter: drop-shadow(0 0 8px rgba(255, 200, 0, 0.9));
+                animation: crownBounceP5 2s infinite ease-in-out;
             }
-
-            .podium-rank-tag {
-                font-size: 14px;
-                font-weight: 900;
-                color: #1e1b4b;
-                text-shadow: 0px 1px 0px rgba(255,255,255,0.8);
+            @keyframes crownBounceP5 {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-3px); }
             }
-
-            .podium-name {
-                font-size: 11px;
-                font-weight: 800;
-                color: #0f172a;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                max-width: 95%;
-                margin-top: 3px;
-                background: rgba(255, 255, 255, 0.5);
-                padding: 2px 4px;
-                border-radius: 4px;
+            .podium-avatar-sj-p5 {
+                width: 48px;
+                height: 48px;
+                border-radius: 50%;
+                background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 24px;
+                margin: 4px 0 5px 0;
+                position: relative;
+                z-index: 25;
             }
-
-            .podium-sub-detail {
+            .podium-avatar-sj-p5.rank-1-sj-p5 {
+                width: 60px;
+                height: 60px;
+                font-size: 30px;
+                border: 3px solid #fbbf24;
+                box-shadow: 0 0 15px rgba(251, 191, 36, 0.7), inset 0 0 10px rgba(0,0,0,0.6);
+            }
+            .podium-avatar-sj-p5.rank-2-sj-p5 {
+                border: 3px solid #94a3b8;
+                box-shadow: 0 0 12px rgba(148, 163, 184, 0.6), inset 0 0 10px rgba(0,0,0,0.6);
+            }
+            .podium-avatar-sj-p5.rank-3-sj-p5 {
+                border: 3px solid #ea580c;
+                box-shadow: 0 0 12px rgba(234, 88, 12, 0.6), inset 0 0 10px rgba(0,0,0,0.6);
+            }
+            .podium-name-sj-p5 {
+                font-family: monospace;
                 font-size: 9px;
-                font-weight: 700;
-                color: #334155;
-                margin-top: 4px;
-                background: rgba(255, 255, 255, 0.7);
-                padding: 2px 4px;
-                border-radius: 4px;
-                width: 92%;
-                line-height: 1.2;
-            }
-
-            .podium-score {
-                font-size: 13px;
                 font-weight: 900;
                 color: #1e1103;
-                margin-top: 4px;
-                text-shadow: 0px 1px 0px rgba(255,255,255,0.6);
+                text-align: center;
+                line-height: 1.2;
+                word-break: break-word;
+                max-width: 100%;
+                margin-bottom: 2px;
+                padding: 2px 3px;
+                background: rgba(255, 255, 255, 0.55);
+                border-radius: 4px;
+            }
+            .podium-score-sj-p5 {
+                font-family: monospace;
+                font-size: 14px;
+                font-weight: 900;
+                color: #78350f;
+                text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+            }
+            .podium-detail-sj-p5 {
+                font-family: monospace;
+                font-size: 8px;
+                font-weight: 700;
+                color: #334155;
+                background: rgba(255, 255, 255, 0.55);
+                padding: 1px 5px;
+                border-radius: 6px;
+                margin-top: 2px;
+                margin-bottom: 5px;
+                display: inline-block;
+                white-space: nowrap;
+            }
+            .podium-block-sj-p5 {
+                width: 100%;
+                display: flex;
+                align-items: flex-start;
+                justify-content: center;
+                border-radius: 6px 6px 0 0;
+                border: 2.5px solid;
+                border-bottom: none;
+                margin-top: 0;
+                position: relative;
+                z-index: 15;
+                padding-top: 8px;
+            }
+            .podium-block-sj-p5.rank-1-sj-p5 {
+                background: linear-gradient(180deg, #fef08a 0%, #fbbf24 50%, #d97706 100%);
+                border-color: #78350f;
+                box-shadow: 0 -4px 12px rgba(120, 53, 15, 0.3), inset 0 1px 3px rgba(255, 255, 255, 0.5);
+            }
+            .podium-block-sj-p5.rank-2-sj-p5 {
+                background: linear-gradient(180deg, #f8fafc 0%, #cbd5e1 50%, #64748b 100%);
+                border-color: #334155;
+                box-shadow: 0 -3px 10px rgba(51, 65, 85, 0.25), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+            }
+            .podium-block-sj-p5.rank-3-sj-p5 {
+                background: linear-gradient(180deg, #ffedd5 0%, #fdba74 50%, #c2410c 100%);
+                border-color: #7c2d12;
+                box-shadow: 0 -3px 10px rgba(124, 45, 18, 0.25), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+            }
+            .podium-rank-num-sj-p5 {
+                font-family: monospace;
+                font-size: 18px;
+                font-weight: 900;
+                color: #1e1103;
+                text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+            }
+            .podium-you-badge-p5 {
+                position: absolute;
+                top: -2px;
+                right: 4px;
+                background: #2563eb;
+                color: white;
+                font-size: 7px;
+                padding: 2px 5px;
+                border-radius: 4px;
+                font-weight: bold;
+                letter-spacing: 0.5px;
+                z-index: 30;
+            }
+            .podium-me-ring-p5 {
+                box-shadow: 0 0 0 3px #2563eb, 0 0 15px rgba(37, 99, 235, 0.5) !important;
             }
 
-            /* --- LIST KANAN --- */
-            .rpg-list-container {
+            .rpg-list-container-p5 {
                 display: flex;
                 flex-direction: column;
-                gap: 6px;
+                gap: 5px;
                 position: relative;
-                z-index: 2;
+                z-index: 20;
                 overflow-y: auto;
-                max-height: 380px;
+                max-height: 400px;
                 padding-right: 2px;
             }
-
-            .rpg-normal-row {
+            .rpg-normal-row-p5 {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                padding: 8px 10px;
+                padding: 7px 10px;
                 border: 1.5px solid #cbd5e1;
                 background: #ffffff;
                 border-radius: 6px;
                 color: #020617 !important;
-                font-size: 12px;
+                font-size: 11px;
+                font-weight: 600;
                 box-shadow: 0 1px 3px rgba(0,0,0,0.04);
                 flex-shrink: 0;
+                font-family: monospace;
             }
-
-            .danger-zone-row {
+            .danger-zone-row-p5 {
                 background: #fff5f5 !important;
                 border: 1.5px solid #fca5a5 !important;
                 color: #991b1b !important;
             }
-            .danger-zone-badge {
+            .danger-zone-badge-p5 {
                 background: #fee2e2;
                 color: #dc2626;
-                font-size: 9px;
-                padding: 2px 5px;
-                border-radius: 4px;
+                font-size: 7.5px;
+                padding: 1px 4px;
+                border-radius: 3px;
                 font-weight: 800;
                 border: 1px solid #f87171;
+                margin-left: 3px;
             }
-
-            .rpg-user-me {
+            .rpg-user-me-p5 {
                 outline: 2.5px solid #2563eb !important;
                 outline-offset: -1px;
+                background: rgba(37, 99, 235, 0.06) !important;
+            }
+            .row-left-p5 {
+                display: flex;
+                flex-direction: column;
+                gap: 2px;
+                overflow: hidden;
+                flex: 1;
+                min-width: 0;
+            }
+            .row-left-top-p5 {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .row-detail-p5 {
+                font-size: 8.5px;
+                color: #475569;
+                padding-left: 26px;
+                font-family: monospace;
+                font-weight: 600;
+            }
+            .row-score-p5 {
+                flex-shrink: 0;
+                margin-left: 5px;
+                font-weight: 900;
+                font-size: 13px;
+                color: #0f172a;
+                text-align: right;
+                line-height: 1.2;
+            }
+            .you-badge-p5 {
+                background: #2563eb;
+                color: white;
+                font-size: 7px;
+                padding: 1px 4px;
+                border-radius: 3px;
+                margin-left: 3px;
+                font-weight: bold;
+                letter-spacing: 0.3px;
+                flex-shrink: 0;
+            }
+            .empty-data-p5 {
+                text-align: center;
+                color: #78350f;
+                font-family: monospace;
+                font-size: 11px;
+                padding: 30px 15px;
+                font-style: italic;
+            }
+            .row-avatar-p5 {
+                font-size: 15px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 22px;
+                height: 22px;
+                min-width: 22px;
+                border-radius: 50%;
+                background: rgba(15, 23, 42, 0.08);
+                border: 1.5px solid #cbd5e1;
+                flex-shrink: 0;
             }
 
-            .open-page-title { color: #3b1104 !important; text-align: center; font-weight: bold; margin-bottom: 2px; position: relative; z-index: 2; font-size: 16px; }
-            .open-page-sub { color: #5c2406 !important; text-align: center; font-size: 11px; margin-bottom: 8px; position: relative; z-index: 2; font-weight: 600; }
-            .open-book-divider { border-bottom: 2px solid #d4af37; margin-bottom: 10px; position: relative; z-index: 2; }
-            .open-page-footer { margin-top: auto; text-align: right; font-size: 10px; color: #5c2406 !important; font-family: monospace; padding-top: 6px; font-weight: bold; position: relative; z-index: 2; }
+            .user-rank-badge-p5 {
+                background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+                border: 2px solid #60a5fa;
+                border-radius: 8px;
+                padding: 8px 10px;
+                margin-top: 10px;
+                box-shadow: 0 3px 10px rgba(29, 78, 216, 0.3), inset 0 1px 2px rgba(255,255,255,0.2);
+                position: relative;
+                z-index: 25;
+            }
+            .user-rank-badge-title-p5 {
+                font-family: monospace;
+                font-size: 9px;
+                font-weight: 900;
+                color: #bfdbfe;
+                text-align: center;
+                letter-spacing: 1.5px;
+                margin-bottom: 6px;
+            }
+            .user-rank-badge-content-p5 {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 6px;
+                background: rgba(255, 255, 255, 0.1);
+                padding: 5px 8px;
+                border-radius: 5px;
+                border: 1px solid rgba(255, 255, 255, 0.15);
+            }
+            .user-rank-badge-avatar-p5 {
+                font-size: 18px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 26px;
+                height: 26px;
+                border-radius: 50%;
+                background: rgba(15, 23, 42, 0.4);
+                border: 1.5px solid #60a5fa;
+                flex-shrink: 0;
+            }
+            .user-rank-badge-num-p5 {
+                font-family: monospace;
+                font-size: 14px;
+                font-weight: 900;
+                color: #fbbf24;
+                text-shadow: 0 0 6px rgba(251, 191, 36, 0.6);
+                min-width: 32px;
+                text-align: center;
+            }
+            .user-rank-badge-name-p5 {
+                font-family: monospace;
+                font-size: 10px;
+                font-weight: 900;
+                color: #ffffff;
+                flex: 1;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                text-align: center;
+            }
+            .user-rank-badge-score-p5 {
+                font-family: monospace;
+                font-size: 9.5px;
+                font-weight: 800;
+                color: #bfdbfe;
+                text-align: right;
+                flex-shrink: 0;
+            }
+
+            @media (max-width: 480px) {
+                .podium-sj-wrapper-p5 { min-height: 240px; gap: 4px; }
+                .podium-crown-sj-p5 { font-size: 17px; }
+                .podium-crown-sj-p5.rank-1-sj-p5 { font-size: 22px; }
+                .podium-avatar-sj-p5 { width: 40px; height: 40px; font-size: 20px; }
+                .podium-avatar-sj-p5.rank-1-sj-p5 { width: 50px; height: 50px; font-size: 26px; }
+                .podium-name-sj-p5 { font-size: 8px; }
+                .podium-score-sj-p5 { font-size: 11px; }
+                .podium-detail-sj-p5 { font-size: 7.5px; }
+                .podium-rank-num-sj-p5 { font-size: 14px; }
+                .rpg-normal-row-p5 { font-size: 10px; padding: 6px 8px; }
+                .row-avatar-p5 { font-size: 13px; width: 20px; height: 20px; min-width: 20px; }
+                .row-detail-p5 { font-size: 8px; padding-left: 24px; }
+            }
             </style>
             """
-            st.markdown(rpg_badge_style, unsafe_allow_html=True)
 
-            active_period = st.session_state.get("active_period", "Periode Sueger Aktif")
+            # ==========================================
+            # 🎨 BUILD PODIUM
+            # ==========================================
+            def _get_avatar_p5(name):
+                import hashlib as _hl
+                _list = ["🧙‍♂️", "🧝‍♂️", "🧝‍♀️", "⚔️", "🎯", "🛡️", "🦁", "🦅",
+                         "🐺", "👑", "💎", "🔮", "🔥", "🏹", "🪄", "🗡️",
+                         "⚗️", "🧛‍♂️", "🧟‍♂️", "🐉", "🦉", "🐻", "🦊", "🦌"]
+                _h = int(_hl.md5(str(name).upper().encode()).hexdigest(), 16)
+                return _list[_h % len(_list)]
 
-            # 3. OLAH DATA KASIR: MASTER_PERSONIL SEBAGAI ACUAN UTAMA
-            sales_pps_df = st.session_state.get("sales_pps_df", st.session_state.get("SALES_PPS", pd.DataFrame()))
-            periode_pps_df = st.session_state.get("periode_pps_df", st.session_state.get("PERIODE_PPS", pd.DataFrame()))
-            master_personil_df = st.session_state.get("master_personil_df", st.session_state.get("MASTER_PERSONIL", pd.DataFrame()))
+            def _make_podium_slot_p5(rank_idx, crown, slot_class, block_height, rlist):
+                if len(rlist) > rank_idx:
+                    n, syarat_v, redeem_v, pct_v = rlist[rank_idx]
+                    is_me = (str(n).upper() == current_user_clean_p5)
+                    me_badge = "<div class='podium-you-badge-p5'>KAMU</div>" if is_me else ""
+                    me_class = "podium-me-ring-p5" if is_me else ""
+                    av = _get_avatar_p5(n)
+                    rank_num = rank_idx + 1
 
-            # Filter Bulan Aktif dari PERIODE_PPS
-            valid_month_dates = None
-            if not periode_pps_df.empty and "start_date" in periode_pps_df.columns:
-                try:
-                    p_pps = periode_pps_df.copy()
-                    p_pps["start_dt"] = pd.to_datetime(p_pps["start_date"], errors="coerce")
-                    active_dates = p_pps[p_pps["status"].astype(str).str.lower() == "aktif"]["start_dt"].dropna()
-                    if not active_dates.empty:
-                        ref_month = active_dates.iloc[0].month
-                        ref_year = active_dates.iloc[0].year
-                        valid_month_dates = (ref_month, ref_year)
-                except Exception:
-                    valid_month_dates = None
+                    return (
+                        "<div class='podium-slot-sj-p5'>"
+                        + me_badge +
+                        "<div class='podium-crown-sj-p5 " + slot_class + "'>" + crown + "</div>"
+                        "<div class='podium-avatar-sj-p5 " + slot_class + " " + me_class + "'>" + av + "</div>"
+                        "<div class='podium-name-sj-p5' title='" + n + "'>" + n + "</div>"
+                        "<div class='podium-score-sj-p5'>" + f"{pct_v:.1f}%" + "</div>"
+                        "<div class='podium-detail-sj-p5'>S:" + str(syarat_v) + " | R:" + str(redeem_v) + "</div>"
+                        "<div class='podium-block-sj-p5 " + slot_class + "' style='height:" + str(block_height) + "px;'>"
+                        "<span class='podium-rank-num-sj-p5'>#" + str(rank_num) + "</span>"
+                        "</div>"
+                        "</div>"
+                    )
+                return "<div class='podium-slot-sj-p5 empty-sj-p5'></div>"
 
-            kasir_summary = {}
+            podium_html_p5 = '<div class="podium-sj-wrapper-p5">'
+            podium_html_p5 += _make_podium_slot_p5(1, "🥈", "rank-2-sj-p5", 70, ranking_list_p5)
+            podium_html_p5 += _make_podium_slot_p5(0, "👑", "rank-1-sj-p5", 110, ranking_list_p5)
+            podium_html_p5 += _make_podium_slot_p5(2, "🥉", "rank-3-sj-p5", 55, ranking_list_p5)
+            podium_html_p5 += '</div>'
 
-            # A. Masukkan semua personil aktif dari MASTER_PERSONIL (Default 0)
-            if not master_personil_df.empty:
-                mp_df = master_personil_df.copy()
-                if "active" in mp_df.columns:
-                    mp_df = mp_df[pd.to_numeric(mp_df["active"], errors="coerce") == 1]
-                    
-                if "person_name" in mp_df.columns:
-                    for p_name in mp_df["person_name"].dropna().astype(str).str.strip().unique():
-                        if p_name and p_name.lower() != "nan":
-                            kasir_summary[p_name] = {"syarat": 0, "redeem": 0, "achiv": 0.0}
+            # ==========================================
+            # 📜 BUILD LIST 4+
+            # ==========================================
+            total_personil_p5 = len(ranking_list_p5)
+            danger_cutoff_p5 = max(4, total_personil_p5 - 2)
 
-            # B. Ambil dan akumulasikan data Sueger dari SALES_PPS (syarat_sueger & redeem_sueger)
-            if not sales_pps_df.empty:
-                sp_df = sales_pps_df.copy()
-                kasir_col = next((c for c in ["kasir_name", "staff_name", "person_name"] if c in sp_df.columns), None)
-                
-                if kasir_col and "syarat_sueger" in sp_df.columns and "redeem_sueger" in sp_df.columns:
-                    sp_df["clean_kasir"] = sp_df[kasir_col].astype(str).str.strip()
-                    sp_df["syarat_sueger"] = pd.to_numeric(sp_df["syarat_sueger"], errors="coerce").fillna(0)
-                    sp_df["redeem_sueger"] = pd.to_numeric(sp_df["redeem_sueger"], errors="coerce").fillna(0)
+            list_html_p5 = '<div class="rpg-list-container-p5">'
 
-                    # Filter Berdasarkan Bulan Aktif
-                    date_col = next((c for c in ["updated_at", "start_date", "tanggal"] if c in sp_df.columns), None)
-                    if date_col and valid_month_dates:
-                        sp_df["dt_check"] = pd.to_datetime(sp_df[date_col], errors="coerce")
-                        sp_df = sp_df[(sp_df["dt_check"].dt.month == valid_month_dates[0]) & (sp_df["dt_check"].dt.year == valid_month_dates[1])]
+            if len(ranking_list_p5) > 3:
+                for i, (n, syarat_v, redeem_v, pct_v) in enumerate(ranking_list_p5[3:]):
+                    rank_num = i + 4
+                    is_me = (str(n).upper() == current_user_clean_p5)
+                    me_class = "rpg-user-me-p5" if is_me else ""
+                    you_badge = '<span class="you-badge-p5">KAMU</span>' if is_me else ""
 
-                    grouped = sp_df.groupby("clean_kasir")[["syarat_sueger", "redeem_sueger"]].sum().reset_index()
+                    is_danger = rank_num >= danger_cutoff_p5
+                    row_style = "danger-zone-row-p5" if is_danger else ""
+                    danger_tag = '<span class="danger-zone-badge-p5">⚠️ ZONA MERAH</span>' if is_danger else ""
+                    rank_icon = "🔻" if is_danger else "🛡️"
+                    _av = _get_avatar_p5(n)
 
-                    for _, r in grouped.iterrows():
-                        k_name = r["clean_kasir"]
-                        if not k_name or k_name.lower() == "nan":
-                            continue
-                        syarat_val = int(r["syarat_sueger"])
-                        redeem_val = int(r["redeem_sueger"])
-                        
-                        # Hitung Persentase Achievement (%): (redeem / syarat) * 100
-                        achiv_val = (redeem_val / syarat_val * 100) if syarat_val > 0 else 0.0
-                        
-                        kasir_summary[k_name] = {
-                            "syarat": syarat_val, 
-                            "redeem": redeem_val, 
-                            "achiv": round(achiv_val, 1)
-                        }
+                    list_html_p5 += (
+                        "<div class='rpg-normal-row-p5 " + row_style + " " + me_class + "'>"
+                        "<div class='row-left-p5'>"
+                        "<div class='row-left-top-p5'>"
+                        "<span class='row-avatar-p5'>" + _av + "</span>"
+                        "<span>" + rank_icon + "</span>"
+                        "<span style='font-weight:bold;'>#" + str(rank_num) + "</span>"
+                        "<span style='font-weight:bold; overflow:hidden; text-overflow:ellipsis;' title='" + n + "'>" + n + "</span>"
+                        + you_badge + danger_tag +
+                        "</div>"
+                        "<div class='row-detail-p5'>Syarat: " + str(syarat_v) + " | Redeem: " + str(redeem_v) + "</div>"
+                        "</div>"
+                        "<div class='row-score-p5'>"
+                        + f"{pct_v:.1f}%"
+                        "</div>"
+                        "</div>"
+                    )
+            else:
+                list_html_p5 += "<div class='empty-data-p5'>📭 Belum ada data peringkat Sueger</div>"
 
-            # C. Susun Peringkat Berdasarkan % Achievement Tertinggi
-            ranking_list = []
-            for k_name, val in kasir_summary.items():
-                ranking_list.append((k_name, val["syarat"], val["redeem"], val["achiv"]))
+            list_html_p5 += '</div>'
 
-            ranking_list = sorted(ranking_list, key=lambda x: x[3], reverse=True)
+            # ==========================================
+            # 🎯 PENANDA POSISI USER
+            # ==========================================
+            user_rank_p5 = -1
+            user_data_p5 = None
 
-            # 4. FUNGSI ELEMENT PODIUM
-            def make_podium_item(rank_idx, class_name, crown_icon, r_list):
-                if len(r_list) > rank_idx:
-                    n, syarat, redeem, achiv = r_list[rank_idx]
-                    is_me = (n.lower() == str(current_user_name).lower())
-                    me_cls = "rpg-user-me" if is_me else ""
-                    you_badge = '<span style="background:#2563eb; color:white; font-size:8px; padding:1px 4px; border-radius:4px; margin-top:2px;">KAMU</span>' if is_me else ""
-                    
-                    html = f'<div class="podium-slot">'
-                    html += f'<div style="font-size:22px; margin-bottom:2px; z-index:3;">{crown_icon}</div>'
-                    html += f'<div class="podium-card {class_name} {me_cls}">'
-                    html += f'<div class="podium-rank-tag">#{rank_idx+1}</div>'
-                    html += f'<div class="podium-name" title="{n}">{n}</div>'
-                    html += f'{you_badge}'
-                    html += f'<div class="podium-sub-detail">Syarat: {syarat}<br>Redeem: {redeem}</div>'
-                    html += f'<div class="podium-score">{achiv}%</div>'
-                    html += f'</div></div>'
-                    return html
-                return ""
+            if current_user_clean_p5:
+                for _i, (_n, _s, _r, _p) in enumerate(ranking_list_p5):
+                    if str(_n).upper() == current_user_clean_p5:
+                        user_rank_p5 = _i + 1
+                        user_data_p5 = (_n, _s, _r, _p)
+                        break
 
-            podium_html = '<div class="podium-wrapper">'
-            podium_html += make_podium_item(1, "podium-2", "🥈", ranking_list)
-            podium_html += make_podium_item(0, "podium-1", "👑", ranking_list)
-            podium_html += make_podium_item(2, "podium-3", "🥉", ranking_list)
-            podium_html += '</div>'
+            user_rank_html_p5 = ""
+            if user_rank_p5 > 3 and user_data_p5:
+                _n_u, _s_u, _r_u, _p_u = user_data_p5
+                _av_u = _get_avatar_p5(_n_u)
 
-            # 5. GENERATE LIST KANAN (PERINGKAT 4 SAMPAI SELESAI)
-            rest_html = '<div class="rpg-list-container">'
-            total_personil = len(ranking_list)
-            danger_cutoff_rank = max(4, total_personil - 1)
+                user_rank_html_p5 = (
+                    "<div class='user-rank-badge-p5'>"
+                    "<div class='user-rank-badge-title-p5'>📍 POSISI KAMU SAAT INI</div>"
+                    "<div class='user-rank-badge-content-p5'>"
+                    "<span class='user-rank-badge-avatar-p5'>" + _av_u + "</span>"
+                    "<span class='user-rank-badge-num-p5'>#" + str(user_rank_p5) + "</span>"
+                    "<span class='user-rank-badge-name-p5'>" + _n_u + "</span>"
+                    "<span class='user-rank-badge-score-p5'>" + f"{_p_u:.1f}% · S:{_s_u} R:{_r_u}" + "</span>"
+                    "</div>"
+                    "</div>"
+                )
 
-            for i, (n, syarat, redeem, achiv) in enumerate(ranking_list[3:]):
-                rank = i + 4
-                is_me = (n.lower() == str(current_user_name).lower())
-                me_class = "rpg-user-me" if is_me else ""
-                you_badge = '<span style="background: #2563eb; color: white; font-size: 8px; padding: 1px 4px; border-radius: 4px; margin-left: 4px;">KAMU</span>' if is_me else ""
-                
-                is_danger = rank >= danger_cutoff_rank
-                row_style = "danger-zone-row" if is_danger else ""
-                danger_tag = '<span class="danger-zone-badge">⚠️ ZONA MERAH</span>' if is_danger else ""
-                rank_icon = "🔻" if is_danger else "🛡️"
-
-                rest_html += f'<div class="rpg-normal-row {row_style} {me_class}">'
-                rest_html += f'<div style="display: flex; flex-direction: column; gap: 2px; overflow: hidden;">'
-                rest_html += f'<div style="display: flex; align-items: center; gap: 4px;">'
-                rest_html += f'<span>{rank_icon}</span>'
-                rest_html += f'<span style="font-weight:bold;">#{rank}</span>'
-                rest_html += f'<span style="font-weight:bold; overflow: hidden; text-overflow: ellipsis;" title="{n}">{n}</span>'
-                rest_html += f'{you_badge}{danger_tag}'
-                rest_html += f'</div>'
-                rest_html += f'<div style="font-size: 10px; color: #475569; padding-left: 20px;">Syarat: <b>{syarat}</b> | Redeem: <b>{redeem}</b></div>'
-                rest_html += f'</div>'
-                rest_html += f'<div style="flex-shrink: 0; margin-left: 6px; font-weight: 900; font-size: 13px; color: #0f172a;">{achiv}%</div>'
-                rest_html += f'</div>'
-            
-            rest_html += '</div>'
-
-            # 6. RENDER HALAMAN BUKU SUEGER
+            # ==========================================
+            # 📄 HTML LENGKAP PAGE 5
+            # ==========================================
             html_open_tugas = (
-                f'<div class="rpg-open-book-container">'
-                f'<div class="rpg-book-page">'
-                f'<h3 class="open-page-title">🥤 SUEGER TOP (1-3)</h3>'
-                f'<p class="open-page-sub">Periode: {active_period}</p>'
-                f'<div class="open-book-divider"></div>'
-                f'{podium_html}'
-                f'<div class="open-page-footer">Halaman Kiri • Sueger 1-3</div>'
-                f'</div>'
-                f'<div class="rpg-book-page">'
-                f'<h3 class="open-page-title">🥤 SUEGER (4+)</h3>'
-                f'<p class="open-page-sub">Kelanjutan Peringkat Kasir Sueger</p>'
-                f'<div class="open-book-divider"></div>'
-                f'{rest_html}'
-                f'<div class="open-page-footer">Halaman Kanan • Sueger 4+</div>'
-                f'</div>'
-                f'</div>'
+                css_p5 +
+                "<div class='rpg-open-book-container'>"
+                "<div class='rpg-book-page rpg-book-page-left rpg-book-page-left-p5'>"
+                "<h3 class='open-page-title'>🥤 SUEGER TOP (1-3)</h3>"
+                "<p class='open-page-sub'>" + target_period_label_p5 + "</p>"
+                "<div class='open-book-divider'></div>"
+                + podium_html_p5 +
+                "<div class='open-page-footer'>Halaman Kiri • Sueger 1-3</div>"
+                "</div>"
+                "<div class='rpg-book-page rpg-book-page-right rpg-book-page-right-p5'>"
+                "<h3 class='open-page-title'>🥤 SUEGER (4+)</h3>"
+                "<p class='open-page-sub'>Kelanjutan Peringkat Kasir Sueger</p>"
+                "<div class='open-book-divider'></div>"
+                + list_html_p5 +
+                user_rank_html_p5 +
+                "<div class='open-page-footer'>Halaman Kanan • Sueger 4+</div>"
+                "</div>"
+                "</div>"
             )
         st.markdown(html_open_tugas, unsafe_allow_html=True)
         st.stop()
