@@ -5309,23 +5309,50 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         import textwrap
 
         # ==========================================
-        # 📅 1. LOGIKA PERIODE DINAMIS BERDASARKAN TANGGAL
+        # 📅 1. LOGIKA PERIODE DINAMIS — AMBIL DARI SHEET PERIODE
         # ==========================================
         today = datetime.now().date()
-        # Simulasi jika ingin tes tanggal tertentu (misal: 10 September 2026)
-        # today = datetime(2026, 9, 10).date()
 
-        def get_active_period(current_date):
-            if datetime(2026, 9, 1).date() <= current_date <= datetime(2026, 9, 7).date():
-                return "Periode 1 Sep - 7 Sep"
-            elif datetime(2026, 9, 8).date() <= current_date <= datetime(2026, 9, 15).date():
-                return "Periode 8 Sep - 15 Sep"
-            elif datetime(2026, 9, 16).date() <= current_date <= datetime(2026, 9, 22).date():
-                return "Periode 16 Sep - 22 Sep"
+        # Ambil periode aktif dari sheet PERIODE (bukan hardcode!)
+        _periods_header = st.session_state.get("periods_df", pd.DataFrame()).copy()
+        if not _periods_header.empty:
+            _periods_header.columns = _periods_header.columns.astype(str).str.strip().str.lower()
+
+        active_period = "Periode Aktif"
+
+        if not _periods_header.empty and all(
+            c in _periods_header.columns for c in ["period_id", "start_date", "end_date"]
+        ):
+            _periods_header["start_dt"] = pd.to_datetime(_periods_header["start_date"], errors="coerce")
+            _periods_header["end_dt"] = pd.to_datetime(_periods_header["end_date"], errors="coerce")
+            _periods_header = _periods_header.dropna(subset=["start_dt", "end_dt"])
+
+            # Skip program PPS/Sueger/SG
+            _periods_header = _periods_header[
+                ~_periods_header["period_id"].astype(str).str.upper().str.contains(
+                    "PWP|SGR|SGS|CBN|PPS", na=False
+                )
+            ]
+
+            # Cari periode aktif (hari ini masuk range)
+            _aktif_header = _periods_header[
+                (_periods_header["start_dt"].dt.date <= today) &
+                (_periods_header["end_dt"].dt.date >= today)
+            ]
+
+            if not _aktif_header.empty:
+                _ps = _aktif_header.iloc[0]["start_dt"].date()
+                _pe = _aktif_header.iloc[0]["end_dt"].date()
+                active_period = f"Periode {_ps.strftime('%d %b')} - {_pe.strftime('%d %b')}"
             else:
-                return "Periode 23 Sep - 30 Sep"
+                # Kalau tidak ada yang aktif, ambil yang terbaru
+                _latest_header = _periods_header.sort_values("start_dt", ascending=False)
+                if not _latest_header.empty:
+                    _ps = _latest_header.iloc[0]["start_dt"].date()
+                    _pe = _latest_header.iloc[0]["end_dt"].date()
+                    active_period = f"Periode {_ps.strftime('%d %b')} - {_pe.strftime('%d %b')}"
 
-        active_period = get_active_period(today)
+        # Bulan dari tanggal hari ini
         current_month_name = today.strftime("%B")
 
         # ==========================================
