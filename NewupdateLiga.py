@@ -2240,8 +2240,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
         elif st.session_state.get("campaign_sub_page") == "view_buku_pencapaian":
             
+            # 🛡️ PROTEKSI HALAMAN: Set halaman awal ke 1 jika baru masuk atau belum terdefinisi
+            if "book_page_number" not in st.session_state:
+                st.session_state["book_page_number"] = 1
+                
             current_page = st.session_state.get("book_page_number", 1)
             username_hero = str(st.session_state.get("username", "RIZKI GUNAWAN")).strip().upper()
+
 
             # --- 📥 AMBIL DATAFRAME DARI SESSION STATE ---
             df_sales_item = st.session_state.get("sales_item_df", pd.DataFrame())
