@@ -2105,29 +2105,26 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
                  
         # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (VISUAL KUSTOM + TOMBOL TRANSPARAN AMAN)
+        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (VISUAL PREMIUM & SILUMAN SEMPURNA)
         # =========================================================================
         if st.session_state.get("campaign_sub_page", "resepsionis_utama") == "resepsionis_utama":
             
             st.markdown("<h2 class='guild-lobby-title' style='text-shadow: 0 0 15px rgba(251,191,36,0.5); color: #fef08a; text-align: center; font-family: monospace;'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
             st.markdown("<p class='guild-lobby-sub' style='color: #cbd5e1; text-align: center; font-family: monospace; margin-bottom: 30px;'>Pilih gulungan maklumat di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
         
-            # --- 🎨 SIHIR CSS: MENGUBAH TOMBOL ASLI MENJADI TRANSPARAN DAN MENUMPANG DI ATAS KARTU HTML ---
+            # --- 🎨 SIHIR CSS: PENYEMBUNYIAN TOMBOL TOTAL & TATA LETAK RESPONSIF MOBILE ---
             st.markdown(
                 """
                 <style>
-                    /* Container pembungkus utama agar tersusun vertikal ke bawah */
-                    .scroll-wrapper-zone {
-                        display: flex;
-                        flex-direction: column;
-                        gap: 25px;
+                    /* Container pembungkus utama kelompok gulungan */
+                    .scroll-block-wrapper {
+                        position: relative;
                         width: 100%;
                         max-width: 480px;
-                        margin: 0 auto;
-                        position: relative;
+                        margin: 0 auto 25px auto;
                     }
                     
-                    /* Komponen Papan Perkamen Visual (Hanya untuk Dilihat) */
+                    /* Komponen Papan Perkamen Visual (Lapisan Bawah) */
                     .scroll-visual-box {
                         background: linear-gradient(135deg, #0f172a 0%, #1e1b18 100%) !important;
                         border: 2px solid #b45309 !important;
@@ -2136,75 +2133,92 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         padding: 22px 20px !important;
                         box-shadow: 0 0 20px rgba(180, 83, 9, 0.3), inset 0 0 15px rgba(251, 191, 36, 0.05) !important;
                         text-align: center;
-                        pointer-events: none; /* Klik akan menembus ke tombol di bawahnya */
+                        pointer-events: none; /* Sentuhan akan menembus ke tombol trigger */
                         position: relative;
                         z-index: 1;
                         transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
                     }
                     
-                    /* Gaya Emoji Mengambang Kuno */
+                    /* Gaya Animasi Emoji Mengambang Kuno */
                     .visual-emoji {
                         font-size: 38px;
                         line-height: 1;
-                        margin-bottom: 10px;
+                        margin-bottom: 12px;
                         display: inline-block;
                         animation: floatScrollBtn 2.5s infinite ease-in-out;
                     }
                     
                     .visual-title {
                         font-family: monospace;
-                        font-size: 15px;
+                        font-size: 14.5px;
                         font-weight: bold;
                         color: #fbbf24;
                         margin-bottom: 8px;
                         display: block;
+                        letter-spacing: 0.5px;
                     }
                     
                     .visual-desc {
                         font-family: monospace;
                         font-size: 11.5px;
-                        line-height: 1.5;
-                        color: #f1f5f9;
+                        line-height: 1.6;
+                        color: #cbd5e1;
                         margin: 0;
                         display: block;
                     }
                     
                     @keyframes floatScrollBtn {
                         0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 4px rgba(251,191,36,0.3)); }
-                        50% { transform: translateY(-4px) scale(1.05); filter: drop-shadow(0 0 12px rgba(251,191,36,0.7)); }
+                        50% { transform: translateY(-5px) scale(1.05); filter: drop-shadow(0 0 12px rgba(251,191,36,0.7)); }
                     }
         
-                    /* 🕵️‍♂️ OPERASI SILUMAN: PAKSA TOMBOL STREAMLIT MENJADI TRANSPARAN SEMPURNA DI ATAS KARTU */
+                    /* 🕵️‍♂️ OPERASI SILUMAN TOTAL: KUNCI & LENYAPKAN TEKS TOMBOL STREAMLIT ORIGINAL */
                     div.rpg-invisible-trigger {
-                        margin-top: -155px !important; /* Menarik tombol ke atas agar menumpuk pas di atas visual-box */
-                        position: relative;
-                        z-index: 2; /* Berada di atas lapisan visual box agar bisa menerima sentuhan klik */
+                        position: absolute !important;
+                        top: 0 !important;
+                        left: 0 !important;
+                        width: 100% !important;
+                        height: 100% !important;
+                        z-index: 2; /* Menutupi penuh visual-box agar menerima klik di semua sisi */
+                        margin: 0 !important;
+                        padding: 0 !important;
                     }
                     
+                    /* Paksa tombol asli Streamlit menjadi benar-benar transparan tak terlihat */
                     div.rpg-invisible-trigger button {
                         background: transparent !important;
-                        border: 2px solid transparent !important;
-                        color: transparent !important; /* Sembunyikan teks bawaan tombol */
-                        min-height: 145px !important;
+                        border: none !important;
+                        color: transparent !important; /* Lenyapkan tulisan TRIGGER dari layar */
                         width: 100% !important;
+                        height: 100% !important;
+                        min-height: 160px !important;
                         cursor: pointer !important;
                         box-shadow: none !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        font-size: 0px !important; /* Mencegah font menyembul */
                     }
                     
-                    /* Hubungkan Efek Hover Tombol Asli agar Memicu Perubahan Visual Box di Bawahnya */
-                    .scroll-wrapper-zone:hover .scroll-visual-box {
-                        transform: translateY(-4px) scale(1.02);
+                    /* Memicu perubahan visual pada papan ketika area pembungkus disentuh/di-hover */
+                    .scroll-block-wrapper:hover .scroll-visual-box {
+                        transform: translateY(-4px) scale(1.01);
                         border-color: #fbbf24 !important;
                         border-top-color: #fbbf24 !important;
-                        box-shadow: 0 0 25px rgba(251, 191, 36, 0.6) !important;
+                        box-shadow: 0 0 25px rgba(251, 191, 36, 0.5), inset 0 0 15px rgba(251, 191, 36, 0.1) !important;
+                    }
+                    
+                    /* Efek responsif aktif saat tombol ditekan di layar HP */
+                    .scroll-block-wrapper:active .scroll-visual-box {
+                        transform: scale(0.99);
+                        box-shadow: 0 0 10px rgba(251, 191, 36, 0.3) !important;
                     }
                 </style>
                 """,
                 unsafe_allow_html=True
             )
         
-            # --- 🏗️ STRUKTUR BLOK GULUNGAN 1: JURNAL BURUAN ---
-            st.markdown("<div class='scroll-wrapper-zone'>", unsafe_allow_html=True)
+            # --- 🏗️ RENDER GULUNGAN 1: JURNAL BURUAN ---
+            st.markdown("<div class='scroll-block-wrapper'>", unsafe_allow_html=True)
             # Tampilan Visual Cantik
             st.markdown(
                 """
@@ -2215,17 +2229,15 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 </div>
                 """, unsafe_allow_html=True
             )
-            # Tombol Trigger Transparan (Klik Asli Python)
+            # Tombol Siluman Absolut (Deteksi klik Python murni di balik layar)
             st.markdown("<div class='rpg-invisible-trigger'>", unsafe_allow_html=True)
-            if st.button("TRIGGER_BURUAN", use_container_width=True, key="btn_trigger_jurnal_buruan_final"):
+            if st.button("TRIGGER_BURUAN", use_container_width=True, key="btn_trigger_jurnal_buruan_premium"):
                 st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
                 st.rerun()
             st.markdown("</div></div>", unsafe_allow_html=True)
         
-            st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True) # Jarak Antar Papan
-        
-            # --- 🏗️ STRUKTUR BLOK GULUNGAN 2: KITAB MISI ---
-            st.markdown("<div class='scroll-wrapper-zone'>", unsafe_allow_html=True)
+            # --- 🏗️ RENDER GULUNGAN 2: KITAB MISI ---
+            st.markdown("<div class='scroll-block-wrapper'>", unsafe_allow_html=True)
             # Tampilan Visual Cantik
             st.markdown(
                 """
@@ -2236,24 +2248,23 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 </div>
                 """, unsafe_allow_html=True
             )
-            # Tombol Trigger Transparan (Klik Asli Python)
+            # Tombol Siluman Absolut (Deteksi klik Python murni di balik layar)
             st.markdown("<div class='rpg-invisible-trigger'>", unsafe_allow_html=True)
-            if st.button("TRIGGER_MISI", use_container_width=True, key="btn_trigger_kitab_misi_final"):
+            if st.button("TRIGGER_MISI", use_container_width=True, key="btn_trigger_kitab_misi_premium"):
                 st.session_state["campaign_sub_page"] = "view_buku_tugas"
                 st.rerun()
             st.markdown("</div></div>", unsafe_allow_html=True)
         
         
-            # --- ↩️ TOMBOL KEMBALI KEMAH (Menggunakan Tombol Normal Bawaan Anda) ---
+            # --- ↩️ TOMBOL KEMBALI KEMAH (Menggunakan Tombol Standar Navigasi Anda) ---
             st.markdown("<br><hr style='border-color: rgba(251, 191, 36, 0.3); margin: 15px 0;'><br>", unsafe_allow_html=True)
             st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
-            if st.button("⬅️ KEMBALI KE BERANDA KOTA", use_container_width=True, key="btn_exit_campaign_lobby_final_fixed"):
+            if st.button("⬅️ KEMBALI KE BERANDA KOTA", use_container_width=True, key="btn_exit_campaign_lobby_premium_fixed"):
                 st.session_state.current_camp_menu = "main"
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
          
             st.stop()
-
 
         # =========================================================================
         # 📘 JURNAL BURUAN INDIVIDU (PEMISAHAN RANKING: TINGKAT LEVEL = RANKING PPS, RANKING PENJUALAN = RANKING PSM)
