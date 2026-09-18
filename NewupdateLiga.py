@@ -2103,149 +2103,129 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
         # 👑 NAVIGATION STRUKTUR INTERNAL: JALUR NAVIGASI UTAMA BERURUTAN (FIXED)
         # =========================================================================
-         
+                 
         # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (CUSTOME CSS TOTAL KHUSUS HALAMAN INI)
+        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (HTML KUSTOM TOTAL - ANTI-UPDATE STREAMLIT)
         # =========================================================================
         if st.session_state.get("campaign_sub_page", "resepsionis_utama") == "resepsionis_utama":
             
-            # --- 🎨 OVERRIDE CSS GLOBAL: HANYA AKTIF SAAT BERADA DI HALAMAN INI ---
+            st.markdown("<h2 class='guild-lobby-title' style='text-shadow: 0 0 15px rgba(251,191,36,0.5); color: #fef08a; text-align: center; font-family: monospace;'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
+            st.markdown("<p class='guild-lobby-sub' style='color: #cbd5e1; text-align: center; font-family: monospace; margin-bottom: 30px;'>Pilih gulungan maklumat di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
+        
+            # --- 🏗️ LOGIKA NAVIGASI CLIK VIA URL PARAMETER ---
+            # Membaca jika ada trigger klik dari komponen HTML di bawah
+            query_params = st.query_params
+            if "go_to_page" in query_params:
+                target_page = query_params["go_to_page"]
+                # Hapus parameter agar tidak stuck looping
+                del st.query_params["go_to_page"]
+                
+                if target_page == "buku_pencapaian":
+                    st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
+                    st.rerun()
+                elif target_page == "buku_tugas":
+                    st.session_state["campaign_sub_page"] = "view_buku_tugas"
+                    st.rerun()
+        
+            # --- 🎨 DESAIN PERKAMEN GANTUNG MURNI (TAHAN TERHADAP CSS GLOBAL) ---
             st.markdown(
                 """
                 <style>
-                    /* 1. Paksa Container Radio Agar Tersusun Kebawah (Vertikal) secara Mutlak */
-                    div[data-testid="stRadio"] > div {
-                        flex-direction: column !important;
-                        gap: 25px !important;
-                        align-items: center !important;
-                        width: 100% !important;
+                    /* Container Utama Gulungan */
+                    .scroll-container {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 25px;
+                        width: 100%;
+                        max-width: 480px;
+                        margin: 0 auto;
                     }
                     
-                    /* Menargetkan pembungkus grup tombol radio versi Streamlit baru */
-                    div[data-testid="stRadio"] div[role="radiogroup"] {
-                        display: flex !important;
-                        flex-direction: column !important;
-                        gap: 25px !important;
-                        width: 100% !important;
-                        max-width: 480px !important;
-                        margin: 0 auto !important;
-                    }
-                    
-                    /* 2. BUMI HANGUSKAN LINGKARAN RADIO & ELEMEN BAWAAN */
-                    div[data-testid="stRadio"] input[type="radio"],
-                    div[data-testid="stRadio"] [data-testid="stRadioButtonCustomCircle"],
-                    div[data-testid="stRadio"] [data-testid="stVisualWidget"],
-                    div[data-testid="stRadio"] label > div:first-child {
-                        display: none !important;
-                        opacity: 0 !important;
-                        visibility: hidden !important;
-                        width: 0px !important; 
-                        height: 0px !important; 
-                        margin: 0 !important; 
-                        padding: 0 !important;
-                    }
-                    
-                    /* 3. SUNTIKKAN GAYA PAPAN PERKAMEN GANTUNG PADA SELURUH LABEL DI HALAMAN INI */
-                    div[data-testid="stRadio"] label {
+                    /* Komponen Kartu Papan Gulungan Meniru Link */
+                    .medieval-scroll-card {
                         background: linear-gradient(135deg, #0f172a 0%, #1e1b18 100%) !important;
                         border: 2px solid #b45309 !important;
-                        border-top: 8px solid #d97706 !important; /* Pasak kayu magis */
+                        border-top: 8px solid #d97706 !important; /* Pasak Kayu */
                         border-radius: 6px 6px 16px 16px !important;
-                        width: 100% !important;
-                        min-height: 140px !important;
                         padding: 22px 20px !important;
-                        margin: 0 !important;
                         box-shadow: 0 0 20px rgba(180, 83, 9, 0.3), inset 0 0 15px rgba(251, 191, 36, 0.05) !important;
-                        cursor: pointer !important;
-                        display: flex !important;
-                        flex-direction: column !important;
-                        justify-content: flex-start !important;
-                        align-items: center !important;
-                        text-align: center !important;
-                        white-space: pre-line !important;
-                        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+                        text-align: center;
+                        text-decoration: none !important;
+                        display: block;
+                        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+                        cursor: pointer;
                     }
                     
-                    /* 4. Efek Ayunan & Pendaran Emas Saat Di-Hover */
-                    div[data-testid="stRadio"] label:hover {
-                        transform: translateY(-3px) scale(1.02) !important;
+                    /* Efek Hover Mengambang Keemasan */
+                    .medieval-scroll-card:hover {
+                        transform: translateY(-4px) scale(1.02);
                         border-color: #fbbf24 !important;
                         border-top-color: #fbbf24 !important;
                         box-shadow: 0 0 25px rgba(251, 191, 36, 0.6), inset 0 0 15px rgba(251, 191, 36, 0.2) !important;
                     }
-        
-                    /* 5. Override Fontasi Isi Teks Gulungan agar Menuruti Aturan Kuno */
-                    div[data-testid="stRadio"] label [data-testid="stMarkdownContainer"] p {
-                        font-family: monospace !important;
-                        font-size: 12px !important;
-                        line-height: 1.6 !important;
-                        color: #f1f5f9 !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
+                    
+                    /* Gaya Emoji */
+                    .scroll-emoji {
+                        font-size: 38px;
+                        line-height: 1;
+                        margin-bottom: 10px;
+                        display: inline-block;
+                        animation: floatScroll 2.5s infinite ease-in-out;
                     }
                     
-                    /* 6. Animasi Emoji Mengambang Magis */
-                    div[data-testid="stRadio"] label [data-testid="stMarkdownContainer"] p::first-line {
-                        font-size: 36px !important;
-                        line-height: 1.4 !important;
-                        display: inline-block !important;
-                        animation: floatingScrollMedieval 2.5s infinite ease-in-out !important;
+                    /* Gaya Judul Gulungan */
+                    .scroll-title {
+                        font-family: monospace;
+                        font-size: 15px;
+                        font-weight: bold;
+                        color: #fbbf24;
+                        margin-bottom: 8px;
                     }
                     
-                    @keyframes floatingScrollMedieval {
-                        0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 6px rgba(251,191,36,0.4)); }
-                        50% { transform: translateY(-4px) scale(1.05); filter: drop-shadow(0 0 16px rgba(251,191,36,0.8)); }
+                    /* Gaya Deskripsi Kuno */
+                    .scroll-desc {
+                        font-family: monospace;
+                        font-size: 12px;
+                        line-height: 1.5;
+                        color: #f1f5f9;
+                        margin: 0;
                     }
                     
-                    /* Sembunyikan Label Judul Bawaan Variabel */
-                    div[data-testid="stRadio"] > label:first-child { 
-                        display: none !important; 
+                    @keyframes floatScroll {
+                        0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 4px rgba(251,191,36,0.3)); }
+                        50% { transform: translateY(-5px) scale(1.05); filter: drop-shadow(0 0 12px rgba(251,191,36,0.7)); }
                     }
                 </style>
-                """, 
+                
+                <div class="scroll-container">
+                    <!-- GULUNGAN 1: JURNAL BURUAN -->
+                    <a href="?go_to_page=buku_pencapaian" target="_self" class="medieval-scroll-card">
+                        <div class="scroll-emoji">📘</div>
+                        <div class="scroll-title">📜 JURNAL BURUAN INDIVIDU 📜</div>
+                        <div class="scroll-desc">Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin hasil buruan, tingkat level pahlawan, dan rekap performa penjualan harian Anda.</div>
+                    </a>
+                    
+                    <!-- GULUNGAN 2: KITAB MISI -->
+                    <a href="?go_to_page=buku_tugas" target="_self" class="medieval-scroll-card">
+                        <div class="scroll-emoji">🔮 ⚔️</div>
+                        <div class="scroll-title">📜 KITAB MISI & QUIZ GUILD 📜</div>
+                        <div class="scroll-desc">Cek papan pengumuman maklumat aliansi untuk memantau target pencapaian toko harian, daftar quest mingguan PSM, serta tantangan kuis berkala.</div>
+                    </a>
+                </div>
+                """,
                 unsafe_allow_html=True
             )
         
-            st.markdown("<h2 class='guild-lobby-title' style='text-shadow: 0 0 15px rgba(251,191,36,0.5); color: #fef08a; text-align: center;'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
-            st.markdown("<p class='guild-lobby-sub' style='color: #cbd5e1; text-align: center;'>Pilih gulungan maklumat di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
-            
-            # --- 📦 FORMAT TEKS GULUNGAN VERTIKAL ---
-            gulungan_buruan = (
-                "📘\n"
-                "📜 JURNAL BURUAN INDIVIDU 📜\n"
-                "Akses lembar arsip report pribadi Anda untuk meninjau akumulasi poin hasil buruan, tingkat level pahlawan, dan rekap performa penjualan harian Anda.\n"
-            )
-            
-            gulungan_misi = (
-                "🔮 ⚔️\n"
-                "📜 KITAB MISI & QUIZ GUILD 📜\n"
-                "Cek papan pengumuman maklumat aliansi untuk memantau target pencapaian toko harian, daftar quest mingguan PSM, serta tantangan kuis berkala.\n"
-            )
-            
-            def proses_navigasi_gulungan():
-                pilihan = st.session_state.rpg_hanging_scroll_selector
-                if pilihan == gulungan_buruan:
-                    st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
-                elif pilihan == gulungan_misi:
-                    st.session_state["campaign_sub_page"] = "view_buku_tugas"
-        
-            # st.radio ini sekarang aman karena CSS di atas akan menimpa CSS global secara paksa saat halaman aktif
-            pilihan_gulungan = st.radio(
-                "SELECT_HANGING_VAL",
-                options=[gulungan_buruan, gulungan_misi],
-                index=None,
-                key="rpg_hanging_scroll_selector",
-                on_change=proses_navigasi_gulungan
-            )
-        
+            # --- ↩️ TOMBOL KEMBALI KEMAH ---
             st.markdown("<br><hr style='border-color: rgba(251, 191, 36, 0.3); margin: 15px 0;'><br>", unsafe_allow_html=True)
             st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
-            if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_radio_hanging"):
+            if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_html_ver"):
                 st.session_state.current_camp_menu = "main"
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
          
             st.stop()
+
 
 
         # =========================================================================
@@ -2665,14 +2645,23 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.markdown(html_content_pages, unsafe_allow_html=True)
 
             # --- 🏛️ TOMBOL NAVIGASI BAWAH ---
+            # 🛡️ Proteksi Awal: Jika karena suatu hal variabel belum terinisialisasi, set ke halaman 1
+            if "book_page_number" not in st.session_state:
+                st.session_state["book_page_number"] = 1
+            
+            # Ambil nilai halaman saat ini dengan aman untuk pencocokan kondisi
+            current_page = st.session_state["book_page_number"]
+            
             if current_page == max_spread_index:
                 if st.button("↺ KEMBALI KE HALAMAN UTAMA (AWAL BUKU)", use_container_width=True, key="btn_desk_nav_reset"):
                     st.session_state["book_page_number"] = 1
                     st.rerun()
             else:
                 if st.button("LEMBAR BERIKUTNYA (BUKA HALAMAN SELANJUTNYA) ➔", use_container_width=True, key="btn_desk_nav_next"):
-                    st.session_state["book_page_number"] += 1
+                    # Menggunakan .get() agar lebih aman dari KeyError saat proses penambahan
+                    st.session_state["book_page_number"] = st.session_state.get("book_page_number", 1) + 1
                     st.rerun()
+
             
             # Memotong eksekusi halaman agar skrip di bawahnya tidak ikut terpanggil
             st.stop()
