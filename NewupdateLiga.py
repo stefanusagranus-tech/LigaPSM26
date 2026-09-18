@@ -3124,7 +3124,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             # =========================================================================
             # 👑 HALAMAN 3A: HALL OF FAME PSM (BENERAN)
             # =========================================================================
-            elif st.session_state.get("campaign_sub_page") == "view_hall_of_fame" and st.session_state.get("hof_sub_page") == "hof_psm":
+            elif (
+                st.session_state.get("campaign_sub_page") == "view_hall_of_fame"
+                and st.session_state.get("hof_sub_page") == "hof_psm"
+            ):
     
                 url_gambar_latar = "https://i.imgur.com/kMo29aW.jpeg"
     
