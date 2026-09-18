@@ -3136,7 +3136,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             url_gambar_latar = "https://i.imgur.com/kMo29aW.jpeg"
             import hashlib
-            import calendar
 
             # ==== FUNGSI AVATAR AUTO-HASH ====
             def get_avatar(name):
@@ -3148,68 +3147,88 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 h = int(hashlib.md5(str(name).upper().encode()).hexdigest(), 16)
                 return list_avatar_rpg[h % len(list_avatar_rpg)]
 
-            # ==== AMBIL DATA DARI SESSION STATE ====
+            # ==== AMBIL DATA ====
             df_periode = st.session_state.get("periods_df", pd.DataFrame()).copy()
             df_sales = st.session_state.get("sales_person_df", pd.DataFrame()).copy()
 
-            # Normalisasi kolom
             for df in [df_periode, df_sales]:
                 if not df.empty:
                     df.columns = df.columns.astype(str).str.strip().str.lower()
 
-            # Hari ini
             today = datetime.now().date()
-            current_year = today.year
 
             # ==== BANGUN DAFTAR KARTU DINAMIS ====
-            kartu_list = []
+            kartu_periode = []   # periode individual
+            kartu_bulan = []     # grup bulan
+            kartu_alltime = None # all time
 
             if not df_periode.empty and all(
                 c in df_periode.columns for c in ["period_id", "period_name", "start_date", "end_date"]
             ):
-                # Parse tanggal
                 df_periode["start_dt"] = pd.to_datetime(df_periode["start_date"], errors="coerce")
                 df_periode["end_dt"] = pd.to_datetime(df_periode["end_date"], errors="coerce")
                 df_periode = df_periode.dropna(subset=["start_dt", "end_dt"])
 
-                # Skip program PPS / Sueger / dll
+                # Skip PPS / Sueger
                 df_periode = df_periode[
                     ~df_periode["period_id"].astype(str).str.upper().str.contains(
                         "PWP|SGR|SGS|CBN|PPS", na=False
                     )
                 ]
 
-                # Urutkan dari terbaru ke lama
-                df_periode = df_periode.sort_values("start_dt", ascending=False).reset_index(drop=True)
+                # Urutkan ASCENDING (terlama dulu) untuk periode
+                df_periode_asc = df_periode.sort_values("start_dt", ascending=True).reset_index(drop=True)
 
-                # --- KARTU 1: ALL TIME (hanya periode yang sudah selesai) ---
+                # === BANGUN KARTU PERIODE (ASCENDING) ===
+                for _, row_p in df_periode_asc.iterrows():
+                    p_id = str(row_p["period_id"]).strip()
+                    p_name = str(row_p["period_name"]).strip()
+                    p_start = row_p["start_dt"].date()
+                    p_end = row_p["end_dt"].date()
+                    is_selesai = p_end < today
+
+                    if p_start.month == p_end.month:
+                        label_tgl = f"{p_start.day}-{p_end.day} {p_start.strftime('%b').upper()}"
+                    else:
+                        label_tgl = f"{p_start.day} {p_start.strftime('%b').upper()} - {p_end.day} {p_end.strftime('%b').upper()}"
+
+                    kartu_periode.append({
+                        "key": f"periode_{p_id}",
+                        "label": f"📅 {label_tgl}",
+                        "tipe": "periode",
+                        "period_ids": [p_id],
+                        "is_active": not is_selesai,
+                        "period_name": p_name,
+                        "start_dt": p_start,
+                    })
+
+                # === BANGUN KARTU ALL TIME (hanya periode selesai) ===
                 df_selesai = df_periode[df_periode["end_dt"].dt.date < today]
                 if not df_selesai.empty:
-                    kartu_list.append({
+                    kartu_alltime = {
                         "key": "alltime",
                         "label": "🏆 ALL TIME",
                         "tipe": "alltime",
                         "period_ids": df_selesai["period_id"].astype(str).str.strip().tolist(),
                         "is_active": False,
-                    })
+                    }
 
-                # --- KARTU BULAN (grup periode per bulan, hanya yang selesai) ---
-                df_selesai_with_month = df_selesai.copy()
-                if not df_selesai_with_month.empty:
-                    df_selesai_with_month["bulan_key"] = df_selesai_with_month["start_dt"].dt.strftime("%Y-%m")
-                    df_selesai_with_month["bulan_label"] = df_selesai_with_month["start_dt"].dt.strftime("%B %Y").str.upper()
+                # === BANGUN KARTU BULAN (ASCENDING) ===
+                if not df_selesai.empty:
+                    df_bulan = df_selesai.copy()
+                    df_bulan["bulan_key"] = df_bulan["start_dt"].dt.strftime("%Y-%m")
+                    df_bulan["bulan_label"] = df_bulan["start_dt"].dt.strftime("%B %Y").str.upper()
 
-                    # Urut dari terbaru
-                    bulan_unik = df_selesai_with_month[["bulan_key", "bulan_label"]].drop_duplicates().sort_values("bulan_key", ascending=False)
+                    bulan_unik = df_bulan[["bulan_key", "bulan_label"]].drop_duplicates().sort_values("bulan_key", ascending=True)
 
                     for _, row_bulan in bulan_unik.iterrows():
                         b_key = row_bulan["bulan_key"]
                         b_label = row_bulan["bulan_label"]
-                        period_ids_bulan = df_selesai_with_month[
-                            df_selesai_with_month["bulan_key"] == b_key
+                        period_ids_bulan = df_bulan[
+                            df_bulan["bulan_key"] == b_key
                         ]["period_id"].astype(str).str.strip().tolist()
 
-                        kartu_list.append({
+                        kartu_bulan.append({
                             "key": f"bulan_{b_key}",
                             "label": f"📆 {b_label}",
                             "tipe": "bulan",
@@ -3217,37 +3236,15 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                             "is_active": False,
                         })
 
-                # --- KARTU PERIODE (semua, baik aktif maupun selesai) ---
-                for _, row_p in df_periode.iterrows():
-                    p_id = str(row_p["period_id"]).strip()
-                    p_name = str(row_p["period_name"]).strip()
-                    p_start = row_p["start_dt"].date()
-                    p_end = row_p["end_dt"].date()
+            # ==== GABUNG URUTAN: Periode → Bulan → All Time ====
+            kartu_list = kartu_periode + kartu_bulan
+            if kartu_alltime:
+                kartu_list.append(kartu_alltime)
 
-                    # Periode selesai kalau end_date < hari ini
-                    is_selesai = p_end < today
-
-                    # Label: ambil tanggal
-                    if p_start.month == p_end.month:
-                        label_tgl = f"{p_start.day}-{p_end.day} {p_start.strftime('%b').upper()}"
-                    else:
-                        label_tgl = f"{p_start.day} {p_start.strftime('%b').upper()} - {p_end.day} {p_end.strftime('%b').upper()}"
-
-                    kartu_list.append({
-                        "key": f"periode_{p_id}",
-                        "label": f"📅 {label_tgl}",
-                        "tipe": "periode",
-                        "period_ids": [p_id],
-                        "is_active": not is_selesai,
-                        "period_name": p_name,
-                    })
-
-            # ==== HITUNG DATA UNTUK SETIAP KARTU ====
+            # ==== HITUNG JUARA ====
             def get_juara_per_kartu(kartu):
-                """Ambil juara 1 untuk kartu tertentu dari sales_person_df."""
                 if df_sales.empty or "person_name" not in df_sales.columns or "actual_qty" not in df_sales.columns:
                     return None
-
                 if "period_id" not in df_sales.columns:
                     return None
 
@@ -3274,25 +3271,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     "qty": int(top1["actual_qty"]),
                 }
 
-            # Precompute juara tiap kartu
             for k in kartu_list:
                 k["juara"] = get_juara_per_kartu(k)
 
-            # ==== STATE: KARTU YANG DIPILIH ====
-            if "hof_psm_selected" not in st.session_state:
-                st.session_state["hof_psm_selected"] = 0
-
             total_kartu = len(kartu_list)
-            if total_kartu == 0:
-                st.session_state["hof_psm_selected"] = 0
-                idx_aktif = 0
-            else:
-                idx_aktif = st.session_state["hof_psm_selected"]
-                if idx_aktif >= total_kartu or idx_aktif < 0:
-                    idx_aktif = 0
-                    st.session_state["hof_psm_selected"] = 0
-
-            kartu_aktif = kartu_list[idx_aktif] if total_kartu > 0 else None
 
             # ==== CSS ====
             st.markdown("""
@@ -3345,23 +3327,35 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     font-size: 11.5px; margin-bottom: 25px;
                 }
 
-                /* CAROUSEL */
+                /* ============================================
+                🎠 CAROUSEL — FIX SCROLL BEBAS
+                ============================================ */
                 .hof-carousel-wrapper {
                     display: flex;
                     flex-direction: row;
                     flex-wrap: nowrap;
                     gap: 14px;
-                    padding: 15px 10px 25px 10px;
-                    justify-content: center;
+                    padding: 15px 20px 25px 20px;
+                    justify-content: flex-start;
                     overflow-x: auto;
                     overflow-y: visible;
-                    scroll-snap-type: x mandatory;
+                    scroll-snap-type: x proximity;
                     -webkit-overflow-scrolling: touch;
-                    scrollbar-width: none;
+                    scrollbar-width: thin;
                     width: 100%;
                     box-sizing: border-box;
                 }
-                .hof-carousel-wrapper::-webkit-scrollbar { display: none; }
+                .hof-carousel-wrapper::-webkit-scrollbar {
+                    height: 8px;
+                }
+                .hof-carousel-wrapper::-webkit-scrollbar-track {
+                    background: rgba(15, 23, 42, 0.5);
+                    border-radius: 4px;
+                }
+                .hof-carousel-wrapper::-webkit-scrollbar-thumb {
+                    background: linear-gradient(90deg, #b45309, #fbbf24, #b45309);
+                    border-radius: 4px;
+                }
 
                 .hof-card {
                     flex: 0 0 auto;
@@ -3444,7 +3438,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 .hof-card-alltime .hof-crown {
                     filter: drop-shadow(0 0 25px rgba(251, 191, 36, 1)) drop-shadow(0 0 40px rgba(251, 191, 36, 0.6));
                 }
-                .hof-card.hof-card-selected .hof-card-inner {
+                .hof-card-selected .hof-card-inner {
                     box-shadow: inset 0 0 30px rgba(251, 191, 36, 0.2), 0 0 40px rgba(251, 191, 36, 0.5);
                     border: 3px solid #fbbf24;
                 }
@@ -3491,7 +3485,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     color: #d8b4fe;
                 }
 
-                /* KARTU EMPTY (belum ada data) */
+                /* KARTU EMPTY */
                 .hof-card-empty .hof-card-inner {
                     background: linear-gradient(160deg, #0f172a 0%, #13110a 100%);
                     border: 2px dashed #475569;
@@ -3517,75 +3511,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     font-size: 10.5px;
                     line-height: 1.6;
                     padding: 0 10px;
-                }
-
-                /* DOTS COMPACT */
-                .st-key-hof_psm_dots {
-                    display: flex !important;
-                    justify-content: center !important;
-                    margin: 8px 0 15px 0 !important;
-                }
-                .st-key-hof_psm_dots div[role="radiogroup"] {
-                    display: flex !important;
-                    flex-direction: row !important;
-                    justify-content: center !important;
-                    align-items: center !important;
-                    gap: 10px !important;
-                    background: rgba(15, 23, 42, 0.6) !important;
-                    border: 1.5px solid rgba(180, 83, 9, 0.4) !important;
-                    border-radius: 20px !important;
-                    padding: 10px 18px !important;
-                    width: fit-content !important;
-                    margin: 0 auto !important;
-                    max-width: 90vw !important;
-                    overflow-x: auto !important;
-                    scrollbar-width: none !important;
-                }
-                .st-key-hof_psm_dots div[role="radiogroup"]::-webkit-scrollbar {
-                    display: none !important;
-                }
-                .st-key-hof_psm_dots div[role="radiogroup"] input[type="radio"] {
-                    display: none !important;
-                }
-                .st-key-hof_psm_dots div[role="radiogroup"] > label > div:first-child {
-                    display: none !important;
-                }
-                .st-key-hof_psm_dots div[role="radiogroup"] > label p {
-                    display: none !important;
-                }
-                .st-key-hof_psm_dots div[role="radiogroup"] > label {
-                    width: 12px !important;
-                    height: 12px !important;
-                    min-width: 12px !important;
-                    padding: 0 !important;
-                    margin: 0 !important;
-                    border-radius: 50% !important;
-                    background: rgba(180, 83, 9, 0.3) !important;
-                    border: 2px solid #b45309 !important;
-                    cursor: pointer !important;
-                    transition: all 0.3s ease !important;
-                    display: inline-block !important;
-                    position: relative !important;
-                }
-                .st-key-hof_psm_dots div[role="radiogroup"] > label:hover {
-                    background: rgba(251, 191, 36, 0.5) !important;
-                    transform: scale(1.2) !important;
-                }
-                .st-key-hof_psm_dots div[role="radiogroup"] > label:has(input:checked) {
-                    background: #fbbf24 !important;
-                    border-color: #fef08a !important;
-                    box-shadow: 0 0 15px rgba(251, 191, 36, 0.9) !important;
-                    transform: scale(1.5) !important;
-                }
-                /* Label dot khusus kalau tipe periode aktif (warna ungu) */
-                .st-key-hof_psm_dots div[role="radiogroup"] > label[data-mystery="true"] {
-                    background: rgba(124, 58, 237, 0.3) !important;
-                    border-color: #7c3aed !important;
-                }
-                .st-key-hof_psm_dots div[role="radiogroup"] > label[data-mystery="true"]:has(input:checked) {
-                    background: #a855f7 !important;
-                    border-color: #d8b4fe !important;
-                    box-shadow: 0 0 15px rgba(168, 85, 247, 0.9) !important;
                 }
 
                 /* TOMBOL */
@@ -3615,6 +3540,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
                 @media (max-width: 600px) {
                     .hof-card { width: 260px; min-width: 260px; max-width: 260px; }
+                    .hof-carousel-wrapper { padding: 15px 15px 25px 15px; }
                 }
                 @media (max-width: 380px) {
                     .hof-card { width: 240px; min-width: 240px; max-width: 240px; }
@@ -3635,10 +3561,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 }}
                 .main .block-container {{
                     background-color: transparent !important;
-                    max-width: 900px !important;
+                    max-width: 100% !important;
                     padding-top: 3% !important;
-                    padding-left: 8px !important;
-                    padding-right: 8px !important;
+                    padding-left: 0 !important;
+                    padding-right: 0 !important;
                 }}
                 div[data-testid="stVerticalBlock"] {{ gap: 0rem !important; }}
                 </style>
@@ -3667,7 +3593,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 st.markdown("<br>", unsafe_allow_html=True)
                 if st.button("⬅️ KEMBALI KE HALL OF FAME", key="btn_hof_psm_back", use_container_width=True):
                     st.session_state["hof_sub_page"] = None
-                    st.session_state["hof_psm_selected"] = 0
                     st.rerun()
                 st.stop()
 
@@ -3675,13 +3600,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             kartu_parts = ["<div class='hof-carousel-wrapper'>"]
 
             for idx, k in enumerate(kartu_list):
-                is_selected = (idx == idx_aktif)
-                selected_class = "hof-card-selected" if is_selected else ""
                 alltime_class = "hof-card-alltime" if k["tipe"] == "alltime" else ""
 
-                # === Tentukan konten kartu ===
                 if k.get("is_active") and k["tipe"] == "periode":
-                    # KARTU MISTERI (periode aktif)
+                    # KARTU MISTERI
                     konten = (
                         "<div class='hof-mystery-icon'>❓</div>"
                         "<div class='hof-mystery-lock'>🔒</div>"
@@ -3689,9 +3611,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         "<div class='hof-mystery-sub'>Prasasti juara akan dibuka setelah periode selesai (H+1).<br><br>"
                         "Selesaikan pertempuran periode ini dulu!</div>"
                     )
-                    card_cls = "hof-card hof-card-mystery " + selected_class
+                    card_cls = "hof-card hof-card-mystery"
                 elif k.get("juara"):
-                    # KARTU JUARA NORMAL
                     juara = k["juara"]
                     av = get_avatar(juara["nama"])
                     konten = (
@@ -3707,15 +3628,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         "<div class='hof-champion-name'>" + juara["nama"] + "</div>"
                         "<div class='hof-champion-qty'>" + str(juara["qty"]) + " Pcs</div>"
                     )
-                    card_cls = "hof-card " + alltime_class + " " + selected_class
+                    card_cls = "hof-card " + alltime_class
                 else:
-                    # KARTU KOSONG (belum ada data)
                     konten = (
                         "<div class='hof-empty-icon'>📭</div>"
                         "<div class='hof-empty-title'>BELUM ADA PENJUALAN</div>"
                         "<div class='hof-empty-sub'>Tidak ada data penjualan untuk periode ini.</div>"
                     )
-                    card_cls = "hof-card hof-card-empty " + alltime_class + " " + selected_class
+                    card_cls = "hof-card hof-card-empty " + alltime_class
 
                 kartu_parts.append(
                     "<div class='" + card_cls + "'>"
@@ -3734,64 +3654,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             kartu_html = "".join(kartu_parts).strip()
             st.markdown(kartu_html, unsafe_allow_html=True)
 
-            # ==== DOTS COMPACT (max 7 titik + ellipsis) ====
-            # Mapping index → label dot (untuk kompresi)
-            def get_dots_indices(total, active, window=3):
-                """Return list index dot yang ditampilkan (max 7)."""
-                if total <= 7:
-                    return list(range(total))
-                # 3 kiri + aktif + 3 kanan
-                start = max(0, active - window)
-                end = min(total, active + window + 1)
-                # Kalau di awal
-                if start == 0:
-                    return list(range(7))
-                # Kalau di akhir
-                if end == total:
-                    return list(range(total - 7, total))
-                return list(range(start, end))
-
-            dots_indices = get_dots_indices(total_kartu, idx_aktif)
-
-            # Label untuk radio (digunakan sebagai index)
-            dot_labels = [str(i) for i in dots_indices]
-
-            if dot_labels:
-                # Cek apakah ada kartu misteri di dots
-                has_mystery_in_dots = any(
-                    kartu_list[i].get("is_active") for i in dots_indices
-                )
-
-                st.markdown(
-                    "<div style='text-align:center; color:#64748b; font-family:monospace; "
-                    "font-size:9px; letter-spacing:2px; margin-bottom:4px;'>"
-                    + ("❓ = MISTERI" if has_mystery_in_dots else "")
-                    + "</div>",
-                    unsafe_allow_html=True
-                )
-
-                # Radio untuk dots
-                default_dot_idx = dots_indices.index(idx_aktif) if idx_aktif in dots_indices else 0
-                selected_dot_label = st.radio(
-                    "Pilih Periode",
-                    options=dot_labels,
-                    index=default_dot_idx,
-                    key="hof_psm_dots",
-                    label_visibility="collapsed",
-                    horizontal=True,
-                )
-
-                # Kalau user ganti dot
-                new_idx = int(selected_dot_label)
-                if new_idx != idx_aktif:
-                    st.session_state["hof_psm_selected"] = new_idx
-                    st.rerun()
-
             # ==== TOMBOL KEMBALI ====
             st.markdown("<br>", unsafe_allow_html=True)
             if st.button("⬅️ KEMBALI KE HALL OF FAME", key="btn_hof_psm_back", use_container_width=True):
                 st.session_state["hof_sub_page"] = None
-                st.session_state["hof_psm_selected"] = 0
                 st.rerun()
 
             st.stop()
