@@ -6725,423 +6725,635 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             )
 
         #============================================================= batas =======================================#
+        # ==========================================
+        # 📄 HALAMAN 3: PSM TOP 1-3 + 4-9
+        # ==========================================
         elif page_num == 3:
-            # 1. Ambil Username Aktif
-            current_user_name = st.session_state.get("user_name", st.session_state.get("username", ""))
 
-            # 2. STYLING CSS MEDIEVAL PODIUM, ZONA MERAH, & MOBILE FIX
-            rpg_badge_style = """
+            # ==========================================
+            # 📥 AMBIL DATA
+            # ==========================================
+            sales_person_df_p3 = st.session_state.get("sales_person_df", pd.DataFrame()).copy()
+            sales_item_df_p3 = st.session_state.get("sales_item_df", pd.DataFrame()).copy()
+            periods_df_p3 = st.session_state.get("periods_df", pd.DataFrame()).copy()
+            person_df_p3 = st.session_state.get("person_df", pd.DataFrame()).copy()
+
+            for _df in [sales_person_df_p3, sales_item_df_p3, periods_df_p3, person_df_p3]:
+                if not _df.empty:
+                    _df.columns = _df.columns.astype(str).str.strip().str.lower()
+
+            current_user_p3 = st.session_state.get("user_name", st.session_state.get("username", ""))
+            current_user_clean_p3 = str(current_user_p3).strip().upper()
+
+            t_today_p3 = pd.Timestamp.now().date()
+
+            # ==========================================
+            # 🗓️ CARI PERIODE AKTIF
+            # ==========================================
+            target_period_id_p3 = ""
+            target_period_label_p3 = ""
+
+            if not periods_df_p3.empty and all(
+                c in periods_df_p3.columns for c in ["period_id", "start_date", "end_date"]
+            ):
+                periods_df_p3["start_dt"] = pd.to_datetime(periods_df_p3["start_date"], errors="coerce")
+                periods_df_p3["end_dt"] = pd.to_datetime(periods_df_p3["end_date"], errors="coerce")
+                periods_df_p3 = periods_df_p3.dropna(subset=["start_dt", "end_dt"])
+
+                # Skip program PPS/Sueger/SG
+                periods_df_p3 = periods_df_p3[
+                    ~periods_df_p3["period_id"].astype(str).str.upper().str.contains(
+                        "PWP|SGR|SGS|CBN|PPS", na=False
+                    )
+                ]
+
+                _aktif_p3 = periods_df_p3[
+                    (periods_df_p3["start_dt"].dt.date <= t_today_p3) &
+                    (periods_df_p3["end_dt"].dt.date >= t_today_p3)
+                ]
+
+                if not _aktif_p3.empty:
+                    target_period_id_p3 = str(_aktif_p3.iloc[0]["period_id"]).strip()
+                    _ps = _aktif_p3.iloc[0]["start_dt"].date()
+                    _pe = _aktif_p3.iloc[0]["end_dt"].date()
+                    target_period_label_p3 = f"Periode {_ps.strftime('%d %b')} - {_pe.strftime('%d %b')}"
+                else:
+                    _latest_p3 = periods_df_p3.sort_values("start_dt", ascending=False)
+                    if not _latest_p3.empty:
+                        target_period_id_p3 = str(_latest_p3.iloc[0]["period_id"]).strip()
+                        _ps = _latest_p3.iloc[0]["start_dt"].date()
+                        _pe = _latest_p3.iloc[0]["end_dt"].date()
+                        target_period_label_p3 = f"Periode {_ps.strftime('%d %b')} - {_pe.strftime('%d %b')}"
+
+            if not target_period_label_p3:
+                target_period_label_p3 = "Periode Aktif"
+
+            # ==========================================
+            # 👥 MASTER PERSONIL
+            # ==========================================
+            master_personil_p3 = []
+            if not person_df_p3.empty and "person_name" in person_df_p3.columns:
+                _mp = person_df_p3.copy()
+                if "active" in _mp.columns:
+                    _mp = _mp[pd.to_numeric(_mp["active"], errors="coerce") == 1]
+                master_personil_p3 = _mp["person_name"].dropna().astype(str).str.strip().str.upper().unique().tolist()
+            elif not sales_person_df_p3.empty and "person_name" in sales_person_df_p3.columns:
+                master_personil_p3 = sales_person_df_p3["person_name"].dropna().astype(str).str.strip().str.upper().unique().tolist()
+
+            # ==========================================
+            # 📊 QTY PSM per KASIR (Periode Aktif)
+            # ==========================================
+            qty_dict_p3 = {}
+            if not sales_person_df_p3.empty and "person_name" in sales_person_df_p3.columns and "actual_qty" in sales_person_df_p3.columns:
+                _sp = sales_person_df_p3.copy()
+                if target_period_id_p3 and "period_id" in _sp.columns:
+                    _sp = _sp[_sp["period_id"].astype(str).str.strip() == target_period_id_p3]
+                _sp["person_clean"] = _sp["person_name"].astype(str).str.strip().str.upper()
+                _sp["actual_qty"] = pd.to_numeric(_sp["actual_qty"], errors="coerce").fillna(0)
+
+                if not _sp.empty:
+                    _grp = _sp.groupby("person_clean")["actual_qty"].sum().reset_index()
+                    for _, _r in _grp.iterrows():
+                        qty_dict_p3[_r["person_clean"]] = int(_r["actual_qty"])
+
+            # ==========================================
+            # 🏆 ACHIEVEMENT per KASIR (Bulan Ini — semua periode)
+            # ==========================================
+            # Ambil semua period_id bulan ini (untuk hitung achiv 1 bulan)
+            _valid_month_pids_p3 = []
+            if not periods_df_p3.empty and target_period_id_p3:
+                _curr_row = periods_df_p3[periods_df_p3["period_id"].astype(str).str.strip() == target_period_id_p3]
+                if not _curr_row.empty:
+                    _ref_date = _curr_row.iloc[0]["start_dt"]
+                    _same_month = periods_df_p3[
+                        (periods_df_p3["start_dt"].dt.month == _ref_date.month) &
+                        (periods_df_p3["start_dt"].dt.year == _ref_date.year)
+                    ]
+                    _valid_month_pids_p3 = _same_month["period_id"].astype(str).str.strip().tolist()
+
+            # Target map (periode aktif saja)
+            target_map_p3 = {}
+            if not sales_item_df_p3.empty and target_period_id_p3 and "period_id" in sales_item_df_p3.columns:
+                _si = sales_item_df_p3[
+                    sales_item_df_p3["period_id"].astype(str).str.strip() == target_period_id_p3
+                ]
+
+                _item_col_si = None
+                for _c in ["item_id", "item_code", "kode_item"]:
+                    if _c in _si.columns:
+                        _item_col_si = _c
+                        break
+
+                _target_col = None
+                for _c in _si.columns:
+                    _c_low = _c.lower()
+                    if "target_kasir" in _c_low or ("target" in _c_low and "kasir" in _c_low):
+                        _target_col = _c
+                        break
+
+                if _item_col_si and _target_col:
+                    for _, _r in _si.iterrows():
+                        _iid = str(_r[_item_col_si]).strip().replace(".0", "")
+                        _tval = pd.to_numeric(_r[_target_col], errors="coerce")
+                        if pd.notna(_tval) and _tval > 0:
+                            target_map_p3[_iid] = int(_tval)
+
+            # Hitung achiv per kasir (bulan ini, semua periode)
+            achiv_dict_p3 = {}
+            if not sales_person_df_p3.empty and "person_name" in sales_person_df_p3.columns and "actual_qty" in sales_person_df_p3.columns:
+                _sp_ach = sales_person_df_p3.copy()
+                if _valid_month_pids_p3 and "period_id" in _sp_ach.columns:
+                    _sp_ach = _sp_ach[
+                        _sp_ach["period_id"].astype(str).str.strip().isin(_valid_month_pids_p3)
+                    ]
+
+                _sp_ach["person_clean"] = _sp_ach["person_name"].astype(str).str.strip().str.upper()
+                _sp_ach["actual_qty"] = pd.to_numeric(_sp_ach["actual_qty"], errors="coerce").fillna(0)
+
+                _item_col_sp = None
+                for _c in ["item_id", "item_code", "kode_item"]:
+                    if _c in _sp_ach.columns:
+                        _item_col_sp = _c
+                        break
+
+                if _item_col_sp and target_map_p3 and not _sp_ach.empty:
+                    _sp_ach["item_clean"] = _sp_ach[_item_col_sp].astype(str).str.strip().str.replace(".0", "", regex=False)
+                    # Agregasi per (kasir, item) — total qty 1 bulan
+                    _agg = _sp_ach.groupby(["person_clean", "item_clean"])["actual_qty"].sum().reset_index()
+
+                    for _, _r in _agg.iterrows():
+                        _kasir = _r["person_clean"]
+                        _item = _r["item_clean"]
+                        _qty = _r["actual_qty"]
+
+                        _tgt = target_map_p3.get(_item, 0)
+                        if _tgt > 0 and _qty >= _tgt:
+                            achiv_dict_p3[_kasir] = achiv_dict_p3.get(_kasir, 0) + 1
+
+            # ==========================================
+            # 🏗️ SUSUN RANKING
+            # ==========================================
+            all_names_p3 = set(master_personil_p3) | set(qty_dict_p3.keys()) | set(achiv_dict_p3.keys())
+
+            ranking_list_p3 = []
+            for _name in all_names_p3:
+                if not _name:
+                    continue
+                ranking_list_p3.append((
+                    _name,
+                    qty_dict_p3.get(_name, 0),
+                    achiv_dict_p3.get(_name, 0),
+                ))
+
+            ranking_list_p3 = sorted(ranking_list_p3, key=lambda x: x[1], reverse=True)
+
+            # ==========================================
+            # 🎨 CSS PAGE 3
+            # ==========================================
+            css_p3 = """
             <style>
-            .rpg-open-book-container {
-                display: flex;
-                flex-direction: row;
-                gap: 20px;
-                width: 100%;
-                box-sizing: border-box;
-            }
-
-            @media (max-width: 768px) {
-                .rpg-open-book-container {
-                    flex-direction: column !important;
-                    gap: 15px;
-                }
-            }
-
-            .rpg-book-page {
-                flex: 1;
-                background: #fdf6e2;
-                border: 3px solid #d4af37;
-                border-radius: 8px;
-                padding: 16px;
-                box-sizing: border-box;
+            /* ============================================
+            🎯 PODIUM VERTIKAL (Juara 1 di Atas)
+            ============================================ */
+            .podium-vertical-p3 {
                 display: flex;
                 flex-direction: column;
-                min-height: 480px;
-                position: relative;
-                overflow: hidden;
-            }
-
-            /* Watermark Naga Pudar */
-            .rpg-book-page::before {
-                content: "";
-                position: absolute;
-                top: 0; left: 0; width: 100%; height: 100%;
-                background-image: url("https://img.pikbest.com/png-images/20250303/fierce-dragon-silhouette--e2-80-93-stylized-black-and-white-mythical-beast-illustration_11570728.png!bw800");
-                background-repeat: no-repeat;
-                background-position: center;
-                background-size: 85% auto;
-                opacity: 0.08 !important;
-                pointer-events: none;
-                z-index: 0;
-            }
-
-            /* --- PODIUM MEDIEVAL TOP 3 --- */
-            .podium-wrapper {
-                display: flex;
-                align-items: flex-end;
-                justify-content: center;
-                gap: 8px;
-                margin-top: auto;
+                align-items: center;
+                gap: 12px;
+                margin-top: 10px;
                 margin-bottom: 10px;
                 position: relative;
-                z-index: 2;
+                z-index: 15;
                 width: 100%;
             }
 
-            .podium-slot {
-                flex: 1;
+            /* Juara 1 — Card Besar */
+            .champion-1-p3 {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                text-align: center;
-                min-width: 0;
-            }
-
-            .podium-card {
-                width: 100%;
-                border-radius: 6px 6px 0 0;
-                padding: 8px 4px;
-                box-sizing: border-box;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: flex-start;
-                box-shadow: 0 -3px 10px rgba(0,0,0,0.25), inset 0 1px 2px rgba(255,255,255,0.4);
+                background: linear-gradient(180deg, #fef08a 0%, #fbbf24 50%, #d97706 100%);
+                border: 3px solid #78350f;
+                border-radius: 12px;
+                padding: 12px 16px 10px 16px;
+                box-shadow: 0 6px 15px rgba(120, 53, 15, 0.4), inset 0 1px 3px rgba(255, 255, 255, 0.5);
+                width: 75%;
+                max-width: 220px;
                 position: relative;
+                z-index: 20;
             }
-
-            /* Balok Podium Medieval Berbingkai */
-            .podium-1 {
-                height: 175px;
-                background: linear-gradient(180deg, #fef08a 0%, #d97706 100%);
-                border: 2.5px solid #78350f;
-                border-bottom: none;
+            .champion-1-crown-p3 {
+                font-size: 26px;
+                margin-bottom: 2px;
+                filter: drop-shadow(0 0 5px rgba(255, 200, 0, 0.8));
+                animation: crownBounceP3 2s infinite ease-in-out;
             }
-            .podium-2 {
-                height: 140px;
-                background: linear-gradient(180deg, #f8fafc 0%, #64748b 100%);
-                border: 2.5px solid #334155;
-                border-bottom: none;
+            @keyframes crownBounceP3 {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-3px); }
             }
-            .podium-3 {
-                height: 115px;
-                background: linear-gradient(180deg, #ffedd5 0%, #c2410c 100%);
-                border: 2.5px solid #7c2d12;
-                border-bottom: none;
+            .champion-1-avatar-p3 {
+                width: 58px;
+                height: 58px;
+                border-radius: 50%;
+                background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
+                border: 3px solid #78350f;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 30px;
+                margin: 4px 0 6px 0;
+                box-shadow: 0 0 12px rgba(251, 191, 36, 0.6);
             }
-
-            .podium-rank-tag {
-                font-size: 15px;
-                font-weight: 900;
-                color: #1e1b4b;
-                text-shadow: 0px 1px 0px rgba(255,255,255,0.8);
-            }
-
-            .podium-name {
-                font-size: 11px;
-                font-weight: 800;
-                color: #0f172a;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                max-width: 95%;
-                margin-top: 3px;
-                background: rgba(255, 255, 255, 0.45);
-                padding: 2px 5px;
-                border-radius: 4px;
-                border: 1px solid rgba(0,0,0,0.1);
-            }
-
-            .podium-score {
+            .champion-1-name-p3 {
+                font-family: monospace;
                 font-size: 12px;
                 font-weight: 900;
                 color: #1e1103;
-                margin-top: 4px;
-                text-shadow: 0px 1px 0px rgba(255,255,255,0.6);
+                text-align: center;
+                letter-spacing: 0.5px;
+                line-height: 1.2;
+                word-break: break-word;
+                max-width: 100%;
+                margin-bottom: 3px;
             }
-
-            .podium-achiv {
+            .champion-1-score-p3 {
+                font-family: monospace;
+                font-size: 15px;
+                font-weight: 900;
+                color: #78350f;
+                text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+            }
+            .champion-1-achiv-p3 {
+                font-family: monospace;
                 font-size: 10px;
-                color: #064e3b;
                 font-weight: 800;
-                margin-top: 2px;
-                background: rgba(255,255,255,0.65);
-                padding: 1px 5px;
+                color: #064e3b;
+                background: rgba(255, 255, 255, 0.6);
+                padding: 2px 8px;
                 border-radius: 10px;
+                margin-top: 3px;
+            }
+            .champion-you-p3 {
+                position: absolute;
+                top: 6px;
+                right: 8px;
+                background: #2563eb;
+                color: white;
+                font-size: 8px;
+                padding: 2px 5px;
+                border-radius: 4px;
+                font-weight: bold;
+                letter-spacing: 0.5px;
+            }
+            .champion-me-ring-p3 {
+                box-shadow: 0 0 0 3px #2563eb, 0 6px 15px rgba(37, 99, 235, 0.4);
             }
 
-            /* --- LIST KANAN & ZONA MERAH --- */
-            .rpg-list-container {
+            /* Juara 2 & 3 — Sejajar */
+            .rank-2-3-row-p3 {
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+                gap: 12px;
+                width: 100%;
+            }
+            .champion-other-p3 {
                 display: flex;
                 flex-direction: column;
-                gap: 6px;
+                align-items: center;
+                border-radius: 10px;
+                padding: 8px 10px 8px 10px;
+                width: 42%;
+                max-width: 110px;
                 position: relative;
-                z-index: 2;
-                overflow-y: auto;
-                max-height: 360px;
-                padding-right: 2px;
+                z-index: 18;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            }
+            .champion-2-p3 {
+                background: linear-gradient(180deg, #f8fafc 0%, #cbd5e1 50%, #64748b 100%);
+                border: 2.5px solid #334155;
+            }
+            .champion-3-p3 {
+                background: linear-gradient(180deg, #ffedd5 0%, #fdba74 50%, #c2410c 100%);
+                border: 2.5px solid #7c2d12;
+            }
+            .champion-other-crown-p3 {
+                font-size: 18px;
+                margin-bottom: 2px;
+            }
+            .champion-other-avatar-p3 {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 20px;
+                margin: 2px 0 4px 0;
+                box-shadow: 0 0 8px rgba(0,0,0,0.3);
+            }
+            .champion-2-p3 .champion-other-avatar-p3 { border: 2px solid #334155; }
+            .champion-3-p3 .champion-other-avatar-p3 { border: 2px solid #7c2d12; }
+            .champion-other-name-p3 {
+                font-family: monospace;
+                font-size: 9.5px;
+                font-weight: 900;
+                color: #0f172a;
+                text-align: center;
+                line-height: 1.2;
+                word-break: break-word;
+                max-width: 100%;
+                margin-bottom: 2px;
+            }
+            .champion-other-score-p3 {
+                font-family: monospace;
+                font-size: 12px;
+                font-weight: 900;
+                color: #1e1103;
+                text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+            }
+            .champion-other-achiv-p3 {
+                font-family: monospace;
+                font-size: 9px;
+                font-weight: 800;
+                color: #064e3b;
+                background: rgba(255, 255, 255, 0.6);
+                padding: 1px 6px;
+                border-radius: 8px;
+                margin-top: 2px;
             }
 
-            .rpg-normal-row {
+            /* ============================================
+            📜 LIST RANKING 4-9
+            ============================================ */
+            .rpg-list-container-p3 {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+                position: relative;
+                z-index: 15;
+                overflow-y: auto;
+                max-height: 420px;
+                padding-right: 2px;
+            }
+            .rpg-normal-row-p3 {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                padding: 8px 10px;
+                padding: 7px 10px;
                 border: 1.5px solid #cbd5e1;
                 background: #ffffff;
                 border-radius: 6px;
                 color: #020617 !important;
-                font-size: 12px;
+                font-size: 11px;
                 font-weight: 600;
                 box-shadow: 0 1px 3px rgba(0,0,0,0.04);
                 flex-shrink: 0;
+                font-family: monospace;
             }
-
-            /* ZONA MERAH (EXACT 3 TERBAWAH) */
-            .danger-zone-row {
+            .danger-zone-row-p3 {
                 background: #fff5f5 !important;
                 border: 1.5px solid #fca5a5 !important;
                 color: #991b1b !important;
             }
-            .danger-zone-badge {
+            .danger-zone-badge-p3 {
                 background: #fee2e2;
                 color: #dc2626;
-                font-size: 9px;
-                padding: 2px 5px;
-                border-radius: 4px;
+                font-size: 7.5px;
+                padding: 1px 4px;
+                border-radius: 3px;
                 font-weight: 800;
                 border: 1px solid #f87171;
+                margin-left: 3px;
             }
-
-            /* HIGHLIGHT USER AKTIF */
-            .rpg-user-me {
+            .rpg-user-me-p3 {
                 outline: 2.5px solid #2563eb !important;
                 outline-offset: -1px;
+                background: rgba(37, 99, 235, 0.06) !important;
+            }
+            .row-left-p3 {
+                display: flex;
+                flex-direction: column;
+                gap: 2px;
+                overflow: hidden;
+                flex: 1;
+                min-width: 0;
+            }
+            .row-left-top-p3 {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .row-left-bottom-p3 {
+                font-size: 9px;
+                color: #475569;
+                padding-left: 16px;
+                font-family: monospace;
+            }
+            .row-score-p3 {
+                flex-shrink: 0;
+                margin-left: 5px;
+                font-weight: 900;
+                font-size: 11px;
+                color: #0f172a;
+                text-align: right;
+                line-height: 1.2;
+            }
+            .row-score-p3 .achiv-part {
+                font-size: 8.5px;
+                color: #065f46;
+                font-weight: bold;
+                display: block;
+                margin-top: 1px;
+            }
+            .you-badge-p3 {
+                background: #2563eb;
+                color: white;
+                font-size: 7px;
+                padding: 1px 4px;
+                border-radius: 3px;
+                margin-left: 3px;
+                font-weight: bold;
+                letter-spacing: 0.3px;
+                flex-shrink: 0;
+            }
+            .empty-data-p3 {
+                text-align: center;
+                color: #78350f;
+                font-family: monospace;
+                font-size: 11px;
+                padding: 30px 15px;
+                font-style: italic;
             }
 
-            .open-page-title { color: #3b1104 !important; text-align: center; font-weight: bold; margin-bottom: 2px; position: relative; z-index: 2; font-size: 16px; }
-            .open-page-sub { color: #5c2406 !important; text-align: center; font-size: 11px; margin-bottom: 8px; position: relative; z-index: 2; font-weight: 600; }
-            .open-book-divider { border-bottom: 2px solid #d4af37; margin-bottom: 10px; position: relative; z-index: 2; }
-            .open-page-footer { margin-top: auto; text-align: right; font-size: 10px; color: #5c2406 !important; font-family: monospace; padding-top: 6px; font-weight: bold; position: relative; z-index: 2; }
+            /* Override z-index untuk watermark di page 3 */
+            .rpg-book-page-left-p3, .rpg-book-page-right-p3 {
+                position: relative;
+                z-index: 10;
+            }
+            .rpg-book-page-left-p3 *, .rpg-book-page-right-p3 * {
+                position: relative;
+                z-index: 15;
+            }
+            .rpg-book-page-left-p3::before, .rpg-book-page-right-p3::before {
+                z-index: 5 !important;
+            }
+
+            @media (max-width: 480px) {
+                .champion-1-p3 { width: 85%; padding: 10px 12px 8px 12px; }
+                .champion-1-avatar-p3 { width: 50px; height: 50px; font-size: 26px; }
+                .champion-1-name-p3 { font-size: 11px; }
+                .champion-1-score-p3 { font-size: 13px; }
+                .champion-other-avatar-p3 { width: 34px; height: 34px; font-size: 17px; }
+                .champion-other-name-p3 { font-size: 8.5px; }
+                .champion-other-score-p3 { font-size: 10.5px; }
+                .rpg-normal-row-p3 { font-size: 10px; padding: 6px 8px; }
+            }
             </style>
             """
-            st.markdown(rpg_badge_style, unsafe_allow_html=True)
 
-            if 'active_period' not in locals() and 'active_period' not in globals():
-                active_period = st.session_state.get("active_period", "Periode Aktif")
+            # ==========================================
+            # 🎨 BUILD PODIUM
+            # ==========================================
+            def _get_avatar_p3(name):
+                import hashlib as _hl
+                _list = ["🧙‍♂️", "🧝‍♂️", "🧝‍♀️", "⚔️", "🎯", "🛡️", "🦁", "🦅",
+                         "🐺", "👑", "💎", "🔮", "🔥", "🏹", "🪄", "🗡️",
+                         "⚗️", "🧛‍♂️", "🧟‍♂️", "🐉", "🦉", "🐻", "🦊", "🦌"]
+                _h = int(_hl.md5(str(name).upper().encode()).hexdigest(), 16)
+                return _list[_h % len(_list)]
 
-            # 3. OLAH DATA PERINGKAT (QTY PERIODE vs ACHIV REALTME BULANAN DARI SHEET PERIODE)
-            sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
-            sales_item_df = st.session_state.get("sales_item_df", pd.DataFrame())
-            periods_df = st.session_state.get("periods_df", pd.DataFrame())
-            
-            target_pid_clean = str(target_period_id).strip() if ('target_period_id' in locals() and target_period_id) else ""
+            podium_html_p3 = '<div class="podium-vertical-p3">'
 
-            # --- AMBIL PILTER PERIOD_ID UNTUK BULAN YANG SAMA DARI SHEET PERIODE ---
-            valid_month_pids = set()
-            if not periods_df.empty and target_pid_clean and "period_id" in periods_df.columns:
-                periods_copy = periods_df.copy()
-                periods_copy["clean_pid"] = periods_copy["period_id"].astype(str).str.strip()
-                
-                # Ambil tanggal dari start_date periode aktif
-                curr_row = periods_copy[periods_copy["clean_pid"] == target_pid_clean]
-                if not curr_row.empty and "start_date" in curr_row.columns:
-                    try:
-                        ref_date = pd.to_datetime(curr_row["start_date"].iloc[0])
-                        periods_copy["start_dt"] = pd.to_datetime(periods_copy["start_date"], errors="coerce")
-                        
-                        # Filter period_id mana saja yang bulan & tahunnya sama dengan periode aktif
-                        same_month_df = periods_copy[
-                            (periods_copy["start_dt"].dt.month == ref_date.month) & 
-                            (periods_copy["start_dt"].dt.year == ref_date.year)
-                        ]
-                        valid_month_pids = set(same_month_df["clean_pid"].unique())
-                    except Exception:
-                        valid_month_pids = {target_pid_clean}
-                else:
-                    valid_month_pids = {target_pid_clean}
+            # Juara 1 (jika ada)
+            if len(ranking_list_p3) > 0:
+                _n1, _q1, _a1 = ranking_list_p3[0]
+                _is_me1 = (str(_n1).upper() == current_user_clean_p3)
+                _me_class1 = "champion-me-ring-p3" if _is_me1 else ""
+                _you1 = "<div class='champion-you-p3'>KAMU</div>" if _is_me1 else ""
+                _av1 = _get_avatar_p3(_n1)
+
+                podium_html_p3 += (
+                    "<div class='champion-1-p3 " + _me_class1 + "'>"
+                    + _you1 +
+                    "<div class='champion-1-crown-p3'>👑</div>"
+                    "<div class='champion-1-avatar-p3'>" + _av1 + "</div>"
+                    "<div class='champion-1-name-p3'>" + _n1 + "</div>"
+                    "<div class='champion-1-score-p3'>" + str(_q1) + " Pcs</div>"
+                    "<div class='champion-1-achiv-p3'>✨ " + str(_a1) + " Achiv</div>"
+                    "</div>"
+                )
+
+            # Juara 2 & 3
+            podium_html_p3 += '<div class="rank-2-3-row-p3">'
+
+            # Juara 2
+            if len(ranking_list_p3) > 1:
+                _n2, _q2, _a2 = ranking_list_p3[1]
+                _is_me2 = (str(_n2).upper() == current_user_clean_p3)
+                _me_class2 = "champion-me-ring-p3" if _is_me2 else ""
+                _you2 = "<div class='champion-you-p3'>KAMU</div>" if _is_me2 else ""
+                _av2 = _get_avatar_p3(_n2)
+
+                podium_html_p3 += (
+                    "<div class='champion-other-p3 champion-2-p3 " + _me_class2 + "'>"
+                    + _you2 +
+                    "<div class='champion-other-crown-p3'>🥈</div>"
+                    "<div class='champion-other-avatar-p3'>" + _av2 + "</div>"
+                    "<div class='champion-other-name-p3'>" + _n2 + "</div>"
+                    "<div class='champion-other-score-p3'>" + str(_q2) + " Pcs</div>"
+                    "<div class='champion-other-achiv-p3'>✨ " + str(_a2) + "</div>"
+                    "</div>"
+                )
+
+            # Juara 3
+            if len(ranking_list_p3) > 2:
+                _n3, _q3, _a3 = ranking_list_p3[2]
+                _is_me3 = (str(_n3).upper() == current_user_clean_p3)
+                _me_class3 = "champion-me-ring-p3" if _is_me3 else ""
+                _you3 = "<div class='champion-you-p3'>KAMU</div>" if _is_me3 else ""
+                _av3 = _get_avatar_p3(_n3)
+
+                podium_html_p3 += (
+                    "<div class='champion-other-p3 champion-3-p3 " + _me_class3 + "'>"
+                    + _you3 +
+                    "<div class='champion-other-crown-p3'>🥉</div>"
+                    "<div class='champion-other-avatar-p3'>" + _av3 + "</div>"
+                    "<div class='champion-other-name-p3'>" + _n3 + "</div>"
+                    "<div class='champion-other-score-p3'>" + str(_q3) + " Pcs</div>"
+                    "<div class='champion-other-achiv-p3'>✨ " + str(_a3) + "</div>"
+                    "</div>"
+                )
+
+            podium_html_p3 += '</div></div>'
+
+            # ==========================================
+            # 📜 BUILD LIST 4-9
+            # ==========================================
+            total_personil_p3 = len(ranking_list_p3)
+            danger_cutoff_p3 = max(4, total_personil_p3 - 2)
+
+            list_html_p3 = '<div class="rpg-list-container-p3">'
+
+            if len(ranking_list_p3) > 3:
+                for i, (n, q, a) in enumerate(ranking_list_p3[3:9]):
+                    rank_num = i + 4
+                    is_me = (str(n).upper() == current_user_clean_p3)
+                    me_class = "rpg-user-me-p3" if is_me else ""
+                    you_badge = '<span class="you-badge-p3">KAMU</span>' if is_me else ""
+
+                    is_danger = rank_num >= danger_cutoff_p3
+                    row_style = "danger-zone-row-p3" if is_danger else ""
+                    danger_tag = '<span class="danger-zone-badge-p3">⚠️ ZONA MERAH</span>' if is_danger else ""
+                    rank_icon = "🔻" if is_danger else "🛡️"
+
+                    list_html_p3 += (
+                        "<div class='rpg-normal-row-p3 " + row_style + " " + me_class + "'>"
+                        "<div class='row-left-p3'>"
+                        "<div class='row-left-top-p3'>"
+                        "<span>" + rank_icon + "</span>"
+                        "<span style='font-weight:bold;'>#" + str(rank_num) + "</span>"
+                        "<span style='font-weight:bold; overflow:hidden; text-overflow:ellipsis;' title='" + n + "'>" + n + "</span>"
+                        + you_badge + danger_tag +
+                        "</div>"
+                        "</div>"
+                        "<div class='row-score-p3'>"
+                        + str(q) + " Pcs"
+                        "<span class='achiv-part'>✨ " + str(a) + " Achiv</span>"
+                        "</div>"
+                        "</div>"
+                    )
             else:
-                if target_pid_clean:
-                    valid_month_pids = {target_pid_clean}
+                list_html_p3 += "<div class='empty-data-p3'>📭 Belum ada data peringkat</div>"
 
-            master_personil = []
-            if "master_personil_df" in st.session_state and not st.session_state["master_personil_df"].empty:
-                master_personil = st.session_state["master_personil_df"]["person_name"].dropna().astype(str).str.strip().unique().tolist()
-            elif not sales_person_df.empty and "person_name" in sales_person_df.columns:
-                master_personil = sales_person_df["person_name"].dropna().astype(str).str.strip().unique().tolist()
+            list_html_p3 += '</div>'
 
-            # --- A. TOTAL QTY PCS (HANYA PERIODE AKTIF SPESIFIK) ---
-            qty_dict = {}
-            if not sales_person_df.empty and "person_name" in sales_person_df.columns:
-                sp_period = sales_person_df.copy()
-                if target_pid_clean and "period_id" in sp_period.columns:
-                    sp_period = sp_period[sp_period["period_id"].astype(str).str.strip() == target_pid_clean]
-                
-                if not sp_period.empty:
-                    sp_period["person_name"] = sp_period["person_name"].astype(str).str.strip()
-                    sp_period["actual_qty"] = pd.to_numeric(sp_period.get("actual_qty", 0), errors="coerce").fillna(0)
-                    grouped_qty = sp_period.groupby("person_name")["actual_qty"].sum().reset_index()
-                    for _, r in grouped_qty.iterrows():
-                        qty_dict[r["person_name"]] = int(r["actual_qty"])
-
-            # --- B. ACHIEVEMENT (AKUMULASI HANYA BULAN AKTIF DARI SHEET PERIODE) ---
-            achiv_dict = {}
-            if not sales_person_df.empty and "person_name" in sales_person_df.columns:
-                sp_month = sales_person_df.copy()
-                sp_month["clean_pid"] = sp_month["period_id"].astype(str).str.strip() if "period_id" in sp_month.columns else ""
-
-                # 1. CARI SEMUA PERIOD_ID YANG SE-BULAN DENGAN TARGET_PERIOD_ID
-                valid_month_pids = set()
-                
-                if not periods_df.empty and target_pid_clean:
-                    p_df = periods_df.copy()
-                    p_df["clean_pid"] = p_df["period_id"].astype(str).str.strip()
-                    
-                    # Cari baris periode yang sedang dipilih/aktif
-                    active_row = p_df[p_df["clean_pid"] == target_pid_clean]
-                    
-                    if not active_row.empty and "start_date" in active_row.columns:
-                        # Ambil Bulan & Tahun dari Periode Aktif
-                        active_date = pd.to_datetime(active_row["start_date"].iloc[0], errors="coerce")
-                        
-                        if pd.notna(active_date):
-                            p_df["start_dt"] = pd.to_datetime(p_df["start_date"], errors="coerce")
-                            # Filter: Ambil period_id yang Bulan & Tahunnya SAMA SAJA
-                            same_month_mask = (p_df["start_dt"].dt.month == active_date.month) & (p_df["start_dt"].dt.year == active_date.year)
-                            valid_month_pids = set(p_df[same_month_mask]["clean_pid"].unique())
-                
-                # Fallback jika sheet PERIODE tidak terbaca: Filter berdasarkan Karakter Pertama Kode (Misal: 'S' untuk September, 'P' untuk Agustus)
-                if not valid_month_pids and target_pid_clean:
-                    prefix = target_pid_clean[0] # Mengambil huruf depan 'S' atau 'P'
-                    valid_month_pids = {pid for pid in sp_month["clean_pid"].unique() if str(pid).startswith(prefix)}
-
-                # 2. FILTER TRANSAKSI HANYA UNTUK BULAN TERSEBUT
-                if valid_month_pids:
-                    sp_month = sp_month[sp_month["clean_pid"].isin(valid_month_pids)]
-
-                # 3. PROSES HITUNG ACHIEVEMENT SEPERTI BIASA
-                if not sp_month.empty:
-                    sp_month["person_name"] = sp_month["person_name"].astype(str).str.strip()
-                    sp_month["actual_qty"] = pd.to_numeric(sp_month.get("actual_qty", 0), errors="coerce").fillna(0)
-                    
-                    item_col_sp = next((c for c in ["item_id", "item_code", "kode_item"] if c in sp_month.columns), "item_name")
-                    sp_month["clean_item"] = sp_month[item_col_sp].astype(str).str.strip()
-
-                    target_map = {}
-                    if not sales_item_df.empty:
-                        item_df = sales_item_df.copy()
-                        t_col = next((c for c in item_df.columns if "target_kasir" in c.lower() or "get_kasir" in c.lower() or ("target" in c.lower() and "kasir" in c.lower())), None)
-                        item_col_si = next((c for c in ["item_id", "item_code", "kode_item"] if c in item_df.columns), "item_name")
-
-                        if t_col:
-                            for _, r in item_df.iterrows():
-                                pid = str(r.get("period_id", "")).strip()
-                                ival = str(r.get(item_col_si, "")).strip()
-                                tval = pd.to_numeric(r.get(t_col, 0), errors="coerce")
-                                if pd.notna(tval) and tval > 0:
-                                    target_map[(pid, ival)] = tval
-
-                    aggregated_sales = sp_month.groupby(["person_name", "clean_pid", "clean_item"])["actual_qty"].sum().reset_index()
-
-                    for _, row in aggregated_sales.iterrows():
-                        p_name = row["person_name"]
-                        pid = row["clean_pid"]
-                        ival = row["clean_item"]
-                        total_act = row["actual_qty"]
-                        
-                        target_val = target_map.get((pid, ival), 0)
-                        if target_val == 0:
-                            target_val = next((v for (p, i), v in target_map.items() if i == ival), 0)
-
-                        if target_val > 0 and total_act >= target_val:
-                            achiv_dict[p_name] = achiv_dict.get(p_name, 0) + 1
-
-            # --- C. GABUNG DAN URUTKAN RANKING ---
-            ranking_list = []
-            all_names = set(master_personil) | set(qty_dict.keys()) | set(achiv_dict.keys())
-            for name in all_names:
-                if not name: continue
-                ranking_list.append((name, qty_dict.get(name, 0), achiv_dict.get(name, 0)))
-
-            ranking_list = sorted(ranking_list, key=lambda x: x[1], reverse=True)
-
-            if not ranking_list:
-                ranking_list = [("Ksatriya Arthur", 98, 3), ("Lancelot", 92, 2), ("Galahad", 85, 1), ("Parsifal", 78, 0), ("Gawain", 70, 0), ("Tristan", 65, 0), ("Bors", 60, 0), ("Kay", 55, 0), ("Bedivere", 50, 0)]
-
-            # 4. FUNGSI PEMBUAT ELEMENT PODIUM
-            def make_podium_item(rank_idx, class_name, crown_icon, r_list):
-                if len(r_list) > rank_idx:
-                    n, q, a = r_list[rank_idx]
-                    is_me = (n.lower() == str(current_user_name).lower())
-                    me_cls = "rpg-user-me" if is_me else ""
-                    you_badge = '<span style="background:#2563eb; color:white; font-size:8px; padding:1px 4px; border-radius:4px; margin-top:2px;">KAMU</span>' if is_me else ""
-                    
-                    html = f'<div class="podium-slot">'
-                    html += f'<div style="font-size:22px; margin-bottom:2px; z-index:3;">{crown_icon}</div>'
-                    html += f'<div class="podium-card {class_name} {me_cls}">'
-                    html += f'<div class="podium-rank-tag">#{rank_idx+1}</div>'
-                    html += f'<div class="podium-name" title="{n}">{n}</div>'
-                    html += f'{you_badge}'
-                    html += f'<div class="podium-score">{q} Pcs</div>'
-                    html += f'<div class="podium-achiv">✨ {a} Achiv</div>'
-                    html += f'</div></div>'
-                    return html
-                return ""
-
-            # Generate HTML Podium Kiri (1-3)
-            podium_html = '<div class="podium-wrapper">'
-            podium_html += make_podium_item(1, "podium-2", "🥈", ranking_list)
-            podium_html += make_podium_item(0, "podium-1", "👑", ranking_list)
-            podium_html += make_podium_item(2, "podium-3", "🥉", ranking_list)
-            podium_html += '</div>'
-
-            # 5. GENERATE LIST KANAN (4-9) + EXACT 3 TERBAWAH ZONA MERAH
-            rest_html = '<div class="rpg-list-container">'
-            total_personil = len(ranking_list)
-            danger_cutoff_rank = max(4, total_personil - 2)
-
-            for i, (n, q, a) in enumerate(ranking_list[3:9]):
-                rank = i + 4
-                is_me = (n.lower() == str(current_user_name).lower())
-                me_class = "rpg-user-me" if is_me else ""
-                you_badge = '<span style="background: #2563eb; color: white; font-size: 8px; padding: 1px 4px; border-radius: 4px; margin-left: 4px;">KAMU</span>' if is_me else ""
-                
-                is_danger = rank >= danger_cutoff_rank
-                row_style = "danger-zone-row" if is_danger else ""
-                danger_tag = '<span class="danger-zone-badge">⚠️ ZONA MERAH</span>' if is_danger else ""
-                rank_icon = "🔻" if is_danger else "🛡️"
-                score_label = f"{q} Pcs <span style='font-size:10px; color:#065f46; font-weight:bold;'>(✨ {a} Achiv)</span>"
-
-                rest_html += f'<div class="rpg-normal-row {row_style} {me_class}">'
-                rest_html += f'<div style="display: flex; align-items: center; gap: 4px; overflow: hidden; white-space: nowrap;">'
-                rest_html += f'<span>{rank_icon}</span>'
-                rest_html += f'<span style="font-weight:bold;">#{rank}</span>'
-                rest_html += f'<span style="overflow: hidden; text-overflow: ellipsis;" title="{n}">{n}</span>'
-                rest_html += f'{you_badge}{danger_tag}'
-                rest_html += f'</div>'
-                rest_html += f'<div style="flex-shrink: 0; margin-left: 6px;">{score_label}</div>'
-                rest_html += f'</div>'
-            
-            rest_html += '</div>'
-
-            # 6. RENDER KEDUA HALAMAN BUKU
+            # ==========================================
+            # 📄 HTML LENGKAP PAGE 3
+            # ==========================================
             html_open_tugas = (
-                f'<div class="rpg-open-book-container">'
-                f'<div class="rpg-book-page">'
-                f'<h3 class="open-page-title">⚔️ PSM TOP (1-3)</h3>'
-                f'<p class="open-page-sub">Periode: {active_period}</p>'
-                f'<div class="open-book-divider"></div>'
-                f'{podium_html}'
-                f'<div class="open-page-footer">Halaman Kiri • PSM 1-3</div>'
-                f'</div>'
-                f'<div class="rpg-book-page">'
-                f'<h3 class="open-page-title">⚔️ PSM (4-9)</h3>'
-                f'<p class="open-page-sub">Kelanjutan Peringkat Periode</p>'
-                f'<div class="open-book-divider"></div>'
-                f'{rest_html}'
-                f'<div class="open-page-footer">Halaman Kanan • PSM 4-9</div>'
-                f'</div>'
-                f'</div>'
+                css_p3 +
+                "<div class='rpg-open-book-container'>"
+                "<div class='rpg-book-page rpg-book-page-left rpg-book-page-left-p3'>"
+                "<h3 class='open-page-title'>⚔️ PSM TOP (1-3)</h3>"
+                "<p class='open-page-sub'>" + target_period_label_p3 + "</p>"
+                "<div class='open-book-divider'></div>"
+                + podium_html_p3 +
+                "<div class='open-page-footer'>Halaman Kiri • PSM 1-3</div>"
+                "</div>"
+                "<div class='rpg-book-page rpg-book-page-right rpg-book-page-right-p3'>"
+                "<h3 class='open-page-title'>⚔️ PSM (4-9)</h3>"
+                "<p class='open-page-sub'>Kelanjutan Peringkat</p>"
+                "<div class='open-book-divider'></div>"
+                + list_html_p3 +
+                "<div class='open-page-footer'>Halaman Kanan • PSM 4-9</div>"
+                "</div>"
+                "</div>"
             )
 
             
