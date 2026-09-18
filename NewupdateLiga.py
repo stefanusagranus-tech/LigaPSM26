@@ -6052,412 +6052,647 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
         #batas========================================================================================================#
         elif page_num == 2:
-            # 1. AMBIL DATA DARI SESSION STATE
-            periods_df = st.session_state.get("periods_df", pd.DataFrame())
-            periods_pps_df = st.session_state.get("periods_pps_df", pd.DataFrame())
-            sales_pps_df = st.session_state.get("sales_pps_df", pd.DataFrame())
-            sales_item_df = st.session_state.get("sales_item_df", pd.DataFrame())
-            sales_person_df = st.session_state.get("sales_person_df", pd.DataFrame())
-            
-            current_user = str(st.session_state.get("username", st.session_state.get("user", "admin"))).strip().lower()
-            user_role = str(st.session_state.get("role", "user")).strip().lower()
-            is_admin = (user_role == "admin" or current_user == "admin")
 
-            # 2. TENTUKAN BULAN & MODE REKAP H+1 (Tanggal 1 Cek Hasil Bulan Lalu)
-            t_today = pd.Timestamp.now().date()
-            
-            if t_today.day == 1:
-                eval_month = t_today.month - 1 if t_today.month > 1 else 12
-                eval_year = t_today.year if t_today.month > 1 else t_today.year - 1
-                is_recap_mode = True
-                recap_title_note = " (REKAP FINAL BULAN LALU)"
-            else:
-                eval_month = t_today.month
-                eval_year = t_today.year
-                is_recap_mode = False
-                recap_title_note = ""
+            # ==========================================
+            # 📥 AMBIL DATA
+            # ==========================================
+            periods_df_p2 = st.session_state.get("periods_df", pd.DataFrame()).copy()
+            periods_pps_df_p2 = st.session_state.get("periods_pps_df", pd.DataFrame()).copy()
+            sales_pps_df_p2 = st.session_state.get("sales_pps_df", pd.DataFrame()).copy()
+            sales_item_df_p2 = st.session_state.get("sales_item_df", pd.DataFrame()).copy()
+            sales_person_df_p2 = st.session_state.get("sales_person_df", pd.DataFrame()).copy()
 
-            # Random Icon Musuh (Bisa menggunakan seed berdasarkan bulan/tahun agar stabil sepanjang bulan tersebut)
-            import random
-            enemy_pool = ["👹", "💀", "🕷️", "🐉", "🦇", "🧟", "🧙‍♂️", "🧛‍♂️"]
-            # Gunakan gabungan tahun & bulan sebagai seed agar icon musuh tidak berubah-ubah setiap refresh di bulan yang sama
-            random.seed(eval_year * 100 + eval_month)
-            current_enemy_icon = random.choice(enemy_pool)
-            blue_guild_icon = "🐉" # Logo guild biru konsisten Naga
+            # Normalisasi kolom
+            for _df in [periods_df_p2, periods_pps_df_p2, sales_pps_df_p2, sales_item_df_p2, sales_person_df_p2]:
+                if not _df.empty:
+                    _df.columns = _df.columns.astype(str).str.strip().str.lower()
 
-            # 3. CARI PERIODE AKTIF UTAMA & DATES (HALAMAN KIRI)
-            active_pps_rows = []
-            active_period_pps_name = "Program PPS"
-            time_factor = 50.0
-            
-            if not periods_pps_df.empty:
-                p_df_pps = periods_pps_df.copy()
-                p_df_pps["start_date"] = pd.to_datetime(p_df_pps["start_date"], errors="coerce").dt.date
-                p_df_pps["end_date"] = pd.to_datetime(p_df_pps["end_date"], errors="coerce").dt.date
-                
-                current_pps = p_df_pps[
-                    (p_df_pps["start_date"] <= t_today) & 
-                    (p_df_pps["end_date"] >= t_today) &
-                    (p_df_pps["status"].astype(str).str.strip().str.lower() == "aktif")
-                ]
-                
-                if current_pps.empty:
-                    current_pps = p_df_pps[p_df_pps["status"].astype(str).str.strip().str.lower() == "aktif"]
-                    
-                if not current_pps.empty:
-                    active_pps_rows = [row for _, row in current_pps.iterrows()]
-                else:
-                    active_pps_rows = [periods_pps_df.iloc[0]]
-                    
-                if active_pps_rows:
-                    r_act = active_pps_rows[0]
-                    active_period_pps_name = str(r_act.get("period_name", "Program PPS"))
-                    try:
-                        s_date = r_act.get("start_date")
-                        e_date = r_act.get("end_date")
-                        total_days = (e_date - s_date).days + 1
-                        passed_days = (t_today - s_date).days + 1
-                        passed_days = max(1, min(passed_days, total_days))
-                        time_factor = (passed_days / total_days) * 100.0
-                    except Exception:
-                        time_factor = 50.0
+            current_user_p2 = str(
+                st.session_state.get("username", st.session_state.get("user", "admin"))
+            ).strip().lower()
+            user_role_p2 = str(st.session_state.get("role", "user")).strip().lower()
+            is_admin_p2 = (user_role_p2 == "admin" or current_user_p2 == "admin")
 
-            # 4. OLAH DATA HALAMAN KIRI (TARGET PPS HARIAN)
-            items_kiri_list = []
-            icon_list = ["🛡️", "⚡", "🗡️", "🏹", "📜"]
-            
-            for idx, r in enumerate(active_pps_rows):
-                p_name = str(r.get("period_name", "Program PPS"))
-                p_lower = p_name.lower()
-                icon = icon_list[idx % len(icon_list)]
-                
-                col_syarat_sgr = "syarat_sueger" if "syarat_sueger" in r else "syarat_suegeer"
-                col_redeem_sgr = "redeem_sueger" if "redeem_sueger" in r else "redeem_suegeer"
+            t_today_p2 = pd.Timestamp.now().date()
+            _bulan_ini_p2 = t_today_p2.month
+            _tahun_ini_p2 = t_today_p2.year
 
-                syarat_val = float(pd.to_numeric(r.get("syarat_total", r.get("syarat_pwp", r.get(col_syarat_sgr, 0))), errors="coerce"))
-                redeem_val = float(pd.to_numeric(r.get("redeem_total", r.get("redeem_pwp", r.get(col_redeem_sgr, 0))), errors="coerce"))
-                
-                f_sales = sales_pps_df
-                if not is_admin and not sales_pps_df.empty and "kasir_name" in sales_pps_df.columns:
-                    f_sales = sales_pps_df[sales_pps_df["kasir_name"].astype(str).str.strip().str.lower() == current_user]
+            # Icon musuh random
+            import random as _rnd_p2
+            _enemy_pool_p2 = ["👹", "💀", "🕷️", "🐉", "🦇", "🧟", "🧙‍♂️", "🧛‍♂️"]
+            _rnd_p2.seed(_tahun_ini_p2 * 100 + _bulan_ini_p2)
+            current_enemy_icon_p2 = _rnd_p2.choice(_enemy_pool_p2)
+            blue_guild_icon_p2 = "🐉"
 
-                if "suegeer" in p_lower or "sueger" in p_lower:
-                    if not is_admin and not f_sales.empty:
-                        s_col = "syarat_sueger" if "syarat_sueger" in f_sales.columns else "syarat_suegeer"
-                        r_col = "redeem_sueger" if "redeem_sueger" in f_sales.columns else "redeem_suegeer"
-                        
-                        syarat_val = float(pd.to_numeric(f_sales[s_col], errors="coerce").sum()) if s_col in f_sales.columns else 0.0
-                        redeem_val = float(pd.to_numeric(f_sales[r_col], errors="coerce").sum()) if r_col in f_sales.columns else 0.0
-                        actual_val = float(pd.to_numeric(f_sales["qty_suegeer"], errors="coerce").sum()) if "qty_suegeer" in f_sales.columns else 0.0
+            # Kolom tanggal di sales_pps
+            _date_col_p2 = None
+            for _c in ["updated_at", "start_date", "tanggal", "date"]:
+                if not sales_pps_df_p2.empty and _c in sales_pps_df_p2.columns:
+                    _date_col_p2 = _c
+                    break
+
+            # ==========================================
+            # 🛡️ KIRI: TARGET PPS (Bulan Ini — Semua Periode)
+            # ==========================================
+            items_kiri_list_p2 = []
+
+            if not periods_pps_df_p2.empty and all(
+                c in periods_pps_df_p2.columns for c in ["period_id", "start_date", "end_date"]
+            ):
+                periods_pps_df_p2["start_dt"] = pd.to_datetime(periods_pps_df_p2["start_date"], errors="coerce")
+                periods_pps_df_p2["end_dt"] = pd.to_datetime(periods_pps_df_p2["end_date"], errors="coerce")
+                periods_pps_df_p2 = periods_pps_df_p2.dropna(subset=["start_dt", "end_dt"])
+
+                # Filter bulan ini saja
+                _pps_bulan_ini = periods_pps_df_p2[
+                    (periods_pps_df_p2["start_dt"].dt.month == _bulan_ini_p2) &
+                    (periods_pps_df_p2["start_dt"].dt.year == _tahun_ini_p2)
+                ].sort_values("start_dt", ascending=True).reset_index(drop=True)
+
+                for _, r_p2 in _pps_bulan_ini.iterrows():
+                    p_id_p2 = str(r_p2["period_id"]).strip()
+                    p_name_p2 = str(r_p2.get("period_name", p_id_p2)).strip()
+                    p_start_p2 = r_p2["start_dt"].date()
+                    p_end_p2 = r_p2["end_dt"].date()
+                    p_target_total_p2 = pd.to_numeric(r_p2.get("target_total", 0), errors="coerce")
+                    if pd.isna(p_target_total_p2):
+                        p_target_total_p2 = 0
+
+                    # Status: selesai / aktif / belum mulai
+                    if t_today_p2 > p_end_p2:
+                        is_selesai_p2 = True
+                        is_aktif_p2 = False
+                        sisa_hari_p2 = 0
+                        hari_aktif_p2 = (p_end_p2 - p_start_p2).days + 1
+                    elif t_today_p2 < p_start_p2:
+                        is_selesai_p2 = False
+                        is_aktif_p2 = False
+                        hari_aktif_p2 = 0
+                        sisa_hari_p2 = (p_end_p2 - p_start_p2).days + 1
                     else:
-                        actual_val = float(pd.to_numeric(r.get("actual_qty", 0), errors="coerce"))
+                        is_selesai_p2 = False
+                        is_aktif_p2 = True
+                        hari_aktif_p2 = (t_today_p2 - p_start_p2).days + 1
+                        sisa_hari_p2 = (p_end_p2 - t_today_p2).days  # termasuk hari ini? tidak. sisa setelah hari ini
 
-                    achiv = (redeem_val / syarat_val * 100) if syarat_val > 0 else 0
-                    info_syarat = f"Syarat: {int(syarat_val)} | Redeem: {int(redeem_val)} | Aktual: <b>{int(actual_val)}</b>"
-                    badge_txt = "AKTIF"
-                    is_above_tf = True
-                else:
-                    target_total = float(pd.to_numeric(r.get("target_total", 0), errors="coerce"))
-                    target_val = target_total if is_admin else (target_total / 9.0 if target_total > 0 else 0)
-                    
-                    q_col = "actual_qty"
-                    if "pwp" in p_lower and "qty_pwp" in f_sales.columns: q_col = "qty_pwp"
-                    elif ("serba" in p_lower or "sg" in p_lower) and "qty_sg" in f_sales.columns: q_col = "qty_sg"
-                    elif "cemilan" in p_lower and "cemilan_ceban" in f_sales.columns: q_col = "cemilan_ceban"
-                    
-                    actual_val = float(pd.to_numeric(f_sales[q_col], errors="coerce").sum()) if not f_sales.empty and q_col in f_sales.columns else 0.0
-                    achiv = (actual_val / target_val * 100) if target_val > 0 else 0
-                    gap = max(0, target_val - actual_val)
-                    info_syarat = f"Target: {int(target_val)} Pcs | Aktual: <b>{int(actual_val)}</b>"
-                    is_above_tf = achiv >= time_factor
-                    badge_txt = "ON TRACK" if is_above_tf else f"GAP: {int(gap)}"
+                    total_hari_p2 = (p_end_p2 - p_start_p2).days + 1
+                    if total_hari_p2 <= 0:
+                        total_hari_p2 = 1
 
-                badge_cls = "badge-success" if is_above_tf else "badge-warning"
-                achiv_color = "#065f46" if is_above_tf else "#b91c1c"
+                    # Tentukan jenis program
+                    p_lower_p2 = p_id_p2.lower() + " " + p_name_p2.lower()
 
-                items_kiri_list.append({
-                    "icon": icon, "p_name": p_name, "badge_cls": badge_cls,
-                    "badge_txt": badge_txt, "info_syarat": info_syarat,
-                    "achiv_color": achiv_color, "achiv": achiv
-                })
+                    # Hitung aktual berdasarkan jenis
+                    aktual_val_p2 = 0
+                    syarat_val_p2 = 0
+                    redeem_val_p2 = 0
+                    target_basis_p2 = p_target_total_p2  # default target = target_total
 
-            # 5. OLAH DATA HALAMAN KANAN (GUILD WAR SYSTEM)
-            sept_period_ids = []
-            if not periods_df.empty:
-                p_df = periods_df.copy()
-                if "start_date" in p_df.columns:
-                    p_df["start_date"] = pd.to_datetime(p_df["start_date"], errors="coerce")
-                    sept_periods = p_df[
-                        (p_df["start_date"].dt.month == eval_month) | 
-                        (p_df["period_id"].astype(str).str.strip().str.upper().str.startswith("S"))
-                    ]
-                    if not sept_periods.empty and "period_id" in sept_periods.columns:
-                        sept_period_ids = sept_periods["period_id"].astype(str).str.strip().tolist()
+                    if not sales_pps_df_p2.empty and _date_col_p2:
+                        _temp_p2 = sales_pps_df_p2.copy()
+                        _temp_p2["_dt"] = pd.to_datetime(_temp_p2[_date_col_p2], errors="coerce")
+                        _temp_p2 = _temp_p2[
+                            (_temp_p2["_dt"].dt.date >= p_start_p2) &
+                            (_temp_p2["_dt"].dt.date <= p_end_p2)
+                        ]
 
-            sept_pps_ids = []
-            if not periods_pps_df.empty and "start_date" in periods_pps_df.columns:
-                pps_temp = periods_pps_df.copy()
-                pps_temp["start_date"] = pd.to_datetime(pps_temp["start_date"], errors="coerce")
-                sept_pps = pps_temp[pps_temp["start_date"].dt.month == eval_month]
-                if not sept_pps.empty and "period_id" in sept_pps.columns:
-                    sept_pps_ids = sept_pps["period_id"].astype(str).str.strip().tolist()
+                        if not _temp_p2.empty:
+                            if "sgr" in p_lower_p2 or "sueger" in p_lower_p2:
+                                # Sueger
+                                for _cc in ["syarat_sueger", "syarat_suegeer"]:
+                                    if _cc in _temp_p2.columns:
+                                        syarat_val_p2 = int(pd.to_numeric(_temp_p2[_cc], errors="coerce").fillna(0).sum())
+                                        break
+                                for _cc in ["redeem_sueger", "redeem_suegeer"]:
+                                    if _cc in _temp_p2.columns:
+                                        redeem_val_p2 = int(pd.to_numeric(_temp_p2[_cc], errors="coerce").fillna(0).sum())
+                                        break
+                                aktual_val_p2 = redeem_val_p2
+                                target_basis_p2 = syarat_val_p2  # basis target = syarat
+                            elif "pwp" in p_lower_p2:
+                                _cc = "qty_pwp"
+                                if _cc in _temp_p2.columns:
+                                    aktual_val_p2 = int(pd.to_numeric(_temp_p2[_cc], errors="coerce").fillna(0).sum())
+                            elif "sgs" in p_lower_p2 or "serba" in p_lower_p2:
+                                _cc = "qty_sg"
+                                if _cc in _temp_p2.columns:
+                                    aktual_val_p2 = int(pd.to_numeric(_temp_p2[_cc], errors="coerce").fillna(0).sum())
 
-            psm_target, psm_actual, psm_mvp = 0.0, 0.0, "-"
-            if not sales_item_df.empty and "target_qty" in sales_item_df.columns:
-                f_item_sept = sales_item_df[sales_item_df["period_id"].astype(str).str.strip().isin(sept_period_ids)] if sept_period_ids and "period_id" in sales_item_df.columns else sales_item_df
-                psm_target = float(pd.to_numeric(f_item_sept["target_qty"], errors="coerce").sum())
+                    # ==========================================
+                    # 🎯 TARGET HARIAN DINAMIS
+                    # ==========================================
+                    # target harian = (target_basis - aktual) / sisa hari kerja
+                    if is_selesai_p2:
+                        target_harian_p2 = 0
+                        target_sampai_hari_ini_p2 = target_basis_p2
+                        sisa_label_p2 = "Periode selesai"
+                    elif not is_aktif_p2:
+                        # Belum mulai
+                        target_harian_p2 = target_basis_p2 / total_hari_p2 if total_hari_p2 > 0 else 0
+                        target_sampai_hari_ini_p2 = 0
+                        sisa_label_p2 = f"Belum mulai ({total_hari_p2} hari)"
+                    else:
+                        # Aktif
+                        # sisa_hari termasuk hari ini (jangan minus)
+                        sisa_hari_kerja_p2 = max(1, (p_end_p2 - t_today_p2).days + 1)
+                        if aktual_val_p2 >= target_basis_p2:
+                            target_harian_p2 = 0
+                        else:
+                            target_harian_p2 = (target_basis_p2 - aktual_val_p2) / sisa_hari_kerja_p2
+                        # target sampai hari ini = proporsional
+                        target_sampai_hari_ini_p2 = target_basis_p2 * (hari_aktif_p2 / total_hari_p2)
+                        sisa_label_p2 = f"{sisa_hari_kerja_p2} hari sisa"
 
-            if not sales_person_df.empty and "actual_qty" in sales_person_df.columns:
-                f_person_sept = sales_person_df[sales_person_df["period_id"].astype(str).str.strip().isin(sept_period_ids)] if sept_period_ids and "period_id" in sales_person_df.columns else sales_person_df
-                psm_actual = float(pd.to_numeric(f_person_sept["actual_qty"], errors="coerce").sum())
-                p_col = "person_name" if "person_name" in f_person_sept.columns else ("staff_name" if "staff_name" in f_person_sept.columns else "")
-                if p_col:
-                    grp_psm = f_person_sept.groupby(p_col)["actual_qty"].sum()
-                    if not grp_psm.empty and grp_psm.max() > 0:
-                        psm_mvp = str(grp_psm.idxmax()).title()
+                    # Achievement
+                    if target_basis_p2 > 0:
+                        achiv_p2 = (aktual_val_p2 / target_basis_p2) * 100
+                    else:
+                        achiv_p2 = 0
 
-            programs = [
-                {"name": "PSM Assault", "key": "psm", "weight": 20, "target": psm_target, "actual": psm_actual, "mvp": psm_mvp},
-                {"name": "PWP Siege", "key": "pwp", "weight": 25, "col_act": "qty_pwp"},
-                {"name": "Serba Gratis (SG)", "key": "serba", "weight": 30, "col_act": "qty_sg"},
-                {"name": "Suegeer Strike", "key": "suegeer", "weight": 0, "col_act": "qty_suegeer"}
-            ]
+                    # Badge & warna
+                    if is_selesai_p2:
+                        badge_txt_p2 = "✅ SELESAI"
+                        badge_cls_p2 = "badge-success"
+                        achiv_color_p2 = "#059669"
+                    elif aktual_val_p2 >= target_basis_p2 and target_basis_p2 > 0:
+                        badge_txt_p2 = "✅ ACHIEVED"
+                        badge_cls_p2 = "badge-success"
+                        achiv_color_p2 = "#059669"
+                    elif not is_aktif_p2:
+                        badge_txt_p2 = "⏳ BELUM MULAI"
+                        badge_cls_p2 = "badge-warning"
+                        achiv_color_p2 = "#ca8a04"
+                    else:
+                        gap_p2 = max(0, int(target_sampai_hari_ini_p2 - aktual_val_p2))
+                        if achiv_p2 >= 70:
+                            badge_txt_p2 = "ON TRACK"
+                            badge_cls_p2 = "badge-success"
+                            achiv_color_p2 = "#059669"
+                        elif achiv_p2 >= 40:
+                            badge_txt_p2 = f"WARNING"
+                            badge_cls_p2 = "badge-warning"
+                            achiv_color_p2 = "#ca8a04"
+                        else:
+                            badge_txt_p2 = f"GAP: {gap_p2}"
+                            badge_cls_p2 = "badge-warning"
+                            achiv_color_p2 = "#dc2626"
 
-            items_kanan_list = []
-            total_blue_points = 0.0
+                    # Info line
+                    if "sgr" in p_lower_p2 or "sueger" in p_lower_p2:
+                        info_line_p2 = f"Syarat: {syarat_val_p2} | Redeem: {redeem_val_p2}"
+                    else:
+                        info_line_p2 = f"Target: {int(target_basis_p2)} | Aktual: {aktual_val_p2}"
 
-            for p in programs:
-                p_key = p["key"]
-                weight = p["weight"]
-                
-                if p_key == "psm":
-                    p_target = p["target"]
-                    p_actual = p["actual"]
-                    mvp_name = p["mvp"]
-                elif p_key == "suegeer":
-                    s_col = "syarat_sueger" if "syarat_sueger" in sales_pps_df.columns else "syarat_suegeer"
-                    r_col = "redeem_sueger" if "redeem_sueger" in sales_pps_df.columns else "redeem_suegeer"
-                    
-                    p_syarat = float(pd.to_numeric(sales_pps_df[s_col], errors="coerce").sum()) if not sales_pps_df.empty and s_col in sales_pps_df.columns else 0.0
-                    p_redeem = float(pd.to_numeric(sales_pps_df[r_col], errors="coerce").sum()) if not sales_pps_df.empty and r_col in sales_pps_df.columns else 0.0
-                    
-                    p_target = p_syarat
-                    p_actual = p_redeem
-                    mvp_name = "-"
-                    if not sales_pps_df.empty and "kasir_name" in sales_pps_df.columns and s_col in sales_pps_df.columns and r_col in sales_pps_df.columns:
-                        grp = sales_pps_df.groupby("kasir_name")[[s_col, r_col]].sum()
-                        grp = grp[grp[s_col] > 0]
-                        if not grp.empty:
-                            grp["ach"] = (grp[r_col] / grp[s_col]) * 100
-                            if not grp.empty and grp["ach"].max() > 0:
-                                mvp_name = str(grp["ach"].idxmax()).title()
-                else:
-                    t_rows = pd.DataFrame()
-                    if not periods_pps_df.empty and "period_name" in periods_pps_df.columns:
-                        mask = periods_pps_df["period_name"].astype(str).str.lower().str.contains(p_key)
-                        if p_key == "serba":
-                            mask = mask | periods_pps_df["period_name"].astype(str).str.lower().str.contains("sg")
-                        t_rows = periods_pps_df[mask]
-                        
-                        if sept_pps_ids and "period_id" in t_rows.columns:
-                            t_rows = t_rows[t_rows["period_id"].astype(str).str.strip().isin(sept_pps_ids)]
-                    
-                    p_target = float(pd.to_numeric(t_rows["target_total"], errors="coerce").sum()) if not t_rows.empty and "target_total" in t_rows.columns else 0.0
-                    col_name = p["col_act"]
-                    p_actual = float(pd.to_numeric(sales_pps_df[col_name], errors="coerce").sum()) if not sales_pps_df.empty and col_name in sales_pps_df.columns else 0.0
-                    
-                    mvp_name = "-"
-                    if not sales_pps_df.empty and "kasir_name" in sales_pps_df.columns and col_name in sales_pps_df.columns:
-                        grp = sales_pps_df.groupby("kasir_name")[col_name].sum()
-                        if not grp.empty and grp.max() > 0:
-                            mvp_name = str(grp.idxmax()).title()
+                    if is_aktif_p2:
+                        info_line_p2 += f" | 🎯 {int(target_harian_p2)}/hari · {sisa_label_p2}"
 
-                p_achiv = (p_actual / p_target * 100) if p_target > 0 else 0
-                achiv_ratio = (p_actual / p_target) if p_target > 0 else 0
-                
-                if weight > 0:
-                    total_blue_points += (achiv_ratio * weight)
+                    # Icon
+                    icon_p2 = "🛡️"
+                    if "pwp" in p_lower_p2:
+                        icon_p2 = "⚡"
+                    elif "sgr" in p_lower_p2 or "sueger" in p_lower_p2:
+                        icon_p2 = "💧"
+                    elif "sgs" in p_lower_p2 or "serba" in p_lower_p2:
+                        icon_p2 = "🎁"
 
-                blue_flex = min(100.0, p_achiv)
-                red_flex = max(0.0, 100.0 - blue_flex)
-                
-                items_kanan_list.append({
-                    "name": p["name"], "mvp": mvp_name, "p_achiv": p_achiv,
-                    "p_actual": int(p_actual), "p_target": int(p_target),
-                    "blue_flex": blue_flex, "red_flex": red_flex,
-                    "is_suegeer": (p_key == "suegeer")
-                })
+                    items_kiri_list_p2.append({
+                        "icon": icon_p2,
+                        "p_name": p_name_p2,
+                        "badge_cls": badge_cls_p2,
+                        "badge_txt": badge_txt_p2,
+                        "info_line": info_line_p2,
+                        "achiv_color": achiv_color_p2,
+                        "achiv": achiv_p2,
+                        "is_selesai": is_selesai_p2,
+                    })
 
-            # Poin Maksimal 75 (Aturan: Jika Biru Naik, Merah Berkurang)
-            total_blue_points = min(75.0, total_blue_points)
-            total_blue_pts_int = int(round(total_blue_points))
-            total_red_pts_int = max(0, 75 - total_blue_pts_int)
-            
-            header_blue_pct = (total_blue_points / 75.0) * 100
-            header_red_pct = 100 - header_blue_pct
-            
-            # Penentuan Status Victory / Defeat
-            if total_blue_points > total_red_pts_int:
-                match_status = "VICTORY 🏆"
-                status_color = "#16a34a"
-            elif total_red_pts_int > total_blue_points:
-                match_status = "DEFEAT 💀"
-                status_color = "#dc2626"
+            # ==========================================
+            # ⚔️ KANAN: GUILD WAR ARENA
+            # ==========================================
+            # Periode PSM bulan ini
+            if not periods_df_p2.empty and "start_date" in periods_df_p2.columns:
+                periods_df_p2["start_dt"] = pd.to_datetime(periods_df_p2["start_date"], errors="coerce")
+                periods_df_p2["end_dt"] = pd.to_datetime(periods_df_p2["end_date"], errors="coerce")
+                _psm_bulan_ini = periods_df_p2[
+                    (periods_df_p2["start_dt"].dt.month == _bulan_ini_p2) &
+                    (periods_df_p2["start_dt"].dt.year == _tahun_ini_p2)
+                ]
             else:
-                match_status = "DRAW ⚔️"
-                status_color = "#eab308"
+                _psm_bulan_ini = pd.DataFrame()
 
-            # 6. RENDER HTML DUA HALAMAN
-            html_kiri_str = "".join([
-                f'<div class="rpg-item-card">'
-                f'<div><div class="item-title">{x["icon"]} {x["p_name"]} <span class="{x["badge_cls"]}">{x["badge_txt"]}</span></div>'
-                f'<div class="item-stats">{x["info_syarat"]}</div></div>'
-                f'<div style="text-align: right;"><div style="font-size: 14px; font-weight: bold; color: {x["achiv_color"]};">{x["achiv"]:.1f}%</div></div>'
-                f'</div>'
-                for x in items_kiri_list
-            ]) if items_kiri_list else '<div style="color:#78350f; font-size:12px; text-align:center; margin-top:20px;"><i>Belum ada data Target PPS aktif.</i></div>'
+            # PSM: target & aktual (hanya periode yang sudah selesai)
+            psm_target_p2 = 0
+            psm_actual_p2 = 0
+            psm_mvp_p2 = "-"
 
-            html_kanan_items = ""
-            for item in items_kanan_list:
-                label_stat = f"Redeem: {item['p_actual']} / Syarat: {item['p_target']}" if item["is_suegeer"] else f"Hit: {item['p_actual']} / Target: {item['p_target']}"
-                html_kanan_items += (
-                    f'<div class="gw-card">'
-                    f'<div class="gw-card-header">'
-                    f'<span class="gw-card-title">⚔️ {item["name"]}</span>'
-                    f'<span class="gw-mvp">👑 MVP: {item["mvp"]}</span>'
-                    f'</div>'
-                    f'<div class="gw-bar-container">'
-                    f'<div class="gw-bar-blue" style="width: {item["blue_flex"]}%;"></div>'
-                    f'<div class="gw-bar-red" style="width: {item["red_flex"]}%;"></div>'
-                    f'<div class="gw-bar-text">{item["p_achiv"]:.1f}%</div>'
-                    f'</div>'
-                    f'<div class="gw-card-footer">{label_stat}</div>'
-                    f'</div>'
+            if not _psm_bulan_ini.empty:
+                _psm_selesai_p2 = _psm_bulan_ini[_psm_bulan_ini["end_dt"].dt.date < t_today_p2]
+                _psm_ids_selesai_p2 = _psm_selesai_p2["period_id"].astype(str).str.strip().tolist()
+
+                if not sales_item_df_p2.empty and "target_qty" in sales_item_df_p2.columns and _psm_ids_selesai_p2:
+                    _fi = sales_item_df_p2[
+                        sales_item_df_p2["period_id"].astype(str).str.strip().isin(_psm_ids_selesai_p2)
+                    ]
+                    psm_target_p2 = int(pd.to_numeric(_fi["target_qty"], errors="coerce").fillna(0).sum())
+
+                if not sales_person_df_p2.empty and "actual_qty" in sales_person_df_p2.columns and _psm_ids_selesai_p2:
+                    _fp = sales_person_df_p2[
+                        sales_person_df_p2["period_id"].astype(str).str.strip().isin(_psm_ids_selesai_p2)
+                    ]
+                    psm_actual_p2 = int(pd.to_numeric(_fp["actual_qty"], errors="coerce").fillna(0).sum())
+                    if not _fp.empty and "person_name" in _fp.columns:
+                        _grp = _fp.groupby("person_name")["actual_qty"].sum()
+                        if not _grp.empty and _grp.max() > 0:
+                            psm_mvp_p2 = str(_grp.idxmax()).title()
+
+            # PWP: target & aktual (hanya periode selesai)
+            pwp_target_p2 = 0
+            pwp_actual_p2 = 0
+            pwp_mvp_p2 = "-"
+
+            if not periods_pps_df_p2.empty:
+                _f_pwp = periods_pps_df_p2[
+                    periods_pps_df_p2["period_id"].astype(str).str.upper().str.startswith("PWP", na=False) &
+                    (periods_pps_df_p2["start_dt"].dt.month == _bulan_ini_p2) &
+                    (periods_pps_df_p2["start_dt"].dt.year == _tahun_ini_p2)
+                ]
+                _f_pwp_selesai = _f_pwp[_f_pwp["end_dt"].dt.date < t_today_p2]
+                pwp_target_p2 = int(pd.to_numeric(_f_pwp_selesai["target_total"], errors="coerce").fillna(0).sum())
+
+                if not sales_pps_df_p2.empty and _date_col_p2 and "qty_pwp" in sales_pps_df_p2.columns and not _f_pwp_selesai.empty:
+                    _temp = sales_pps_df_p2.copy()
+                    _temp["_dt"] = pd.to_datetime(_temp[_date_col_p2], errors="coerce")
+                    _mask = pd.Series([False] * len(_temp), index=_temp.index)
+                    for _, _row in _f_pwp_selesai.iterrows():
+                        _s = _row["start_dt"].date()
+                        _e = _row["end_dt"].date()
+                        _mask = _mask | ((_temp["_dt"].dt.date >= _s) & (_temp["_dt"].dt.date <= _e))
+                    _temp = _temp[_mask]
+                    pwp_actual_p2 = int(pd.to_numeric(_temp["qty_pwp"], errors="coerce").fillna(0).sum())
+                    if "kasir_name" in _temp.columns and not _temp.empty:
+                        _grp = _temp.groupby("kasir_name")["qty_pwp"].sum()
+                        if not _grp.empty and _grp.max() > 0:
+                            pwp_mvp_p2 = str(_grp.idxmax()).title()
+
+            # SG: target & aktual (hanya periode selesai)
+            sg_target_p2 = 0
+            sg_actual_p2 = 0
+            sg_mvp_p2 = "-"
+
+            if not periods_pps_df_p2.empty:
+                _f_sg = periods_pps_df_p2[
+                    periods_pps_df_p2["period_id"].astype(str).str.upper().str.startswith("SGS", na=False) &
+                    (periods_pps_df_p2["start_dt"].dt.month == _bulan_ini_p2) &
+                    (periods_pps_df_p2["start_dt"].dt.year == _tahun_ini_p2)
+                ]
+                _f_sg_selesai = _f_sg[_f_sg["end_dt"].dt.date < t_today_p2]
+                sg_target_p2 = int(pd.to_numeric(_f_sg_selesai["target_total"], errors="coerce").fillna(0).sum())
+
+                if not sales_pps_df_p2.empty and _date_col_p2 and "qty_sg" in sales_pps_df_p2.columns and not _f_sg_selesai.empty:
+                    _temp = sales_pps_df_p2.copy()
+                    _temp["_dt"] = pd.to_datetime(_temp[_date_col_p2], errors="coerce")
+                    _mask = pd.Series([False] * len(_temp), index=_temp.index)
+                    for _, _row in _f_sg_selesai.iterrows():
+                        _s = _row["start_dt"].date()
+                        _e = _row["end_dt"].date()
+                        _mask = _mask | ((_temp["_dt"].dt.date >= _s) & (_temp["_dt"].dt.date <= _e))
+                    _temp = _temp[_mask]
+                    sg_actual_p2 = int(pd.to_numeric(_temp["qty_sg"], errors="coerce").fillna(0).sum())
+                    if "kasir_name" in _temp.columns and not _temp.empty:
+                        _grp = _temp.groupby("kasir_name")["qty_sg"].sum()
+                        if not _grp.empty and _grp.max() > 0:
+                            sg_mvp_p2 = str(_grp.idxmax()).title()
+
+            # Sueger: syarat & redeem (hanya periode selesai)
+            sgr_syarat_p2 = 0
+            sgr_redeem_p2 = 0
+            sgr_mvp_p2 = "-"
+
+            if not periods_pps_df_p2.empty:
+                _f_sgr = periods_pps_df_p2[
+                    periods_pps_df_p2["period_id"].astype(str).str.upper().str.startswith("SGR", na=False) &
+                    (periods_pps_df_p2["start_dt"].dt.month == _bulan_ini_p2) &
+                    (periods_pps_df_p2["start_dt"].dt.year == _tahun_ini_p2)
+                ]
+                _f_sgr_selesai = _f_sgr[_f_sgr["end_dt"].dt.date < t_today_p2]
+
+                if not sales_pps_df_p2.empty and _date_col_p2 and not _f_sgr_selesai.empty:
+                    _temp = sales_pps_df_p2.copy()
+                    _temp["_dt"] = pd.to_datetime(_temp[_date_col_p2], errors="coerce")
+                    _mask = pd.Series([False] * len(_temp), index=_temp.index)
+                    for _, _row in _f_sgr_selesai.iterrows():
+                        _s = _row["start_dt"].date()
+                        _e = _row["end_dt"].date()
+                        _mask = _mask | ((_temp["_dt"].dt.date >= _s) & (_temp["_dt"].dt.date <= _e))
+                    _temp = _temp[_mask]
+
+                    for _cc in ["syarat_sueger", "syarat_suegeer"]:
+                        if _cc in _temp.columns:
+                            sgr_syarat_p2 = int(pd.to_numeric(_temp[_cc], errors="coerce").fillna(0).sum())
+                            break
+                    for _cc in ["redeem_sueger", "redeem_suegeer"]:
+                        if _cc in _temp.columns:
+                            sgr_redeem_p2 = int(pd.to_numeric(_temp[_cc], errors="coerce").fillna(0).sum())
+                            break
+
+                    if "kasir_name" in _temp.columns and sgr_syarat_p2 > 0:
+                        _s_col = "syarat_sueger" if "syarat_sueger" in _temp.columns else "syarat_suegeer"
+                        _r_col = "redeem_sueger" if "redeem_sueger" in _temp.columns else "redeem_suegeer"
+                        if _s_col in _temp.columns and _r_col in _temp.columns:
+                            _grp = _temp.groupby("kasir_name")[[_s_col, _r_col]].sum()
+                            _grp = _grp[_grp[_s_col] > 0]
+                            if not _grp.empty:
+                                _grp["pct"] = (_grp[_r_col] / _grp[_s_col]) * 100
+                                if _grp["pct"].max() > 0:
+                                    sgr_mvp_p2 = str(_grp["pct"].idxmax()).title()
+
+            # ==========================================
+            # 🎯 GUILD WAR SCORE
+            # ==========================================
+            ach_psm_p2 = (psm_actual_p2 / psm_target_p2 * 100) if psm_target_p2 > 0 else 0
+            ach_pwp_p2 = (pwp_actual_p2 / pwp_target_p2 * 100) if pwp_target_p2 > 0 else 0
+            ach_sg_p2 = (sg_actual_p2 / sg_target_p2 * 100) if sg_target_p2 > 0 else 0
+            ach_sgr_p2 = (sgr_redeem_p2 / sgr_syarat_p2 * 100) if sgr_syarat_p2 > 0 else 0
+
+            poin_psm_p2 = 20 * min(ach_psm_p2, 100) / 100
+            poin_pwp_p2 = 25 * min(ach_pwp_p2, 100) / 100
+            poin_sg_p2 = 30 * min(ach_sg_p2, 100) / 100
+            poin_total_p2 = poin_psm_p2 + poin_pwp_p2 + poin_sg_p2
+            poin_merah_p2 = max(0, 75 - poin_total_p2)
+
+            if poin_total_p2 > poin_merah_p2:
+                status_text_p2 = "VICTORY 🏆"
+                status_color_p2 = "#16a34a"
+            elif poin_merah_p2 > poin_total_p2:
+                status_text_p2 = "DEFEAT 💀"
+                status_color_p2 = "#dc2626"
+            else:
+                status_text_p2 = "DRAW ⚔️"
+                status_color_p2 = "#ca8a04"
+
+            blue_pct_p2 = (poin_total_p2 / 75) * 100
+            red_pct_p2 = 100 - blue_pct_p2
+
+            # ==========================================
+            # 🎨 BUILD HTML KIRI
+            # ==========================================
+            html_kiri_str_p2 = ""
+            for x in items_kiri_list_p2:
+                html_kiri_str_p2 += (
+                    "<div class='rpg-item-card-v2'>"
+                    "<div class='rpg-item-header-v2'>"
+                    "<span class='rpg-item-name-v2'>" + x["icon"] + " " + x["p_name"] + "</span>"
+                    "<span class='" + x["badge_cls"] + "'>" + x["badge_txt"] + "</span>"
+                    "</div>"
+                    "<div class='rpg-item-target-v2'>" + x["info_line"] + "</div>"
+                    "<div class='rpg-progress-wrap-v2'>"
+                    "<div class='rpg-progress-bg-v2'>"
+                    "<div class='rpg-progress-fill-v2' style='width:" + f"{min(x['achiv'], 100.0):.1f}" + "%; background: linear-gradient(90deg, " + x['achiv_color'] + ", " + x['achiv_color'] + "cc);'></div>"
+                    "</div>"
+                    "<div class='rpg-progress-pct-v2' style='color:" + x['achiv_color'] + ";'>" + f"{x['achiv']:.1f}%" + "</div>"
+                    "</div>"
+                    "</div>"
                 )
 
-            html_header_box = (
-                f'<div class="gw-header-box">'
-                f'<div style="font-size: 10px; font-weight: bold; color: #b45309; margin-bottom: 2px;">'
-                f'ARENA GUILD WAR{recap_title_note}'
-                f'</div>'
-                f'<div class="gw-match-title">'
-                f'<span class="gw-team-blue">{blue_guild_icon} ACHIV: {total_blue_pts_int} PTS</span>'
-                f'<span class="gw-vs">VS</span>'
-                f'<span class="gw-team-red">{current_enemy_icon} TARGET: {total_red_pts_int} PTS</span>'
-                f'</div>'
-                f'<div class="gw-status-text" style="color: {status_color} !important;">{match_status}</div>'
-                f'<div class="gw-main-bar">'
-                f'<div class="gw-main-blue" style="width: {header_blue_pct}%;"></div>'
-                f'<div class="gw-main-red" style="width: {header_red_pct}%;"></div>'
-                f'<div class="gw-main-bar-text">{total_blue_pts_int} / {total_red_pts_int} PTS</div>'
-                f'</div>'
-                f'</div>'
+            if not html_kiri_str_p2:
+                html_kiri_str_p2 = "<div style='color:#78350f; font-size:12px; text-align:center; margin-top:20px; font-style:italic;'>Belum ada data Target PPS aktif untuk bulan ini.</div>"
+
+            # ==========================================
+            # 🎨 BUILD HTML KANAN — GUILD WAR
+            # ==========================================
+            gw_header_html_p2 = (
+                "<div class='gw-header-box-v2'>"
+                "<div style='font-size:10px; font-weight:bold; color:#b45309; margin-bottom:6px; letter-spacing:1.5px;'>ARENA GUILD WAR</div>"
+                "<div class='gw-match-title-v2'>"
+                "<span class='gw-team-blue-v2'>" + blue_guild_icon_p2 + " ACHIV: " + str(int(round(poin_total_p2))) + " PTS</span>"
+                "<span class='gw-vs-v2'>VS</span>"
+                "<span class='gw-team-red-v2'>" + current_enemy_icon_p2 + " TARGET: " + str(int(round(poin_merah_p2))) + " PTS</span>"
+                "</div>"
+                "<div class='gw-status-text-v2' style='color:" + status_color_p2 + ";'>" + status_text_p2 + "</div>"
+                "<div class='gw-main-bar-v2'>"
+                "<div class='gw-main-blue-v2' style='width:" + f"{blue_pct_p2:.1f}" + "%;'></div>"
+                "<div class='gw-main-red-v2' style='width:" + f"{red_pct_p2:.1f}" + "%;'></div>"
+                "<div class='gw-main-bar-text-v2'>" + str(int(round(poin_total_p2))) + " / " + str(int(round(poin_merah_p2))) + " PTS</div>"
+                "</div>"
+                "</div>"
             )
 
-            css_gw = """
+            def _build_gw_card_p2(nama, mvp, aktual, target, achiv, is_sueger=False):
+                blue = min(achiv, 100.0)
+                red = max(0.0, 100.0 - blue)
+                label = f"Redeem: {aktual} / Syarat: {target}" if is_sueger else f"Hit: {aktual} / Target: {target}"
+                return (
+                    "<div class='gw-card-v2'>"
+                    "<div class='gw-card-header-v2'>"
+                    "<span class='gw-card-title-v2'>⚔️ " + nama + "</span>"
+                    "<span class='gw-mvp-v2'>👑 MVP: " + mvp + "</span>"
+                    "</div>"
+                    "<div class='gw-bar-container-v2'>"
+                    "<div class='gw-bar-blue-v2' style='width:" + f"{blue:.1f}" + "%;'></div>"
+                    "<div class='gw-bar-red-v2' style='width:" + f"{red:.1f}" + "%;'></div>"
+                    "<div class='gw-bar-text-v2'>" + f"{achiv:.1f}%" + "</div>"
+                    "</div>"
+                    "<div class='gw-card-footer-v2'>" + label + "</div>"
+                    "</div>"
+                )
+
+            html_kanan_items_p2 = ""
+            html_kanan_items_p2 += _build_gw_card_p2("PSM Assault", psm_mvp_p2, psm_actual_p2, psm_target_p2, ach_psm_p2)
+            html_kanan_items_p2 += _build_gw_card_p2("PWP Siege", pwp_mvp_p2, pwp_actual_p2, pwp_target_p2, ach_pwp_p2)
+            html_kanan_items_p2 += _build_gw_card_p2("Serba Gratis (SG)", sg_mvp_p2, sg_actual_p2, sg_target_p2, ach_sg_p2)
+            html_kanan_items_p2 += _build_gw_card_p2("Sueger Strike", sgr_mvp_p2, sgr_redeem_p2, sgr_syarat_p2, ach_sgr_p2, is_sueger=True)
+
+            # ==========================================
+            # 🎨 CSS PAGE 2
+            # ==========================================
+            css_p2 = """
             <style>
-                .rpg-book-page-right {
-                    position: relative !important;
-                    z-index: 1 !important;
-                }
-                .rpg-book-page-right * {
-                    position: relative !important;
-                    z-index: 5 !important;
-                    opacity: 1 !important;
-                }
-                .gw-header-box {
-                    background-color: #fffbeb !important;
-                    border: 2px solid #b45309 !important;
-                    border-radius: 8px !important;
-                    padding: 8px 12px !important;
-                    margin-bottom: 12px !important;
-                    text-align: center !important;
-                    box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
-                }
-                .gw-match-title {
-                    display: flex !important;
-                    justify-content: space-between !important;
-                    align-items: center !important;
-                    font-weight: 800 !important;
-                }
-                .gw-team-blue { color: #0284c7 !important; font-size: 13px !important; font-weight: 900 !important; }
-                .gw-team-red { color: #dc2626 !important; font-size: 13px !important; font-weight: 900 !important; }
-                .gw-vs { font-size: 12px !important; color: #78350f !important; margin: 0 6px !important; }
-                .gw-status-text {
-                    font-size: 11px !important;
-                    font-weight: 900 !important;
-                    letter-spacing: 2px !important;
-                    margin: 3px 0 !important;
-                }
-                .gw-main-bar {
-                    height: 18px !important;
-                    background-color: #cbd5e1 !important;
-                    border-radius: 4px !important;
-                    border: 1px solid #94a3b8 !important;
-                    display: flex !important;
-                    overflow: hidden !important;
-                    margin-top: 4px !important;
-                }
-                .gw-main-blue { background: linear-gradient(90deg, #0284c7, #38bdf8) !important; height: 100% !important; }
-                .gw-main-red { background: linear-gradient(90deg, #dc2626, #f87171) !important; height: 100% !important; }
-                .gw-main-bar-text {
-                    position: absolute !important; width: 100% !important; text-align: center !important; line-height: 18px !important;
-                    font-size: 10px !important; font-weight: bold !important; color: #ffffff !important; text-shadow: 1px 1px 2px #000 !important;
-                    left: 0; top: 0;
-                }
-                .gw-card {
-                    background-color: #fffdf5 !important;
-                    border: 1.5px solid #fde68a !important;
-                    border-radius: 6px !important;
-                    padding: 8px 10px !important;
-                    margin-bottom: 8px !important;
-                    box-shadow: 0 2px 4px rgba(180, 83, 9, 0.1) !important;
-                }
-                .gw-card-header { 
-                    display: flex !important; 
-                    justify-content: space-between !important; 
-                    align-items: center !important; 
-                    margin-bottom: 4px !important; 
-                }
-                .gw-card-title { font-size: 12px !important; font-weight: bold !important; color: #451a03 !important; }
-                .gw-mvp { 
-                    font-size: 9px !important; background-color: #fef3c7 !important; color: #b45309 !important; 
-                    border: 1px solid #fde68a !important; padding: 2px 6px !important; border-radius: 4px !important; font-weight: bold !important; 
-                }
-                .gw-bar-container {
-                    height: 14px !important; background-color: #cbd5e1 !important; border-radius: 3px !important; 
-                    border: 1px solid #94a3b8 !important; display: flex !important; overflow: hidden !important; 
-                }
-                .gw-bar-blue { background: linear-gradient(90deg, #2563eb, #60a5fa) !important; height: 100% !important; }
-                .gw-bar-red { background: linear-gradient(90deg, #dc2626, #f87171) !important; height: 100% !important; }
-                .gw-bar-text {
-                    position: absolute !important; width: 100% !important; text-align: center !important; line-height: 14px !important;
-                    font-size: 9px !important; font-weight: bold !important; color: #ffffff !important; text-shadow: 1px 1px 2px #000 !important;
-                    left: 0; top: 0;
-                }
-                .gw-card-footer { font-size: 10px !important; color: #78350f !important; margin-top: 4px !important; font-weight: 700 !important; }
+            .rpg-item-card-v2 {
+                background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+                border: 1px solid #d97706;
+                border-radius: 6px;
+                padding: 10px 12px;
+                margin-bottom: 8px;
+                position: relative;
+                z-index: 10;
+            }
+            .rpg-item-header-v2 {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 6px;
+            }
+            .rpg-item-name-v2 {
+                color: #451a03;
+                font-weight: bold;
+                font-size: 12px;
+                font-family: 'MedievalSharp', cursive;
+            }
+            .rpg-item-target-v2 {
+                font-size: 10px;
+                color: #78350f;
+                font-family: monospace;
+                margin-bottom: 6px;
+            }
+            .rpg-progress-wrap-v2 {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .rpg-progress-bg-v2 {
+                flex: 1;
+                height: 11px;
+                background: #e5e7eb;
+                border-radius: 5px;
+                overflow: hidden;
+                border: 1px solid #d1d5db;
+                box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+            }
+            .rpg-progress-fill-v2 {
+                height: 100%;
+                border-radius: 5px;
+                transition: width 0.5s ease;
+                box-shadow: 0 0 6px rgba(0,0,0,0.15);
+            }
+            .rpg-progress-pct-v2 {
+                font-family: monospace;
+                font-size: 12px;
+                font-weight: 900;
+                min-width: 48px;
+                text-align: right;
+            }
+            .badge-success { background-color: #059669; color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 9px; font-weight: bold; letter-spacing: 0.5px; }
+            .badge-warning { background-color: #dc2626; color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 9px; font-weight: bold; letter-spacing: 0.5px; }
+
+            /* GUILD WAR HEADER */
+            .gw-header-box-v2 {
+                background-color: #fffbeb;
+                border: 2px solid #b45309;
+                border-radius: 8px;
+                padding: 10px 12px;
+                margin-bottom: 12px;
+                text-align: center;
+                position: relative;
+                z-index: 10;
+            }
+            .gw-match-title-v2 {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-weight: 800;
+                margin-bottom: 4px;
+            }
+            .gw-team-blue-v2 { color: #0284c7; font-size: 13px; font-weight: 900; }
+            .gw-team-red-v2 { color: #dc2626; font-size: 13px; font-weight: 900; }
+            .gw-vs-v2 { font-size: 12px; color: #78350f; margin: 0 8px; font-weight: 900; }
+            .gw-status-text-v2 {
+                font-size: 15px;
+                font-weight: 900;
+                letter-spacing: 3px;
+                margin: 8px 0;
+                text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 2px 2px 4px rgba(0,0,0,0.4);
+                -webkit-text-stroke: 0.5px rgba(120, 53, 15, 0.5);
+            }
+            .gw-main-bar-v2 {
+                height: 22px;
+                background-color: #cbd5e1;
+                border-radius: 5px;
+                border: 1px solid #94a3b8;
+                display: flex;
+                overflow: hidden;
+                margin-top: 6px;
+                position: relative;
+            }
+            .gw-main-blue-v2 { background: linear-gradient(90deg, #0284c7, #38bdf8); height: 100%; }
+            .gw-main-red-v2 { background: linear-gradient(90deg, #dc2626, #f87171); height: 100%; }
+            .gw-main-bar-text-v2 {
+                position: absolute;
+                width: 100%;
+                text-align: center;
+                line-height: 22px;
+                font-size: 11px;
+                font-weight: 900;
+                color: #ffffff;
+                text-shadow: 1px 1px 3px #000;
+                left: 0;
+                top: 0;
+            }
+
+            /* GW CARD */
+            .gw-card-v2 {
+                background-color: #fffdf5;
+                border: 1.5px solid #fde68a;
+                border-radius: 6px;
+                padding: 9px 11px;
+                margin-bottom: 9px;
+                position: relative;
+                z-index: 10;
+            }
+            .gw-card-header-v2 {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 5px;
+            }
+            .gw-card-title-v2 { font-size: 12px; font-weight: bold; color: #451a03; }
+            .gw-mvp-v2 {
+                font-size: 9px;
+                background-color: #fef3c7;
+                color: #b45309;
+                border: 1px solid #fde68a;
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-weight: bold;
+            }
+            .gw-bar-container-v2 {
+                height: 14px;
+                background-color: #cbd5e1;
+                border-radius: 3px;
+                border: 1px solid #94a3b8;
+                display: flex;
+                overflow: hidden;
+                position: relative;
+            }
+            .gw-bar-blue-v2 { background: linear-gradient(90deg, #2563eb, #60a5fa); height: 100%; }
+            .gw-bar-red-v2 { background: linear-gradient(90deg, #dc2626, #f87171); height: 100%; }
+            .gw-bar-text-v2 {
+                position: absolute;
+                width: 100%;
+                text-align: center;
+                line-height: 14px;
+                font-size: 9px;
+                font-weight: bold;
+                color: #ffffff;
+                text-shadow: 1px 1px 2px #000;
+                left: 0;
+                top: 0;
+            }
+            .gw-card-footer-v2 { font-size: 10px; color: #78350f; margin-top: 5px; font-weight: 700; }
             </style>
             """
 
+            # ==========================================
+            # 🏗️ HTML LENGKAP PAGE 2
+            # ==========================================
             html_open_tugas = (
-                f'{css_gw}'
-                f'<div class="rpg-open-book-container">'
-                f'<div class="rpg-book-page rpg-book-page-left">'
-                f'<h3 class="open-page-title">🛡️ TARGET PPS</h3>'
-                f'<p class="open-page-sub">Rincian Target Harian ({active_period_pps_name})</p>'
-                f'<div class="open-book-divider"></div>'
-                f'{html_kiri_str}'
-                f'<div class="open-page-footer">Halaman Kiri • Target PPS</div>'
-                f'</div>'
-                f'<div class="rpg-book-page rpg-book-page-right">'
-                f'<h3 class="open-page-title">⚔️ GUILD WAR ARENA</h3>'
-                f'<p class="open-page-sub">Pertempuran Performa Bulanan</p>'
-                f'<div class="open-book-divider"></div>'
-                f'{html_header_box}'
-                f'{html_kanan_items}'
-                f'<div class="open-page-footer">Halaman Kanan • Guild War</div>'
-                f'</div>'
-                f'</div>'
+                css_p2 +
+                "<div class='rpg-open-book-container'>"
+                "<div class='rpg-book-page rpg-book-page-left'>"
+                "<h3 class='open-page-title'>🛡️ TARGET PPS</h3>"
+                "<p class='open-page-sub'>Rincian Target Program Bulan Ini</p>"
+                "<div class='open-book-divider'></div>"
+                + html_kiri_str_p2 +
+                "<div class='open-page-footer'>Halaman Kiri • Target PPS</div>"
+                "</div>"
+                "<div class='rpg-book-page rpg-book-page-right'>"
+                "<h3 class='open-page-title'>⚔️ GUILD WAR ARENA</h3>"
+                "<p class='open-page-sub'>Pertempuran Performa Bulanan</p>"
+                "<div class='open-book-divider'></div>"
+                + gw_header_html_p2 +
+                html_kanan_items_p2 +
+                "<div class='open-page-footer'>Halaman Kanan • Guild War</div>"
+                "</div>"
+                "</div>"
             )
 
         #============================================================= batas =======================================#
