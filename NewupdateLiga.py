@@ -4375,12 +4375,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
                 # Filter sesuai tab: PWP atau SG
                 if tab_aktif == "pwp":
+                    # PWP — exact prefix
                     df_filter = df_pps_periode[
-                        df_pps_periode["period_id"].astype(str).str.upper().str.contains("PWP", na=False)
+                        df_pps_periode["period_id"].astype(str).str.upper().str.strip().str.startswith("PWP", na=False)
                     ]
                 else:
+                    # SG — exact prefix SGS (bukan SGR!)
                     df_filter = df_pps_periode[
-                        df_pps_periode["period_id"].astype(str).str.upper().str.contains("SGS|SG", na=False)
+                        df_pps_periode["period_id"].astype(str).str.upper().str.strip().str.startswith("SGS", na=False)
                     ]
 
                 # Urut ascending (terlama dulu)
@@ -4475,7 +4477,18 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     return None
 
                 df_temp = df_sales_pps.copy()
-                df_temp["_start"] = pd.to_datetime(df_temp["start_date"], errors="coerce")
+
+                # Cari kolom tanggal yang tersedia (prioritas: updated_at)
+                _date_col = None
+                for _c in ["updated_at", "start_date", "tanggal", "date"]:
+                    if _c in df_temp.columns:
+                        _date_col = _c
+                        break
+
+                if _date_col is None:
+                    return None
+
+                df_temp["_start"] = pd.to_datetime(df_temp[_date_col], errors="coerce")
                 df_temp = df_temp.dropna(subset=["_start"])
 
                 # Tentukan daftar periode untuk kartu ini
