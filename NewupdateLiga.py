@@ -8753,15 +8753,15 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 css_p5 +
                 "<div class='rpg-open-book-container'>"
                 "<div class='rpg-book-page rpg-book-page-left rpg-book-page-left-p5'>"
-                "<h3 class='open-page-title'>🥤 SUEGER TOP (1-3)</h3>"
+                "<h3 class='open-page-title'>🥤 TOP 3 SUEGER</h3>"
                 "<p class='open-page-sub'>" + target_period_label_p5 + "</p>"
                 "<div class='open-book-divider'></div>"
                 + podium_html_p5 +
                 "<div class='open-page-footer'>Halaman Kiri • Sueger 1-3</div>"
                 "</div>"
                 "<div class='rpg-book-page rpg-book-page-right rpg-book-page-right-p5'>"
-                "<h3 class='open-page-title'>🥤 SUEGER (4+)</h3>"
-                "<p class='open-page-sub'>Kelanjutan Peringkat Kasir Sueger</p>"
+                "<h3 class='open-page-title'>🥤 RANK SUEGER</h3>"
+                "<p class='open-page-sub'>Peringkat Penjualan Sueger Kasir</p>"
                 "<div class='open-book-divider'></div>"
                 + list_html_p5 +
                 user_rank_html_p5 +
