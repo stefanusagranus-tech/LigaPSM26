@@ -6092,7 +6092,23 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     break
 
             # ==========================================
-            # 🛡️ KIRI: TARGET PPS (Bulan Ini — Semua Periode)
+            # 👥 HITUNG JUMLAH KASIR AKTIF (untuk target kasir)
+            # ==========================================
+            _master_personil_p2 = st.session_state.get("person_df", pd.DataFrame()).copy()
+            if not _master_personil_p2.empty:
+                _master_personil_p2.columns = _master_personil_p2.columns.astype(str).str.strip().str.lower()
+
+            _jumlah_kasir_p2 = 9  # default
+            if not _master_personil_p2.empty and "person_name" in _master_personil_p2.columns:
+                _mp_p2 = _master_personil_p2.copy()
+                if "active" in _mp_p2.columns:
+                    _mp_p2 = _mp_p2[pd.to_numeric(_mp_p2["active"], errors="coerce") == 1]
+                _count_p2 = _mp_p2["person_name"].dropna().astype(str).str.strip().nunique()
+                if _count_p2 > 0:
+                    _jumlah_kasir_p2 = _count_p2
+
+            # ==========================================
+            # 🛡️ KIRI: TARGET PPS (Role-Based)
             # ==========================================
             items_kiri_list_p2 = []
 
@@ -6118,22 +6134,27 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     if pd.isna(p_target_total_p2):
                         p_target_total_p2 = 0
 
-                    # Status: selesai / aktif / belum mulai
+                    # ==========================================
+                    # 🎯 TARGET BASIS — Admin: Toko, User: Kasir
+                    # ==========================================
+                    if is_admin_p2:
+                        target_basis_p2 = p_target_total_p2
+                    else:
+                        target_basis_p2 = p_target_total_p2 / _jumlah_kasir_p2 if _jumlah_kasir_p2 > 0 else 0
+
+                    # Status periode
                     if t_today_p2 > p_end_p2:
                         is_selesai_p2 = True
                         is_aktif_p2 = False
-                        sisa_hari_p2 = 0
                         hari_aktif_p2 = (p_end_p2 - p_start_p2).days + 1
                     elif t_today_p2 < p_start_p2:
                         is_selesai_p2 = False
                         is_aktif_p2 = False
                         hari_aktif_p2 = 0
-                        sisa_hari_p2 = (p_end_p2 - p_start_p2).days + 1
                     else:
                         is_selesai_p2 = False
                         is_aktif_p2 = True
                         hari_aktif_p2 = (t_today_p2 - p_start_p2).days + 1
-                        sisa_hari_p2 = (p_end_p2 - t_today_p2).days  # termasuk hari ini? tidak. sisa setelah hari ini
 
                     total_hari_p2 = (p_end_p2 - p_start_p2).days + 1
                     if total_hari_p2 <= 0:
@@ -6142,11 +6163,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     # Tentukan jenis program
                     p_lower_p2 = p_id_p2.lower() + " " + p_name_p2.lower()
 
-                    # Hitung aktual berdasarkan jenis
+                    # ==========================================
+                    # 📥 HITUNG AKTUAL
+                    # ==========================================
                     aktual_val_p2 = 0
                     syarat_val_p2 = 0
                     redeem_val_p2 = 0
-                    target_basis_p2 = p_target_total_p2  # default target = target_total
 
                     if not sales_pps_df_p2.empty and _date_col_p2:
                         _temp_p2 = sales_pps_df_p2.copy()
@@ -6155,6 +6177,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                             (_temp_p2["_dt"].dt.date >= p_start_p2) &
                             (_temp_p2["_dt"].dt.date <= p_end_p2)
                         ]
+
+                        # Filter kasir kalau bukan admin
+                        if not is_admin_p2 and not _temp_p2.empty and "kasir_name" in _temp_p2.columns:
+                            _temp_p2 = _temp_p2[
+                                _temp_p2["kasir_name"].astype(str).str.strip().str.lower() == current_user_p2
+                            ]
 
                         if not _temp_p2.empty:
                             if "sgr" in p_lower_p2 or "sueger" in p_lower_p2:
@@ -6168,7 +6196,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                                         redeem_val_p2 = int(pd.to_numeric(_temp_p2[_cc], errors="coerce").fillna(0).sum())
                                         break
                                 aktual_val_p2 = redeem_val_p2
-                                target_basis_p2 = syarat_val_p2  # basis target = syarat
+                                # Sueger: target basis = syarat (bukan target_total / jumlah_kasir)
+                                target_basis_p2 = syarat_val_p2
                             elif "pwp" in p_lower_p2:
                                 _cc = "qty_pwp"
                                 if _cc in _temp_p2.columns:
@@ -6181,25 +6210,20 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     # ==========================================
                     # 🎯 TARGET HARIAN DINAMIS
                     # ==========================================
-                    # target harian = (target_basis - aktual) / sisa hari kerja
                     if is_selesai_p2:
                         target_harian_p2 = 0
                         target_sampai_hari_ini_p2 = target_basis_p2
                         sisa_label_p2 = "Periode selesai"
                     elif not is_aktif_p2:
-                        # Belum mulai
                         target_harian_p2 = target_basis_p2 / total_hari_p2 if total_hari_p2 > 0 else 0
                         target_sampai_hari_ini_p2 = 0
                         sisa_label_p2 = f"Belum mulai ({total_hari_p2} hari)"
                     else:
-                        # Aktif
-                        # sisa_hari termasuk hari ini (jangan minus)
                         sisa_hari_kerja_p2 = max(1, (p_end_p2 - t_today_p2).days + 1)
                         if aktual_val_p2 >= target_basis_p2:
                             target_harian_p2 = 0
                         else:
                             target_harian_p2 = (target_basis_p2 - aktual_val_p2) / sisa_hari_kerja_p2
-                        # target sampai hari ini = proporsional
                         target_sampai_hari_ini_p2 = target_basis_p2 * (hari_aktif_p2 / total_hari_p2)
                         sisa_label_p2 = f"{sisa_hari_kerja_p2} hari sisa"
 
@@ -6229,7 +6253,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                             badge_cls_p2 = "badge-success"
                             achiv_color_p2 = "#059669"
                         elif achiv_p2 >= 40:
-                            badge_txt_p2 = f"WARNING"
+                            badge_txt_p2 = "WARNING"
                             badge_cls_p2 = "badge-warning"
                             achiv_color_p2 = "#ca8a04"
                         else:
@@ -6266,7 +6290,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         "is_selesai": is_selesai_p2,
                     })
 
-                       # ==========================================
+            # ==========================================
             # ⚔️ KANAN: GUILD WAR ARENA
             # ==========================================
             # Periode PSM bulan ini
