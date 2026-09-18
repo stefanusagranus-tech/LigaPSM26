@@ -2316,7 +2316,98 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 </div>
             """, unsafe_allow_html=True)
             if st.button("Lihat Papan Peringkat ➔", key="btn_go_to_hall_of_fame", use_container_width=True):
+                # 🎬 ANIMASI MASUK ALTAR HALL OF FAME
+                placeholder_altar = st.empty()
+                with placeholder_altar.container():
+                    st.markdown(
+                        """
+                        <div style='background-color: #0a0d1a; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; overflow: hidden;'>
+                            
+                            <!-- 🌟 RING CAHAYA EMAS BERPUSING -->
+                            <div class="altar-portal-container" style="position: relative; width: 220px; height: 220px; display: flex; justify-content: center; align-items: center;">
+                                <svg width="220" height="220" viewBox="0 0 220 220" style="position: absolute;">
+                                    <circle cx="110" cy="110" r="100" class="altar-outer-ring" stroke="#d97706" stroke-width="3" stroke-dasharray="15, 10" fill="none" />
+                                    <circle cx="110" cy="110" r="75" class="altar-mid-ring" stroke="#fbbf24" stroke-width="2" stroke-dasharray="5, 8" fill="none" />
+                                    <circle cx="110" cy="110" r="50" class="altar-inner-ring" stroke="#fef08a" stroke-width="2" fill="none" />
+                                    <polygon points="110,30 180,150 40,150" class="altar-triangle" stroke="#d97706" stroke-width="1.5" fill="none" />
+                                </svg>
+                                
+                                <!-- 🏛️ IKON ALTAR / PORTAL DI TENGAH -->
+                                <div class="altar-core-icon">🏛️</div>
+                                
+                                <!-- ✨ PARTIKEL CAHAYA -->
+                                <div class="altar-spark altar-spark-1">✦</div>
+                                <div class="altar-spark altar-spark-2">✦</div>
+                                <div class="altar-spark altar-spark-3">✦</div>
+                            </div>
+                            
+                            <!-- 🏷️ TEKS ANIMASI -->
+                            <h1 style='color: #fbbf24; font-family: monospace; animation: altarBlink 1.5s infinite; font-size: 22px; margin-top: 40px; letter-spacing: 2px; text-shadow: 0 0 20px rgba(251,191,36,0.6); text-align: center; padding: 0 20px;'>🚪 MEMBUKA PINTU ALTAR... 🚪</h1>
+                            <p id="altar-status-text" style='color: #64748b; font-size: 13px; margin-top: 8px; font-family: monospace; text-align: center; padding: 0 20px;'>Menyatukan cahaya prasasti kuno dan mengaktifkan ruang Hall of Fame...</p>
+                            
+                            <!-- ⏳ PROGRESS BAR ALTAR -->
+                            <div class="altar-progress-wrapper" style="margin-top: 30px; width: 280px;">
+                                <div class="altar-progress-bg">
+                                    <div class="altar-progress-fill"></div>
+                                </div>
+                                <div id="altar-progress-pct" style="color: #fbbf24; font-family: monospace; font-size: 12px; font-weight: bold; text-align: center; margin-top: 8px;">ACTIVATING: 0%</div>
+                            </div>
+                            
+                            <style>
+                                @keyframes altarBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+                                @keyframes altarSpinCW { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                                @keyframes altarSpinCCW { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+                                @keyframes altarPulse { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px #d97706); } 50% { transform: scale(1.12); filter: drop-shadow(0 0 30px #fbbf24); } }
+                                @keyframes altarSparkFloat { 0% { transform: translateY(0) scale(0.6); opacity: 0; } 50% { opacity: 1; } 100% { transform: translateY(-60px) scale(1.2); opacity: 0; } }
+                                
+                                .altar-outer-ring { transform-origin: 110px 110px; animation: altarSpinCW 10s infinite linear; filter: drop-shadow(0 0 12px #d97706); }
+                                .altar-mid-ring { transform-origin: 110px 110px; animation: altarSpinCCW 6s infinite linear; filter: drop-shadow(0 0 10px #fbbf24); }
+                                .altar-inner-ring { transform-origin: 110px 110px; animation: altarSpinCW 4s infinite linear; filter: drop-shadow(0 0 8px #fef08a); }
+                                .altar-triangle { transform-origin: 110px 110px; animation: altarSpinCCW 12s infinite linear; filter: drop-shadow(0 0 10px #d97706); }
+                                
+                                .altar-core-icon { position: absolute; font-size: 65px; z-index: 10; animation: altarPulse 2s infinite ease-in-out; }
+                                
+                                .altar-spark { position: absolute; color: #fbbf24; font-size: 16px; font-weight: bold; filter: drop-shadow(0 0 8px #fef08a); }
+                                .altar-spark-1 { top: 20px; left: 50px; animation: altarSparkFloat 2.5s infinite ease-out; }
+                                .altar-spark-2 { top: 30px; right: 55px; animation: altarSparkFloat 3s infinite ease-out 0.5s; }
+                                .altar-spark-3 { bottom: 40px; left: 80px; animation: altarSparkFloat 2.8s infinite ease-out 1s; }
+                                
+                                .altar-progress-bg {
+                                    width: 100%; height: 14px; background: rgba(15, 23, 42, 0.9);
+                                    border: 2px solid #b45309; border-radius: 8px; overflow: hidden;
+                                    box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 0 15px rgba(180, 83, 9, 0.3);
+                                }
+                                .altar-progress-fill {
+                                    height: 100%; width: 0%; border-radius: 6px;
+                                    background: linear-gradient(90deg, #78350f, #d97706, #fbbf24, #fef08a, #fbbf24, #d97706, #78350f);
+                                    background-size: 300% 100%;
+                                    animation: altarShimmer 1.5s infinite linear, altarGrowFill 2.2s forwards ease-out;
+                                    box-shadow: 0 0 15px rgba(251, 191, 36, 0.8);
+                                }
+                                @keyframes altarShimmer { 0% { background-position: 0% 50%; } 100% { background-position: 300% 50%; } }
+                                @keyframes altarGrowFill { 0% { width: 0%; } 100% { width: 100%; } }
+                            </style>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                    
+                    # Simulasi progress 0-100% selama ~2.2 detik
+                    progress_altar = st.progress(0)
+                    for pct in range(100):
+                        time.sleep(0.022)
+                        progress_altar.progress(pct + 1)
+                        if pct == 35:
+                            st.markdown("<script>window.parent.document.getElementById('altar-status-text').innerHTML = 'Mengukir nama-nama pahlawan ke prasasti...'; window.parent.document.getElementById('altar-progress-pct').innerHTML = 'ACTIVATING: 36%';</script>", unsafe_allow_html=True)
+                        elif pct == 70:
+                            st.markdown("<script>window.parent.document.getElementById('altar-status-text').innerHTML = 'Menyatukan cahaya emas dan membuka pintu utama...'; window.parent.document.getElementById('altar-progress-pct').innerHTML = 'ACTIVATING: 71%';</script>", unsafe_allow_html=True)
+                        elif pct == 95:
+                            st.markdown("<script>window.parent.document.getElementById('altar-status-text').innerHTML = 'Ruang Hall of Fame siap dibuka!'; window.parent.document.getElementById('altar-progress-pct').innerHTML = 'ACTIVATING: 100%';</script>", unsafe_allow_html=True)
+                
+                placeholder_altar.empty()
+                
                 st.session_state["campaign_sub_page"] = "view_hall_of_fame"
+                st.session_state["hof_sub_page"] = None
                 st.rerun()
         
             # ↩️ KEMBALI
@@ -2767,7 +2858,213 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     st.rerun()
 
             
-            # Memotong eksekusi halaman agar skrip di bawahnya tidak ikut terpanggil
+                       # Memotong eksekusi halaman agar skrip di bawahnya tidak ikut terpanggil
+            st.stop()
+
+        # =========================================================================
+        # 🏆 HALAMAN 3: HALL OF FAME ALIANSI — MENU 3 PILAR
+        # =========================================================================
+        elif st.session_state.get("campaign_sub_page") == "view_hall_of_fame" and not st.session_state.get("hof_sub_page"):
+
+            url_gambar_latar = "https://i.imgur.com/kMo29aW.jpeg"
+
+            st.markdown(
+                f"""
+                <style>
+                    .stApp {{
+                        background-image: linear-gradient(rgba(10, 13, 26, 0.78), rgba(10, 13, 26, 0.88)), url("{url_gambar_latar}") !important;
+                        background-size: cover !important;
+                        background-position: center !important;
+                        background-repeat: no-repeat !important;
+                        background-attachment: fixed !important;
+                    }}
+                    .main .block-container {{
+                        background-color: transparent !important;
+                        max-width: 700px !important;
+                        padding-top: 3% !important;
+                    }}
+                    div[data-testid="stVerticalBlock"] {{ gap: 0rem !important; }}
+
+                    /* ✨ ANIMASI MASUK HALAMAN */
+                    .hof-page-wrapper {{
+                        animation: hofEnterFade 0.9s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+                        transform-origin: center center;
+                    }}
+                    @keyframes hofEnterFade {{
+                        0% {{ opacity: 0; transform: scale(0.94) translateY(20px); filter: blur(6px); }}
+                        100% {{ opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }}
+                    }}
+
+                    .fame-header-title {{
+                        text-align: center; color: #fef08a !important; font-family: monospace;
+                        font-size: 24px !important; font-weight: 900 !important;
+                        text-shadow: 0 0 15px rgba(251, 191, 36, 0.6) !important;
+                        margin: 0 0 5px 0 !important;
+                        animation: hofTitleGlow 3s infinite ease-in-out;
+                    }}
+                    @keyframes hofTitleGlow {{
+                        0%, 100% {{ text-shadow: 0 0 15px rgba(251, 191, 36, 0.5); }}
+                        50% {{ text-shadow: 0 0 25px rgba(251, 191, 36, 0.9), 0 0 40px rgba(251, 191, 36, 0.5); }}
+                    }}
+                    .fame-header-sub {{
+                        text-align: center; color: #cbd5e1 !important; font-family: monospace;
+                        font-size: 12px !important; margin-bottom: 30px !important;
+                    }}
+
+                    .fame-pillar-card {{
+                        background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 27, 24, 0.95) 100%) !important;
+                        border-radius: 12px !important;
+                        padding: 25px 20px 20px 20px !important;
+                        text-align: center;
+                        max-width: 480px;
+                        margin: 0 auto;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.6) !important;
+                        min-height: 190px;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                    }}
+                    .fame-pillar-psm {{
+                        border: 2px solid #1d4ed8 !important;
+                        border-top: 6px solid #3b82f6 !important;
+                    }}
+                    .fame-pillar-pps {{
+                        border: 2px solid #7c3aed !important;
+                        border-top: 6px solid #a855f7 !important;
+                    }}
+                    .fame-pillar-sueger {{
+                        border: 2px solid #059669 !important;
+                        border-top: 6px solid #10b981 !important;
+                    }}
+
+                    .fame-pillar-emoji {{
+                        font-size: 45px; line-height: 1; margin-bottom: 12px;
+                        display: inline-block;
+                        animation: floatFameEmoji 2.5s infinite ease-in-out;
+                    }}
+                    .fame-pillar-title {{
+                        font-family: monospace; font-size: 15px; font-weight: bold;
+                        color: #fbbf24; margin-bottom: 8px; letter-spacing: 0.5px;
+                    }}
+                    .fame-pillar-desc {{
+                        font-family: monospace; font-size: 11.5px;
+                        line-height: 1.6; color: #cbd5e1; margin-bottom: 0;
+                    }}
+
+                    div[data-testid="stButton"] {{
+                        max-width: 480px !important;
+                        margin: 6px auto 25px auto !important;
+                        padding: 0 !important;
+                    }}
+                    div[data-testid="stButton"] > button {{
+                        border-radius: 12px !important;
+                        font-family: monospace !important;
+                        font-size: 13px !important;
+                        font-weight: bold !important;
+                        padding: 12px 20px !important;
+                        transition: all 0.3s ease !important;
+                        width: 100% !important;
+                        display: block !important;
+                    }}
+
+                    .st-key-btn_hof_psm button {{
+                        background: rgba(29, 78, 216, 0.18) !important;
+                        border: 2px solid #1d4ed8 !important;
+                        color: #93c5fd !important;
+                    }}
+                    .st-key-btn_hof_psm button:hover {{
+                        background: #1d4ed8 !important; color: #ffffff !important;
+                        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4) !important;
+                    }}
+
+                    .st-key-btn_hof_pps button {{
+                        background: rgba(124, 58, 237, 0.18) !important;
+                        border: 2px solid #7c3aed !important;
+                        color: #d8b4fe !important;
+                    }}
+                    .st-key-btn_hof_pps button:hover {{
+                        background: #7c3aed !important; color: #ffffff !important;
+                        box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4) !important;
+                    }}
+
+                    .st-key-btn_hof_sueger button {{
+                        background: rgba(5, 150, 105, 0.18) !important;
+                        border: 2px solid #059669 !important;
+                        color: #6ee7b7 !important;
+                    }}
+                    .st-key-btn_hof_sueger button:hover {{
+                        background: #059669 !important; color: #ffffff !important;
+                        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4) !important;
+                    }}
+
+                    .st-key-btn_hof_back button {{
+                        background: rgba(100, 116, 139, 0.15) !important;
+                        border: 2px solid #475569 !important;
+                        color: #cbd5e1 !important;
+                    }}
+                    .st-key-btn_hof_back button:hover {{
+                        background: #475569 !important; color: #ffffff !important;
+                        box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4) !important;
+                    }}
+
+                    @keyframes floatFameEmoji {{
+                        0%, 100% {{ transform: translateY(0); filter: drop-shadow(0 0 6px rgba(251,191,36,0.4)); }}
+                        50%      {{ transform: translateY(-5px); filter: drop-shadow(0 0 12px rgba(251,191,36,0.7)); }}
+                    }}
+                </style>
+                """,
+                unsafe_allow_html=True
+            )
+
+            st.markdown("<div class='hof-page-wrapper'>", unsafe_allow_html=True)
+
+            st.markdown("<h2 class='fame-header-title'>🏛️ HALL OF FAME ALIANSI 🏛️</h2>", unsafe_allow_html=True)
+            st.markdown("<p class='fame-header-sub'>Pilih papan prasasti pahlawan yang ingin dilihat</p>", unsafe_allow_html=True)
+
+            # 👑 PILAR 1: PSM
+            st.markdown("""
+                <div class='fame-pillar-card fame-pillar-psm'>
+                    <div class='fame-pillar-emoji'>👑</div>
+                    <div class='fame-pillar-title'>HALL OF FAME PSM</div>
+                    <div class='fame-pillar-desc'>Papan peringkat pahlawan dengan akumulasi penjualan item terbanyak per periode promosi.</div>
+                </div>
+            """, unsafe_allow_html=True)
+            if st.button("👑 BUKA PAPAN PSM ➔", key="btn_hof_psm", use_container_width=True):
+                st.session_state["hof_sub_page"] = "hof_psm"
+                st.rerun()
+
+            # ⚔️ PILAR 2: PWP & SG
+            st.markdown("""
+                <div class='fame-pillar-card fame-pillar-pps'>
+                    <div class='fame-pillar-emoji'>⚔️</div>
+                    <div class='fame-pillar-title'>HALL OF FAME PWP & SG</div>
+                    <div class='fame-pillar-desc'>Papan kehormatan untuk pahlawan dengan total penjualan program PWP dan Serba Gratis terbanyak.</div>
+                </div>
+            """, unsafe_allow_html=True)
+            if st.button("⚔️ BUKA PAPAN PWP & SG ➔", key="btn_hof_pps", use_container_width=True):
+                st.session_state["hof_sub_page"] = "hof_pps"
+                st.rerun()
+
+            # 🍃 PILAR 3: SUEGER
+            st.markdown("""
+                <div class='fame-pillar-card fame-pillar-sueger'>
+                    <div class='fame-pillar-emoji'>🍃</div>
+                    <div class='fame-pillar-title'>HALL OF FAME SUEGER</div>
+                    <div class='fame-pillar-desc'>Papan pencapaian untuk kasir dengan persentase achievement program Sueger tertinggi.</div>
+                </div>
+            """, unsafe_allow_html=True)
+            if st.button("🍃 BUKA PAPAN SUEGER ➔", key="btn_hof_sueger", use_container_width=True):
+                st.session_state["hof_sub_page"] = "hof_sueger"
+                st.rerun()
+
+            st.markdown("</div>", unsafe_allow_html=True)
+
+            st.markdown("<br><hr style='border-color: rgba(251, 191, 36, 0.3); margin: 15px 0;'><br>", unsafe_allow_html=True)
+            if st.button("⬅️ KEMBALI KE RESEPSIONIS", key="btn_hof_back", use_container_width=True):
+                st.session_state["campaign_sub_page"] = "resepsionis_utama"
+                st.session_state["hof_sub_page"] = None
+                st.rerun()
+
             st.stop()
     
         # ==============================================================================
