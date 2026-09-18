@@ -2108,47 +2108,49 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA (HANGING SCROLL / BOOK OVERRIDER)
         # =========================================================================
         if st.session_state.get("campaign_sub_page", "resepsionis_utama") == "resepsionis_utama":
-            st.markdown("<h2 class='guild-lobby-title' style='text-shadow: 0 0 15px rgba(251,191,36,0.5); color: #fef08a;'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
-            st.markdown("<p class='guild-lobby-sub' style='color: #cbd5e1;'>Pilih gulungan maklumat di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
+            st.markdown("<h2 class='guild-lobby-title' style='text-shadow: 0 0 15px rgba(251,191,36,0.5); color: #fef08a; text-align: center;'>🛎️ GUILD RECEPTION DESK 🛎️</h2>", unsafe_allow_html=True)
+            st.markdown("<p class='guild-lobby-sub' style='color: #cbd5e1; text-align: center;'>Pilih gulungan maklumat di bawah ini untuk memeriksa catatan log petualangan Anda.</p>", unsafe_allow_html=True)
             
-            # --- 🎨 SIHIR CSS: HANCURKAN RADIO + AKALI JADI PAPAN GANTUNG BERANIMASI (MEDIEVAL-GLOW) ---
+            # --- 🎨 SIHIR CSS TERISOLASI (HANYA BERLAKU UNTUK KEY: rpg_hanging_scroll_selector) ---
             st.markdown(
                 """
                 <style>
-                    /* Force seluruh blok widget agar presisi di tengah lobi */
-                    div[data-testid="stRadio"] {
+                    /* Mengunci target hanya pada widget radio yang memiliki elemen internal dengan key kita */
+                    div[data-testid="stRadio"]:has(div[data-element-instance-id*="rpg_hanging_scroll_selector"]),
+                    div[data-testid="stRadio"]:has(input[id*="rpg_hanging_scroll_selector"]) {
                         display: flex !important;
-                        justify-content: center !important;
+                        flex-direction: column !important;
                         align-items: center !important;
                         width: 100% !important;
                         margin: 20px auto !important;
                     }
                     
-                    div[data-testid="stRadio"] div[role="radiogroup"] {
+                    /* Mengatur susunan vertikal gulungan khusus di meja ini */
+                    div[data-testid="stRadio"]:has(input[id*="rpg_hanging_scroll_selector"]) [data-testid="stWidgetMarkdownContainer"] + div {
                         display: flex !important;
-                        flex-direction: column !important; /* Susun vertikal ke bawah */
+                        flex-direction: column !important; 
                         gap: 25px !important;
                         width: 100% !important;
-                        max-width: 480px !important; /* Menciutkan grid agar seimbang di tengah */
+                        max-width: 480px !important;
                         margin: 0 auto !important;
                     }
                     
-                    /* MUSNAHKAN BULATAN RADIO */
-                    div[data-testid="stRadio"] input[type="radio"],
-                    div[data-testid="stRadio"] [data-testid="stRadioButtonCustomCircle"],
-                    div[data-testid="stRadio"] div[role="radiogroup"] div:has(> input[type="radio"]),
-                    div[data-testid="stRadio"] div[role="radiogroup"] label > div:first-child {
+                    /* MUSNAHKAN BULATAN RADIO HANYA DI MEJA INI */
+                    div[data-testid="stRadio"]:has(input[id*="rpg_hanging_scroll_selector"]) input[type="radio"],
+                    div[data-testid="stRadio"]:has(input[id*="rpg_hanging_scroll_selector"]) [data-testid="stRadioButtonCustomCircle"],
+                    div[data-testid="stRadio"]:has(input[id*="rpg_hanging_scroll_selector"]) [data-testid="stVisualWidget"],
+                    div[data-testid="stRadio"]:has(input[id*="rpg_hanging_scroll_selector"]) label > div:first-child {
                         display: none !important;
                         opacity: 0 !important;
                         visibility: hidden !important;
                         width: 0px !important; height: 0px !important; margin: 0 !important; padding: 0 !important;
                     }
                     
-                    /* DESAIN PAPAN GANTUNGAN PERKAMEN DENGAN EFEK GLOW KEEMASAN */
-                    div[data-testid="stRadio"] div[role="radiogroup"] > label {
+                    /* UBAH MENJADI PAPAN PERKAMEN GANTUNG HANYA DI MEJA INI */
+                    div[data-testid="stRadio"]:has(input[id*="rpg_hanging_scroll_selector"]) label {
                         background: linear-gradient(135deg, #0f172a 0%, #1e1b18 100%) !important;
                         border: 2px solid #b45309 !important;
-                        border-top: 8px solid #d97706 !important; /* Aksen jepit papan kayu magis */
+                        border-top: 8px solid #d97706 !important;
                         border-radius: 6px 6px 16px 16px !important;
                         width: 100% !important;
                         min-height: 140px !important;
@@ -2165,36 +2167,41 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
                     }
                     
-                    /* Efek Ayunan & Pendaran Terang Saat Di-Hover */
-                    div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
-                        transform: translateY(-3px) scale(1.01) !important;
+                    /* Efek Hover Khusus */
+                    div[data-testid="stRadio"]:has(input[id*="rpg_hanging_scroll_selector"]) label:hover {
+                        transform: translateY(-3px) scale(1.02) !important;
                         border-color: #fbbf24 !important;
                         border-top-color: #fbbf24 !important;
                         box-shadow: 0 0 25px rgba(251, 191, 36, 0.6), inset 0 0 15px rgba(251, 191, 36, 0.2) !important;
                     }
-
-                    /* Modifikasi font isi teks agar kontras & bercahaya */
-                    div[data-testid="stRadio"] div[role="radiogroup"] label div[data-testid="stMarkdownContainer"] p {
+        
+                    /* Font Kontras Teks Gulungan Khusus */
+                    div[data-testid="stRadio"]:has(input[id*="rpg_hanging_scroll_selector"]) label [data-testid="stMarkdownContainer"] p {
                         font-family: monospace !important;
-                        font-size: 11.5px !important;
-                        line-height: 1.5 !important;
+                        font-size: 12px !important;
+                        line-height: 1.6 !important;
                         color: #f1f5f9 !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
                     }
                     
-                    /* 🎬 SEKTOR SIHIR: EMOJI BERANIMASI MENGAMBANG DENGAN GLOW */
-                    div[data-testid="stRadio"] div[role="radiogroup"] label div[data-testid="stMarkdownContainer"] p::first-line {
-                        font-size: 40px !important;
-                        line-height: 1.3 !important;
+                    /* Animasi Emoji Baris Pertama Khusus */
+                    div[data-testid="stRadio"]:has(input[id*="rpg_hanging_scroll_selector"]) label [data-testid="stMarkdownContainer"] p::first-line {
+                        font-size: 36px !important;
+                        line-height: 1.4 !important;
                         display: inline-block !important;
-                        animation: floatingScroll 2.5s infinite ease-in-out !important;
+                        animation: floatingScrollMedieval 2.5s infinite ease-in-out !important;
                     }
                     
-                    @keyframes floatingScroll {
+                    @keyframes floatingScrollMedieval {
                         0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 6px rgba(251,191,36,0.4)); }
-                        50% { transform: translateY(-5px) scale(1.06); filter: drop-shadow(0 0 16px rgba(251,191,36,0.8)); }
+                        50% { transform: translateY(-4px) scale(1.05); filter: drop-shadow(0 0 16px rgba(251,191,36,0.8)); }
                     }
                     
-                    div[data-testid="stRadio"] > label { display: none !important; }
+                    /* Sembunyikan Judul Variabel Bawaan Khusus */
+                    div[data-testid="stRadio"]:has(input[id*="rpg_hanging_scroll_selector"]) > label:first-child { 
+                        display: none !important; 
+                    }
                 </style>
                 """, 
                 unsafe_allow_html=True
@@ -2213,20 +2220,22 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 "Cek papan pengumuman maklumat aliansi untuk memantau target pencapaian toko harian, daftar quest mingguan PSM, serta tantangan kuis berkala.\n"
             )
             
+            def proses_navigasi_gulungan():
+                pilihan = st.session_state.rpg_hanging_scroll_selector
+                if pilihan == gulungan_buruan:
+                    st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
+                elif pilihan == gulungan_misi:
+                    st.session_state["campaign_sub_page"] = "view_buku_tugas"
+        
+            # Widget di bawah ini menggunakan key yang dikunci oleh CSS di atas
             pilihan_gulungan = st.radio(
                 "SELECT_HANGING_VAL",
                 options=[gulungan_buruan, gulungan_misi],
                 index=None,
-                key="rpg_hanging_scroll_selector"
+                key="rpg_hanging_scroll_selector",
+                on_change=proses_navigasi_gulungan
             )
-            
-            if pilihan_gulungan == gulungan_buruan:
-                st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
-                st.rerun()
-            elif pilihan_gulungan == gulungan_misi:
-                st.session_state["campaign_sub_page"] = "view_buku_tugas"
-                st.rerun()
-
+        
             st.markdown("<br><hr style='border-color: rgba(251, 191, 36, 0.3); margin: 15px 0;'><br>", unsafe_allow_html=True)
             st.markdown("<div class='rpg-back-btn-box'>", unsafe_allow_html=True)
             if st.button("⬅️ KEMBALI KE KEMAH PERSIAPAN", use_container_width=True, key="btn_exit_campaign_lobby_radio_hanging"):
@@ -2234,16 +2243,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
          
-         # Memotong eksekusi halaman agar skrip di bawahnya tidak ikut terpanggil
             st.stop()
+
 
         # =========================================================================
         # 📘 JURNAL BURUAN INDIVIDU (PEMISAHAN RANKING: TINGKAT LEVEL = RANKING PPS, RANKING PENJUALAN = RANKING PSM)
         # =========================================================================
         elif st.session_state.get("campaign_sub_page") == "view_buku_pencapaian":
             
-            import random
-            from datetime import datetime
             
             current_page = st.session_state.get("book_page_number", 1)
             username_hero = str(st.session_state.get("username", "RIZKI GUNAWAN")).strip().upper()
