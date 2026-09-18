@@ -4622,7 +4622,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.stop()
 
         # =========================================================================
-        # 🍃 HALAMAN 3C: HALL OF FAME SUEGER (DATA REAL)
+        # 🍃 HALAMAN 3C: HALL OF FAME SUEGER (DUAL: QTY + %)
         # =========================================================================
         elif (
             st.session_state.get("campaign_sub_page") == "view_hall_of_fame"
@@ -4665,9 +4665,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     0% { opacity: 0; transform: translateY(30px) scale(0.95); }
                     100% { opacity: 1; transform: translateY(0) scale(1); }
                 }
-                @keyframes cardGlow {
+                @keyframes cardGlowQty {
                     0%, 100% { box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 15px rgba(16, 185, 129, 0.3); }
                     50% { box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 35px rgba(16, 185, 129, 0.6); }
+                }
+                @keyframes cardGlowPct {
+                    0%, 100% { box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 15px rgba(110, 231, 183, 0.3); }
+                    50% { box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 35px rgba(110, 231, 183, 0.6); }
                 }
                 @keyframes mysteryPulse {
                     0%, 100% { filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.6)); transform: scale(1); }
@@ -4689,7 +4693,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     font-size: 11.5px; margin-bottom: 20px;
                 }
 
-                /* CAROUSEL */
                 .hof-carousel-wrapper {
                     display: flex;
                     flex-direction: row;
@@ -4710,7 +4713,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     background: rgba(15, 23, 42, 0.5);
                     border-radius: 4px;
                 }
-                .hof-carousel-wrapper.warna-sgr::-webkit-scrollbar-thumb {
+                .hof-carousel-wrapper::-webkit-scrollbar-thumb {
                     background: linear-gradient(90deg, #064e3b, #10b981, #064e3b);
                     border-radius: 4px;
                 }
@@ -4725,18 +4728,32 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     position: relative;
                     border-radius: 18px;
                     padding: 3px;
-                    animation: cardEnter 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards,
-                            cardGlow 4s infinite ease-in-out 1s;
+                    animation: cardEnter 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards;
                     transition: transform 0.3s ease;
                 }
-                .hof-card.warna-sgr {
+                /* QTY — hijau tua */
+                .hof-card.mode-qty {
                     background: linear-gradient(160deg, #0f172a 0%, #0a1f16 50%, #0f172a 100%);
+                    animation: cardEnter 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards,
+                            cardGlowQty 4s infinite ease-in-out 1s;
                     box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 15px rgba(16, 185, 129, 0.3);
                 }
-                .hof-card.warna-sgr .hof-card-inner {
+                .hof-card.mode-qty .hof-card-inner {
                     background: linear-gradient(160deg, #0a0d1a 0%, #0a1f16 100%);
                     border: 2px solid #10b981;
                     box-shadow: inset 0 0 20px rgba(16, 185, 129, 0.08);
+                }
+                /* % — hijau muda */
+                .hof-card.mode-pct {
+                    background: linear-gradient(160deg, #0f172a 0%, #0e2a20 50%, #0f172a 100%);
+                    animation: cardEnter 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards,
+                            cardGlowPct 4s infinite ease-in-out 1s;
+                    box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 15px rgba(110, 231, 183, 0.3);
+                }
+                .hof-card.mode-pct .hof-card-inner {
+                    background: linear-gradient(160deg, #0a0d1a 0%, #0e2a20 100%);
+                    border: 2px solid #6ee7b7;
+                    box-shadow: inset 0 0 20px rgba(110, 231, 183, 0.08);
                 }
 
                 .hof-card-inner {
@@ -4752,31 +4769,40 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 .hof-ornament {
                     position: absolute; font-size: 16px; line-height: 1; z-index: 5;
                 }
-                .warna-sgr .hof-ornament { color: #10b981; filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.8)); }
+                .mode-qty .hof-ornament { color: #10b981; filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.8)); }
+                .mode-pct .hof-ornament { color: #6ee7b7; filter: drop-shadow(0 0 4px rgba(110, 231, 183, 0.8)); }
                 .hof-orn-tl { top: 8px; left: 10px; }
                 .hof-orn-tr { top: 8px; right: 10px; }
                 .hof-orn-bl { bottom: 8px; left: 10px; }
                 .hof-orn-br { bottom: 8px; right: 10px; }
+
                 .hof-period-badge {
                     text-align: center;
                     border-radius: 8px;
                     padding: 7px 12px; font-family: monospace;
-                    font-size: 11px; font-weight: 900;
+                    font-size: 10.5px; font-weight: 900;
                     letter-spacing: 1px; margin-bottom: 20px;
                     width: 100%;
                     box-sizing: border-box;
                 }
-                .warna-sgr .hof-period-badge {
-                    background: linear-gradient(90deg, rgba(6, 78, 59, 0.4), rgba(16, 185, 129, 0.3), rgba(6, 78, 59, 0.4));
+                .mode-qty .hof-period-badge {
+                    background: linear-gradient(90deg, rgba(6, 78, 59, 0.5), rgba(16, 185, 129, 0.3), rgba(6, 78, 59, 0.5));
                     border: 1px solid #10b981;
                     color: #6ee7b7;
                     text-shadow: 0 0 6px rgba(110, 231, 183, 0.5);
+                }
+                .mode-pct .hof-period-badge {
+                    background: linear-gradient(90deg, rgba(16, 185, 129, 0.5), rgba(110, 231, 183, 0.3), rgba(16, 185, 129, 0.5));
+                    border: 1px solid #6ee7b7;
+                    color: #ffffff;
+                    text-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
                 }
 
                 .hof-crown-box { text-align: center; position: relative; height: 70px; margin-bottom: 8px; width: 100%; }
                 .hof-crown { font-size: 48px; display: inline-block; animation: crownFloat 2.5s infinite ease-in-out; }
                 .hof-sparkle { position: absolute; font-size: 14px; }
-                .warna-sgr .hof-sparkle { color: #6ee7b7; filter: drop-shadow(0 0 6px #10b981); }
+                .mode-qty .hof-sparkle { color: #6ee7b7; filter: drop-shadow(0 0 6px #10b981); }
+                .mode-pct .hof-sparkle { color: #ffffff; filter: drop-shadow(0 0 6px #6ee7b7); }
                 .hof-sparkle-1 { top: 5px; left: 30%; animation: sparkleFloat1 2s infinite ease-in-out; }
                 .hof-sparkle-2 { top: 20px; right: 30%; animation: sparkleFloat2 2.3s infinite ease-in-out 0.3s; }
                 .hof-sparkle-3 { bottom: 0px; left: 50%; transform: translateX(-50%); animation: sparkleFloat1 2.6s infinite ease-in-out 0.7s; }
@@ -4789,9 +4815,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     font-size: 40px;
                     animation: avatarBob 2.5s infinite ease-in-out;
                 }
-                .warna-sgr .hof-avatar-circle {
+                .mode-qty .hof-avatar-circle {
                     border: 3px solid #10b981;
                     box-shadow: 0 0 20px rgba(16, 185, 129, 0.5), inset 0 0 10px rgba(0, 0, 0, 0.6);
+                }
+                .mode-pct .hof-avatar-circle {
+                    border: 3px solid #6ee7b7;
+                    box-shadow: 0 0 20px rgba(110, 231, 183, 0.5), inset 0 0 10px rgba(0, 0, 0, 0.6);
                 }
 
                 .hof-champion-name {
@@ -4801,10 +4831,19 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 }
                 .hof-champion-qty {
                     text-align: center; font-family: monospace; font-size: 22px; font-weight: 900;
+                    margin-bottom: 5px;
                 }
-                .warna-sgr .hof-champion-qty {
+                .mode-qty .hof-champion-qty {
                     color: #10b981;
                     text-shadow: 0 0 15px rgba(16, 185, 129, 0.8);
+                }
+                .mode-pct .hof-champion-qty {
+                    color: #6ee7b7;
+                    text-shadow: 0 0 15px rgba(110, 231, 183, 0.8);
+                }
+                .hof-champion-detail {
+                    text-align: center; font-family: monospace; font-size: 9.5px;
+                    color: #94a3b8; letter-spacing: 0.3px; line-height: 1.5;
                 }
 
                 /* KARTU MISTERI */
@@ -4864,7 +4903,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     font-size: 10.5px; line-height: 1.6; padding: 0 10px;
                 }
 
-                /* TOMBOL */
                 div[data-testid="stButton"] {
                     max-width: 480px !important;
                     margin: 8px auto 10px auto !important;
@@ -4925,7 +4963,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             # ==== HEADER ====
             st.markdown("<h2 class='hof-sgr-page-title'>🍃 HALL OF FAME SUEGER 🍃</h2>", unsafe_allow_html=True)
-            st.markdown("<p class='hof-sgr-page-sub'>Papan kehormatan program Sueger</p>", unsafe_allow_html=True)
+            st.markdown("<p class='hof-sgr-page-sub'>Papan kehormatan program Sueger — Qty & Achievement %</p>", unsafe_allow_html=True)
 
             # ==== AMBIL DATA ====
             df_pps_periode = st.session_state.get("periods_pps_df", pd.DataFrame()).copy()
@@ -4937,10 +4975,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
             today = datetime.now().date()
 
-            # ==== BANGUN KARTU DINAMIS DARI PERIODE_PPS yang SGR ====
-            kartu_periode = []
-            kartu_bulan = []
-            kartu_alltime = None
+            # ==== BANGUN KARTU (Base) ====
+            kartu_base = []
 
             if not df_pps_periode.empty and all(
                 c in df_pps_periode.columns for c in ["period_id", "start_date", "end_date"]
@@ -4949,14 +4985,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 df_pps_periode["end_dt"] = pd.to_datetime(df_pps_periode["end_date"], errors="coerce")
                 df_pps_periode = df_pps_periode.dropna(subset=["start_dt", "end_dt"])
 
-                # Filter hanya SGR (Sueger)
                 df_filter = df_pps_periode[
                     df_pps_periode["period_id"].astype(str).str.upper().str.strip().str.startswith("SGR", na=False)
                 ]
 
                 df_filter = df_filter.sort_values("start_dt", ascending=True).reset_index(drop=True)
 
-                # === KARTU PERIODE ===
+                # KARTU PERIODE
                 for _, row_p in df_filter.iterrows():
                     p_id = str(row_p["period_id"]).strip()
                     p_start = row_p["start_dt"].date()
@@ -4968,33 +5003,30 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     else:
                         label_tgl = f"{p_start.day} {p_start.strftime('%b').upper()} - {p_end.day} {p_end.strftime('%b').upper()}"
 
-                    kartu_periode.append({
+                    kartu_base.append({
                         "key": f"periode_{p_id}",
-                        "label": f"📅 {label_tgl}",
+                        "label_tgl": label_tgl,
                         "tipe": "periode",
                         "start_date": p_start,
                         "end_date": p_end,
                         "is_active": not is_selesai,
                     })
 
-                # === KARTU ALL TIME ===
+                # ALL TIME
                 df_selesai = df_filter[df_filter["end_dt"].dt.date < today]
                 if not df_selesai.empty:
-                    kartu_alltime = {
+                    kartu_base.append({
                         "key": "alltime",
-                        "label": "🏆 ALL TIME",
+                        "label_tgl": "ALL TIME",
                         "tipe": "alltime",
                         "periode_list": [
-                            {
-                                "start_date": r["start_dt"].date(),
-                                "end_date": r["end_dt"].date(),
-                            }
+                            {"start_date": r["start_dt"].date(), "end_date": r["end_dt"].date()}
                             for _, r in df_selesai.iterrows()
                         ],
                         "is_active": False,
-                    }
+                    })
 
-                # === KARTU BULAN ===
+                # BULAN
                 if not df_selesai.empty:
                     df_bulan = df_selesai.copy()
                     df_bulan["bulan_key"] = df_bulan["start_dt"].dt.strftime("%Y-%m")
@@ -5007,33 +5039,22 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         b_label = row_bulan["bulan_label"]
                         periode_bulan = df_bulan[df_bulan["bulan_key"] == b_key]
 
-                        kartu_bulan.append({
+                        kartu_base.append({
                             "key": f"bulan_{b_key}",
-                            "label": f"📆 {b_label}",
+                            "label_tgl": b_label,
                             "tipe": "bulan",
                             "periode_list": [
-                                {
-                                    "start_date": r["start_dt"].date(),
-                                    "end_date": r["end_dt"].date(),
-                                }
+                                {"start_date": r["start_dt"].date(), "end_date": r["end_dt"].date()}
                                 for _, r in periode_bulan.iterrows()
                             ],
                             "is_active": False,
                         })
 
-            kartu_list = kartu_periode + kartu_bulan
-            if kartu_alltime:
-                kartu_list.append(kartu_alltime)
-
-            # ==== HITUNG JUARA SUEGER ====
-            # Pakai kolom qty_sueger kalau ada, fallback ke redeem_sueger
-            def get_juara_sueger(kartu):
-                if df_sales_pps.empty:
-                    return None
-                if "kasir_name" not in df_sales_pps.columns:
+            # ==== HITUNG JUARA QTY ====
+            def get_juara_qty(kartu):
+                if df_sales_pps.empty or "kasir_name" not in df_sales_pps.columns:
                     return None
 
-                # Cari kolom sueger
                 _kolom = None
                 for _c in ["qty_sueger", "redeem_sueger", "qty_suegeer", "redeem_suegeer"]:
                     if _c in df_sales_pps.columns:
@@ -5042,7 +5063,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 if _kolom is None:
                     return None
 
-                # Cari kolom tanggal
                 _date_col = None
                 for _c in ["updated_at", "start_date", "tanggal", "date"]:
                     if _c in df_sales_pps.columns:
@@ -5056,10 +5076,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 df_temp = df_temp.dropna(subset=["_start"])
 
                 if kartu["tipe"] == "periode":
-                    periode_list = [{
-                        "start_date": kartu["start_date"],
-                        "end_date": kartu["end_date"],
-                    }]
+                    periode_list = [{"start_date": kartu["start_date"], "end_date": kartu["end_date"]}]
                 else:
                     periode_list = kartu.get("periode_list", [])
 
@@ -5088,13 +5105,89 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 grouped = grouped.sort_values(_kolom, ascending=False).reset_index(drop=True)
                 top1 = grouped.iloc[0]
 
+                return {"nama": str(top1["kasir_clean"]), "qty": int(top1[_kolom])}
+
+            # ==== HITUNG JUARA % ====
+            def get_juara_pct(kartu, min_syarat=10):
+                if df_sales_pps.empty or "kasir_name" not in df_sales_pps.columns:
+                    return None
+                if "syarat_sueger" not in df_sales_pps.columns or "redeem_sueger" not in df_sales_pps.columns:
+                    return None
+
+                _date_col = None
+                for _c in ["updated_at", "start_date", "tanggal", "date"]:
+                    if _c in df_sales_pps.columns:
+                        _date_col = _c
+                        break
+                if _date_col is None:
+                    return None
+
+                df_temp = df_sales_pps.copy()
+                df_temp["_start"] = pd.to_datetime(df_temp[_date_col], errors="coerce")
+                df_temp = df_temp.dropna(subset=["_start"])
+
+                if kartu["tipe"] == "periode":
+                    periode_list = [{"start_date": kartu["start_date"], "end_date": kartu["end_date"]}]
+                else:
+                    periode_list = kartu.get("periode_list", [])
+
+                if not periode_list:
+                    return None
+
+                mask = pd.Series([False] * len(df_temp), index=df_temp.index)
+                for p in periode_list:
+                    mask = mask | (
+                        (df_temp["_start"].dt.date >= p["start_date"]) &
+                        (df_temp["_start"].dt.date <= p["end_date"])
+                    )
+                df_temp = df_temp[mask]
+
+                if df_temp.empty:
+                    return None
+
+                df_temp["kasir_clean"] = df_temp["kasir_name"].astype(str).str.strip()
+                df_temp["syarat_sueger"] = pd.to_numeric(df_temp["syarat_sueger"], errors="coerce").fillna(0)
+                df_temp["redeem_sueger"] = pd.to_numeric(df_temp["redeem_sueger"], errors="coerce").fillna(0)
+
+                grouped = df_temp.groupby("kasir_clean").agg(
+                    total_syarat=("syarat_sueger", "sum"),
+                    total_redeem=("redeem_sueger", "sum"),
+                ).reset_index()
+
+                # Skip syarat=0
+                grouped = grouped[grouped["total_syarat"] > 0]
+                if grouped.empty:
+                    return None
+
+                # Minimal syarat
+                grouped = grouped[grouped["total_syarat"] >= min_syarat]
+                if grouped.empty:
+                    return None
+
+                grouped["pct"] = (grouped["total_redeem"] / grouped["total_syarat"]) * 100
+                grouped = grouped.sort_values("pct", ascending=False).reset_index(drop=True)
+                top1 = grouped.iloc[0]
+
                 return {
                     "nama": str(top1["kasir_clean"]),
-                    "qty": int(top1[_kolom]),
+                    "pct": float(top1["pct"]),
+                    "syarat": int(top1["total_syarat"]),
+                    "redeem": int(top1["total_redeem"]),
                 }
 
-            for k in kartu_list:
-                k["juara"] = get_juara_sueger(k)
+            # Precompute
+            for k in kartu_base:
+                k["juara_qty"] = get_juara_qty(k)
+                k["juara_pct"] = get_juara_pct(k)
+
+            # Bangun kartu_list: per periode → Qty dulu, lalu %
+            kartu_list = []
+            for k in kartu_base:
+                # Kartu QTY
+                kartu_list.append({**k, "mode": "qty"})
+                # Kartu % (hanya kalau bukan periode aktif — misteri cukup 1x saja)
+                if not (k.get("is_active") and k["tipe"] == "periode"):
+                    kartu_list.append({**k, "mode": "pct"})
 
             total_kartu = len(kartu_list)
 
@@ -5119,11 +5212,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 st.stop()
 
             # ==== CAROUSEL ====
-            kartu_parts = ["<div class='hof-carousel-wrapper warna-sgr'>"]
+            kartu_parts = ["<div class='hof-carousel-wrapper'>"]
 
-            for idx, k in enumerate(kartu_list):
-                alltime_class = "hof-card-alltime" if k["tipe"] == "alltime" else ""
+            for k in kartu_list:
+                mode = k["mode"]
 
+                # MISTERI (khusus periode aktif — cukup 1x, di mode qty)
                 if k.get("is_active") and k["tipe"] == "periode":
                     konten = (
                         "<div class='hof-mystery-icon'>❓</div>"
@@ -5132,9 +5226,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         "<div class='hof-mystery-sub'>Prasasti juara akan dibuka setelah periode selesai (H+1).<br><br>"
                         "Selesaikan pertempuran periode ini dulu!</div>"
                     )
-                    card_cls = "hof-card hof-card-mystery warna-sgr"
-                elif k.get("juara"):
-                    juara = k["juara"]
+                    card_cls = "hof-card hof-card-mystery"
+                    badge = "📅 " + k["label_tgl"]
+                elif mode == "qty" and k.get("juara_qty"):
+                    juara = k["juara_qty"]
                     av = get_avatar(juara["nama"])
                     konten = (
                         "<div class='hof-crown-box'>"
@@ -5149,14 +5244,37 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         "<div class='hof-champion-name'>" + juara["nama"] + "</div>"
                         "<div class='hof-champion-qty'>" + str(juara["qty"]) + " Pcs</div>"
                     )
-                    card_cls = "hof-card warna-sgr " + alltime_class
+                    card_cls = "hof-card mode-qty"
+                    badge = "📊 QTY · " + k["label_tgl"]
+                elif mode == "pct" and k.get("juara_pct"):
+                    juara = k["juara_pct"]
+                    av = get_avatar(juara["nama"])
+                    konten = (
+                        "<div class='hof-crown-box'>"
+                        "<span class='hof-sparkle hof-sparkle-1'>✦</span>"
+                        "<span class='hof-crown'>💯</span>"
+                        "<span class='hof-sparkle hof-sparkle-2'>✦</span>"
+                        "<span class='hof-sparkle hof-sparkle-3'>✦</span>"
+                        "</div>"
+                        "<div class='hof-avatar-wrapper'>"
+                        "<div class='hof-avatar-circle'>" + av + "</div>"
+                        "</div>"
+                        "<div class='hof-champion-name'>" + juara["nama"] + "</div>"
+                        "<div class='hof-champion-qty'>" + f"{juara['pct']:.1f}%" + "</div>"
+                        "<div class='hof-champion-detail'>Syarat: " + str(juara["syarat"]) + " | Redeem: " + str(juara["redeem"]) + "</div>"
+                    )
+                    card_cls = "hof-card mode-pct"
+                    badge = "🎯 % · " + k["label_tgl"]
                 else:
+                    # Empty
+                    mode_label = "Qty" if mode == "qty" else "Achievement %"
                     konten = (
                         "<div class='hof-empty-icon'>📭</div>"
-                        "<div class='hof-empty-title'>BELUM ADA PENJUALAN</div>"
-                        "<div class='hof-empty-sub'>Tidak ada data penjualan Sueger untuk periode ini.</div>"
+                        "<div class='hof-empty-title'>BELUM ADA DATA</div>"
+                        "<div class='hof-empty-sub'>Tidak ada data Sueger (" + mode_label + ") untuk periode ini.</div>"
                     )
-                    card_cls = "hof-card hof-card-empty warna-sgr " + alltime_class
+                    card_cls = "hof-card hof-card-empty mode-" + mode
+                    badge = ("📊 QTY · " if mode == "qty" else "🎯 % · ") + k["label_tgl"]
 
                 kartu_parts.append(
                     "<div class='" + card_cls + "'>"
@@ -5165,7 +5283,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     "<div class='hof-ornament hof-orn-tr'>⚜️</div>"
                     "<div class='hof-ornament hof-orn-bl'>⚜️</div>"
                     "<div class='hof-ornament hof-orn-br'>⚜️</div>"
-                    "<div class='hof-period-badge'>" + k["label"] + "</div>"
+                    "<div class='hof-period-badge'>" + badge + "</div>"
                     + konten +
                     "</div>"
                     "</div>"
