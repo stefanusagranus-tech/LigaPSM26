@@ -3585,7 +3585,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.stop()
 
         # =========================================================================
-        # ⚔️ HALAMAN 3B: HALL OF FAME PWP & SG (PLACEHOLDER)
+        # ⚔️ HALAMAN 3B: HAoP & SG (PLACEHOLDER)
         # =========================================================================
         elif (
             st.session_state.get("campaign_sub_page") == "view_hall_of_fame"
