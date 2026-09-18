@@ -2107,25 +2107,17 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         # =========================================================================
                  
         # =========================================================================
-        # 🚪 KONDISI 1: MEJA RESEPSIONIS UTAMA
-        # 3 Gulungan + Backdrop Miyazaki + Warna Beda Per Kartu
-        # Streamlit 1.64.0 ✅
+        # 🚪 MEJA RESEPSIONIS UTAMA — VERSI RAPI (JARAK KARTU & TOMBOL)
         # =========================================================================
         
         if st.session_state.get("campaign_sub_page", "resepsionis_utama") == "resepsionis_utama":
         
-            # ---------------------------------------------------------------------
-            # 🌌 BACKGROUND IMAGE — Miyazaki Style Medieval Guild Hall
-            # ---------------------------------------------------------------------
             url_gambar_latar = "https://i.imgur.com/9HTvsmJ.jpeg"
         
-            # =====================================================================
-            # 🎨 SUNTIK CSS GLOBAL
-            # =====================================================================
             st.markdown(
                 f"""
                 <style>
-                    /* 🌌 BACKGROUND HALAMAN */
+                    /* 🌌 BACKGROUND */
                     .stApp {{
                         background-image: linear-gradient(rgba(15, 23, 42, 0.82), rgba(15, 23, 42, 0.82)), url("{url_gambar_latar}") !important;
                         background-size: cover !important;
@@ -2134,13 +2126,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         background-attachment: fixed !important;
                     }}
         
-                    /* 🏗️ KARTU DASAR */
+                    /* 🏗️ KARTU — rounded penuh */
                     .rpg-card-box {{
                         background: linear-gradient(135deg, #0f172a 0%, #1e1b18 100%) !important;
                         border: 2px solid #b45309 !important;
                         border-top: 6px solid #d97706 !important;
-                        border-radius: 12px 12px 0 0 !important;
-                        padding: 25px 20px 15px 20px !important;
+                        border-radius: 12px !important;
+                        padding: 25px 20px 20px 20px !important;
                         margin-bottom: 0 !important;
                         box-shadow: 0 4px 15px rgba(0,0,0,0.6), inset 0 0 15px rgba(251, 191, 36, 0.02) !important;
                         text-align: center;
@@ -2149,24 +2141,21 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         margin-right: auto;
                     }}
         
-                    /* 🎨 VARIAN WARNA KARTU */
+                    /* 🎨 WARNA KARTU */
                     .rpg-card-blue {{
                         border: 2px solid #1d4ed8 !important;
                         border-top: 6px solid #3b82f6 !important;
-                        box-shadow: 0 4px 15px rgba(0,0,0,0.6), inset 0 0 15px rgba(59, 130, 246, 0.05) !important;
                     }}
                     .rpg-card-purple {{
                         border: 2px solid #7c3aed !important;
                         border-top: 6px solid #a855f7 !important;
-                        box-shadow: 0 4px 15px rgba(0,0,0,0.6), inset 0 0 15px rgba(168, 85, 247, 0.05) !important;
                     }}
                     .rpg-card-gold {{
                         border: 2px solid #b45309 !important;
                         border-top: 6px solid #d97706 !important;
-                        box-shadow: 0 4px 15px rgba(0,0,0,0.6), inset 0 0 15px rgba(251, 191, 36, 0.05) !important;
                     }}
         
-                    /* ✨ EMOJI MENGAMBANG */
+                    /* ✨ EMOJI */
                     .rpg-card-emoji {{
                         font-size: 38px;
                         line-height: 1;
@@ -2175,7 +2164,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         animation: floatScrollBtn 2.5s infinite ease-in-out;
                     }}
         
-                    /* 📘 JUDUL KARTU */
+                    /* 📘 JUDUL */
                     .rpg-card-title {{
                         font-family: monospace;
                         font-size: 15px;
@@ -2185,28 +2174,27 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         letter-spacing: 0.5px;
                     }}
         
-                    /* 📝 DESKRIPSI KARTU */
+                    /* 📝 DESKRIPSI */
                     .rpg-card-desc {{
                         font-family: monospace;
                         font-size: 12px;
                         line-height: 1.6;
                         color: #cbd5e1;
-                        margin-bottom: 5px;
+                        margin-bottom: 0;
                     }}
         
-                    /* 🎯 WRAPPER TOMBOL STREAMLIT */
+                    /* 🎯 WRAPPER TOMBOL */
                     div[data-testid="stButton"] {{
                         max-width: 480px !important;
-                        margin: 0 auto 35px auto !important;
+                        margin: 8px auto 30px auto !important;  /* ← jarak 8px dari kartu */
                         padding: 0 !important;
                     }}
         
-                    /* 🔘 TOMBOL DEFAULT (fallback) */
+                    /* 🔘 TOMBOL — rounded penuh, ada jarak */
                     div[data-testid="stButton"] > button {{
                         background: rgba(180, 83, 9, 0.15) !important;
                         border: 2px solid #b45309 !important;
-                        border-top: none !important;
-                        border-radius: 0 0 12px 12px !important;
+                        border-radius: 12px !important;
                         color: #fde047 !important;
                         font-family: monospace !important;
                         font-size: 13px !important;
@@ -2215,25 +2203,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         transition: all 0.3s ease !important;
                         width: 100% !important;
                         display: block !important;
-                        margin-top: -2px !important;
                     }}
         
-                    /* ============================================
-                       🔵 TOMBOL 1 — JURNAL BURUAN (BIRU)
-                       ============================================ */
+                    /* 🔵 TOMBOL 1 — BIRU */
                     .st-key-btn_go_to_jurnal_buruan_camp_style button {{
                         background: rgba(29, 78, 216, 0.18) !important;
                         border: 2px solid #1d4ed8 !important;
-                        border-top: none !important;
-                        border-radius: 0 0 12px 12px !important;
                         color: #93c5fd !important;
-                        font-family: monospace !important;
-                        font-size: 13px !important;
-                        font-weight: bold !important;
-                        padding: 12px 20px !important;
-                        width: 100% !important;
-                        margin-top: -2px !important;
-                        transition: all 0.3s ease !important;
                     }}
                     .st-key-btn_go_to_jurnal_buruan_camp_style button:hover {{
                         background: #1d4ed8 !important;
@@ -2241,22 +2217,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4) !important;
                     }}
         
-                    /* ============================================
-                       🟣 TOMBOL 2 — KITAB MISI (UNGU)
-                       ============================================ */
+                    /* 🟣 TOMBOL 2 — UNGU */
                     .st-key-btn_go_to_kitab_misi_camp_style button {{
                         background: rgba(124, 58, 237, 0.18) !important;
                         border: 2px solid #7c3aed !important;
-                        border-top: none !important;
-                        border-radius: 0 0 12px 12px !important;
                         color: #d8b4fe !important;
-                        font-family: monospace !important;
-                        font-size: 13px !important;
-                        font-weight: bold !important;
-                        padding: 12px 20px !important;
-                        width: 100% !important;
-                        margin-top: -2px !important;
-                        transition: all 0.3s ease !important;
                     }}
                     .st-key-btn_go_to_kitab_misi_camp_style button:hover {{
                         background: #7c3aed !important;
@@ -2264,22 +2229,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4) !important;
                     }}
         
-                    /* ============================================
-                       🟡 TOMBOL 3 — HALL OF FAME (EMAS)
-                       ============================================ */
+                    /* 🟡 TOMBOL 3 — EMAS */
                     .st-key-btn_go_to_hall_of_fame button {{
                         background: rgba(180, 83, 9, 0.18) !important;
                         border: 2px solid #b45309 !important;
-                        border-top: none !important;
-                        border-radius: 0 0 12px 12px !important;
                         color: #fde047 !important;
-                        font-family: monospace !important;
-                        font-size: 13px !important;
-                        font-weight: bold !important;
-                        padding: 12px 20px !important;
-                        width: 100% !important;
-                        margin-top: -2px !important;
-                        transition: all 0.3s ease !important;
                     }}
                     .st-key-btn_go_to_hall_of_fame button:hover {{
                         background: #b45309 !important;
@@ -2293,11 +2247,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         border: 2px solid #475569 !important;
                         border-radius: 12px !important;
                         color: #cbd5e1 !important;
+                        padding: 12px 20px !important;
                         font-family: monospace !important;
                         font-size: 13px !important;
                         font-weight: bold !important;
-                        padding: 12px 20px !important;
-                        margin-top: 0 !important;
                         transition: all 0.3s ease !important;
                     }}
                     .st-key-btn_exit_reception_lobby_camp_style button:hover {{
@@ -2306,16 +2259,10 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4) !important;
                     }}
         
-                    /* 🎬 ANIMASI MENGAMBANG */
+                    /* 🎬 ANIMASI */
                     @keyframes floatScrollBtn {{
-                        0%, 100% {{
-                            transform: translateY(0);
-                            filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.3));
-                        }}
-                        50% {{
-                            transform: translateY(-4px);
-                            filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.6));
-                        }}
+                        0%, 100% {{ transform: translateY(0); filter: drop-shadow(0 0 4px rgba(251,191,36,0.3)); }}
+                        50%      {{ transform: translateY(-4px); filter: drop-shadow(0 0 10px rgba(251,191,36,0.6)); }}
                     }}
                 </style>
                 """,
@@ -2323,7 +2270,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             )
         
             # =====================================================================
-            # 🏷️ JUDUL HALAMAN
+            # 🏷️ JUDUL
             # =====================================================================
             st.markdown(
                 "<h2 style='text-shadow: 0 0 15px rgba(251,191,36,0.5); color: #fef08a; "
@@ -2339,7 +2286,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             )
         
             # =====================================================================
-            # 🏗️ KARTU 1: JURNAL BURUAN INDIVIDU (BIRU 🔵)
+            # 🔵 KARTU 1 — JURNAL BURUAN
             # =====================================================================
             st.markdown(
                 """
@@ -2351,16 +2298,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 """,
                 unsafe_allow_html=True
             )
-            if st.button(
-                "Buka Catatan ➔",
-                key="btn_go_to_jurnal_buruan_camp_style",
-                use_container_width=True
-            ):
+            if st.button("Buka Catatan ➔", key="btn_go_to_jurnal_buruan_camp_style", use_container_width=True):
                 st.session_state["campaign_sub_page"] = "view_buku_pencapaian"
                 st.rerun()
         
             # =====================================================================
-            # 🏗️ KARTU 2: KITAB MISI & QUIZ GUILD (UNGU 🟣)
+            # 🟣 KARTU 2 — KITAB MISI
             # =====================================================================
             st.markdown(
                 """
@@ -2372,16 +2315,12 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 """,
                 unsafe_allow_html=True
             )
-            if st.button(
-                "Periksa Kitab ➔",
-                key="btn_go_to_kitab_misi_camp_style",
-                use_container_width=True
-            ):
+            if st.button("Periksa Kitab ➔", key="btn_go_to_kitab_misi_camp_style", use_container_width=True):
                 st.session_state["campaign_sub_page"] = "view_buku_tugas"
                 st.rerun()
         
             # =====================================================================
-            # 🏗️ KARTU 3: HALL OF FAME ALIANSI (EMAS 🟡)
+            # 🟡 KARTU 3 — HALL OF FAME
             # =====================================================================
             st.markdown(
                 """
@@ -2393,26 +2332,18 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 """,
                 unsafe_allow_html=True
             )
-            if st.button(
-                "Lihat Papan Peringkat ➔",
-                key="btn_go_to_hall_of_fame",
-                use_container_width=True
-            ):
+            if st.button("Lihat Papan Peringkat ➔", key="btn_go_to_hall_of_fame", use_container_width=True):
                 st.session_state["campaign_sub_page"] = "view_hall_of_fame"
                 st.rerun()
         
             # =====================================================================
-            # ↩️ TOMBOL KEMBALI KE BERANDA KOTA
+            # ↩️ KEMBALI
             # =====================================================================
             st.markdown(
                 "<br><hr style='border-color: rgba(251, 191, 36, 0.3); margin: 15px 0;'><br>",
                 unsafe_allow_html=True
             )
-            if st.button(
-                "⬅️ KEMBALI KE BERANDA KOTA",
-                use_container_width=True,
-                key="btn_exit_reception_lobby_camp_style"
-            ):
+            if st.button("⬅️ KEMBALI KE BERANDA KOTA", use_container_width=True, key="btn_exit_reception_lobby_camp_style"):
                 st.session_state.current_camp_menu = "main"
                 st.rerun()
         
