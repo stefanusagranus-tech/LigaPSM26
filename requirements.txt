@@ -6,3 +6,4 @@ plotly
 st-gsheets-connection>=0.1.0
 streamlit-option-menu
 xlsxwriter
+streamlit-carousel
