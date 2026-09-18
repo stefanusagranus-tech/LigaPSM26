@@ -3500,9 +3500,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 </style>
                 """, unsafe_allow_html=True)
 
-                            # ==== BACKGROUND ====
-                            st.markdown(
-                                f"""
+            # ==== BACKGROUND ====
+            st.markdown(
+                f"""
                 <style>
                 .stApp {{
                     background-image: linear-gradient(rgba(10, 13, 26, 0.85), rgba(10, 13, 26, 0.92)), url("{url_gambar_latar}") !important;
@@ -3922,8 +3922,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 </style>
                 """, unsafe_allow_html=True)
 
-                            st.markdown(
-                                f"""
+            st.markdown(
+                f"""
                 <style>
                 .stApp {{
                     background-image: linear-gradient(rgba(10, 13, 26, 0.88), rgba(10, 13, 26, 0.95)), url("{url_gambar_latar}") !important;
