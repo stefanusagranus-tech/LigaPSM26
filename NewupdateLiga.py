@@ -14885,7 +14885,7 @@ elif selected_tab == "⚙️ Pengaturan & Master":
             # Baca data log SEKALI
             try:
                 with st.spinner("⏳ Membaca activity log..."):
-                    _log_sheet_df = conn.read(worksheet="ACTIVITY_LOG", ttl=30)
+                    _log_sheet_df = conn.read(worksheet="ACTIVITY_LOG", ttl=300)
             except Exception as e_log:
                 st.warning(f"⚠️ Sheet ACTIVITY_LOG belum dibuat atau error: {e_log}")
                 _log_sheet_df = pd.DataFrame()
