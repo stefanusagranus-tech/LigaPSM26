@@ -14021,8 +14021,8 @@ elif selected_tab == "⚙️ Pengaturan & Master":
         with col_rep2:
             selected_psm_period_opt = st.selectbox("🎯 Filter Periode PSM", psm_opt, key="rep_period_sel")
 
-        # 2 TOMBOL: WA & PDF
-        col_btn_wa, col_btn_pdf = st.columns(2)
+        # 3 TOMBOL: WA, PDF, PPT
+        col_btn_wa, col_btn_pdf, col_btn_ppt = st.columns(3)
 
         with col_btn_wa:
             btn_gen_wa = st.button(
@@ -14039,10 +14039,17 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                 key="btn_gen_pdf_summary",
             )
 
+        with col_btn_ppt:
+            btn_gen_ppt = st.button(
+                "🎨 Generate Report PPT",
+                use_container_width=True,
+                key="btn_gen_ppt_summary",
+            )
+
         # =========================================================
         # LOGIKA GENERATE
         # =========================================================
-        if btn_gen_wa or btn_gen_pdf:
+        if btn_gen_wa or btn_gen_pdf or btn_gen_ppt:
             with st.spinner("🧙‍♂️ Membersihkan cache & menarik data segar dari Google Sheets..."):
                 st.cache_data.clear()
                 try:
@@ -14056,7 +14063,8 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                     st.session_state.sales_item_df = si_df_fresh
                     st.session_state.sales_person_df = sp_df_fresh
                     st.session_state.sales_pps_df = s_pps_df_fresh
-                    _add_activity_log("REPORT", f"Generate report ({'PDF' if btn_gen_pdf else 'WA'})")
+                    _report_type = "WA" if btn_gen_wa else ("PDF" if btn_gen_pdf else "PPT")
+                    _add_activity_log("REPORT", f"Generate report ({_report_type})")
                     st.toast("✅ Data segar ditarik!", icon="⚡")
                 except Exception as e_fresh:
                     st.warning(f"⚠️ Gagal refresh data: {e_fresh}")
@@ -14354,3 +14362,90 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                     )
                 else:
                     st.error("❌ Gagal generate PDF. Cek apakah `fpdf2` sudah di-install.")
+
+            # =========================================================
+            # OUTPUT PPt (TERPISAH — HANYA JALAN KALAU TOMBOL PPT DIKLIK)
+            # =========================================================
+            if btn_gen_ppt:
+                # Data untuk PPT
+                top3_kasir = []
+                _sp_leaderboard = st.session_state.get("sales_person_df", pd.DataFrame()).copy()
+                if not _sp_leaderboard.empty and "person_name" in _sp_leaderboard.columns and "actual_qty" in _sp_leaderboard.columns:
+                    if valid_period_ids and "period_id" in _sp_leaderboard.columns:
+                        _sp_leaderboard = _sp_leaderboard[_sp_leaderboard["period_id"].isin(valid_period_ids)]
+                    _sp_leaderboard["actual_qty"] = pd.to_numeric(_sp_leaderboard["actual_qty"], errors="coerce").fillna(0)
+                    _grp_lb = _sp_leaderboard.groupby("person_name")["actual_qty"].sum().reset_index()
+                    _grp_lb = _grp_lb.sort_values("actual_qty", ascending=False).head(3)
+                    for _, _row in _grp_lb.iterrows():
+                        top3_kasir.append((str(_row["person_name"]), int(_row["actual_qty"]), "Pcs"))
+
+                psm_data = {
+                    "target": int(target_psm_tot),
+                    "actual": int(actual_psm_tot),
+                    "ach": ach_psm,
+                    "poin": poin_psm,
+                    "harian": int(target_harian_psm),
+                    "shift1": int(target_harian_psm * 0.40),
+                    "shift2": int(target_harian_psm * 0.40),
+                    "shift3": int(target_harian_psm * 0.20),
+                }
+                pwp_data = {
+                    "syarat": int(s_pwp),
+                    "redeem": int(r_pwp),
+                    "target": int(tq_pwp),
+                    "actual": int(q_pwp),
+                    "ach_redeem": ach_pwp_redeem,
+                    "ach_qty": ach_pwp_qty,
+                    "poin": poin_pwp,
+                    "harian": int(target_harian_pwp),
+                    "shift1": int(target_harian_pwp * 0.40),
+                    "shift2": int(target_harian_pwp * 0.40),
+                    "shift3": int(target_harian_pwp * 0.20),
+                }
+                sueger_data = {
+                    "syarat": int(s_sueger_val),
+                    "redeem": int(r_sueger_val),
+                    "ach": ach_sueger,
+                }
+                sg_data = {
+                    "target": int(t_sg),
+                    "actual": int(q_sg),
+                    "ach": ach_sg,
+                    "poin": poin_sg,
+                    "harian": int(target_harian_sg),
+                    "shift1": int(target_harian_sg * 0.40),
+                    "shift2": int(target_harian_sg * 0.40),
+                    "shift3": int(target_harian_sg * 0.20),
+                }
+                ceban_data = {
+                    "target": int(t_ceban),
+                    "actual": int(q_ceban),
+                    "ach": ach_ceban,
+                }
+
+                with st.spinner("🎨 Meracik slide PPT..."):
+                    _ppt_bytes = generate_ppt_report(
+                        title=f"Report Summary Penjualan {selected_month_name} {waktu_wib.year}",
+                        month_year_str=f"{selected_month_name} {waktu_wib.year}",
+                        generated_time_str=_generate_str,
+                        psm_data=psm_data,
+                        pwp_data=pwp_data,
+                        sueger_data=sueger_data,
+                        sg_data=sg_data,
+                        ceban_data=ceban_data,
+                        total_poin=total_poin_didapat,
+                        top3_kasir=top3_kasir,
+                    )
+
+                if _ppt_bytes:
+                    st.success(f"✅ PPT berhasil dibuat — 9 slide siap presentasi!")
+                    st.download_button(
+                        label="📥 Download Report PPT (.pptx)",
+                        data=_ppt_bytes,
+                        file_name=f"Report_PSM_{selected_month_name}_{_generate_time.strftime('%Y%m%d_%H%M%S')}.pptx",
+                        mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                        use_container_width=True,
+                        key="dl_ppt_report",
+                    )
+                else:
+                    st.error("❌ Gagal generate PPT.")
