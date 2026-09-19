@@ -3415,7 +3415,32 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 text-align: center; font-family: monospace; font-size: 9.5px;
                 color: #b45309; font-style: italic;
             }}
-
+            /* KATA BIJAK GUILD */
+            .motivasi-box-j {
+                margin-top: 15px;
+                padding: 10px 12px;
+                background: linear-gradient(135deg, rgba(180, 83, 9, 0.08) 0%, rgba(180, 83, 9, 0.15) 100%);
+                border-left: 4px solid #b45309;
+                border-radius: 8px;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            }
+            .motivasi-title-j {
+                font-family: monospace;
+                font-size: 9px;
+                font-weight: 900;
+                color: #b45309;
+                letter-spacing: 1.5px;
+                margin-bottom: 5px;
+                text-align: center;
+            }
+            .motivasi-text-j {
+                font-family: monospace;
+                font-size: 10px;
+                color: #78350f;
+                font-style: italic;
+                line-height: 1.6;
+                text-align: center;
+            }
             /* PERSONIL SELECTOR */
             .personil-selector-j {{
                 margin-top: 10px;
@@ -3692,34 +3717,60 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 })();
                 </script>
                 """
-                # Display avatar + clock
+
+                # Emoji Kepala Guild — admin pakai 🫅
+                _emoji_kepala_j = "🫅" if is_admin_j else user_avatar_j
+
+                # Kata motivasi random
+                _motivasi_list_j = [
+                    "Fokus, bidik target dengan tepat, dan buktikan kemampuan terbaikmu!",
+                    "Konsistensi hari ini adalah kunci kemenangan di akhir bulan.",
+                    "Setiap item yang terjual mendekatkanmu pada singgasana juara!",
+                    "Pahlawan sejati selalu bangkit dan melampaui target!",
+                    "Langkah kecil setiap hari menghasilkan pencapaian luar biasa.",
+                    "Satu penjualan hari ini adalah satu langkah menuju kemenangan.",
+                ]
+                _motivasi_terpilih_j = random.choice(_motivasi_list_j)
+
+                # ==========================================
+                # HALAMAN KIRI — Kartu Kepala Guild
+                # ==========================================
                 html_kiri_j = (
                     "<div class='open-page-title-j'>👑 KARTU KEPALA GUILD 👑</div>"
                     "<div class='open-page-sub-j'>Arsip Pimpinan Toko C383</div>"
                     "<div class='open-book-divider-j'></div>"
                     "<div class='kepala-avatar-wrapper-j'>"
                     "<div class='kepala-crown-j'>👑</div>"
-                    "<div class='kepala-avatar-circle-j'>" + user_avatar_j + "</div>"
+                    "<div class='kepala-avatar-circle-j'>" + _emoji_kepala_j + "</div>"
                     "<div class='kepala-name-j'>" + (current_user_clean_j if current_user_clean_j else "ADMIN") + "</div>"
                     "<div class='kepala-title-j'>" + ("Kepala Guild" if is_admin_j else "Personil") + " — Toko C383</div>"
                     "</div>"
                 )
+
                 # Clock via components
                 with st.container():
                     col_c1_j, col_c2_j, col_c3_j = st.columns([1, 1.2, 1])
                     with col_c2_j:
                         components.html(clock_html_str, height=90)
 
-                # Lanjut HTML
+                # Lanjut HTML — Info + Motivasi
                 html_kiri_j += (
                     "<div style='margin-top:10px;'>"
                     + _build_j_stat_row("📅 Bulan", nama_bulan_j, "#0d9488")
                     + _build_j_stat_row("👥 Personil", str(len(master_personil_j)) + " orang", "#2563eb")
                     + _build_j_stat_row("🏪 Toko", "C383 — KGS", "#b45309")
                     + "</div>"
+                    # ─── KATA BIJAK GUILD ───
+                    + "<div class='motivasi-box-j'>"
+                    + "<div class='motivasi-title-j'>📜 KATA BIJAK GUILD</div>"
+                    + "<div class='motivasi-text-j'>\"" + _motivasi_terpilih_j + "\"</div>"
+                    + "</div>"
                     + "<div class='open-page-footer-j'>- Halaman 1 -</div>"
                 )
 
+                # ==========================================
+                # HALAMAN KANAN — Akumulasi
+                # ==========================================
                 html_kanan_j = (
                     "<div class='open-page-title-j'>📊 " + ("AKUMULASI BULAN INI" if mode_admin_j else "AKUMULASI PRIBADI") + "</div>"
                     "<div class='open-page-sub-j'>" + ("Performa Toko Selama 1 Bulan" if mode_admin_j else "Performa Pribadi Bulan Ini") + "</div>"
