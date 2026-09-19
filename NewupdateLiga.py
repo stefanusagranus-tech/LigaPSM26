@@ -13877,12 +13877,7 @@ _Generated automatically via LigaPSM System_
 """
 
             st.markdown("##### 📝 Hasil Text Report (Siap Copas ke WA):")
-            st.text_area(
-                "Salin teks di bawah sini:",
-                wa_text,
-                height=500,
-                key="wa_summary_text_area",
-            )
+            st.code(wa_text, language="text")
 
             # Info tambahan
             st.info(f"✅ Data segar dari Google Sheets — Generate: {_generate_str}")
