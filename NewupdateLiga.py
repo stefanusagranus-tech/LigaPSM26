@@ -10828,11 +10828,284 @@ if selected_tab == "🏠 Menu Utama":
 # --- INPUT & RESET DATA ---
 # =============================================================================
 elif selected_tab == "📝 Input Data":
+
+    # =========================================================================
+    # 🎨 BACKGROUND HALAMAN INPUT DATA
+    # =========================================================================
+    bg_url_input = "https://i.postimg.cc/fbWjVRpJ/comfy-drawing-oriental-rifles-wallpaper-preview.jpg"
+
+    # =========================================================================
+    # 🏛️ HEADER (FULL WIDTH) + TOMBOL BACK DI DALAM HEADER
+    # =========================================================================
+    input_header_html = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: transparent; font-family: 'MedievalSharp', 'Courier New', monospace; overflow: hidden; }
+
+        .input-header-outer {
+            position: relative;
+            background: radial-gradient(circle, #162447 0%, #0c1427 100%);
+            border: 3px double #d4af37;
+            border-radius: 14px;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.35), inset 0 0 20px rgba(0, 0, 0, 0.8);
+            padding: 12px 16px;
+            color: #f1e5c7;
+        }
+        .input-corner {
+            position: absolute;
+            color: #d4af37;
+            font-size: 11px;
+            line-height: 1;
+            opacity: 0.85;
+            pointer-events: none;
+        }
+        .input-corner-tl { top: 3px; left: 5px; }
+        .input-corner-tr { top: 3px; right: 5px; }
+        .input-corner-bl { bottom: 3px; left: 5px; }
+        .input-corner-br { bottom: 3px; right: 5px; }
+
+        .input-title-box { text-align: center; margin-bottom: 8px; }
+        .input-title {
+            font-family: 'MedievalSharp', 'Courier New', monospace;
+            font-size: 22px;
+            color: #f7e7b4;
+            text-shadow: 0 0 8px rgba(212, 175, 55, 0.8), 2px 2px 4px #000;
+            margin: 0;
+            letter-spacing: 1.2px;
+            font-weight: 900;
+        }
+        .input-subtitle {
+            font-size: 10px;
+            color: #38bdf8;
+            margin-top: 3px;
+            letter-spacing: 0.5px;
+            font-family: monospace;
+        }
+
+        .input-bottom-row {
+            display: flex;
+            align-items: stretch;
+            justify-content: space-between;
+            gap: 10px;
+            width: 100%;
+        }
+        .input-side-box {
+            flex: 1;
+            background: rgba(10, 17, 34, 0.75);
+            border: 1px solid #9a7b38;
+            border-radius: 8px;
+            padding: 8px 12px;
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .input-box-title {
+            font-size: 9px;
+            color: #e5c158;
+            font-weight: bold;
+            letter-spacing: 0.6px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            font-family: monospace;
+        }
+
+        .input-marquee-container {
+            overflow: hidden;
+            white-space: nowrap;
+            width: 100%;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid #ef4444;
+            border-radius: 5px;
+            padding: 4px 0;
+        }
+        .input-marquee-text {
+            display: inline-block;
+            padding-left: 100%;
+            animation: marqueeInput 14s linear infinite;
+            color: #fca5a5;
+            font-size: 11px;
+            font-weight: bold;
+            font-family: monospace;
+            letter-spacing: 0.5px;
+        }
+        @keyframes marqueeInput {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-100%, 0); }
+        }
+
+        .input-time-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+        .input-hourglass {
+            font-size: 22px;
+            display: inline-block;
+            animation: spinHourglassInput 2.5s infinite ease-in-out;
+            padding-right: 10px;
+            filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.8));
+        }
+        @keyframes spinHourglassInput {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(180deg); }
+            100% { transform: rotate(180deg); }
+        }
+        .input-clock-content { text-align: right; flex: 1; }
+        .input-greet {
+            font-size: 10px;
+            color: #fcd34d;
+            font-weight: bold;
+            margin-bottom: 1px;
+            font-family: monospace;
+        }
+        .input-clock {
+            font-family: monospace;
+            font-size: 15px;
+            font-weight: bold;
+            color: #38bdf8;
+            text-shadow: 0 0 6px rgba(56, 189, 248, 0.5);
+            line-height: 1.1;
+        }
+        .input-date {
+            font-size: 10px;
+            color: #cbd5e1;
+            margin-top: 1px;
+            font-weight: bold;
+            font-family: monospace;
+        }
+    </style>
+    </head>
+    <body>
+    <div class="input-header-outer">
+        <div class="input-corner input-corner-tl">⚜</div>
+        <div class="input-corner input-corner-tr">⚜</div>
+        <div class="input-corner input-corner-bl">⚜</div>
+        <div class="input-corner input-corner-br">⚜</div>
+
+        <div class="input-title-box">
+            <h1 class="input-title">✏️ KELOLA & INPUT DATA PENJUALAN</h1>
+            <div class="input-subtitle">Sistem Pencatatan Transaksi Harian PSM Toko C383</div>
+        </div>
+
+        <div class="input-bottom-row">
+            <div class="input-side-box">
+                <div class="input-box-title">📢 PENGUMUMAN GUILD</div>
+                <div class="input-marquee-container">
+                    <span class="input-marquee-text">⚠️ Biasakan untuk cek Report 25 untuk syarat PWP dan Sueger sebelum input data penjualan! — Jangan lupa isi shift dengan benar. — Pastikan qty sudah sesuai sebelum klik Simpan. ⚠️</span>
+                </div>
+            </div>
+
+            <div class="input-side-box">
+                <div class="input-time-wrap">
+                    <div>
+                        <span class="input-hourglass">⏳</span>
+                    </div>
+                    <div class="input-clock-content">
+                        <div class="input-greet" id="inpGreet">🌙 Selamat Malam</div>
+                        <div class="input-clock" id="inpClock">00:00:00 WIB</div>
+                        <div class="input-date" id="inpDate">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function updateInputClock() {
+            var now = new Date();
+            var h = now.getHours();
+            var greet = '🌙 Selamat Malam';
+            if (h >= 4 && h < 11) greet = '🌅 Selamat Pagi';
+            else if (h >= 11 && h < 15) greet = '☀️ Selamat Siang';
+            else if (h >= 15 && h < 18) greet = '🌇 Selamat Sore';
+            document.getElementById('inpGreet').textContent = greet;
+
+            var hh = String(h).padStart(2, '0');
+            var mm = String(now.getMinutes()).padStart(2, '0');
+            var ss = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('inpClock').textContent = hh + ':' + mm + ':' + ss + ' WIB';
+
+            var days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+            var d = days[now.getDay()];
+            var dd = String(now.getDate()).padStart(2, '0');
+            var mo = String(now.getMonth()+1).padStart(2, '0');
+            var yy = now.getFullYear();
+            document.getElementById('inpDate').textContent = d + ', ' + dd + '/' + mo + '/' + yy;
+        }
+        setInterval(updateInputClock, 1000);
+        updateInputClock();
+    </script>
+    </body>
+    </html>
+    """
+
+    # =========================================================================
+    # 🎨 CSS BACKGROUND + TOMBOL BACK
+    # =========================================================================
     st.markdown(
-        "<h2 style='color: #00f0ff; text-shadow: 0 0 10px rgba(0,240,255,0.5);'>✏️"
-        " Kelola & Input Data Penjualan</h2>",
+        f"""
+        <style>
+            /* 🌌 BACKGROUND HALAMAN INPUT */
+            .stApp {{
+                background-image: linear-gradient(rgba(10, 13, 26, 0.85), rgba(10, 13, 26, 0.92)), url("{bg_url_input}") !important;
+                background-size: cover !important;
+                background-position: center !important;
+                background-repeat: no-repeat !important;
+                background-attachment: fixed !important;
+            }}
+
+            .main .block-container {{
+                background-color: transparent !important;
+                max-width: 1000px !important;
+                padding-top: 2% !important;
+                padding-left: 12px !important;
+                padding-right: 12px !important;
+            }}
+
+            /* 🔙 TOMBOL BACK KECIL — NEMPEL DI BAWAH HEADER */
+            div[data-testid="stButton"] > button[kind="secondary"] {{
+                background: linear-gradient(135deg, rgba(180, 83, 9, 0.25), rgba(180, 83, 9, 0.4)) !important;
+                border: 2px solid #b45309 !important;
+                color: #fde047 !important;
+                font-family: monospace !important;
+                font-size: 11px !important;
+                font-weight: bold !important;
+                border-radius: 8px !important;
+                padding: 6px 14px !important;
+                transition: all 0.25s ease !important;
+                margin-top: -10px !important;
+            }}
+            div[data-testid="stButton"] > button[kind="secondary"]:hover {{
+                background: #b45309 !important;
+                color: #ffffff !important;
+                box-shadow: 0 0 15px rgba(180, 83, 9, 0.6) !important;
+            }}
+        </style>
+        """,
         unsafe_allow_html=True,
     )
+
+    # =========================================================================
+    # 🏛️ RENDER HEADER
+    # =========================================================================
+    components.html(input_header_html, height=175)
+
+    # =========================================================================
+    # 🔙 TOMBOL BACK — NEMPEL DI BAWAH HEADER (TENGAH, KECIL)
+    # =========================================================================
+    col_nav_l, col_nav_m, col_nav_r = st.columns([1, 1, 1])
+    with col_nav_m:
+        if st.button("⬅️ MENU UTAMA", key="btn_back_to_main_input", use_container_width=True):
+            st.session_state["selected_tab"] = "🏠 Menu Utama"
+            st.rerun()
+
+    st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
     
     # --- Context & User Role ---
     current_user = st.session_state.get("username", "visitor")
