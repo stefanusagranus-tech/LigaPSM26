@@ -420,7 +420,9 @@ if not periods_dict and not active_periods_df.empty:
 def backup_to_gsheets():
     """Menyimpan salinan cadangan otomatis ke tab _BACKUP di Google Sheets."""
     try:
+        # =====================================================================
         # 1. Backup Data PPS
+        # =====================================================================
         if (
             "sales_pps_df" in st.session_state
             and not st.session_state.sales_pps_df.empty
@@ -438,7 +440,9 @@ def backup_to_gsheets():
                 data=st.session_state.periods_pps_df,
             )
 
+        # =====================================================================
         # 2. Backup Data Utama / PSM
+        # =====================================================================
         if (
             "sales_item_df" in st.session_state
             and not st.session_state.sales_item_df.empty
@@ -457,9 +461,44 @@ def backup_to_gsheets():
                 data=st.session_state.sales_person_df,
             )
 
+        # =====================================================================
+        # 3. Backup PERIODE PSM (BARU!)
+        # =====================================================================
+        if (
+            "periods_df" in st.session_state
+            and not st.session_state.periods_df.empty
+        ):
+            conn.update(
+                worksheet="PERIODE_BACKUP",
+                data=st.session_state.periods_df,
+            )
+
+        # =====================================================================
+        # 4. Backup MASTER ITEM (BARU!)
+        # =====================================================================
+        if (
+            "items_df" in st.session_state
+            and not st.session_state.items_df.empty
+        ):
+            conn.update(
+                worksheet="MASTER_ITEM_BACKUP",
+                data=st.session_state.items_df,
+            )
+
+        # =====================================================================
+        # 5. Backup MASTER PERSONIL (BARU!)
+        # =====================================================================
+        if (
+            "person_df" in st.session_state
+            and not st.session_state.person_df.empty
+        ):
+            conn.update(
+                worksheet="MASTER_PERSONIL_BACKUP",
+                data=st.session_state.person_df,
+            )
+
         return True
     except Exception as e:
-        # Jika tab _BACKUP belum dibuat di Google Sheets, sistem tidak akan menghentikan aplikasi
         return False
 
 # ==========================================
@@ -13527,11 +13566,25 @@ elif selected_tab == "⚙️ Pengaturan & Master":
         col_bk1, col_bk2 = st.columns(2)
         with col_bk1:
             st.markdown("##### ☁️ Backup Otomatis Google Sheets")
-            if st.button("⚡ Jalankan Backup Otomatis Sekarang", use_container_width=True):
-                with st.spinner("⏳ Backup ke tab _BACKUP..."):
+            st.caption(
+                "Backup ke 7 tab: SALES_PPS_BACKUP, PERIODE_PPS_BACKUP, "
+                "SALES_ITEM_BACKUP, SALES_PERSON_BACKUP, "
+                "PERIODE_BACKUP, MASTER_ITEM_BACKUP, MASTER_PERSONIL_BACKUP"
+            )
+            
+            if st.button(
+                "⚡ Jalankan Backup Otomatis Sekarang", use_container_width=True
+            ):
+                with st.spinner("⏳ Backup ke tab _BACKUP di Google Sheets..."):
                     try:
-                        backup_to_gsheets()
-                        st.success("✅ Backup ke tab `_BACKUP` berhasil!")
+                        _bk_ok = backup_to_gsheets()
+                        if _bk_ok:
+                            st.success("✅ Backup ke 7 tab `_BACKUP` berhasil!")
+                        else:
+                            st.warning(
+                                "⚠️ Backup selesai tapi ada kendala. "
+                                "Pastikan semua tab `*_BACKUP` sudah dibuat di Google Sheets."
+                            )
                     except Exception as e_bk:
                         st.error(f"❌ Gagal backup: {e_bk}")
 
