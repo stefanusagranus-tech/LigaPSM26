@@ -3416,15 +3416,15 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 color: #b45309; font-style: italic;
             }}
             /* KATA BIJAK GUILD */
-            .motivasi-box-j {
+            .motivasi-box-j {{
                 margin-top: 15px;
                 padding: 10px 12px;
                 background: linear-gradient(135deg, rgba(180, 83, 9, 0.08) 0%, rgba(180, 83, 9, 0.15) 100%);
                 border-left: 4px solid #b45309;
                 border-radius: 8px;
                 box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-            }
-            .motivasi-title-j {
+            }}
+            .motivasi-title-j {{
                 font-family: monospace;
                 font-size: 9px;
                 font-weight: 900;
@@ -3432,15 +3432,15 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 letter-spacing: 1.5px;
                 margin-bottom: 5px;
                 text-align: center;
-            }
-            .motivasi-text-j {
+            }}
+            .motivasi-text-j {{
                 font-family: monospace;
                 font-size: 10px;
                 color: #78350f;
                 font-style: italic;
                 line-height: 1.6;
                 text-align: center;
-            }
+            }}
             /* PERSONIL SELECTOR */
             .personil-selector-j {{
                 margin-top: 10px;
