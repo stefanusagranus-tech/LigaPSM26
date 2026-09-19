@@ -1048,6 +1048,9 @@ if "username" not in st.session_state:
 if "campaign_sub_page" not in st.session_state:
     st.session_state["campaign_sub_page"] = "resepsionis_utama"
 
+if "redirect_to_main_tab" not in st.session_state:
+    st.session_state["redirect_to_main_tab"] = False
+
 if not st.session_state.logged_in:
   show_login_page()
   st.stop()
@@ -1241,6 +1244,11 @@ if "redirect_to_input" in st.session_state and st.session_state.redirect_to_inpu
 if "redirect_to_input" in st.session_state and st.session_state.redirect_to_input:
     st.session_state["selected_tab"] = "📝 Input Data"
     del st.session_state.redirect_to_input # Matikan saklar setelah berhasil digunakan
+
+# Handle redirect ke Menu Utama — set state SEBELUM radio instantiate
+if st.session_state.get("redirect_to_main_tab", False):
+    st.session_state["selected_tab"] = "🏠 Menu Utama"
+    st.session_state["redirect_to_main_tab"] = False
 
 # Ini adalah baris kode st.sidebar.radio Anda (Jangan dihapus, pastikan posisinya berada di bawah kode if di atas):
 selected_tab = st.sidebar.radio("", menu_options, key="selected_tab", label_visibility="collapsed")
@@ -10983,44 +10991,45 @@ elif selected_tab == "📝 Input Data":
         * ============================================
            📱 RESPONSIVE HP
         ============================================ */
-        @media (max-width: 600px) {
+               @media (max-width: 600px) {
             .input-header-outer {
-                padding: 10px 10px;
+                padding: 8px 10px;
             }
             .input-title {
-                font-size: 16px;
-                letter-spacing: 0.5px;
+                font-size: 13px;
+                letter-spacing: 0.2px;
             }
             .input-subtitle {
-                font-size: 8.5px;
+                font-size: 7.5px;
             }
+            /* 🔑 TETAP SIDE-BY-SIDE */
             .input-bottom-row {
-                flex-direction: column;
+                flex-direction: row !important;
                 gap: 6px;
             }
             .input-side-box {
-                padding: 6px 10px;
-                min-width: 100%;
+                padding: 5px 6px;
+                min-width: 0;
             }
             .input-box-title {
-                font-size: 8px;
-                margin-bottom: 3px;
+                font-size: 7px;
+                margin-bottom: 2px;
             }
             .input-marquee-text {
-                font-size: 10px;
+                font-size: 8.5px;
             }
             .input-hourglass {
-                font-size: 18px;
-                padding-right: 6px;
+                font-size: 14px;
+                padding-right: 4px;
             }
             .input-greet {
-                font-size: 9px;
+                font-size: 7.5px;
             }
             .input-clock {
-                font-size: 13px;
+                font-size: 11px;
             }
             .input-date {
-                font-size: 9px;
+                font-size: 7.5px;
             }
         }
     </style>
@@ -11140,7 +11149,7 @@ elif selected_tab == "📝 Input Data":
     # Deteksi HP
     _is_mobile_input = st.session_state.get("is_mobile", False)
     _iframe_height = 320 if _is_mobile_input else 195
-    components.html(input_header_html, height=_iframe_height)
+    components.html(input_header_html, height=220)
 
     # =========================================================================
     # 🔙 TOMBOL BACK — NEMPEL DI BAWAH HEADER (TENGAH, KECIL)
@@ -11178,8 +11187,8 @@ elif selected_tab == "📝 Input Data":
     )
 
     # Tombol back — full width container tapi button di-center via CSS
-    if st.button("⬅️ MENU UTAMA", key="btn_back_to_main_input", use_container_width=False):
-        st.session_state["selected_tab"] = "🏠 Menu Utama"
+    if st.button("⬅️ MENU UTAMA", key="btn_back_to_main_input"):
+        st.session_state["redirect_to_main_tab"] = True
         st.rerun()
 
     st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
