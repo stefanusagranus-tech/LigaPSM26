@@ -3415,6 +3415,33 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 text-align: center; font-family: monospace; font-size: 9.5px;
                 color: #b45309; font-style: italic;
             }}
+            /* JAM DIGITAL */
+            .clock-box-j {{
+                background: rgba(15, 23, 42, 0.9);
+                border: 2px solid #b45309;
+                border-radius: 8px;
+                padding: 8px 12px;
+                margin: 10px auto;
+                text-align: center;
+                max-width: 200px;
+                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+            }}
+            .clock-time-j {{
+                font-family: 'Courier New', monospace;
+                font-size: 20px;
+                font-weight: 900;
+                color: #38bdf8;
+                text-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+                letter-spacing: 2px;
+                line-height: 1;
+            }}
+            .clock-date-j {{
+                font-family: monospace;
+                font-size: 9px;
+                color: #cbd5e1;
+                margin-top: 4px;
+                font-weight: bold;
+            }}
             /* KATA BIJAK GUILD */
             .motivasi-box-j {{
                 margin-top: 15px;
@@ -3677,48 +3704,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             html_kanan_j = ""
             spread_type = current_spread_j["type"]
 
-            # ==========================================
+                       # ==========================================
             # SPREAD 1
             # ==========================================
             if spread_type == "spread_1":
-                # Clock via components.html
-                clock_html_str = """
-                <div style='background: rgba(15,23,42,0.9); border: 2px solid #b45309; border-radius: 8px; padding: 6px 10px; margin: 6px auto; text-align: center; max-width: 180px; font-family: Courier New, monospace;'>
-                <div id='jg' style='font-size:8.5px; color:#fbbf24; font-weight:bold; margin-bottom:3px;'>🌙 Selamat Malam</div>
-                <div id='jc' style='font-size:18px; font-weight:900; color:#38bdf8; letter-spacing:2px; line-height:1;'>00:00:00</div>
-                <div id='jd' style='font-size:8.5px; color:#cbd5e1; font-weight:bold; margin-top:3px;'>-</div>
-                </div>
-                <script>
-                (function() {
-                    function upd() {
-                        var n = new Date();
-                        var h = n.getHours();
-                        var g = '🌙 Selamat Malam';
-                        if (h >= 4 && h < 11) g = '🌅 Selamat Pagi';
-                        else if (h >= 11 && h < 15) g = '☀️ Selamat Siang';
-                        else if (h >= 15 && h < 18) g = '🌇 Selamat Sore';
-                        var hh = String(h).padStart(2,'0');
-                        var mm = String(n.getMinutes()).padStart(2,'0');
-                        var ss = String(n.getSeconds()).padStart(2,'0');
-                        var days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-                        var d = days[n.getDay()];
-                        var dd = String(n.getDate()).padStart(2,'0');
-                        var mo = String(n.getMonth()+1).padStart(2,'0');
-                        var yy = n.getFullYear();
-                        var eg = document.getElementById('jg');
-                        var ec = document.getElementById('jc');
-                        var ed = document.getElementById('jd');
-                        if(eg) eg.textContent = g;
-                        if(ec) ec.textContent = hh+':'+mm+':'+ss;
-                        if(ed) ed.textContent = d+', '+dd+'/'+mo+'/'+yy;
-                    }
-                    upd();
-                    setInterval(upd, 1000);
-                })();
-                </script>
-                """
-
-                # Emoji Kepala Guild — admin pakai 🫅
+                # Emoji Kepala Guild
                 _emoji_kepala_j = "🫅" if is_admin_j else user_avatar_j
 
                 # Kata motivasi random
@@ -3732,8 +3722,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 ]
                 _motivasi_terpilih_j = random.choice(_motivasi_list_j)
 
+                # Waktu realtime WIB (update tiap refresh)
+                _waktu_wib_j = datetime.now(ZoneInfo("Asia/Jakarta"))
+                _jam_str_j = _waktu_wib_j.strftime("%H:%M:%S")
+                _tgl_str_j = _waktu_wib_j.strftime("%A, %d/%m/%Y")
+
                 # ==========================================
-                # HALAMAN KIRI — Kartu Kepala Guild
+                # KIRI — Kartu Kepala Guild + Jam
                 # ==========================================
                 html_kiri_j = (
                     "<div class='open-page-title-j'>👑 KARTU KEPALA GUILD 👑</div>"
@@ -3745,31 +3740,21 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     "<div class='kepala-name-j'>" + (current_user_clean_j if current_user_clean_j else "ADMIN") + "</div>"
                     "<div class='kepala-title-j'>" + ("Kepala Guild" if is_admin_j else "Personil") + " — Toko C383</div>"
                     "</div>"
-                )
-
-                # Clock via components
-                with st.container():
-                    col_c1_j, col_c2_j, col_c3_j = st.columns([1, 1.2, 1])
-                    with col_c2_j:
-                        components.html(clock_html_str, height=90)
-
-                # Lanjut HTML — Info + Motivasi
-                html_kiri_j += (
                     "<div style='margin-top:10px;'>"
                     + _build_j_stat_row("📅 Bulan", nama_bulan_j, "#0d9488")
                     + _build_j_stat_row("👥 Personil", str(len(master_personil_j)) + " orang", "#2563eb")
                     + _build_j_stat_row("🏪 Toko", "C383 — KGS", "#b45309")
                     + "</div>"
-                    # ─── KATA BIJAK GUILD ───
-                    + "<div class='motivasi-box-j'>"
-                    + "<div class='motivasi-title-j'>📜 KATA BIJAK GUILD</div>"
-                    + "<div class='motivasi-text-j'>\"" + _motivasi_terpilih_j + "\"</div>"
+                    # ─── JAM DIGITAL (STATIS) ───
+                    + "<div class='clock-box-j'>"
+                    + "<div class='clock-time-j'>" + _jam_str_j + "</div>"
+                    + "<div class='clock-date-j'>" + _tgl_str_j + "</div>"
                     + "</div>"
                     + "<div class='open-page-footer-j'>- Halaman 1 -</div>"
                 )
 
                 # ==========================================
-                # HALAMAN KANAN — Akumulasi
+                # KANAN — Akumulasi + Motivasi
                 # ==========================================
                 html_kanan_j = (
                     "<div class='open-page-title-j'>📊 " + ("AKUMULASI BULAN INI" if mode_admin_j else "AKUMULASI PRIBADI") + "</div>"
@@ -3781,6 +3766,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     + _build_j_progress("📦 PSM", psm_total_v, max(psm_total_v, 1), "linear-gradient(90deg, #b45309, #d97706)")
                     + "<div style='margin-top:12px;'>"
                     + _build_j_stat_row("🥤 Ceban", f"{ceban_total_v:,} Pcs", "#db2777")
+                    + "</div>"
+                    # ─── KATA BIJAK GUILD ───
+                    + "<div class='motivasi-box-j'>"
+                    + "<div class='motivasi-title-j'>📜 KATA BIJAK GUILD</div>"
+                    + "<div class='motivasi-text-j'>\"" + _motivasi_terpilih_j + "\"</div>"
                     + "</div>"
                     + "<div class='open-page-footer-j'>- Halaman 2 -</div>"
                 )
