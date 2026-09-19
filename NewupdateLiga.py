@@ -14883,7 +14883,7 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                 label_visibility="collapsed",
             )
 
-                        # Baca data log SEKALI
+            # Baca data log SEKALI
             try:
                 with st.spinner("⏳ Membaca activity log..."):
                     _log_sheet_df = conn.read(worksheet="ACTIVITY_LOG", ttl=300)
