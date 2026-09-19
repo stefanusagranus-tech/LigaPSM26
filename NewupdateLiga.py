@@ -15345,7 +15345,7 @@ elif selected_tab == "⚙️ Pengaturan & Master":
             """, unsafe_allow_html=True)
 
             _log_subtab = st.radio(
-                "Log Sub Tab",
+                "",
                 ["🔍 Filter", "📊 Statistik", "📋 Tabel Log", "📥 Download", "🗑️ Maintenance"],
                 horizontal=True,
                 key="log_subtab_nav",
@@ -15451,7 +15451,7 @@ elif selected_tab == "⚙️ Pengaturan & Master":
 
                     st.markdown("##### 📅 Rentang Waktu")
                     st.radio(
-                        "Rentang Waktu",
+                        "",
                         ["Hari Ini", "7 Hari Terakhir", "30 Hari Terakhir",
                          "Bulan Ini", "Custom Range", "Semua (Tanpa Batas)"],
                         horizontal=True,
