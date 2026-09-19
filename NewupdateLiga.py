@@ -400,6 +400,84 @@ def get_period_date_bounds(p_id):
     today = pd.Timestamp.now().date()
     return today.replace(day=1), today
 
+def generate_pdf_report(title, sections_data, generated_time_str):
+    """
+    Generate PDF report summary penjualan.
+    
+    Args:
+        title (str): Judul laporan
+        sections_data (list): List of dict dengan format:
+            [{"title": "...", "lines": ["line1", "line2", ...]}, ...]
+        generated_time_str (str): String waktu generate
+    
+    Returns:
+        bytes: PDF bytes siap didownload, atau None jika gagal
+    """
+    try:
+        pdf = FPDF(orientation="P", unit="mm", format="A4")
+        pdf.set_auto_page_break(auto=True, margin=15)
+        pdf.add_page()
+        
+        # --- HEADER ---
+        pdf.set_font("Helvetica", "B", 16)
+        pdf.set_text_color(20, 40, 90)
+        pdf.cell(0, 10, title, ln=True, align="C")
+        
+        pdf.set_font("Helvetica", "I", 9)
+        pdf.set_text_color(120, 120, 120)
+        pdf.cell(0, 6, f"Generated: {generated_time_str}", ln=True, align="C")
+        
+        # Garis pemisah
+        pdf.set_draw_color(200, 170, 60)
+        pdf.set_line_width(0.6)
+        pdf.line(15, pdf.get_y() + 2, 195, pdf.get_y() + 2)
+        pdf.ln(6)
+        
+        # --- SECTION LOOP ---
+        for section in sections_data:
+            sec_title = str(section.get("title", "-"))
+            sec_lines = section.get("lines", [])
+            
+            # Judul section
+            pdf.set_font("Helvetica", "B", 12)
+            pdf.set_text_color(180, 83, 9)  # oranye tua
+            pdf.cell(0, 8, sec_title, ln=True)
+            
+            # Isi section
+            pdf.set_font("Helvetica", "", 10)
+            pdf.set_text_color(30, 30, 30)
+            for line in sec_lines:
+                # Handle garis kosong
+                if not str(line).strip():
+                    pdf.ln(2)
+                    continue
+                # Auto wrap text panjang
+                safe_line = str(line).encode("latin-1", "replace").decode("latin-1")
+                pdf.multi_cell(0, 5, safe_line)
+            
+            pdf.ln(4)
+            
+            # Garis pemisah antar section
+            pdf.set_draw_color(220, 220, 220)
+            pdf.set_line_width(0.3)
+            pdf.line(15, pdf.get_y(), 195, pdf.get_y())
+            pdf.ln(4)
+        
+        # --- FOOTER ---
+        pdf.set_y(-20)
+        pdf.set_font("Helvetica", "I", 8)
+        pdf.set_text_color(120, 120, 120)
+        pdf.cell(0, 5, "Generated automatically via LigaPSM System", align="C")
+        
+        # Output sebagai bytes
+        pdf_output = pdf.output(dest="S")
+        if isinstance(pdf_output, str):
+            return pdf_output.encode("latin-1")
+        return bytes(pdf_output)
+    
+    except Exception as e:
+        st.error(f"❌ Gagal generate PDF: {e}")
+        return None
 
 # --- INISIALISASI GLOBAL PERIODS_DICT ---
 periods_dict = {}
