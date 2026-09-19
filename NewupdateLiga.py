@@ -12787,7 +12787,7 @@ elif selected_tab == "⚙️ Pengaturan & Master":
     """, unsafe_allow_html=True)
 
     selected_master_sub = st.radio(
-        "Pilih Menu Master Data",
+        "",
         [
             "🎛️ Pengaturan PSM",
             "👥 Pengaturan Sales",
@@ -12811,7 +12811,7 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                 "⚙️ Pengaturan & Edit Item",
                 "📅 Pengaturan Periode Promosi"
             ],
-            key="psm_inner_menu_select"
+            key="psm_inner_menu_select_v2"
         )
         
         st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
@@ -13247,7 +13247,7 @@ elif selected_tab == "⚙️ Pengaturan & Master":
         """, unsafe_allow_html=True)
 
         selected_pps_sub = st.radio(
-            "Pilih Sub Menu PPS & Sueger",
+            "",
             [
                 "➕ Tambah Sueger",
                 "➕ Tambah Periode PPS",
