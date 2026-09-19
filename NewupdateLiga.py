@@ -12539,7 +12539,7 @@ elif selected_tab == "📝 Input Data":
 
                                     # --- BACKUP OTOMATIS BERJALAN DI SINI ---
                                     backup_to_gsheets()
-                                
+                                    flush_pending_logs() 
                                     # Sebelum st.rerun() di show_success_popup
                                     log_activity("SAVE_SALES", f"Input {inserted_count} item untuk {person_name}")
                             
@@ -12815,6 +12815,7 @@ elif selected_tab == "📝 Input Data":
 
                         # --- BACKUP OTOMATIS BERJALAN DI SINI ---
                         backup_to_gsheets()
+                        flush_pending_logs() 
                         log_activity("SAVE_PPS", f"Input PPS: {staff_name} / {kasir_name} / {date_str}")
 
                     show_success_pps_dialog(
@@ -14886,8 +14887,12 @@ elif selected_tab == "⚙️ Pengaturan & Master":
             try:
                 with st.spinner("⏳ Membaca activity log..."):
                     _log_sheet_df = conn.read(worksheet="ACTIVITY_LOG", ttl=300)
-            except Exception as e_log:
-                st.warning(f"⚠️ Sheet ACTIVITY_LOG belum dibuat atau error: {e_log}")
+             except Exception as e_log:
+                _err_str = str(e_log)
+                if "429" in _err_str or "Quota exceeded" in _err_str:
+                    st.warning("⚠️ Kuota Google Sheets habis sementara (60 read/menit). Tunggu 1 menit & refresh halaman.")
+                else:
+                    st.warning(f"⚠️ Sheet ACTIVITY_LOG belum dibuat atau error: {e_log}")
                 _log_sheet_df = pd.DataFrame()
 
             _log_ready = False
@@ -15124,6 +15129,28 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                 elif _log_subtab == "🗑️ Maintenance":
                     st.markdown("##### 🗑️ Maintenance Log")
                     st.caption("⚠️ Zona bahaya — aksi di sini tidak bisa di-undo. Backup dulu!")
+
+                    # 🆕 TOMBOL FLUSH LOGS MANUAL
+                    _pending_count = len(st.session_state.get("pending_activity_logs", []))
+                    st.info(f"📝 **{_pending_count}** log di queue (belum ditulis ke Sheets)")
+                    
+                    if st.button("💾 Flush Logs ke Sheets", use_container_width=True, key="flush_logs_now"):
+                        if _pending_count > 0:
+                            with st.spinner("⏳ Menulis log ke Google Sheets..."):
+                                _flush_ok = flush_pending_logs()
+                                if _flush_ok:
+                                    st.success(f"✅ {_pending_count} log berhasil ditulis!")
+                                    time.sleep(1)
+                                    st.rerun()
+                                else:
+                                    st.error("❌ Gagal flush log. Coba lagi.")
+                        else:
+                            st.info("ℹ️ Tidak ada log di queue.")
+                    
+                    st.markdown("---")
+
+                    col_mt1, col_mt2 = st.columns(2)
+                    # ... sisanya tetap sama ...
 
                     col_mt1, col_mt2 = st.columns(2)
 
