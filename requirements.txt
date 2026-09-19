@@ -8,3 +8,5 @@ streamlit-option-menu
 xlsxwriter
 streamlit-carousel
 fpdf2
+python-pptx
+matplotlib
