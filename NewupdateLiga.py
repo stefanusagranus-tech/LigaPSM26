@@ -14147,7 +14147,7 @@ elif selected_tab == "⚙️ Pengaturan & Master":
             if btn_gen_wa:
                 st.markdown("##### 📝 Hasil Text Report (Siap Copas ke WA):")
                 st.text_area(
-                    "Salin teks di bawah sini:",
+                    "Salin teks di bawah ini:",
                     wa_text,
                     height=500,
                     key="wa_summary_text_area",
