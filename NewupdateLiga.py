@@ -3448,9 +3448,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.8));
             }}
             @keyframes hourglassSpinJ {{
-                0% { transform: rotate(0deg); }
-                50% { transform: rotate(180deg); }
-                100% { transform: rotate(180deg); }
+                0% {{ transform: rotate(0deg); }}
+                50% {{ transform: rotate(180deg); }}
+                100% {{ transform: rotate(180deg); }}
             }}
             .clock-bar-right-j {{
                 font-family: monospace;
