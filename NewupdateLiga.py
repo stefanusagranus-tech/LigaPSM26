@@ -1079,17 +1079,48 @@ def _generate_session_id():
     return st.session_state["session_id"]
 
 
-def log_activity(action, detail=""):
+# ==========================================
+# 📝 FUNGSI FLUSH PENDING LOGS (SISTEM ANTRIAN)
+# ==========================================
+def flush_pending_logs():
     """
-    Catat aktivitas user ke sheet ACTIVITY_LOG (permanen di Google Sheets).
-    Auto-tambah timestamp + username + role + session_id.
-    
-    Args:
-        action (str): Jenis aksi (LOGIN, LOGOUT, OPEN_TAB, SAVE_SALES, dll)
-        detail (str): Detail tambahan
+    Menulis semua log yang tertunda di session_state ke Google Sheets.
+    Fungsi ini dipanggil saat menyimpan data untuk mengurangi frekuensi API call.
     """
     try:
-        # Skip kalau user belum login (kecuali untuk LOGIN & LOGIN_FAILED)
+        if "pending_activity_logs" not in st.session_state or not st.session_state["pending_activity_logs"]:
+            return True # Tidak ada yang perlu di-flush
+
+        # Gabungkan log yang tertunda menjadi DataFrame
+        pending_df = pd.DataFrame(st.session_state["pending_activity_logs"])
+        
+        # Baca log yang ada di sheet
+        try:
+            existing_log = conn.read(worksheet="ACTIVITY_LOG", ttl=0)
+            if existing_log is None or existing_log.empty:
+                existing_log = pd.DataFrame(columns=["timestamp", "username", "role", "action", "detail", "session_id"])
+        except Exception:
+            existing_log = pd.DataFrame(columns=["timestamp", "username", "role", "action", "detail", "session_id"])
+        
+        # Gabungkan dan simpan
+        combined_log = pd.concat([existing_log, pending_df], ignore_index=True)
+        conn.update(worksheet="ACTIVITY_LOG", data=combined_log)
+        
+        # Kosongkan antrian setelah berhasil disimpan
+        st.session_state["pending_activity_logs"] = []
+        print(f"[FLUSH_LOG] Berhasil menyimpan {len(pending_df)} log ke ACTIVITY_LOG.")
+        return True
+        
+    except Exception as e:
+        print(f"[FLUSH_LOG ERROR] Gagal menyimpan log: {e}")
+        return False
+
+def log_activity(action, detail=""):
+    """
+    Catat aktivitas user ke dalam antrian session_state.
+    Log akan ditulis ke Google Sheets saat fungsi flush_pending_logs() dipanggil.
+    """
+    try:
         _username = st.session_state.get("username", "")
         _role = st.session_state.get("role", "")
         
@@ -1099,30 +1130,24 @@ def log_activity(action, detail=""):
         _waktu = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
         _session_id = _generate_session_id()
         
-        _new_row = pd.DataFrame([{
+        # Buat entri log baru
+        new_log_entry = {
             "timestamp": _waktu,
             "username": str(_username) if _username else "-",
             "role": str(_role) if _role else "-",
             "action": str(action),
-            "detail": str(detail)[:200],  # Batasi panjang detail
+            "detail": str(detail)[:200],
             "session_id": _session_id,
-        }])
+        }
         
-        # Baca log existing
-        try:
-            _existing_log = conn.read(worksheet="ACTIVITY_LOG", ttl=0)
-            if _existing_log is None or _existing_log.empty:
-                _existing_log = pd.DataFrame(columns=["timestamp", "username", "role", "action", "detail", "session_id"])
-        except Exception:
-            _existing_log = pd.DataFrame(columns=["timestamp", "username", "role", "action", "detail", "session_id"])
+        # Inisialisasi antrian jika belum ada
+        if "pending_activity_logs" not in st.session_state:
+            st.session_state["pending_activity_logs"] = []
+            
+        # Tambahkan ke antrian (di awal agar urutannya terbalik - terbaru di atas)
+        st.session_state["pending_activity_logs"].insert(0, new_log_entry)
         
-        # Gabungkan & simpan
-        _combined = pd.concat([_existing_log, _new_row], ignore_index=True)
-        
-        # Simpan ke sheet
-        conn.update(worksheet="ACTIVITY_LOG", data=_combined)
-        
-        # Simpan juga ke session_state untuk cepat akses
+        # Simpan juga ke session_state untuk akses cepat UI
         if "admin_activity_log" not in st.session_state:
             st.session_state["admin_activity_log"] = []
         st.session_state["admin_activity_log"].insert(0, {
@@ -1135,8 +1160,9 @@ def log_activity(action, detail=""):
             st.session_state["admin_activity_log"] = st.session_state["admin_activity_log"][:100]
     
     except Exception as e:
-        # Jangan sampai logging bikin app crash
         print(f"[LOG_ACTIVITY ERROR] {e}")
+        
+
 
 # --- INISIALISASI GLOBAL PERIODS_DICT ---
 periods_dict = {}
