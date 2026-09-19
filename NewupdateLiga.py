@@ -13839,12 +13839,34 @@ elif selected_tab == "⚙️ Pengaturan & Master":
 
         with col_cl3:
             st.markdown("##### 🕰️ Data Lama (> 6 Bulan)")
-            _batas_lama = waktu_wib - timedelta(days=180)
+            
+            # Pakai datetime tanpa timezone
+            _batas_lama = datetime.now() - timedelta(days=180)
             _total_lama = 0
             _sp_lama = st.session_state.get("sales_person_df", pd.DataFrame())
+            
             if not _sp_lama.empty and "updated_at" in _sp_lama.columns:
                 _sp_lama["_dt"] = pd.to_datetime(_sp_lama["updated_at"], errors="coerce")
-                _total_lama = int((_sp_lama["_dt"] < pd.Timestamp(_batas_lama)).sum())
+                _dt_naive = _sp_lama["_dt"].dt.tz_localize(None) if hasattr(_sp_lama["_dt"].dt, "tz") else _sp_lama["_dt"]
+                _total_lama = int((_dt_naive < pd.Timestamp(_batas_lama)).sum())
+
+            st.metric("Data > 6 Bulan", _total_lama)
+
+            if _total_lama > 0:
+                if st.button("🗑️ Hapus Data Lama", use_container_width=True, key="cln_lama"):
+                    _removed_l = 0
+                    _sp_l = st.session_state.get("sales_person_df", pd.DataFrame())
+                    if not _sp_l.empty and "updated_at" in _sp_l.columns:
+                        _before_l = len(_sp_l)
+                        _sp_l["_dt"] = pd.to_datetime(_sp_l["updated_at"], errors="coerce")
+                        _dt_naive2 = _sp_l["_dt"].dt.tz_localize(None) if hasattr(_sp_l["_dt"].dt, "tz") else _sp_l["_dt"]
+                        _sp_l = _sp_l[_dt_naive2 >= pd.Timestamp(_batas_lama)].drop(columns=["_dt"])
+                        _removed_l = _before_l - len(_sp_l)
+                        st.session_state["sales_person_df"] = _sp_l
+                    _add_activity_log("CLEANUP", f"Hapus {_removed_l} baris > 6 bulan")
+                    st.success(f"✅ {_removed_l} baris lama dihapus!")
+                    time.sleep(1)
+                    st.rerun()
 
             st.metric("Data > 6 Bulan", _total_lama)
 
