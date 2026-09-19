@@ -5,6 +5,7 @@ import re
 import math
 import os
 import io
+from fpdf import FPDF
 import base64
 from datetime import datetime
 from zoneinfo import ZoneInfo
