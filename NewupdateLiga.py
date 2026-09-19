@@ -14102,7 +14102,7 @@ elif selected_tab == "⚙️ Pengaturan & Master":
     if selected_master_sub == "🎛️ Pengaturan PSM":
         
         selected_psm_sub = st.radio(
-            label="Pilih",
+            label="",
             options=[
                 "➕ Tambah Item & Target",
                 "⚙️ Pengaturan & Edit Item",
@@ -14954,7 +14954,7 @@ elif selected_tab == "⚙️ Pengaturan & Master":
         # 🎛️ NAVIGASI TAB — 6 SEKSI UTAMA
         # =====================================================================
         _admin_tab = st.radio(
-            "Admin Nav",
+            "",
             [
                 "📌 System Health",
                 "📊 Database",
