@@ -13795,12 +13795,15 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                 target_shift3_sg = 0
 
             # =========================================================================
-            # D. PERHITUNGAN POIN
+            # D. PERHITUNGAN POIN — UNCAPPED (Achievement > 100% dapat poin lebih)
             # =========================================================================
-            poin_psm = 20 * (min(ach_psm, 100) / 100)
-            poin_pwp = 25 * (min(ach_pwp_qty, 100) / 100)
-            poin_sg = 30 * (min(ach_sg, 100) / 100)
+            poin_psm = 20 * (ach_psm / 100)
+            poin_pwp = 25 * (ach_pwp_qty / 100)
+            poin_sg = 30 * (ach_sg / 100)
             total_poin_didapat = poin_psm + poin_pwp + poin_sg
+
+            # Info batas max (untuk konteks)
+            max_poin_normal = 20 + 25 + 30  # = 75
 
             # =========================================================================
             # E. FORMAT TEKS SUMMARY
