@@ -3415,32 +3415,52 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 text-align: center; font-family: monospace; font-size: 9.5px;
                 color: #b45309; font-style: italic;
             }}
-            /* JAM DIGITAL */
-            .clock-box-j {{
+           /* JAM PANJANG + JAM PASIR */
+            .clock-bar-j {{
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
                 background: rgba(15, 23, 42, 0.9);
                 border: 2px solid #b45309;
-                border-radius: 8px;
-                padding: 8px 12px;
-                margin: 10px auto;
-                text-align: center;
-                max-width: 200px;
+                border-radius: 10px;
+                padding: 10px 16px;
+                margin: 12px auto;
+                width: 100%;
+                max-width: 380px;
                 box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+                box-sizing: border-box;
             }}
-            .clock-time-j {{
+            .clock-bar-left-j {{
                 font-family: 'Courier New', monospace;
-                font-size: 20px;
+                font-size: 22px;
                 font-weight: 900;
                 color: #38bdf8;
                 text-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
                 letter-spacing: 2px;
-                line-height: 1;
+                flex: 1;
+                text-align: left;
             }}
-            .clock-date-j {{
+            .clock-bar-center-j {{
+                font-size: 22px;
+                flex: 0 0 auto;
+                margin: 0 12px;
+                animation: hourglassSpinJ 2.5s infinite ease-in-out;
+                filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.8));
+            }}
+            @keyframes hourglassSpinJ {{
+                0% { transform: rotate(0deg); }
+                50% { transform: rotate(180deg); }
+                100% { transform: rotate(180deg); }
+            }}
+            .clock-bar-right-j {{
                 font-family: monospace;
-                font-size: 9px;
-                color: #cbd5e1;
-                margin-top: 4px;
+                font-size: 10px;
                 font-weight: bold;
+                color: #cbd5e1;
+                flex: 1;
+                text-align: right;
+                letter-spacing: 0.3px;
+                line-height: 1.3;
             }}
             /* KATA BIJAK GUILD */
             .motivasi-box-j {{
@@ -3724,7 +3744,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 
                 # Waktu realtime WIB (update tiap refresh)
                 _waktu_wib_j = datetime.now(ZoneInfo("Asia/Jakarta"))
-                _jam_str_j = _waktu_wib_j.strftime("%H:%M:%S")
+                _jam_hm_j = _waktu_wib_j.strftime("%H:%M")
                 _tgl_str_j = _waktu_wib_j.strftime("%A, %d/%m/%Y")
 
                 # ==========================================
@@ -3745,10 +3765,11 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     + _build_j_stat_row("👥 Personil", str(len(master_personil_j)) + " orang", "#2563eb")
                     + _build_j_stat_row("🏪 Toko", "C383 — KGS", "#b45309")
                     + "</div>"
-                    # ─── JAM DIGITAL (STATIS) ───
-                    + "<div class='clock-box-j'>"
-                    + "<div class='clock-time-j'>" + _jam_str_j + "</div>"
-                    + "<div class='clock-date-j'>" + _tgl_str_j + "</div>"
+                    # ─── JAM PANJANG + JAM PASIR ───
+                    + "<div class='clock-bar-j'>"
+                    + "<div class='clock-bar-left-j'>" + _jam_hm_j + "</div>"
+                    + "<div class='clock-bar-center-j'>⏳</div>"
+                    + "<div class='clock-bar-right-j'>" + _tgl_str_j + "</div>"
                     + "</div>"
                     + "<div class='open-page-footer-j'>- Halaman 1 -</div>"
                 )
