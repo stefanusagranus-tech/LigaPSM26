@@ -13239,7 +13239,7 @@ elif selected_tab == "📝 Input Data":
                     "cemilan_ceban": int(cemilan_ceban),
                     "updated_at": str(tanggal_pps),
                 }
-
+            
                 try:
                     with st.spinner("⏳ Memproses & Menyingkronkan Data..."):
                         new_pps_df = pd.DataFrame([new_pps_record])
@@ -13250,6 +13250,23 @@ elif selected_tab == "📝 Input Data":
                             [st.session_state.sales_pps_df, new_pps_df],
                             ignore_index=True,
                         )
+                    
+                        # Jalankan sinkronisasi
+                        sync_periode_pps_from_sales()
+
+                        # Simpan ke Google Sheets
+                        save_database(
+                            st.session_state.sales_item_df,
+                            st.session_state.sales_person_df,
+                            st.session_state.sales_pps_df,
+                            st.session_state.sales_store_df,
+                        )
+
+                        # --- BACKUP OTOMATIS BERJALAN DI SINI ---
+                        backup_to_gsheets()
+                        flush_pending_logs() 
+                        log_activity("SAVE_PPS", f"Input PPS: {staff_name} / {kasir_name} / {date_str}")
+                    
                     show_success_dialog(
                         title_msg="<b>Data Sales PPS</b> berhasil disegel oleh mage!",
                         subtitle="Sinkronisasi ke PERIODE_PPS Berhasil",
@@ -13268,23 +13285,8 @@ elif selected_tab == "📝 Input Data":
                             "💧 Redeem Sueger": redeem_sueger,
                             "🥤 Cemilan Ceban": cemilan_ceban,
                         }
-                    )
-                        # Jalankan sinkronisasi
-                        sync_periode_pps_from_sales()
-
-                        # Simpan ke Google Sheets
-                        save_database(
-                            st.session_state.sales_item_df,
-                            st.session_state.sales_person_df,
-                            st.session_state.sales_pps_df,
-                            st.session_state.sales_store_df,
-                        )
-
-                        # --- BACKUP OTOMATIS BERJALAN DI SINI ---
-                        backup_to_gsheets()
-                        flush_pending_logs() 
-                        log_activity("SAVE_PPS", f"Input PPS: {staff_name} / {kasir_name} / {date_str}")
-
+                    ) 
+                    
                     show_success_pps_dialog(
                         staff_name,
                         kasir_name,
