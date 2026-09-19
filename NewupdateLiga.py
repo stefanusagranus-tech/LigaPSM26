@@ -14887,7 +14887,7 @@ elif selected_tab == "⚙️ Pengaturan & Master":
             try:
                 with st.spinner("⏳ Membaca activity log..."):
                     _log_sheet_df = conn.read(worksheet="ACTIVITY_LOG", ttl=300)
-             except Exception as e_log:
+        except Exception as e_log:
                 _err_str = str(e_log)
                 if "429" in _err_str or "Quota exceeded" in _err_str:
                     st.warning("⚠️ Kuota Google Sheets habis sementara (60 read/menit). Tunggu 1 menit & refresh halaman.")
