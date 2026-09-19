@@ -10980,6 +10980,49 @@ elif selected_tab == "📝 Input Data":
             font-weight: bold;
             font-family: monospace;
         }
+        * ============================================
+           📱 RESPONSIVE HP
+        ============================================ */
+        @media (max-width: 600px) {
+            .input-header-outer {
+                padding: 10px 10px;
+            }
+            .input-title {
+                font-size: 16px;
+                letter-spacing: 0.5px;
+            }
+            .input-subtitle {
+                font-size: 8.5px;
+            }
+            .input-bottom-row {
+                flex-direction: column;
+                gap: 6px;
+            }
+            .input-side-box {
+                padding: 6px 10px;
+                min-width: 100%;
+            }
+            .input-box-title {
+                font-size: 8px;
+                margin-bottom: 3px;
+            }
+            .input-marquee-text {
+                font-size: 10px;
+            }
+            .input-hourglass {
+                font-size: 18px;
+                padding-right: 6px;
+            }
+            .input-greet {
+                font-size: 9px;
+            }
+            .input-clock {
+                font-size: 13px;
+            }
+            .input-date {
+                font-size: 9px;
+            }
+        }
     </style>
     </head>
     <body>
@@ -11094,16 +11137,50 @@ elif selected_tab == "📝 Input Data":
     # =========================================================================
     # 🏛️ RENDER HEADER
     # =========================================================================
-    components.html(input_header_html, height=175)
+    # Deteksi HP
+    _is_mobile_input = st.session_state.get("is_mobile", False)
+    _iframe_height = 320 if _is_mobile_input else 195
+    components.html(input_header_html, height=_iframe_height)
 
     # =========================================================================
     # 🔙 TOMBOL BACK — NEMPEL DI BAWAH HEADER (TENGAH, KECIL)
     # =========================================================================
-    col_nav_l, col_nav_m, col_nav_r = st.columns([1, 1, 1])
-    with col_nav_m:
-        if st.button("⬅️ MENU UTAMA", key="btn_back_to_main_input", use_container_width=True):
-            st.session_state["selected_tab"] = "🏠 Menu Utama"
-            st.rerun()
+        # CSS khusus tombol back — biar kecil di HP juga
+    st.markdown(
+        """
+        <style>
+            .st-key-btn_back_to_main_input button,
+            div[data-testid="stButton"]:has(button[key="btn_back_to_main_input"]) button {
+                background: linear-gradient(135deg, rgba(180, 83, 9, 0.25), rgba(180, 83, 9, 0.4)) !important;
+                border: 2px solid #b45309 !important;
+                color: #fde047 !important;
+                font-family: monospace !important;
+                font-size: 11px !important;
+                font-weight: bold !important;
+                border-radius: 8px !important;
+                padding: 6px 14px !important;
+                transition: all 0.25s ease !important;
+                margin-top: -10px !important;
+                max-width: 200px !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+                display: block !important;
+            }
+            .st-key-btn_back_to_main_input button:hover,
+            div[data-testid="stButton"]:has(button[key="btn_back_to_main_input"]) button:hover {
+                background: #b45309 !important;
+                color: #ffffff !important;
+                box-shadow: 0 0 15px rgba(180, 83, 9, 0.6) !important;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Tombol back — full width container tapi button di-center via CSS
+    if st.button("⬅️ MENU UTAMA", key="btn_back_to_main_input", use_container_width=False):
+        st.session_state["selected_tab"] = "🏠 Menu Utama"
+        st.rerun()
 
     st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
     
