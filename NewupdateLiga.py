@@ -12806,12 +12806,15 @@ elif selected_tab == "⚙️ Pengaturan & Master":
     if selected_master_sub == "🎛️ Pengaturan PSM":
         
         selected_psm_sub = st.radio(
-            [
+            label="Pilih Menu Pengaturan PSM",
+            options=[
                 "➕ Tambah Item & Target",
                 "⚙️ Pengaturan & Edit Item",
                 "📅 Pengaturan Periode Promosi"
             ],
-            key="psm_inner_menu_select_v2"
+            index=0,
+            key="psm_inner_menu_select_v2",
+            label_visibility="collapsed"
         )
         
         st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
