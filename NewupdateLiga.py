@@ -15421,12 +15421,7 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                 # OUTPUT WA
                 if btn_gen_wa:
                     st.markdown("##### 📝 Hasil Text Report (Siap Copas ke WA):")
-                    st.text_area(
-                        "Salin teks di bawah ini:",
-                        wa_text,
-                        height=500,
-                        key="wa_summary_text_area",
-                    )
+                    st.code(wa_text, language="text")
                     st.caption("💡 Tap & tahan di dalam text area untuk pilih semua, lalu copy")
                     st.info(f"✅ Data segar — Generate: {_generate_str}")
 
