@@ -10838,268 +10838,11 @@ if selected_tab == "🏠 Menu Utama":
 elif selected_tab == "📝 Input Data":
 
     # =========================================================================
-    # 🎨 BACKGROUND HALAMAN INPUT DATA
+    # 🏛️ HEADER UTAMA — KELOLA & INPUT DATA
     # =========================================================================
     bg_url_input = "https://i.postimg.cc/fbWjVRpJ/comfy-drawing-oriental-rifles-wallpaper-preview.jpg"
 
-    # =========================================================================
-    # 🏛️ HEADER (FULL WIDTH) + TOMBOL BACK DI DALAM HEADER
-    # =========================================================================
-    input_header_html = """
-    <!DOCTYPE html>
-    <html>
-    <head>
-    <meta charset="UTF-8">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background-color: transparent; font-family: 'MedievalSharp', 'Courier New', monospace; overflow: hidden; }
-
-        .input-header-outer {
-            position: relative;
-            background: radial-gradient(circle, #162447 0%, #0c1427 100%);
-            border: 3px double #d4af37;
-            border-radius: 14px;
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.35), inset 0 0 20px rgba(0, 0, 0, 0.8);
-            padding: 12px 16px;
-            color: #f1e5c7;
-        }
-        .input-corner {
-            position: absolute;
-            color: #d4af37;
-            font-size: 11px;
-            line-height: 1;
-            opacity: 0.85;
-            pointer-events: none;
-        }
-        .input-corner-tl { top: 3px; left: 5px; }
-        .input-corner-tr { top: 3px; right: 5px; }
-        .input-corner-bl { bottom: 3px; left: 5px; }
-        .input-corner-br { bottom: 3px; right: 5px; }
-
-        .input-title-box { text-align: center; margin-bottom: 8px; }
-        .input-title {
-            font-family: 'MedievalSharp', 'Courier New', monospace;
-            font-size: 22px;
-            color: #f7e7b4;
-            text-shadow: 0 0 8px rgba(212, 175, 55, 0.8), 2px 2px 4px #000;
-            margin: 0;
-            letter-spacing: 1.2px;
-            font-weight: 900;
-        }
-        .input-subtitle {
-            font-size: 10px;
-            color: #38bdf8;
-            margin-top: 3px;
-            letter-spacing: 0.5px;
-            font-family: monospace;
-        }
-
-        .input-bottom-row {
-            display: flex;
-            align-items: stretch;
-            justify-content: space-between;
-            gap: 10px;
-            width: 100%;
-        }
-        .input-side-box {
-            flex: 1;
-            background: rgba(10, 17, 34, 0.75);
-            border: 1px solid #9a7b38;
-            border-radius: 8px;
-            padding: 8px 12px;
-            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        .input-box-title {
-            font-size: 9px;
-            color: #e5c158;
-            font-weight: bold;
-            letter-spacing: 0.6px;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-            font-family: monospace;
-        }
-
-        .input-marquee-container {
-            overflow: hidden;
-            white-space: nowrap;
-            width: 100%;
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid #ef4444;
-            border-radius: 5px;
-            padding: 4px 0;
-        }
-        .input-marquee-text {
-            display: inline-block;
-            padding-left: 100%;
-            animation: marqueeInput 14s linear infinite;
-            color: #fca5a5;
-            font-size: 11px;
-            font-weight: bold;
-            font-family: monospace;
-            letter-spacing: 0.5px;
-        }
-        @keyframes marqueeInput {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(-100%, 0); }
-        }
-
-        .input-time-wrap {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-        }
-        .input-hourglass {
-            font-size: 22px;
-            display: inline-block;
-            animation: spinHourglassInput 2.5s infinite ease-in-out;
-            padding-right: 10px;
-            filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.8));
-        }
-        @keyframes spinHourglassInput {
-            0% { transform: rotate(0deg); }
-            50% { transform: rotate(180deg); }
-            100% { transform: rotate(180deg); }
-        }
-        .input-clock-content { text-align: right; flex: 1; }
-        .input-greet {
-            font-size: 10px;
-            color: #fcd34d;
-            font-weight: bold;
-            margin-bottom: 1px;
-            font-family: monospace;
-        }
-        .input-clock {
-            font-family: monospace;
-            font-size: 15px;
-            font-weight: bold;
-            color: #38bdf8;
-            text-shadow: 0 0 6px rgba(56, 189, 248, 0.5);
-            line-height: 1.1;
-        }
-        .input-date {
-            font-size: 10px;
-            color: #cbd5e1;
-            margin-top: 1px;
-            font-weight: bold;
-            font-family: monospace;
-        }
-        * ============================================
-           📱 RESPONSIVE HP
-        ============================================ */
-               @media (max-width: 600px) {
-            .input-header-outer {
-                padding: 8px 10px;
-            }
-            .input-title {
-                font-size: 13px;
-                letter-spacing: 0.2px;
-            }
-            .input-subtitle {
-                font-size: 7.5px;
-            }
-            /* 🔑 TETAP SIDE-BY-SIDE */
-            .input-bottom-row {
-                flex-direction: row !important;
-                gap: 6px;
-            }
-            .input-side-box {
-                padding: 5px 6px;
-                min-width: 0;
-            }
-            .input-box-title {
-                font-size: 7px;
-                margin-bottom: 2px;
-            }
-            .input-marquee-text {
-                font-size: 8.5px;
-            }
-            .input-hourglass {
-                font-size: 14px;
-                padding-right: 4px;
-            }
-            .input-greet {
-                font-size: 7.5px;
-            }
-            .input-clock {
-                font-size: 11px;
-            }
-            .input-date {
-                font-size: 7.5px;
-            }
-        }
-    </style>
-    </head>
-    <body>
-    <div class="input-header-outer">
-        <div class="input-corner input-corner-tl">⚜</div>
-        <div class="input-corner input-corner-tr">⚜</div>
-        <div class="input-corner input-corner-bl">⚜</div>
-        <div class="input-corner input-corner-br">⚜</div>
-
-        <div class="input-title-box">
-            <h1 class="input-title">✏️ KELOLA & INPUT DATA PENJUALAN</h1>
-            <div class="input-subtitle">Sistem Pencatatan Transaksi Harian PSM Toko C383</div>
-        </div>
-
-        <div class="input-bottom-row">
-            <div class="input-side-box">
-                <div class="input-box-title">📢 PENGUMUMAN GUILD</div>
-                <div class="input-marquee-container">
-                    <span class="input-marquee-text">⚠️ Biasakan untuk cek Report 25 untuk syarat PWP dan Sueger sebelum input data penjualan! — Jangan lupa isi shift dengan benar. — Pastikan qty sudah sesuai sebelum klik Simpan. ⚠️</span>
-                </div>
-            </div>
-
-            <div class="input-side-box">
-                <div class="input-time-wrap">
-                    <div>
-                        <span class="input-hourglass">⏳</span>
-                    </div>
-                    <div class="input-clock-content">
-                        <div class="input-greet" id="inpGreet">🌙 Selamat Malam</div>
-                        <div class="input-clock" id="inpClock">00:00:00 WIB</div>
-                        <div class="input-date" id="inpDate">-</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <script>
-        function updateInputClock() {
-            var now = new Date();
-            var h = now.getHours();
-            var greet = '🌙 Selamat Malam';
-            if (h >= 4 && h < 11) greet = '🌅 Selamat Pagi';
-            else if (h >= 11 && h < 15) greet = '☀️ Selamat Siang';
-            else if (h >= 15 && h < 18) greet = '🌇 Selamat Sore';
-            document.getElementById('inpGreet').textContent = greet;
-
-            var hh = String(h).padStart(2, '0');
-            var mm = String(now.getMinutes()).padStart(2, '0');
-            var ss = String(now.getSeconds()).padStart(2, '0');
-            document.getElementById('inpClock').textContent = hh + ':' + mm + ':' + ss + ' WIB';
-
-            var days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-            var d = days[now.getDay()];
-            var dd = String(now.getDate()).padStart(2, '0');
-            var mo = String(now.getMonth()+1).padStart(2, '0');
-            var yy = now.getFullYear();
-            document.getElementById('inpDate').textContent = d + ', ' + dd + '/' + mo + '/' + yy;
-        }
-        setInterval(updateInputClock, 1000);
-        updateInputClock();
-    </script>
-    </body>
-    </html>
-    """
-
-    # =========================================================================
-    # 🎨 CSS BACKGROUND + TOMBOL BACK
-    # =========================================================================
+    # Setup background + tombol back CSS
     st.markdown(
         f"""
         <style>
@@ -11120,8 +10863,12 @@ elif selected_tab == "📝 Input Data":
                 padding-right: 12px !important;
             }}
 
-            /* 🔙 TOMBOL BACK KECIL — NEMPEL DI BAWAH HEADER */
-            div[data-testid="stButton"] > button[kind="secondary"] {{
+            /* 🔙 TOMBOL MENU UTAMA — KECIL, TENGAH, NEMPEL */
+            div[data-testid="stButton"]:has(button[key="btn_back_to_main_input"]) {{
+                max-width: 220px !important;
+                margin: -10px auto 15px auto !important;
+            }}
+            div[data-testid="stButton"]:has(button[key="btn_back_to_main_input"]) > button {{
                 background: linear-gradient(135deg, rgba(180, 83, 9, 0.25), rgba(180, 83, 9, 0.4)) !important;
                 border: 2px solid #b45309 !important;
                 color: #fde047 !important;
@@ -11131,9 +10878,9 @@ elif selected_tab == "📝 Input Data":
                 border-radius: 8px !important;
                 padding: 6px 14px !important;
                 transition: all 0.25s ease !important;
-                margin-top: -10px !important;
+                width: 100% !important;
             }}
-            div[data-testid="stButton"] > button[kind="secondary"]:hover {{
+            div[data-testid="stButton"]:has(button[key="btn_back_to_main_input"]) > button:hover {{
                 background: #b45309 !important;
                 color: #ffffff !important;
                 box-shadow: 0 0 15px rgba(180, 83, 9, 0.6) !important;
@@ -11144,52 +10891,287 @@ elif selected_tab == "📝 Input Data":
     )
 
     # =========================================================================
-    # 🏛️ RENDER HEADER
+    # 🏛️ HEADER ROYAL FRAME — STRUKTUR SAMA SEPERTI HOME
     # =========================================================================
-    # Deteksi HP
-    _is_mobile_input = st.session_state.get("is_mobile", False)
-    _iframe_height = 320 if _is_mobile_input else 195
-    components.html(input_header_html, height=220)
+    input_running_text = "⚠️ Biasakan untuk cek Report 25 untuk syarat PWP dan Sueger sebelum input data penjualan! — Jangan lupa isi shift dengan benar. — Pastikan qty sudah sesuai sebelum klik Simpan. ⚠️"
+
+    rpg_header_input_html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&family=Quicksand:wght@600;700&display=swap');
+
+        * {{
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }}
+
+        body {{
+            background-color: transparent;
+            font-family: 'Quicksand', sans-serif;
+            overflow: hidden;
+        }}
+
+        /* BINGKAI UTAMA ROYAL KERAJAAN */
+        .royal-outer-frame {{
+            position: relative;
+            background: radial-gradient(circle, #162447 0%, #0c1427 100%);
+            border: 3px double #d4af37;
+            border-radius: 14px;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.35), inset 0 0 20px rgba(0, 0, 0, 0.8);
+            padding: 10px 14px;
+            color: #f1e5c7;
+            margin-bottom: 5px;
+        }}
+
+        /* UKIRAN SUDUT EMAS */
+        .corner-ornament {{
+            position: absolute;
+            color: #d4af37;
+            font-size: 10px;
+            line-height: 1;
+            opacity: 0.85;
+            pointer-events: none;
+        }}
+        .top-left {{ top: 3px; left: 5px; }}
+        .top-right {{ top: 3px; right: 5px; }}
+        .bottom-left {{ bottom: 3px; left: 5px; }}
+        .bottom-right {{ bottom: 3px; right: 5px; }}
+
+        /* BARIS ATAS: JUDUL */
+        .guild-title-box {{
+            text-align: center;
+            margin-bottom: 8px;
+        }}
+
+        .guild-title {{
+            font-family: 'MedievalSharp', serif;
+            font-size: 16px;
+            color: #f7e7b4;
+            text-shadow: 0 0 8px rgba(212, 175, 55, 0.8), 2px 2px 4px #000;
+            margin: 0;
+            letter-spacing: 0.8px;
+        }}
+
+        .guild-subtitle {{
+            font-size: 9px;
+            color: #38bdf8;
+            margin-top: 1px;
+            letter-spacing: 0.3px;
+        }}
+
+        /* BARIS BAWAH: DUA KOTAK SIMETRIS */
+        .bottom-row {{
+            display: flex;
+            align-items: stretch;
+            justify-content: space-between;
+            gap: 10px;
+            width: 100%;
+        }}
+
+        .royal-side-box {{
+            flex: 1;
+            background: rgba(10, 17, 34, 0.75);
+            border: 1px solid #9a7b38;
+            border-radius: 8px;
+            padding: 6px 10px;
+            min-width: 0;
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }}
+
+        .box-title {{
+            font-size: 8px;
+            color: #e5c158;
+            font-weight: bold;
+            letter-spacing: 0.6px;
+            margin-bottom: 3px;
+            text-transform: uppercase;
+        }}
+
+        /* RUNNING TEXT (KIRI) — WARNA MERAH */
+        .marquee-container {{
+            overflow: hidden;
+            white-space: nowrap;
+            width: 100%;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid #ef4444;
+            border-radius: 5px;
+            padding: 2px 0;
+            margin-top: 2px;
+        }}
+
+        .marquee-text {{
+            display: inline-block;
+            padding-left: 100%;
+            animation: marquee 14s linear infinite;
+            color: #fca5a5;
+            font-size: 10px;
+            font-weight: bold;
+        }}
+
+        @keyframes marquee {{
+            0%   {{ transform: translate(0, 0); }}
+            100% {{ transform: translate(-100%, 0); }}
+        }}
+
+        /* KANAN: JAM */
+        .time-box-wrapper {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }}
+
+        .hourglass-container {{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-right: 8px;
+        }}
+
+        .hourglass-spin {{
+            font-size: 20px;
+            display: inline-block;
+            filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.8));
+            animation: spinHourglass 2.5s infinite ease-in-out;
+        }}
+
+        @keyframes spinHourglass {{
+            0% {{ transform: rotate(0deg); }}
+            50% {{ transform: rotate(180deg); }}
+            100% {{ transform: rotate(180deg); }}
+        }}
+
+        .right-clock-content {{
+            text-align: right;
+            flex: 1;
+        }}
+
+        .greeting-text {{
+            font-size: 9px;
+            color: #fcd34d;
+            font-weight: bold;
+            margin-bottom: 1px;
+        }}
+
+        .digital-clock {{
+            font-family: monospace;
+            font-size: 13px;
+            font-weight: bold;
+            color: #38bdf8;
+            text-shadow: 0 0 6px rgba(56, 189, 248, 0.5);
+            line-height: 1.1;
+        }}
+
+        .digital-date {{
+            font-size: 9px;
+            color: #cbd5e1;
+            margin-top: 1px;
+            font-weight: bold;
+        }}
+
+        @media (min-width: 650px) {{
+            .guild-title {{ font-size: 18px; }}
+            .guild-subtitle {{ font-size: 11px; }}
+            .greeting-text {{ font-size: 10px; }}
+            .digital-clock {{ font-size: 14px; }}
+            .digital-date {{ font-size: 10px; }}
+            .box-title {{ font-size: 9px; }}
+            .marquee-text {{ font-size: 11px; }}
+            .hourglass-spin {{ font-size: 24px; }}
+        }}
+    </style>
+    </head>
+    <body>
+
+    <div class="royal-outer-frame">
+        <div class="corner-ornament top-left">⚜</div>
+        <div class="corner-ornament top-right">⚜</div>
+        <div class="corner-ornament bottom-left">⚜</div>
+        <div class="corner-ornament bottom-right">⚜</div>
+
+        <div class="guild-title-box">
+            <h1 class="guild-title">✏️ Kelola & Input Data Penjualan ✏️</h1>
+            <div class="guild-subtitle">Sistem Pencatatan Transaksi Harian PSM Toko C383</div>
+        </div>
+
+        <div class="bottom-row">
+            <div class="royal-side-box">
+                <div class="box-title">📢 PENGUMUMAN GUILD</div>
+                <div class="marquee-container">
+                    <span class="marquee-text">{input_running_text}</span>
+                </div>
+            </div>
+
+            <div class="royal-side-box">
+                <div class="time-box-wrapper">
+                    <div class="hourglass-container">
+                        <span class="hourglass-spin">⏳</span>
+                    </div>
+                    <div class="right-clock-content">
+                        <div class="greeting-text" id="timeGreeting">🌙 Selamat Malam</div>
+                        <div class="digital-clock" id="liveClock">00:00:00 WIB</div>
+                        <div class="digital-date" id="liveDate">Senin, 01/01/2026</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateClock() {{
+            const now = new Date();
+            const hoursNum = now.getHours();
+
+            let greeting = "🌙 Selamat Malam";
+            if (hoursNum >= 4 && hoursNum < 11) {{
+                greeting = "🌅 Selamat Pagi";
+            }} else if (hoursNum >= 11 && hoursNum < 15) {{
+                greeting = "☀️ Selamat Siang";
+            }} else if (hoursNum >= 15 && hoursNum < 18) {{
+                greeting = "🌇 Selamat Sore";
+            }}
+            document.getElementById('timeGreeting').textContent = greeting;
+
+            const hours = String(hoursNum).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('liveClock').textContent = `${{hours}}:${{minutes}}:${{seconds}} WIB`;
+
+            const daysArr = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const dayName = daysArr[now.getDay()];
+
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+
+            document.getElementById('liveDate').textContent = `${{dayName}}, ${{day}}/${{month}}/${{year}}`;
+        }}
+
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+
+    </body>
+    </html>
+    """
+
+    components.html(rpg_header_input_html, height=175)
 
     # =========================================================================
-    # 🔙 TOMBOL BACK — NEMPEL DI BAWAH HEADER (TENGAH, KECIL)
+    # 🔙 TOMBOL MENU UTAMA — NEMPEL DI BAWAH HEADER
     # =========================================================================
-        # CSS khusus tombol back — biar kecil di HP juga
-    st.markdown(
-        """
-        <style>
-            .st-key-btn_back_to_main_input button,
-            div[data-testid="stButton"]:has(button[key="btn_back_to_main_input"]) button {
-                background: linear-gradient(135deg, rgba(180, 83, 9, 0.25), rgba(180, 83, 9, 0.4)) !important;
-                border: 2px solid #b45309 !important;
-                color: #fde047 !important;
-                font-family: monospace !important;
-                font-size: 11px !important;
-                font-weight: bold !important;
-                border-radius: 8px !important;
-                padding: 6px 14px !important;
-                transition: all 0.25s ease !important;
-                margin-top: -10px !important;
-                max-width: 200px !important;
-                margin-left: auto !important;
-                margin-right: auto !important;
-                display: block !important;
-            }
-            .st-key-btn_back_to_main_input button:hover,
-            div[data-testid="stButton"]:has(button[key="btn_back_to_main_input"]) button:hover {
-                background: #b45309 !important;
-                color: #ffffff !important;
-                box-shadow: 0 0 15px rgba(180, 83, 9, 0.6) !important;
-            }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    # Tombol back — full width container tapi button di-center via CSS
     if st.button("⬅️ MENU UTAMA", key="btn_back_to_main_input"):
         st.session_state["redirect_to_main_tab"] = True
         st.rerun()
+
+    st.markdown("<br>", unsafe_allow_html=True)
 
     st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
     
