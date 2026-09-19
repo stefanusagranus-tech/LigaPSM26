@@ -42,6 +42,413 @@ st.set_page_config(
 
 SPREADSHEET_ID = "1kJ-OsjLEsFuNyyBg2TwxlWz8Ape4lwF9h0t66q3ldQk"
 
+# =========================================================================
+# 🎉 DIALOG GLOBAL ROYAL GUILD — SUKSES NOTIFIKASI
+# =========================================================================
+@st.dialog("✨ Transaksi Berhasil!")
+def show_success_dialog(
+    title_msg: str,
+    detail_dict: dict,
+    subtitle: str = "Pencatatan Berhasil Disimpan",
+    icon: str = "⚜️",
+    theme: str = "gold",  # "gold" | "blue" | "green" | "purple"
+):
+    """
+    Dialog global Royal Guild dengan tema medieval fantasy.
+    
+    Args:
+        title_msg (str): Pesan utama sukses.
+        detail_dict (dict): Detail info (key-value) untuk ditampilkan.
+        subtitle (str): Sub-judul di bawah icon.
+        icon (str): Emoji/karakter icon utama (default: ⚜️).
+        theme (str): Tema warna — "gold", "blue", "green", "purple".
+    """
+    
+    # =====================================================================
+    # 🎨 PALET WARNA PER TEMA
+    # =====================================================================
+    themes = {
+        "gold": {
+            "primary": "#d4af37",
+            "secondary": "#fbbf24",
+            "light": "#f7e7b4",
+            "dark": "#78350f",
+            "gradient": "linear-gradient(135deg, #78350f 0%, #b45309 50%, #d4af37 100%)",
+            "glow": "rgba(212, 175, 55, 0.6)",
+        },
+        "blue": {
+            "primary": "#3b82f6",
+            "secondary": "#60a5fa",
+            "light": "#dbeafe",
+            "dark": "#1e3a8a",
+            "gradient": "linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%)",
+            "glow": "rgba(59, 130, 246, 0.6)",
+        },
+        "green": {
+            "primary": "#10b981",
+            "secondary": "#34d399",
+            "light": "#d1fae5",
+            "dark": "#064e3b",
+            "gradient": "linear-gradient(135deg, #064e3b 0%, #059669 50%, #10b981 100%)",
+            "glow": "rgba(16, 185, 129, 0.6)",
+        },
+        "purple": {
+            "primary": "#a855f7",
+            "secondary": "#c084fc",
+            "light": "#e9d5ff",
+            "dark": "#4c1d95",
+            "gradient": "linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #a855f7 100%)",
+            "glow": "rgba(168, 85, 247, 0.6)",
+        },
+    }
+    t = themes.get(theme, themes["gold"])
+    
+    # =====================================================================
+    # 🎨 CSS KUSUS DIALOG (dalam iframe dialog Streamlit)
+    # =====================================================================
+    st.markdown(
+        f"""
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&family=Cinzel:wght@700;900&family=Quicksand:wght@600;700&display=swap');
+            
+            /* Container utama dialog */
+            div[data-testid="stDialog"] > div {{
+                background: radial-gradient(circle at top, #162447 0%, #0c1427 60%, #05070c 100%) !important;
+                border: 3px double {t['primary']} !important;
+                border-radius: 16px !important;
+                box-shadow: 0 0 40px {t['glow']}, inset 0 0 30px rgba(0, 0, 0, 0.8) !important;
+                padding: 0 !important;
+            }}
+            
+            /* Header default dialog disembunyikan (kita bikin sendiri) */
+            div[data-testid="stDialog"] header {{
+                display: none !important;
+            }}
+            
+            /* Body dialog */
+            div[data-testid="stDialog"] [role="dialog"] > div:nth-child(2) {{
+                padding: 20px 25px 25px 25px !important;
+            }}
+            
+            /* ============================================================ */
+            /* ORNAMEN SUDUT EMAS */
+            /* ============================================================ */
+            .dialog-frame {{
+                position: relative;
+                padding: 5px;
+            }}
+            .dialog-frame .corner {{
+                position: absolute;
+                color: {t['primary']};
+                font-size: 14px;
+                line-height: 1;
+                filter: drop-shadow(0 0 6px {t['glow']});
+                animation: cornerPulse 3s infinite ease-in-out;
+            }}
+            .dialog-frame .corner-tl {{ top: -5px; left: -5px; }}
+            .dialog-frame .corner-tr {{ top: -5px; right: -5px; }}
+            .dialog-frame .corner-bl {{ bottom: -5px; left: -5px; }}
+            .dialog-frame .corner-br {{ bottom: -5px; right: -5px; }}
+            
+            @keyframes cornerPulse {{
+                0%, 100% {{ filter: drop-shadow(0 0 6px {t['glow']}); opacity: 0.85; }}
+                50% {{ filter: drop-shadow(0 0 15px {t['glow']}); opacity: 1; }}
+            }}
+            
+            /* ============================================================ */
+            /* HEADER BANNER */
+            /* ============================================================ */
+            .dialog-banner {{
+                background: {t['gradient']};
+                border-radius: 12px;
+                padding: 22px 18px 18px 18px;
+                text-align: center;
+                margin-bottom: 18px;
+                position: relative;
+                overflow: hidden;
+                box-shadow: 0 4px 20px {t['glow']}, inset 0 1px 0 rgba(255, 255, 255, 0.2);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+            }}
+            .dialog-banner::before {{
+                content: "";
+                position: absolute;
+                top: -50%;
+                left: -50%;
+                width: 200%;
+                height: 200%;
+                background: linear-gradient(
+                    45deg,
+                    transparent 30%,
+                    rgba(255, 255, 255, 0.15) 50%,
+                    transparent 70%
+                );
+                animation: shimmer 3s infinite linear;
+            }}
+            @keyframes shimmer {{
+                0% {{ transform: translateX(-100%) translateY(-100%) rotate(45deg); }}
+                100% {{ transform: translateX(100%) translateY(100%) rotate(45deg); }}
+            }}
+            
+            .dialog-icon-wrap {{
+                position: relative;
+                display: inline-block;
+                margin-bottom: 8px;
+            }}
+            .dialog-icon {{
+                font-size: 42px;
+                display: inline-block;
+                animation: iconFloat 2.5s infinite ease-in-out;
+                filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+                position: relative;
+                z-index: 2;
+            }}
+            @keyframes iconFloat {{
+                0%, 100% {{ transform: translateY(0) scale(1); }}
+                50% {{ transform: translateY(-4px) scale(1.05); }}
+            }}
+            .dialog-sparkle {{
+                position: absolute;
+                color: #ffffff;
+                font-size: 12px;
+                opacity: 0.8;
+                animation: sparkleAnim 2s infinite ease-in-out;
+            }}
+            .dialog-sparkle-1 {{ top: -6px; left: -12px; animation-delay: 0s; }}
+            .dialog-sparkle-2 {{ top: 0; right: -14px; animation-delay: 0.5s; }}
+            .dialog-sparkle-3 {{ bottom: -4px; left: -8px; animation-delay: 1s; }}
+            @keyframes sparkleAnim {{
+                0%, 100% {{ opacity: 0.3; transform: scale(0.8); }}
+                50% {{ opacity: 1; transform: scale(1.2); }}
+            }}
+            
+            .dialog-title {{
+                font-family: 'MedievalSharp', 'Cinzel', serif;
+                font-size: 20px;
+                font-weight: 900;
+                color: #ffffff;
+                margin: 0;
+                letter-spacing: 1.5px;
+                text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 255, 255, 0.3);
+                position: relative;
+                z-index: 2;
+            }}
+            .dialog-subtitle {{
+                font-family: 'Quicksand', sans-serif;
+                font-size: 11px;
+                color: rgba(255, 255, 255, 0.9);
+                margin: 4px 0 0 0;
+                font-weight: 600;
+                letter-spacing: 0.5px;
+                position: relative;
+                z-index: 2;
+            }}
+            
+            /* ============================================================ */
+            /* BODY PESAN */
+            /* ============================================================ */
+            .dialog-body {{
+                margin-top: 12px;
+            }}
+            .dialog-message {{
+                font-family: 'Quicksand', sans-serif;
+                font-size: 13px;
+                color: {t['light']};
+                text-align: center;
+                margin-bottom: 16px;
+                padding: 10px 14px;
+                background: rgba(0, 0, 0, 0.25);
+                border-left: 3px solid {t['primary']};
+                border-right: 3px solid {t['primary']};
+                border-radius: 6px;
+                font-weight: 600;
+                letter-spacing: 0.3px;
+            }}
+            
+            /* ============================================================ */
+            /* DETAIL ROWS — SEPERTI SCROLL */
+            /* ============================================================ */
+            .detail-scroll {{
+                background: rgba(10, 17, 34, 0.6);
+                border: 1.5px solid {t['primary']};
+                border-radius: 10px;
+                padding: 12px 14px;
+                box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.6), 0 0 10px {t['glow']};
+            }}
+            .detail-row {{
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 7px 4px;
+                border-bottom: 1px dashed rgba({t['primary'].replace('#', '')}, 0.25);
+                font-family: 'Quicksand', sans-serif;
+                font-size: 12px;
+                transition: all 0.2s ease;
+            }}
+            .detail-row:last-child {{
+                border-bottom: none;
+            }}
+            .detail-row:hover {{
+                background: rgba(255, 255, 255, 0.03);
+                padding-left: 8px;
+            }}
+            .detail-key {{
+                color: #94a3b8;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }}
+            .detail-key::before {{
+                content: "▸";
+                color: {t['primary']};
+                font-weight: bold;
+                font-size: 10px;
+            }}
+            .detail-value {{
+                color: {t['light']};
+                font-weight: 800;
+                font-family: 'Cinzel', 'MedievalSharp', serif;
+                letter-spacing: 0.5px;
+                text-shadow: 0 0 6px {t['glow']};
+                text-align: right;
+                max-width: 55%;
+                word-break: break-word;
+            }}
+            
+            /* ============================================================ */
+            /* FOOTER STATUS */
+            /* ============================================================ */
+            .dialog-footer {{
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                margin-top: 16px;
+                padding: 8px 12px;
+                background: rgba(16, 185, 129, 0.1);
+                border: 1px solid rgba(16, 185, 129, 0.4);
+                border-radius: 20px;
+                font-family: 'Quicksand', sans-serif;
+                font-size: 11px;
+                font-weight: 700;
+                color: #34d399;
+                letter-spacing: 0.5px;
+            }}
+            .dialog-footer .pulse-dot {{
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: #10b981;
+                box-shadow: 0 0 8px #10b981;
+                animation: pulseDot 1.5s infinite ease-in-out;
+            }}
+            @keyframes pulseDot {{
+                0%, 100% {{ transform: scale(1); opacity: 1; }}
+                50% {{ transform: scale(1.4); opacity: 0.5; }}
+            }}
+            
+            /* ============================================================ */
+            /* TOMBOL CLOSE — ROYAL STYLE */
+            /* ============================================================ */
+            div[data-testid="stDialog"] div.stButton > button {{
+                background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%) !important;
+                color: {t['light']} !important;
+                border: 2px solid {t['primary']} !important;
+                border-radius: 10px !important;
+                font-family: 'Cinzel', 'MedievalSharp', serif !important;
+                font-weight: 900 !important;
+                font-size: 13px !important;
+                letter-spacing: 1.5px !important;
+                padding: 12px 20px !important;
+                margin-top: 14px !important;
+                box-shadow: 0 0 12px {t['glow']}, inset 0 0 10px rgba(0, 0, 0, 0.5) !important;
+                transition: all 0.3s ease !important;
+                text-transform: uppercase !important;
+            }}
+            div[data-testid="stDialog"] div.stButton > button:hover {{
+                background: {t['gradient']} !important;
+                color: #ffffff !important;
+                border-color: {t['secondary']} !important;
+                box-shadow: 0 0 25px {t['glow']}, inset 0 0 15px rgba(255, 255, 255, 0.2) !important;
+                transform: translateY(-2px) !important;
+            }}
+            div[data-testid="stDialog"] div.stButton > button:active {{
+                transform: translateY(0) !important;
+                box-shadow: 0 0 15px {t['glow']} !important;
+            }}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+    
+    # =====================================================================
+    # 🏛️ STRUKTUR HTML DIALOG
+    # =====================================================================
+    st.markdown(
+        f"""
+        <div class="dialog-frame">
+            <span class="corner corner-tl">⚜️</span>
+            <span class="corner corner-tr">⚜️</span>
+            <span class="corner corner-bl">⚜️</span>
+            <span class="corner corner-br">⚜️</span>
+            
+            <!-- HEADER BANNER -->
+            <div class="dialog-banner">
+                <div class="dialog-icon-wrap">
+                    <span class="dialog-sparkle dialog-sparkle-1">✦</span>
+                    <span class="dialog-icon">{icon}</span>
+                    <span class="dialog-sparkle dialog-sparkle-2">✦</span>
+                    <span class="dialog-sparkle dialog-sparkle-3">✦</span>
+                </div>
+                <h2 class="dialog-title">TRANSAKSI BERHASIL</h2>
+                <p class="dialog-subtitle">{subtitle}</p>
+            </div>
+            
+            <!-- BODY -->
+            <div class="dialog-body">
+                <div class="dialog-message">{title_msg}</div>
+                <div class="detail-scroll">
+        """,
+        unsafe_allow_html=True,
+    )
+    
+    # Render baris detail
+    if detail_dict:
+        for key, val in detail_dict.items():
+            st.markdown(
+                f"""
+                <div class="detail-row">
+                    <span class="detail-key">{key}</span>
+                    <span class="detail-value">{val}</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+    else:
+        st.markdown(
+            "<div style='text-align:center; color:#94a3b8; font-size:11px; padding:10px;'>"
+            "— Tidak ada detail tambahan —</div>",
+            unsafe_allow_html=True,
+        )
+    
+    # Footer + tutup
+    st.markdown(
+        f"""
+                </div>
+                <div class="dialog-footer">
+                    <span class="pulse-dot"></span>
+                    <span>TERSINKRONISASI KE GOOGLE SHEETS</span>
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    
+    # Tombol Tutup
+    if st.button("⚜️ Tutup Gulungan ⚜️", use_container_width=True, key="btn_close_global_success_dialog"):
+        st.rerun()
+
 # =========================================================
 # 2. INISIALISASI KONEKSI GOOGLE SHEETS & FUNGSI DATABASE
 # =========================================================
@@ -12568,7 +12975,23 @@ elif selected_tab == "📝 Input Data":
                                     flush_pending_logs() 
                                     # Sebelum st.rerun() di show_success_popup
                                     log_activity("SAVE_SALES", f"Input {inserted_count} item untuk {person_name}")
-                            
+                                                
+                                                # ✅ PANGGIL DIALOG GLOBAL — TEMA GOLD
+                                show_success_dialog(
+                                    title_msg=f"<b>{inserted_count} item penjualan</b> telah dicatat oleh dewan guild!",
+                                    subtitle="Penjualan Tersimpan di Gulungan Kerajaan",
+                                    icon="⚜️",
+                                    theme="gold",
+                                    detail_dict={
+                                        "👤 Personil": m_person,
+                                        "📅 Tanggal": m_date.strftime("%d/%m/%Y"),
+                                        "📋 Periode": m_period_name,
+                                        "📦 Jumlah Item": f"{inserted_count} produk",
+                                    }
+                                )
+                            except Exception as e:
+                                st.error(f"❌ Terjadi kesalahan penyimpanan: {str(e)}")
+                                
                                 show_success_popup(
                                     inserted_count,
                                     m_person,
@@ -12827,7 +13250,25 @@ elif selected_tab == "📝 Input Data":
                             [st.session_state.sales_pps_df, new_pps_df],
                             ignore_index=True,
                         )
-
+                    show_success_dialog(
+                        title_msg="<b>Data Sales PPS</b> berhasil disegel oleh mage!",
+                        subtitle="Sinkronisasi ke PERIODE_PPS Berhasil",
+                        icon="🔮",
+                        theme="purple",
+                        detail_dict={
+                            "👤 Staf": staff_name,
+                            "🎯 Kasir": kasir_name,
+                            "📅 Tanggal": tanggal_pps.strftime("%d/%m/%Y"),
+                            "🕐 Shift": shift_personil,
+                            "⚔️ Syarat PWP": syarat_pwp,
+                            "🛡️ Redeem PWP": redeem_pwp,
+                            "📦 Qty PWP": qty_pwp,
+                            "🎁 Qty SG": qty_sg,
+                            "💧 Syarat Sueger": syarat_sueger,
+                            "💧 Redeem Sueger": redeem_sueger,
+                            "🥤 Cemilan Ceban": cemilan_ceban,
+                        }
+                    )
                         # Jalankan sinkronisasi
                         sync_periode_pps_from_sales()
 
