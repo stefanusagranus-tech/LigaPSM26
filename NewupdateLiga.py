@@ -13567,9 +13567,7 @@ elif selected_tab == "⚙️ Pengaturan & Master":
         with col_bk1:
             st.markdown("##### ☁️ Backup Otomatis Google Sheets")
             st.caption(
-                "Backup ke 7 tab: SALES_PPS_BACKUP, PERIODE_PPS_BACKUP, "
-                "SALES_ITEM_BACKUP, SALES_PERSON_BACKUP, "
-                "PERIODE_BACKUP, MASTER_ITEM_BACKUP, MASTER_PERSONIL_BACKUP"
+                "Backup ke 7 tab"
             )
             
             if st.button(
