@@ -513,7 +513,7 @@ def generate_pdf_report(title, sections_data, generated_time_str):
         st.code(traceback.format_exc())
         return None
 
-        def generate_ppt_report(
+def generate_ppt_report(
     title, month_year_str, generated_time_str,
     psm_data, pwp_data, sueger_data, sg_data, ceban_data,
     total_poin, top3_kasir,
@@ -522,9 +522,6 @@ def generate_pdf_report(title, sections_data, generated_time_str):
     Generate PPT Report Pro dengan chart & visual (9 slide).
     """
     try:
-        # =========================================================
-        # 🎨 WARNA TEMA
-        # =========================================================
         CLR_DARK_NAVY = RGBColor(0x0C, 0x14, 0x27)
         CLR_NAVY = RGBColor(0x16, 0x24, 0x47)
         CLR_GOLD = RGBColor(0xD4, 0xAF, 0x37)
@@ -543,9 +540,6 @@ def generate_pdf_report(title, sections_data, generated_time_str):
         prs.slide_height = Inches(7.5)
         BLANK = prs.slide_layouts[6]
 
-        # =========================================================
-        # HELPER FUNCTIONS
-        # =========================================================
         def add_bg(slide, color=CLR_DARK_NAVY):
             bg = slide.shapes.add_shape(
                 MSO_SHAPE.RECTANGLE, 0, 0, prs.slide_width, prs.slide_height
@@ -575,7 +569,6 @@ def generate_pdf_report(title, sections_data, generated_time_str):
 
         def add_progress_bar(slide, left, top, width, height,
                              percent, color_fill=CLR_GREEN):
-            # Background bar
             bg = slide.shapes.add_shape(
                 MSO_SHAPE.ROUNDED_RECTANGLE, left, top, width, height
             )
@@ -584,7 +577,6 @@ def generate_pdf_report(title, sections_data, generated_time_str):
             bg.line.color.rgb = CLR_GOLD
             bg.line.width = Pt(1)
 
-            # Fill bar
             percent_clamped = max(0, min(100, percent))
             fill_width = int(width * (percent_clamped / 100))
             if fill_width > 0:
@@ -615,9 +607,7 @@ def generate_pdf_report(title, sections_data, generated_time_str):
             plt.close(fig)
             slide.shapes.add_picture(buf, left, top, width, height)
 
-        # =========================================================
-        # 🎬 SLIDE 1: COVER
-        # =========================================================
+        # SLIDE 1: COVER
         slide = prs.slides.add_slide(BLANK)
         add_bg(slide)
         add_gold_border(slide)
@@ -635,7 +625,6 @@ def generate_pdf_report(title, sections_data, generated_time_str):
                  font_size=20, color=CLR_WHITE,
                  align=PP_ALIGN.CENTER)
 
-        # Garis emas
         line = slide.shapes.add_shape(
             MSO_SHAPE.RECTANGLE,
             Inches(4.5), Inches(4.7), Inches(4.33), Pt(2)
@@ -654,9 +643,7 @@ def generate_pdf_report(title, sections_data, generated_time_str):
                  font_size=12, color=CLR_GRAY,
                  align=PP_ALIGN.CENTER, font_name="Consolas")
 
-        # =========================================================
-        # 📈 SLIDE 2: OVERVIEW ALL PROGRAM (BAR CHART)
-        # =========================================================
+        # SLIDE 2: OVERVIEW CHART
         slide = prs.slides.add_slide(BLANK)
         add_bg(slide)
         add_gold_border(slide)
@@ -700,9 +687,7 @@ def generate_pdf_report(title, sections_data, generated_time_str):
                         Inches(1.5), Inches(1.3),
                         Inches(10.33), Inches(5.5))
 
-        # =========================================================
-        # 🎯 SLIDE 3-7: DETAIL PER PROGRAM
-        # =========================================================
+        # SLIDE 3-7: DETAIL PER PROGRAM
         def add_program_slide(title_text, main_data, extra_lines,
                               color_accent=CLR_GREEN, page_num=3):
             slide = prs.slides.add_slide(BLANK)
@@ -722,7 +707,6 @@ def generate_pdf_report(title, sections_data, generated_time_str):
             line.fill.fore_color.rgb = CLR_GOLD
             line.line.fill.background()
 
-            # Progress label
             add_text(slide, "ACHIEVEMENT",
                      Inches(0.8), Inches(1.7), Inches(4), Inches(0.5),
                      font_size=16, bold=True, color=CLR_GOLD,
@@ -740,7 +724,6 @@ def generate_pdf_report(title, sections_data, generated_time_str):
                 color_fill=color_accent
             )
 
-            # Stats grid
             y_start = 3.5
             stat_items = main_data.get("stats", [])
             col1_x, col2_x = Inches(0.8), Inches(6.8)
@@ -784,7 +767,6 @@ def generate_pdf_report(title, sections_data, generated_time_str):
                      font_size=10, color=CLR_GRAY,
                      align=PP_ALIGN.CENTER, font_name="Consolas")
 
-        # --- Slide 3: PSM ---
         psm_extra = (
             f"Target Harian: {psm_data['harian']} Pcs/hari\n"
             f"Shift 1 (40%): {psm_data['shift1']} Pcs   |   "
@@ -805,7 +787,6 @@ def generate_pdf_report(title, sections_data, generated_time_str):
             psm_extra, color_accent=CLR_BLUE, page_num=3
         )
 
-        # --- Slide 4: PWP ---
         pwp_extra = (
             f"Target Harian: {pwp_data['harian']} Pcs/hari\n"
             f"Shift 1 (40%): {pwp_data['shift1']} Pcs   |   "
@@ -828,7 +809,6 @@ def generate_pdf_report(title, sections_data, generated_time_str):
             pwp_extra, color_accent=CLR_PURPLE, page_num=4
         )
 
-        # --- Slide 5: Sueger ---
         add_program_slide(
             "PROGRAM SUEGER",
             {
@@ -842,7 +822,6 @@ def generate_pdf_report(title, sections_data, generated_time_str):
             None, color_accent=CLR_GREEN, page_num=5
         )
 
-        # --- Slide 6: SG ---
         sg_extra = (
             f"Target Harian: {sg_data['harian']} Pcs/hari\n"
             f"Shift 1 (40%): {sg_data['shift1']} Pcs   |   "
@@ -863,7 +842,6 @@ def generate_pdf_report(title, sections_data, generated_time_str):
             sg_extra, color_accent=CLR_ORANGE, page_num=6
         )
 
-        # --- Slide 7: Ceban ---
         add_program_slide(
             "CEMILAN CEBAN",
             {
@@ -877,9 +855,7 @@ def generate_pdf_report(title, sections_data, generated_time_str):
             None, color_accent=CLR_PINK, page_num=7
         )
 
-        # =========================================================
-        # 🏆 SLIDE 8: LEADERBOARD TOP 3
-        # =========================================================
+        # SLIDE 8: LEADERBOARD
         slide = prs.slides.add_slide(BLANK)
         add_bg(slide)
         add_gold_border(slide)
@@ -937,9 +913,7 @@ def generate_pdf_report(title, sections_data, generated_time_str):
                      font_size=22, bold=True, color=CLR_GOLD_LIGHT,
                      align=PP_ALIGN.CENTER, font_name="Consolas")
 
-        # =========================================================
-        # 📝 SLIDE 9: REKOMENDASI & INSIGHT
-        # =========================================================
+        # SLIDE 9: INSIGHT
         slide = prs.slides.add_slide(BLANK)
         add_bg(slide)
         add_gold_border(slide)
@@ -977,20 +951,18 @@ def generate_pdf_report(title, sections_data, generated_time_str):
         ]
         if worst[1] < 50:
             insight_list.append(
-                f"  - Fokus extra untuk program {worst[0]} - review strategi & briefing tim"
+                f"  - Fokus extra untuk program {worst[0]} - review strategi"
             )
         if avg_ach < 70:
             insight_list.append(
-                "  - Adakan briefing mingguan untuk evaluasi progres tiap shift"
+                "  - Adakan briefing mingguan untuk evaluasi progres"
             )
         if best[1] >= 90:
             insight_list.append(
-                f"  - Program {best[0]} sudah excellent - jadikan benchmark tim lain"
+                f"  - Program {best[0]} sudah excellent - jadikan benchmark"
             )
         insight_list.append("")
         insight_list.append(f"TOTAL POIN KESELURUHAN: {total_poin:.2f}")
-
-        insight_text = "\n".join(insight_list)
 
         box = slide.shapes.add_shape(
             MSO_SHAPE.ROUNDED_RECTANGLE,
@@ -1002,13 +974,12 @@ def generate_pdf_report(title, sections_data, generated_time_str):
         box.line.color.rgb = CLR_GOLD
         box.line.width = Pt(2)
 
-        # Pakai text frame multi-baris
         tb = slide.shapes.add_textbox(
             Inches(1.4), Inches(2.1), Inches(10.53), Inches(4.8)
         )
         tf = tb.text_frame
         tf.word_wrap = True
-        for i, line_txt in enumerate(insight_text.split("\n")):
+        for i, line_txt in enumerate(insight_list):
             p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
             p.alignment = PP_ALIGN.LEFT
             r = p.add_run()
@@ -1017,9 +988,6 @@ def generate_pdf_report(title, sections_data, generated_time_str):
             r.font.size = Pt(14)
             r.font.color.rgb = CLR_TEXT
 
-        # =========================================================
-        # 💾 SAVE PPT KE BYTES
-        # =========================================================
         buf = io.BytesIO()
         prs.save(buf)
         buf.seek(0)
