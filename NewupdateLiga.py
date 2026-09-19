@@ -2482,6 +2482,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
         elif st.session_state.get("campaign_sub_page") == "view_buku_pencapaian":
 
             import hashlib
+            import math
 
             # ==========================================
             # 📥 AMBIL DATA
@@ -2644,9 +2645,84 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             _sgr_ach_j = (_sgr_redeem_bulan_j / _sgr_syarat_bulan_j * 100) if _sgr_syarat_bulan_j > 0 else 0
 
             # ==========================================
+            # 🏆 RANKING PSM / PWP / SG / SUEGER
+            # ==========================================
+            # Ranking PSM (per personil, total qty PSM bulan ini)
+            ranking_psm_j = []
+            if not _sp_bulan_j.empty and "person_name" in _sp_bulan_j.columns and "actual_qty" in _sp_bulan_j.columns:
+                _rp = _sp_bulan_j.copy()
+                _rp["person_clean"] = _rp["person_name"].astype(str).str.strip().str.upper()
+                _rp["actual_qty"] = pd.to_numeric(_rp["actual_qty"], errors="coerce").fillna(0)
+                _grp_rp = _rp.groupby("person_clean")["actual_qty"].sum().reset_index()
+                _grp_rp = _grp_rp.sort_values("actual_qty", ascending=False).reset_index(drop=True)
+                for i, _r in _grp_rp.iterrows():
+                    if _r["actual_qty"] > 0:
+                        ranking_psm_j.append({
+                            "rank": i + 1,
+                            "nama": _r["person_clean"],
+                            "qty": int(_r["actual_qty"]),
+                        })
+
+            # Ranking PWP & SG (per kasir)
+            ranking_pwp_j = []
+            ranking_sg_j = []
+            if not _pps_bulan_j.empty and "kasir_name" in _pps_bulan_j.columns:
+                _rp2 = _pps_bulan_j.copy()
+                _rp2["kasir_clean"] = _rp2["kasir_name"].astype(str).str.strip().str.upper()
+                for _cc in ["qty_pwp", "qty_sg"]:
+                    if _cc not in _rp2.columns:
+                        _rp2[_cc] = 0
+                    _rp2[_cc] = pd.to_numeric(_rp2[_cc], errors="coerce").fillna(0)
+
+                _grp_pwp = _rp2.groupby("kasir_clean")["qty_pwp"].sum().reset_index()
+                _grp_pwp = _grp_pwp.sort_values("qty_pwp", ascending=False).reset_index(drop=True)
+                for i, _r in _grp_pwp.iterrows():
+                    if _r["qty_pwp"] > 0:
+                        ranking_pwp_j.append({"rank": i + 1, "nama": _r["kasir_clean"], "qty": int(_r["qty_pwp"])})
+
+                _grp_sg = _rp2.groupby("kasir_clean")["qty_sg"].sum().reset_index()
+                _grp_sg = _grp_sg.sort_values("qty_sg", ascending=False).reset_index(drop=True)
+                for i, _r in _grp_sg.iterrows():
+                    if _r["qty_sg"] > 0:
+                        ranking_sg_j.append({"rank": i + 1, "nama": _r["kasir_clean"], "qty": int(_r["qty_sg"])})
+
+            # Ranking Sueger (per kasir, by %)
+            ranking_sgr_j = []
+            if not _pps_bulan_j.empty and "kasir_name" in _pps_bulan_j.columns:
+                _rs = _pps_bulan_j.copy()
+                _rs["kasir_clean"] = _rs["kasir_name"].astype(str).str.strip().str.upper()
+                _s_col_j = None
+                for _cc in ["syarat_sueger", "syarat_suegeer"]:
+                    if _cc in _rs.columns:
+                        _s_col_j = _cc
+                        break
+                _r_col_j = None
+                for _cc in ["redeem_sueger", "redeem_suegeer"]:
+                    if _cc in _rs.columns:
+                        _r_col_j = _cc
+                        break
+                if _s_col_j and _r_col_j:
+                    _rs[_s_col_j] = pd.to_numeric(_rs[_s_col_j], errors="coerce").fillna(0)
+                    _rs[_r_col_j] = pd.to_numeric(_rs[_r_col_j], errors="coerce").fillna(0)
+                    _grp_s = _rs.groupby("kasir_clean").agg(
+                        syarat=(_s_col_j, "sum"),
+                        redeem=(_r_col_j, "sum"),
+                    ).reset_index()
+                    _grp_s = _grp_s[_grp_s["syarat"] > 0]
+                    _grp_s["ach"] = _grp_s.apply(lambda r: (r["redeem"]/r["syarat"]*100) if r["syarat"]>0 else 0, axis=1)
+                    _grp_s = _grp_s.sort_values("ach", ascending=False).reset_index(drop=True)
+                    for i, _r in _grp_s.iterrows():
+                        ranking_sgr_j.append({
+                            "rank": i + 1,
+                            "nama": _r["kasir_clean"],
+                            "syarat": int(_r["syarat"]),
+                            "redeem": int(_r["redeem"]),
+                            "ach": round(_r["ach"], 1),
+                        })
+
+            # ==========================================
             # 🏅 ITEM TERCAPAI per PERSONIL (+ Periode)
             # ==========================================
-            # Map periode → label tanggal
             p_label_map_j = {}
             if not df_periods_j.empty and "period_id" in df_periods_j.columns:
                 for _, _r in df_periods_j.iterrows():
@@ -2661,7 +2737,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     except Exception:
                         p_label_map_j[_pid] = str(_r.get("period_name", _pid)).strip()
 
-            # Target map
             target_map_j = {}
             if not _si_bulan_j.empty and "item_id" in _si_bulan_j.columns:
                 _t_col_j = None
@@ -2694,7 +2769,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     if _c in _sp_ter_j.columns:
                         _item_name_col_j = _c
                         break
-
                 if _item_name_col_j:
                     _sp_ter_j["item_name_clean"] = _sp_ter_j[_item_name_col_j].astype(str).str.strip()
                 else:
@@ -2708,7 +2782,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     _iid = _r["item_clean"]
                     _iname = _r["item_name_clean"]
                     _qty = _r["actual_qty"]
-
                     _tgt = target_map_j.get((_pid, _iid), 0)
                     if _tgt > 0 and _qty >= _tgt:
                         _label_p = p_label_map_j.get(_pid, _pid)
@@ -2721,113 +2794,235 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                             "periode": _label_p,
                         })
 
-                # Sort items per personil by periode
                 for _k in item_tercapai_per_person_j:
-                    item_tercapai_per_person_j[_k] = sorted(
-                        item_tercapai_per_person_j[_k],
-                        key=lambda x: x.get("periode", "")
-                    )
+                    item_tercapai_per_person_j[_k] = sorted(item_tercapai_per_person_j[_k], key=lambda x: x.get("periode", ""))
 
             # ==========================================
-            # 📘 LOG PER TANGGAL
+            # 📋 LOG DETAIL — Format: Tgl - Shift / Data
             # ==========================================
-            def _build_log_per_tanggal(df_input, date_col, qty_col, filter_col=None, filter_val=None):
-                if df_input.empty or date_col not in df_input.columns or qty_col not in df_input.columns:
-                    return []
-                _d = df_input.copy()
-                if filter_col and filter_val:
-                    if filter_col not in _d.columns:
-                        return []
-                    _d = _d[_d[filter_col].astype(str).str.strip().str.upper() == filter_val]
-                if _d.empty:
-                    return []
-                _d["_dt"] = pd.to_datetime(_d[date_col], errors="coerce")
-                _d = _d.dropna(subset=["_dt"])
-                _d[qty_col] = pd.to_numeric(_d[qty_col], errors="coerce").fillna(0)
-                _grp = _d.groupby(_d["_dt"].dt.date)[qty_col].sum().reset_index()
-                _grp.columns = ["tanggal", "qty"]
-                _grp = _grp.sort_values("tanggal")
-                return [{"tanggal": r["tanggal"], "qty": int(r["qty"])} for _, r in _grp.iterrows()]
+            def _fmt_tgl_str(d):
+                try:
+                    return d.strftime("%d/%m/%y")
+                except Exception:
+                    return str(d)
 
-            log_psm_per_personil_j = {}
-            log_pwp_per_kasir_j = {}
-            log_sg_per_kasir_j = {}
-            for _k in master_personil_j:
-                log_psm_per_personil_j[_k] = _build_log_per_tanggal(_sp_bulan_j, "updated_at", "actual_qty", "person_name", _k)
-                log_pwp_per_kasir_j[_k] = _build_log_per_tanggal(_pps_bulan_j, "_dt", "qty_pwp", "kasir_name", _k)
-                log_sg_per_kasir_j[_k] = _build_log_per_tanggal(_pps_bulan_j, "_dt", "qty_sg", "kasir_name", _k)
+            # LOG PSM: tgl - qty
+            log_psm_rows_j = []
+            if not _sp_bulan_j.empty and "updated_at" in _sp_bulan_j.columns and "actual_qty" in _sp_bulan_j.columns:
+                _lp = _sp_bulan_j.copy()
+                _lp["_dt"] = pd.to_datetime(_lp["updated_at"], errors="coerce")
+                _lp = _lp.dropna(subset=["_dt"])
+                _lp["actual_qty"] = pd.to_numeric(_lp["actual_qty"], errors="coerce").fillna(0)
+                _grp_lp = _lp.groupby(_lp["_dt"].dt.date)["actual_qty"].sum().reset_index()
+                _grp_lp.columns = ["tanggal", "qty"]
+                _grp_lp = _grp_lp.sort_values("tanggal")
+                for _, _r in _grp_lp.iterrows():
+                    if _r["qty"] > 0:
+                        log_psm_rows_j.append({
+                            "tgl": _r["tanggal"],
+                            "qty": int(_r["qty"]),
+                        })
 
-            # Log Sueger per tanggal
-            log_sgr_per_tanggal_j = []
+            # LOG PWP: tgl - shift / syarat / redeem / % / qty
+            log_pwp_rows_j = []
             if not _pps_bulan_j.empty and "_dt" in _pps_bulan_j.columns:
-                _s_h_j = _pps_bulan_j.copy()
-                _s_col_j = None
+                _lpw = _pps_bulan_j.copy()
+                _shift_col = None
+                for _cc in ["shift_personil", "shift", "nama_shift"]:
+                    if _cc in _lpw.columns:
+                        _shift_col = _cc
+                        break
+                for _cc in ["syarat_pwp"]:
+                    if _cc in _lpw.columns:
+                        _lpw[_cc] = pd.to_numeric(_lpw[_cc], errors="coerce").fillna(0)
+                for _cc in ["redeem_pwp"]:
+                    if _cc in _lpw.columns:
+                        _lpw[_cc] = pd.to_numeric(_lpw[_cc], errors="coerce").fillna(0)
+                for _cc in ["qty_pwp"]:
+                    if _cc in _lpw.columns:
+                        _lpw[_cc] = pd.to_numeric(_lpw[_cc], errors="coerce").fillna(0)
+
+                _grp_lpw = _lpw.groupby([_lpw["_dt"].dt.date, _shift_col if _shift_col else "shift_personil"]).agg(
+                    syarat=("syarat_pwp", "sum") if "syarat_pwp" in _lpw.columns else ("qty_pwp", "sum"),
+                    redeem=("redeem_pwp", "sum") if "redeem_pwp" in _lpw.columns else ("qty_pwp", "sum"),
+                    qty=("qty_pwp", "sum") if "qty_pwp" in _lpw.columns else ("qty_pwp", "sum"),
+                ).reset_index()
+                _grp_lpw.columns = ["tanggal", "shift", "syarat", "redeem", "qty"]
+                _grp_lpw = _grp_lpw.sort_values(["tanggal", "shift"])
+                for _, _r in _grp_lpw.iterrows():
+                    if _r["syarat"] > 0 or _r["redeem"] > 0 or _r["qty"] > 0:
+                        _pct = (_r["redeem"] / _r["syarat"] * 100) if _r["syarat"] > 0 else 0
+                        log_pwp_rows_j.append({
+                            "tgl": _r["tanggal"],
+                            "shift": str(_r["shift"]),
+                            "syarat": int(_r["syarat"]),
+                            "redeem": int(_r["redeem"]),
+                            "pct": round(_pct, 1),
+                            "qty": int(_r["qty"]),
+                        })
+
+            # LOG SG: tgl - shift / qty
+            log_sg_rows_j = []
+            if not _pps_bulan_j.empty and "_dt" in _pps_bulan_j.columns and "qty_sg" in _pps_bulan_j.columns:
+                _lsg = _pps_bulan_j.copy()
+                _lsg["qty_sg"] = pd.to_numeric(_lsg["qty_sg"], errors="coerce").fillna(0)
+                _shift_col_sg = None
+                for _cc in ["shift_personil", "shift", "nama_shift"]:
+                    if _cc in _lsg.columns:
+                        _shift_col_sg = _cc
+                        break
+
+                _grp_lsg = _lsg.groupby([_lsg["_dt"].dt.date, _shift_col_sg if _shift_col_sg else "shift_personil"])["qty_sg"].sum().reset_index()
+                _grp_lsg.columns = ["tanggal", "shift", "qty"]
+                _grp_lsg = _grp_lsg.sort_values(["tanggal", "shift"])
+                for _, _r in _grp_lsg.iterrows():
+                    if _r["qty"] > 0:
+                        log_sg_rows_j.append({
+                            "tgl": _r["tanggal"],
+                            "shift": str(_r["shift"]),
+                            "qty": int(_r["qty"]),
+                        })
+
+            # LOG SUEGER: tgl - shift / syarat / redeem / %
+            log_sgr_rows_j = []
+            if not _pps_bulan_j.empty and "_dt" in _pps_bulan_j.columns:
+                _lsg2 = _pps_bulan_j.copy()
+                _s_col_j2 = None
                 for _cc in ["syarat_sueger", "syarat_suegeer"]:
-                    if _cc in _s_h_j.columns:
-                        _s_col_j = _cc
+                    if _cc in _lsg2.columns:
+                        _s_col_j2 = _cc
                         break
-                _r_col_j = None
+                _r_col_j2 = None
                 for _cc in ["redeem_sueger", "redeem_suegeer"]:
-                    if _cc in _s_h_j.columns:
-                        _r_col_j = _cc
+                    if _cc in _lsg2.columns:
+                        _r_col_j2 = _cc
                         break
-                if _s_col_j and _r_col_j:
-                    _s_h_j[_s_col_j] = pd.to_numeric(_s_h_j[_s_col_j], errors="coerce").fillna(0)
-                    _s_h_j[_r_col_j] = pd.to_numeric(_s_h_j[_r_col_j], errors="coerce").fillna(0)
-                    _grp_s = _s_h_j.groupby(_s_h_j["_dt"].dt.date).agg(
-                        syarat=(_s_col_j, "sum"),
-                        redeem=(_r_col_j, "sum"),
+
+                if _s_col_j2 and _r_col_j2:
+                    _lsg2[_s_col_j2] = pd.to_numeric(_lsg2[_s_col_j2], errors="coerce").fillna(0)
+                    _lsg2[_r_col_j2] = pd.to_numeric(_lsg2[_r_col_j2], errors="coerce").fillna(0)
+                    _shift_col_sgr = None
+                    for _cc in ["shift_personil", "shift", "nama_shift"]:
+                        if _cc in _lsg2.columns:
+                            _shift_col_sgr = _cc
+                            break
+
+                    _grp_lsg2 = _lsg2.groupby([_lsg2["_dt"].dt.date, _shift_col_sgr if _shift_col_sgr else "shift_personil"]).agg(
+                        syarat=(_s_col_j2, "sum"),
+                        redeem=(_r_col_j2, "sum"),
                     ).reset_index()
-                    _grp_s.columns = ["tanggal", "syarat", "redeem"]
-                    _grp_s = _grp_s.sort_values("tanggal")
-                    for _, _r in _grp_s.iterrows():
+                    _grp_lsg2.columns = ["tanggal", "shift", "syarat", "redeem"]
+                    _grp_lsg2 = _grp_lsg2.sort_values(["tanggal", "shift"])
+                    for _, _r in _grp_lsg2.iterrows():
                         if _r["syarat"] > 0 or _r["redeem"] > 0:
-                            _ach = (_r["redeem"] / _r["syarat"] * 100) if _r["syarat"] > 0 else 0
-                            log_sgr_per_tanggal_j.append({
-                                "tanggal": _r["tanggal"],
+                            _pct = (_r["redeem"] / _r["syarat"] * 100) if _r["syarat"] > 0 else 0
+                            log_sgr_rows_j.append({
+                                "tgl": _r["tanggal"],
+                                "shift": str(_r["shift"]),
                                 "syarat": int(_r["syarat"]),
                                 "redeem": int(_r["redeem"]),
-                                "ach": round(_ach, 1),
+                                "pct": round(_pct, 1),
                             })
 
             # ==========================================
-            # 🏆 RANKING SUEGER
+            # 📊 SPREAD DINAMIS
             # ==========================================
-            ranking_sgr_j = []
-            if not _pps_bulan_j.empty and "kasir_name" in _pps_bulan_j.columns:
-                _r_sgr_j = _pps_bulan_j.copy()
-                _r_sgr_j["kasir_clean"] = _r_sgr_j["kasir_name"].astype(str).str.strip().str.upper()
-                _s_col2_j = None
-                for _cc in ["syarat_sueger", "syarat_suegeer"]:
-                    if _cc in _r_sgr_j.columns:
-                        _s_col2_j = _cc
-                        break
-                _r_col2_j = None
-                for _cc in ["redeem_sueger", "redeem_suegeer"]:
-                    if _cc in _r_sgr_j.columns:
-                        _r_col2_j = _cc
-                        break
-                if _s_col2_j and _r_col2_j:
-                    _r_sgr_j[_s_col2_j] = pd.to_numeric(_r_sgr_j[_s_col2_j], errors="coerce").fillna(0)
-                    _r_sgr_j[_r_col2_j] = pd.to_numeric(_r_sgr_j[_r_col2_j], errors="coerce").fillna(0)
-                    _grp_sgr = _r_sgr_j.groupby("kasir_clean").agg(
-                        syarat=(_s_col2_j, "sum"),
-                        redeem=(_r_col2_j, "sum"),
-                    ).reset_index()
-                    _grp_sgr = _grp_sgr[_grp_sgr["syarat"] > 0]
-                    _grp_sgr["ach"] = _grp_sgr.apply(
-                        lambda r: (r["redeem"] / r["syarat"] * 100) if r["syarat"] > 0 else 0,
-                        axis=1
-                    )
-                    _grp_sgr = _grp_sgr.sort_values("ach", ascending=False).reset_index(drop=True)
-                    for i, _r in _grp_sgr.iterrows():
-                        ranking_sgr_j.append({
-                            "rank": i + 1,
-                            "nama": _r["kasir_clean"],
-                            "syarat": int(_r["syarat"]),
-                            "redeem": int(_r["redeem"]),
-                            "ach": round(_r["ach"], 1),
-                        })
+            # Hitung jumlah halaman item tercapai (max 6 personil per halaman, atau 5)
+            ITEMS_PER_PAGE_J = 5
+            total_personil_items = len(master_personil_j)
+            total_pages_item = math.ceil(total_personil_items / ITEMS_PER_PAGE_J) if total_personil_items > 0 else 1
+
+            # Hitung halaman log (max 15 baris per halaman)
+            ROWS_PER_PAGE_J = 15
+            pages_psm = math.ceil(len(log_psm_rows_j) / ROWS_PER_PAGE_J) if log_psm_rows_j else 1
+            pages_pwp = math.ceil(len(log_pwp_rows_j) / ROWS_PER_PAGE_J) if log_pwp_rows_j else 1
+            pages_sg = math.ceil(len(log_sg_rows_j) / ROWS_PER_PAGE_J) if log_sg_rows_j else 1
+            pages_sgr = math.ceil(len(log_sgr_rows_j) / ROWS_PER_PAGE_J) if log_sgr_rows_j else 1
+
+            # Bangun daftar spread
+            spread_list_j = []
+
+            # Spread 1: Kartu Kepala + Bar Akumulasi
+            spread_list_j.append({
+                "type": "spread_1",
+                "page_label": "KARTU KEPALA GUILD",
+                "page_start": 1,
+                "page_end": 2,
+            })
+
+            # Spread 2: Ranking PSM & PWP
+            spread_list_j.append({
+                "type": "spread_2",
+                "page_label": "RANKING PSM & PWP",
+                "page_start": 3,
+                "page_end": 4,
+            })
+
+            # Spread 3: Ranking SG & Sueger
+            spread_list_j.append({
+                "type": "spread_3",
+                "page_label": "RANKING SG & SUEGER",
+                "page_start": 5,
+                "page_end": 6,
+            })
+
+            # Spread Item Tercapai (dinamis)
+            current_page_counter = 7
+            for i in range(total_pages_item):
+                spread_list_j.append({
+                    "type": "item_page",
+                    "page_index": i,
+                    "page_label": f"ITEM TERCAPAI ({i+1}/{total_pages_item})",
+                    "page_start": current_page_counter,
+                    "page_end": current_page_counter + 1,
+                })
+                current_page_counter += 2
+
+            # Spread Log PSM (dinamis)
+            for i in range(pages_psm):
+                spread_list_j.append({
+                    "type": "log_psm",
+                    "page_index": i,
+                    "page_label": f"LOG PSM ({i+1}/{pages_psm})",
+                    "page_start": current_page_counter,
+                    "page_end": current_page_counter + 1,
+                })
+                current_page_counter += 2
+
+            # Spread Log PWP
+            for i in range(pages_pwp):
+                spread_list_j.append({
+                    "type": "log_pwp",
+                    "page_index": i,
+                    "page_label": f"LOG PWP ({i+1}/{pages_pwp})",
+                    "page_start": current_page_counter,
+                    "page_end": current_page_counter + 1,
+                })
+                current_page_counter += 2
+
+            # Spread Log SG
+            for i in range(pages_sg):
+                spread_list_j.append({
+                    "type": "log_sg",
+                    "page_index": i,
+                    "page_label": f"LOG SG ({i+1}/{pages_sg})",
+                    "page_start": current_page_counter,
+                    "page_end": current_page_counter + 1,
+                })
+                current_page_counter += 2
+
+            # Spread Log Sueger
+            for i in range(pages_sgr):
+                spread_list_j.append({
+                    "type": "log_sgr",
+                    "page_index": i,
+                    "page_label": f"LOG SUEGER ({i+1}/{pages_sgr})",
+                    "page_start": current_page_counter,
+                    "page_end": current_page_counter + 1,
+                })
+                current_page_counter += 2
+
+            total_spread_j = len(spread_list_j)
 
             # ==========================================
             # 📄 STATE
@@ -2837,12 +3032,13 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             if "jurnal_filter_personil" not in st.session_state:
                 st.session_state["jurnal_filter_personil"] = master_personil_j[0] if master_personil_j else "ADMIN"
 
-            total_spread_j = 8
             page_spread_j = st.session_state.get("jurnal_spread_page", 1)
             if page_spread_j < 1:
                 page_spread_j = 1
             if page_spread_j > total_spread_j:
                 page_spread_j = 1
+
+            current_spread_j = spread_list_j[page_spread_j - 1]
 
             # ==========================================
             # 🎨 CSS
@@ -2873,8 +3069,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 border-radius: 12px !important;
                 box-shadow: 0 20px 40px rgba(0,0,0,0.8), inset 0 0 40px rgba(181, 101, 29, 0.15) !important;
                 display: flex !important;
-                min-height: 520px !important;
-                max-height: 620px !important;
+                min-height: 540px !important;
+                max-height: 640px !important;
                 position: relative !important;
                 overflow: hidden !important;
                 width: 100% !important;
@@ -2937,239 +3133,154 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 border-top: 1px dashed rgba(120, 53, 15, 0.2);
             }}
 
-            .kepala-avatar-j {{
-                display: flex;
-                justify-content: center;
-                margin: 10px 0;
-            }}
+            .kepala-avatar-j {{ display: flex; justify-content: center; margin: 8px 0; }}
             .kepala-avatar-circle-j {{
-                width: 75px;
-                height: 75px;
-                border-radius: 50%;
+                width: 70px; height: 70px; border-radius: 50%;
                 background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
                 border: 3px solid #fbbf24;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 40px;
+                display: flex; align-items: center; justify-content: center;
+                font-size: 38px;
                 box-shadow: 0 0 25px rgba(251, 191, 36, 0.6);
             }}
             .kepala-name-j {{
-                text-align: center;
-                font-family: monospace;
-                font-size: 16px;
-                font-weight: 900;
-                color: #78350f;
-                letter-spacing: 1px;
-                margin-bottom: 3px;
+                text-align: center; font-family: monospace; font-size: 15px; font-weight: 900;
+                color: #78350f; letter-spacing: 1px; margin-bottom: 3px;
             }}
             .kepala-title-j {{
-                text-align: center;
-                font-family: monospace;
-                font-size: 10px;
-                color: #b45309;
-                font-style: italic;
-                margin-bottom: 10px;
+                text-align: center; font-family: monospace; font-size: 10px;
+                color: #b45309; font-style: italic; margin-bottom: 8px;
             }}
 
             .clock-box-j {{
                 background: rgba(15, 23, 42, 0.9);
-                border: 2px solid #b45309;
-                border-radius: 8px;
-                padding: 8px 12px;
-                margin: 8px auto;
-                text-align: center;
-                max-width: 200px;
+                border: 2px solid #b45309; border-radius: 8px;
+                padding: 6px 10px; margin: 6px auto; text-align: center; max-width: 180px;
             }}
             .clock-time-j {{
-                font-family: 'Courier New', monospace;
-                font-size: 20px;
-                font-weight: 900;
-                color: #38bdf8;
-                text-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
-                letter-spacing: 2px;
-                line-height: 1;
+                font-family: 'Courier New', monospace; font-size: 18px; font-weight: 900;
+                color: #38bdf8; text-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+                letter-spacing: 2px; line-height: 1;
             }}
             .clock-date-j {{
-                font-family: monospace;
-                font-size: 9px;
-                color: #cbd5e1;
-                margin-top: 3px;
-                font-weight: bold;
+                font-family: monospace; font-size: 8.5px; color: #cbd5e1;
+                margin-top: 3px; font-weight: bold;
             }}
             .clock-greet-j {{
-                font-family: monospace;
-                font-size: 9px;
-                color: #fbbf24;
-                margin-bottom: 3px;
-                font-weight: bold;
+                font-family: monospace; font-size: 8.5px; color: #fbbf24;
+                margin-bottom: 3px; font-weight: bold;
             }}
 
             .j-stat-row-j {{
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 4px 0;
-                font-size: 10.5px;
-                font-weight: bold;
-                border-bottom: 1px dashed rgba(133,77,14,0.15);
-                margin-bottom: 4px;
+                display: flex; justify-content: space-between; align-items: center;
+                padding: 3px 0; font-size: 10px; font-weight: bold;
+                border-bottom: 1px dashed rgba(133,77,14,0.15); margin-bottom: 3px;
             }}
             .j-stat-label-j {{ color: #78350f; }}
             .j-stat-value-j {{ color: #451a03; font-weight: 900; }}
 
-            .j-progress-box-j {{ margin-bottom: 12px; }}
+            .j-progress-box-j {{ margin-bottom: 10px; }}
             .j-progress-header-j {{
-                display: flex;
-                justify-content: space-between;
-                font-size: 10.5px;
-                font-weight: 900;
-                color: #451a03;
-                margin-bottom: 3px;
+                display: flex; justify-content: space-between;
+                font-size: 10px; font-weight: 900; color: #451a03; margin-bottom: 3px;
             }}
             .j-progress-bg-j {{
-                width: 100%;
-                height: 12px;
-                background: #e5e7eb;
-                border-radius: 6px;
-                overflow: hidden;
-                border: 1px solid #d1d5db;
+                width: 100%; height: 11px; background: #e5e7eb; border-radius: 6px;
+                overflow: hidden; border: 1px solid #d1d5db;
                 box-shadow: inset 0 1px 3px rgba(0,0,0,0.15);
             }}
-            .j-progress-fill-j {{
-                height: 100%;
-                border-radius: 6px;
+            .j-progress-fill-j {{ height: 100%; border-radius: 6px; }}
+
+            .rank-item-j {{
+                display: flex; justify-content: space-between; align-items: center;
+                padding: 5px 8px; margin-bottom: 4px; background: #ffffff;
+                border: 1.5px solid #cbd5e1; border-radius: 5px;
+                font-size: 10px; font-weight: 700; color: #1e1103;
             }}
+            .rank-item-j.top-1-j {{ background: linear-gradient(90deg, #fef3c7, #fde68a); border-color: #fbbf24; }}
+            .rank-item-j.top-2-j {{ background: linear-gradient(90deg, #f8fafc, #e2e8f0); border-color: #94a3b8; }}
+            .rank-item-j.top-3-j {{ background: linear-gradient(90deg, #ffedd5, #fed7aa); border-color: #ea580c; }}
+            .rank-name-j {{ flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
+            .rank-score-j {{ font-weight: 900; color: #78350f; margin-left: 8px; }}
 
             .item-capai-card-j {{
-                background: #fffbeb;
-                border: 1.5px solid #d97706;
-                border-radius: 6px;
-                padding: 7px 9px;
-                margin-bottom: 8px;
+                background: #fffbeb; border: 1.5px solid #d97706;
+                border-radius: 6px; padding: 7px 9px; margin-bottom: 8px;
             }}
             .item-capai-header-j {{
-                font-size: 10.5px;
-                font-weight: 900;
-                color: #78350f;
-                margin-bottom: 5px;
-                padding-bottom: 4px;
+                font-size: 10px; font-weight: 900; color: #78350f;
+                margin-bottom: 5px; padding-bottom: 4px;
                 border-bottom: 1px dashed rgba(180, 83, 9, 0.3);
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
+                display: flex; justify-content: space-between; align-items: center;
             }}
             .item-capai-badge-j {{
-                background: #10b981;
-                color: white;
-                padding: 1px 6px;
-                border-radius: 8px;
-                font-size: 8px;
+                background: #10b981; color: white; padding: 1px 6px;
+                border-radius: 8px; font-size: 8px;
             }}
             .item-capai-row-j {{
-                display: flex;
-                justify-content: space-between;
-                font-size: 9px;
-                color: #451a03;
-                margin-bottom: 2px;
-                font-weight: 600;
-                align-items: center;
+                display: flex; justify-content: space-between;
+                font-size: 8.5px; color: #451a03;
+                margin-bottom: 2px; font-weight: 600; align-items: center;
             }}
-            .item-capai-row-j .ach-j {{
-                color: #059669;
-                font-weight: 900;
-                flex-shrink: 0;
-                margin-left: 5px;
-            }}
+            .item-capai-row-j .ach-j {{ color: #059669; font-weight: 900; flex-shrink: 0; margin-left: 5px; }}
             .periode-badge-j {{
-                font-size: 7.5px;
-                color: #b45309;
-                background: #fef08a;
-                padding: 1px 4px;
-                border-radius: 3px;
-                font-weight: 900;
-                margin-left: 3px;
+                font-size: 7px; color: #b45309; background: #fef08a;
+                padding: 1px 3px; border-radius: 3px; font-weight: 900; margin-left: 2px;
             }}
 
             .history-table-j {{
-                width: 100%;
-                font-size: 10px;
-                border-collapse: collapse;
+                width: 100%; font-size: 9px; border-collapse: collapse;
             }}
             .history-table-j th {{
-                background: rgba(180, 83, 9, 0.15);
-                color: #78350f;
-                padding: 5px 6px;
-                text-align: left;
-                font-weight: 900;
-                border-bottom: 2px solid #b45309;
+                background: rgba(180, 83, 9, 0.15); color: #78350f;
+                padding: 4px 5px; text-align: left; font-weight: 900;
+                border-bottom: 2px solid #b45309; font-size: 8.5px;
             }}
             .history-table-j td {{
-                padding: 4px 6px;
-                border-bottom: 1px dashed rgba(133, 77, 14, 0.15);
-                color: #451a03;
-                font-weight: 600;
+                padding: 3px 5px; border-bottom: 1px dashed rgba(133, 77, 14, 0.15);
+                color: #451a03; font-weight: 600; font-size: 8.5px;
             }}
-            .history-table-j tr:nth-child(even) td {{
-                background: rgba(251, 191, 36, 0.05);
-            }}
-            .history-table-j td.qty-col-j {{
-                text-align: right;
-                font-weight: 900;
-                color: #78350f;
+            .history-table-j tr:nth-child(even) td {{ background: rgba(251, 191, 36, 0.05); }}
+            .history-table-j tr.total-row-j td {{
+                background: rgba(251, 191, 36, 0.2); font-weight: 900;
+                border-top: 2px solid #b45309; color: #78350f;
             }}
 
             .empty-data-j {{
-                text-align: center;
-                color: #78716c;
-                font-family: monospace;
-                font-size: 11px;
-                padding: 30px 15px;
-                font-style: italic;
+                text-align: center; color: #78716c;
+                font-family: monospace; font-size: 11px;
+                padding: 30px 15px; font-style: italic;
             }}
 
             div[data-testid="stButton"] {{
-                max-width: 960px !important;
-                margin: 10px auto !important;
-                padding: 0 !important;
+                max-width: 960px !important; margin: 10px auto !important; padding: 0 !important;
             }}
             div[data-testid="stButton"] > button {{
                 background: linear-gradient(135deg, #5c4033 0%, #3d2b1f 100%) !important;
-                color: #fef08a !important;
-                border: 2px solid #b45309 !important;
-                border-radius: 8px !important;
-                font-family: monospace !important;
-                font-size: 13px !important;
-                font-weight: 900 !important;
-                padding: 12px 20px !important;
-                letter-spacing: 1px !important;
+                color: #fef08a !important; border: 2px solid #b45309 !important;
+                border-radius: 8px !important; font-family: monospace !important;
+                font-size: 13px !important; font-weight: 900 !important;
+                padding: 12px 20px !important; letter-spacing: 1px !important;
                 box-shadow: 0 8px 20px rgba(0,0,0,0.6) !important;
                 text-shadow: 0 1px 2px rgba(0,0,0,0.8) !important;
-                transition: all 0.25s ease !important;
-                width: 100% !important;
+                transition: all 0.25s ease !important; width: 100% !important;
                 display: block !important;
             }}
             div[data-testid="stButton"] > button:hover {{
                 background: linear-gradient(135deg, #7c5a48 0%, #5c4033 100%) !important;
-                border-color: #d97706 !important;
-                color: #ffffff !important;
+                border-color: #d97706 !important; color: #ffffff !important;
             }}
 
             div[data-testid="stSelectbox"] {{
-                max-width: 500px !important;
-                margin: 0 auto 10px auto !important;
+                max-width: 500px !important; margin: 0 auto 10px auto !important;
             }}
             div[data-testid="stSelectbox"] label {{
-                color: #fef08a !important;
-                font-family: monospace !important;
-                font-size: 11px !important;
-                font-weight: 900 !important;
+                color: #fef08a !important; font-family: monospace !important;
+                font-size: 11px !important; font-weight: 900 !important;
                 text-align: center !important;
             }}
             div[data-testid="stSelectbox"] > div > div {{
                 background: rgba(15, 23, 42, 0.9) !important;
-                border: 2px solid #b45309 !important;
-                color: #fef3c7 !important;
+                border: 2px solid #b45309 !important; color: #fef3c7 !important;
             }}
             </style>
             """
@@ -3177,7 +3288,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             st.markdown(css_jurnal_j, unsafe_allow_html=True)
 
             # ==========================================
-            # 🏷️ HEADER + FILTER PERSONIL (DI DALAM BUKU)
+            # 🏷️ HEADER
             # ==========================================
             st.markdown(
                 "<h2 style='text-align:center; color:#fbbf24; font-family:monospace; "
@@ -3191,27 +3302,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 unsafe_allow_html=True
             )
 
-            # Filter personil (khusus admin, di atas buku)
-            if is_admin_j and master_personil_j:
-                st.markdown(
-                    "<p style='text-align:center; color:#fbbf24; font-family:monospace; "
-                    "font-size:11px; font-weight:900; letter-spacing:1.5px; margin-bottom:5px;'>"
-                    "🔍 FILTER PERSONIL (untuk Log Penjualan)</p>",
-                    unsafe_allow_html=True
-                )
-                selected_personil_j = st.selectbox(
-                    "Pilih Personil",
-                    options=master_personil_j,
-                    index=master_personil_j.index(st.session_state["jurnal_filter_personil"]) if st.session_state["jurnal_filter_personil"] in master_personil_j else 0,
-                    key="jurnal_filter_dropdown",
-                    label_visibility="collapsed"
-                )
-                st.session_state["jurnal_filter_personil"] = selected_personil_j
-            else:
-                selected_personil_j = current_user_clean_j
-
             # ==========================================
-            # 🏗️ BUILD HALAMAN
+            # 🏗️ BUILD
             # ==========================================
             def _build_j_stat_row(label, value, color="#451a03"):
                 return (
@@ -3236,14 +3328,48 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     "</div>"
                 )
 
+            def _build_rank_list(rank_data, is_sgr=False):
+                html = ""
+                for _r in rank_data[:10]:
+                    cls = ""
+                    if _r["rank"] == 1: cls = "top-1-j"
+                    elif _r["rank"] == 2: cls = "top-2-j"
+                    elif _r["rank"] == 3: cls = "top-3-j"
+                    _score = f"{_r['ach']:.1f}%" if is_sgr else f"{_r['qty']} Pcs"
+                    html += (
+                        "<div class='rank-item-j " + cls + "'>"
+                        "<span class='rank-name-j'>#" + str(_r["rank"]) + " " + _r["nama"] + "</span>"
+                        "<span class='rank-score-j'>" + _score + "</span>"
+                        "</div>"
+                    )
+                if not html:
+                    html = "<div class='empty-data-j'>Belum ada data</div>"
+                return html
+
+            def _build_log_table(rows, headers, row_fn, total_row_fn=None):
+                """Generic log table"""
+                if not rows:
+                    return "<div class='empty-data-j'>Belum ada data bulan ini</div>"
+                html = "<table class='history-table-j'><tr>"
+                for h in headers:
+                    html += "<th>" + h + "</th>"
+                html += "</tr>"
+                for _r in rows:
+                    html += "<tr>" + row_fn(_r) + "</tr>"
+                if total_row_fn:
+                    html += "<tr class='total-row-j'>" + total_row_fn() + "</tr>"
+                html += "</table>"
+                return html
+
             html_kiri_j = ""
             html_kanan_j = ""
 
+            spread_type = current_spread_j["type"]
+
             # ==========================================
-            # SPREAD 1: Kartu Kepala + Bar Penjualan
+            # SPREAD 1: Kartu Kepala + Bar Akumulasi
             # ==========================================
-            if page_spread_j == 1:
-                # Live clock HTML (JS embedded)
+            if spread_type == "spread_1":
                 clock_html_j = """
                 <div class="clock-box-j">
                 <div class="clock-greet-j" id="jurnal_greet">🌙 Selamat Malam</div>
@@ -3259,17 +3385,14 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         if (h >= 4 && h < 11) greet = "🌅 Selamat Pagi";
                         else if (h >= 11 && h < 15) greet = "☀️ Selamat Siang";
                         else if (h >= 15 && h < 18) greet = "🌇 Selamat Sore";
-
                         var hh = String(h).padStart(2, '0');
                         var mm = String(now.getMinutes()).padStart(2, '0');
                         var ss = String(now.getSeconds()).padStart(2, '0');
-
-                        var days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                        var days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
                         var d = days[now.getDay()];
                         var dd = String(now.getDate()).padStart(2, '0');
-                        var mo = String(now.getMonth() + 1).padStart(2, '0');
+                        var mo = String(now.getMonth()+1).padStart(2, '0');
                         var yy = now.getFullYear();
-
                         var g = document.getElementById('jurnal_greet');
                         var c = document.getElementById('jurnal_clock');
                         var dt = document.getElementById('jurnal_date');
@@ -3282,7 +3405,6 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 })();
                 </script>
                 """
-
                 html_kiri_j = (
                     "<div class='open-page-title-j'>👑 KARTU KEPALA GUILD 👑</div>"
                     "<div class='open-page-sub-j'>Arsip Pimpinan Toko C383</div>"
@@ -3294,8 +3416,8 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     "<div class='kepala-title-j'>Kepala Guild — Toko C383</div>"
                     + clock_html_j +
                     "<div style='margin-top:10px;'>"
-                    + _build_j_stat_row("📅 Periode Aktif", nama_bulan_j, "#0d9488")
-                    + _build_j_stat_row("👥 Total Personil", str(len(master_personil_j)) + " orang", "#2563eb")
+                    + _build_j_stat_row("📅 Bulan", nama_bulan_j, "#0d9488")
+                    + _build_j_stat_row("👥 Personil", str(len(master_personil_j)) + " orang", "#2563eb")
                     + _build_j_stat_row("🏪 Toko", "C383 — KGS", "#b45309")
                     + "</div>"
                     + "<div class='open-page-footer-j'>- Halaman 1 -</div>"
@@ -3305,186 +3427,78 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     "<div class='open-page-title-j'>📊 AKUMULASI BULAN INI</div>"
                     "<div class='open-page-sub-j'>Performa Toko Selama 1 Bulan</div>"
                     "<div class='open-book-divider-j'></div>"
-                    + _build_j_progress("⚡ PWP Siege", _pwp_aktual_bulan_j, _pwp_target_bulan_j, "linear-gradient(90deg, #3b82f6, #60a5fa)")
-                    + _build_j_progress("🎁 Serba Gratis (SG)", _sg_aktual_bulan_j, _sg_target_bulan_j, "linear-gradient(90deg, #7c3aed, #a855f7)")
-                    + _build_j_progress("💧 Sueger (Redeem / Syarat)", _sgr_redeem_bulan_j, _sgr_syarat_bulan_j, "linear-gradient(90deg, #10b981, #34d399)")
+                    + _build_j_progress("⚡ PWP", _pwp_aktual_bulan_j, _pwp_target_bulan_j, "linear-gradient(90deg, #3b82f6, #60a5fa)")
+                    + _build_j_progress("🎁 SG", _sg_aktual_bulan_j, _sg_target_bulan_j, "linear-gradient(90deg, #7c3aed, #a855f7)")
+                    + _build_j_progress("💧 Sueger", _sgr_redeem_bulan_j, _sgr_syarat_bulan_j, "linear-gradient(90deg, #10b981, #34d399)")
                     + _build_j_progress("📦 PSM", _psm_total_bulan_j, max(_psm_total_bulan_j, 1), "linear-gradient(90deg, #b45309, #d97706)")
                     + "<div style='margin-top:12px;'>"
-                    + _build_j_stat_row("🥤 Cemilan Ceban", f"{_ceban_total_j:,} Pcs", "#db2777")
+                    + _build_j_stat_row("🥤 Ceban", f"{_ceban_total_j:,} Pcs", "#db2777")
                     + "</div>"
                     + "<div class='open-page-footer-j'>- Halaman 2 -</div>"
                 )
 
             # ==========================================
-            # SPREAD 2: Penjualan PWP + SG 1 Bulan
+            # SPREAD 2: Ranking PSM & PWP
             # ==========================================
-            elif page_spread_j == 2:
-                # PWP per tanggal
-                pwp_rows_html = ""
-                total_pwp_j2 = 0
-                if not _pps_bulan_j.empty and "_dt" in _pps_bulan_j.columns and "qty_pwp" in _pps_bulan_j.columns:
-                    _p = _pps_bulan_j.copy()
-                    _p["qty_pwp"] = pd.to_numeric(_p["qty_pwp"], errors="coerce").fillna(0)
-                    _grp = _p.groupby(_p["_dt"].dt.date)["qty_pwp"].sum().reset_index()
-                    _grp.columns = ["tanggal", "qty"]
-                    _grp = _grp.sort_values("tanggal")
-                    for _, _r in _grp.iterrows():
-                        if _r["qty"] > 0:
-                            total_pwp_j2 += int(_r["qty"])
-                            pwp_rows_html += (
-                                "<tr><td>" + _r["tanggal"].strftime("%d/%m") + "</td>"
-                                "<td class='qty-col-j'>" + str(int(_r["qty"])) + " Pcs</td></tr>"
-                            )
-                if pwp_rows_html:
-                    pwp_rows_html = (
-                        "<table class='history-table-j'>"
-                        "<tr><th>Tanggal</th><th style='text-align:right;'>Qty PWP</th></tr>"
-                        + pwp_rows_html +
-                        "<tr style='background:rgba(251,191,36,0.15); font-weight:900;'>"
-                        "<td>TOTAL</td><td class='qty-col-j'>" + str(total_pwp_j2) + " Pcs</td></tr>"
-                        "</table>"
-                    )
-                else:
-                    pwp_rows_html = "<div class='empty-data-j'>Belum ada PWP bulan ini</div>"
-
+            elif spread_type == "spread_2":
                 html_kiri_j = (
-                    "<div class='open-page-title-j'>⚡ PENJUALAN PWP</div>"
-                    "<div class='open-page-sub-j'>Per Tanggal — 1 Bulan</div>"
+                    "<div class='open-page-title-j'>🏆 RANKING PSM</div>"
+                    "<div class='open-page-sub-j'>Top 10 — Total Qty Bulan Ini</div>"
                     "<div class='open-book-divider-j'></div>"
-                    + pwp_rows_html +
+                    + _build_rank_list(ranking_psm_j) +
                     "<div class='open-page-footer-j'>- Halaman 3 -</div>"
                 )
-
-                # SG per tanggal
-                sg_rows_html = ""
-                total_sg_j2 = 0
-                if not _pps_bulan_j.empty and "_dt" in _pps_bulan_j.columns and "qty_sg" in _pps_bulan_j.columns:
-                    _s = _pps_bulan_j.copy()
-                    _s["qty_sg"] = pd.to_numeric(_s["qty_sg"], errors="coerce").fillna(0)
-                    _grp = _s.groupby(_s["_dt"].dt.date)["qty_sg"].sum().reset_index()
-                    _grp.columns = ["tanggal", "qty"]
-                    _grp = _grp.sort_values("tanggal")
-                    for _, _r in _grp.iterrows():
-                        if _r["qty"] > 0:
-                            total_sg_j2 += int(_r["qty"])
-                            sg_rows_html += (
-                                "<tr><td>" + _r["tanggal"].strftime("%d/%m") + "</td>"
-                                "<td class='qty-col-j'>" + str(int(_r["qty"])) + " Pcs</td></tr>"
-                            )
-                if sg_rows_html:
-                    sg_rows_html = (
-                        "<table class='history-table-j'>"
-                        "<tr><th>Tanggal</th><th style='text-align:right;'>Qty SG</th></tr>"
-                        + sg_rows_html +
-                        "<tr style='background:rgba(251,191,36,0.15); font-weight:900;'>"
-                        "<td>TOTAL</td><td class='qty-col-j'>" + str(total_sg_j2) + " Pcs</td></tr>"
-                        "</table>"
-                    )
-                else:
-                    sg_rows_html = "<div class='empty-data-j'>Belum ada SG bulan ini</div>"
-
                 html_kanan_j = (
-                    "<div class='open-page-title-j'>🎁 PENJUALAN SG</div>"
-                    "<div class='open-page-sub-j'>Per Tanggal — 1 Bulan</div>"
+                    "<div class='open-page-title-j'>🏆 RANKING PWP</div>"
+                    "<div class='open-page-sub-j'>Top 10 — Total Qty Bulan Ini</div>"
                     "<div class='open-book-divider-j'></div>"
-                    + sg_rows_html +
+                    + _build_rank_list(ranking_pwp_j) +
                     "<div class='open-page-footer-j'>- Halaman 4 -</div>"
                 )
 
             # ==========================================
-            # SPREAD 3: Penjualan PSM + Sueger 1 Bulan
+            # SPREAD 3: Ranking SG & Sueger
             # ==========================================
-            elif page_spread_j == 3:
-                # PSM per tanggal
-                psm_rows_html = ""
-                total_psm_j3 = 0
-                if not _sp_bulan_j.empty and "updated_at" in _sp_bulan_j.columns and "actual_qty" in _sp_bulan_j.columns:
-                    _p = _sp_bulan_j.copy()
-                    _p["_dt"] = pd.to_datetime(_p["updated_at"], errors="coerce")
-                    _p = _p.dropna(subset=["_dt"])
-                    _p["actual_qty"] = pd.to_numeric(_p["actual_qty"], errors="coerce").fillna(0)
-                    _grp = _p.groupby(_p["_dt"].dt.date)["actual_qty"].sum().reset_index()
-                    _grp.columns = ["tanggal", "qty"]
-                    _grp = _grp.sort_values("tanggal")
-                    for _, _r in _grp.iterrows():
-                        if _r["qty"] > 0:
-                            total_psm_j3 += int(_r["qty"])
-                            psm_rows_html += (
-                                "<tr><td>" + _r["tanggal"].strftime("%d/%m") + "</td>"
-                                "<td class='qty-col-j'>" + str(int(_r["qty"])) + " Pcs</td></tr>"
-                            )
-                if psm_rows_html:
-                    psm_rows_html = (
-                        "<table class='history-table-j'>"
-                        "<tr><th>Tanggal</th><th style='text-align:right;'>Qty PSM</th></tr>"
-                        + psm_rows_html +
-                        "<tr style='background:rgba(251,191,36,0.15); font-weight:900;'>"
-                        "<td>TOTAL</td><td class='qty-col-j'>" + str(total_psm_j3) + " Pcs</td></tr>"
-                        "</table>"
-                    )
-                else:
-                    psm_rows_html = "<div class='empty-data-j'>Belum ada penjualan PSM bulan ini</div>"
-
+            elif spread_type == "spread_3":
                 html_kiri_j = (
-                    "<div class='open-page-title-j'>📘 PENJUALAN PSM</div>"
-                    "<div class='open-page-sub-j'>Per Tanggal — 1 Bulan</div>"
+                    "<div class='open-page-title-j'>🏆 RANKING SG</div>"
+                    "<div class='open-page-sub-j'>Top 10 — Total Qty Bulan Ini</div>"
                     "<div class='open-book-divider-j'></div>"
-                    + psm_rows_html +
+                    + _build_rank_list(ranking_sg_j) +
                     "<div class='open-page-footer-j'>- Halaman 5 -</div>"
                 )
-
-                # Sueger per tanggal
-                sgr_rows_html = ""
-                if log_sgr_per_tanggal_j:
-                    for _r in log_sgr_per_tanggal_j:
-                        _tgl = _r["tanggal"].strftime("%d/%m")
-                        _ach_color = "#059669" if _r["ach"] >= 50 else "#dc2626"
-                        sgr_rows_html += (
-                            "<tr><td>" + _tgl + "</td>"
-                            "<td style='text-align:right;'>" + str(_r["syarat"]) + "</td>"
-                            "<td style='text-align:right;'>" + str(_r["redeem"]) + "</td>"
-                            "<td style='text-align:right; color:" + _ach_color + "; font-weight:900;'>" + f"{_r['ach']:.1f}%" + "</td></tr>"
-                        )
-                    sgr_rows_html = (
-                        "<table class='history-table-j'>"
-                        "<tr><th>Tgl</th><th style='text-align:right;'>Syarat</th><th style='text-align:right;'>Redeem</th><th style='text-align:right;'>%</th></tr>"
-                        + sgr_rows_html +
-                        "<tr style='background:rgba(251,191,36,0.15); font-weight:900;'>"
-                        "<td>TOTAL</td>"
-                        "<td style='text-align:right;'>" + str(_sgr_syarat_bulan_j) + "</td>"
-                        "<td style='text-align:right;'>" + str(_sgr_redeem_bulan_j) + "</td>"
-                        "<td style='text-align:right;'>" + f"{_sgr_ach_j:.1f}%" + "</td></tr>"
-                        "</table>"
-                    )
-                else:
-                    sgr_rows_html = "<div class='empty-data-j'>Belum ada Sueger bulan ini</div>"
-
                 html_kanan_j = (
-                    "<div class='open-page-title-j'>💧 PENJUALAN SUEGER</div>"
-                    "<div class='open-page-sub-j'>Per Tanggal — 1 Bulan</div>"
+                    "<div class='open-page-title-j'>🏆 RANKING SUEGER</div>"
+                    "<div class='open-page-sub-j'>Top 10 — Achievement % Bulan Ini</div>"
                     "<div class='open-book-divider-j'></div>"
-                    + sgr_rows_html +
+                    + _build_rank_list(ranking_sgr_j, is_sgr=True) +
                     "<div class='open-page-footer-j'>- Halaman 6 -</div>"
                 )
 
             # ==========================================
-            # SPREAD 4: Item Tercapai (2 halaman)
+            # SPREAD ITEM TERCAPAI (Dinamis)
             # ==========================================
-            elif page_spread_j == 4:
-                # Sort personil by jumlah item tercapai (desc)
-                sorted_personil_j = sorted(
+            elif spread_type == "item_page":
+                idx_page = current_spread_j["page_index"]
+                start_idx = idx_page * ITEMS_PER_PAGE_J
+                end_idx = start_idx + ITEMS_PER_PAGE_J
+
+                # Sort personil: yang punya item dulu, yang kosong belakang
+                sorted_personil_list = sorted(
                     item_tercapai_per_person_j.items(),
-                    key=lambda x: len(x[1]),
-                    reverse=True
+                    key=lambda x: (-len(x[1]), x[0])
                 )
 
-                # Bagi 2
-                total_p = len(sorted_personil_j)
-                half = (total_p + 1) // 2
-                bagian_1 = sorted_personil_j[:half]
-                bagian_2 = sorted_personil_j[half:]
+                current_page_items = sorted_personil_list[start_idx:end_idx]
 
-                def _render_item_cards(bagian):
+                # Bagi 2 kolom
+                half = (len(current_page_items) + 1) // 2
+                bagian_kiri = current_page_items[:half]
+                bagian_kanan = current_page_items[half:]
+
+                def _render_cards(bagian):
+                    if not bagian:
+                        return "<div class='empty-data-j'>—</div>"
                     html = ""
                     for _k, _items in bagian:
                         if not _items:
@@ -3494,21 +3508,21 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                                 "<span>🧑 " + _k + "</span>"
                                 "<span class='item-capai-badge-j' style='background:#94a3b8;'>0 item</span>"
                                 "</div>"
-                                "<div style='font-size:9px; color:#78716c; font-style:italic; text-align:center; padding:4px;'>Belum ada item tercapai</div>"
+                                "<div style='font-size:8px; color:#78716c; font-style:italic; text-align:center; padding:3px;'>Belum ada item tercapai</div>"
                                 "</div>"
                             )
                             continue
                         _cards = ""
-                        for _it in _items[:10]:
+                        for _it in _items[:8]:
                             _cards += (
                                 "<div class='item-capai-row-j'>"
-                                "<span>✅ " + _it["item_name"][:18] +
+                                "<span>✅ " + _it["item_name"][:14] +
                                 "<span class='periode-badge-j'>[" + _it.get("periode", "-") + "]</span></span>"
                                 "<span class='ach-j'>" + str(_it["actual"]) + "/" + str(_it["target"]) + "</span>"
                                 "</div>"
                             )
-                        if len(_items) > 10:
-                            _cards += "<div class='item-capai-row-j' style='font-style:italic; color:#78716c;'>+" + str(len(_items) - 10) + " item lainnya...</div>"
+                        if len(_items) > 8:
+                            _cards += "<div class='item-capai-row-j' style='font-style:italic; color:#78716c; font-size:8px;'>+" + str(len(_items) - 8) + " lainnya...</div>"
 
                         html += (
                             "<div class='item-capai-card-j'>"
@@ -3521,246 +3535,196 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                         )
                     return html
 
+                page_start = current_spread_j["page_start"]
                 html_kiri_j = (
-                    "<div class='open-page-title-j'>🏅 ITEM TERCAPAI (1)</div>"
-                    "<div class='open-page-sub-j'>Per Personil — Bagian 1</div>"
+                    "<div class='open-page-title-j'>🏅 ITEM TERCAPAI</div>"
+                    "<div class='open-page-sub-j'>Bagian " + str(idx_page + 1) + " — Kiri</div>"
                     "<div class='open-book-divider-j'></div>"
-                    + _render_item_cards(bagian_1) +
-                    "<div class='open-page-footer-j'>- Halaman 7 -</div>"
+                    + _render_cards(bagian_kiri) +
+                    "<div class='open-page-footer-j'>- Halaman " + str(page_start) + " -</div>"
                 )
-
                 html_kanan_j = (
-                    "<div class='open-page-title-j'>🏅 ITEM TERCAPAI (2)</div>"
-                    "<div class='open-page-sub-j'>Per Personil — Bagian 2</div>"
+                    "<div class='open-page-title-j'>🏅 ITEM TERCAPAI</div>"
+                    "<div class='open-page-sub-j'>Bagian " + str(idx_page + 1) + " — Kanan</div>"
                     "<div class='open-book-divider-j'></div>"
-                    + _render_item_cards(bagian_2) +
-                    "<div class='open-page-footer-j'>- Halaman 8 -</div>"
+                    + _render_cards(bagian_kanan) +
+                    "<div class='open-page-footer-j'>- Halaman " + str(page_start + 1) + " -</div>"
                 )
 
             # ==========================================
-            # SPREAD 5: Log PSM (filter personil)
+            # SPREAD LOG PSM
             # ==========================================
-            elif page_spread_j == 5:
-                log_data = log_psm_per_personil_j.get(selected_personil_j, [])
-                total_qty_log = sum(_r["qty"] for _r in log_data)
+            elif spread_type == "log_psm":
+                idx_page = current_spread_j["page_index"]
+                start_idx = idx_page * ROWS_PER_PAGE_J
+                end_idx = start_idx + ROWS_PER_PAGE_J
+                current_rows = log_psm_rows_j[start_idx:end_idx]
 
-                if log_data:
-                    half_log = (len(log_data) + 1) // 2
-                    rows_kiri = ""
-                    for _r in log_data[:half_log]:
-                        rows_kiri += (
-                            "<tr><td>📅 " + _r["tanggal"].strftime("%d/%m") + "</td>"
-                            "<td class='qty-col-j'>" + str(_r["qty"]) + " Pcs</td></tr>"
-                        )
-                    rows_kiri = (
-                        "<table class='history-table-j'>"
-                        "<tr><th>Tanggal</th><th style='text-align:right;'>Qty</th></tr>"
-                        + rows_kiri + "</table>"
-                    )
+                # Split kiri & kanan
+                half = (len(current_rows) + 1) // 2
+                rows_kiri = current_rows[:half]
+                rows_kanan = current_rows[half:]
 
-                    rows_kanan = ""
-                    for _r in log_data[half_log:]:
-                        rows_kanan += (
-                            "<tr><td>📅 " + _r["tanggal"].strftime("%d/%m") + "</td>"
-                            "<td class='qty-col-j'>" + str(_r["qty"]) + " Pcs</td></tr>"
-                        )
-                    rows_kanan = (
-                        "<table class='history-table-j'>"
-                        "<tr><th>Tanggal</th><th style='text-align:right;'>Qty</th></tr>"
-                        + rows_kanan +
-                        "<tr style='background:rgba(251,191,36,0.15); font-weight:900;'>"
-                        "<td>TOTAL</td><td class='qty-col-j'>" + str(total_qty_log) + " Pcs</td></tr>"
-                        "</table>"
-                    ) if rows_kanan else "<div class='empty-data-j'>—</div>"
-                else:
-                    rows_kiri = "<div class='empty-data-j'>Belum ada penjualan bulan ini</div>"
-                    rows_kanan = "<div class='empty-data-j'>—</div>"
+                def _row_psm(r):
+                    return "<td>📅 " + _fmt_tgl_str(r["tgl"]) + "</td><td style='text-align:right;'>" + str(r["qty"]) + " Pcs</td>"
 
                 html_kiri_j = (
-                    "<div class='open-page-title-j'>📘 LOG PSM (1)</div>"
-                    "<div class='open-page-sub-j'>" + selected_personil_j + " — Bagian 1</div>"
+                    "<div class='open-page-title-j'>📘 LOG PSM</div>"
+                    "<div class='open-page-sub-j'>Bagian " + str(idx_page + 1) + " — Kiri</div>"
                     "<div class='open-book-divider-j'></div>"
-                    + rows_kiri +
-                    "<div class='open-page-footer-j'>- Halaman 9 -</div>"
+                    + _build_log_table(rows_kiri, ["Tanggal", "Qty"], _row_psm) +
+                    "<div class='open-page-footer-j'>- Halaman " + str(current_spread_j["page_start"]) + " -</div>"
                 )
-
                 html_kanan_j = (
-                    "<div class='open-page-title-j'>📘 LOG PSM (2)</div>"
-                    "<div class='open-page-sub-j'>" + selected_personil_j + " — Bagian 2</div>"
+                    "<div class='open-page-title-j'>📘 LOG PSM</div>"
+                    "<div class='open-page-sub-j'>Bagian " + str(idx_page + 1) + " — Kanan</div>"
                     "<div class='open-book-divider-j'></div>"
-                    + rows_kanan +
-                    "<div class='open-page-footer-j'>- Halaman 10 -</div>"
+                    + _build_log_table(rows_kanan, ["Tanggal", "Qty"], _row_psm) +
+                    "<div class='open-page-footer-j'>- Halaman " + str(current_spread_j["page_start"] + 1) + " -</div>"
                 )
 
             # ==========================================
-            # SPREAD 6: Log PWP (filter personil)
+            # SPREAD LOG PWP
             # ==========================================
-            elif page_spread_j == 6:
-                log_data = log_pwp_per_kasir_j.get(selected_personil_j, [])
-                total_qty_log = sum(_r["qty"] for _r in log_data)
+            elif spread_type == "log_pwp":
+                idx_page = current_spread_j["page_index"]
+                start_idx = idx_page * ROWS_PER_PAGE_J
+                end_idx = start_idx + ROWS_PER_PAGE_J
+                current_rows = log_pwp_rows_j[start_idx:end_idx]
 
-                if log_data:
-                    half_log = (len(log_data) + 1) // 2
-                    rows_kiri = ""
-                    for _r in log_data[:half_log]:
-                        rows_kiri += (
-                            "<tr><td>📅 " + _r["tanggal"].strftime("%d/%m") + "</td>"
-                            "<td class='qty-col-j'>" + str(_r["qty"]) + " Pcs</td></tr>"
-                        )
-                    rows_kiri = (
-                        "<table class='history-table-j'>"
-                        "<tr><th>Tanggal</th><th style='text-align:right;'>Qty PWP</th></tr>"
-                        + rows_kiri + "</table>"
+                half = (len(current_rows) + 1) // 2
+                rows_kiri = current_rows[:half]
+                rows_kanan = current_rows[half:]
+
+                def _row_pwp(r):
+                    return (
+                        "<td>📅 " + _fmt_tgl_str(r["tgl"]) + "</td>"
+                        "<td>" + r["shift"].replace("Shift ", "S") + "</td>"
+                        "<td style='text-align:right;'>" + str(r["syarat"]) + "</td>"
+                        "<td style='text-align:right;'>" + str(r["redeem"]) + "</td>"
+                        "<td style='text-align:right; font-weight:900; color:" + ("#059669" if r["pct"] >= 50 else "#dc2626") + ";'>" + f"{r['pct']:.0f}%" + "</td>"
+                        "<td style='text-align:right; font-weight:900;'>" + str(r["qty"]) + "</td>"
                     )
 
-                    rows_kanan = ""
-                    for _r in log_data[half_log:]:
-                        rows_kanan += (
-                            "<tr><td>📅 " + _r["tanggal"].strftime("%d/%m") + "</td>"
-                            "<td class='qty-col-j'>" + str(_r["qty"]) + " Pcs</td></tr>"
-                        )
-                    rows_kanan = (
-                        "<table class='history-table-j'>"
-                        "<tr><th>Tanggal</th><th style='text-align:right;'>Qty PWP</th></tr>"
-                        + rows_kanan +
-                        "<tr style='background:rgba(251,191,36,0.15); font-weight:900;'>"
-                        "<td>TOTAL</td><td class='qty-col-j'>" + str(total_qty_log) + " Pcs</td></tr>"
-                        "</table>"
-                    ) if rows_kanan else "<div class='empty-data-j'>—</div>"
-                else:
-                    rows_kiri = "<div class='empty-data-j'>Belum ada PWP bulan ini</div>"
-                    rows_kanan = "<div class='empty-data-j'>—</div>"
+                headers_pwp = ["Tgl", "Shf", "Syarat", "Redeem", "%", "Qty"]
 
                 html_kiri_j = (
-                    "<div class='open-page-title-j'>⚡ LOG PWP (1)</div>"
-                    "<div class='open-page-sub-j'>" + selected_personil_j + " — Bagian 1</div>"
+                    "<div class='open-page-title-j'>⚡ LOG PWP</div>"
+                    "<div class='open-page-sub-j'>Bagian " + str(idx_page + 1) + " — Kiri</div>"
                     "<div class='open-book-divider-j'></div>"
-                    + rows_kiri +
-                    "<div class='open-page-footer-j'>- Halaman 11 -</div>"
+                    + _build_log_table(rows_kiri, headers_pwp, _row_pwp) +
+                    "<div class='open-page-footer-j'>- Halaman " + str(current_spread_j["page_start"]) + " -</div>"
                 )
 
-                html_kanan_j = (
-                    "<div class='open-page-title-j'>⚡ LOG PWP (2)</div>"
-                    "<div class='open-page-sub-j'>" + selected_personil_j + " — Bagian 2</div>"
-                    "<div class='open-book-divider-j'></div>"
-                    + rows_kanan +
-                    "<div class='open-page-footer-j'>- Halaman 12 -</div>"
-                )
-
-            # ==========================================
-            # SPREAD 7: Log SG (filter personil)
-            # ==========================================
-            elif page_spread_j == 7:
-                log_data = log_sg_per_kasir_j.get(selected_personil_j, [])
-                total_qty_log = sum(_r["qty"] for _r in log_data)
-
-                if log_data:
-                    half_log = (len(log_data) + 1) // 2
-                    rows_kiri = ""
-                    for _r in log_data[:half_log]:
-                        rows_kiri += (
-                            "<tr><td>📅 " + _r["tanggal"].strftime("%d/%m") + "</td>"
-                            "<td class='qty-col-j'>" + str(_r["qty"]) + " Pcs</td></tr>"
-                        )
-                    rows_kiri = (
-                        "<table class='history-table-j'>"
-                        "<tr><th>Tanggal</th><th style='text-align:right;'>Qty SG</th></tr>"
-                        + rows_kiri + "</table>"
-                    )
-
-                    rows_kanan = ""
-                    for _r in log_data[half_log:]:
-                        rows_kanan += (
-                            "<tr><td>📅 " + _r["tanggal"].strftime("%d/%m") + "</td>"
-                            "<td class='qty-col-j'>" + str(_r["qty"]) + " Pcs</td></tr>"
-                        )
-                    rows_kanan = (
-                        "<table class='history-table-j'>"
-                        "<tr><th>Tanggal</th><th style='text-align:right;'>Qty SG</th></tr>"
-                        + rows_kanan +
-                        "<tr style='background:rgba(251,191,36,0.15); font-weight:900;'>"
-                        "<td>TOTAL</td><td class='qty-col-j'>" + str(total_qty_log) + " Pcs</td></tr>"
-                        "</table>"
-                    ) if rows_kanan else "<div class='empty-data-j'>—</div>"
-                else:
-                    rows_kiri = "<div class='empty-data-j'>Belum ada SG bulan ini</div>"
-                    rows_kanan = "<div class='empty-data-j'>—</div>"
-
-                html_kiri_j = (
-                    "<div class='open-page-title-j'>🎁 LOG SG (1)</div>"
-                    "<div class='open-page-sub-j'>" + selected_personil_j + " — Bagian 1</div>"
-                    "<div class='open-book-divider-j'></div>"
-                    + rows_kiri +
-                    "<div class='open-page-footer-j'>- Halaman 13 -</div>"
-                )
-
-                html_kanan_j = (
-                    "<div class='open-page-title-j'>🎁 LOG SG (2)</div>"
-                    "<div class='open-page-sub-j'>" + selected_personil_j + " — Bagian 2</div>"
-                    "<div class='open-book-divider-j'></div>"
-                    + rows_kanan +
-                    "<div class='open-page-footer-j'>- Halaman 14 -</div>"
-                )
-
-            # ==========================================
-            # SPREAD 8: Log Sueger (harian, semua kasir)
-            # ==========================================
-            elif page_spread_j == 8:
-                if log_sgr_per_tanggal_j:
-                    half_log = (len(log_sgr_per_tanggal_j) + 1) // 2
-                    rows_kiri = ""
-                    for _r in log_sgr_per_tanggal_j[:half_log]:
-                        _ach_color = "#059669" if _r["ach"] >= 50 else "#dc2626"
-                        rows_kiri += (
-                            "<tr><td>" + _r["tanggal"].strftime("%d/%m") + "</td>"
-                            "<td style='text-align:right;'>" + str(_r["syarat"]) + "</td>"
-                            "<td style='text-align:right;'>" + str(_r["redeem"]) + "</td>"
-                            "<td style='text-align:right; color:" + _ach_color + "; font-weight:900;'>" + f"{_r['ach']:.1f}%" + "</td></tr>"
-                        )
-                    rows_kiri = (
-                        "<table class='history-table-j'>"
-                        "<tr><th>Tgl</th><th style='text-align:right;'>S</th><th style='text-align:right;'>R</th><th style='text-align:right;'>%</th></tr>"
-                        + rows_kiri + "</table>"
-                    )
-
-                    rows_kanan = ""
-                    for _r in log_sgr_per_tanggal_j[half_log:]:
-                        _ach_color = "#059669" if _r["ach"] >= 50 else "#dc2626"
-                        rows_kanan += (
-                            "<tr><td>" + _r["tanggal"].strftime("%d/%m") + "</td>"
-                            "<td style='text-align:right;'>" + str(_r["syarat"]) + "</td>"
-                            "<td style='text-align:right;'>" + str(_r["redeem"]) + "</td>"
-                            "<td style='text-align:right; color:" + _ach_color + "; font-weight:900;'>" + f"{_r['ach']:.1f}%" + "</td></tr>"
-                        )
-                    rows_kanan = (
-                        "<table class='history-table-j'>"
-                        "<tr><th>Tgl</th><th style='text-align:right;'>S</th><th style='text-align:right;'>R</th><th style='text-align:right;'>%</th></tr>"
-                        + rows_kanan +
-                        "<tr style='background:rgba(251,191,36,0.15); font-weight:900;'>"
+                # Total di halaman kanan
+                def _total_pwp():
+                    return (
                         "<td>TOTAL</td>"
+                        "<td>—</td>"
+                        "<td style='text-align:right;'>" + str(_pwp_target_bulan_j) + "</td>"
+                        "<td style='text-align:right;'>—</td>"
+                        "<td style='text-align:right;'>" + f"{_pwp_ach_j:.1f}%" + "</td>"
+                        "<td style='text-align:right;'>" + str(_pwp_aktual_bulan_j) + "</td>"
+                    )
+
+                is_last_pwp_page = (idx_page == pages_pwp - 1)
+                html_kanan_j = (
+                    "<div class='open-page-title-j'>⚡ LOG PWP</div>"
+                    "<div class='open-page-sub-j'>Bagian " + str(idx_page + 1) + " — Kanan</div>"
+                    "<div class='open-book-divider-j'></div>"
+                    + _build_log_table(rows_kanan, headers_pwp, _row_pwp, _total_pwp if is_last_pwp_page else None) +
+                    "<div class='open-page-footer-j'>- Halaman " + str(current_spread_j["page_start"] + 1) + " -</div>"
+                )
+
+            # ==========================================
+            # SPREAD LOG SG
+            # ==========================================
+            elif spread_type == "log_sg":
+                idx_page = current_spread_j["page_index"]
+                start_idx = idx_page * ROWS_PER_PAGE_J
+                end_idx = start_idx + ROWS_PER_PAGE_J
+                current_rows = log_sg_rows_j[start_idx:end_idx]
+
+                half = (len(current_rows) + 1) // 2
+                rows_kiri = current_rows[:half]
+                rows_kanan = current_rows[half:]
+
+                def _row_sg(r):
+                    return (
+                        "<td>📅 " + _fmt_tgl_str(r["tgl"]) + "</td>"
+                        "<td>" + r["shift"].replace("Shift ", "S") + "</td>"
+                        "<td style='text-align:right; font-weight:900;'>" + str(r["qty"]) + " Pcs</td>"
+                    )
+
+                headers_sg = ["Tgl", "Shf", "Qty SG"]
+
+                html_kiri_j = (
+                    "<div class='open-page-title-j'>🎁 LOG SG</div>"
+                    "<div class='open-page-sub-j'>Bagian " + str(idx_page + 1) + " — Kiri</div>"
+                    "<div class='open-book-divider-j'></div>"
+                    + _build_log_table(rows_kiri, headers_sg, _row_sg) +
+                    "<div class='open-page-footer-j'>- Halaman " + str(current_spread_j["page_start"]) + " -</div>"
+                )
+
+                def _total_sg():
+                    return "<td>TOTAL</td><td>—</td><td style='text-align:right;'>" + str(_sg_aktual_bulan_j) + " Pcs</td>"
+
+                is_last_sg_page = (idx_page == pages_sg - 1)
+                html_kanan_j = (
+                    "<div class='open-page-title-j'>🎁 LOG SG</div>"
+                    "<div class='open-page-sub-j'>Bagian " + str(idx_page + 1) + " — Kanan</div>"
+                    "<div class='open-book-divider-j'></div>"
+                    + _build_log_table(rows_kanan, headers_sg, _row_sg, _total_sg if is_last_sg_page else None) +
+                    "<div class='open-page-footer-j'>- Halaman " + str(current_spread_j["page_start"] + 1) + " -</div>"
+                )
+
+            # ==========================================
+            # SPREAD LOG SUEGER
+            # ==========================================
+            elif spread_type == "log_sgr":
+                idx_page = current_spread_j["page_index"]
+                start_idx = idx_page * ROWS_PER_PAGE_J
+                end_idx = start_idx + ROWS_PER_PAGE_J
+                current_rows = log_sgr_rows_j[start_idx:end_idx]
+
+                half = (len(current_rows) + 1) // 2
+                rows_kiri = current_rows[:half]
+                rows_kanan = current_rows[half:]
+
+                def _row_sgr(r):
+                    return (
+                        "<td>📅 " + _fmt_tgl_str(r["tgl"]) + "</td>"
+                        "<td>" + r["shift"].replace("Shift ", "S") + "</td>"
+                        "<td style='text-align:right;'>" + str(r["syarat"]) + "</td>"
+                        "<td style='text-align:right;'>" + str(r["redeem"]) + "</td>"
+                        "<td style='text-align:right; font-weight:900; color:" + ("#059669" if r["pct"] >= 50 else "#dc2626") + ";'>" + f"{r['pct']:.0f}%" + "</td>"
+                    )
+
+                headers_sgr = ["Tgl", "Shf", "Syarat", "Redeem", "%"]
+
+                html_kiri_j = (
+                    "<div class='open-page-title-j'>💧 LOG SUEGER</div>"
+                    "<div class='open-page-sub-j'>Bagian " + str(idx_page + 1) + " — Kiri</div>"
+                    "<div class='open-book-divider-j'></div>"
+                    + _build_log_table(rows_kiri, headers_sgr, _row_sgr) +
+                    "<div class='open-page-footer-j'>- Halaman " + str(current_spread_j["page_start"]) + " -</div>"
+                )
+
+                def _total_sgr():
+                    return (
+                        "<td>TOTAL</td><td>—</td>"
                         "<td style='text-align:right;'>" + str(_sgr_syarat_bulan_j) + "</td>"
                         "<td style='text-align:right;'>" + str(_sgr_redeem_bulan_j) + "</td>"
-                        "<td style='text-align:right;'>" + f"{_sgr_ach_j:.1f}%" + "</td></tr>"
-                        "</table>"
-                    ) if rows_kanan else "<div class='empty-data-j'>—</div>"
-                else:
-                    rows_kiri = "<div class='empty-data-j'>Belum ada Sueger bulan ini</div>"
-                    rows_kanan = "<div class='empty-data-j'>—</div>"
+                        "<td style='text-align:right;'>" + f"{_sgr_ach_j:.1f}%" + "</td>"
+                    )
 
-                html_kiri_j = (
-                    "<div class='open-page-title-j'>💧 LOG SUEGER (1)</div>"
-                    "<div class='open-page-sub-j'>Log Harian — Bagian 1</div>"
-                    "<div class='open-book-divider-j'></div>"
-                    + rows_kiri +
-                    "<div class='open-page-footer-j'>- Halaman 15 -</div>"
-                )
-
+                is_last_sgr_page = (idx_page == pages_sgr - 1)
                 html_kanan_j = (
-                    "<div class='open-page-title-j'>💧 LOG SUEGER (2)</div>"
-                    "<div class='open-page-sub-j'>Log Harian — Bagian 2</div>"
+                    "<div class='open-page-title-j'>💧 LOG SUEGER</div>"
+                    "<div class='open-page-sub-j'>Bagian " + str(idx_page + 1) + " — Kanan</div>"
                     "<div class='open-book-divider-j'></div>"
-                    + rows_kanan +
-                    "<div class='open-page-footer-j'>- Halaman 16 -</div>"
+                    + _build_log_table(rows_kanan, headers_sgr, _row_sgr, _total_sgr if is_last_sgr_page else None) +
+                    "<div class='open-page-footer-j'>- Halaman " + str(current_spread_j["page_start"] + 1) + " -</div>"
                 )
 
             # ==========================================
@@ -3794,7 +3758,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 st.markdown(
                     f"<p style='text-align:center; color:#fef3c7; font-family:monospace; "
                     f"font-weight:bold; font-size:11px; margin-top:8px;'>"
-                    f"LEMBAR KE-{page_spread_j} DARI {total_spread_j}</p>",
+                    f"LEMBAR KE-{page_spread_j} DARI {total_spread_j} — {current_spread_j['page_label']}</p>",
                     unsafe_allow_html=True
                 )
 
