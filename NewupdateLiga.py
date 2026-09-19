@@ -14336,258 +14336,256 @@ elif selected_tab == "⚙️ Pengaturan & Master":
         st.caption("Pusat manajemen sistem, backup data, maintenance, dan generator report WhatsApp/PDF.")
 
         # =====================================================================
-        # 💾 INIT ACTIVITY LOG
+        # 🎨 CSS GLOBAL — SEMUA TOMBOL JADI TEMA EMAS-NAVY
         # =====================================================================
-        if "admin_activity_log" not in st.session_state:
-            st.session_state["admin_activity_log"] = []
-
-        def _add_activity_log(action, detail):
-            """Tambah entri ke activity log."""
-            _waktu = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
-            _user = st.session_state.get("username", "ADMIN")
-            st.session_state["admin_activity_log"].insert(0, {
-                "waktu": _waktu,
-                "user": _user,
-                "action": action,
-                "detail": detail,
-            })
-            if len(st.session_state["admin_activity_log"]) > 50:
-                st.session_state["admin_activity_log"] = st.session_state["admin_activity_log"][:50]
+        st.markdown("""
+        <style>
+            /* ============ SEMUA TOMBOL ============ */
+            div[data-testid="stButton"] > button,
+            div[data-testid="stDownloadButton"] > button,
+            div[data-testid="stFormSubmitButton"] > button {
+                background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+                color: #fbbf24 !important;
+                border: 2px solid #b45309 !important;
+                border-radius: 10px !important;
+                font-family: monospace !important;
+                font-weight: 700 !important;
+                font-size: 12px !important;
+                padding: 10px 14px !important;
+                transition: all 0.25s ease-in-out !important;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+                white-space: normal !important;
+                height: auto !important;
+                min-height: 44px !important;
+            }
+            div[data-testid="stButton"] > button:hover,
+            div[data-testid="stDownloadButton"] > button:hover,
+            div[data-testid="stFormSubmitButton"] > button:hover {
+                background: linear-gradient(135deg, #b45309 0%, #d97706 100%) !important;
+                color: #ffffff !important;
+                border-color: #fbbf24 !important;
+                box-shadow: 0 0 15px rgba(251, 191, 36, 0.6) !important;
+                transform: translateY(-2px) !important;
+            }
+            div[data-testid="stButton"] > button[kind="primary"] {
+                background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%) !important;
+                color: #ffffff !important;
+                border: 2px solid #a855f7 !important;
+            }
+            div[data-testid="stButton"] > button[kind="primary"]:hover {
+                background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%) !important;
+                box-shadow: 0 0 20px rgba(168, 85, 247, 0.7) !important;
+            }
+            /* Selectbox */
+            div[data-baseweb="select"] > div {
+                background-color: #0f172a !important;
+                border: 1.5px solid #b45309 !important;
+                border-radius: 8px !important;
+            }
+            div[data-baseweb="select"] span {
+                color: #fbbf24 !important;
+                font-weight: 700 !important;
+            }
+            /* Metric */
+            div[data-testid="stMetric"] {
+                background: linear-gradient(135deg, #0f172a 0%, #1e1b18 100%) !important;
+                border: 2px solid #b45309 !important;
+                border-radius: 10px !important;
+                padding: 14px !important;
+            }
+            div[data-testid="stMetric"] label {
+                color: #94a3b8 !important;
+                font-family: monospace !important;
+                font-size: 11px !important;
+                font-weight: bold !important;
+            }
+            div[data-testid="stMetric"] [data-testid="stMetricValue"] {
+                color: #fbbf24 !important;
+                font-family: monospace !important;
+                font-weight: 900 !important;
+            }
+            /* Expander */
+            div[data-testid="stExpander"] {
+                background: rgba(15, 23, 42, 0.7) !important;
+                border: 1.5px solid #b45309 !important;
+                border-radius: 10px !important;
+            }
+            div[data-testid="stExpander"] summary {
+                color: #fbbf24 !important;
+                font-family: monospace !important;
+                font-weight: bold !important;
+            }
+            /* Dataframe */
+            div[data-testid="stDataFrame"] {
+                border: 1.5px solid #b45309 !important;
+                border-radius: 10px !important;
+            }
+            /* ============ TAB NAVIGASI ADMIN ============ */
+            div[data-testid="stRadio"].admin-mainnav > label:first-child { display: none !important; }
+            div[data-testid="stRadio"].admin-mainnav div[role="radiogroup"] {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: wrap !important;
+                justify-content: center !important;
+                gap: 6px !important;
+                width: 100% !important;
+                padding: 6px !important;
+                background: #0f172a !important;
+                border: 2px solid #b45309 !important;
+                border-radius: 12px !important;
+                margin-bottom: 15px !important;
+            }
+            div[data-testid="stRadio"].admin-mainnav div[role="radiogroup"] > label > div:first-child,
+            div[data-testid="stRadio"].admin-mainnav input[type="radio"] {
+                display: none !important; width: 0 !important; height: 0 !important;
+            }
+            div[data-testid="stRadio"].admin-mainnav div[role="radiogroup"] > label {
+                background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+                border: 1.5px solid #334155 !important;
+                border-radius: 8px !important;
+                padding: 9px 14px !important;
+                margin: 0 !important;
+                cursor: pointer !important;
+                transition: all 0.2s ease !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+            div[data-testid="stRadio"].admin-mainnav div[role="radiogroup"] > label p,
+            div[data-testid="stRadio"].admin-mainnav div[role="radiogroup"] > label span {
+                color: #94a3b8 !important;
+                font-family: monospace !important;
+                font-size: 11px !important;
+                font-weight: 700 !important;
+                white-space: nowrap !important;
+                margin: 0 !important;
+            }
+            div[data-testid="stRadio"].admin-mainnav div[role="radiogroup"] > label:hover {
+                border-color: #fbbf24 !important;
+                box-shadow: 0 0 10px rgba(251, 191, 36, 0.3) !important;
+            }
+            div[data-testid="stRadio"].admin-mainnav div[role="radiogroup"] > label:hover p,
+            div[data-testid="stRadio"].admin-mainnav div[role="radiogroup"] > label:hover span {
+                color: #fbbf24 !important;
+            }
+            div[data-testid="stRadio"].admin-mainnav div[role="radiogroup"] > label:has(input:checked) {
+                background: linear-gradient(135deg, #b45309 0%, #d97706 100%) !important;
+                border-color: #fbbf24 !important;
+                box-shadow: 0 0 15px rgba(251, 191, 36, 0.6) !important;
+            }
+            div[data-testid="stRadio"].admin-mainnav div[role="radiogroup"] > label:has(input:checked) p,
+            div[data-testid="stRadio"].admin-mainnav div[role="radiogroup"] > label:has(input:checked) span {
+                color: #ffffff !important;
+            }
+        </style>
+        """, unsafe_allow_html=True)
 
         # =====================================================================
-        # 📌 SEKSI 1: SYSTEM HEALTH & QUICK ACTIONS
+        # 🎛️ NAVIGASI TAB — 6 SEKSI UTAMA
         # =====================================================================
-        st.markdown("---")
-        st.markdown("### 📌 1. System Health & Quick Actions")
+        _admin_tab = st.radio(
+            "Admin Nav",
+            [
+                "📌 System Health",
+                "📊 Database",
+                "📦 Backup",
+                "🧹 Cleanup",
+                "📜 Activity Log",
+                "📲 Report",
+            ],
+            horizontal=True,
+            key="admin_main_tab_nav",
+            label_visibility="collapsed",
+        )
 
-        _total_rows = 0
-        for _k in ["sales_item_df", "sales_person_df", "sales_pps_df",
-                   "periods_df", "periods_pps_df", "items_df", "person_df"]:
-            _df = st.session_state.get(_k, pd.DataFrame())
-            if not _df.empty:
-                _total_rows += len(_df)
+        st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
-        _total_size_mb = 0
-        for _k in ["sales_item_df", "sales_person_df", "sales_pps_df",
-                   "periods_df", "periods_pps_df", "items_df", "person_df"]:
-            _df = st.session_state.get(_k, pd.DataFrame())
-            if not _df.empty:
-                _total_size_mb += _df.memory_usage(deep=True).sum() / (1024 * 1024)
+        # =====================================================================
+        # 📌 TAB 1: SYSTEM HEALTH & QUICK ACTIONS
+        # =====================================================================
+        if _admin_tab == "📌 System Health":
+            st.markdown("### 📌 1. System Health & Quick Actions")
 
-        _last_backup = st.session_state.get("last_backup_time", "Belum pernah")
+            _total_rows = 0
+            for _k in ["sales_item_df", "sales_person_df", "sales_pps_df",
+                       "periods_df", "periods_pps_df", "items_df", "person_df"]:
+                _df = st.session_state.get(_k, pd.DataFrame())
+                if not _df.empty:
+                    _total_rows += len(_df)
 
-        col_h1, col_h2, col_h3, col_h4 = st.columns(4)
-        with col_h1:
-            st.metric("🔗 Status Koneksi",
-                      "✅ Online" if not st.session_state.get("sales_item_df", pd.DataFrame()).empty else "⚠️ Loading")
-        with col_h2:
-            st.metric("💾 Total Baris Data", f"{_total_rows:,}")
-        with col_h3:
-            st.metric("📦 Ukuran Data", f"{_total_size_mb:.2f} MB")
-        with col_h4:
-            st.metric("💿 Backup Terakhir",
-                      str(_last_backup)[:16] if _last_backup != "Belum pernah" else "—")
+            _total_size_mb = 0
+            for _k in ["sales_item_df", "sales_person_df", "sales_pps_df",
+                       "periods_df", "periods_pps_df", "items_df", "person_df"]:
+                _df = st.session_state.get(_k, pd.DataFrame())
+                if not _df.empty:
+                    _total_size_mb += _df.memory_usage(deep=True).sum() / (1024 * 1024)
 
-        # --- Quick Actions ---
-        st.markdown("##### ⚡ Quick Actions")
-        col_qa1, col_qa2, col_qa3, col_qa4 = st.columns(4)
+            _last_backup = st.session_state.get("last_backup_time", "Belum pernah")
 
-        with col_qa1:
-            if st.button("🔄 Refresh Data", use_container_width=True, key="qa_refresh"):
-                with st.spinner("⏳ Refresh data dari Google Sheets..."):
-                    st.cache_data.clear()
-                    try:
-                        (p_df, p_pps, p_store, i_df, pers, si, sp, s_pps, s_store) = load_database()
-                        st.session_state.periods_df = p_df
-                        st.session_state.periods_pps_df = p_pps
-                        st.session_state.periods_store_df = p_store
-                        st.session_state.items_df = i_df
-                        st.session_state.person_df = pers
-                        st.session_state.sales_item_df = si
-                        st.session_state.sales_person_df = sp
-                        st.session_state.sales_pps_df = s_pps
-                        st.session_state.sales_store_df = s_store
-                        _add_activity_log("REFRESH", "Refresh data dari Google Sheets")
-                        st.toast("✅ Data berhasil di-refresh!", icon="⚡")
-                        time.sleep(0.5)
-                        st.rerun()
-                    except Exception as e_ref:
-                        st.error(f"❌ Gagal refresh: {e_ref}")
+            col_h1, col_h2, col_h3, col_h4 = st.columns(4)
+            with col_h1:
+                st.metric("🔗 Status Koneksi",
+                          "✅ Online" if not st.session_state.get("sales_item_df", pd.DataFrame()).empty else "⚠️ Loading")
+            with col_h2:
+                st.metric("💾 Total Baris Data", f"{_total_rows:,}")
+            with col_h3:
+                st.metric("📦 Ukuran Data", f"{_total_size_mb:.2f} MB")
+            with col_h4:
+                st.metric("💿 Backup Terakhir",
+                          str(_last_backup)[:16] if _last_backup != "Belum pernah" else "—")
 
-        with col_qa2:
-            if st.button("💾 Backup Now", use_container_width=True, key="qa_backup"):
-                with st.spinner("⏳ Backup ke tab _BACKUP..."):
-                    try:
-                        _bk_ok = backup_to_gsheets()
-                        if _bk_ok:
-                            st.session_state["last_backup_time"] = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
-                            _add_activity_log("BACKUP", "Backup manual ke tab _BACKUP")
-                            # Ganti jadi:
-                            log_activity("BACKUP", "Backup manual ke tab _BACKUP")
-                            st.success("✅ Backup berhasil!")
+            st.markdown("##### ⚡ Quick Actions")
+            col_qa1, col_qa2, col_qa3, col_qa4 = st.columns(4)
+
+            with col_qa1:
+                if st.button("🔄 Refresh Data", use_container_width=True, key="qa_refresh"):
+                    with st.spinner("⏳ Refresh data dari Google Sheets..."):
+                        st.cache_data.clear()
+                        try:
+                            (p_df, p_pps, p_store, i_df, pers, si, sp, s_pps, s_store) = load_database()
+                            st.session_state.periods_df = p_df
+                            st.session_state.periods_pps_df = p_pps
+                            st.session_state.periods_store_df = p_store
+                            st.session_state.items_df = i_df
+                            st.session_state.person_df = pers
+                            st.session_state.sales_item_df = si
+                            st.session_state.sales_person_df = sp
+                            st.session_state.sales_pps_df = s_pps
+                            st.session_state.sales_store_df = s_store
+                            log_activity("REFRESH", "Refresh data dari Google Sheets")
+                            st.toast("✅ Data berhasil di-refresh!", icon="⚡")
                             time.sleep(0.5)
                             st.rerun()
-                        else:
-                            st.warning("⚠️ Tab *_BACKUP mungkin belum dibuat di Google Sheets.")
-                    except Exception as e_bk:
-                        st.error(f"❌ Gagal backup: {e_bk}")
+                        except Exception as e_ref:
+                            st.error(f"❌ Gagal refresh: {e_ref}")
 
-        with col_qa3:
-            if st.button("🗑️ Clear Cache", use_container_width=True, key="qa_cache"):
-                st.cache_data.clear()
-                _add_activity_log("CACHE", "Clear cache Streamlit")
-                st.toast("✅ Cache dibersihkan!", icon="⚡")
-                time.sleep(0.5)
-                st.rerun()
+            with col_qa2:
+                if st.button("💾 Backup Now", use_container_width=True, key="qa_backup"):
+                    with st.spinner("⏳ Backup ke tab _BACKUP..."):
+                        try:
+                            _bk_ok = backup_to_gsheets()
+                            if _bk_ok:
+                                st.session_state["last_backup_time"] = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
+                                log_activity("BACKUP", "Backup manual ke tab _BACKUP")
+                                st.success("✅ Backup berhasil!")
+                                time.sleep(0.5)
+                                st.rerun()
+                            else:
+                                st.warning("⚠️ Tab *_BACKUP mungkin belum dibuat di Google Sheets.")
+                        except Exception as e_bk:
+                            st.error(f"❌ Gagal backup: {e_bk}")
 
-        with col_qa4:
-            if st.button("🔍 Cek Duplikat", use_container_width=True, key="qa_dup"):
-                _dup_count = 0
-                for _k, _idcol in [
-                    ("sales_item_df", "record_id"),
-                    ("sales_person_df", "record_id"),
-                    ("sales_pps_df", "record_id"),
-                ]:
-                    _df = st.session_state.get(_k, pd.DataFrame())
-                    if not _df.empty and _idcol in _df.columns:
-                        _dup_count += int(_df[_idcol].duplicated().sum())
-                _add_activity_log("CHECK", f"Cek duplikat: {_dup_count} ditemukan")
-                if _dup_count > 0:
-                    st.warning(f"⚠️ Ditemukan **{_dup_count}** baris duplikat. Cek di Maintenance.")
-                else:
-                    st.success("✅ Tidak ada duplikat!")
+            with col_qa3:
+                if st.button("🗑️ Clear Cache", use_container_width=True, key="qa_cache"):
+                    st.cache_data.clear()
+                    log_activity("CACHE", "Clear cache Streamlit")
+                    st.toast("✅ Cache dibersihkan!", icon="⚡")
+                    time.sleep(0.5)
+                    st.rerun()
 
-        # =====================================================================
-        # 📊 SEKSI 2: DATABASE MONITORING
-        # =====================================================================
-        st.markdown("---")
-        st.markdown("### 📊 2. Database Monitoring")
-
-        _db_data = []
-        for _label, _key in [
-            ("📦 MASTER ITEM", "items_df"),
-            ("👥 MASTER PERSONIL", "person_df"),
-            ("📅 PERIODE PSM", "periods_df"),
-            ("📅 PERIODE PPS", "periods_pps_df"),
-            ("📝 SALES ITEM", "sales_item_df"),
-            ("📝 SALES PERSONIL", "sales_person_df"),
-            ("📝 SALES PPS", "sales_pps_df"),
-        ]:
-            _df = st.session_state.get(_key, pd.DataFrame())
-            _n_rows = len(_df)
-            _n_cols = len(_df.columns)
-            _size_mb = _df.memory_usage(deep=True).sum() / (1024 * 1024) if not _df.empty else 0
-            _db_data.append({
-                "Tabel": _label,
-                "Baris": _n_rows,
-                "Kolom": _n_cols,
-                "Ukuran (MB)": round(_size_mb, 3),
-            })
-
-        st.dataframe(pd.DataFrame(_db_data), use_container_width=True, hide_index=True)
-
-        # --- Estimasi Kuota Google Sheets ---
-        _max_cells = 10_000_000
-        _est_cells = _total_rows * 10
-        _pct_quota = min((_est_cells / _max_cells) * 100, 100)
-
-        st.markdown("##### 💾 Estimasi Kuota Google Sheets")
-        st.markdown(
-            f"**{_est_cells:,}** / **{_max_cells:,}** cell (~**{_pct_quota:.2f}%**) "
-            f"dari limit Google Sheets"
-        )
-        st.progress(_pct_quota / 100)
-
-        if _pct_quota < 50:
-            st.success(f"✅ Kuota aman ({_pct_quota:.1f}%)")
-        elif _pct_quota < 80:
-            st.warning(f"⚠️ Kuota mulai terpakai ({_pct_quota:.1f}%). Siap-siap cleanup.")
-        else:
-            st.error(f"🚨 Kuota hampir penuh ({_pct_quota:.1f}%)! Lakukan cleanup.")
-
-        # =====================================================================
-        # 📦 SEKSI 3: BACKUP & EXPORT
-        # =====================================================================
-        st.markdown("---")
-        st.markdown("### 📦 3. Backup & Export Data")
-        col_bk1, col_bk2 = st.columns(2)
-        with col_bk1:
-            st.markdown("##### ☁️ Backup Otomatis Google Sheets")
-            st.caption(
-                "Backup ke tab: SALES_PPS_BACKUP, PERIODE_PPS_BACKUP, "
-                "SALES_ITEM_BACKUP, SALES_PERSON_BACKUP, PERIODE_BACKUP, "
-                "MASTER_ITEM_BACKUP, MASTER_PERSONIL_BACKUP"
-            )
-            if st.button("⚡ Jalankan Backup Otomatis Sekarang", use_container_width=True, key="bk_auto_now"):
-                with st.spinner("⏳ Backup ke tab _BACKUP..."):
-                    try:
-                        _bk_ok = backup_to_gsheets()
-                        if _bk_ok:
-                            st.session_state["last_backup_time"] = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
-                            _add_activity_log("BACKUP", "Backup otomatis ke tab _BACKUP")
-                            st.success("✅ Backup ke tab `_BACKUP` berhasil!")
-                        else:
-                            st.warning("⚠️ Tab *_BACKUP mungkin belum dibuat di Google Sheets.")
-                    except Exception as e_bk:
-                        st.error(f"❌ Gagal backup: {e_bk}")
-
-        with col_bk2:
-            st.markdown("##### 📥 Backup Manual File (.xlsx)")
-            try:
-                output_backup = io.BytesIO()
-                with pd.ExcelWriter(output_backup, engine="xlsxwriter") as backup_writer:
-                    dict_backup_tables = {
-                        "PERIODE_PSM": "periods_df",
-                        "MASTER_ITEM": "items_df",
-                        "MASTER_PERSONIL": "person_df",
-                        "SALES_ITEM": "sales_item_df",
-                        "SALES_PERSONIL": "sales_person_df",
-                        "PERIODE_PPS": "periods_pps_df",
-                        "SALES_PPS": "sales_pps_df",
-                    }
-                    for sheet_name, state_key in dict_backup_tables.items():
-                        df_b = st.session_state.get(state_key, pd.DataFrame())
-                        if not df_b.empty:
-                            df_b.to_excel(backup_writer, sheet_name=sheet_name, index=False)
-
-                excel_backup_bytes = output_backup.getvalue()
-                filename_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-                st.download_button(
-                    label="💾 Download Full Backup (.xlsx)",
-                    data=excel_backup_bytes,
-                    file_name=f"Backup_Database_LigaPSM_{filename_time}.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    use_container_width=True,
-                )
-            except Exception as e_dl:
-                st.error(f"⚠️ Gagal menyiapkan file download: {e_dl}")
-
-        # =====================================================================
-        # 🧹 SEKSI 4: MAINTENANCE & CLEANUP
-        # =====================================================================
-        st.markdown("---")
-        st.markdown("### 🧹 4. Maintenance & Cleanup")
-        st.caption("⚠️ Hati-hati: aksi di bawah tidak bisa di-undo. Backup dulu sebelum cleanup.")
-
-        col_cl1, col_cl2, col_cl3 = st.columns(3)
-
-        with col_cl1:
-            st.markdown("##### 🔍 Data Duplikat")
-            _total_dup = 0
-            for _k, _idcol in [
-                ("sales_item_df", "record_id"),
-                ("sales_person_df", "record_id"),
-                ("sales_pps_df", "record_id"),
-            ]:
-                _df = st.session_state.get(_k, pd.DataFrame())
-                if not _df.empty and _idcol in _df.columns:
-                    _total_dup += int(_df[_idcol].duplicated().sum())
-
-            st.metric("Duplikat Ditemukan", _total_dup)
-
-            if _total_dup > 0:
-                if st.button("🗑️ Hapus Duplikat", use_container_width=True, key="cln_dup"):
-                    _removed = 0
+            with col_qa4:
+                if st.button("🔍 Cek Duplikat", use_container_width=True, key="qa_dup"):
+                    _dup_count = 0
                     for _k, _idcol in [
                         ("sales_item_df", "record_id"),
                         ("sales_person_df", "record_id"),
@@ -14595,808 +14593,1002 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                     ]:
                         _df = st.session_state.get(_k, pd.DataFrame())
                         if not _df.empty and _idcol in _df.columns:
-                            _before = len(_df)
-                            _df = _df.drop_duplicates(subset=[_idcol], keep="first")
-                            _removed += _before - len(_df)
-                            st.session_state[_k] = _df
-                    _add_activity_log("CLEANUP", f"Hapus {_removed} baris duplikat")
-                    st.success(f"✅ {_removed} baris duplikat dihapus!")
-                    time.sleep(1)
-                    st.rerun()
+                            _dup_count += int(_df[_idcol].duplicated().sum())
+                    log_activity("CHECK", f"Cek duplikat: {_dup_count} ditemukan")
+                    if _dup_count > 0:
+                        st.warning(f"⚠️ Ditemukan **{_dup_count}** baris duplikat. Cek di Maintenance.")
+                    else:
+                        st.success("✅ Tidak ada duplikat!")
 
-        with col_cl2:
-            st.markdown("##### 📭 Data Kosong (Qty 0)")
-            _total_zero = 0
-            for _k in ["sales_item_df", "sales_person_df", "sales_pps_df"]:
+        # =====================================================================
+        # 📊 TAB 2: DATABASE MONITORING
+        # =====================================================================
+        elif _admin_tab == "📊 Database":
+            st.markdown("### 📊 2. Database Monitoring")
+
+            _db_data = []
+            for _label, _key in [
+                ("📦 MASTER ITEM", "items_df"),
+                ("👥 MASTER PERSONIL", "person_df"),
+                ("📅 PERIODE PSM", "periods_df"),
+                ("📅 PERIODE PPS", "periods_pps_df"),
+                ("📝 SALES ITEM", "sales_item_df"),
+                ("📝 SALES PERSONIL", "sales_person_df"),
+                ("📝 SALES PPS", "sales_pps_df"),
+            ]:
+                _df = st.session_state.get(_key, pd.DataFrame())
+                _n_rows = len(_df)
+                _n_cols = len(_df.columns)
+                _size_mb = _df.memory_usage(deep=True).sum() / (1024 * 1024) if not _df.empty else 0
+                _db_data.append({
+                    "Tabel": _label,
+                    "Baris": _n_rows,
+                    "Kolom": _n_cols,
+                    "Ukuran (MB)": round(_size_mb, 3),
+                })
+
+            st.dataframe(pd.DataFrame(_db_data), use_container_width=True, hide_index=True)
+
+            _total_rows_db = 0
+            for _k in ["sales_item_df", "sales_person_df", "sales_pps_df",
+                       "periods_df", "periods_pps_df", "items_df", "person_df"]:
                 _df = st.session_state.get(_k, pd.DataFrame())
-                if not _df.empty and "actual_qty" in _df.columns:
-                    _total_zero += int((pd.to_numeric(_df["actual_qty"], errors="coerce").fillna(0) == 0).sum())
+                if not _df.empty:
+                    _total_rows_db += len(_df)
 
-            st.metric("Data Qty 0", _total_zero)
+            _max_cells = 10_000_000
+            _est_cells = _total_rows_db * 10
+            _pct_quota = min((_est_cells / _max_cells) * 100, 100)
 
-            if _total_zero > 0:
-                if st.button("🗑️ Hapus Data Kosong", use_container_width=True, key="cln_zero"):
-                    _removed_z = 0
-                    for _k in ["sales_item_df", "sales_person_df", "sales_pps_df"]:
-                        _df = st.session_state.get(_k, pd.DataFrame())
-                        if not _df.empty and "actual_qty" in _df.columns:
-                            _before = len(_df)
-                            _df = _df[pd.to_numeric(_df["actual_qty"], errors="coerce").fillna(0) > 0]
-                            _removed_z += _before - len(_df)
-                            st.session_state[_k] = _df
-                    _add_activity_log("CLEANUP", f"Hapus {_removed_z} baris qty 0")
-                    st.success(f"✅ {_removed_z} baris qty 0 dihapus!")
-                    time.sleep(1)
-                    st.rerun()
-
-        with col_cl3:
-            st.markdown("##### 🕰️ Data Lama (> 6 Bulan)")
-            
-            # Pakai datetime tanpa timezone
-            _batas_lama = datetime.now() - timedelta(days=180)
-            _total_lama = 0
-            _sp_lama = st.session_state.get("sales_person_df", pd.DataFrame())
-            
-            if not _sp_lama.empty and "updated_at" in _sp_lama.columns:
-                _sp_lama["_dt"] = pd.to_datetime(_sp_lama["updated_at"], errors="coerce")
-                _dt_naive = _sp_lama["_dt"].dt.tz_localize(None) if hasattr(_sp_lama["_dt"].dt, "tz") else _sp_lama["_dt"]
-                _total_lama = int((_dt_naive < pd.Timestamp(_batas_lama)).sum())
-
-            st.metric("Data > 6 Bulan", _total_lama)
-
-            if _total_lama > 0:
-                if st.button("🗑️ Hapus Data Lama", use_container_width=True, key="cln_lama"):
-                    _removed_l = 0
-                    _sp_l = st.session_state.get("sales_person_df", pd.DataFrame())
-                    if not _sp_l.empty and "updated_at" in _sp_l.columns:
-                        _before_l = len(_sp_l)
-                        _sp_l["_dt"] = pd.to_datetime(_sp_l["updated_at"], errors="coerce")
-                        _dt_naive2 = _sp_l["_dt"].dt.tz_localize(None) if hasattr(_sp_l["_dt"].dt, "tz") else _sp_l["_dt"]
-                        _sp_l = _sp_l[_dt_naive2 >= pd.Timestamp(_batas_lama)].drop(columns=["_dt"])
-                        _removed_l = _before_l - len(_sp_l)
-                        st.session_state["sales_person_df"] = _sp_l
-                    _add_activity_log("CLEANUP", f"Hapus {_removed_l} baris > 6 bulan")
-                    st.success(f"✅ {_removed_l} baris lama dihapus!")
-                    time.sleep(1)
-                    st.rerun()
-
-            st.metric("Data > 6 Bulan", _total_lama)
-
-            if _total_lama > 0:
-                if st.button("🗑️ Hapus Data Lama", use_container_width=True, key="cln_lama"):
-                    _removed_l = 0
-                    _sp_l = st.session_state.get("sales_person_df", pd.DataFrame())
-                    if not _sp_l.empty and "updated_at" in _sp_l.columns:
-                        _before_l = len(_sp_l)
-                        _sp_l["_dt"] = pd.to_datetime(_sp_l["updated_at"], errors="coerce")
-                        _sp_l = _sp_l[_sp_l["_dt"] >= pd.Timestamp(_batas_lama)].drop(columns=["_dt"])
-                        _removed_l = _before_l - len(_sp_l)
-                        st.session_state["sales_person_df"] = _sp_l
-                    _add_activity_log("CLEANUP", f"Hapus {_removed_l} baris > 6 bulan")
-                    st.success(f"✅ {_removed_l} baris lama dihapus!")
-                    time.sleep(1)
-                    st.rerun()
-
-                # =====================================================================
-        # 📜 SEKSI 5: ACTIVITY LOG / AUDIT TRAIL (PERMANEN + FILTER TANGGAL)
-        # =====================================================================
-        st.markdown("---")
-        st.markdown("### 📜 5. Activity Log / Audit Trail")
-        st.caption("Riwayat permanen semua aktivitas user — tersimpan di Google Sheets.")
-
-        # --- FILTER CONTROLS ---
-        col_lf1, col_lf2 = st.columns(2)
-        
-        with col_lf1:
-            _log_username_filter = st.selectbox(
-                "Filter User",
-                ["Semua User", "admin", "ARIS APRILIANTO", "TIKA", "RIZKI GUNAWAN",
-                 "ADELIA PRATIWI", "ILHAM PRIANDIKA", "REZA PURNAMA AGUSTIN",
-                 "SUBEKTI PANDU YULIANTO", "KUSDEWI TIA NINGRUM", "AHMAD ZAKI SYABANI ZEN"],
-                key="log_filter_user",
+            st.markdown("##### 💾 Estimasi Kuota Google Sheets")
+            st.markdown(
+                f"**{_est_cells:,}** / **{_max_cells:,}** cell (~**{_pct_quota:.2f}%**) "
+                f"dari limit Google Sheets"
             )
-        
-        with col_lf2:
-            _log_action_filter = st.selectbox(
-                "Filter Action",
-                ["Semua Action", "LOGIN", "LOGOUT", "LOGIN_FAILED", "OPEN_TAB",
-                 "SAVE_SALES", "SAVE_PPS", "SAVE_MASTER", "EDIT_DATA", "DELETE_DATA",
-                 "REPORT", "BACKUP", "CLEANUP", "REFRESH"],
-                key="log_filter_action",
-            )
-        
-        # --- FILTER RENTANG WAKTU ---
-        col_rw1, col_rw2 = st.columns([2, 1])
-        
-        with col_rw1:
-            _log_range_filter = st.radio(
-                "📅 Rentang Waktu",
-                ["Hari Ini", "7 Hari Terakhir", "30 Hari Terakhir",
-                 "Bulan Ini", "Custom Range", "Semua (Tanpa Batas)"],
-                horizontal=True,
-                key="log_range_filter",
-                index=5,  # default: Semua
-            )
-        
-        # --- CUSTOM RANGE (kalau pilih Custom Range) ---
-        _custom_start = None
-        _custom_end = None
-        if _log_range_filter == "Custom Range":
-            with col_rw2:
-                st.caption("Pilih rentang:")
-            col_cr1, col_cr2 = st.columns(2)
-            with col_cr1:
-                _custom_start = st.date_input(
-                    "Dari Tanggal",
-                    value=waktu_wib.date() - timedelta(days=7),
-                    key="log_custom_start",
-                )
-            with col_cr2:
-                _custom_end = st.date_input(
-                    "Sampai Tanggal",
-                    value=waktu_wib.date(),
-                    key="log_custom_end",
-                )
-        else:
-            with col_rw2:
-                _log_limit = st.selectbox(
-                    "Tampilkan",
-                    [50, 100, 200, 500, 1000, "Semua"],
-                    index=1,
-                    key="log_filter_limit",
-                )
-        
-        # Set limit default kalau custom range
-        if _log_range_filter == "Custom Range":
-            _log_limit = "Semua"
-        
-        # --- BACA DARI GOOGLE SHEETS ---
-        try:
-            with st.spinner("⏳ Membaca activity log dari Google Sheets..."):
-                _log_sheet_df = conn.read(worksheet="ACTIVITY_LOG", ttl=30)
-        except Exception as e_log:
-            st.warning(f"⚠️ Sheet ACTIVITY_LOG belum dibuat atau error: {e_log}")
-            _log_sheet_df = pd.DataFrame()
-        
-        if not _log_sheet_df.empty:
-            # Normalisasi kolom
-            _log_sheet_df.columns = _log_sheet_df.columns.astype(str).str.strip().str.lower()
-            
-            for _c in ["timestamp", "username", "role", "action", "detail", "session_id"]:
-                if _c not in _log_sheet_df.columns:
-                    _log_sheet_df[_c] = "-"
-            
-            # Parse timestamp ke datetime
-            _log_sheet_df["_dt"] = pd.to_datetime(
-                _log_sheet_df["timestamp"], format="%d/%m/%Y %H:%M:%S", errors="coerce"
-            )
-            
-            # Buang yang tidak bisa di-parse (jaga-jaga)
-            _log_valid = _log_sheet_df.dropna(subset=["_dt"]).copy()
-            
-            # --- APPLY FILTER TANGGAL ---
-            _today = pd.Timestamp(waktu_wib.date())
-            
-            if _log_range_filter == "Hari Ini":
-                _start_dt = _today
-                _end_dt = _today + pd.Timedelta(days=1)
-            elif _log_range_filter == "7 Hari Terakhir":
-                _start_dt = _today - pd.Timedelta(days=6)
-                _end_dt = _today + pd.Timedelta(days=1)
-            elif _log_range_filter == "30 Hari Terakhir":
-                _start_dt = _today - pd.Timedelta(days=29)
-                _end_dt = _today + pd.Timedelta(days=1)
-            elif _log_range_filter == "Bulan Ini":
-                _start_dt = pd.Timestamp(waktu_wib.date().replace(day=1))
-                _end_dt = _today + pd.Timedelta(days=1)
-            elif _log_range_filter == "Custom Range" and _custom_start and _custom_end:
-                _start_dt = pd.Timestamp(_custom_start)
-                _end_dt = pd.Timestamp(_custom_end) + pd.Timedelta(days=1)
-            else:  # Semua (Tanpa Batas)
-                _start_dt = _log_valid["_dt"].min() if not _log_valid.empty else _today
-                _end_dt = _log_valid["_dt"].max() + pd.Timedelta(days=1) if not _log_valid.empty else _today + pd.Timedelta(days=1)
-            
-            _log_filtered = _log_valid[
-                (_log_valid["_dt"] >= _start_dt) & (_log_valid["_dt"] < _end_dt)
-            ].copy()
-            
-            # --- APPLY FILTER USER & ACTION ---
-            if _log_username_filter != "Semua User":
-                _log_filtered = _log_filtered[
-                    _log_filtered["username"].astype(str) == _log_username_filter
-                ]
-            if _log_action_filter != "Semua Action":
-                _log_filtered = _log_filtered[
-                    _log_filtered["action"].astype(str).str.upper() == _log_action_filter.upper()
-                ]
-            
-            # Sort: terbaru duluan untuk display, terlama duluan untuk export
-            _log_display_sorted = _log_filtered.sort_values("_dt", ascending=False)
-            _log_export_sorted = _log_filtered.sort_values("_dt", ascending=True)
-            
-            # Apply limit untuk display
-            if _log_limit != "Semua":
-                _log_display_final = _log_display_sorted.head(int(_log_limit))
+            st.progress(_pct_quota / 100)
+
+            if _pct_quota < 50:
+                st.success(f"✅ Kuota aman ({_pct_quota:.1f}%)")
+            elif _pct_quota < 80:
+                st.warning(f"⚠️ Kuota mulai terpakai ({_pct_quota:.1f}%). Siap-siap cleanup.")
             else:
-                _log_display_final = _log_display_sorted
-            
-            # --- METRIC RINGKAS ---
-            col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-            with col_m1:
-                st.metric("📊 Log Terfilter", len(_log_filtered))
-            with col_m2:
-                st.metric("👥 User Unik", _log_filtered["username"].nunique())
-            with col_m3:
-                _login_count = int((_log_filtered["action"].astype(str).str.upper() == "LOGIN").sum())
-                st.metric("🔓 Total Login", _login_count)
-            with col_m4:
-                _failed_count = int((_log_filtered["action"].astype(str).str.upper() == "LOGIN_FAILED").sum())
-                st.metric("❌ Login Gagal", _failed_count)
-            
-            st.markdown(f"**Menampilkan {len(_log_display_final)} dari {len(_log_filtered)} log terfilter**")
-            
-            # --- TABEL ---
-            _log_display = _log_display_final.drop(columns=["_dt"]).rename(columns={
-                "timestamp": "⏰ Waktu",
-                "username": "👤 User",
-                "role": "🎭 Role",
-                "action": "🎯 Action",
-                "detail": "📝 Detail",
-                "session_id": "🔑 Session",
-            })
-            st.dataframe(_log_display, use_container_width=True, hide_index=True)
-            
-            # =========================================================
-            # DOWNLOAD BUTTONS — 3 OPSI
-            # =========================================================
-            st.markdown("##### 📥 Download Log")
-            col_dl1, col_dl2, col_dl3 = st.columns(3)
-            
-            _file_suffix = {
-                "Hari Ini": f"Harian_{waktu_wib.strftime('%Y%m%d')}",
-                "7 Hari Terakhir": f"Mingguan_{waktu_wib.strftime('%Y%m%d')}",
-                "30 Hari Terakhir": f"30Hari_{waktu_wib.strftime('%Y%m%d')}",
-                "Bulan Ini": f"Bulanan_{waktu_wib.strftime('%Y%m')}",
-                "Custom Range": f"{_custom_start.strftime('%Y%m%d')}_{_custom_end.strftime('%Y%m%d')}" if _custom_start and _custom_end else "Custom",
-                "Semua (Tanpa Batas)": "AllTime",
-            }.get(_log_range_filter, "Custom")
-            
-            # --- 1. Download sesuai FILTER AKTIF ---
-            with col_dl1:
-                _log_export_filtered = _log_export_sorted.drop(columns=["_dt"])
-                _buffer_filtered = io.BytesIO()
-                with pd.ExcelWriter(_buffer_filtered, engine="xlsxwriter") as _w:
-                    _log_export_filtered.to_excel(_w, sheet_name="ACTIVITY_LOG", index=False)
-                st.download_button(
-                    label=f"📥 Download ({_log_range_filter})",
-                    data=_buffer_filtered.getvalue(),
-                    file_name=f"ActivityLog_{_file_suffix}_{datetime.now().strftime('%H%M%S')}.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    use_container_width=True,
-                    key="dl_activity_log_filtered",
+                st.error(f"🚨 Kuota hampir penuh ({_pct_quota:.1f}%)! Lakukan cleanup.")
+
+        # =====================================================================
+        # 📦 TAB 3: BACKUP & EXPORT
+        # =====================================================================
+        elif _admin_tab == "📦 Backup":
+            st.markdown("### 📦 3. Backup & Export Data")
+            col_bk1, col_bk2 = st.columns(2)
+            with col_bk1:
+                st.markdown("##### ☁️ Backup Otomatis Google Sheets")
+                st.caption(
+                    "Backup ke tab: SALES_PPS_BACKUP, PERIODE_PPS_BACKUP, "
+                    "SALES_ITEM_BACKUP, SALES_PERSON_BACKUP, PERIODE_BACKUP, "
+                    "MASTER_ITEM_BACKUP, MASTER_PERSONIL_BACKUP"
                 )
-            
-            # --- 2. Download HARI INI (quick) ---
-            with col_dl2:
-                _log_today = _log_valid[_log_valid["_dt"] >= _today].drop(columns=["_dt"])
-                _buffer_today = io.BytesIO()
-                with pd.ExcelWriter(_buffer_today, engine="xlsxwriter") as _w:
-                    _log_today.to_excel(_w, sheet_name="ACTIVITY_LOG", index=False)
-                st.download_button(
-                    label=f"📥 Download Hari Ini ({len(_log_today)})",
-                    data=_buffer_today.getvalue(),
-                    file_name=f"ActivityLog_Harian_{waktu_wib.strftime('%Y%m%d')}.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    use_container_width=True,
-                    key="dl_activity_log_today",
-                )
-            
-            # --- 3. Download SEMUA (semua data tanpa batas) ---
-            with col_dl3:
-                _log_all = _log_valid.drop(columns=["_dt"])
-                _buffer_all = io.BytesIO()
-                with pd.ExcelWriter(_buffer_all, engine="xlsxwriter") as _w:
-                    _log_all.to_excel(_w, sheet_name="ACTIVITY_LOG", index=False)
-                st.download_button(
-                    label=f"📥 Download SEMUA ({len(_log_all)})",
-                    data=_buffer_all.getvalue(),
-                    file_name=f"ActivityLog_AllTime_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    use_container_width=True,
-                    key="dl_activity_log_all",
-                )
-            
-            # =========================================================
-            # REFRESH & HAPUS
-            # =========================================================
-            col_act1, col_act2 = st.columns(2)
-            
-            with col_act1:
-                if st.button("🔄 Refresh Log", use_container_width=True, key="refresh_log"):
-                    st.cache_data.clear()
-                    st.rerun()
-            
-            with col_act2:
-                with st.expander("⚠️ Zona Bahaya"):
-                    st.caption("Hapus log lama untuk hemat kuota Google Sheets.")
-                    _hapus_opsi = st.radio(
-                        "Hapus log:",
-                        ["Log > 90 hari", "Log > 30 hari", "Log > 7 hari", "SEMUA log"],
-                        key="del_log_range",
-                    )
-                    if st.button("🗑️ Hapus Sekarang", key="btn_del_log"):
+                if st.button("⚡ Jalankan Backup Otomatis Sekarang", use_container_width=True, key="bk_auto_now"):
+                    with st.spinner("⏳ Backup ke tab _BACKUP..."):
                         try:
-                            if _hapus_opsi == "SEMUA log":
-                                _log_empty = pd.DataFrame(columns=["timestamp", "username", "role", "action", "detail", "session_id"])
-                                conn.update(worksheet="ACTIVITY_LOG", data=_log_empty)
-                                st.success("✅ Semua log dihapus.")
+                            _bk_ok = backup_to_gsheets()
+                            if _bk_ok:
+                                st.session_state["last_backup_time"] = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
+                                log_activity("BACKUP", "Backup otomatis ke tab _BACKUP")
+                                st.success("✅ Backup ke tab `_BACKUP` berhasil!")
                             else:
-                                _days_map = {"Log > 90 hari": 90, "Log > 30 hari": 30, "Log > 7 hari": 7}
-                                _days = _days_map[_hapus_opsi]
-                                _batas = pd.Timestamp(datetime.now() - timedelta(days=_days))
-                                _log_kept = _log_sheet_df[_log_sheet_df["_dt"] >= _batas].drop(columns=["_dt"], errors="ignore")
-                                conn.update(worksheet="ACTIVITY_LOG", data=_log_kept)
-                                st.success(f"✅ Log > {_days} hari dihapus. Sisa: {len(_log_kept)} log.")
-                            time.sleep(1)
-                            st.rerun()
-                        except Exception as e_del:
-                            st.error(f"❌ Gagal hapus log: {e_del}")
-        else:
-            st.info("📭 Belum ada aktivitas tercatat. Mulai dari login & gunakan aplikasi.")
+                                st.warning("⚠️ Tab *_BACKUP mungkin belum dibuat di Google Sheets.")
+                        except Exception as e_bk:
+                            st.error(f"❌ Gagal backup: {e_bk}")
 
-        # =====================================================================
-        # 📲 SEKSI 6: GENERATOR REPORT WHATSAPP + PDF
-        # =====================================================================
-        st.markdown("---")
-        st.markdown("### 📲 6. Generator Report WhatsApp & PDF")
-        st.caption("Pilih filter bulan & periode untuk generate report untuk brifing.")
-
-        col_rep1, col_rep2 = st.columns(2)
-        with col_rep1:
-            bulan_list = [
-                "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-                "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-            ]
-            curr_month_idx = waktu_wib.month - 1
-            selected_month_name = st.selectbox(
-                "📅 Pilih Bulan Report", bulan_list, index=curr_month_idx, key="rep_month_sel"
-            )
-            selected_month_num = bulan_list.index(selected_month_name) + 1
-        psm_periods_df = st.session_state.get("periods_df", pd.DataFrame())
-        psm_opt = ["Seluruh Penjualan 1 Bulan"]
-        if not psm_periods_df.empty and "period_name" in psm_periods_df.columns:
-            psm_opt.extend(psm_periods_df["period_name"].dropna().unique().tolist())
-
-        with col_rep2:
-            selected_psm_period_opt = st.selectbox("🎯 Filter Periode PSM", psm_opt, key="rep_period_sel")
-
-        # 3 TOMBOL: WA, PDF, PPT
-        col_btn_wa, col_btn_pdf, col_btn_ppt = st.columns(3)
-
-        with col_btn_wa:
-            btn_gen_wa = st.button(
-                "🚀 Generate Report WA",
-                use_container_width=True,
-                type="primary",
-                key="btn_gen_wa_summary",
-            )
-
-        with col_btn_pdf:
-            btn_gen_pdf = st.button(
-                "📄 Generate Report PDF",
-                use_container_width=True,
-                key="btn_gen_pdf_summary",
-            )
-
-        with col_btn_ppt:
-            btn_gen_ppt = st.button(
-                "🎨 Generate Report PPT",
-                use_container_width=True,
-                key="btn_gen_ppt_summary",
-            )
-
-        # =========================================================
-        # LOGIKA GENERATE
-        # =========================================================
-        if btn_gen_wa or btn_gen_pdf or btn_gen_ppt:
-            _report_type = "WA" if btn_gen_wa else ("PDF" if btn_gen_pdf else "PPT")
-            log_activity("REPORT", f"Generate report ({_report_type})")
-            with st.spinner("🧙‍♂️ Membersihkan cache & menarik data segar dari Google Sheets..."):
-                st.cache_data.clear()
+            with col_bk2:
+                st.markdown("##### 📥 Backup Manual File (.xlsx)")
                 try:
-                    (p_df_fresh, p_pps_df_fresh, p_store_df_fresh,
-                     i_df_fresh, pers_df_fresh, si_df_fresh,
-                     sp_df_fresh, s_pps_df_fresh, s_store_df_fresh) = load_database()
-                    st.session_state.periods_df = p_df_fresh
-                    st.session_state.periods_pps_df = p_pps_df_fresh
-                    st.session_state.items_df = i_df_fresh
-                    st.session_state.person_df = pers_df_fresh
-                    st.session_state.sales_item_df = si_df_fresh
-                    st.session_state.sales_person_df = sp_df_fresh
-                    st.session_state.sales_pps_df = s_pps_df_fresh
-                    _report_type = "WA" if btn_gen_wa else ("PDF" if btn_gen_pdf else "PPT")
-                    _add_activity_log("REPORT", f"Generate report ({_report_type})")
-                    st.toast("✅ Data segar ditarik!", icon="⚡")
-                except Exception as e_fresh:
-                    st.warning(f"⚠️ Gagal refresh data: {e_fresh}")
+                    output_backup = io.BytesIO()
+                    with pd.ExcelWriter(output_backup, engine="xlsxwriter") as backup_writer:
+                        dict_backup_tables = {
+                            "PERIODE_PSM": "periods_df",
+                            "MASTER_ITEM": "items_df",
+                            "MASTER_PERSONIL": "person_df",
+                            "SALES_ITEM": "sales_item_df",
+                            "SALES_PERSONIL": "sales_person_df",
+                            "PERIODE_PPS": "periods_pps_df",
+                            "SALES_PPS": "sales_pps_df",
+                        }
+                        for sheet_name, state_key in dict_backup_tables.items():
+                            df_b = st.session_state.get(state_key, pd.DataFrame())
+                            if not df_b.empty:
+                                df_b.to_excel(backup_writer, sheet_name=sheet_name, index=False)
 
-            _generate_time = datetime.now(ZoneInfo("Asia/Jakarta"))
-            _generate_str = _generate_time.strftime("%d/%m/%Y %H:%M:%S WIB")
+                    excel_backup_bytes = output_backup.getvalue()
+                    filename_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    st.download_button(
+                        label="💾 Download Full Backup (.xlsx)",
+                        data=excel_backup_bytes,
+                        file_name=f"Backup_Database_LigaPSM_{filename_time}.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        use_container_width=True,
+                        key="dl_full_backup",
+                    )
+                except Exception as e_dl:
+                    st.error(f"⚠️ Gagal menyiapkan file download: {e_dl}")
 
-            # --- HITUNG PSM ---
-            target_psm_tot = 0
-            actual_psm_tot = 0
-            sales_item_df = st.session_state.get("sales_item_df", pd.DataFrame())
-            valid_period_ids = []
+        # =====================================================================
+        # 🧹 TAB 4: MAINTENANCE & CLEANUP
+        # =====================================================================
+        elif _admin_tab == "🧹 Cleanup":
+            st.markdown("### 🧹 4. Maintenance & Cleanup")
+            st.caption("⚠️ Hati-hati: aksi di bawah tidak bisa di-undo. Backup dulu sebelum cleanup.")
 
-            if not psm_periods_df.empty:
-                p_filtered = psm_periods_df.copy()
-                if "start_date" in p_filtered.columns:
-                    p_filtered["start_date"] = pd.to_datetime(p_filtered["start_date"], errors="coerce")
-                    p_date_filtered = p_filtered[
-                        (p_filtered["start_date"].dt.month == selected_month_num) &
-                        (p_filtered["start_date"].dt.year == waktu_wib.year)
-                    ]
-                    if not p_date_filtered.empty:
-                        p_filtered = p_date_filtered
-                if selected_psm_period_opt != "Seluruh Penjualan 1 Bulan" and "period_name" in p_filtered.columns:
-                    p_filtered = p_filtered[p_filtered["period_name"] == selected_psm_period_opt]
-                if "period_id" in p_filtered.columns:
-                    valid_period_ids = p_filtered["period_id"].dropna().unique().tolist()
+            col_cl1, col_cl2, col_cl3 = st.columns(3)
 
-            if not sales_item_df.empty:
-                s_item = sales_item_df.copy()
-                if valid_period_ids and "period_id" in s_item.columns:
-                    s_item_filtered = s_item[s_item["period_id"].isin(valid_period_ids)]
-                    if not s_item_filtered.empty:
-                        s_item = s_item_filtered
-                elif selected_psm_period_opt != "Seluruh Penjualan 1 Bulan":
-                    s_item = s_item.iloc[0:0]
-                if "target_qty" in s_item.columns:
-                    target_psm_tot = pd.to_numeric(s_item["target_qty"], errors="coerce").sum()
-                if "actual_qty" in s_item.columns:
-                    actual_psm_tot = pd.to_numeric(s_item["actual_qty"], errors="coerce").sum()
+            with col_cl1:
+                st.markdown("##### 🔍 Data Duplikat")
+                _total_dup = 0
+                for _k, _idcol in [
+                    ("sales_item_df", "record_id"),
+                    ("sales_person_df", "record_id"),
+                    ("sales_pps_df", "record_id"),
+                ]:
+                    _df = st.session_state.get(_k, pd.DataFrame())
+                    if not _df.empty and _idcol in _df.columns:
+                        _total_dup += int(_df[_idcol].duplicated().sum())
 
-            ach_psm = (actual_psm_tot / target_psm_tot * 100) if target_psm_tot > 0 else 0
+                st.metric("Duplikat Ditemukan", _total_dup)
 
-            # --- HITUNG PPS ---
-            periods_pps_df = st.session_state.get("periods_pps_df", pd.DataFrame())
-            pps_filtered = periods_pps_df.copy()
-            if not pps_filtered.empty and "start_date" in pps_filtered.columns:
-                pps_filtered["start_date"] = pd.to_datetime(pps_filtered["start_date"], errors="coerce")
-                pps_filtered = pps_filtered[
-                    (pps_filtered["start_date"].dt.month == selected_month_num) &
-                    (pps_filtered["start_date"].dt.year == waktu_wib.year)
-                ]
+                if _total_dup > 0:
+                    if st.button("🗑️ Hapus Duplikat", use_container_width=True, key="cln_dup"):
+                        _removed = 0
+                        for _k, _idcol in [
+                            ("sales_item_df", "record_id"),
+                            ("sales_person_df", "record_id"),
+                            ("sales_pps_df", "record_id"),
+                        ]:
+                            _df = st.session_state.get(_k, pd.DataFrame())
+                            if not _df.empty and _idcol in _df.columns:
+                                _before = len(_df)
+                                _df = _df.drop_duplicates(subset=[_idcol], keep="first")
+                                _removed += _before - len(_df)
+                                st.session_state[_k] = _df
+                        log_activity("CLEANUP", f"Hapus {_removed} baris duplikat")
+                        st.success(f"✅ {_removed} baris duplikat dihapus!")
+                        time.sleep(1)
+                        st.rerun()
 
-            def get_pps_by_prefix(df, prefix, col_name):
-                if df.empty or "period_id" not in df.columns or col_name not in df.columns:
-                    return 0
-                sub_df = df[df["period_id"].astype(str).str.upper().str.startswith(prefix, na=False)]
-                if sub_df.empty:
-                    return 0
-                return pd.to_numeric(sub_df[col_name], errors="coerce").sum()
+            with col_cl2:
+                st.markdown("##### 📭 Data Kosong (Qty 0)")
+                _total_zero = 0
+                for _k in ["sales_item_df", "sales_person_df", "sales_pps_df"]:
+                    _df = st.session_state.get(_k, pd.DataFrame())
+                    if not _df.empty and "actual_qty" in _df.columns:
+                        _total_zero += int((pd.to_numeric(_df["actual_qty"], errors="coerce").fillna(0) == 0).sum())
 
-            redeem_col_name = "redeem_total" if "redeem_total" in pps_filtered.columns else "deem_total"
+                st.metric("Data Qty 0", _total_zero)
 
-            s_pwp = get_pps_by_prefix(pps_filtered, "PWP", "syarat_total")
-            r_pwp = get_pps_by_prefix(pps_filtered, "PWP", redeem_col_name)
-            tq_pwp = get_pps_by_prefix(pps_filtered, "PWP", "target_total")
-            q_pwp = get_pps_by_prefix(pps_filtered, "PWP", "actual_qty")
+                if _total_zero > 0:
+                    if st.button("🗑️ Hapus Data Kosong", use_container_width=True, key="cln_zero"):
+                        _removed_z = 0
+                        for _k in ["sales_item_df", "sales_person_df", "sales_pps_df"]:
+                            _df = st.session_state.get(_k, pd.DataFrame())
+                            if not _df.empty and "actual_qty" in _df.columns:
+                                _before = len(_df)
+                                _df = _df[pd.to_numeric(_df["actual_qty"], errors="coerce").fillna(0) > 0]
+                                _removed_z += _before - len(_df)
+                                st.session_state[_k] = _df
+                        log_activity("CLEANUP", f"Hapus {_removed_z} baris qty 0")
+                        st.success(f"✅ {_removed_z} baris qty 0 dihapus!")
+                        time.sleep(1)
+                        st.rerun()
 
-            ach_pwp_redeem = (r_pwp / s_pwp * 100) if s_pwp > 0 else 0
-            ach_pwp_qty = (q_pwp / tq_pwp * 100) if tq_pwp > 0 else 0
+            with col_cl3:
+                st.markdown("##### 🕰️ Data Lama (> 6 Bulan)")
 
-            s_sueger_val = get_pps_by_prefix(pps_filtered, "SGR", "syarat_total")
-            r_sueger_val = get_pps_by_prefix(pps_filtered, "SGR", redeem_col_name)
-            if r_sueger_val == 0:
-                r_sueger_val = get_pps_by_prefix(pps_filtered, "SGR", "actual_qty")
-            ach_sueger = (r_sueger_val / s_sueger_val * 100) if s_sueger_val > 0 else 0
+                _batas_lama = datetime.now() - timedelta(days=180)
+                _total_lama = 0
+                _sp_lama = st.session_state.get("sales_person_df", pd.DataFrame())
 
-            t_sg = get_pps_by_prefix(pps_filtered, "SGS", "target_total")
-            q_sg = get_pps_by_prefix(pps_filtered, "SGS", "actual_qty")
-            ach_sg = (q_sg / t_sg * 100) if t_sg > 0 else 0
+                if not _sp_lama.empty and "updated_at" in _sp_lama.columns:
+                    _sp_lama["_dt"] = pd.to_datetime(_sp_lama["updated_at"], errors="coerce")
+                    _dt_naive = _sp_lama["_dt"].dt.tz_localize(None) if hasattr(_sp_lama["_dt"].dt, "tz") else _sp_lama["_dt"]
+                    _total_lama = int((_dt_naive < pd.Timestamp(_batas_lama)).sum())
 
-            t_ceban = get_pps_by_prefix(pps_filtered, "CBN", "target_total")
-            q_ceban = get_pps_by_prefix(pps_filtered, "CBN", "actual_qty")
-            ach_ceban = (q_ceban / t_ceban * 100) if t_ceban > 0 else 0
+                st.metric("Data > 6 Bulan", _total_lama)
 
-            # --- TARGET HARIAN & PER SHIFT ---
-            _total_hari_report = 30
-            if valid_period_ids and not psm_periods_df.empty and "period_id" in psm_periods_df.columns:
-                _match_p = psm_periods_df[psm_periods_df["period_id"].isin(valid_period_ids)]
-                if not _match_p.empty and "start_date" in _match_p.columns and "end_date" in _match_p.columns:
-                    try:
-                        _all_start = pd.to_datetime(_match_p["start_date"], errors="coerce").min()
-                        _all_end = pd.to_datetime(_match_p["end_date"], errors="coerce").max()
-                        if pd.notna(_all_start) and pd.notna(_all_end):
-                            _total_hari_report = (_all_end - _all_start).days + 1
-                    except Exception:
-                        pass
-            if _total_hari_report <= 0:
-                _total_hari_report = 30
+                if _total_lama > 0:
+                    if st.button("🗑️ Hapus Data Lama", use_container_width=True, key="cln_lama"):
+                        _removed_l = 0
+                        _sp_l = st.session_state.get("sales_person_df", pd.DataFrame())
+                        if not _sp_l.empty and "updated_at" in _sp_l.columns:
+                            _before_l = len(_sp_l)
+                            _sp_l["_dt"] = pd.to_datetime(_sp_l["updated_at"], errors="coerce")
+                            _dt_naive2 = _sp_l["_dt"].dt.tz_localize(None) if hasattr(_sp_l["_dt"].dt, "tz") else _sp_l["_dt"]
+                            _sp_l = _sp_l[_dt_naive2 >= pd.Timestamp(_batas_lama)].drop(columns=["_dt"])
+                            _removed_l = _before_l - len(_sp_l)
+                            st.session_state["sales_person_df"] = _sp_l
+                        log_activity("CLEANUP", f"Hapus {_removed_l} baris > 6 bulan")
+                        st.success(f"✅ {_removed_l} baris lama dihapus!")
+                        time.sleep(1)
+                        st.rerun()
 
-            target_harian_psm = target_psm_tot / _total_hari_report if _total_hari_report > 0 else 0
-            target_harian_pwp = tq_pwp / _total_hari_report if _total_hari_report > 0 else 0
-            target_harian_sg = t_sg / _total_hari_report if _total_hari_report > 0 else 0
+        # =====================================================================
+        # 📜 TAB 5: ACTIVITY LOG / AUDIT TRAIL
+        # =====================================================================
+        elif _admin_tab == "📜 Activity Log":
+            st.markdown("### 📜 5. Activity Log / Audit Trail")
+            st.caption("Riwayat permanen semua aktivitas user — tersimpan di Google Sheets.")
 
-            # Auto zero kalau sudah tercapai
-            if actual_psm_tot >= target_psm_tot and target_psm_tot > 0:
-                target_harian_psm = 0
-            if q_pwp >= tq_pwp and tq_pwp > 0:
-                target_harian_pwp = 0
-            if q_sg >= t_sg and t_sg > 0:
-                target_harian_sg = 0
+            # CSS tab sub-navigasi log
+            st.markdown("""
+            <style>
+                div[data-testid="stRadio"].log-subtab > label:first-child { display: none !important; }
+                div[data-testid="stRadio"].log-subtab div[role="radiogroup"] {
+                    display: flex !important;
+                    flex-direction: row !important;
+                    flex-wrap: wrap !important;
+                    justify-content: center !important;
+                    gap: 6px !important;
+                    width: 100% !important;
+                    padding: 5px !important;
+                    background: #0f172a !important;
+                    border: 1.5px solid #b45309 !important;
+                    border-radius: 10px !important;
+                    margin-bottom: 12px !important;
+                }
+                div[data-testid="stRadio"].log-subtab div[role="radiogroup"] > label > div:first-child,
+                div[data-testid="stRadio"].log-subtab input[type="radio"] {
+                    display: none !important; width: 0 !important; height: 0 !important;
+                }
+                div[data-testid="stRadio"].log-subtab div[role="radiogroup"] > label {
+                    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+                    border: 1.5px solid #334155 !important;
+                    border-radius: 8px !important;
+                    padding: 7px 12px !important;
+                    margin: 0 !important;
+                    cursor: pointer !important;
+                    transition: all 0.2s ease !important;
+                }
+                div[data-testid="stRadio"].log-subtab div[role="radiogroup"] > label p,
+                div[data-testid="stRadio"].log-subtab div[role="radiogroup"] > label span {
+                    color: #94a3b8 !important;
+                    font-family: monospace !important;
+                    font-size: 10.5px !important;
+                    font-weight: 700 !important;
+                    white-space: nowrap !important;
+                    margin: 0 !important;
+                }
+                div[data-testid="stRadio"].log-subtab div[role="radiogroup"] > label:hover {
+                    border-color: #fbbf24 !important;
+                }
+                div[data-testid="stRadio"].log-subtab div[role="radiogroup"] > label:hover p,
+                div[data-testid="stRadio"].log-subtab div[role="radiogroup"] > label:hover span {
+                    color: #fbbf24 !important;
+                }
+                div[data-testid="stRadio"].log-subtab div[role="radiogroup"] > label:has(input:checked) {
+                    background: linear-gradient(135deg, #b45309 0%, #d97706 100%) !important;
+                    border-color: #fbbf24 !important;
+                    box-shadow: 0 0 12px rgba(251, 191, 36, 0.5) !important;
+                }
+                div[data-testid="stRadio"].log-subtab div[role="radiogroup"] > label:has(input:checked) p,
+                div[data-testid="stRadio"].log-subtab div[role="radiogroup"] > label:has(input:checked) span {
+                    color: #ffffff !important;
+                }
+            </style>
+            """, unsafe_allow_html=True)
 
-            # --- POIN (UNCAPPED) ---
-            poin_psm = 20 * (ach_psm / 100)
-            poin_pwp = 25 * (ach_pwp_qty / 100)
-            poin_sg = 30 * (ach_sg / 100)
-            total_poin_didapat = poin_psm + poin_pwp + poin_sg
+            _log_subtab = st.radio(
+                "Log Sub Tab",
+                ["🔍 Filter", "📊 Statistik", "📋 Tabel Log", "📥 Download", "🗑️ Maintenance"],
+                horizontal=True,
+                key="log_subtab_nav",
+                label_visibility="collapsed",
+            )
 
-            # =========================================================
-            # FORMAT TEKS WA
-            # =========================================================
-            wa_text = f"""📊 *REPORT SUMMARY PENJUALAN {selected_month_name.upper()} {waktu_wib.year}*
-            📅 _Generated: {_generate_str}_
-            ════════════════════════════════════════
+            # Baca data log SEKALI
+            try:
+                with st.spinner("⏳ Membaca activity log..."):
+                    _log_sheet_df = conn.read(worksheet="ACTIVITY_LOG", ttl=30)
+            except Exception as e_log:
+                st.warning(f"⚠️ Sheet ACTIVITY_LOG belum dibuat atau error: {e_log}")
+                _log_sheet_df = pd.DataFrame()
 
-            *1️⃣ PROGRAM PSM ({selected_psm_period_opt.upper()})*
-            📦 Target PSM    : {int(target_psm_tot)} Pcs
-            📊 Actual Qty    : {int(actual_psm_tot)} Pcs
-            🎯 Achievement   : *{ach_psm:.1f}%*
-            ⭐ Poin PSM      : *{poin_psm:.2f}* (Max 20)
-
-            📆 *Target Harian:* {int(target_harian_psm)} Pcs/hari
-            🕐 *Target per Shift:*
-            • Shift 1 (40%) : {int(target_harian_psm * 0.40)} Pcs
-            • Shift 2 (40%) : {int(target_harian_psm * 0.40)} Pcs
-            • Shift 3 (20%) : {int(target_harian_psm * 0.20)} Pcs
-
-            ════════════════════════════════════════
-
-            *2️⃣ PROGRAM PWP*
-            📋 Syarat Redeem : {int(s_pwp)}
-            🎁 Total Redeem  : {int(r_pwp)}
-            📦 Target Qty    : {int(tq_pwp)} Pcs
-            📊 Actual Qty    : {int(q_pwp)} Pcs
-            🎯 Ach. Redeem   : *{ach_pwp_redeem:.1f}%*
-            🎯 Ach. Qty      : *{ach_pwp_qty:.1f}%*
-            ⭐ Poin PWP      : *{poin_pwp:.2f}* (Max 25)
-
-            📆 *Target Harian:* {int(target_harian_pwp)} Pcs/hari
-            🕐 *Target per Shift:*
-            • Shift 1 (40%) : {int(target_harian_pwp * 0.40)} Pcs
-            • Shift 2 (40%) : {int(target_harian_pwp * 0.40)} Pcs
-            • Shift 3 (20%) : {int(target_harian_pwp * 0.20)} Pcs
-
-            ════════════════════════════════════════
-
-            *3️⃣ PROGRAM SUEGER*
-            📋 Syarat Redeem : {int(s_sueger_val)}
-            🎁 Qty Redeem    : {int(r_sueger_val)}
-            🎯 Achievement   : *{ach_sueger:.1f}%*
-
-            ════════════════════════════════════════
-
-            *4️⃣ PROGRAM SERBA GRATIS (SG)*
-            📦 Target Qty    : {int(t_sg)} Pcs
-            📊 Actual Qty    : {int(q_sg)} Pcs
-            🎯 Achievement   : *{ach_sg:.1f}%*
-            ⭐ Poin SG       : *{poin_sg:.2f}* (Max 30)
-
-            📆 *Target Harian:* {int(target_harian_sg)} Pcs/hari
-            🕐 *Target per Shift:*
-            • Shift 1 (40%) : {int(target_harian_sg * 0.40)} Pcs
-            • Shift 2 (40%) : {int(target_harian_sg * 0.40)} Pcs
-            • Shift 3 (20%) : {int(target_harian_sg * 0.20)} Pcs
-
-            ════════════════════════════════════════
-
-            *5️⃣ CEMILAN CEBAN*
-            📦 Target Qty    : {int(t_ceban)} Pcs
-            📊 Actual Qty    : {int(q_ceban)} Pcs
-            🎯 Achievement   : *{ach_ceban:.1f}%*
-
-            ════════════════════════════════════════
-
-            🏆 *TOTAL POIN DIDAPAT: {total_poin_didapat:.2f}*
-
-            ⚠️ Catatan: Target otomatis 0 apabila sudah tercapai.
-
-            ════════════════════════════════════════
-            _Generated automatically via LigaPSM System_
-            """
-
-            # =========================================================
-            # OUTPUT WA
-            # =========================================================
-            if btn_gen_wa:
-                st.markdown("##### 📝 Hasil Text Report (Siap Copas ke WA):")
-                st.text_area(
-                    "Salin teks di bawah ini:",
-                    wa_text,
-                    height=500,
-                    key="wa_summary_text_area",
+            _log_ready = False
+            if not _log_sheet_df.empty:
+                _log_sheet_df.columns = _log_sheet_df.columns.astype(str).str.strip().str.lower()
+                for _c in ["timestamp", "username", "role", "action", "detail", "session_id"]:
+                    if _c not in _log_sheet_df.columns:
+                        _log_sheet_df[_c] = "-"
+                _log_sheet_df["_dt"] = pd.to_datetime(
+                    _log_sheet_df["timestamp"], format="%d/%m/%Y %H:%M:%S", errors="coerce"
                 )
-                st.caption("💡 Tap & tahan di dalam text area untuk pilih semua, lalu copy")
-                st.info(f"✅ Data segar — Generate: {_generate_str}")
+                _log_valid = _log_sheet_df.dropna(subset=["_dt"]).copy()
+                _log_ready = True
 
-            # =========================================================
-            # OUTPUT PDF
-            # =========================================================
-            if btn_gen_pdf:
-                _pdf_report_data = [
-                    {
-                        "title": f"1. PROGRAM PSM - {selected_psm_period_opt}",
-                        "lines": [
-                            f"Target PSM     : {int(target_psm_tot)} Pcs",
-                            f"Actual Qty     : {int(actual_psm_tot)} Pcs",
-                            f"Achievement    : {ach_psm:.1f}%",
-                            f"Poin PSM       : {poin_psm:.2f} (Max 20)",
-                            "",
-                            f"Target Harian  : {int(target_harian_psm)} Pcs/hari",
-                            f"  - Shift 1 (40%) : {int(target_harian_psm * 0.40)} Pcs",
-                            f"  - Shift 2 (40%) : {int(target_harian_psm * 0.40)} Pcs",
-                            f"  - Shift 3 (20%) : {int(target_harian_psm * 0.20)} Pcs",
-                        ],
-                    },
-                    {
-                        "title": "2. PROGRAM PWP (Purchase with Purchase)",
-                        "lines": [
-                            f"Syarat Redeem  : {int(s_pwp)}",
-                            f"Total Redeem   : {int(r_pwp)}",
-                            f"Target Qty     : {int(tq_pwp)} Pcs",
-                            f"Actual Qty     : {int(q_pwp)} Pcs",
-                            f"Ach. Redeem    : {ach_pwp_redeem:.1f}%",
-                            f"Ach. Qty       : {ach_pwp_qty:.1f}%",
-                            f"Poin PWP       : {poin_pwp:.2f} (Max 25)",
-                            "",
-                            f"Target Harian  : {int(target_harian_pwp)} Pcs/hari",
-                            f"  - Shift 1 (40%) : {int(target_harian_pwp * 0.40)} Pcs",
-                            f"  - Shift 2 (40%) : {int(target_harian_pwp * 0.40)} Pcs",
-                            f"  - Shift 3 (20%) : {int(target_harian_pwp * 0.20)} Pcs",
-                        ],
-                    },
-                    {
-                        "title": "3. PROGRAM SUEGER",
-                        "lines": [
-                            f"Syarat Redeem  : {int(s_sueger_val)}",
-                            f"Qty Redeem     : {int(r_sueger_val)}",
-                            f"Achievement    : {ach_sueger:.1f}%",
-                        ],
-                    },
-                    {
-                        "title": "4. PROGRAM SERBA GRATIS (SG)",
-                        "lines": [
-                            f"Target Qty     : {int(t_sg)} Pcs",
-                            f"Actual Qty     : {int(q_sg)} Pcs",
-                            f"Achievement    : {ach_sg:.1f}%",
-                            f"Poin SG        : {poin_sg:.2f} (Max 30)",
-                            "",
-                            f"Target Harian  : {int(target_harian_sg)} Pcs/hari",
-                            f"  - Shift 1 (40%) : {int(target_harian_sg * 0.40)} Pcs",
-                            f"  - Shift 2 (40%) : {int(target_harian_sg * 0.40)} Pcs",
-                            f"  - Shift 3 (20%) : {int(target_harian_sg * 0.20)} Pcs",
-                        ],
-                    },
-                    {
-                        "title": "5. CEMILAN CEBAN",
-                        "lines": [
-                            f"Target Qty     : {int(t_ceban)} Pcs",
-                            f"Actual Qty     : {int(q_ceban)} Pcs",
-                            f"Achievement    : {ach_ceban:.1f}%",
-                        ],
-                    },
-                    {
-                        "title": "TOTAL POIN",
-                        "lines": [
-                            f"TOTAL POIN DIDAPAT : {total_poin_didapat:.2f}",
-                            "",
-                            "Catatan: Target otomatis 0 apabila sudah tercapai.",
-                        ],
-                    },
+            if not _log_ready:
+                st.info("📭 Belum ada aktivitas tercatat. Mulai dari login & gunakan aplikasi.")
+            else:
+                # Ambil filter dari session_state
+                _log_username_filter = st.session_state.get("log_filter_user", "Semua User")
+                _log_action_filter = st.session_state.get("log_filter_action", "Semua Action")
+                _log_range_filter = st.session_state.get("log_range_filter", "Semua (Tanpa Batas)")
+                _log_limit = st.session_state.get("log_filter_limit", 100)
+                _custom_start = st.session_state.get("log_custom_start", None)
+                _custom_end = st.session_state.get("log_custom_end", None)
+
+                _today = pd.Timestamp(waktu_wib.date())
+
+                if _log_range_filter == "Hari Ini":
+                    _start_dt = _today
+                    _end_dt = _today + pd.Timedelta(days=1)
+                elif _log_range_filter == "7 Hari Terakhir":
+                    _start_dt = _today - pd.Timedelta(days=6)
+                    _end_dt = _today + pd.Timedelta(days=1)
+                elif _log_range_filter == "30 Hari Terakhir":
+                    _start_dt = _today - pd.Timedelta(days=29)
+                    _end_dt = _today + pd.Timedelta(days=1)
+                elif _log_range_filter == "Bulan Ini":
+                    _start_dt = pd.Timestamp(waktu_wib.date().replace(day=1))
+                    _end_dt = _today + pd.Timedelta(days=1)
+                elif _log_range_filter == "Custom Range" and _custom_start and _custom_end:
+                    _start_dt = pd.Timestamp(_custom_start)
+                    _end_dt = pd.Timestamp(_custom_end) + pd.Timedelta(days=1)
+                else:
+                    _start_dt = _log_valid["_dt"].min() if not _log_valid.empty else _today
+                    _end_dt = (_log_valid["_dt"].max() + pd.Timedelta(days=1)) if not _log_valid.empty else (_today + pd.Timedelta(days=1))
+
+                _log_filtered = _log_valid[
+                    (_log_valid["_dt"] >= _start_dt) & (_log_valid["_dt"] < _end_dt)
+                ].copy()
+
+                if _log_username_filter != "Semua User":
+                    _log_filtered = _log_filtered[_log_filtered["username"].astype(str) == _log_username_filter]
+                if _log_action_filter != "Semua Action":
+                    _log_filtered = _log_filtered[_log_filtered["action"].astype(str).str.upper() == _log_action_filter.upper()]
+
+                _log_display_sorted = _log_filtered.sort_values("_dt", ascending=False)
+                _log_export_sorted = _log_filtered.sort_values("_dt", ascending=True)
+
+                if _log_limit != "Semua":
+                    _log_display_final = _log_display_sorted.head(int(_log_limit))
+                else:
+                    _log_display_final = _log_display_sorted
+
+                # =====================
+                # SUB-TAB 1: FILTER
+                # =====================
+                if _log_subtab == "🔍 Filter":
+                    st.markdown("##### 🔍 Pengaturan Filter")
+
+                    col_lf1, col_lf2 = st.columns(2)
+                    with col_lf1:
+                        st.selectbox(
+                            "Filter User",
+                            ["Semua User", "admin", "ARIS APRILIANTO", "TIKA", "RIZKI GUNAWAN",
+                             "ADELIA PRATIWI", "ILHAM PRIANDIKA", "REZA PURNAMA AGUSTIN",
+                             "SUBEKTI PANDU YULIANTO", "KUSDEWI TIA NINGRUM", "AHMAD ZAKI SYABANI ZEN"],
+                            key="log_filter_user",
+                        )
+                    with col_lf2:
+                        st.selectbox(
+                            "Filter Action",
+                            ["Semua Action", "LOGIN", "LOGOUT", "LOGIN_FAILED", "OPEN_TAB",
+                             "SAVE_SALES", "SAVE_PPS", "SAVE_MASTER", "EDIT_DATA", "DELETE_DATA",
+                             "REPORT", "BACKUP", "CLEANUP", "REFRESH", "CACHE", "CHECK"],
+                            key="log_filter_action",
+                        )
+
+                    st.markdown("##### 📅 Rentang Waktu")
+                    st.radio(
+                        "Rentang Waktu",
+                        ["Hari Ini", "7 Hari Terakhir", "30 Hari Terakhir",
+                         "Bulan Ini", "Custom Range", "Semua (Tanpa Batas)"],
+                        horizontal=True,
+                        key="log_range_filter",
+                        index=5,
+                        label_visibility="collapsed",
+                    )
+
+                    if st.session_state.get("log_range_filter") == "Custom Range":
+                        col_cr1, col_cr2 = st.columns(2)
+                        with col_cr1:
+                            st.date_input("📅 Dari Tanggal",
+                                          value=waktu_wib.date() - timedelta(days=7),
+                                          key="log_custom_start")
+                        with col_cr2:
+                            st.date_input("📅 Sampai Tanggal",
+                                          value=waktu_wib.date(),
+                                          key="log_custom_end")
+                        st.session_state["log_filter_limit"] = "Semua"
+                    else:
+                        st.selectbox("Tampilkan (jumlah baris)",
+                                     [50, 100, 200, 500, 1000, "Semua"],
+                                     index=1,
+                                     key="log_filter_limit")
+
+                    st.success("✅ Filter di-set. Pindah ke tab **📊 Statistik** / **📋 Tabel Log** untuk lihat hasilnya.")
+
+                # =====================
+                # SUB-TAB 2: STATISTIK
+                # =====================
+                elif _log_subtab == "📊 Statistik":
+                    st.markdown("##### 📊 Statistik Log Terfilter")
+
+                    col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+                    with col_m1:
+                        st.metric("📊 Log Terfilter", len(_log_filtered))
+                    with col_m2:
+                        st.metric("👥 User Unik", _log_filtered["username"].nunique())
+                    with col_m3:
+                        _login_count = int((_log_filtered["action"].astype(str).str.upper() == "LOGIN").sum())
+                        st.metric("🔓 Total Login", _login_count)
+                    with col_m4:
+                        _failed_count = int((_log_filtered["action"].astype(str).str.upper() == "LOGIN_FAILED").sum())
+                        st.metric("❌ Login Gagal", _failed_count)
+
+                    st.markdown("---")
+                    st.markdown("##### 🎯 Filter Aktif")
+                    col_fi1, col_fi2, col_fi3 = st.columns(3)
+                    with col_fi1:
+                        st.info(f"👤 User: **{_log_username_filter}**")
+                    with col_fi2:
+                        st.info(f"🎯 Action: **{_log_action_filter}**")
+                    with col_fi3:
+                        st.info(f"📅 Rentang: **{_log_range_filter}**")
+
+                    if not _log_filtered.empty:
+                        st.markdown("---")
+                        st.markdown("##### 📈 Breakdown per Action")
+                        _action_counts = _log_filtered["action"].astype(str).value_counts().reset_index()
+                        _action_counts.columns = ["Action", "Jumlah"]
+                        st.dataframe(_action_counts, use_container_width=True, hide_index=True)
+
+                # =====================
+                # SUB-TAB 3: TABEL LOG
+                # =====================
+                elif _log_subtab == "📋 Tabel Log":
+                    st.markdown(f"##### 📋 Menampilkan {len(_log_display_final)} dari {len(_log_filtered)} log")
+
+                    _log_display = _log_display_final.drop(columns=["_dt"]).rename(columns={
+                        "timestamp": "⏰ Waktu",
+                        "username": "👤 User",
+                        "role": "🎭 Role",
+                        "action": "🎯 Action",
+                        "detail": "📝 Detail",
+                        "session_id": "🔑 Session",
+                    })
+                    st.dataframe(_log_display, use_container_width=True, hide_index=True)
+
+                # =====================
+                # SUB-TAB 4: DOWNLOAD
+                # =====================
+                elif _log_subtab == "📥 Download":
+                    st.markdown("##### 📥 Download Log ke Excel")
+
+                    _file_suffix = {
+                        "Hari Ini": f"Harian_{waktu_wib.strftime('%Y%m%d')}",
+                        "7 Hari Terakhir": f"Mingguan_{waktu_wib.strftime('%Y%m%d')}",
+                        "30 Hari Terakhir": f"30Hari_{waktu_wib.strftime('%Y%m%d')}",
+                        "Bulan Ini": f"Bulanan_{waktu_wib.strftime('%Y%m')}",
+                        "Custom Range": f"{_custom_start.strftime('%Y%m%d')}_{_custom_end.strftime('%Y%m%d')}" if _custom_start and _custom_end else "Custom",
+                        "Semua (Tanpa Batas)": "AllTime",
+                    }.get(_log_range_filter, "Custom")
+
+                    col_dl1, col_dl2, col_dl3 = st.columns(3)
+
+                    with col_dl1:
+                        _log_export_filtered = _log_export_sorted.drop(columns=["_dt"])
+                        _buffer_filtered = io.BytesIO()
+                        with pd.ExcelWriter(_buffer_filtered, engine="xlsxwriter") as _w:
+                            _log_export_filtered.to_excel(_w, sheet_name="ACTIVITY_LOG", index=False)
+                        st.download_button(
+                            label="📥 Filter Aktif",
+                            data=_buffer_filtered.getvalue(),
+                            file_name=f"ActivityLog_{_file_suffix}_{datetime.now().strftime('%H%M%S')}.xlsx",
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            use_container_width=True,
+                            key="dl_activity_log_filtered",
+                            help=f"Download {len(_log_filtered)} baris sesuai filter aktif",
+                        )
+
+                    with col_dl2:
+                        _log_today = _log_valid[_log_valid["_dt"] >= _today].drop(columns=["_dt"])
+                        _buffer_today = io.BytesIO()
+                        with pd.ExcelWriter(_buffer_today, engine="xlsxwriter") as _w:
+                            _log_today.to_excel(_w, sheet_name="ACTIVITY_LOG", index=False)
+                        st.download_button(
+                            label=f"📥 Hari Ini ({len(_log_today)})",
+                            data=_buffer_today.getvalue(),
+                            file_name=f"ActivityLog_Harian_{waktu_wib.strftime('%Y%m%d')}.xlsx",
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            use_container_width=True,
+                            key="dl_activity_log_today",
+                            help="Download log hari ini",
+                        )
+
+                    with col_dl3:
+                        _log_all = _log_valid.drop(columns=["_dt"])
+                        _buffer_all = io.BytesIO()
+                        with pd.ExcelWriter(_buffer_all, engine="xlsxwriter") as _w:
+                            _log_all.to_excel(_w, sheet_name="ACTIVITY_LOG", index=False)
+                        st.download_button(
+                            label=f"📥 Semua ({len(_log_all)})",
+                            data=_buffer_all.getvalue(),
+                            file_name=f"ActivityLog_AllTime_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            use_container_width=True,
+                            key="dl_activity_log_all",
+                            help="Download semua log tanpa batas waktu",
+                        )
+
+                # =====================
+                # SUB-TAB 5: MAINTENANCE
+                # =====================
+                elif _log_subtab == "🗑️ Maintenance":
+                    st.markdown("##### 🗑️ Maintenance Log")
+                    st.caption("⚠️ Zona bahaya — aksi di sini tidak bisa di-undo. Backup dulu!")
+
+                    col_mt1, col_mt2 = st.columns(2)
+
+                    with col_mt1:
+                        st.markdown("###### 🔄 Refresh Data")
+                        st.caption("Tarik ulang data log dari Google Sheets (refresh cache).")
+                        if st.button("🔄 Refresh Log", use_container_width=True, key="refresh_log"):
+                            st.cache_data.clear()
+                            st.rerun()
+
+                    with col_mt2:
+                        st.markdown("###### 🗑️ Hapus Log Lama")
+                        st.caption("Hapus log lama untuk hemat kuota Google Sheets.")
+
+                        _hapus_opsi = st.radio(
+                            "Hapus log:",
+                            ["Log > 90 hari", "Log > 30 hari", "Log > 7 hari", "SEMUA log"],
+                            key="del_log_range",
+                        )
+
+                        if st.button("🗑️ Hapus Sekarang", key="btn_del_log", use_container_width=True):
+                            try:
+                                if _hapus_opsi == "SEMUA log":
+                                    _log_empty = pd.DataFrame(columns=["timestamp", "username", "role", "action", "detail", "session_id"])
+                                    conn.update(worksheet="ACTIVITY_LOG", data=_log_empty)
+                                    st.success("✅ Semua log dihapus.")
+                                else:
+                                    _days_map = {"Log > 90 hari": 90, "Log > 30 hari": 30, "Log > 7 hari": 7}
+                                    _days = _days_map[_hapus_opsi]
+                                    _batas = pd.Timestamp(datetime.now() - timedelta(days=_days))
+                                    _log_kept = _log_sheet_df[_log_sheet_df["_dt"] >= _batas].drop(columns=["_dt"], errors="ignore")
+                                    conn.update(worksheet="ACTIVITY_LOG", data=_log_kept)
+                                    st.success(f"✅ Log > {_days} hari dihapus. Sisa: {len(_log_kept)} log.")
+                                time.sleep(1)
+                                st.rerun()
+                            except Exception as e_del:
+                                st.error(f"❌ Gagal hapus log: {e_del}")
+
+        # =====================================================================
+        # 📲 TAB 6: GENERATOR REPORT WA/PDF/PPT
+        # =====================================================================
+        elif _admin_tab == "📲 Report":
+            st.markdown("### 📲 6. Generator Report WhatsApp, PDF & PPT")
+            st.caption("Pilih filter bulan & periode untuk generate report untuk brifing.")
+
+            col_rep1, col_rep2 = st.columns(2)
+            with col_rep1:
+                bulan_list = [
+                    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
                 ]
+                curr_month_idx = waktu_wib.month - 1
+                selected_month_name = st.selectbox(
+                    "📅 Pilih Bulan Report", bulan_list, index=curr_month_idx, key="rep_month_sel"
+                )
+                selected_month_num = bulan_list.index(selected_month_name) + 1
+            psm_periods_df = st.session_state.get("periods_df", pd.DataFrame())
+            psm_opt = ["Seluruh Penjualan 1 Bulan"]
+            if not psm_periods_df.empty and "period_name" in psm_periods_df.columns:
+                psm_opt.extend(psm_periods_df["period_name"].dropna().unique().tolist())
 
-                _pdf_title = f"Report Summary Penjualan {selected_month_name} {waktu_wib.year}"
-                _pdf_bytes = generate_pdf_report(_pdf_title, _pdf_report_data, _generate_str)
+            with col_rep2:
+                selected_psm_period_opt = st.selectbox("🎯 Filter Periode PSM", psm_opt, key="rep_period_sel")
 
-                if _pdf_bytes:
-                    st.success(f"✅ PDF berhasil dibuat — {_generate_str}")
-                    st.download_button(
-                        label="📥 Download Report PDF",
-                        data=_pdf_bytes,
-                        file_name=f"Report_PSM_{selected_month_name}_{_generate_time.strftime('%Y%m%d_%H%M%S')}.pdf",
-                        mime="application/pdf",
-                        use_container_width=True,
-                        key="dl_pdf_report",
-                    )
-                else:
-                    st.error("❌ Gagal generate PDF. Cek apakah `fpdf2` sudah di-install.")
+            col_btn_wa, col_btn_pdf, col_btn_ppt = st.columns(3)
+
+            with col_btn_wa:
+                btn_gen_wa = st.button(
+                    "🚀 Generate Report WA",
+                    use_container_width=True,
+                    type="primary",
+                    key="btn_gen_wa_summary",
+                )
+            with col_btn_pdf:
+                btn_gen_pdf = st.button(
+                    "📄 Generate Report PDF",
+                    use_container_width=True,
+                    key="btn_gen_pdf_summary",
+                )
+            with col_btn_ppt:
+                btn_gen_ppt = st.button(
+                    "🎨 Generate Report PPT",
+                    use_container_width=True,
+                    key="btn_gen_ppt_summary",
+                )
 
             # =========================================================
-            # OUTPUT PPt (TERPISAH — HANYA JALAN KALAU TOMBOL PPT DIKLIK)
+            # LOGIKA GENERATE
             # =========================================================
-            if btn_gen_ppt:
-                # Data untuk PPT
-                top3_kasir = []
-                _sp_leaderboard = st.session_state.get("sales_person_df", pd.DataFrame()).copy()
-                if not _sp_leaderboard.empty and "person_name" in _sp_leaderboard.columns and "actual_qty" in _sp_leaderboard.columns:
-                    if valid_period_ids and "period_id" in _sp_leaderboard.columns:
-                        _sp_leaderboard = _sp_leaderboard[_sp_leaderboard["period_id"].isin(valid_period_ids)]
-                    _sp_leaderboard["actual_qty"] = pd.to_numeric(_sp_leaderboard["actual_qty"], errors="coerce").fillna(0)
-                    _grp_lb = _sp_leaderboard.groupby("person_name")["actual_qty"].sum().reset_index()
-                    _grp_lb = _grp_lb.sort_values("actual_qty", ascending=False).head(3)
-                    for _, _row in _grp_lb.iterrows():
-                        top3_kasir.append((str(_row["person_name"]), int(_row["actual_qty"]), "Pcs"))
+            if btn_gen_wa or btn_gen_pdf or btn_gen_ppt:
+                _report_type = "WA" if btn_gen_wa else ("PDF" if btn_gen_pdf else "PPT")
+                log_activity("REPORT", f"Generate report ({_report_type})")
 
-                psm_data = {
-                    "target": int(target_psm_tot),
-                    "actual": int(actual_psm_tot),
-                    "ach": ach_psm,
-                    "poin": poin_psm,
-                    "harian": int(target_harian_psm),
-                    "shift1": int(target_harian_psm * 0.40),
-                    "shift2": int(target_harian_psm * 0.40),
-                    "shift3": int(target_harian_psm * 0.20),
-                }
-                pwp_data = {
-                    "syarat": int(s_pwp),
-                    "redeem": int(r_pwp),
-                    "target": int(tq_pwp),
-                    "actual": int(q_pwp),
-                    "ach_redeem": ach_pwp_redeem,
-                    "ach_qty": ach_pwp_qty,
-                    "poin": poin_pwp,
-                    "harian": int(target_harian_pwp),
-                    "shift1": int(target_harian_pwp * 0.40),
-                    "shift2": int(target_harian_pwp * 0.40),
-                    "shift3": int(target_harian_pwp * 0.20),
-                }
-                sueger_data = {
-                    "syarat": int(s_sueger_val),
-                    "redeem": int(r_sueger_val),
-                    "ach": ach_sueger,
-                }
-                sg_data = {
-                    "target": int(t_sg),
-                    "actual": int(q_sg),
-                    "ach": ach_sg,
-                    "poin": poin_sg,
-                    "harian": int(target_harian_sg),
-                    "shift1": int(target_harian_sg * 0.40),
-                    "shift2": int(target_harian_sg * 0.40),
-                    "shift3": int(target_harian_sg * 0.20),
-                }
-                ceban_data = {
-                    "target": int(t_ceban),
-                    "actual": int(q_ceban),
-                    "ach": ach_ceban,
-                }
+                with st.spinner("🧙‍♂️ Membersihkan cache & menarik data segar..."):
+                    st.cache_data.clear()
+                    try:
+                        (p_df_fresh, p_pps_df_fresh, p_store_df_fresh,
+                         i_df_fresh, pers_df_fresh, si_df_fresh,
+                         sp_df_fresh, s_pps_df_fresh, s_store_df_fresh) = load_database()
+                        st.session_state.periods_df = p_df_fresh
+                        st.session_state.periods_pps_df = p_pps_df_fresh
+                        st.session_state.items_df = i_df_fresh
+                        st.session_state.person_df = pers_df_fresh
+                        st.session_state.sales_item_df = si_df_fresh
+                        st.session_state.sales_person_df = sp_df_fresh
+                        st.session_state.sales_pps_df = s_pps_df_fresh
+                        st.toast("✅ Data segar ditarik!", icon="⚡")
+                    except Exception as e_fresh:
+                        st.warning(f"⚠️ Gagal refresh data: {e_fresh}")
 
-                with st.spinner("🎨 Meracik slide PPT..."):
-                    _ppt_bytes = generate_ppt_report(
-                        title=f"Report Summary Penjualan {selected_month_name} {waktu_wib.year}",
-                        month_year_str=f"{selected_month_name} {waktu_wib.year}",
-                        generated_time_str=_generate_str,
-                        psm_data=psm_data,
-                        pwp_data=pwp_data,
-                        sueger_data=sueger_data,
-                        sg_data=sg_data,
-                        ceban_data=ceban_data,
-                        total_poin=total_poin_didapat,
-                        top3_kasir=top3_kasir,
+                _generate_time = datetime.now(ZoneInfo("Asia/Jakarta"))
+                _generate_str = _generate_time.strftime("%d/%m/%Y %H:%M:%S WIB")
+
+                # --- HITUNG PSM ---
+                target_psm_tot = 0
+                actual_psm_tot = 0
+                sales_item_df = st.session_state.get("sales_item_df", pd.DataFrame())
+                valid_period_ids = []
+
+                if not psm_periods_df.empty:
+                    p_filtered = psm_periods_df.copy()
+                    if "start_date" in p_filtered.columns:
+                        p_filtered["start_date"] = pd.to_datetime(p_filtered["start_date"], errors="coerce")
+                        p_date_filtered = p_filtered[
+                            (p_filtered["start_date"].dt.month == selected_month_num) &
+                            (p_filtered["start_date"].dt.year == waktu_wib.year)
+                        ]
+                        if not p_date_filtered.empty:
+                            p_filtered = p_date_filtered
+                    if selected_psm_period_opt != "Seluruh Penjualan 1 Bulan" and "period_name" in p_filtered.columns:
+                        p_filtered = p_filtered[p_filtered["period_name"] == selected_psm_period_opt]
+                    if "period_id" in p_filtered.columns:
+                        valid_period_ids = p_filtered["period_id"].dropna().unique().tolist()
+
+                if not sales_item_df.empty:
+                    s_item = sales_item_df.copy()
+                    if valid_period_ids and "period_id" in s_item.columns:
+                        s_item_filtered = s_item[s_item["period_id"].isin(valid_period_ids)]
+                        if not s_item_filtered.empty:
+                            s_item = s_item_filtered
+                    elif selected_psm_period_opt != "Seluruh Penjualan 1 Bulan":
+                        s_item = s_item.iloc[0:0]
+                    if "target_qty" in s_item.columns:
+                        target_psm_tot = pd.to_numeric(s_item["target_qty"], errors="coerce").sum()
+                    if "actual_qty" in s_item.columns:
+                        actual_psm_tot = pd.to_numeric(s_item["actual_qty"], errors="coerce").sum()
+
+                ach_psm = (actual_psm_tot / target_psm_tot * 100) if target_psm_tot > 0 else 0
+
+                # --- HITUNG PPS ---
+                periods_pps_df = st.session_state.get("periods_pps_df", pd.DataFrame())
+                pps_filtered = periods_pps_df.copy()
+                if not pps_filtered.empty and "start_date" in pps_filtered.columns:
+                    pps_filtered["start_date"] = pd.to_datetime(pps_filtered["start_date"], errors="coerce")
+                    pps_filtered = pps_filtered[
+                        (pps_filtered["start_date"].dt.month == selected_month_num) &
+                        (pps_filtered["start_date"].dt.year == waktu_wib.year)
+                    ]
+
+                def get_pps_by_prefix(df, prefix, col_name):
+                    if df.empty or "period_id" not in df.columns or col_name not in df.columns:
+                        return 0
+                    sub_df = df[df["period_id"].astype(str).str.upper().str.startswith(prefix, na=False)]
+                    if sub_df.empty:
+                        return 0
+                    return pd.to_numeric(sub_df[col_name], errors="coerce").sum()
+
+                redeem_col_name = "redeem_total" if "redeem_total" in pps_filtered.columns else "deem_total"
+
+                s_pwp = get_pps_by_prefix(pps_filtered, "PWP", "syarat_total")
+                r_pwp = get_pps_by_prefix(pps_filtered, "PWP", redeem_col_name)
+                tq_pwp = get_pps_by_prefix(pps_filtered, "PWP", "target_total")
+                q_pwp = get_pps_by_prefix(pps_filtered, "PWP", "actual_qty")
+
+                ach_pwp_redeem = (r_pwp / s_pwp * 100) if s_pwp > 0 else 0
+                ach_pwp_qty = (q_pwp / tq_pwp * 100) if tq_pwp > 0 else 0
+
+                s_sueger_val = get_pps_by_prefix(pps_filtered, "SGR", "syarat_total")
+                r_sueger_val = get_pps_by_prefix(pps_filtered, "SGR", redeem_col_name)
+                if r_sueger_val == 0:
+                    r_sueger_val = get_pps_by_prefix(pps_filtered, "SGR", "actual_qty")
+                ach_sueger = (r_sueger_val / s_sueger_val * 100) if s_sueger_val > 0 else 0
+
+                t_sg = get_pps_by_prefix(pps_filtered, "SGS", "target_total")
+                q_sg = get_pps_by_prefix(pps_filtered, "SGS", "actual_qty")
+                ach_sg = (q_sg / t_sg * 100) if t_sg > 0 else 0
+
+                t_ceban = get_pps_by_prefix(pps_filtered, "CBN", "target_total")
+                q_ceban = get_pps_by_prefix(pps_filtered, "CBN", "actual_qty")
+                ach_ceban = (q_ceban / t_ceban * 100) if t_ceban > 0 else 0
+
+                # --- TARGET HARIAN & PER SHIFT ---
+                _total_hari_report = 30
+                if valid_period_ids and not psm_periods_df.empty and "period_id" in psm_periods_df.columns:
+                    _match_p = psm_periods_df[psm_periods_df["period_id"].isin(valid_period_ids)]
+                    if not _match_p.empty and "start_date" in _match_p.columns and "end_date" in _match_p.columns:
+                        try:
+                            _all_start = pd.to_datetime(_match_p["start_date"], errors="coerce").min()
+                            _all_end = pd.to_datetime(_match_p["end_date"], errors="coerce").max()
+                            if pd.notna(_all_start) and pd.notna(_all_end):
+                                _total_hari_report = (_all_end - _all_start).days + 1
+                        except Exception:
+                            pass
+                if _total_hari_report <= 0:
+                    _total_hari_report = 30
+
+                target_harian_psm = target_psm_tot / _total_hari_report if _total_hari_report > 0 else 0
+                target_harian_pwp = tq_pwp / _total_hari_report if _total_hari_report > 0 else 0
+                target_harian_sg = t_sg / _total_hari_report if _total_hari_report > 0 else 0
+
+                if actual_psm_tot >= target_psm_tot and target_psm_tot > 0:
+                    target_harian_psm = 0
+                if q_pwp >= tq_pwp and tq_pwp > 0:
+                    target_harian_pwp = 0
+                if q_sg >= t_sg and t_sg > 0:
+                    target_harian_sg = 0
+
+                poin_psm = 20 * (ach_psm / 100)
+                poin_pwp = 25 * (ach_pwp_qty / 100)
+                poin_sg = 30 * (ach_sg / 100)
+                total_poin_didapat = poin_psm + poin_pwp + poin_sg
+
+                # Format WA
+                wa_text = f"""📊 *REPORT SUMMARY PENJUALAN {selected_month_name.upper()} {waktu_wib.year}*
+                📅 _Generated: {_generate_str}_
+                ════════════════════════════════════════
+
+                *1️⃣ PROGRAM PSM ({selected_psm_period_opt.upper()})*
+                📦 Target PSM    : {int(target_psm_tot)} Pcs
+                📊 Actual Qty    : {int(actual_psm_tot)} Pcs
+                🎯 Achievement   : *{ach_psm:.1f}%*
+                ⭐ Poin PSM      : *{poin_psm:.2f}* (Max 20)
+
+                📆 *Target Harian:* {int(target_harian_psm)} Pcs/hari
+                🕐 *Target per Shift:*
+                • Shift 1 (40%) : {int(target_harian_psm * 0.40)} Pcs
+                • Shift 2 (40%) : {int(target_harian_psm * 0.40)} Pcs
+                • Shift 3 (20%) : {int(target_harian_psm * 0.20)} Pcs
+
+                ════════════════════════════════════════
+
+                *2️⃣ PROGRAM PWP*
+                📋 Syarat Redeem : {int(s_pwp)}
+                🎁 Total Redeem  : {int(r_pwp)}
+                📦 Target Qty    : {int(tq_pwp)} Pcs
+                📊 Actual Qty    : {int(q_pwp)} Pcs
+                🎯 Ach. Redeem   : *{ach_pwp_redeem:.1f}%*
+                🎯 Ach. Qty      : *{ach_pwp_qty:.1f}%*
+                ⭐ Poin PWP      : *{poin_pwp:.2f}* (Max 25)
+
+                📆 *Target Harian:* {int(target_harian_pwp)} Pcs/hari
+                🕐 *Target per Shift:*
+                • Shift 1 (40%) : {int(target_harian_pwp * 0.40)} Pcs
+                • Shift 2 (40%) : {int(target_harian_pwp * 0.40)} Pcs
+                • Shift 3 (20%) : {int(target_harian_pwp * 0.20)} Pcs
+
+                ════════════════════════════════════════
+
+                *3️⃣ PROGRAM SUEGER*
+                📋 Syarat Redeem : {int(s_sueger_val)}
+                🎁 Qty Redeem    : {int(r_sueger_val)}
+                🎯 Achievement   : *{ach_sueger:.1f}%*
+
+                ════════════════════════════════════════
+
+                *4️⃣ PROGRAM SERBA GRATIS (SG)*
+                📦 Target Qty    : {int(t_sg)} Pcs
+                📊 Actual Qty    : {int(q_sg)} Pcs
+                🎯 Achievement   : *{ach_sg:.1f}%*
+                ⭐ Poin SG       : *{poin_sg:.2f}* (Max 30)
+
+                📆 *Target Harian:* {int(target_harian_sg)} Pcs/hari
+                🕐 *Target per Shift:*
+                • Shift 1 (40%) : {int(target_harian_sg * 0.40)} Pcs
+                • Shift 2 (40%) : {int(target_harian_sg * 0.40)} Pcs
+                • Shift 3 (20%) : {int(target_harian_sg * 0.20)} Pcs
+
+                ════════════════════════════════════════
+
+                *5️⃣ CEMILAN CEBAN*
+                📦 Target Qty    : {int(t_ceban)} Pcs
+                📊 Actual Qty    : {int(q_ceban)} Pcs
+                🎯 Achievement   : *{ach_ceban:.1f}%*
+
+                ════════════════════════════════════════
+
+                🏆 *TOTAL POIN DIDAPAT: {total_poin_didapat:.2f}*
+
+                ⚠️ Catatan: Target otomatis 0 apabila sudah tercapai.
+
+                ════════════════════════════════════════
+                _Generated automatically via LigaPSM System_
+                """
+
+                # OUTPUT WA
+                if btn_gen_wa:
+                    st.markdown("##### 📝 Hasil Text Report (Siap Copas ke WA):")
+                    st.text_area(
+                        "Salin teks di bawah ini:",
+                        wa_text,
+                        height=500,
+                        key="wa_summary_text_area",
                     )
+                    st.caption("💡 Tap & tahan di dalam text area untuk pilih semua, lalu copy")
+                    st.info(f"✅ Data segar — Generate: {_generate_str}")
 
-                if _ppt_bytes:
-                    st.success(f"✅ PPT berhasil dibuat — 9 slide siap presentasi!")
-                    st.download_button(
-                        label="📥 Download Report PPT (.pptx)",
-                        data=_ppt_bytes,
-                        file_name=f"Report_PSM_{selected_month_name}_{_generate_time.strftime('%Y%m%d_%H%M%S')}.pptx",
-                        mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
-                        use_container_width=True,
-                        key="dl_ppt_report",
-                    )
-                else:
-                    st.error("❌ Gagal generate PPT.")
+                # OUTPUT PDF
+                if btn_gen_pdf:
+                    _pdf_report_data = [
+                        {
+                            "title": f"1. PROGRAM PSM - {selected_psm_period_opt}",
+                            "lines": [
+                                f"Target PSM     : {int(target_psm_tot)} Pcs",
+                                f"Actual Qty     : {int(actual_psm_tot)} Pcs",
+                                f"Achievement    : {ach_psm:.1f}%",
+                                f"Poin PSM       : {poin_psm:.2f} (Max 20)",
+                                "",
+                                f"Target Harian  : {int(target_harian_psm)} Pcs/hari",
+                                f"  - Shift 1 (40%) : {int(target_harian_psm * 0.40)} Pcs",
+                                f"  - Shift 2 (40%) : {int(target_harian_psm * 0.40)} Pcs",
+                                f"  - Shift 3 (20%) : {int(target_harian_psm * 0.20)} Pcs",
+                            ],
+                        },
+                        {
+                            "title": "2. PROGRAM PWP (Purchase with Purchase)",
+                            "lines": [
+                                f"Target Qty     : {int(tq_pwp)} Pcs",
+                                f"Actual Qty     : {int(q_pwp)} Pcs",
+                                f"Ach. Qty       : {ach_pwp_qty:.1f}%",
+                                f"Poin PWP       : {poin_pwp:.2f} (Max 25)",
+                                "",
+                                f"Target Harian  : {int(target_harian_pwp)} Pcs/hari",
+                                f"  - Shift 1 (40%) : {int(target_harian_pwp * 0.40)} Pcs",
+                                f"  - Shift 2 (40%) : {int(target_harian_pwp * 0.40)} Pcs",
+                                f"  - Shift 3 (20%) : {int(target_harian_pwp * 0.20)} Pcs",
+                            ],
+                        },
+                        {
+                            "title": "3. PROGRAM SUEGER",
+                            "lines": [
+                                f"Syarat Redeem  : {int(s_sueger_val)}",
+                                f"Qty Redeem     : {int(r_sueger_val)}",
+                                f"Achievement    : {ach_sueger:.1f}%",
+                            ],
+                        },
+                        {
+                            "title": "4. PROGRAM SERBA GRATIS (SG)",
+                            "lines": [
+                                f"Target Qty     : {int(t_sg)} Pcs",
+                                f"Actual Qty     : {int(q_sg)} Pcs",
+                                f"Achievement    : {ach_sg:.1f}%",
+                                f"Poin SG        : {poin_sg:.2f} (Max 30)",
+                                "",
+                                f"Target Harian  : {int(target_harian_sg)} Pcs/hari",
+                                f"  - Shift 1 (40%) : {int(target_harian_sg * 0.40)} Pcs",
+                                f"  - Shift 2 (40%) : {int(target_harian_sg * 0.40)} Pcs",
+                                f"  - Shift 3 (20%) : {int(target_harian_sg * 0.20)} Pcs",
+                            ],
+                        },
+                        {
+                            "title": "TOTAL POIN",
+                            "lines": [
+                                f"TOTAL POIN DIDAPAT : {total_poin_didapat:.2f}",
+                                "",
+                                "Catatan: Data sesuai inputan pada website.",
+                            ],
+                        },
+                    ]
+
+                    _pdf_title = f"Report Summary Penjualan {selected_month_name} {waktu_wib.year}"
+                    _pdf_bytes = generate_pdf_report(_pdf_title, _pdf_report_data, _generate_str)
+
+                    if _pdf_bytes:
+                        st.success(f"✅ PDF berhasil dibuat — {_generate_str}")
+                        st.download_button(
+                            label="📥 Download Report PDF",
+                            data=_pdf_bytes,
+                            file_name=f"Report_PSM_{selected_month_name}_{_generate_time.strftime('%Y%m%d_%H%M%S')}.pdf",
+                            mime="application/pdf",
+                            use_container_width=True,
+                            key="dl_pdf_report",
+                        )
+                    else:
+                        st.error("❌ Gagal generate PDF. Cek apakah `fpdf2` sudah di-install.")
+
+                # OUTPUT PPT
+                if btn_gen_ppt:
+                    top3_kasir = []
+                    _sp_leaderboard = st.session_state.get("sales_person_df", pd.DataFrame()).copy()
+                    if not _sp_leaderboard.empty and "person_name" in _sp_leaderboard.columns and "actual_qty" in _sp_leaderboard.columns:
+                        if valid_period_ids and "period_id" in _sp_leaderboard.columns:
+                            _sp_leaderboard = _sp_leaderboard[_sp_leaderboard["period_id"].isin(valid_period_ids)]
+                        _sp_leaderboard["actual_qty"] = pd.to_numeric(_sp_leaderboard["actual_qty"], errors="coerce").fillna(0)
+                        _grp_lb = _sp_leaderboard.groupby("person_name")["actual_qty"].sum().reset_index()
+                        _grp_lb = _grp_lb.sort_values("actual_qty", ascending=False).head(3)
+                        for _, _row in _grp_lb.iterrows():
+                            top3_kasir.append((str(_row["person_name"]), int(_row["actual_qty"]), "Pcs"))
+
+                    psm_data = {
+                        "target": int(target_psm_tot),
+                        "actual": int(actual_psm_tot),
+                        "ach": ach_psm,
+                        "poin": poin_psm,
+                        "harian": int(target_harian_psm),
+                        "shift1": int(target_harian_psm * 0.40),
+                        "shift2": int(target_harian_psm * 0.40),
+                        "shift3": int(target_harian_psm * 0.20),
+                    }
+                    pwp_data = {
+                        "syarat": int(s_pwp),
+                        "redeem": int(r_pwp),
+                        "target": int(tq_pwp),
+                        "actual": int(q_pwp),
+                        "ach_redeem": ach_pwp_redeem,
+                        "ach_qty": ach_pwp_qty,
+                        "poin": poin_pwp,
+                        "harian": int(target_harian_pwp),
+                        "shift1": int(target_harian_pwp * 0.40),
+                        "shift2": int(target_harian_pwp * 0.40),
+                        "shift3": int(target_harian_pwp * 0.20),
+                    }
+                    sueger_data = {
+                        "syarat": int(s_sueger_val),
+                        "redeem": int(r_sueger_val),
+                        "ach": ach_sueger,
+                    }
+                    sg_data = {
+                        "target": int(t_sg),
+                        "actual": int(q_sg),
+                        "ach": ach_sg,
+                        "poin": poin_sg,
+                        "harian": int(target_harian_sg),
+                        "shift1": int(target_harian_sg * 0.40),
+                        "shift2": int(target_harian_sg * 0.40),
+                        "shift3": int(target_harian_sg * 0.20),
+                    }
+                    ceban_data = {
+                        "target": int(t_ceban),
+                        "actual": int(q_ceban),
+                        "ach": ach_ceban,
+                    }
+
+                    with st.spinner("🎨 Meracik slide PPT..."):
+                        _ppt_bytes = generate_ppt_report(
+                            title=f"Report Summary Penjualan {selected_month_name} {waktu_wib.year}",
+                            month_year_str=f"{selected_month_name} {waktu_wib.year}",
+                            generated_time_str=_generate_str,
+                            psm_data=psm_data,
+                            pwp_data=pwp_data,
+                            sueger_data=sueger_data,
+                            sg_data=sg_data,
+                            ceban_data=ceban_data,
+                            total_poin=total_poin_didapat,
+                            top3_kasir=top3_kasir,
+                        )
+
+                    if _ppt_bytes:
+                        st.success(f"✅ PPT berhasil dibuat — 9 slide siap presentasi!")
+                        st.download_button(
+                            label="📥 Download Report PPT (.pptx)",
+                            data=_ppt_bytes,
+                            file_name=f"Report_PSM_{selected_month_name}_{_generate_time.strftime('%Y%m%d_%H%M%S')}.pptx",
+                            mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                            use_container_width=True,
+                            key="dl_ppt_report",
+                        )
+                    else:
+                        st.error("❌ Gagal generate PPT.")
