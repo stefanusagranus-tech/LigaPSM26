@@ -14753,14 +14753,6 @@ elif selected_tab == "⚙️ Pengaturan & Master":
             • Shift 3 (20%) : {int(target_harian_sg * 0.20)} Pcs
 
             ════════════════════════════════════════
-
-            *5️⃣ CEMILAN CEBAN*
-            📦 Target Qty    : {int(t_ceban)} Pcs
-            📊 Actual Qty    : {int(q_ceban)} Pcs
-            🎯 Achievement   : *{ach_ceban:.1f}%*
-
-            ════════════════════════════════════════
-
             🏆 *TOTAL POIN DIDAPAT: {total_poin_didapat:.2f}*
 
             ⚠️ Catatan: Target otomatis 0 apabila sudah tercapai.
