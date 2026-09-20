@@ -1373,6 +1373,179 @@ def get_period_date_bounds(p_id):
     today = pd.Timestamp.now().date()
     return today.replace(day=1), today
 
+# =========================================================================
+# 📅 FUNGSI: LOAD & SAVE PERIODE STORE PERFORMANCE
+# =========================================================================
+def load_periode_store():
+    """
+    Baca sheet PERIODE_STOREPERFORMANCE.
+    Return DataFrame dengan kolom:
+        period_id, period_name, start_date, end_date,
+        target_net_sales, target_std, target_apc,
+        nsb_percentage, status
+    """
+    try:
+        df = conn.read(worksheet="PERIODE_STOREPERFORMANCE", ttl=60)
+        
+        if df is None or df.empty:
+            return pd.DataFrame(columns=[
+                "period_id", "period_name", "start_date", "end_date",
+                "target_net_sales", "target_std", "target_apc",
+                "nsb_percentage", "status"
+            ])
+        
+        # Normalisasi kolom
+        df.columns = df.columns.astype(str).str.strip().str.lower()
+        
+        # Pastikan kolom ada
+        expected_cols = [
+            "period_id", "period_name", "start_date", "end_date",
+            "target_net_sales", "target_std", "target_apc",
+            "nsb_percentage", "status"
+        ]
+        for col in expected_cols:
+            if col not in df.columns:
+                df[col] = ""
+        
+        # Normalisasi period_id
+        df["period_id"] = df["period_id"].astype(str).str.strip().str.upper()
+        
+        # Konversi tanggal
+        df["start_date_dt"] = pd.to_datetime(df["start_date"], errors="coerce")
+        df["end_date_dt"] = pd.to_datetime(df["end_date"], errors="coerce")
+        
+        # Konversi numerik
+        for col in ["target_net_sales", "target_std", "target_apc"]:
+            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).astype(int)
+        
+        df["nsb_percentage"] = pd.to_numeric(df["nsb_percentage"], errors="coerce").fillna(0)
+        
+        # Filter baris yang tidak valid (period_id kosong)
+        df = df[df["period_id"] != ""].reset_index(drop=True)
+        
+        return df
+    
+    except Exception as e:
+        print(f"[load_periode_store ERROR] {e}")
+        return pd.DataFrame(columns=[
+            "period_id", "period_name", "start_date", "end_date",
+            "target_net_sales", "target_std", "target_apc",
+            "nsb_percentage", "status"
+        ])
+
+
+def save_periode_store(df_data):
+    """
+    Simpan DataFrame ke sheet PERIODE_STOREPERFORMANCE.
+    """
+    try:
+        if df_data.empty:
+            st.warning("⚠️ Data periode kosong, tidak disimpan.")
+            return False
+        
+        # Ambil kolom yang diperlukan saja
+        expected_cols = [
+            "period_id", "period_name", "start_date", "end_date",
+            "target_net_sales", "target_std", "target_apc",
+            "nsb_percentage", "status"
+        ]
+        
+        df_to_save = df_data[expected_cols].copy()
+        
+        # Format tanggal ke string
+        df_to_save["start_date"] = pd.to_datetime(df_to_save["start_date"], errors="coerce").dt.strftime("%Y-%m-%d")
+        df_to_save["end_date"] = pd.to_datetime(df_to_save["end_date"], errors="coerce").dt.strftime("%Y-%m-%d")
+        
+        # Fill NaN
+        df_to_save = df_to_save.fillna("")
+        
+        conn.update(worksheet="PERIODE_STOREPERFORMANCE", data=df_to_save)
+        time.sleep(0.5)
+        
+        st.cache_data.clear()
+        st.toast("✅ Periode Store Performance tersimpan!", icon="💾")
+        return True
+    
+    except Exception as e:
+        st.error(f"❌ Gagal simpan periode: {e}")
+        return False
+
+
+def get_active_period_store():
+    """
+    Ambil periode aktif + auto-hitung JHK, target SPD, NSB target.
+    Return dict atau None kalau tidak ada periode aktif.
+    """
+    try:
+        df = load_periode_store()
+        
+        if df.empty:
+            return None
+        
+        today = pd.Timestamp.now().date()
+        
+        # Filter periode aktif (hari ini masuk rentang)
+        df["start_dt"] = pd.to_datetime(df["start_date"], errors="coerce").dt.date
+        df["end_dt"] = pd.to_datetime(df["end_date"], errors="coerce").dt.date
+        
+        aktif = df[
+            (df["start_dt"] <= today) & 
+            (df["end_dt"] >= today) &
+            (df["status"].astype(str).str.lower() == "aktif")
+        ]
+        
+        if aktif.empty:
+            return None
+        
+        row = aktif.iloc[0]
+        
+        # === AMBIL DATA ===
+        _period_id = str(row["period_id"])
+        _period_name = str(row["period_name"])
+        _start = row["start_dt"]
+        _end = row["end_dt"]
+        _target_net_sales = int(row["target_net_sales"])
+        _target_std = int(row["target_std"])
+        _target_apc = int(row["target_apc"])
+        _nsb_pct = float(row["nsb_percentage"])
+        
+        # === AUTO-HITUNG JHK ===
+        _jhk = (_end - _start).days + 1
+        
+        # === AUTO-HITUNG TARGET SPD (Harian) ===
+        _target_spd = int(_target_net_sales / _jhk) if _jhk > 0 else 0
+        
+        # === AUTO-HITUNG NSB TARGET (Bulanan) ===
+        _nsb_target_bulanan = int(_target_net_sales * (_nsb_pct / 100))
+        
+        # === AUTO-HITUNG NSB TARGET (Harian) ===
+        _nsb_target_harian = int(_target_spd * (_nsb_pct / 100))
+        
+        # === VALIDASI TARGET KOSONG ===
+        _target_warning = False
+        if _target_net_sales <= 0 or _target_std <= 0 or _target_apc <= 0:
+            _target_warning = True
+        
+        return {
+            "period_id": _period_id,
+            "period_name": _period_name,
+            "start_date": _start,
+            "end_date": _end,
+            "jhk": _jhk,
+            "target_net_sales": _target_net_sales,
+            "target_std": _target_std,
+            "target_apc": _target_apc,
+            "nsb_percentage": _nsb_pct,
+            "target_spd": _target_spd,
+            "nsb_target_bulanan": _nsb_target_bulanan,
+            "nsb_target_harian": _nsb_target_harian,
+            "target_warning": _target_warning,
+        }
+    
+    except Exception as e:
+        print(f"[get_active_period_store ERROR] {e}")
+        return None
+
 def generate_pdf_report(title, sections_data, generated_time_str):
     """
     Generate PDF Report PPS Toko Karang Satria — versi ringkas tanpa progress bar.
@@ -3555,10 +3728,10 @@ st.sidebar.markdown(
 
 # Navigasi Menu Utama (Jika mengecil, otomatis hanya menampilkan karakter ikon pertamanya saja)
 if st.session_state.sidebar_collapsed:
-    menu_options = ["🏠", "📝", "➕", "⚙️"]
+    menu_options = ["🏠", "📝","📊", "➕", "⚙️"]
     st.sidebar.markdown("<center><p style='color:#a1a1aa; font-size:12px;'>📌</p></center>", unsafe_allow_html=True)
 else:
-    menu_options = ["🏠 Menu Utama", "📝 Input Data", "➕ Edit Data (Admin)", "⚙️ Pengaturan & Master"]
+    menu_options = ["🏠 Menu Utama", "📝 Input Data","📊 Store Performance","➕ Edit Data (Admin)", "⚙️ Pengaturan & Master"]
     st.sidebar.markdown("<p style='color:#a1a1aa; font-size:11px; font-weight:700; padding: 0 10px;'>📌 NAVIGASI MENU</p>", unsafe_allow_html=True)
 
 # 🚀 TAMBAHKAN SAKLAR PENGUNCI PERKEMAHAN INI TEPAT DI ATAS ST.SIDEBAR.RADIO ANDA:
