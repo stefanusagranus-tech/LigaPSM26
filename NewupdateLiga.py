@@ -3062,36 +3062,96 @@ st.markdown(
     }
 
     /* =========================================================================
-   🎯 HIDE RADIO DOT — GLOBAL (SEMUA RADIO)
-   ========================================================================= */
+       🎯 GLOBAL: FIX BINGKAI EMAS + HIDE BULLET RADIO (REPLIKA INPUT DATA)
+       ========================================================================= */
+    
+    /* 1. Atur container radio group — HORIZONTAL WRAP */
+    div[data-testid="stRadio"] > div[role="radiogroup"] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        gap: 12px !important;
+        justify-content: center !important;
+        align-items: center !important;
+        width: 100% !important;
+    }
+    
+    /* 2. Sembunyikan bulat/bullet radio bawaan Streamlit secara mutlak */
+    div[data-testid="stRadio"] div[role="radiogroup"] label > div:first-child,
+    div[data-testid="stRadio"] [data-baseweb="radio"] > div:first-child,
     div[data-testid="stRadio"] input[type="radio"] {
-        position: absolute !important;
-        opacity: 0 !important;
+        display: none !important;
         width: 0 !important;
         height: 0 !important;
-        pointer-events: none !important;
     }
-
-    div[data-testid="stRadio"] [data-testid="stRadioButtonCustomIcon"],
-    div[data-testid="stRadio"] div[role="radiogroup"] label > div:first-child,
-    div[data-testid="stRadio"] div[role="radiogroup"] > label > div:first-child {
-        display: none !important;
+    
+    /* 3. BINGKAI EMAS DASAR — SEMUA TOMBOL */
+    div[data-testid="stRadio"] div[role="radiogroup"] > label,
+    div[data-testid="stRadio"] [data-baseweb="radio"] {
+        background: linear-gradient(180deg, #2a1a0c 0%, #170d05 100%) !important;
+        border: 2px solid #b8860b !important;
+        box-shadow: 0 0 4px rgba(184, 134, 11, 0.3), inset 0 0 4px rgba(0, 0, 0, 0.8) !important;
+        border-radius: 8px !important;
+        padding: 10px 16px !important;
+        margin: 4px !important;
+        min-width: 130px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        cursor: pointer !important;
+        transition: all 0.25s ease-in-out !important;
     }
-
+    
+    /* 4. Format Teks Default */
+    div[data-testid="stRadio"] label *,
+    div[data-testid="stRadio"] [data-baseweb="radio"] * {
+        color: #d4af37 !important;
+        font-family: 'Georgia', serif !important;
+        font-weight: bold !important;
+        font-size: 11px !important;
+        letter-spacing: 0.5px !important;
+        text-transform: uppercase !important;
+        background: transparent !important;
+    }
+    
+    /* 5. EFEK HOVER */
+    div[data-testid="stRadio"] label:hover,
+    div[data-testid="stRadio"] [data-baseweb="radio"]:hover {
+        border-color: #ffe57f !important;
+        background: linear-gradient(180deg, #422913 0%, #291607 100%) !important;
+        box-shadow: 0 0 10px rgba(255, 229, 127, 0.5) !important;
+        transform: translateY(-2px) !important;
+    }
+    
+    /* 6. EFEK TOMBOL YANG SEDANG DIKLIK / TERPILIH */
+    div[data-testid="stRadio"] label:has(input:checked),
+    div[data-testid="stRadio"] [data-baseweb="radio"]:has(input:checked),
+    div[data-testid="stRadio"] [aria-checked="true"] {
+        background: linear-gradient(180deg, #6e4218 0%, #3d230b 100%) !important;
+        border: 2px solid #fff3b0 !important;
+        box-shadow: 0 0 15px rgba(212, 175, 55, 0.9), inset 0 0 8px rgba(255, 243, 176, 0.5) !important;
+    }
+    
+    div[data-testid="stRadio"] label:has(input:checked) *,
+    div[data-testid="stRadio"] [data-baseweb="radio"]:has(input:checked) *,
+    div[data-testid="stRadio"] [aria-checked="true"] * {
+        color: #ffffff !important;
+        text-shadow: 0 0 6px rgba(255, 243, 176, 0.9) !important;
+    }
+    
     /* =========================================================================
-    SIDEBAR: LOCK PRESISI
-    ========================================================================= */
+       ⚠️ EXCEPTION: SIDEBAR RADIO — JANGAN IKUT STYLE INI
+       ========================================================================= */
+    /* Sidebar radio punya style sendiri, jadi kita override balik */
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] {
-        display: flex !important;
         flex-direction: column !important;
         gap: 10px !important;
-        width: 100% !important;
+        justify-content: flex-start !important;
         align-items: stretch !important;
-        padding: 0 !important;
-        margin: 0 !important;
     }
-
-    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label,
+    
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] > label,
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"] {
         width: 100% !important;
         max-width: 100% !important;
@@ -3110,8 +3170,8 @@ st.markdown(
         cursor: pointer !important;
         box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.4) !important;
     }
-
-    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label * {
+    
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] > label * {
         color: #f1e5c7 !important;
         font-family: 'Cinzel', serif !important;
         font-size: 11px !important;
@@ -3119,74 +3179,11 @@ st.markdown(
         letter-spacing: 0.5px !important;
         white-space: nowrap !important;
     }
-
-    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) {
+    
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) {
         background: linear-gradient(135deg, #b8860b 0%, #785805 100%) !important;
         border-color: #f7e7b4 !important;
         box-shadow: 0 0 12px rgba(212, 175, 55, 0.6) !important;
-    }
-
-    /* =========================================================================
-    🎯 MAIN CONTENT: HIDE RADIO DOT (UNTUK SUB-TAB DI HALAMAN UTAMA)
-    ========================================================================= */
-    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: wrap !important;
-        gap: 8px !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        justify-content: flex-start !important;
-    }
-
-    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label,
-    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"] {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        padding: 8px 16px !important;
-        margin: 0 !important;
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
-        border: 1.5px solid #334155 !important;
-        border-radius: 8px !important;
-        cursor: pointer !important;
-        transition: all 0.2s ease !important;
-        min-height: 40px !important;
-    }
-
-    /* Teks di main content */
-    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label p,
-    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label span {
-        color: #94a3b8 !important;
-        font-family: monospace !important;
-        font-size: 11px !important;
-        font-weight: 700 !important;
-        white-space: nowrap !important;
-        margin: 0 !important;
-    }
-
-    /* Hover state */
-    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover {
-        border-color: #fbbf24 !important;
-        background: linear-gradient(135deg, #2d4f7c 0%, #1e293b 100%) !important;
-    }
-
-    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover p,
-    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover span {
-        color: #fbbf24 !important;
-    }
-
-    /* Active state */
-    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) {
-        background: linear-gradient(135deg, #b45309 0%, #d97706 100%) !important;
-        border-color: #fbbf24 !important;
-        box-shadow: 0 0 15px rgba(251, 191, 36, 0.6) !important;
-    }
-
-    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) p,
-    div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) span {
-        color: #ffffff !important;
-        font-weight: 900 !important;
     }
 
     /* =========================================================================
@@ -3492,94 +3489,6 @@ st.markdown(
         .box-title { font-size: 9px; }
         .marquee-text { font-size: 11px; }
         .hourglass-spin { font-size: 24px; }
-    }
-    /* =========================================================================
-    🎯 MUTLAK: HIDE RADIO BULLET — VERSI PALING FORCE
-    ========================================================================= */
-
-    /* Layer 1: Hide semua input radio */
-    div[data-testid="stRadio"] input[type="radio"],
-    div[data-testid="stRadio"] div[role="radiogroup"] label input[type="radio"],
-    div[data-testid="stRadio"] div[role="radiogroup"] > label > input,
-    div[data-testid="stRadio"] [data-baseweb="radio"] input,
-    input[type="radio"] {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        width: 0 !important;
-        height: 0 !important;
-        position: absolute !important;
-        left: -99999px !important;
-        pointer-events: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-
-    /* Layer 2: Hide wrapper bullet (div pertama dalam label) */
-    div[data-testid="stRadio"] div[role="radiogroup"] > label > div:first-child,
-    div[data-testid="stRadio"] div[role="radiogroup"] > label > div:nth-child(1),
-    div[data-testid="stRadio"] div[role="radiogroup"] > label > div:first-of-type {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        width: 0 !important;
-        height: 0 !important;
-        position: absolute !important;
-        left: -99999px !important;
-        pointer-events: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        border: 0 !important;
-    }
-
-    /* Layer 3: Hide bullet dot (div dalam wrapper) */
-    div[data-testid="stRadio"] div[role="radiogroup"] > label > div:first-child > div,
-    div[data-testid="stRadio"] div[role="radiogroup"] > label > div:nth-child(1) > div,
-    div[data-testid="stRadio"] div[role="radiogroup"] > label > div:first-child > div > div,
-    div[data-testid="stRadio"] div[role="radiogroup"] > label div[class*="st-emotion-cache"]:not(:has(p)):not(:has(span)):not(:has(div:has(p))):not(:has(div:has(span))) {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        width: 0 !important;
-        height: 0 !important;
-        position: absolute !important;
-        left: -99999px !important;
-        pointer-events: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        border: 0 !important;
-    }
-
-    /* Layer 4: Hide testid custom icon */
-    div[data-testid="stRadio"] [data-testid="stRadioButtonCustomIcon"],
-    div[data-testid="stRadio"] [data-testid="stRadioButtonCustomIcon"] *,
-    div[data-testid="stRadio"] [data-testid="stRadioButtonCustomIcon"] > * {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        width: 0 !important;
-        height: 0 !important;
-        position: absolute !important;
-        left: -99999px !important;
-        pointer-events: none !important;
-    }
-
-    /* Layer 5: NUCLEAR — semua div dalam label yang bukan wrapper teks */
-    div[data-testid="stRadio"] div[role="radiogroup"] > label > div:not(:last-child):not(:has(p)):not(:has(span)):not(:has(> p)):not(:has(> span)) {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        width: 0 !important;
-        height: 0 !important;
-        max-width: 0 !important;
-        max-height: 0 !important;
-        position: absolute !important;
-        left: -99999px !important;
-        top: -99999px !important;
-        pointer-events: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        border: 0 !important;
     }
 </style>
 """,
