@@ -12961,7 +12961,7 @@ elif selected_tab == "📝 Input Data":
                                     backup_to_gsheets()
                                     flush_pending_logs() 
                                     # Sebelum st.rerun() di show_success_popup
-                                    log_activity("SAVE_SALES", f"Input {inserted_count} item untuk {person_name}")
+                                    log_activity("SAVE_SALES", f"Input {inserted_count} item untuk {m_person}")
                                                 
                                                 # ✅ PANGGIL DIALOG GLOBAL — TEMA GOLD
                                 show_success_dialog(
@@ -13230,7 +13230,7 @@ elif selected_tab == "📝 Input Data":
                         # --- BACKUP OTOMATIS BERJALAN DI SINI ---
                         backup_to_gsheets()
                         flush_pending_logs() 
-                        log_activity("SAVE_PPS", f"Input PPS: {staff_name} / {kasir_name} / {date_str}")
+                        log_activity("SAVE_PPS", f"Input PPS: {staff_name} / {kasir_name} / {tanggal_pps.strftime('%d/%m/%Y')}")
                     
                     show_success_dialog(
                         title_msg="<b>Data Sales PPS</b> berhasil disegel oleh mage!",
@@ -13816,8 +13816,8 @@ elif selected_tab == "➕ Edit Data (Admin)":
                         )
                         # ✅ LOG AKTIVITAS
                         log_activity(
-                            "DELETE_DATA",
-                            f"Hapus item '{d_item_name}' untuk {d_person}"
+                            "EDIT_DATA",
+                            f"Edit transaksi {e_person} - {selected_label}"
                         )
 
                         st.toast("🎉 Perubahan data sukses disimpan!", icon="✅")
@@ -14356,7 +14356,6 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                             # ✅ LOG AKTIVITAS
                             log_activity("SAVE_MASTER", f"Tambah Periode: {new_p_name}")
                             
-                            show_swal("Sukses!", ...)
                             show_swal("Sukses!", f"Periode {new_p_name} berhasil ditambahkan!", "success")
                             time.sleep(1.5)
                             st.rerun()
