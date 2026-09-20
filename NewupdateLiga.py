@@ -3493,6 +3493,137 @@ st.markdown(
         .marquee-text { font-size: 11px; }
         .hourglass-spin { font-size: 24px; }
     }
+    /* =========================================================================
+    🎯 SUPER FORCE HIDE RADIO BULLET — STREAMLIT 1.40+ EMOTION CSS
+    ========================================================================= */
+
+    /* Target 1: Semua input radio — sembunyikan total */
+    div[data-testid="stRadio"] input[type="radio"],
+    div[data-testid="stRadio"] div[role="radiogroup"] input[type="radio"],
+    div[data-testid="stRadio"] div[role="radiogroup"] > label > input[type="radio"],
+    input[type="radio"] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        width: 0 !important;
+        height: 0 !important;
+        max-width: 0 !important;
+        max-height: 0 !important;
+        position: absolute !important;
+        left: -9999px !important;
+        top: -9999px !important;
+        pointer-events: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+    }
+
+    /* Target 2: Custom icon testid */
+    div[data-testid="stRadio"] [data-testid="stRadioButtonCustomIcon"],
+    div[data-testid="stRadio"] [data-testid="stRadioButtonCustomIcon"] *,
+    div[data-testid="stRadio"] [data-testid="stRadioButtonCustomIcon"] > * {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        width: 0 !important;
+        height: 0 !important;
+        position: absolute !important;
+        left: -9999px !important;
+        pointer-events: none !important;
+    }
+
+    /* Target 3: Div pertama di dalam label (wrapper bullet) */
+    div[data-testid="stRadio"] div[role="radiogroup"] > label > div:first-child,
+    div[data-testid="stRadio"] div[role="radiogroup"] > label > div:nth-child(1),
+    div[data-testid="stRadio"] div[role="radiogroup"] > label > div:first-of-type {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        width: 0 !important;
+        height: 0 !important;
+        max-width: 0 !important;
+        max-height: 0 !important;
+        position: absolute !important;
+        left: -9999px !important;
+        top: -9999px !important;
+        pointer-events: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+    }
+
+    /* Target 4: Div KEDUA di dalam div pertama (bullet dot) */
+    div[data-testid="stRadio"] div[role="radiogroup"] > label > div:first-child > div,
+    div[data-testid="stRadio"] div[role="radiogroup"] > label > div:nth-child(1) > div,
+    div[data-testid="stRadio"] div[role="radiogroup"] > label > div:first-child > div:first-child,
+    div[data-testid="stRadio"] div[role="radiogroup"] > label > div:nth-child(1) > div:nth-child(1) {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        width: 0 !important;
+        height: 0 !important;
+        max-width: 0 !important;
+        max-height: 0 !important;
+        position: absolute !important;
+        left: -9999px !important;
+        top: -9999px !important;
+        pointer-events: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+    }
+
+    /* Target 5: SEMUA div dalam label yang punya class st-emotion-cache */
+    /* TAPI hanya yang BUKAN wrapper teks (tidak punya child p atau span) */
+    div[data-testid="stRadio"] div[role="radiogroup"] > label > div[class*="st-emotion-cache"]:not(:has(> p)):not(:has(> span)):not(:has(> div > p)):not(:has(> div > span)),
+    div[data-testid="stRadio"] div[role="radiogroup"] > label > div[class*="st-emotion-cache"]:not(:has(p)):not(:has(span)) {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        width: 0 !important;
+        height: 0 !important;
+        max-width: 0 !important;
+        max-height: 0 !important;
+        position: absolute !important;
+        left: -9999px !important;
+        top: -9999px !important;
+        pointer-events: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+    }
+
+    /* Target 6: SEMUA div yang punya style inline border-radius: 50% (bullet style) */
+    div[data-testid="stRadio"] div[role="radiogroup"] > label div[style*="border-radius: 50%"],
+    div[data-testid="stRadio"] div[role="radiogroup"] > label div[style*="border-radius:50%"],
+    div[data-testid="stRadio"] div[role="radiogroup"] > label div[style*="width: 1rem"],
+    div[data-testid="stRadio"] div[role="radiogroup"] > label div[style*="height: 1rem"],
+    div[data-testid="stRadio"] div[role="radiogroup"] > label div[style*="width:1rem"],
+    div[data-testid="stRadio"] div[role="radiogroup"] > label div[style*="height:1rem"] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        width: 0 !important;
+        height: 0 !important;
+        position: absolute !important;
+        left: -9999px !important;
+        pointer-events: none !important;
+    }
+
+    /* Target 7: NUCLEAR OPTION — SEMUA div dalam label radio, KECUALI yang berisi teks */
+    div[data-testid="stRadio"] div[role="radiogroup"] > label > div:not(:last-child):not(:has(p)):not(:has(span)),
+    div[data-testid="stRadio"] div[role="radiogroup"] > label > div:not(:last-child):not(:has(> p)):not(:has(> span)) {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        width: 0 !important;
+        height: 0 !important;
+        position: absolute !important;
+        left: -9999px !important;
+        pointer-events: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
 </style>
 """,
     unsafe_allow_html=True,
