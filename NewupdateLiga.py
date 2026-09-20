@@ -1491,80 +1491,155 @@ def _generate_session_id():
 # ==========================================
 def flush_pending_logs():
     """
-    Menulis semua log yang tertunda di session_state ke Google Sheets.
-    Fungsi ini dipanggil saat menyimpan data untuk mengurangi frekuensi API call.
+    Tulis semua log dari queue ke Google Sheets.
+    Dipanggil manual (tombol) atau auto saat ganti hari.
     """
     try:
-        if "pending_activity_logs" not in st.session_state or not st.session_state["pending_activity_logs"]:
-            return True # Tidak ada yang perlu di-flush
-
-        # Gabungkan log yang tertunda menjadi DataFrame
-        pending_df = pd.DataFrame(st.session_state["pending_activity_logs"])
+        if "pending_activity_logs" not in st.session_state:
+            return 0, "Tidak ada log di queue"
         
-        # Baca log yang ada di sheet
+        pending_logs = st.session_state["pending_activity_logs"]
+        if not pending_logs:
+            return 0, "Queue kosong"
+        
+        # Ambil semua log (tanpa limit, karena manual)
+        pending_df = pd.DataFrame(pending_logs)
+        
+        # Baca existing log
         try:
             existing_log = conn.read(worksheet="ACTIVITY_LOG", ttl=0)
             if existing_log is None or existing_log.empty:
-                existing_log = pd.DataFrame(columns=["timestamp", "username", "role", "action", "detail", "session_id"])
+                existing_log = pd.DataFrame(columns=[
+                    "timestamp", "username", "role", "action", "detail", "session_id"
+                ])
         except Exception:
-            existing_log = pd.DataFrame(columns=["timestamp", "username", "role", "action", "detail", "session_id"])
+            existing_log = pd.DataFrame(columns=[
+                "timestamp", "username", "role", "action", "detail", "session_id"
+            ])
         
-        # Gabungkan dan simpan
+        # Anti-duplikat
+        if not existing_log.empty and "session_id" in existing_log.columns and "timestamp" in existing_log.columns:
+            existing_keys = set(
+                existing_log["session_id"].astype(str) + "|" + existing_log["timestamp"].astype(str)
+            )
+            pending_df["_key"] = pending_df["session_id"].astype(str) + "|" + pending_df["timestamp"].astype(str)
+            pending_df = pending_df[~pending_df["_key"].isin(existing_keys)]
+            pending_df = pending_df.drop(columns=["_key"])
+        
+        if pending_df.empty:
+            st.session_state["pending_activity_logs"] = []
+            return 0, "Semua log sudah ada di sheet (duplikat)"
+        
+        # Gabung & retensi max 1000 baris
         combined_log = pd.concat([existing_log, pending_df], ignore_index=True)
+        if len(combined_log) > 1000:
+            combined_log = combined_log.tail(1000).reset_index(drop=True)
+        
         conn.update(worksheet="ACTIVITY_LOG", data=combined_log)
         
-        # Kosongkan antrian setelah berhasil disimpan
+        # Kosongkan queue
+        count = len(pending_df)
         st.session_state["pending_activity_logs"] = []
-        print(f"[FLUSH_LOG] Berhasil menyimpan {len(pending_df)} log ke ACTIVITY_LOG.")
-        return True
         
+        print(f"[FLUSH_LOG] Berhasil simpan {count} log.")
+        return count, f"✅ {count} log berhasil ditulis ke sheet"
+    
     except Exception as e:
-        print(f"[FLUSH_LOG ERROR] Gagal menyimpan log: {e}")
-        return False
+        print(f"[FLUSH_LOG ERROR] {e}")
+        return 0, f"❌ Gagal: {str(e)}"
+
+# =========================================================================
+# 🌙 AUTO-FLUSH & AUTO-BACKUP — DETEKSI GANTI HARI
+# =========================================================================
+def check_and_auto_flush_log():
+    """
+    Cek apakah sudah ganti hari. Jika iya:
+        1. Auto-flush semua log ke Google Sheets
+        2. Auto-backup database ke sheet _BACKUP
+        3. Update tanggal flush
+    
+    Trigger: saat user pertama buka app di hari baru.
+    """
+    try:
+        _today = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%Y-%m-%d")
+        _last_flush_date = st.session_state.get("last_flush_date", None)
+        
+        # Inisialisasi: kalau belum ada, set ke hari ini (skip flush pertama)
+        if _last_flush_date is None:
+            st.session_state["last_flush_date"] = _today
+            return
+        
+        # Cek apakah sudah ganti hari
+        if _last_flush_date != _today:
+            # ✅ GANTI HARI — Auto-flush!
+            _pending_count = len(st.session_state.get("pending_activity_logs", []))
+            
+            if _pending_count > 0:
+                _count, _msg = flush_pending_logs()
+                if _count > 0:
+                    print(f"[AUTO_FLUSH] ✅ {_count} log auto-flushed (ganti hari: {_last_flush_date} → {_today})")
+            
+            # ✅ AUTO-BACKUP
+            try:
+                backup_to_gsheets()
+                print(f"[AUTO_BACKUP] ✅ Backup otomatis saat ganti hari")
+                st.session_state["last_backup_time"] = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
+            except Exception as e_bk:
+                print(f"[AUTO_BACKUP ERROR] {e_bk}")
+            
+            # Update tanggal flush
+            st.session_state["last_flush_date"] = _today
+            st.session_state["last_flush_time"] = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
+            
+    except Exception as e:
+        print(f"[AUTO_FLUSH ERROR] {e}")
+
+# =========================================================================
+# 📝 LOG ACTIVITY — FILTERED (HANYA LOGIN, LOGOUT, INPUT)
+# =========================================================================
+_ACTIONS_TO_LOG = {"LOGIN", "LOGOUT", "INPUT"}
 
 def log_activity(action, detail=""):
     """
-    Catat aktivitas user ke dalam antrian session_state.
-    Log akan ditulis ke Google Sheets saat fungsi flush_pending_logs() dipanggil.
+    Catat aktivitas user ke queue (session_state).
+    
+    ⚡ OPTIMASI: Hanya 3 aksi penting yang di-log:
+        - LOGIN (audit keamanan)
+        - LOGOUT (audit keamanan)
+        - INPUT (audit input data PSM/PPS)
+    
+    Log masuk ke queue di RAM. Ditulis ke sheet saat:
+        - Admin klik tombol FLUSH
+        - Auto-flush saat ganti hari (tengah malam)
     """
     try:
+        _action_upper = str(action).upper()
+        if _action_upper not in _ACTIONS_TO_LOG:
+            return  # Skip aksi lain (OPEN_TAB, REFRESH, dll)
+        
         _username = st.session_state.get("username", "")
         _role = st.session_state.get("role", "")
         
-        if not _username and action not in ["LOGIN", "LOGIN_FAILED"]:
+        if not _username and action not in ["LOGIN"]:
             return
         
         _waktu = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
         _session_id = _generate_session_id()
         
-        # Buat entri log baru
         new_log_entry = {
             "timestamp": _waktu,
             "username": str(_username) if _username else "-",
             "role": str(_role) if _role else "-",
-            "action": str(action),
+            "action": str(_action_upper),
             "detail": str(detail)[:200],
             "session_id": _session_id,
         }
         
-        # Inisialisasi antrian jika belum ada
+        # Masukkan ke queue (RAM, tanpa API call)
         if "pending_activity_logs" not in st.session_state:
             st.session_state["pending_activity_logs"] = []
-            
-        # Tambahkan ke antrian (di awal agar urutannya terbalik - terbaru di atas)
-        st.session_state["pending_activity_logs"].insert(0, new_log_entry)
         
-        # Simpan juga ke session_state untuk akses cepat UI
-        if "admin_activity_log" not in st.session_state:
-            st.session_state["admin_activity_log"] = []
-        st.session_state["admin_activity_log"].insert(0, {
-            "waktu": _waktu,
-            "user": _username or "-",
-            "action": str(action),
-            "detail": str(detail),
-        })
-        if len(st.session_state["admin_activity_log"]) > 100:
-            st.session_state["admin_activity_log"] = st.session_state["admin_activity_log"][:100]
+        st.session_state["pending_activity_logs"].insert(0, new_log_entry)
     
     except Exception as e:
         print(f"[LOG_ACTIVITY ERROR] {e}")
@@ -2240,18 +2315,20 @@ def show_login_page():
             username_input in USER_DATABASE
             and USER_DATABASE[username_input]["password"] == password_input
         ):
-          user_info = USER_DATABASE[username_input]
-          st.session_state.logged_in = True
-          st.session_state.username = user_info["nama"]
-          st.session_state.role = user_info.get("role", "Staff Toko")
-          # Generate session ID baru setiap login
-          st.session_state["session_id"] = str(_uuid_module.uuid4())[:8]
-          
-          # Catat LOGIN ke activity log
-          log_activity("LOGIN", f"Login berhasil sebagai {user_info['nama']} ({username_input})")
-          
-          st.toast(f"Selamat Datang, {user_info['nama']}!", icon="✅")
-          st.rerun()
+            user_info = USER_DATABASE[username_input]
+            st.session_state.logged_in = True
+            st.session_state.username = user_info["nama"]
+            st.session_state.role = user_info.get("role", "Staff Toko")
+            st.session_state["session_id"] = str(_uuid_module.uuid4())[:8]
+            
+            # ✅ Log LOGIN (queue saja)
+            log_activity("LOGIN", f"Login sebagai {user_info['nama']}")
+            
+            # 🌙 Cek ganti hari — auto-flush kalau perlu
+            check_and_auto_flush_log()
+            
+            st.toast(f"Selamat Datang, {user_info['nama']}!", icon="✅")
+            st.rerun()
         else:
           # Catat LOGIN_FAILED (opsional)
           try:
@@ -2499,12 +2576,63 @@ if selected_tab != st.session_state["last_logged_tab"]:
     _tab_name_clean = str(selected_tab).replace("🏠 ", "").replace("📝 ", "").replace("➕ ", "").replace("⚙️ ", "")
     log_activity("OPEN_TAB", f"Buka tab: {_tab_name_clean}")
     st.session_state["last_logged_tab"] = selected_tab
+# =========================================================================
+# 🔔 NOTIFIKASI FLUSH LOG — KHUSUS ADMIN
+# =========================================================================
+_is_admin_user = any(
+    x in str(st.session_state.get("username", "")).lower()
+    for x in ["admin", "chief", "cos", "lavitality"]
+)
+
+if _is_admin_user:
+    _pending_count = len(st.session_state.get("pending_activity_logs", []))
+    
+    if _pending_count > 0:
+        _notif_color = "#ef4444" if _pending_count >= 20 else "#f59e0b"
+        _notif_emoji = "🚨" if _pending_count >= 20 else "⚠️"
+        
+        st.sidebar.markdown(
+            f"""
+            <div style='
+                background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(239, 68, 68, 0.15));
+                border: 1.5px solid {_notif_color};
+                border-radius: 8px;
+                padding: 8px 10px;
+                margin: 10px 0;
+                text-align: center;
+            '>
+                <div style='color: {_notif_color}; font-size: 18px; margin-bottom: 2px;'>{_notif_emoji}</div>
+                <div style='color: #fbbf24; font-family: monospace; font-size: 10px; font-weight: 900;'>
+                    {_pending_count} LOG BELUM FLUSH
+                </div>
+                <div style='color: #94a3b8; font-family: monospace; font-size: 8px; margin-top: 2px;'>
+                    Auto-flush tengah malam
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        
+        if st.sidebar.button(
+            f"💾 FLUSH {_pending_count} LOG",
+            use_container_width=True,
+            key="btn_flush_from_sidebar",
+            type="primary"
+        ):
+            with st.spinner("⏳ Menulis log..."):
+                _count, _msg = flush_pending_logs()
+            if _count > 0:
+                st.toast(f"✅ {_count} log tersimpan!", icon="💾")
+                time.sleep(1)
+                st.rerun()
 
 # Tombol Keluar / Logout
 st.sidebar.markdown("<hr style='margin: 15px 0; border-color: #27272a;'>", unsafe_allow_html=True)
 logout_text = "🚪" if st.session_state.sidebar_collapsed else "🚪 Keluar / Logout"
 if st.sidebar.button(logout_text, use_container_width=True, key="logout_sidebar"):
+    # ✅ Log LOGOUT (queue saja)
     log_activity("LOGOUT", "Logout dari sistem")
+    
     st.session_state.logged_in = False
     st.session_state.username = ""
     st.session_state.role = ""
@@ -12957,13 +13085,10 @@ elif selected_tab == "📝 Input Data":
                                         st.session_state.sales_store_df,
                                     )
 
-                                    # --- BACKUP OTOMATIS BERJALAN DI SINI ---
-                                    backup_to_gsheets()
-                                    flush_pending_logs() 
-                                    # Sebelum st.rerun() di show_success_popup
-                                    log_activity("SAVE_SALES", f"Input {inserted_count} item untuk {m_person}")
+                                    # ✅ Log INPUT (queue saja, tanpa backup)
+                                    log_activity("INPUT", f"PSM: {inserted_count} item untuk {m_person}")
                                                 
-                                                # ✅ PANGGIL DIALOG GLOBAL — TEMA GOLD
+                                    # ✅ PANGGIL DIALOG GLOBAL — TEMA GOLD
                                 show_success_dialog(
                                     title_msg=f"<b>{inserted_count} item penjualan</b> telah dicatat oleh dewan guild!",
                                     subtitle="Penjualan Tersimpan di Gulungan Kerajaan",
@@ -13227,10 +13352,8 @@ elif selected_tab == "📝 Input Data":
                             st.session_state.sales_store_df,
                         )
 
-                        # --- BACKUP OTOMATIS BERJALAN DI SINI ---
-                        backup_to_gsheets()
-                        flush_pending_logs() 
-                        log_activity("SAVE_PPS", f"Input PPS: {staff_name} / {kasir_name} / {tanggal_pps.strftime('%d/%m/%Y')}")
+                        # ✅ Log INPUT (queue saja, tanpa backup)
+                        log_activity("INPUT", f"PPS: {staff_name} / {kasir_name} / {tanggal_pps.strftime('%d/%m/%Y')}")
                     
                     show_success_dialog(
                         title_msg="<b>Data Sales PPS</b> berhasil disegel oleh mage!",
@@ -15236,383 +15359,236 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                         st.rerun()
 
         # =====================================================================
-        # 📜 TAB 5: ACTIVITY LOG / AUDIT TRAIL
+        # 📜 TAB 5: ACTIVITY LOG / AUDIT TRAIL (VERSI SIMPLE)
         # =====================================================================
         elif _admin_tab == "📜 Activity Log":
             st.markdown("### 📜 5. Activity Log / Audit Trail")
-            st.caption("Riwayat permanen semua aktivitas user — tersimpan di Google Sheets.")
-
-            # CSS tab sub-navigasi log
-            st.markdown("""
-            <style>
-                div[data-testid="stRadio"].log-subtab > label:first-child { display: none !important; }
-                div[data-testid="stRadio"].log-subtab div[role="radiogroup"] {
-                    display: flex !important;
-                    flex-direction: row !important;
-                    flex-wrap: wrap !important;
-                    justify-content: center !important;
-                    gap: 6px !important;
-                    width: 100% !important;
-                    padding: 5px !important;
-                    background: #0f172a !important;
-                    border: 1.5px solid #b45309 !important;
-                    border-radius: 10px !important;
-                    margin-bottom: 12px !important;
-                }
-                div[data-testid="stRadio"].log-subtab div[role="radiogroup"] > label > div:first-child,
-                div[data-testid="stRadio"].log-subtab input[type="radio"] {
-                    display: none !important; width: 0 !important; height: 0 !important;
-                }
-                div[data-testid="stRadio"].log-subtab div[role="radiogroup"] > label {
-                    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
-                    border: 1.5px solid #334155 !important;
-                    border-radius: 8px !important;
-                    padding: 7px 12px !important;
-                    margin: 0 !important;
-                    cursor: pointer !important;
-                    transition: all 0.2s ease !important;
-                }
-                div[data-testid="stRadio"].log-subtab div[role="radiogroup"] > label p,
-                div[data-testid="stRadio"].log-subtab div[role="radiogroup"] > label span {
-                    color: #94a3b8 !important;
-                    font-family: monospace !important;
-                    font-size: 10.5px !important;
-                    font-weight: 700 !important;
-                    white-space: nowrap !important;
-                    margin: 0 !important;
-                }
-                div[data-testid="stRadio"].log-subtab div[role="radiogroup"] > label:hover {
-                    border-color: #fbbf24 !important;
-                }
-                div[data-testid="stRadio"].log-subtab div[role="radiogroup"] > label:hover p,
-                div[data-testid="stRadio"].log-subtab div[role="radiogroup"] > label:hover span {
-                    color: #fbbf24 !important;
-                }
-                div[data-testid="stRadio"].log-subtab div[role="radiogroup"] > label:has(input:checked) {
-                    background: linear-gradient(135deg, #b45309 0%, #d97706 100%) !important;
-                    border-color: #fbbf24 !important;
-                    box-shadow: 0 0 12px rgba(251, 191, 36, 0.5) !important;
-                }
-                div[data-testid="stRadio"].log-subtab div[role="radiogroup"] > label:has(input:checked) p,
-                div[data-testid="stRadio"].log-subtab div[role="radiogroup"] > label:has(input:checked) span {
-                    color: #ffffff !important;
-                }
-            </style>
-            """, unsafe_allow_html=True)
-
-            _log_subtab = st.radio(
-                "",
-                ["🔍 Filter", "📊 Statistik", "📋 Tabel Log", "📥 Download", "🗑️ Maintenance"],
-                horizontal=True,
-                key="log_subtab_nav",
-                label_visibility="collapsed",
-            )
-
-            # Baca data log SEKALI
+            st.caption("Riwayat **Login**, **Logout**, dan **Input** user.")
+            
+            # =====================================================================
+            # 📥 PANEL QUEUE
+            # =====================================================================
+            _pending_count = len(st.session_state.get("pending_activity_logs", []))
+            
+            col_q1, col_q2 = st.columns([3, 1])
+            with col_q1:
+                if _pending_count > 0:
+                    _warna = "🔴" if _pending_count >= 10 else "🟡"
+                    st.warning(f"{_warna} **{_pending_count} log di queue** — silahkan flush dulu biar tersimpan ke Google Sheets")
+                else:
+                    st.success("✅ Queue kosong — semua log sudah tersimpan di Google Sheets")
+            with col_q2:
+                if st.button(
+                    "💾 FLUSH LOG",
+                    use_container_width=True,
+                    type="primary",
+                    key="btn_flush_log_manual",
+                    disabled=(_pending_count == 0)
+                ):
+                    with st.spinner("⏳ Menulis log ke Google Sheets..."):
+                        _count, _msg = flush_pending_logs()
+                    if _count > 0:
+                        st.success(_msg)
+                        time.sleep(1)
+                        st.rerun()
+                    else:
+                        st.info(_msg)
+            
+            st.markdown("---")
+            
+            # =====================================================================
+            # 📊 BACA LOG DARI SHEET
+            # =====================================================================
             try:
-                with st.spinner("⏳ Membaca activity log..."):
+                with st.spinner("⏳ Membaca log..."):
                     _log_sheet_df = conn.read(worksheet="ACTIVITY_LOG", ttl=300)
             except Exception as e_log:
-                _err_str = str(e_log)
-                if "429" in _err_str or "Quota exceeded" in _err_str:
-                    st.warning("⚠️ Kuota Google Sheets habis sementara (60 read/menit). Tunggu 1 menit & refresh halaman.")
-                else:
-                    st.warning(f"⚠️ Sheet ACTIVITY_LOG belum dibuat atau error: {e_log}")
+                st.warning(f"⚠️ Sheet ACTIVITY_LOG error: {e_log}")
                 _log_sheet_df = pd.DataFrame()
-
-            _log_ready = False
-            if not _log_sheet_df.empty:
+            
+            if _log_sheet_df.empty:
+                st.info("📭 Belum ada log tersimpan. Klik **FLUSH LOG** untuk menyimpan log dari queue.")
+            else:
+                # Normalisasi kolom
                 _log_sheet_df.columns = _log_sheet_df.columns.astype(str).str.strip().str.lower()
                 for _c in ["timestamp", "username", "role", "action", "detail", "session_id"]:
                     if _c not in _log_sheet_df.columns:
                         _log_sheet_df[_c] = "-"
+                
                 _log_sheet_df["_dt"] = pd.to_datetime(
                     _log_sheet_df["timestamp"], format="%d/%m/%Y %H:%M:%S", errors="coerce"
                 )
-                _log_valid = _log_sheet_df.dropna(subset=["_dt"]).copy()
-                _log_ready = True
-
-            if not _log_ready:
-                st.info("📭 Belum ada aktivitas tercatat. Mulai dari login & gunakan aplikasi.")
-            else:
-                # Ambil filter dari session_state
-                _log_username_filter = st.session_state.get("log_filter_user", "Semua User")
-                _log_action_filter = st.session_state.get("log_filter_action", "Semua Action")
-                _log_range_filter = st.session_state.get("log_range_filter", "Semua (Tanpa Batas)")
-                _log_limit = st.session_state.get("log_filter_limit", 100)
-                _custom_start = st.session_state.get("log_custom_start", None)
-                _custom_end = st.session_state.get("log_custom_end", None)
-
-                _today = pd.Timestamp(waktu_wib.date())
-
-                if _log_range_filter == "Hari Ini":
-                    _start_dt = _today
-                    _end_dt = _today + pd.Timedelta(days=1)
-                elif _log_range_filter == "7 Hari Terakhir":
-                    _start_dt = _today - pd.Timedelta(days=6)
-                    _end_dt = _today + pd.Timedelta(days=1)
-                elif _log_range_filter == "30 Hari Terakhir":
-                    _start_dt = _today - pd.Timedelta(days=29)
-                    _end_dt = _today + pd.Timedelta(days=1)
-                elif _log_range_filter == "Bulan Ini":
-                    _start_dt = pd.Timestamp(waktu_wib.date().replace(day=1))
-                    _end_dt = _today + pd.Timedelta(days=1)
-                elif _log_range_filter == "Custom Range" and _custom_start and _custom_end:
-                    _start_dt = pd.Timestamp(_custom_start)
-                    _end_dt = pd.Timestamp(_custom_end) + pd.Timedelta(days=1)
-                else:
-                    _start_dt = _log_valid["_dt"].min() if not _log_valid.empty else _today
-                    _end_dt = (_log_valid["_dt"].max() + pd.Timedelta(days=1)) if not _log_valid.empty else (_today + pd.Timedelta(days=1))
-
-                _log_filtered = _log_valid[
-                    (_log_valid["_dt"] >= _start_dt) & (_log_valid["_dt"] < _end_dt)
-                ].copy()
-
-                if _log_username_filter != "Semua User":
-                    _log_filtered = _log_filtered[_log_filtered["username"].astype(str) == _log_username_filter]
-                if _log_action_filter != "Semua Action":
-                    _log_filtered = _log_filtered[_log_filtered["action"].astype(str).str.upper() == _log_action_filter.upper()]
-
-                _log_display_sorted = _log_filtered.sort_values("_dt", ascending=False)
-                _log_export_sorted = _log_filtered.sort_values("_dt", ascending=True)
-
-                if _log_limit != "Semua":
-                    _log_display_final = _log_display_sorted.head(int(_log_limit))
-                else:
-                    _log_display_final = _log_display_sorted
-
-                # =====================
-                # SUB-TAB 1: FILTER
-                # =====================
-                if _log_subtab == "🔍 Filter":
-                    st.markdown("##### 🔍 Pengaturan Filter")
-
-                    col_lf1, col_lf2 = st.columns(2)
-                    with col_lf1:
-                        st.selectbox(
+                _log_sheet_df = _log_sheet_df.dropna(subset=["_dt"])
+                _log_sheet_df = _log_sheet_df.sort_values("_dt", ascending=False).reset_index(drop=True)
+                
+                # =====================================================================
+                # 📑 SUB-TAB
+                # =====================================================================
+                _log_view = st.radio(
+                    "Pilih Tampilan:",
+                    ["📊 Ringkasan User", "📋 Detail Log"],
+                    horizontal=True,
+                    key="log_view_mode",
+                    label_visibility="collapsed",
+                )
+                
+                st.markdown("---")
+                
+                # =====================================================================
+                # VIEW 1: RINGKASAN USER
+                # =====================================================================
+                if _log_view == "📊 Ringkasan User":
+                    st.markdown("##### 📊 Ringkasan Aktivitas per User")
+                    st.caption("💡 Kolom 'Hari Aktif' = jumlah hari unik user pakai web (dari login)")
+                    
+                    # Ambil daftar user dari master personil
+                    _all_master_users = []
+                    if "person_df" in st.session_state and not st.session_state.person_df.empty:
+                        _person_df = st.session_state.person_df.copy()
+                        if "person_name" in _person_df.columns:
+                            _all_master_users = sorted(
+                                _person_df["person_name"].dropna().astype(str).str.strip().str.upper().unique().tolist()
+                            )
+                    
+                    if not _all_master_users:
+                        _all_master_users = [
+                            "ADMIN", "ARIS APRILIANTO", "TIKA", "RIZKI GUNAWAN",
+                            "ADELIA PRATIWI", "ILHAM PRIANDIKA", "REZA PURNAMA AGUSTIN",
+                            "SUBEKTI PANDU YULIANTO", "KUSDEWI TIA NINGRUM", "AHMAD ZAKI SYABANI ZEN"
+                        ]
+                    
+                    _user_summary = []
+                    
+                    for _user in _all_master_users:
+                        _user_upper = _user.upper()
+                        _user_logs = _log_sheet_df[
+                            _log_sheet_df["username"].astype(str).str.upper() == _user_upper
+                        ].copy()
+                        
+                        if _user_logs.empty:
+                            _user_summary.append({
+                                "👤 User": _user,
+                                "📅 Hari Aktif": 0,
+                                "🔓 Login": 0,
+                                "🚪 Logout": 0,
+                                "📝 Input": 0,
+                                "⏰ Login Terakhir": "— Belum pernah —",
+                                "📝 Input Terakhir": "— Belum pernah —",
+                                "⚠️ Status": "🔴 BELUM LOGIN",
+                            })
+                            continue
+                        
+                        _login_logs = _user_logs[_user_logs["action"].astype(str).str.upper() == "LOGIN"]
+                        _logout_logs = _user_logs[_user_logs["action"].astype(str).str.upper() == "LOGOUT"]
+                        _input_logs = _user_logs[_user_logs["action"].astype(str).str.upper() == "INPUT"]
+                        
+                        # Hitung hari aktif
+                        _user_logs["_date"] = _user_logs["_dt"].dt.date
+                        _hari_aktif = _user_logs[_user_logs["action"].astype(str).str.upper() == "LOGIN"]["_date"].nunique()
+                        
+                        # Cek login terakhir
+                        if not _login_logs.empty:
+                            _last_login_date = _login_logs.iloc[0]["_dt"]
+                            _selisih_hari = (pd.Timestamp.now() - _last_login_date).days
+                            
+                            if _selisih_hari > 7:
+                                _status_icon = f"🟡 {_selisih_hari} HARI LALU"
+                            elif _selisih_hari > 1:
+                                _status_icon = f"🟢 {_selisih_hari} hari lalu"
+                            else:
+                                _status_icon = "🟢 AKTIF HARI INI"
+                        else:
+                            _status_icon = "⚪ BELUM LOGIN"
+                        
+                        _user_summary.append({
+                            "👤 User": _user,
+                            "📅 Hari Aktif": _hari_aktif,
+                            "🔓 Login": len(_login_logs),
+                            "🚪 Logout": len(_logout_logs),
+                            "📝 Input": len(_input_logs),
+                            "⏰ Login Terakhir": _login_logs.iloc[0]["timestamp"] if not _login_logs.empty else "—",
+                            "📝 Input Terakhir": _input_logs.iloc[0]["timestamp"] if not _input_logs.empty else "—",
+                            "⚠️ Status": _status_icon,
+                        })
+                    
+                    if _user_summary:
+                        _summary_df = pd.DataFrame(_user_summary)
+                        _summary_df["_sort"] = _summary_df["📅 Hari Aktif"]
+                        _summary_df = _summary_df.sort_values(
+                            by=["⚠️ Status", "_sort"],
+                            ascending=[True, False]
+                        ).drop(columns=["_sort"])
+                        
+                        st.dataframe(_summary_df, use_container_width=True, hide_index=True)
+                        
+                        # Section Perlu Perhatian
+                        _user_belum_aktif = _summary_df[
+                            _summary_df["⚠️ Status"].astype(str).str.contains("HARI LALU|BELUM LOGIN", na=False)
+                        ]
+                        
+                        if not _user_belum_aktif.empty:
+                            st.markdown("---")
+                            st.markdown("##### ⚠️ User yang Perlu Perhatian")
+                            for _, _row in _user_belum_aktif.iterrows():
+                                _u = _row["👤 User"]
+                                _st = _row["⚠️ Status"]
+                                _last = _row["⏰ Login Terakhir"]
+                                
+                                if "BELUM LOGIN" in _st:
+                                    st.error(f"🔴 **{_u}** — Belum pernah login.")
+                                else:
+                                    st.warning(f"🟡 **{_u}** — Login terakhir: {_last}")
+                        else:
+                            st.success("✅ Semua user aktif dalam 7 hari terakhir!")
+                
+                # =====================================================================
+                # VIEW 2: DETAIL LOG
+                # =====================================================================
+                elif _log_view == "📋 Detail Log":
+                    st.markdown(f"##### 📋 Detail Log ({len(_log_sheet_df)} baris)")
+                    
+                    col_f1, col_f2 = st.columns(2)
+                    with col_f1:
+                        _filter_user = st.selectbox(
                             "Filter User",
-                            ["Semua User", "admin", "ARIS APRILIANTO", "TIKA", "RIZKI GUNAWAN",
-                             "ADELIA PRATIWI", "ILHAM PRIANDIKA", "REZA PURNAMA AGUSTIN",
-                             "SUBEKTI PANDU YULIANTO", "KUSDEWI TIA NINGRUM", "AHMAD ZAKI SYABANI ZEN"],
-                            key="log_filter_user",
+                            ["Semua"] + sorted([u for u in _log_sheet_df["username"].unique() if u not in ["-", ""]]),
+                            key="log_filter_user_view"
                         )
-                    with col_lf2:
-                        st.selectbox(
-                            "Filter Action",
-                            ["Semua Action", "LOGIN", "LOGOUT", "LOGIN_FAILED", "OPEN_TAB",
-                             "SAVE_SALES", "SAVE_PPS", "SAVE_MASTER", "EDIT_DATA", "DELETE_DATA",
-                             "REPORT", "BACKUP", "CLEANUP", "REFRESH", "CACHE", "CHECK"],
-                            key="log_filter_action",
+                    with col_f2:
+                        _filter_action = st.selectbox(
+                            "Filter Aksi",
+                            ["Semua", "LOGIN", "LOGOUT", "INPUT"],
+                            key="log_filter_action_view"
                         )
-
-                    st.markdown("##### 📅 Rentang Waktu")
-                    st.radio(
-                        "",
-                        ["Hari Ini", "7 Hari Terakhir", "30 Hari Terakhir",
-                         "Bulan Ini", "Custom Range", "Semua (Tanpa Batas)"],
-                        horizontal=True,
-                        key="log_range_filter",
-                        index=5,
-                        label_visibility="collapsed",
-                    )
-
-                    if st.session_state.get("log_range_filter") == "Custom Range":
-                        col_cr1, col_cr2 = st.columns(2)
-                        with col_cr1:
-                            st.date_input("📅 Dari Tanggal",
-                                          value=waktu_wib.date() - timedelta(days=7),
-                                          key="log_custom_start")
-                        with col_cr2:
-                            st.date_input("📅 Sampai Tanggal",
-                                          value=waktu_wib.date(),
-                                          key="log_custom_end")
-                        st.session_state["log_filter_limit"] = "Semua"
-                    else:
-                        st.selectbox("Tampilkan (jumlah baris)",
-                                     [50, 100, 200, 500, 1000, "Semua"],
-                                     index=1,
-                                     key="log_filter_limit")
-
-                    st.success("✅ Filter di-set. Pindah ke tab **📊 Statistik** / **📋 Tabel Log** untuk lihat hasilnya.")
-
-                # =====================
-                # SUB-TAB 2: STATISTIK
-                # =====================
-                elif _log_subtab == "📊 Statistik":
-                    st.markdown("##### 📊 Statistik Log Terfilter")
-
-                    col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-                    with col_m1:
-                        st.metric("📊 Log Terfilter", len(_log_filtered))
-                    with col_m2:
-                        st.metric("👥 User Unik", _log_filtered["username"].nunique())
-                    with col_m3:
-                        _login_count = int((_log_filtered["action"].astype(str).str.upper() == "LOGIN").sum())
-                        st.metric("🔓 Total Login", _login_count)
-                    with col_m4:
-                        _failed_count = int((_log_filtered["action"].astype(str).str.upper() == "LOGIN_FAILED").sum())
-                        st.metric("❌ Login Gagal", _failed_count)
-
-                    st.markdown("---")
-                    st.markdown("##### 🎯 Filter Aktif")
-                    col_fi1, col_fi2, col_fi3 = st.columns(3)
-                    with col_fi1:
-                        st.info(f"👤 User: **{_log_username_filter}**")
-                    with col_fi2:
-                        st.info(f"🎯 Action: **{_log_action_filter}**")
-                    with col_fi3:
-                        st.info(f"📅 Rentang: **{_log_range_filter}**")
-
-                    if not _log_filtered.empty:
-                        st.markdown("---")
-                        st.markdown("##### 📈 Breakdown per Action")
-                        _action_counts = _log_filtered["action"].astype(str).value_counts().reset_index()
-                        _action_counts.columns = ["Action", "Jumlah"]
-                        st.dataframe(_action_counts, use_container_width=True, hide_index=True)
-
-                # =====================
-                # SUB-TAB 3: TABEL LOG
-                # =====================
-                elif _log_subtab == "📋 Tabel Log":
-                    st.markdown(f"##### 📋 Menampilkan {len(_log_display_final)} dari {len(_log_filtered)} log")
-
-                    _log_display = _log_display_final.drop(columns=["_dt"]).rename(columns={
+                    
+                    _log_filtered = _log_sheet_df.copy()
+                    if _filter_user != "Semua":
+                        _log_filtered = _log_filtered[_log_filtered["username"] == _filter_user]
+                    if _filter_action != "Semua":
+                        _log_filtered = _log_filtered[_log_filtered["action"].astype(str).str.upper() == _filter_action]
+                    
+                    _log_display = _log_filtered.drop(columns=["_dt"]).rename(columns={
                         "timestamp": "⏰ Waktu",
                         "username": "👤 User",
                         "role": "🎭 Role",
-                        "action": "🎯 Action",
+                        "action": "🎯 Aksi",
                         "detail": "📝 Detail",
                         "session_id": "🔑 Session",
                     })
-                    st.dataframe(_log_display, use_container_width=True, hide_index=True)
-
-                # =====================
-                # SUB-TAB 4: DOWNLOAD
-                # =====================
-                elif _log_subtab == "📥 Download":
-                    st.markdown("##### 📥 Download Log ke Excel")
-
-                    _file_suffix = {
-                        "Hari Ini": f"Harian_{waktu_wib.strftime('%Y%m%d')}",
-                        "7 Hari Terakhir": f"Mingguan_{waktu_wib.strftime('%Y%m%d')}",
-                        "30 Hari Terakhir": f"30Hari_{waktu_wib.strftime('%Y%m%d')}",
-                        "Bulan Ini": f"Bulanan_{waktu_wib.strftime('%Y%m')}",
-                        "Custom Range": f"{_custom_start.strftime('%Y%m%d')}_{_custom_end.strftime('%Y%m%d')}" if _custom_start and _custom_end else "Custom",
-                        "Semua (Tanpa Batas)": "AllTime",
-                    }.get(_log_range_filter, "Custom")
-
-                    col_dl1, col_dl2, col_dl3 = st.columns(3)
-
-                    with col_dl1:
-                        _log_export_filtered = _log_export_sorted.drop(columns=["_dt"])
-                        _buffer_filtered = io.BytesIO()
-                        with pd.ExcelWriter(_buffer_filtered, engine="xlsxwriter") as _w:
-                            _log_export_filtered.to_excel(_w, sheet_name="ACTIVITY_LOG", index=False)
-                        st.download_button(
-                            label="📥 Filter Aktif",
-                            data=_buffer_filtered.getvalue(),
-                            file_name=f"ActivityLog_{_file_suffix}_{datetime.now().strftime('%H%M%S')}.xlsx",
-                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                            use_container_width=True,
-                            key="dl_activity_log_filtered",
-                            help=f"Download {len(_log_filtered)} baris sesuai filter aktif",
-                        )
-
-                    with col_dl2:
-                        _log_today = _log_valid[_log_valid["_dt"] >= _today].drop(columns=["_dt"])
-                        _buffer_today = io.BytesIO()
-                        with pd.ExcelWriter(_buffer_today, engine="xlsxwriter") as _w:
-                            _log_today.to_excel(_w, sheet_name="ACTIVITY_LOG", index=False)
-                        st.download_button(
-                            label=f"📥 Hari Ini ({len(_log_today)})",
-                            data=_buffer_today.getvalue(),
-                            file_name=f"ActivityLog_Harian_{waktu_wib.strftime('%Y%m%d')}.xlsx",
-                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                            use_container_width=True,
-                            key="dl_activity_log_today",
-                            help="Download log hari ini",
-                        )
-
-                    with col_dl3:
-                        _log_all = _log_valid.drop(columns=["_dt"])
-                        _buffer_all = io.BytesIO()
-                        with pd.ExcelWriter(_buffer_all, engine="xlsxwriter") as _w:
-                            _log_all.to_excel(_w, sheet_name="ACTIVITY_LOG", index=False)
-                        st.download_button(
-                            label=f"📥 Semua ({len(_log_all)})",
-                            data=_buffer_all.getvalue(),
-                            file_name=f"ActivityLog_AllTime_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
-                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                            use_container_width=True,
-                            key="dl_activity_log_all",
-                            help="Download semua log tanpa batas waktu",
-                        )
-
-                # =====================
-                # SUB-TAB 5: MAINTENANCE
-                # =====================
-                elif _log_subtab == "🗑️ Maintenance":
-                    st.markdown("##### 🗑️ Maintenance Log")
-                    st.caption("⚠️ Zona bahaya — aksi di sini tidak bisa di-undo. Backup dulu!")
-
-                    # 🆕 TOMBOL FLUSH LOGS MANUAL
-                    _pending_count = len(st.session_state.get("pending_activity_logs", []))
-                    st.info(f"📝 **{_pending_count}** log di queue (belum ditulis ke Sheets)")
                     
-                    if st.button("💾 Flush Logs ke Sheets", use_container_width=True, key="flush_logs_now"):
-                        if _pending_count > 0:
-                            with st.spinner("⏳ Menulis log ke Google Sheets..."):
-                                _flush_ok = flush_pending_logs()
-                                if _flush_ok:
-                                    st.success(f"✅ {_pending_count} log berhasil ditulis!")
-                                    time.sleep(1)
-                                    st.rerun()
-                                else:
-                                    st.error("❌ Gagal flush log. Coba lagi.")
-                        else:
-                            st.info("ℹ️ Tidak ada log di queue.")
+                    st.dataframe(_log_display.head(200), use_container_width=True, hide_index=True)
                     
-                    st.markdown("---")
-
-                    col_mt1, col_mt2 = st.columns(2)
-                    # ... sisanya tetap sama ...
-
-                    col_mt1, col_mt2 = st.columns(2)
-
-                    with col_mt1:
-                        st.markdown("###### 🔄 Refresh Data")
-                        st.caption("Tarik ulang data log dari Google Sheets (refresh cache).")
-                        if st.button("🔄 Refresh Log", use_container_width=True, key="refresh_log"):
-                            st.cache_data.clear()
-                            st.rerun()
-
-                    with col_mt2:
-                        st.markdown("###### 🗑️ Hapus Log Lama")
-                        st.caption("Hapus log lama untuk hemat kuota Google Sheets.")
-
-                        _hapus_opsi = st.radio(
-                            "Hapus log:",
-                            ["Log > 90 hari", "Log > 30 hari", "Log > 7 hari", "SEMUA log"],
-                            key="del_log_range",
-                        )
-
-                        if st.button("🗑️ Hapus Sekarang", key="btn_del_log", use_container_width=True):
-                            try:
-                                if _hapus_opsi == "SEMUA log":
-                                    _log_empty = pd.DataFrame(columns=["timestamp", "username", "role", "action", "detail", "session_id"])
-                                    conn.update(worksheet="ACTIVITY_LOG", data=_log_empty)
-                                    st.success("✅ Semua log dihapus.")
-                                else:
-                                    _days_map = {"Log > 90 hari": 90, "Log > 30 hari": 30, "Log > 7 hari": 7}
-                                    _days = _days_map[_hapus_opsi]
-                                    _batas = pd.Timestamp(datetime.now() - timedelta(days=_days))
-                                    _log_kept = _log_sheet_df[_log_sheet_df["_dt"] >= _batas].drop(columns=["_dt"], errors="ignore")
-                                    conn.update(worksheet="ACTIVITY_LOG", data=_log_kept)
-                                    st.success(f"✅ Log > {_days} hari dihapus. Sisa: {len(_log_kept)} log.")
-                                time.sleep(1)
-                                st.rerun()
-                            except Exception as e_del:
-                                st.error(f"❌ Gagal hapus log: {e_del}")
+                    _buffer = io.BytesIO()
+                    with pd.ExcelWriter(_buffer, engine="xlsxwriter") as _w:
+                        _log_display.to_excel(_w, sheet_name="ACTIVITY_LOG", index=False)
+                    st.download_button(
+                        label=f"📥 Download Log ({len(_log_display)} baris)",
+                        data=_buffer.getvalue(),
+                        file_name=f"ActivityLog_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        use_container_width=True,
+                        key="dl_log_detail",
+                    )
 
         # =====================================================================
         # 📲 TAB 6: GENERATOR REPORT WA/PDF/PPT
