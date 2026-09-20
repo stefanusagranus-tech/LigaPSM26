@@ -1663,89 +1663,74 @@ if not periods_dict and not active_periods_df.empty:
         for _, row in active_periods_df.iterrows()
     }
 
+# =========================================================================
+# 💾 BACKUP TO GSHEETS — VERSI FIX (Anti-Gagal)
+# =========================================================================
 def backup_to_gsheets():
-    """Menyimpan salinan cadangan otomatis ke tab _BACKUP di Google Sheets."""
-    try:
-        # =====================================================================
-        # 1. Backup Data PPS
-        # =====================================================================
-        if (
-            "sales_pps_df" in st.session_state
-            and not st.session_state.sales_pps_df.empty
-        ):
-            conn.update(
-                worksheet="SALES_PPS_BACKUP", data=st.session_state.sales_pps_df
-            )
-
-        if (
-            "periods_pps_df" in st.session_state
-            and not st.session_state.periods_pps_df.empty
-        ):
-            conn.update(
-                worksheet="PERIODE_PPS_BACKUP",
-                data=st.session_state.periods_pps_df,
-            )
-
-        # =====================================================================
-        # 2. Backup Data Utama / PSM
-        # =====================================================================
-        if (
-            "sales_item_df" in st.session_state
-            and not st.session_state.sales_item_df.empty
-        ):
-            conn.update(
-                worksheet="SALES_ITEM_BACKUP",
-                data=st.session_state.sales_item_df,
-            )
-
-        if (
-            "sales_person_df" in st.session_state
-            and not st.session_state.sales_person_df.empty
-        ):
-            conn.update(
-                worksheet="SALES_PERSON_BACKUP",
-                data=st.session_state.sales_person_df,
-            )
-
-        # =====================================================================
-        # 3. Backup PERIODE PSM (BARU!)
-        # =====================================================================
-        if (
-            "periods_df" in st.session_state
-            and not st.session_state.periods_df.empty
-        ):
-            conn.update(
-                worksheet="PERIODE_BACKUP",
-                data=st.session_state.periods_df,
-            )
-
-        # =====================================================================
-        # 4. Backup MASTER ITEM (BARU!)
-        # =====================================================================
-        if (
-            "items_df" in st.session_state
-            and not st.session_state.items_df.empty
-        ):
-            conn.update(
-                worksheet="MASTER_ITEM_BACKUP",
-                data=st.session_state.items_df,
-            )
-
-        # =====================================================================
-        # 5. Backup MASTER PERSONIL (BARU!)
-        # =====================================================================
-        if (
-            "person_df" in st.session_state
-            and not st.session_state.person_df.empty
-        ):
-            conn.update(
-                worksheet="MASTER_PERSONIL_BACKUP",
-                data=st.session_state.person_df,
-            )
-
-        return True
-    except Exception as e:
-        return False
+    """
+    Menyimpan salinan cadangan ke tab _BACKUP di Google Sheets.
+    
+    ⚡ PERBAIKAN:
+        - Delay antar sheet (hindari rate limit)
+        - Try-except per sheet (1 gagal tidak crash semua)
+        - Return dict hasil backup per sheet
+        - Kolom di-isi ulang kalau kosong
+    
+    Returns:
+        dict: {"success": [...], "failed": [...], "total": int}
+    """
+    _result = {"success": [], "failed": [], "total": 0}
+    
+    # Mapping: sheet name → session state key
+    _backup_map = [
+        ("SALES_PPS_BACKUP", "sales_pps_df"),
+        ("PERIODE_PPS_BACKUP", "periods_pps_df"),
+        ("SALES_ITEM_BACKUP", "sales_item_df"),
+        ("SALES_PERSON_BACKUP", "sales_person_df"),
+        ("PERIODE_BACKUP", "periods_df"),
+        ("MASTER_ITEM_BACKUP", "items_df"),
+        ("MASTER_PERSONIL_BACKUP", "person_df"),
+    ]
+    
+    for _sheet_name, _state_key in _backup_map:
+        try:
+            _df = st.session_state.get(_state_key, pd.DataFrame())
+            
+            if _df.empty:
+                _result["failed"].append(f"⚠️ {_sheet_name}: data kosong")
+                continue
+            
+            # Bersihkan DataFrame
+            _df_clean = _df.copy()
+            
+            # Isi NaN dengan string kosong
+            _df_clean = _df_clean.fillna("")
+            
+            # Pastikan kolom string
+            _df_clean.columns = _df_clean.columns.astype(str)
+            
+            # Reset index
+            _df_clean = _df_clean.reset_index(drop=True)
+            
+            # Update ke sheet
+            conn.update(worksheet=_sheet_name, data=_df_clean)
+            _result["success"].append(_sheet_name)
+            _result["total"] += len(_df_clean)
+            
+            # ⏱️ Delay antar sheet (penting!)
+            time.sleep(0.5)
+            
+        except Exception as e:
+            _err_msg = str(e)
+            if "429" in _err_msg or "Quota" in _err_msg:
+                _result["failed"].append(f"❌ {_sheet_name}: Kuota habis (tunggu 1 menit)")
+            elif "not found" in _err_msg.lower():
+                _result["failed"].append(f"❌ {_sheet_name}: Sheet tidak ditemukan")
+            else:
+                _result["failed"].append(f"❌ {_sheet_name}: {_err_msg[:50]}")
+            continue
+    
+    return _result
 
 # ==========================================
 # 3. WAKTU REALTIME GMT+7 (WIB)
@@ -15030,15 +15015,146 @@ elif selected_tab == "⚙️ Pengaturan & Master":
         """, unsafe_allow_html=True)
 
         # =====================================================================
-        # 🎛️ NAVIGASI TAB — 6 SEKSI UTAMA
+        # ⏱️ CSS INDIKATOR COOLDOWN (TAMBAHAN)
+        # =====================================================================
+        st.markdown("""
+        <style>
+            /* Cooldown info box */
+            .cooldown-box {
+                background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(245, 158, 11, 0.15));
+                border: 1.5px solid #ef4444;
+                border-radius: 8px;
+                padding: 10px 14px;
+                margin: 10px 0;
+                text-align: center;
+                font-family: monospace;
+            }
+            .cooldown-title {
+                color: #ef4444;
+                font-size: 11px;
+                font-weight: 900;
+                letter-spacing: 1px;
+                margin-bottom: 4px;
+            }
+            .cooldown-timer {
+                color: #fbbf24;
+                font-size: 18px;
+                font-weight: 900;
+                font-family: 'Courier New', monospace;
+                text-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
+            }
+            .cooldown-sub {
+                color: #94a3b8;
+                font-size: 9px;
+                margin-top: 3px;
+            }
+            
+            /* Tombol disabled saat cooldown */
+            div[data-testid="stButton"] > button:disabled {
+                background: linear-gradient(135deg, #334155 0%, #1e293b 100%) !important;
+                color: #64748b !important;
+                border-color: #475569 !important;
+                cursor: not-allowed !important;
+                opacity: 0.6 !important;
+            }
+            
+            /* Backup status box */
+            .backup-success-box {
+                background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(52, 211, 153, 0.15));
+                border: 1.5px solid #10b981;
+                border-radius: 8px;
+                padding: 10px 14px;
+                margin: 8px 0;
+                font-family: monospace;
+                font-size: 11px;
+                color: #34d399;
+            }
+            .backup-failed-box {
+                background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(245, 158, 11, 0.15));
+                border: 1.5px solid #ef4444;
+                border-radius: 8px;
+                padding: 10px 14px;
+                margin: 8px 0;
+                font-family: monospace;
+                font-size: 11px;
+                color: #fca5a5;
+            }
+        </style>
+        """, unsafe_allow_html=True)
+
+        # =====================================================================
+        # ⏱️ HELPER: COOLDOWN SYSTEM
+        # =====================================================================
+        def check_cooldown(action_key, cooldown_seconds=3600):
+            """Cek apakah tombol dalam masa cooldown."""
+            now = time.time()
+            last_click_key = f"cooldown_{action_key}"
+            last_click = st.session_state.get(last_click_key, 0)
+            
+            elapsed = now - last_click
+            remaining = cooldown_seconds - elapsed
+            
+            if remaining > 0:
+                _hours = int(remaining // 3600)
+                _minutes = int((remaining % 3600) // 60)
+                _seconds = int(remaining % 60)
+                
+                if _hours > 0:
+                    remaining_str = f"{_hours}j {_minutes}m {_seconds}s"
+                elif _minutes > 0:
+                    remaining_str = f"{_minutes}m {_seconds}s"
+                else:
+                    remaining_str = f"{_seconds}s"
+                
+                return True, int(remaining), remaining_str
+            
+            return False, 0, ""
+
+
+        def set_cooldown(action_key):
+            """Set cooldown untuk aksi tertentu."""
+            st.session_state[f"cooldown_{action_key}"] = time.time()
+
+
+        def render_cooldown_box(remaining_str, label="COOLDOWN AKTIF"):
+            """Render kotak cooldown dengan timer."""
+            st.markdown(f"""
+            <div class="cooldown-box">
+                <div class="cooldown-title">⏱️ {label}</div>
+                <div class="cooldown-timer">{remaining_str}</div>
+                <div class="cooldown-sub">Tunggu sampai cooldown selesai</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+
+        def render_backup_status(result):
+            """Render status backup dari dict result."""
+            if result["success"]:
+                st.markdown(f"""
+                <div class="backup-success-box">
+                    ✅ <b>Backup Berhasil</b><br>
+                    📦 Total data: <b>{result['total']:,} baris</b><br>
+                    ✔️ Sheet sukses: {len(result['success'])}/7
+                </div>
+                """, unsafe_allow_html=True)
+            
+            if result["failed"]:
+                _fail_lines = "<br>".join(result["failed"])
+                st.markdown(f"""
+                <div class="backup-failed-box">
+                    ⚠️ <b>Beberapa Sheet Gagal:</b><br>
+                    {_fail_lines}
+                </div>
+                """, unsafe_allow_html=True)
+
+        # =====================================================================
+        # 🎛️ NAVIGASI TAB — 4 SEKSI UTAMA
         # =====================================================================
         _admin_tab = st.radio(
             "",
             [
-                "📌 System Health",
+                "🛠️ Maintenance & Backup",
                 "📊 Database",
-                "📦 Backup",
-                "🧹 Cleanup",
                 "📜 Activity Log",
                 "📲 Report",
             ],
@@ -15050,187 +15166,161 @@ elif selected_tab == "⚙️ Pengaturan & Master":
         st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
         # =====================================================================
-        # 📌 TAB 1: SYSTEM HEALTH & QUICK ACTIONS
+        # 🛠️ TAB 1: MAINTENANCE & BACKUP (GABUNGAN)
         # =====================================================================
-        if _admin_tab == "📌 System Health":
-            st.markdown("### 📌 1. System Health & Quick Actions")
-
+        if _admin_tab == "🛠️ Maintenance & Backup":
+            st.markdown("### 🛠️ 1. Maintenance & Backup")
+            st.caption("Pusat maintenance sistem: health check, backup, dan cleanup data.")
+            
+            # =====================================================================
+            # 📊 SECTION A: SYSTEM HEALTH METRICS
+            # =====================================================================
+            st.markdown("---")
+            st.markdown("#### 📊 A. System Health")
+            
             _total_rows = 0
             for _k in ["sales_item_df", "sales_person_df", "sales_pps_df",
-                       "periods_df", "periods_pps_df", "items_df", "person_df"]:
+                    "periods_df", "periods_pps_df", "items_df", "person_df"]:
                 _df = st.session_state.get(_k, pd.DataFrame())
                 if not _df.empty:
                     _total_rows += len(_df)
-
+            
             _total_size_mb = 0
             for _k in ["sales_item_df", "sales_person_df", "sales_pps_df",
-                       "periods_df", "periods_pps_df", "items_df", "person_df"]:
+                    "periods_df", "periods_pps_df", "items_df", "person_df"]:
                 _df = st.session_state.get(_k, pd.DataFrame())
                 if not _df.empty:
                     _total_size_mb += _df.memory_usage(deep=True).sum() / (1024 * 1024)
-
+            
             _last_backup = st.session_state.get("last_backup_time", "Belum pernah")
-
+            _pending_count = len(st.session_state.get("pending_activity_logs", []))
+            
             col_h1, col_h2, col_h3, col_h4 = st.columns(4)
             with col_h1:
                 st.metric("🔗 Status Koneksi",
-                          "✅ Online" if not st.session_state.get("sales_item_df", pd.DataFrame()).empty else "⚠️ Loading")
+                        "✅ Online" if not st.session_state.get("sales_item_df", pd.DataFrame()).empty else "⚠️ Loading")
             with col_h2:
                 st.metric("💾 Total Baris Data", f"{_total_rows:,}")
             with col_h3:
                 st.metric("📦 Ukuran Data", f"{_total_size_mb:.2f} MB")
             with col_h4:
                 st.metric("💿 Backup Terakhir",
-                          str(_last_backup)[:16] if _last_backup != "Belum pernah" else "—")
-
-            st.markdown("##### ⚡ Quick Actions")
-            col_qa1, col_qa2, col_qa3, col_qa4 = st.columns(4)
-
+                        str(_last_backup)[:16] if _last_backup != "Belum pernah" else "—")
+            
+            # =====================================================================
+            # ⚡ SECTION B: QUICK ACTIONS (3 TOMBOL + COOLDOWN)
+            # =====================================================================
+            st.markdown("---")
+            st.markdown("#### ⚡ B. Quick Actions")
+            st.caption("⏱️ Setiap tombol memiliki cooldown untuk mencegah spam API.")
+            
+            col_qa1, col_qa2, col_qa3 = st.columns(3)
+            
+            # ---------- TOMBOL 1: Refresh Data ----------
             with col_qa1:
-                if st.button("🔄 Refresh Data", use_container_width=True, key="qa_refresh"):
-                    with st.spinner("⏳ Refresh data dari Google Sheets..."):
-                        st.cache_data.clear()
-                        try:
-                            (p_df, p_pps, p_store, i_df, pers, si, sp, s_pps, s_store) = load_database()
-                            st.session_state.periods_df = p_df
-                            st.session_state.periods_pps_df = p_pps
-                            st.session_state.periods_store_df = p_store
-                            st.session_state.items_df = i_df
-                            st.session_state.person_df = pers
-                            st.session_state.sales_item_df = si
-                            st.session_state.sales_person_df = sp
-                            st.session_state.sales_pps_df = s_pps
-                            st.session_state.sales_store_df = s_store
-                            log_activity("REFRESH", "Refresh data dari Google Sheets")
-                            st.toast("✅ Data berhasil di-refresh!", icon="⚡")
-                            time.sleep(0.5)
-                            st.rerun()
-                        except Exception as e_ref:
-                            st.error(f"❌ Gagal refresh: {e_ref}")
-
-            with col_qa2:
-                if st.button("💾 Backup Now", use_container_width=True, key="qa_backup"):
-                    with st.spinner("⏳ Backup ke tab _BACKUP..."):
-                        try:
-                            _bk_ok = backup_to_gsheets()
-                            if _bk_ok:
-                                st.session_state["last_backup_time"] = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
-                                log_activity("BACKUP", "Backup manual ke tab _BACKUP")
-                                st.success("✅ Backup berhasil!")
+                _cd, _remain, _remain_str = check_cooldown("refresh_data", 3600)
+                
+                if _cd:
+                    st.button("🔄 Refresh Data", use_container_width=True, key="qa_refresh", disabled=True)
+                    render_cooldown_box(_remain_str, "REFRESH COOLDOWN")
+                else:
+                    if st.button("🔄 Refresh Data", use_container_width=True, key="qa_refresh"):
+                        with st.spinner("⏳ Refresh data dari Google Sheets..."):
+                            st.cache_data.clear()
+                            try:
+                                (p_df, p_pps, p_store, i_df, pers, si, sp, s_pps, s_store) = load_database()
+                                st.session_state.periods_df = p_df
+                                st.session_state.periods_pps_df = p_pps
+                                st.session_state.periods_store_df = p_store
+                                st.session_state.items_df = i_df
+                                st.session_state.person_df = pers
+                                st.session_state.sales_item_df = si
+                                st.session_state.sales_person_df = sp
+                                st.session_state.sales_pps_df = s_pps
+                                st.session_state.sales_store_df = s_store
+                                set_cooldown("refresh_data")
+                                st.toast("✅ Data berhasil di-refresh!", icon="⚡")
                                 time.sleep(0.5)
                                 st.rerun()
-                            else:
-                                st.warning("⚠️ Tab *_BACKUP mungkin belum dibuat di Google Sheets.")
-                        except Exception as e_bk:
-                            st.error(f"❌ Gagal backup: {e_bk}")
-
-            with col_qa3:
-                if st.button("🗑️ Clear Cache", use_container_width=True, key="qa_cache"):
-                    st.cache_data.clear()
-                    log_activity("CACHE", "Clear cache Streamlit")
-                    st.toast("✅ Cache dibersihkan!", icon="⚡")
-                    time.sleep(0.5)
-                    st.rerun()
-
-            with col_qa4:
-                if st.button("🔍 Cek Duplikat", use_container_width=True, key="qa_dup"):
-                    _dup_count = 0
-                    for _k, _idcol in [
-                        ("sales_item_df", "record_id"),
-                        ("sales_person_df", "record_id"),
-                        ("sales_pps_df", "record_id"),
-                    ]:
-                        _df = st.session_state.get(_k, pd.DataFrame())
-                        if not _df.empty and _idcol in _df.columns:
-                            _dup_count += int(_df[_idcol].duplicated().sum())
-                    log_activity("CHECK", f"Cek duplikat: {_dup_count} ditemukan")
-                    if _dup_count > 0:
-                        st.warning(f"⚠️ Ditemukan **{_dup_count}** baris duplikat. Cek di Maintenance.")
-                    else:
-                        st.success("✅ Tidak ada duplikat!")
-
-        # =====================================================================
-        # 📊 TAB 2: DATABASE MONITORING
-        # =====================================================================
-        elif _admin_tab == "📊 Database":
-            st.markdown("### 📊 2. Database Monitoring")
-
-            _db_data = []
-            for _label, _key in [
-                ("📦 MASTER ITEM", "items_df"),
-                ("👥 MASTER PERSONIL", "person_df"),
-                ("📅 PERIODE PSM", "periods_df"),
-                ("📅 PERIODE PPS", "periods_pps_df"),
-                ("📝 SALES ITEM", "sales_item_df"),
-                ("📝 SALES PERSONIL", "sales_person_df"),
-                ("📝 SALES PPS", "sales_pps_df"),
-            ]:
-                _df = st.session_state.get(_key, pd.DataFrame())
-                _n_rows = len(_df)
-                _n_cols = len(_df.columns)
-                _size_mb = _df.memory_usage(deep=True).sum() / (1024 * 1024) if not _df.empty else 0
-                _db_data.append({
-                    "Tabel": _label,
-                    "Baris": _n_rows,
-                    "Kolom": _n_cols,
-                    "Ukuran (MB)": round(_size_mb, 3),
-                })
-
-            st.dataframe(pd.DataFrame(_db_data), use_container_width=True, hide_index=True)
-
-            _total_rows_db = 0
-            for _k in ["sales_item_df", "sales_person_df", "sales_pps_df",
-                       "periods_df", "periods_pps_df", "items_df", "person_df"]:
-                _df = st.session_state.get(_k, pd.DataFrame())
-                if not _df.empty:
-                    _total_rows_db += len(_df)
-
-            _max_cells = 10_000_000
-            _est_cells = _total_rows_db * 10
-            _pct_quota = min((_est_cells / _max_cells) * 100, 100)
-
-            st.markdown("##### 💾 Estimasi Kuota Google Sheets")
-            st.markdown(
-                f"**{_est_cells:,}** / **{_max_cells:,}** cell (~**{_pct_quota:.2f}%**) "
-                f"dari limit Google Sheets"
-            )
-            st.progress(_pct_quota / 100)
-
-            if _pct_quota < 50:
-                st.success(f"✅ Kuota aman ({_pct_quota:.1f}%)")
-            elif _pct_quota < 80:
-                st.warning(f"⚠️ Kuota mulai terpakai ({_pct_quota:.1f}%). Siap-siap cleanup.")
-            else:
-                st.error(f"🚨 Kuota hampir penuh ({_pct_quota:.1f}%)! Lakukan cleanup.")
-
-        # =====================================================================
-        # 📦 TAB 3: BACKUP & EXPORT
-        # =====================================================================
-        elif _admin_tab == "📦 Backup":
-            st.markdown("### 📦 3. Backup & Export Data")
-            col_bk1, col_bk2 = st.columns(2)
-            with col_bk1:
-                st.markdown("##### ☁️ Backup Otomatis Google Sheets")
-                st.caption(
-                    "Backup ke tab: SALES_PPS_BACKUP, PERIODE_PPS_BACKUP, "
-                    "SALES_ITEM_BACKUP, SALES_PERSON_BACKUP, PERIODE_BACKUP, "
-                    "MASTER_ITEM_BACKUP, MASTER_PERSONIL_BACKUP"
-                )
-                if st.button("⚡ Jalankan Backup Otomatis Sekarang", use_container_width=True, key="bk_auto_now"):
-                    with st.spinner("⏳ Backup ke tab _BACKUP..."):
-                        try:
-                            _bk_ok = backup_to_gsheets()
-                            if _bk_ok:
+                            except Exception as e_ref:
+                                st.error(f"❌ Gagal refresh: {e_ref}")
+            
+            # ---------- TOMBOL 2: Backup Now ----------
+            with col_qa2:
+                _cd_bk, _remain_bk, _remain_str_bk = check_cooldown("backup_now", 1800)  # 30 menit
+                
+                if _cd_bk:
+                    st.button("💾 Backup Now", use_container_width=True, key="qa_backup", disabled=True)
+                    render_cooldown_box(_remain_str_bk, "BACKUP COOLDOWN")
+                else:
+                    if st.button("💾 Backup Now", use_container_width=True, key="qa_backup"):
+                        with st.spinner("⏳ Backup ke tab _BACKUP..."):
+                            _bk_result = backup_to_gsheets()
+                            
+                            if _bk_result["success"]:
                                 st.session_state["last_backup_time"] = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
-                                log_activity("BACKUP", "Backup otomatis ke tab _BACKUP")
-                                st.success("✅ Backup ke tab `_BACKUP` berhasil!")
+                                set_cooldown("backup_now")
+                                render_backup_status(_bk_result)
+                                time.sleep(2)
+                                st.rerun()
                             else:
-                                st.warning("⚠️ Tab *_BACKUP mungkin belum dibuat di Google Sheets.")
-                        except Exception as e_bk:
-                            st.error(f"❌ Gagal backup: {e_bk}")
-
+                                st.error("❌ Semua sheet gagal di-backup. Cek detail di bawah.")
+                                render_backup_status(_bk_result)
+            
+            # ---------- TOMBOL 3: Clear Cache ----------
+            with col_qa3:
+                _cd_cc, _remain_cc, _remain_str_cc = check_cooldown("clear_cache", 1800)  # 30 menit
+                
+                if _cd_cc:
+                    st.button("🗑️ Clear Cache", use_container_width=True, key="qa_cache", disabled=True)
+                    render_cooldown_box(_remain_str_cc, "CACHE COOLDOWN")
+                else:
+                    if st.button("🗑️ Clear Cache", use_container_width=True, key="qa_cache"):
+                        st.cache_data.clear()
+                        set_cooldown("clear_cache")
+                        st.toast("✅ Cache dibersihkan!", icon="⚡")
+                        time.sleep(0.5)
+                        st.rerun()
+            
+            # =====================================================================
+            # 📦 SECTION C: BACKUP
+            # =====================================================================
+            st.markdown("---")
+            st.markdown("#### 📦 C. Backup Data")
+            
+            col_bk1, col_bk2 = st.columns(2)
+            
+            with col_bk1:
+                st.markdown("##### ☁️ Backup Otomatis ke Google Sheets")
+                st.caption(
+                    "Backup 7 sheet ke tab `_BACKUP`: SALES_PPS, PERIODE_PPS, "
+                    "SALES_ITEM, SALES_PERSON, PERIODE, MASTER_ITEM, MASTER_PERSONIL"
+                )
+                
+                _cd_bk2, _remain_bk2, _remain_str_bk2 = check_cooldown("backup_manual_sheet", 1800)  # 30 menit
+                
+                if _cd_bk2:
+                    st.button("⚡ Jalankan Backup Otomatis", use_container_width=True, key="bk_auto_now", disabled=True)
+                    render_cooldown_box(_remain_str_bk2, "BACKUP COOLDOWN")
+                else:
+                    if st.button("⚡ Jalankan Backup Otomatis", use_container_width=True, key="bk_auto_now"):
+                        with st.spinner("⏳ Backup ke tab _BACKUP... (delay 0.5 detik antar sheet)"):
+                            _bk_result = backup_to_gsheets()
+                            
+                            if _bk_result["success"]:
+                                st.session_state["last_backup_time"] = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
+                                set_cooldown("backup_manual_sheet")
+                                render_backup_status(_bk_result)
+                                time.sleep(2)
+                                st.rerun()
+                            else:
+                                st.error("❌ Semua sheet gagal di-backup.")
+                                render_backup_status(_bk_result)
+            
             with col_bk2:
                 st.markdown("##### 📥 Backup Manual File (.xlsx)")
+                st.caption("Download semua data ke file Excel (tanpa API Google Sheets).")
+                
                 try:
                     output_backup = io.BytesIO()
                     with pd.ExcelWriter(output_backup, engine="xlsxwriter") as backup_writer:
@@ -15247,7 +15337,7 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                             df_b = st.session_state.get(state_key, pd.DataFrame())
                             if not df_b.empty:
                                 df_b.to_excel(backup_writer, sheet_name=sheet_name, index=False)
-
+                    
                     excel_backup_bytes = output_backup.getvalue()
                     filename_time = datetime.now().strftime("%Y%m%d_%H%M%S")
                     st.download_button(
@@ -15260,49 +15350,65 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                     )
                 except Exception as e_dl:
                     st.error(f"⚠️ Gagal menyiapkan file download: {e_dl}")
-
-        # =====================================================================
-        # 🧹 TAB 4: MAINTENANCE & CLEANUP
-        # =====================================================================
-        elif _admin_tab == "🧹 Cleanup":
-            st.markdown("### 🧹 4. Maintenance & Cleanup")
+            
+            # =====================================================================
+            # 🧹 SECTION D: CLEANUP DATA
+            # =====================================================================
+            st.markdown("---")
+            st.markdown("#### 🧹 D. Cleanup Data")
             st.caption("⚠️ Hati-hati: aksi di bawah tidak bisa di-undo. Backup dulu sebelum cleanup.")
-
+            
             col_cl1, col_cl2, col_cl3 = st.columns(3)
-
+            
             with col_cl1:
                 st.markdown("##### 🔍 Data Duplikat")
+                
+                # Hitung duplikat + detail
                 _total_dup = 0
-                for _k, _idcol in [
-                    ("sales_item_df", "record_id"),
-                    ("sales_person_df", "record_id"),
-                    ("sales_pps_df", "record_id"),
+                _dup_detail = []
+                for _k, _label in [
+                    ("sales_item_df", "📝 Sales Item"),
+                    ("sales_person_df", "📝 Sales Personil"),
+                    ("sales_pps_df", "📝 Sales PPS"),
                 ]:
                     _df = st.session_state.get(_k, pd.DataFrame())
-                    if not _df.empty and _idcol in _df.columns:
-                        _total_dup += int(_df[_idcol].duplicated().sum())
-
+                    if not _df.empty and "record_id" in _df.columns:
+                        _n_dup = int(_df["record_id"].duplicated().sum())
+                        _total_dup += _n_dup
+                        if _n_dup > 0:
+                            _dup_detail.append(f"{_label}: {_n_dup}")
+                
                 st.metric("Duplikat Ditemukan", _total_dup)
-
+                
                 if _total_dup > 0:
-                    if st.button("🗑️ Hapus Duplikat", use_container_width=True, key="cln_dup"):
-                        _removed = 0
-                        for _k, _idcol in [
-                            ("sales_item_df", "record_id"),
-                            ("sales_person_df", "record_id"),
-                            ("sales_pps_df", "record_id"),
-                        ]:
-                            _df = st.session_state.get(_k, pd.DataFrame())
-                            if not _df.empty and _idcol in _df.columns:
-                                _before = len(_df)
-                                _df = _df.drop_duplicates(subset=[_idcol], keep="first")
-                                _removed += _before - len(_df)
-                                st.session_state[_k] = _df
-                        log_activity("CLEANUP", f"Hapus {_removed} baris duplikat")
-                        st.success(f"✅ {_removed} baris duplikat dihapus!")
-                        time.sleep(1)
-                        st.rerun()
-
+                    st.caption("**Detail:** " + " | ".join(_dup_detail))
+                
+                _cd_dup2, _remain_dup2, _remain_str_dup2 = check_cooldown("cleanup_dup", 1800)
+                
+                if _cd_dup2:
+                    st.button("🧹 CEK & HAPUS DUPLIKAT", use_container_width=True, key="cln_dup", disabled=True)
+                    render_cooldown_box(_remain_str_dup2, "CLEANUP COOLDOWN")
+                else:
+                    if _total_dup > 0:
+                        if st.button("🧹 CEK & HAPUS DUPLIKAT", use_container_width=True, key="cln_dup", type="primary"):
+                            _removed = 0
+                            for _k in ["sales_item_df", "sales_person_df", "sales_pps_df"]:
+                                _df = st.session_state.get(_k, pd.DataFrame())
+                                if not _df.empty and "record_id" in _df.columns:
+                                    _before = len(_df)
+                                    _df = _df.drop_duplicates(subset=["record_id"], keep="first")
+                                    _removed += _before - len(_df)
+                                    st.session_state[_k] = _df
+                            set_cooldown("cleanup_dup")
+                            st.success(f"✅ {_removed} baris duplikat dihapus!")
+                            time.sleep(1)
+                            st.rerun()
+                    else:
+                        if st.button("🔍 CEK DUPLIKAT", use_container_width=True, key="cln_dup"):
+                            st.success("✅ Tidak ada duplikat!")
+                            time.sleep(0.5)
+                            st.rerun()
+            
             with col_cl2:
                 st.markdown("##### 📭 Data Kosong (Qty 0)")
                 _total_zero = 0
@@ -15310,53 +15416,64 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                     _df = st.session_state.get(_k, pd.DataFrame())
                     if not _df.empty and "actual_qty" in _df.columns:
                         _total_zero += int((pd.to_numeric(_df["actual_qty"], errors="coerce").fillna(0) == 0).sum())
-
+                
                 st.metric("Data Qty 0", _total_zero)
-
+                
                 if _total_zero > 0:
-                    if st.button("🗑️ Hapus Data Kosong", use_container_width=True, key="cln_zero"):
-                        _removed_z = 0
-                        for _k in ["sales_item_df", "sales_person_df", "sales_pps_df"]:
-                            _df = st.session_state.get(_k, pd.DataFrame())
-                            if not _df.empty and "actual_qty" in _df.columns:
-                                _before = len(_df)
-                                _df = _df[pd.to_numeric(_df["actual_qty"], errors="coerce").fillna(0) > 0]
-                                _removed_z += _before - len(_df)
-                                st.session_state[_k] = _df
-                        log_activity("CLEANUP", f"Hapus {_removed_z} baris qty 0")
-                        st.success(f"✅ {_removed_z} baris qty 0 dihapus!")
-                        time.sleep(1)
-                        st.rerun()
-
+                    _cd_z, _remain_z, _remain_str_z = check_cooldown("cleanup_zero", 1800)
+                    
+                    if _cd_z:
+                        st.button("🗑️ Hapus Data Kosong", use_container_width=True, key="cln_zero", disabled=True)
+                        render_cooldown_box(_remain_str_z, "CLEANUP COOLDOWN")
+                    else:
+                        if st.button("🗑️ Hapus Data Kosong", use_container_width=True, key="cln_zero"):
+                            _removed_z = 0
+                            for _k in ["sales_item_df", "sales_person_df", "sales_pps_df"]:
+                                _df = st.session_state.get(_k, pd.DataFrame())
+                                if not _df.empty and "actual_qty" in _df.columns:
+                                    _before = len(_df)
+                                    _df = _df[pd.to_numeric(_df["actual_qty"], errors="coerce").fillna(0) > 0]
+                                    _removed_z += _before - len(_df)
+                                    st.session_state[_k] = _df
+                            set_cooldown("cleanup_zero")
+                            st.success(f"✅ {_removed_z} baris qty 0 dihapus!")
+                            time.sleep(1)
+                            st.rerun()
+            
             with col_cl3:
                 st.markdown("##### 🕰️ Data Lama (> 6 Bulan)")
-
                 _batas_lama = datetime.now() - timedelta(days=180)
                 _total_lama = 0
                 _sp_lama = st.session_state.get("sales_person_df", pd.DataFrame())
-
+                
                 if not _sp_lama.empty and "updated_at" in _sp_lama.columns:
                     _sp_lama["_dt"] = pd.to_datetime(_sp_lama["updated_at"], errors="coerce")
                     _dt_naive = _sp_lama["_dt"].dt.tz_localize(None) if hasattr(_sp_lama["_dt"].dt, "tz") else _sp_lama["_dt"]
                     _total_lama = int((_dt_naive < pd.Timestamp(_batas_lama)).sum())
-
+                
                 st.metric("Data > 6 Bulan", _total_lama)
-
+                
                 if _total_lama > 0:
-                    if st.button("🗑️ Hapus Data Lama", use_container_width=True, key="cln_lama"):
-                        _removed_l = 0
-                        _sp_l = st.session_state.get("sales_person_df", pd.DataFrame())
-                        if not _sp_l.empty and "updated_at" in _sp_l.columns:
-                            _before_l = len(_sp_l)
-                            _sp_l["_dt"] = pd.to_datetime(_sp_l["updated_at"], errors="coerce")
-                            _dt_naive2 = _sp_l["_dt"].dt.tz_localize(None) if hasattr(_sp_l["_dt"].dt, "tz") else _sp_l["_dt"]
-                            _sp_l = _sp_l[_dt_naive2 >= pd.Timestamp(_batas_lama)].drop(columns=["_dt"])
-                            _removed_l = _before_l - len(_sp_l)
-                            st.session_state["sales_person_df"] = _sp_l
-                        log_activity("CLEANUP", f"Hapus {_removed_l} baris > 6 bulan")
-                        st.success(f"✅ {_removed_l} baris lama dihapus!")
-                        time.sleep(1)
-                        st.rerun()
+                    _cd_l, _remain_l, _remain_str_l = check_cooldown("cleanup_lama", 1800)
+                    
+                    if _cd_l:
+                        st.button("🗑️ Hapus Data Lama", use_container_width=True, key="cln_lama", disabled=True)
+                        render_cooldown_box(_remain_str_l, "CLEANUP COOLDOWN")
+                    else:
+                        if st.button("🗑️ Hapus Data Lama", use_container_width=True, key="cln_lama"):
+                            _removed_l = 0
+                            _sp_l = st.session_state.get("sales_person_df", pd.DataFrame())
+                            if not _sp_l.empty and "updated_at" in _sp_l.columns:
+                                _before_l = len(_sp_l)
+                                _sp_l["_dt"] = pd.to_datetime(_sp_l["updated_at"], errors="coerce")
+                                _dt_naive2 = _sp_l["_dt"].dt.tz_localize(None) if hasattr(_sp_l["_dt"].dt, "tz") else _sp_l["_dt"]
+                                _sp_l = _sp_l[_dt_naive2 >= pd.Timestamp(_batas_lama)].drop(columns=["_dt"])
+                                _removed_l = _before_l - len(_sp_l)
+                                st.session_state["sales_person_df"] = _sp_l
+                            set_cooldown("cleanup_lama")
+                            st.success(f"✅ {_removed_l} baris lama dihapus!")
+                            time.sleep(1)
+                            st.rerun()
 
         # =====================================================================
         # 📜 TAB 5: ACTIVITY LOG / AUDIT TRAIL (VERSI SIMPLE)
