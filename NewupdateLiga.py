@@ -12566,19 +12566,6 @@ elif selected_tab == "📝 Input Data":
                     pass
         today = datetime.now().date()
         return today.replace(day=1), today
-
-
-    @st.dialog("🎉 Input Data Berhasil!")
-    def show_success_popup(inserted_count, person_name, date_str):
-        st.success(
-            f"**{inserted_count} Item Penjualan** berhasil disimpan secara permanen"
-            " ke database!"
-        )
-        st.markdown(f"""
-            * **Personil:** `{person_name}`
-            * **Tanggal:** `{date_str}`
-            * **Status:** Synchronized to Google Sheets ✅
-            """)
             
         if st.button("👍 Mantap, Tutup", use_container_width=True):
             st.rerun()
@@ -13024,28 +13011,6 @@ elif selected_tab == "📝 Input Data":
             )
         else:
 
-            @st.dialog("🎉 Data PPS Berhasil Disimpan!")
-            def show_success_pps_dialog(
-                staff_val, kasir_val, date_str, syarat_pwp_val, redeem_pwp_val
-            ):
-                st.success(
-                    "✅ **Data Sales PPS** berhasil disimpan dan diakumulasikan ke"
-                    " tabel **PERIODE_PPS**!"
-                )
-                st.markdown(f"""
-                    * **Staf / Personil:** `{staff_val}`
-                    * **Kasir:** `{kasir_val}`
-                    * **Tanggal:** `{date_str}`
-                    * **Syarat PWP:** `{syarat_pwp_val}` | **Redeem PWP:** `{redeem_pwp_val}`
-                    * **Status:** Synchronized to SALES_PPS & PERIODE_PPS ✅
-                    """)
-                if st.button(
-                    "👍 Oke, Lanjutkan / Tutup",
-                    use_container_width=True,
-                    key="btn_close_pps_dialog",
-                ):
-                    st.rerun()
-
             # Ambil daftar personil
             all_personnel = (
                 sorted(person_df["person_name"].dropna().unique().tolist())
@@ -13286,14 +13251,6 @@ elif selected_tab == "📝 Input Data":
                             "🥤 Cemilan Ceban": cemilan_ceban,
                         }
                     ) 
-                    
-                    show_success_pps_dialog(
-                        staff_name,
-                        kasir_name,
-                        tanggal_pps.strftime("%d/%m/%Y"),
-                        syarat_pwp,
-                        redeem_pwp,
-                    )
                 except Exception as e:
                     st.error(f"❌ Gagal menyimpan data SALES_PPS: {str(e)}")
 
@@ -15843,7 +15800,8 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                 total_poin_didapat = poin_psm + poin_pwp + poin_sg
 
                 # Format WA
-                wa_text = f"""📊 *REPORT SUMMARY PENJUALAN {selected_month_name.upper()} {waktu_wib.year}*
+                wa_text = f"""
+                📊 *REPORT SUMMARY PENJUALAN {selected_month_name.upper()} {waktu_wib.year}*
                 📅 _Generated: {_generate_str}_
                 ════════════════════════════════════════
 
@@ -15907,8 +15865,6 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                 ════════════════════════════════════════
 
                 🏆 *TOTAL POIN DIDAPAT: {total_poin_didapat:.2f}*
-
-                ⚠️ Catatan: Target otomatis 0 apabila sudah tercapai.
 
                 ════════════════════════════════════════
                 _Generated automatically via LigaPSM System_
