@@ -737,73 +737,274 @@ def show_success_dialog(
         unsafe_allow_html=True,
     )
     
-    # =====================================================================
-    # 🏛️ STRUKTUR HTML DIALOG
-    # =====================================================================
-    st.markdown(
-        f"""
-        <div class="dialog-frame">
-            <span class="corner corner-tl">⚜️</span>
-            <span class="corner corner-tr">⚜️</span>
-            <span class="corner corner-bl">⚜️</span>
-            <span class="corner corner-br">⚜️</span>
-            
-            <!-- HEADER BANNER -->
-            <div class="dialog-banner">
-                <div class="dialog-icon-wrap">
-                    <span class="dialog-sparkle dialog-sparkle-1">✦</span>
-                    <span class="dialog-icon">{icon}</span>
-                    <span class="dialog-sparkle dialog-sparkle-2">✦</span>
-                    <span class="dialog-sparkle dialog-sparkle-3">✦</span>
-                </div>
-                <h2 class="dialog-title">TRANSAKSI BERHASIL</h2>
-                <p class="dialog-subtitle">{subtitle}</p>
-            </div>
-            
-            <!-- BODY -->
-            <div class="dialog-body">
-                <div class="dialog-message">{title_msg}</div>
-                <div class="detail-scroll">
-        """,
-        unsafe_allow_html=True,
-    )
-    
-    # Render baris detail
-    if detail_dict:
+    # =========================================================================
+    # 💬 DIALOG KONFIRMASI EDIT — MENU EDIT DATA
+    # =========================================================================
+    @st.dialog("✏️ Konfirmasi Edit Data")
+    def show_edit_confirm_dialog(detail_dict, callback_key="confirm_edit"):
+        """
+        Dialog konfirmasi sebelum edit data.
+        """
+        # CSS Dialog
+        st.markdown("""
+        <style>
+            div[data-testid="stDialog"] > div {
+                background: radial-gradient(circle at top, #1e3a5f 0%, #0f172a 60%, #05070c 100%) !important;
+                border: 2px solid #b45309 !important;
+                border-radius: 14px !important;
+                box-shadow: 0 0 30px rgba(251, 191, 36, 0.4) !important;
+            }
+            div[data-testid="stDialog"] header { display: none !important; }
+            div[data-testid="stDialog"] [role="dialog"] > div:nth-child(2) {
+                padding: 20px 24px !important;
+            }
+            .edit-dialog-title {
+                text-align: center;
+                color: #fbbf24;
+                font-family: 'Cinzel', serif;
+                font-size: 18px;
+                font-weight: 900;
+                letter-spacing: 1.5px;
+                margin-bottom: 12px;
+                text-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
+            }
+            .edit-dialog-message {
+                text-align: center;
+                color: #cbd5e1;
+                font-family: 'Quicksand', sans-serif;
+                font-size: 12px;
+                margin-bottom: 16px;
+                padding: 10px;
+                background: rgba(0, 0, 0, 0.3);
+                border-left: 3px solid #b45309;
+                border-right: 3px solid #b45309;
+                border-radius: 6px;
+            }
+            .edit-detail-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 6px 10px;
+                border-bottom: 1px dashed rgba(180, 83, 9, 0.3);
+                font-family: monospace;
+                font-size: 11px;
+            }
+            .edit-detail-row:last-child { border-bottom: none; }
+            .edit-detail-key { color: #94a3b8; font-weight: 600; }
+            .edit-detail-value { color: #fbbf24; font-weight: 800; }
+            div[data-testid="stDialog"] div.stButton > button {
+                border-radius: 10px !important;
+                font-family: 'Cinzel', serif !important;
+                font-weight: 900 !important;
+                font-size: 12px !important;
+                padding: 12px 20px !important;
+                margin-top: 8px !important;
+                text-transform: uppercase !important;
+                letter-spacing: 1px !important;
+            }
+        </style>
+        """, unsafe_allow_html=True)
+        
+        st.markdown(
+            "<div class='edit-dialog-title'>✏️ KONFIRMASI EDIT DATA</div>",
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            "<div class='edit-dialog-message'>"
+            "Pastikan data yang akan diubah sudah benar. "
+            "Perubahan akan disimpan permanen."
+            "</div>",
+            unsafe_allow_html=True
+        )
+        
+        # Detail row
         for key, val in detail_dict.items():
             st.markdown(
-                f"""
-                <div class="detail-row">
-                    <span class="detail-key">{key}</span>
-                    <span class="detail-value">{val}</span>
-                </div>
-                """,
-                unsafe_allow_html=True,
+                f"<div class='edit-detail-row'>"
+                f"<span class='edit-detail-key'>{key}</span>"
+                f"<span class='edit-detail-value'>{val}</span>"
+                f"</div>",
+                unsafe_allow_html=True
             )
-    else:
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        col_ok, col_cancel = st.columns(2)
+        with col_ok:
+            if st.button("✅ YA, SIMPAN", use_container_width=True, key=f"{callback_key}_ok"):
+                st.session_state[f"{callback_key}_result"] = True
+                st.rerun()
+        with col_cancel:
+            if st.button("❌ BATAL", use_container_width=True, key=f"{callback_key}_cancel"):
+                st.session_state[f"{callback_key}_result"] = False
+                st.rerun()
+
+
+    # =========================================================================
+    # 💬 DIALOG KONFIRMASI HAPUS — MENU EDIT DATA
+    # =========================================================================
+    @st.dialog("🗑️ Konfirmasi Hapus Data")
+    def show_delete_confirm_dialog(detail_dict, warning_text="", callback_key="confirm_delete"):
+        """
+        Dialog konfirmasi sebelum hapus data (dengan peringatan merah).
+        """
+        st.markdown("""
+        <style>
+            div[data-testid="stDialog"] > div {
+                background: radial-gradient(circle at top, #4c1d1d 0%, #1a0a0a 60%, #05070c 100%) !important;
+                border: 2px solid #dc2626 !important;
+                border-radius: 14px !important;
+                box-shadow: 0 0 30px rgba(239, 68, 68, 0.5) !important;
+            }
+            div[data-testid="stDialog"] header { display: none !important; }
+            div[data-testid="stDialog"] [role="dialog"] > div:nth-child(2) {
+                padding: 20px 24px !important;
+            }
+            .del-dialog-title {
+                text-align: center;
+                color: #ef4444;
+                font-family: 'Cinzel', serif;
+                font-size: 18px;
+                font-weight: 900;
+                letter-spacing: 1.5px;
+                margin-bottom: 12px;
+                text-shadow: 0 0 15px rgba(239, 68, 68, 0.8);
+            }
+            .del-dialog-warning {
+                text-align: center;
+                color: #fca5a5;
+                font-family: 'Quicksand', sans-serif;
+                font-size: 12px;
+                font-weight: 700;
+                margin-bottom: 16px;
+                padding: 12px;
+                background: rgba(239, 68, 68, 0.15);
+                border: 1.5px solid #ef4444;
+                border-radius: 8px;
+                line-height: 1.5;
+            }
+            .del-detail-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 6px 10px;
+                border-bottom: 1px dashed rgba(239, 68, 68, 0.3);
+                font-family: monospace;
+                font-size: 11px;
+            }
+            .del-detail-row:last-child { border-bottom: none; }
+            .del-detail-key { color: #94a3b8; font-weight: 600; }
+            .del-detail-value { color: #fca5a5; font-weight: 800; }
+            div[data-testid="stDialog"] div.stButton > button {
+                border-radius: 10px !important;
+                font-family: 'Cinzel', serif !important;
+                font-weight: 900 !important;
+                font-size: 12px !important;
+                padding: 12px 20px !important;
+                margin-top: 8px !important;
+                text-transform: uppercase !important;
+                letter-spacing: 1px !important;
+            }
+        </style>
+        """, unsafe_allow_html=True)
+        
         st.markdown(
-            "<div style='text-align:center; color:#94a3b8; font-size:11px; padding:10px;'>"
-            "— Tidak ada detail tambahan —</div>",
+            "<div class='del-dialog-title'>🗑️ KONFIRMASI HAPUS</div>",
+            unsafe_allow_html=True
+        )
+        
+        if warning_text:
+            st.markdown(
+                f"<div class='del-dialog-warning'>⚠️ {warning_text} ⚠️</div>",
+                unsafe_allow_html=True
+            )
+        
+        for key, val in detail_dict.items():
+            st.markdown(
+                f"<div class='del-detail-row'>"
+                f"<span class='del-detail-key'>{key}</span>"
+                f"<span class='del-detail-value'>{val}</span>"
+                f"</div>",
+                unsafe_allow_html=True
+            )
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        col_ok, col_cancel = st.columns(2)
+        with col_ok:
+            if st.button("🗑️ YA, HAPUS", use_container_width=True, key=f"{callback_key}_ok"):
+                st.session_state[f"{callback_key}_result"] = True
+                st.rerun()
+        with col_cancel:
+            if st.button("❌ BATAL", use_container_width=True, key=f"{callback_key}_cancel"):
+                st.session_state[f"{callback_key}_result"] = False
+                st.rerun()
+
+        # =====================================================================
+        # 🏛️ STRUKTUR HTML DIALOG
+        # =====================================================================
+        st.markdown(
+            f"""
+            <div class="dialog-frame">
+                <span class="corner corner-tl">⚜️</span>
+                <span class="corner corner-tr">⚜️</span>
+                <span class="corner corner-bl">⚜️</span>
+                <span class="corner corner-br">⚜️</span>
+                
+                <!-- HEADER BANNER -->
+                <div class="dialog-banner">
+                    <div class="dialog-icon-wrap">
+                        <span class="dialog-sparkle dialog-sparkle-1">✦</span>
+                        <span class="dialog-icon">{icon}</span>
+                        <span class="dialog-sparkle dialog-sparkle-2">✦</span>
+                        <span class="dialog-sparkle dialog-sparkle-3">✦</span>
+                    </div>
+                    <h2 class="dialog-title">TRANSAKSI BERHASIL</h2>
+                    <p class="dialog-subtitle">{subtitle}</p>
+                </div>
+                
+                <!-- BODY -->
+                <div class="dialog-body">
+                    <div class="dialog-message">{title_msg}</div>
+                    <div class="detail-scroll">
+            """,
             unsafe_allow_html=True,
         )
-    
-    # Footer + tutup
-    st.markdown(
-        f"""
-                </div>
-                <div class="dialog-footer">
-                    <span class="pulse-dot"></span>
-                    <span>TERSINKRONISASI KE GOOGLE SHEETS</span>
+        
+        # Render baris detail
+        if detail_dict:
+            for key, val in detail_dict.items():
+                st.markdown(
+                    f"""
+                    <div class="detail-row">
+                        <span class="detail-key">{key}</span>
+                        <span class="detail-value">{val}</span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+        else:
+            st.markdown(
+                "<div style='text-align:center; color:#94a3b8; font-size:11px; padding:10px;'>"
+                "— Tidak ada detail tambahan —</div>",
+                unsafe_allow_html=True,
+            )
+        
+        # Footer + tutup
+        st.markdown(
+            f"""
+                    </div>
+                    <div class="dialog-footer">
+                        <span class="pulse-dot"></span>
+                        <span>TERSINKRONISASI KE GOOGLE SHEETS</span>
+                    </div>
                 </div>
             </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    
-    # Tombol Tutup
-    if st.button("⚜️ Tutup Gulungan ⚜️", use_container_width=True, key="btn_close_global_success_dialog"):
-        st.rerun()
+            """,
+            unsafe_allow_html=True,
+        )
+        
+        # Tombol Tutup
+        if st.button("⚜️ Tutup Gulungan ⚜️", use_container_width=True, key="btn_close_global_success_dialog"):
+            st.rerun()
 
 # =========================================================
 # 2. INISIALISASI KONEKSI GOOGLE SHEETS & FUNGSI DATABASE
@@ -14654,13 +14855,154 @@ elif selected_tab == "📝 Input Data":
                 st.code(wa_sueger_text, language="markdown")
 
 # --- EDIT DATA ---
-elif selected_tab == "➕ Edit Data (Admin)":
-    st.markdown(
-        "<h2 style='color: #00f0ff; text-shadow: 0 0 10px rgba(0,240,255,0.5);'>⚙️"
-        " Edit Data Jika Terjadi Kesalahan Input </h2>",
-        unsafe_allow_html=True,
-    )
-
+elif selected_tab == "➕ Edit Data (Admin)":    
+    # =========================================================================
+    # 🎨 CSS BACKGROUND + HEADER GLOBAL (UNTUK SEMUA SUB-TAB)
+    # =========================================================================
+    st.markdown("""
+    <style>
+        /* Background Utama Halaman Edit Data */
+        .stApp {
+            background-image: 
+                linear-gradient(rgba(10, 13, 26, 0.88), rgba(10, 13, 26, 0.95)),
+                url("https://i.imgur.com/LQzXT3U.jpeg") !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            background-attachment: fixed !important;
+        }
+        
+        .main .block-container {
+            background-color: transparent !important;
+            max-width: 900px !important;
+            padding-top: 2% !important;
+            padding-left: 12px !important;
+            padding-right: 12px !important;
+        }
+        
+        /* ============================================================ */
+        /* HEADER EDIT DATA — ROYAL FRAME */
+        /* ============================================================ */
+        .edit-data-header {
+            background: radial-gradient(circle, #1e3a5f 0%, #0f172a 100%);
+            border: 2px solid #b45309;
+            border-radius: 14px;
+            box-shadow: 0 0 25px rgba(180, 83, 9, 0.35), inset 0 0 20px rgba(0, 0, 0, 0.6);
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Ornamen Sudut */
+        .edit-data-header::before,
+        .edit-data-header::after {
+            content: "⚜️";
+            position: absolute;
+            color: #d4af37;
+            font-size: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.8));
+        }
+        .edit-data-header::before { left: 18px; }
+        .edit-data-header::after { right: 18px; }
+        
+        /* Garis Emas Atas */
+        .edit-data-header-top-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #d4af37, #fbbf24, #d4af37, transparent);
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.6);
+        }
+        
+        .edit-data-title {
+            font-family: 'Cinzel', serif;
+            font-size: 24px;
+            font-weight: 900;
+            color: #fbbf24;
+            letter-spacing: 2.5px;
+            margin: 0 0 6px 0;
+            text-shadow: 
+                0 0 15px rgba(251, 191, 36, 0.7),
+                2px 2px 4px rgba(0, 0, 0, 0.8);
+            position: relative;
+            z-index: 2;
+        }
+        .edit-data-subtitle {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 12px;
+            color: #94a3b8;
+            letter-spacing: 1.5px;
+            margin: 0;
+            font-weight: 600;
+            position: relative;
+            z-index: 2;
+        }
+        .edit-data-subtitle::before,
+        .edit-data-subtitle::after {
+            content: " ⚜ ";
+            color: #d4af37;
+            font-size: 10px;
+        }
+        
+        /* ============================================================ */
+        /* TOMBOL HOME */
+        /* ============================================================ */
+        .home-btn-container-edit {
+            max-width: 280px !important;
+            margin: 0 auto 20px auto !important;
+        }
+        .home-btn-container-edit div.stButton > button {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+            color: #fbbf24 !important;
+            border: 1.5px solid #d4af37 !important;
+            border-radius: 10px !important;
+            font-family: 'Cinzel', serif !important;
+            font-weight: 900 !important;
+            font-size: 12px !important;
+            letter-spacing: 1.5px !important;
+            padding: 12px 20px !important;
+            transition: all 0.3s ease !important;
+            width: 100% !important;
+        }
+        .home-btn-container-edit div.stButton > button:hover {
+            background: linear-gradient(135deg, #d4af37 0%, #9a7b38 100%) !important;
+            color: #0b0f19 !important;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.6) !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # =========================================================================
+    # 🏛️ HEADER UTAMA
+    # =========================================================================
+    st.markdown("""
+    <div class="edit-data-header">
+        <div class="edit-data-header-top-line"></div>
+        <h1 class="edit-data-title">⚙️ EDIT DATA (ADMIN) ⚙️</h1>
+        <p class="edit-data-subtitle">Koreksi Kesalahan Input • PSM & PPS</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # =========================================================================
+    # 🏠 TOMBOL HOME
+    # =========================================================================
+    st.markdown("<div class='home-btn-container-edit'>", unsafe_allow_html=True)
+    if st.button("🏠 KEMBALI KE MENU UTAMA", use_container_width=True, key="btn_home_edit_data_main"):
+        st.session_state["redirect_to_main_tab"] = True
+        st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # =========================================================================
+    # 🔐 CEK ADMIN
+    # =========================================================================
     current_user = st.session_state.get("username", "visitor")
     user_lower = str(current_user).lower()
     is_admin = any(
@@ -14753,7 +15095,12 @@ elif selected_tab == "➕ Edit Data (Admin)":
 
     selected_sub_tab = st.radio(
         "Pilih Menu Edit",
-        ["✏️ EDIT SALES PERSONIL", "🗑️ HAPUS & RESET"],
+        [
+            "✏️ EDIT SALES PSM",
+            "🎯 EDIT SALES PPS",       # ← BARU
+            "🗑️ HAPUS & RESET PSM",
+            "🚨 HAPUS & RESET PPS"     # ← BARU
+        ],
         label_visibility="collapsed",
         key="sub_tab_edit_radio"
     )
@@ -14991,7 +15338,382 @@ elif selected_tab == "➕ Edit Data (Admin)":
                         )
                         time.sleep(1.5)
                         st.rerun()
-              
+    # =========================================================================
+    # 🎯 EDIT SALES PPS (BARU)
+    # =========================================================================
+    elif selected_sub_tab == "🎯 EDIT SALES PPS":
+        
+        # =====================================================================
+        # 🏛️ SUB-HEADER
+        # =====================================================================
+        st.markdown("""
+        <div style='
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+            border: 1.5px solid #38bdf8;
+            border-left: 5px solid #38bdf8;
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+        '>
+            <div style='
+                font-family: monospace;
+                font-size: 16px;
+                font-weight: 900;
+                color: #38bdf8;
+                letter-spacing: 1.5px;
+                text-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+            '>🎯 EDIT SALES PPS</div>
+            <div style='
+                font-family: monospace;
+                font-size: 10px;
+                color: #94a3b8;
+                margin-top: 4px;
+                letter-spacing: 0.5px;
+            '>Koreksi data PPS — PWP, SG, Sueger, Ceban</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # =====================================================================
+        # 📥 AMBIL DATA PPS
+        # =====================================================================
+        _pps_all = st.session_state.get("sales_pps_df", pd.DataFrame()).copy()
+        
+        if _pps_all.empty:
+            st.warning("⚠️ Belum ada data PPS untuk diedit.")
+        else:
+            # Normalisasi kolom
+            _pps_all.columns = _pps_all.columns.astype(str).str.strip().str.lower()
+            
+            # Pastikan kolom tanggal
+            if "updated_at" not in _pps_all.columns:
+                st.error("❌ Kolom 'updated_at' tidak ditemukan di data PPS.")
+            else:
+                _pps_all["_dt"] = pd.to_datetime(_pps_all["updated_at"], errors="coerce")
+                _pps_all = _pps_all.dropna(subset=["_dt"])
+                
+                # =============================================================
+                # 🔍 SECTION FILTER
+                # =============================================================
+                st.markdown("""
+                <div style='
+                    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85));
+                    border: 1.5px solid #9a7b38;
+                    border-radius: 12px;
+                    padding: 16px 20px;
+                    margin-bottom: 16px;
+                '>
+                    <div style='
+                        font-family: monospace;
+                        font-size: 12px;
+                        font-weight: 900;
+                        color: #fbbf24;
+                        letter-spacing: 1px;
+                        margin-bottom: 12px;
+                        padding-bottom: 8px;
+                        border-bottom: 1px dashed rgba(180, 83, 9, 0.4);
+                    '>🔍 FILTER DATA PPS</div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                col_f1, col_f2, col_f3 = st.columns(3)
+                
+                with col_f1:
+                    _tanggal_filter = st.date_input(
+                        "📅 Pilih Tanggal",
+                        value=pd.Timestamp.now().date(),
+                        key="pps_edit_filter_date"
+                    )
+                
+                # Filter by tanggal dulu
+                _pps_tanggal = _pps_all[_pps_all["_dt"].dt.date == _tanggal_filter].copy()
+                
+                with col_f2:
+                    # Ambil shift unik dari tanggal terpilih
+                    if not _pps_tanggal.empty and "shift_personil" in _pps_tanggal.columns:
+                        _shift_list = ["Semua"] + sorted(_pps_tanggal["shift_personil"].dropna().astype(str).unique().tolist())
+                    else:
+                        _shift_list = ["Semua"]
+                    _shift_filter = st.selectbox(
+                        "🕐 Pilih Shift",
+                        _shift_list,
+                        key="pps_edit_filter_shift"
+                    )
+                
+                # Filter by shift
+                if _shift_filter != "Semua":
+                    _pps_shift = _pps_tanggal[_pps_tanggal["shift_personil"] == _shift_filter].copy()
+                else:
+                    _pps_shift = _pps_tanggal.copy()
+                
+                with col_f3:
+                    # Ambil kasir unik dari tanggal + shift
+                    if not _pps_shift.empty and "kasir_name" in _pps_shift.columns:
+                        _kasir_list = ["Semua"] + sorted(_pps_shift["kasir_name"].dropna().astype(str).unique().tolist())
+                    else:
+                        _kasir_list = ["Semua"]
+                    _kasir_filter = st.selectbox(
+                        "👤 Pilih Kasir",
+                        _kasir_list,
+                        key="pps_edit_filter_kasir"
+                    )
+                
+                # Filter final
+                if _kasir_filter != "Semua":
+                    _pps_filtered = _pps_shift[_pps_shift["kasir_name"] == _kasir_filter].copy()
+                else:
+                    _pps_filtered = _pps_shift.copy()
+                
+                # =============================================================
+                # 📋 DAFTAR TRANSAKSI
+                # =============================================================
+                if _pps_filtered.empty:
+                    st.info(f"📭 Tidak ada data PPS untuk filter: **{_tanggal_filter}** / **{_shift_filter}** / **{_kasir_filter}**")
+                else:
+                    st.markdown(f"""
+                    <div style='
+                        font-family: monospace;
+                        font-size: 12px;
+                        font-weight: 900;
+                        color: #fbbf24;
+                        letter-spacing: 1px;
+                        margin: 20px 0 12px 0;
+                        padding-bottom: 8px;
+                        border-bottom: 1px dashed rgba(180, 83, 9, 0.4);
+                    '>📋 DAFTAR TRANSAKSI ({len(_pps_filtered)} record)</div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Radio untuk pilih record
+                    _record_options = []
+                    for _idx, _row in _pps_filtered.iterrows():
+                        _label = f"🕐 {_row.get('shift_personil', '-')} | 👤 {_row.get('kasir_name', '-')} | 📅 {_row['_dt'].strftime('%d/%m/%Y')}"
+                        _record_options.append((_idx, _label))
+                    
+                    _record_labels = [opt[1] for opt in _record_options]
+                    
+                    _selected_label = st.radio(
+                        "Pilih record yang ingin diedit:",
+                        _record_labels,
+                        key="pps_edit_record_select",
+                        label_visibility="collapsed"
+                    )
+                    
+                    # Cari index berdasarkan label
+                    _selected_idx = None
+                    for _idx, _lbl in _record_options:
+                        if _lbl == _selected_label:
+                            _selected_idx = _idx
+                            break
+                    
+                    # =============================================================
+                    # ✏️ FORM EDIT
+                    # =============================================================
+                    if _selected_idx is not None:
+                        _selected_row = _pps_filtered.loc[_selected_idx]
+                        
+                        st.markdown(f"""
+                        <div style='
+                            font-family: monospace;
+                            font-size: 12px;
+                            font-weight: 900;
+                            color: #fbbf24;
+                            letter-spacing: 1px;
+                            margin: 20px 0 12px 0;
+                            padding-bottom: 8px;
+                            border-bottom: 1px dashed rgba(180, 83, 9, 0.4);
+                        '>✏️ EDIT DATA TERPILIH</div>
+                        """, unsafe_allow_html=True)
+                        
+                        with st.form("form_edit_pps_admin"):
+                            # Baris 1: Shift, Kasir, Tanggal
+                            col_e1, col_e2, col_e3 = st.columns(3)
+                            
+                            with col_e1:
+                                _shift_options = ["Shift 1", "Shift 2", "Shift 3", "Full Shift"]
+                                _current_shift = str(_selected_row.get("shift_personil", "Shift 1"))
+                                _shift_idx = _shift_options.index(_current_shift) if _current_shift in _shift_options else 0
+                                _new_shift = st.selectbox(
+                                    "🕐 Shift",
+                                    _shift_options,
+                                    index=_shift_idx,
+                                    key="edit_pps_shift"
+                                )
+                            
+                            with col_e2:
+                                # Ambil daftar personil
+                                _person_list = []
+                                if "person_df" in st.session_state and not st.session_state.person_df.empty:
+                                    _person_df_edit = st.session_state.person_df.copy()
+                                    if "person_name" in _person_df_edit.columns:
+                                        _person_list = sorted(_person_df_edit["person_name"].dropna().astype(str).unique().tolist())
+                                
+                                if not _person_list:
+                                    _person_list = [str(_selected_row.get("kasir_name", "-"))]
+                                
+                                _current_kasir = str(_selected_row.get("kasir_name", "-"))
+                                _kasir_idx = _person_list.index(_current_kasir) if _current_kasir in _person_list else 0
+                                _new_kasir = st.selectbox(
+                                    "👤 Kasir",
+                                    _person_list,
+                                    index=_kasir_idx,
+                                    key="edit_pps_kasir"
+                                )
+                            
+                            with col_e3:
+                                try:
+                                    _current_date = _selected_row["_dt"].date()
+                                except Exception:
+                                    _current_date = pd.Timestamp.now().date()
+                                _new_tanggal = st.date_input(
+                                    "📅 Tanggal",
+                                    value=_current_date,
+                                    key="edit_pps_tanggal"
+                                )
+                            
+                            st.markdown("---")
+                            
+                            # Baris 2: Angka PWP & SG
+                            st.markdown("**⚡ PWP & SG**")
+                            col_a1, col_a2, col_a3, col_a4 = st.columns(4)
+                            
+                            with col_a1:
+                                _new_syarat_pwp = st.number_input(
+                                    "Syarat PWP",
+                                    min_value=0, step=1,
+                                    value=int(pd.to_numeric(_selected_row.get("syarat_pwp", 0), errors="coerce")),
+                                    key="edit_pps_syarat_pwp"
+                                )
+                            with col_a2:
+                                _new_redeem_pwp = st.number_input(
+                                    "Redeem PWP",
+                                    min_value=0, step=1,
+                                    value=int(pd.to_numeric(_selected_row.get("redeem_pwp", 0), errors="coerce")),
+                                    key="edit_pps_redeem_pwp"
+                                )
+                            with col_a3:
+                                _new_qty_pwp = st.number_input(
+                                    "Qty PWP",
+                                    min_value=0, step=1,
+                                    value=int(pd.to_numeric(_selected_row.get("qty_pwp", 0), errors="coerce")),
+                                    key="edit_pps_qty_pwp"
+                                )
+                            with col_a4:
+                                _new_qty_sg = st.number_input(
+                                    "Qty SG",
+                                    min_value=0, step=1,
+                                    value=int(pd.to_numeric(_selected_row.get("qty_sg", 0), errors="coerce")),
+                                    key="edit_pps_qty_sg"
+                                )
+                            
+                            st.markdown("**💧 Sueger & Ceban**")
+                            col_b1, col_b2, col_b3 = st.columns(3)
+                            
+                            with col_b1:
+                                _new_syarat_sueger = st.number_input(
+                                    "Syarat Sueger",
+                                    min_value=0, step=1,
+                                    value=int(pd.to_numeric(_selected_row.get("syarat_sueger", 0), errors="coerce")),
+                                    key="edit_pps_syarat_sueger"
+                                )
+                            with col_b2:
+                                _new_redeem_sueger = st.number_input(
+                                    "Redeem Sueger",
+                                    min_value=0, step=1,
+                                    value=int(pd.to_numeric(_selected_row.get("redeem_sueger", 0), errors="coerce")),
+                                    key="edit_pps_redeem_sueger"
+                                )
+                            with col_b3:
+                                _new_cemilan_ceban = st.number_input(
+                                    "Cemilan Ceban",
+                                    min_value=0, step=1,
+                                    value=int(pd.to_numeric(_selected_row.get("cemilan_ceban", 0), errors="coerce")),
+                                    key="edit_pps_cemilan_ceban"
+                                )
+                            
+                            st.markdown("---")
+                            
+                            _btn_submit_edit_pps = st.form_submit_button(
+                                "💾 SIMPAN PERUBAHAN",
+                                use_container_width=True,
+                                type="primary"
+                            )
+                        
+                        # =============================================================
+                        # 💬 KONFIRMASI EDIT VIA DIALOG
+                        # =============================================================
+                        if _btn_submit_edit_pps:
+                            _detail_edit = {
+                                "🕐 Shift": f"{_selected_row.get('shift_personil', '-')} → {_new_shift}",
+                                "👤 Kasir": f"{_selected_row.get('kasir_name', '-')} → {_new_kasir}",
+                                "📅 Tanggal": f"{_selected_row['_dt'].strftime('%d/%m/%Y')} → {_new_tanggal.strftime('%d/%m/%Y')}",
+                                "⚔️ Syarat PWP": f"{_selected_row.get('syarat_pwp', 0)} → {_new_syarat_pwp}",
+                                "🛡️ Redeem PWP": f"{_selected_row.get('redeem_pwp', 0)} → {_new_redeem_pwp}",
+                                "📦 Qty PWP": f"{_selected_row.get('qty_pwp', 0)} → {_new_qty_pwp}",
+                                "🎁 Qty SG": f"{_selected_row.get('qty_sg', 0)} → {_new_qty_sg}",
+                                "💧 Syarat Sueger": f"{_selected_row.get('syarat_sueger', 0)} → {_new_syarat_sueger}",
+                                "💧 Redeem Sueger": f"{_selected_row.get('redeem_sueger', 0)} → {_new_redeem_sueger}",
+                                "🥤 Cemilan Ceban": f"{_selected_row.get('cemilan_ceban', 0)} → {_new_cemilan_ceban}",
+                            }
+                            
+                            # Simpan state untuk di-commit di dialog
+                            st.session_state["pending_edit_pps"] = {
+                                "idx": _selected_idx,
+                                "data": {
+                                    "shift_personil": _new_shift,
+                                    "kasir_name": _new_kasir,
+                                    "updated_at": str(_new_tanggal),
+                                    "syarat_pwp": _new_syarat_pwp,
+                                    "redeem_pwp": _new_redeem_pwp,
+                                    "qty_pwp": _new_qty_pwp,
+                                    "qty_sg": _new_qty_sg,
+                                    "syarat_sueger": _new_syarat_sueger,
+                                    "redeem_sueger": _new_redeem_sueger,
+                                    "cemilan_ceban": _new_cemilan_ceban,
+                                }
+                            }
+                            
+                            show_edit_confirm_dialog(_detail_edit, callback_key="edit_pps_confirm")
+                        
+                        # =============================================================
+                        # 💾 COMMIT EDIT (setelah user klik "YA, SIMPAN")
+                        # =============================================================
+                        if st.session_state.get("edit_pps_confirm_result", False):
+                            st.session_state["edit_pps_confirm_result"] = False
+                            
+                            _pending = st.session_state.pop("pending_edit_pps", None)
+                            if _pending:
+                                try:
+                                    _idx_to_edit = _pending["idx"]
+                                    _new_data = _pending["data"]
+                                    
+                                    # Update di session_state
+                                    _pps_now = st.session_state.get("sales_pps_df", pd.DataFrame()).copy()
+                                    
+                                    # Cari index yang match (berdasarkan index asli)
+                                    for _col, _val in _new_data.items():
+                                        if _col in _pps_now.columns:
+                                            _pps_now.loc[_idx_to_edit, _col] = _val
+                                    
+                                    st.session_state.sales_pps_df = _pps_now
+                                    
+                                    # Sync ke periode PPS
+                                    sync_periode_pps_from_sales()
+                                    
+                                    # Save ke Google Sheets
+                                    save_database(
+                                        st.session_state.sales_item_df,
+                                        st.session_state.sales_person_df,
+                                        st.session_state.sales_pps_df,
+                                        st.session_state.sales_store_df,
+                                    )
+                                    
+                                    st.toast("✅ Data PPS berhasil diupdate!", icon="🎉")
+                                    time.sleep(1.5)
+                                    st.rerun()
+                                except Exception as _e:
+                                    st.error(f"❌ Gagal update: {_e}")
+
+
 # --- TAB MASTER DATA & PENGATURAN ---
 elif selected_tab == "⚙️ Pengaturan & Master":
     st.markdown(
