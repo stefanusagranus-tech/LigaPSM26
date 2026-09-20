@@ -15425,7 +15425,7 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                 # 📑 SUB-TAB
                 # =====================================================================
                 _log_view = st.radio(
-                    "Pilih Tampilan:",
+                    "",
                     ["📊 Ringkasan User", "📋 Detail Log"],
                     horizontal=True,
                     key="log_view_mode",
