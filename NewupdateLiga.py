@@ -2001,15 +2001,14 @@ def log_activity(action, detail=""):
         print(f"[LOG_ACTIVITY ERROR] {e}")
 
 # =========================================================================
-# 🚀 WELCOME SCREEN — VERSI SIMPLE (FIXED + TOMBOL DI DALAM)
+# 🚀 WELCOME SCREEN — VERSI SIMPLE (FIXED - STREAMLIT BUTTON)
 # =========================================================================
 def show_welcome_screen():
     """
     Tampilkan welcome screen keren setelah login berhasil.
-    Tombol masuk ada DI DALAM overlay (via JS).
+    Pakai st.button native (bisa diklik) + overlay HTML dekoratif.
     """
     import hashlib
-    import streamlit.components.v1 as components
     
     _username = st.session_state.get("username", "User")
     
@@ -2027,37 +2026,56 @@ def show_welcome_screen():
     else:
         _sapaan = "Selamat Malam"
     
-    # Avatar based on username (konsisten)
+    # Avatar based on username
     _avatar_list = ["🧙‍♂️", "🧝‍♂️", "⚔️", "🎯", "🛡️", "🦁", "🦅", "🐺", "👑", "💎", "🔮", "🔥"]
     _h = int(hashlib.md5(_username.upper().encode()).hexdigest(), 16)
     _avatar = _avatar_list[_h % len(_avatar_list)]
     
-    # Admin pakai avatar khusus
     if any(x in _username.lower() for x in ["admin", "chief", "cos", "lavitality"]):
         _avatar = "👑"
     
-    # === HTML + CSS + JS (ALL IN ONE) ===
-    html_welcome = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
+    # === CSS + OVERLAY ===
+    st.markdown(f"""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&family=Quicksand:wght@600;700&family=Cinzel:wght@600;700;800&display=swap');
         
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* HIDE SIDEBAR & HEADER */
+        [data-testid="stSidebar"],
+        [data-testid="stHeader"],
+        [data-testid="stToolbar"] {{
+            display: none !important;
         }}
         
-        body {{
+        /* HIDE EVERYTHING ELSE */
+        .main .block-container {{
+            padding: 0 !important;
+            max-width: 100% !important;
+        }}
+        
+        /* MAIN CONTENT HIDDEN - hanya tombol & overlay */
+        .main .block-container > div:not(:has(.welcome-overlay-css)) {{
+            visibility: hidden;
+        }}
+        
+        /* OVERLAY FULLSCREEN */
+        .welcome-overlay-css {{
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 999990;
+            background: radial-gradient(ellipse at top, #1e3a5f 0%, #0f172a 50%, #05070c 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             overflow: hidden;
-            font-family: 'Quicksand', sans-serif;
+            animation: welcomeEnter 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+            pointer-events: none; /* Biar tombol di atasnya bisa diklik */
         }}
         
         @keyframes welcomeEnter {{
-            0% {{ opacity: 0; transform: scale(0.9) translateY(30px); filter: blur(10px); }}
-            100% {{ opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }}
+            0% {{ opacity: 0; transform: scale(0.9); }}
+            100% {{ opacity: 1; transform: scale(1); }}
         }}
         @keyframes welcomeIconPulse {{
             0%, 100% {{ transform: scale(1); filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.6)); }}
@@ -2076,19 +2094,6 @@ def show_welcome_screen():
             to {{ transform: rotate(360deg); }}
         }}
         
-        .welcome-overlay {{
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            background: radial-gradient(ellipse at top, #1e3a5f 0%, #0f172a 50%, #05070c 100%);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            animation: welcomeEnter 0.8s cubic-bezier(0.25, 1, 0.5, 1);
-        }}
-        
         .welcome-corner {{
             position: absolute;
             color: #d4af37;
@@ -2102,8 +2107,7 @@ def show_welcome_screen():
         .welcome-corner-br {{ bottom: 30px; right: 30px; }}
         
         .welcome-avatar {{
-            width: 140px;
-            height: 140px;
+            width: 140px; height: 140px;
             border-radius: 50%;
             background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
             border: 4px solid #d4af37;
@@ -2114,7 +2118,6 @@ def show_welcome_screen():
             margin-bottom: 32px;
             animation: welcomeIconPulse 2.5s infinite ease-in-out;
             position: relative;
-            z-index: 10;
         }}
         .welcome-avatar::before {{
             content: "";
@@ -2154,7 +2157,6 @@ def show_welcome_screen():
             text-transform: uppercase;
             margin-bottom: 8px;
             text-align: center;
-            animation: welcomeEnter 1s cubic-bezier(0.25, 1, 0.5, 1);
             opacity: 0.9;
         }}
         
@@ -2171,34 +2173,48 @@ def show_welcome_screen():
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            animation: welcomeEnter 1.2s cubic-bezier(0.25, 1, 0.5, 1), welcomeShimmer 4s infinite linear;
+            animation: welcomeShimmer 4s infinite linear;
             filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.4));
         }}
         
-        .welcome-btn {{
-            background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
-            color: #ffffff;
-            border: 2px solid #fbbf24;
-            border-radius: 50px;
-            font-family: 'Cinzel', serif;
-            font-weight: 900;
-            font-size: 15px;
-            letter-spacing: 2px;
-            padding: 18px 60px;
-            cursor: pointer;
-            text-transform: uppercase;
-            box-shadow: 0 0 25px rgba(251, 191, 36, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
-            transition: all 0.3s ease;
+        /* === TOMBOL STREAMLIT DIPAKSA POSITION FIXED DI ATAS OVERLAY === */
+        div[data-testid="stButton"]:has(button[key="btn_enter_app"]) {{
+            position: fixed !important;
+            bottom: 30% !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            z-index: 999999 !important;
+            width: auto !important;
+            max-width: 320px !important;
+            min-width: 280px !important;
+            margin: 0 !important;
+            padding: 0 !important;
             animation: welcomeEnter 1.6s cubic-bezier(0.25, 1, 0.5, 1);
-            min-width: 280px;
         }}
-        .welcome-btn:hover {{
-            background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%);
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 0 40px rgba(251, 191, 36, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        
+        div[data-testid="stButton"]:has(button[key="btn_enter_app"]) > button {{
+            background: linear-gradient(135deg, #b45309 0%, #d97706 100%) !important;
+            color: #ffffff !important;
+            border: 2px solid #fbbf24 !important;
+            border-radius: 50px !important;
+            font-family: 'Cinzel', serif !important;
+            font-weight: 900 !important;
+            font-size: 15px !important;
+            letter-spacing: 2px !important;
+            padding: 18px 40px !important;
+            height: auto !important;
+            min-height: 64px !important;
+            text-transform: uppercase !important;
+            box-shadow: 0 0 25px rgba(251, 191, 36, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+            transition: all 0.3s ease !important;
+            width: 100% !important;
+            cursor: pointer !important;
         }}
-        .welcome-btn:active {{
-            transform: translateY(0) scale(1);
+        
+        div[data-testid="stButton"]:has(button[key="btn_enter_app"]) > button:hover {{
+            background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%) !important;
+            transform: translateY(-3px) scale(1.02) !important;
+            box-shadow: 0 0 40px rgba(251, 191, 36, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
         }}
         
         @media (max-width: 768px) {{
@@ -2207,61 +2223,36 @@ def show_welcome_screen():
             .welcome-name {{ font-size: 26px; letter-spacing: 2px; margin-bottom: 30px; }}
             .welcome-spark {{ font-size: 16px; }}
             .welcome-corner {{ font-size: 16px; }}
-            .welcome-btn {{ font-size: 13px; padding: 14px 40px; min-width: 240px; }}
+            div[data-testid="stButton"]:has(button[key="btn_enter_app"]) > button {{
+                font-size: 13px !important;
+                padding: 14px 30px !important;
+                min-height: 56px !important;
+            }}
         }}
     </style>
-    </head>
-    <body>
 
-    <div class="welcome-overlay">
+    <div class="welcome-overlay-css">
         <div class="welcome-corner welcome-corner-tl">⚜️</div>
         <div class="welcome-corner welcome-corner-tr">⚜️</div>
         <div class="welcome-corner welcome-corner-bl">⚜️</div>
         <div class="welcome-corner welcome-corner-br">⚜️</div>
-        
         <div class="welcome-spark welcome-spark-1">✦</div>
         <div class="welcome-spark welcome-spark-2">✦</div>
         <div class="welcome-spark welcome-spark-3">✦</div>
         <div class="welcome-spark welcome-spark-4">✦</div>
-        
         <div class="welcome-avatar">{_avatar}</div>
-        
         <p class="welcome-greeting">{_sapaan}</p>
         <h1 class="welcome-name">{_username}</h1>
-        
-        <button class="welcome-btn" onclick="enterApp()">⚔️ MASUK KE APLIKASI</button>
     </div>
-
-    <script>
-        function enterApp() {{
-            // Kirim sinyal ke Streamlit via URL params
-            const url = new URL(window.parent.location.href);
-            url.searchParams.set('welcome_entered', '1');
-            window.parent.location.href = url.toString();
-        }}
-    </script>
-
-    </body>
-    </html>
-    """
+    """, unsafe_allow_html=True)
     
-    # Render full HTML via components.html (bukan st.markdown)
-    components.html(html_welcome, height=800, scrolling=False)
-    
-    # Cek URL param untuk masuk
-    _query_params = st.query_params
-    if _query_params.get("welcome_entered") == "1":
-        st.session_state["welcome_shown"] = True
-        st.query_params.clear()
-        st.rerun()
-    
-    st.stop()    
-    # === TOMBOL MASUK ===
-    st.markdown('<div class="welcome-btn-container">', unsafe_allow_html=True)
-    if st.button("⚔️ MASUK KE APLIKASI", use_container_width=True, key="btn_enter_app"):
-        st.session_state["welcome_shown"] = True
-        st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+    # === TOMBOL STREAMLIT (di-render sebagai satu-satunya elemen visible) ===
+    # Bungkus dengan div untuk styling
+    col_btn1, col_btn2, col_btn3 = st.columns([1, 1, 1])
+    with col_btn2:
+        if st.button("⚔️ MASUK KE APLIKASI", use_container_width=True, key="btn_enter_app"):
+            st.session_state["welcome_shown"] = True
+            st.rerun()
     
     st.stop()
 
