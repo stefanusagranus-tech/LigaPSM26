@@ -15476,6 +15476,89 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                             st.rerun()
 
         # =====================================================================
+        # 📊 TAB 2: DATABASE MONITORING
+        # =====================================================================
+        elif _admin_tab == "📊 Database":
+            st.markdown("### 📊 2. Database Monitoring")
+            st.caption("Info ukuran tiap tabel data & estimasi kuota Google Sheets.")
+            
+            # =====================================================================
+            # 📋 TABEL INFO UKURAN
+            # =====================================================================
+            _db_data = []
+            for _label, _key in [
+                ("📦 MASTER ITEM", "items_df"),
+                ("👥 MASTER PERSONIL", "person_df"),
+                ("📅 PERIODE PSM", "periods_df"),
+                ("📅 PERIODE PPS", "periods_pps_df"),
+                ("📝 SALES ITEM", "sales_item_df"),
+                ("📝 SALES PERSONIL", "sales_person_df"),
+                ("📝 SALES PPS", "sales_pps_df"),
+            ]:
+                _df = st.session_state.get(_key, pd.DataFrame())
+                _n_rows = len(_df)
+                _n_cols = len(_df.columns)
+                _size_mb = _df.memory_usage(deep=True).sum() / (1024 * 1024) if not _df.empty else 0
+                _db_data.append({
+                    "Tabel": _label,
+                    "Baris": _n_rows,
+                    "Kolom": _n_cols,
+                    "Ukuran (MB)": round(_size_mb, 3),
+                })
+            
+            st.dataframe(pd.DataFrame(_db_data), use_container_width=True, hide_index=True)
+            
+            # =====================================================================
+            # 💾 ESTIMASI KUOTA
+            # =====================================================================
+            _total_rows_db = 0
+            for _k in ["sales_item_df", "sales_person_df", "sales_pps_df",
+                       "periods_df", "periods_pps_df", "items_df", "person_df"]:
+                _df = st.session_state.get(_k, pd.DataFrame())
+                if not _df.empty:
+                    _total_rows_db += len(_df)
+            
+            _max_cells = 10_000_000
+            _est_cells = _total_rows_db * 10
+            _pct_quota = min((_est_cells / _max_cells) * 100, 100)
+            
+            st.markdown("---")
+            st.markdown("##### 💾 Estimasi Kuota Google Sheets")
+            st.markdown(
+                f"**{_est_cells:,}** / **{_max_cells:,}** cell (~**{_pct_quota:.2f}%**) "
+                f"dari limit Google Sheets"
+            )
+            st.progress(_pct_quota / 100)
+            
+            if _pct_quota < 50:
+                st.success(f"✅ Kuota aman ({_pct_quota:.1f}%)")
+            elif _pct_quota < 80:
+                st.warning(f"⚠️ Kuota mulai terpakai ({_pct_quota:.1f}%). Siap-siap cleanup.")
+            else:
+                st.error(f"🚨 Kuota hampir penuh ({_pct_quota:.1f}%)! Lakukan cleanup.")
+            
+            # =====================================================================
+            # 🔔 STATUS QUEUE LOG
+            # =====================================================================
+            st.markdown("---")
+            st.markdown("##### 📜 Status Queue Log")
+            
+            _pending_count = len(st.session_state.get("pending_activity_logs", []))
+            col_q1, col_q2 = st.columns(2)
+            with col_q1:
+                st.metric("Log di Queue", _pending_count, 
+                          help="Log yang belum ditulis ke Google Sheets")
+            with col_q2:
+                _last_flush = st.session_state.get("last_flush_time", "Belum pernah")
+                st.metric("Flush Terakhir", 
+                          str(_last_flush)[:16] if _last_flush != "Belum pernah" else "—")
+            
+            if _pending_count > 0:
+                st.warning(f"⚠️ Ada **{_pending_count} log** di queue. Flush di tab **Activity Log** atau tunggu auto-flush tengah malam.")
+            else:
+                st.success("✅ Queue kosong — semua log sudah tersimpan.")
+
+        # =====================================================================
         # 📜 TAB 5: ACTIVITY LOG / AUDIT TRAIL (VERSI SIMPLE)
         # =====================================================================
         elif _admin_tab == "📜 Activity Log":
