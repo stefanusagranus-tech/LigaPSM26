@@ -2001,12 +2001,11 @@ def log_activity(action, detail=""):
         print(f"[LOG_ACTIVITY ERROR] {e}")
 
 # =========================================================================
-# 🚀 WELCOME SCREEN — VERSI FINAL (TOMBOL CAKEP + BISA DIKLIK)
+# 🚀 WELCOME SCREEN — VERSI FINAL (AVATAR SAMA DENGAN HALL OF FAME)
 # =========================================================================
 def show_welcome_screen():
     """
-    Welcome screen final: tombol cakep oranye DAN bisa diklik.
-    Trik: CSS pakai attribute selector [key="..."].
+    Welcome screen final: avatar konsisten dengan Hall of Fame.
     """
     import hashlib
     
@@ -2026,11 +2025,16 @@ def show_welcome_screen():
     else:
         _sapaan = "Selamat Malam"
     
-    # Avatar
-    _avatar_list = ["🧙‍♂️", "🧝‍♂️", "⚔️", "🎯", "🛡️", "🦁", "🦅", "🐺", "👑", "💎", "🔮", "🔥"]
+    # ✅ AVATAR — SAMA DENGAN HALL OF FAME
+    _avatar_list = [
+        "🧙‍♂️", "🧝‍♂️", "🧝‍♀️", "⚔️", "🎯", "🛡️", "🦁", "🦅",
+        "🐺", "👑", "💎", "🔮", "🔥", "🏹", "🪄", "🗡️",
+        "⚗️", "🧛‍♂️", "🧟‍♂️", "🐉", "🦉", "🐻", "🦊", "🦌"
+    ]
     _h = int(hashlib.md5(_username.upper().encode()).hexdigest(), 16)
     _avatar = _avatar_list[_h % len(_avatar_list)]
     
+    # Admin special case
     if any(x in _username.lower() for x in ["admin", "chief", "cos", "lavitality"]):
         _avatar = "👑"
     
@@ -2039,20 +2043,17 @@ def show_welcome_screen():
 <style>
     @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&family=Quicksand:wght@600;700&family=Cinzel:wght@600;700;800&display=swap');
     
-    /* HIDE SIDEBAR & HEADER */
     [data-testid="stSidebar"],
     [data-testid="stHeader"],
     [data-testid="stToolbar"] {
         display: none !important;
     }
     
-    /* HILANGKAN SEMUA ELEMEN KECUALI OVERLAY & TOMBOL */
     .main .block-container {
         padding: 0 !important;
         max-width: 100% !important;
     }
     
-    /* OVERLAY FULLSCREEN */
     .welcome-overlay-css {
         position: fixed;
         top: 0; left: 0;
@@ -2161,7 +2162,7 @@ def show_welcome_screen():
         font-weight: 900;
         letter-spacing: 3px;
         text-align: center;
-        margin: 0 0 40px 0;
+        margin: 0 0 20px 0;
         line-height: 1.1;
         background: linear-gradient(90deg, #f7e7b4 0%, #d4af37 25%, #f7e7b4 50%, #d4af37 75%, #f7e7b4 100%);
         background-size: 1000px 100%;
@@ -2170,27 +2171,13 @@ def show_welcome_screen():
         background-clip: text;
         animation: welcomeShimmer 4s infinite linear;
         filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.4));
-    }
-    
-    /* ============================================================
-       TOMBOL STREAMLIT — POSITION FIXED DI ATAS OVERLAY
-       Pakai attribute selector [key=...] yang lebih universal
-       ============================================================ */
-    div[data-testid="stButton"] button[kind="secondary"][aria-label*="MASUK"],
-    div[data-testid="stButton"] button[aria-label*="MASUK"],
-    div[data-testid="stButton"]:has(> button[kind]) button {
-        /* Fallback: kalau selector :has() tidak support, ini apply ke semua tombol */
-    }
-    
-    /* Target div parent dari tombol welcome */
-    div[data-testid="stButton"] {
         position: relative;
+        z-index: 10;
     }
     
-    /* Target LAST button di halaman (tombol welcome) */
     div[data-testid="stButton"]:last-of-type {
         position: fixed !important;
-        bottom: 25% !important;
+        bottom: 80px !important;
         left: 50% !important;
         transform: translateX(-50%) !important;
         z-index: 999999 !important;
@@ -2227,21 +2214,26 @@ def show_welcome_screen():
         box-shadow: 0 0 40px rgba(251, 191, 36, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
     }
     
-    /* Sembunyikan kolom lain */
-    div[data-testid="stColumn"]:not(:has(div[data-testid="stButton"]:last-of-type)) {
-        display: none !important;
-    }
-    
     @media (max-width: 768px) {
         .welcome-avatar { width: 100px; height: 100px; font-size: 50px; margin-bottom: 24px; }
         .welcome-greeting { font-size: 13px; letter-spacing: 4px; }
-        .welcome-name { font-size: 26px; letter-spacing: 2px; margin-bottom: 30px; }
+        .welcome-name { font-size: 26px; letter-spacing: 2px; margin-bottom: 16px; }
         .welcome-spark { font-size: 16px; }
         .welcome-corner { font-size: 16px; }
+        
+        div[data-testid="stButton"]:last-of-type {
+            bottom: 60px !important;
+        }
         div[data-testid="stButton"]:last-of-type > button {
             font-size: 13px !important;
             padding: 14px 30px !important;
             min-height: 56px !important;
+        }
+    }
+    
+    @media (min-width: 1200px) {
+        div[data-testid="stButton"]:last-of-type {
+            bottom: 100px !important;
         }
     }
 </style>
@@ -2261,13 +2253,12 @@ def show_welcome_screen():
 </div>
 """, unsafe_allow_html=True)
     
-    # === TOMBOL NATIVE (1 SATU SAJA, POSITION FIXED VIA CSS) ===
     if st.button("⚔️ MASUK KE APLIKASI", use_container_width=True, key="btn_enter_app"):
         st.session_state["welcome_shown"] = True
         st.rerun()
     
     st.stop()
-    
+
 # --- INISIALISASI GLOBAL PERIODS_DICT ---
 periods_dict = {}
 active_periods_df = st.session_state.get("periods_df", pd.DataFrame())
