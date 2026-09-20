@@ -3751,7 +3751,7 @@ st.sidebar.markdown(
 
 # Navigasi Menu Utama (Jika mengecil, otomatis hanya menampilkan karakter ikon pertamanya saja)
 if st.session_state.sidebar_collapsed:
-    menu_options = ["🏠", "📝","📊", "➕", "⚙️"]
+    menu_options = ["🏠", "📝", "📊", "➕", "⚙️"]
     st.sidebar.markdown("<center><p style='color:#a1a1aa; font-size:12px;'>📌</p></center>", unsafe_allow_html=True)
 else:
     menu_options = ["🏠 Menu Utama", "📝 Input Data","📊 Store Performance","➕ Edit Data (Admin)", "⚙️ Pengaturan & Master"]
