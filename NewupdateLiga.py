@@ -2001,7 +2001,7 @@ def log_activity(action, detail=""):
         print(f"[LOG_ACTIVITY ERROR] {e}")
 
 # =========================================================================
-# 🚀 WELCOME SCREEN — VERSI SIMPLE
+# 🚀 WELCOME SCREEN — VERSI SIMPLE (FIXED)
 # =========================================================================
 def show_welcome_screen():
     """
@@ -2034,25 +2034,22 @@ def show_welcome_screen():
     if any(x in _username.lower() for x in ["admin", "chief", "cos", "lavitality"]):
         _avatar = "👑"
     
-    # Render HTML
-    st.markdown(f"""
-    <div class="welcome-overlay">
-        <div class="welcome-corner welcome-corner-tl">⚜️</div>
-        <div class="welcome-corner welcome-corner-tr">⚜️</div>
-        <div class="welcome-corner welcome-corner-bl">⚜️</div>
-        <div class="welcome-corner welcome-corner-br">⚜️</div>
-        
-        <div class="welcome-spark welcome-spark-1">✦</div>
-        <div class="welcome-spark welcome-spark-2">✦</div>
-        <div class="welcome-spark welcome-spark-3">✦</div>
-        <div class="welcome-spark welcome-spark-4">✦</div>
-        
-        <div class="welcome-avatar">{_avatar}</div>
-        
-        <p class="welcome-greeting">{_sapaan}</p>
-        <h1 class="welcome-name">{_username}</h1>
-    </div>
-    """, unsafe_allow_html=True)
+    # Render HTML — TANPA INDENTASI (mulai dari kolom 0)
+    html_welcome = f"""<div class="welcome-overlay">
+<div class="welcome-corner welcome-corner-tl">⚜️</div>
+<div class="welcome-corner welcome-corner-tr">⚜️</div>
+<div class="welcome-corner welcome-corner-bl">⚜️</div>
+<div class="welcome-corner welcome-corner-br">⚜️</div>
+<div class="welcome-spark welcome-spark-1">✦</div>
+<div class="welcome-spark welcome-spark-2">✦</div>
+<div class="welcome-spark welcome-spark-3">✦</div>
+<div class="welcome-spark welcome-spark-4">✦</div>
+<div class="welcome-avatar">{_avatar}</div>
+<p class="welcome-greeting">{_sapaan}</p>
+<h1 class="welcome-name">{_username}</h1>
+</div>"""
+    
+    st.markdown(html_welcome, unsafe_allow_html=True)
     
     # Tombol Masuk
     st.markdown('<div class="welcome-btn-container">', unsafe_allow_html=True)
@@ -2061,7 +2058,7 @@ def show_welcome_screen():
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
     
-    st.stop()        
+    st.stop()
 
 
 # --- INISIALISASI GLOBAL PERIODS_DICT ---
