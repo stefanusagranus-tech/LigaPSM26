@@ -3493,29 +3493,6 @@ st.markdown(
         .marquee-text { font-size: 11px; }
         .hourglass-spin { font-size: 24px; }
     }
-    /* =========================================================================
-    🎯 FORCE HIDE RADIO DOT — GLOBAL (SEMUA RADIO)
-    ========================================================================= */
-    div[data-testid="stRadio"] input[type="radio"],
-    div[data-testid="stRadio"] [type="radio"],
-    div[data-testid="stRadio"] > div > div > label > div:first-child,
-    div[data-testid="stRadio"] div[role="radiogroup"] > label > div:first-child,
-    div[data-testid="stRadio"] [data-baseweb="radio"] > div:first-child,
-    input[type="radio"] {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        width: 0 !important;
-        height: 0 !important;
-        position: absolute !important;
-        pointer-events: none !important;
-    }
-
-    /* Sembunyikan SVG bullet kalau ada */
-    div[data-testid="stRadio"] svg[data-testid="stRadioButtonCustomIcon"],
-    div[data-testid="stRadio"] [data-testid="stRadioButtonCustomIcon"] {
-        display: none !important;
-    }
 </style>
 """,
     unsafe_allow_html=True,
@@ -3763,6 +3740,29 @@ st.sidebar.markdown(
         div[data-testid="stRadio"] [data-testid="stMarkdownVisibility"] {
             display: none;
         }
+        /* =========================================================================
+        🎯 FORCE HIDE RADIO DOT — GLOBAL (SEMUA RADIO)
+        ========================================================================= */
+        div[data-testid="stRadio"] input[type="radio"],
+        div[data-testid="stRadio"] [type="radio"],
+        div[data-testid="stRadio"] > div > div > label > div:first-child,
+        div[data-testid="stRadio"] div[role="radiogroup"] > label > div:first-child,
+        div[data-testid="stRadio"] [data-baseweb="radio"] > div:first-child,
+        input[type="radio"] {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+            position: absolute !important;
+            pointer-events: none !important;
+        }
+
+        /* Sembunyikan SVG bullet kalau ada */
+        div[data-testid="stRadio"] svg[data-testid="stRadioButtonCustomIcon"],
+        div[data-testid="stRadio"] [data-testid="stRadioButtonCustomIcon"] {
+            display: none !important;
+        }
     </style>
 """,
     unsafe_allow_html=True,
@@ -3821,9 +3821,14 @@ if st.session_state.sidebar_collapsed:
     menu_options = ["🏠", "📝", "📊", "➕", "⚙️"]
     st.sidebar.markdown("<center><p style='color:#a1a1aa; font-size:12px;'>📌</p></center>", unsafe_allow_html=True)
 else:
-    menu_options = ["🏠 Menu Utama", "📝 Input Data","📊 Store Performance","➕ Edit Data (Admin)", "⚙️ Pengaturan & Master"]
+    menu_options = [
+        "🏠 Menu Utama",
+        "📝 Input Data",
+        "📊 Daily Performance",
+        "➕ Edit Data (Admin)",
+        "⚙️ Pengaturan & Master"
+    ]
     st.sidebar.markdown("<p style='color:#a1a1aa; font-size:11px; font-weight:700; padding: 0 10px;'>📌 NAVIGASI MENU</p>", unsafe_allow_html=True)
-
 # 🚀 TAMBAHKAN SAKLAR PENGUNCI PERKEMAHAN INI TEPAT DI ATAS ST.SIDEBAR.RADIO ANDA:
 if st.session_state.get("current_camp_menu") == "quiz_campaign":
     # Paksa agar navigasi utama mengalah dan mengunci sistem tetap di halaman Quiz Campaign
@@ -15185,6 +15190,596 @@ elif selected_tab == "📝 Input Data":
                     wa_sueger_text += f"_Belum ada catatan transaksi Sueger untuk Kasir {selected_kasir} bulan ini._\n"
 
                 st.code(wa_sueger_text, language="markdown")
+
+
+# =============================================================================
+# 📊 DAILY PERFORMANCE TOKO — HALAMAN BARU
+# =============================================================================
+elif selected_tab == "📊 Daily Performance":
+    
+    # =========================================================================
+    # 🎨 CSS BACKGROUND + HEADER
+    # =========================================================================
+    st.markdown("""
+    <style>
+        .stApp {
+            background-image: 
+                linear-gradient(rgba(10, 13, 26, 0.88), rgba(10, 13, 26, 0.95)),
+                url("https://i.imgur.com/LQzXT3U.jpeg") !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            background-attachment: fixed !important;
+        }
+        
+        .main .block-container {
+            background-color: transparent !important;
+            max-width: 1000px !important;
+            padding-top: 2% !important;
+            padding-left: 12px !important;
+            padding-right: 12px !important;
+        }
+        
+        /* ============================================================ */
+        /* HEADER DAILY PERFORMANCE */
+        /* ============================================================ */
+        .dp-header {
+            background: radial-gradient(circle, #1e3a5f 0%, #0f172a 100%);
+            border: 2px solid #b45309;
+            border-radius: 14px;
+            box-shadow: 0 0 25px rgba(180, 83, 9, 0.35), inset 0 0 20px rgba(0, 0, 0, 0.6);
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .dp-header::before,
+        .dp-header::after {
+            content: "⚜️";
+            position: absolute;
+            color: #d4af37;
+            font-size: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.8));
+        }
+        .dp-header::before { left: 18px; }
+        .dp-header::after { right: 18px; }
+        
+        .dp-header-top-line {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #d4af37, #fbbf24, #d4af37, transparent);
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.6);
+        }
+        
+        .dp-title {
+            font-family: 'Cinzel', serif;
+            font-size: 24px;
+            font-weight: 900;
+            color: #fbbf24;
+            letter-spacing: 2.5px;
+            margin: 0 0 6px 0;
+            text-shadow: 0 0 15px rgba(251, 191, 36, 0.7), 2px 2px 4px rgba(0, 0, 0, 0.8);
+            position: relative;
+            z-index: 2;
+        }
+        .dp-subtitle {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 12px;
+            color: #94a3b8;
+            letter-spacing: 1.5px;
+            margin: 0;
+            font-weight: 600;
+            position: relative;
+            z-index: 2;
+        }
+        .dp-subtitle::before,
+        .dp-subtitle::after {
+            content: " ⚜ ";
+            color: #d4af37;
+            font-size: 10px;
+        }
+        
+        /* ============================================================ */
+        /* INFO PERIODE CARD */
+        /* ============================================================ */
+        .dp-info-card {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.85) 100%);
+            border: 1.5px solid #9a7b38;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+        
+        .dp-info-title {
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            font-weight: 800;
+            color: #fbbf24;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1.5px dashed rgba(180, 83, 9, 0.4);
+        }
+        
+        .dp-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+        }
+        
+        .dp-info-item {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 8px 12px;
+            text-align: center;
+        }
+        
+        .dp-info-label {
+            font-family: monospace;
+            font-size: 9px;
+            color: #94a3b8;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+        
+        .dp-info-value {
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            color: #fbbf24;
+            font-weight: 900;
+        }
+        
+        /* ============================================================ */
+        /* AUTO-CALCULATED BOX */
+        /* ============================================================ */
+        .dp-auto-box {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(14, 165, 233, 0.15));
+            border: 1.5px solid #38bdf8;
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin: 12px 0;
+        }
+        
+        .dp-auto-title {
+            font-family: monospace;
+            font-size: 10px;
+            color: #38bdf8;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        
+        .dp-auto-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-family: monospace;
+            font-size: 11px;
+        }
+        
+        .dp-auto-label {
+            color: #94a3b8;
+        }
+        
+        .dp-auto-value {
+            color: #38bdf8;
+            font-weight: 900;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # =========================================================================
+    # 🏛️ HEADER
+    # =========================================================================
+    st.markdown("""
+    <div class="dp-header">
+        <div class="dp-header-top-line"></div>
+        <h1 class="dp-title">📊 DAILY PERFORMANCE 📊</h1>
+        <p class="dp-subtitle">Input Performa Harian Toko C383 — Karang Satria</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # =========================================================================
+    # 📑 SUB-TAB
+    # =========================================================================
+    _dp_subtab = st.radio(
+        "Pilih Menu:",
+        [
+            "📝 Input Harian",
+            "📊 Rekap",
+            "📈 Dashboard",
+            "📥 Export"
+        ],
+        horizontal=True,
+        key="dp_subtab_radio",
+        label_visibility="collapsed"
+    )
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # =========================================================================
+    # 📝 SUB-TAB 1: INPUT HARIAN
+    # =========================================================================
+    if _dp_subtab == "📝 Input Harian":
+        
+        # =============================================================
+        # CEK PERIODE AKTIF
+        # =============================================================
+        _active_period = get_active_period_store()
+        
+        if _active_period is None:
+            st.error(
+                "⚠️ **Belum ada periode aktif!** Hubungi admin untuk setting periode "
+                "di menu **⚙️ Pengaturan & Master → 📊 Store Performance**."
+            )
+            st.stop()
+        
+        # =============================================================
+        # 📊 INFO PERIODE AKTIF
+        # =============================================================
+        st.markdown(f"""
+        <div class="dp-info-card">
+            <div class="dp-info-title">📅 PERIODE AKTIF</div>
+            <div class="dp-info-grid">
+                <div class="dp-info-item">
+                    <div class="dp-info-label">Nama Periode</div>
+                    <div class="dp-info-value">{_active_period['period_name']}</div>
+                </div>
+                <div class="dp-info-item">
+                    <div class="dp-info-label">Rentang</div>
+                    <div class="dp-info-value">{_active_period['start_date'].strftime('%d/%m')} - {_active_period['end_date'].strftime('%d/%m/%Y')}</div>
+                </div>
+                <div class="dp-info-item">
+                    <div class="dp-info-label">JHK</div>
+                    <div class="dp-info-value">{_active_period['jhk']} hari</div>
+                </div>
+                <div class="dp-info-item">
+                    <div class="dp-info-label">Target SPD</div>
+                    <div class="dp-info-value">Rp {_active_period['target_spd']:,}</div>
+                </div>
+                <div class="dp-info-item">
+                    <div class="dp-info-label">Target STD</div>
+                    <div class="dp-info-value">{_active_period['target_std']} struk</div>
+                </div>
+                <div class="dp-info-item">
+                    <div class="dp-info-label">Target APC</div>
+                    <div class="dp-info-value">Rp {_active_period['target_apc']:,}</div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Peringatan kalau target kosong
+        if _active_period.get("target_warning", False):
+            st.warning(
+                "⚠️ **Target belum di-set lengkap** untuk periode ini. "
+                "Beberapa perhitungan mungkin tidak akurat. Hubungi admin."
+            )
+        
+        # =============================================================
+        # 📥 LOAD DATA HARIAN YANG SUDAH ADA
+        # =============================================================
+        _existing_daily_df = pd.DataFrame()
+        try:
+            _existing_daily_df = conn.read(worksheet="SALES_STOREPERFORMANCE", ttl=10)
+            if _existing_daily_df is None:
+                _existing_daily_df = pd.DataFrame()
+            else:
+                _existing_daily_df.columns = _existing_daily_df.columns.astype(str).str.strip().str.lower()
+        except Exception:
+            _existing_daily_df = pd.DataFrame()
+        
+        # =============================================================
+        # 📝 FORM INPUT
+        # =============================================================
+        st.markdown("---")
+        st.markdown("##### 📝 Form Input Data Harian")
+        
+        # Cek hari ini apakah sudah ada input
+        _today = pd.Timestamp.now().date()
+        _sudah_input = False
+        _data_today = pd.DataFrame()
+        
+        if not _existing_daily_df.empty and "tanggal" in _existing_daily_df.columns:
+            _existing_daily_df["_tgl"] = pd.to_datetime(_existing_daily_df["tanggal"], errors="coerce").dt.date
+            _data_today = _existing_daily_df[_existing_daily_df["_tgl"] == _today]
+            _sudah_input = not _data_today.empty
+        
+        if _sudah_input:
+            st.info(
+                f"ℹ️ Data untuk tanggal **{_today.strftime('%d/%m/%Y')}** sudah ada. "
+                "Kalau simpan lagi, akan **update** data yang lama."
+            )
+        
+        with st.form("form_daily_performance"):
+            
+            # === BARIS 1: Tanggal ===
+            _input_tanggal = st.date_input(
+                "📅 Tanggal",
+                value=_today,
+                key="dp_input_tanggal"
+            )
+            
+            # === BARIS 2: SPD & STD ===
+            st.markdown("**💰 Data Sales & Struk**")
+            col_s1, col_s2 = st.columns(2)
+            
+            with col_s1:
+                _input_spd = st.number_input(
+                    "💰 SPD (Sales Per Day) — Rp",
+                    min_value=0,
+                    step=100000,
+                    value=0,
+                    key="dp_input_spd",
+                    help="Total penjualan hari ini"
+                )
+            
+            with col_s2:
+                _input_std = st.number_input(
+                    "📄 STD (Struk Per Day) — struk",
+                    min_value=0,
+                    step=1,
+                    value=0,
+                    key="dp_input_std",
+                    help="Jumlah struk hari ini"
+                )
+            
+            # === AUTO-CALCULATE PREVIEW ===
+            if _input_spd > 0 and _input_std > 0:
+                _preview_apc = int(_input_spd / _input_std)
+            else:
+                _preview_apc = 0
+            
+            _preview_nsb_target = int(_input_spd * (_active_period['nsb_percentage'] / 100)) if _input_spd > 0 else 0
+            
+            if _input_spd > 0:
+                st.markdown(f"""
+                <div class="dp-auto-box">
+                    <div class="dp-auto-title">📊 AUTO-CALCULATED</div>
+                    <div class="dp-auto-row">
+                        <span class="dp-auto-label">👥 APC (SPD ÷ STD)</span>
+                        <span class="dp-auto-value">Rp {_preview_apc:,}</span>
+                    </div>
+                    <div class="dp-auto-row">
+                        <span class="dp-auto-label">⚠️ NSB Target (SPD × {_active_period['nsb_percentage']}%)</span>
+                        <span class="dp-auto-value">Rp {_preview_nsb_target:,}</span>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # === BARIS 3: NSB Actual ===
+            st.markdown("**⚠️ NSB (Nota Selisih Barang)**")
+            _input_nsb_actual = st.number_input(
+                "NSB Actual — Rp",
+                min_value=0,
+                step=1000,
+                value=0,
+                key="dp_input_nsb_actual",
+                help="Jumlah NSB aktual hari ini (isi 0 kalau tidak ada)"
+            )
+            
+            # === BARIS 4: Keterangan ===
+            _input_keterangan = st.text_area(
+                "📝 Keterangan (Opsional)",
+                placeholder="Contoh: Ada event promo, cuaca hujan, dll",
+                height=80,
+                key="dp_input_keterangan"
+            )
+            
+            # === SUBMIT ===
+            st.markdown("---")
+            _btn_simpan = st.form_submit_button(
+                "💾 SIMPAN DATA HARIAN",
+                use_container_width=True,
+                type="primary"
+            )
+        
+        # =============================================================
+        # 💾 PROSES SIMPAN
+        # =============================================================
+        if _btn_simpan:
+            _errors = []
+            
+            # Validasi
+            if _input_spd <= 0:
+                _errors.append("SPD harus lebih dari 0")
+            if _input_std <= 0:
+                _errors.append("STD harus lebih dari 0")
+            if _input_nsb_actual < 0:
+                _errors.append("NSB Actual tidak boleh negatif")
+            
+            if _errors:
+                for _err in _errors:
+                    st.error(f"❌ {_err}")
+            else:
+                try:
+                    with st.spinner("⏳ Menyimpan data harian..."):
+                        # Generate record_id
+                        _existing_df = pd.DataFrame()
+                        try:
+                            _existing_df = conn.read(worksheet="SALES_STOREPERFORMANCE", ttl=0)
+                            if _existing_df is None:
+                                _existing_df = pd.DataFrame()
+                            else:
+                                _existing_df.columns = _existing_df.columns.astype(str).str.strip().str.lower()
+                        except Exception:
+                            _existing_df = pd.DataFrame()
+                        
+                        _max_id = 0
+                        if not _existing_df.empty and "record_id" in _existing_df.columns:
+                            _numeric_ids = (
+                                _existing_df["record_id"]
+                                .astype(str)
+                                .str.extract(r"(\d+)")[0]
+                                .dropna()
+                            )
+                            if not _numeric_ids.empty:
+                                _max_id = _numeric_ids.astype(int).max()
+                        
+                        _new_id = _max_id + 1
+                        
+                        # Hitung APC & NSB Target
+                        _apc_val = int(_input_spd / _input_std)
+                        _nsb_target_val = int(_input_spd * (_active_period['nsb_percentage'] / 100))
+                        
+                        # Ambil username
+                        _input_by = st.session_state.get("username", "unknown")
+                        
+                        # Waktu sekarang
+                        _now_str = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
+                        
+                        # === CEK APAKAH TANGGAL SUDAH ADA (Update vs Insert) ===
+                        if not _existing_df.empty and "tanggal" in _existing_df.columns:
+                            _existing_df["_tgl"] = pd.to_datetime(_existing_df["tanggal"], errors="coerce").dt.date
+                            _match = _existing_df[_existing_df["_tgl"] == _input_tanggal]
+                            
+                            if not _match.empty:
+                                # === UPDATE ===
+                                _idx_update = _match.index[0]
+                                _existing_df.loc[_idx_update, "spd"] = int(_input_spd)
+                                _existing_df.loc[_idx_update, "std"] = int(_input_std)
+                                _existing_df.loc[_idx_update, "apc"] = int(_apc_val)
+                                _existing_df.loc[_idx_update, "nsb_target"] = int(_nsb_target_val)
+                                _existing_df.loc[_idx_update, "nsb_actual"] = int(_input_nsb_actual)
+                                _existing_df.loc[_idx_update, "keterangan"] = str(_input_keterangan)
+                                _existing_df.loc[_idx_update, "input_by"] = str(_input_by)
+                                _existing_df.loc[_idx_update, "updated_at"] = str(_now_str)
+                                
+                                _existing_df = _existing_df.drop(columns=["_tgl"], errors="ignore")
+                                _df_to_save = _existing_df
+                                _action = "update"
+                            else:
+                                # === INSERT ===
+                                _existing_df = _existing_df.drop(columns=["_tgl"], errors="ignore")
+                                
+                                _new_row = pd.DataFrame([{
+                                    "record_id": f"SP{_new_id:05d}",
+                                    "tanggal": str(_input_tanggal),
+                                    "spd": int(_input_spd),
+                                    "std": int(_input_std),
+                                    "apc": int(_apc_val),
+                                    "nsb_target": int(_nsb_target_val),
+                                    "nsb_actual": int(_input_nsb_actual),
+                                    "keterangan": str(_input_keterangan),
+                                    "input_by": str(_input_by),
+                                    "updated_at": str(_now_str),
+                                }])
+                                
+                                _df_to_save = pd.concat([_existing_df, _new_row], ignore_index=True)
+                                _action = "insert"
+                        else:
+                            # === FIRST INSERT ===
+                            _new_row = pd.DataFrame([{
+                                "record_id": f"SP{_new_id:05d}",
+                                "tanggal": str(_input_tanggal),
+                                "spd": int(_input_spd),
+                                "std": int(_input_std),
+                                "apc": int(_apc_val),
+                                "nsb_target": int(_nsb_target_val),
+                                "nsb_actual": int(_input_nsb_actual),
+                                "keterangan": str(_input_keterangan),
+                                "input_by": str(_input_by),
+                                "updated_at": str(_now_str),
+                            }])
+                            
+                            _df_to_save = _new_row
+                            _action = "insert"
+                        
+                        # === SIMPAN KE SHEET ===
+                        conn.update(worksheet="SALES_STOREPERFORMANCE", data=_df_to_save)
+                        time.sleep(0.5)
+                        st.cache_data.clear()
+                        
+                        # === LOG AKTIVITAS ===
+                        log_activity(
+                            "INPUT",
+                            f"Daily Performance {_action}: {_input_tanggal.strftime('%d/%m/%Y')} - SPD: {_input_spd:,}"
+                        )
+                        
+                        # === SHOW SUCCESS DIALOG ===
+                        _action_text = "diperbarui" if _action == "update" else "disimpan"
+                        
+                        st.toast(f"✅ Data harian berhasil {_action_text}!", icon="🎉")
+                        time.sleep(1)
+                        st.rerun()
+                
+                except Exception as _e:
+                    st.error(f"❌ Gagal menyimpan data: {_e}")
+                    import traceback
+                    st.code(traceback.format_exc())
+        
+        # =============================================================
+        # 📋 PREVIEW DATA 5 HARI TERAKHIR
+        # =============================================================
+        if not _existing_daily_df.empty:
+            st.markdown("---")
+            st.markdown("##### 📋 Preview Data 5 Hari Terakhir")
+            
+            _preview_df = _existing_daily_df.copy()
+            if "tanggal" in _preview_df.columns:
+                _preview_df["_tgl"] = pd.to_datetime(_preview_df["tanggal"], errors="coerce")
+                _preview_df = _preview_df.sort_values("_tgl", ascending=False).head(5)
+                
+                _display_cols = []
+                for _c in ["tanggal", "spd", "std", "apc", "nsb_target", "nsb_actual", "input_by"]:
+                    if _c in _preview_df.columns:
+                        _display_cols.append(_c)
+                
+                if _display_cols:
+                    _preview_show = _preview_df[_display_cols].copy()
+                    _preview_show.columns = [
+                        _c.replace("_", " ").title() for _c in _display_cols
+                    ]
+                    st.dataframe(_preview_show, use_container_width=True, hide_index=True)
+    
+    # =========================================================================
+    # 📊 SUB-TAB 2: REKAP (PLACEHOLDER)
+    # =========================================================================
+    elif _dp_subtab == "📊 Rekap":
+        st.info("🚧 **Halaman Rekap** akan diisi di **FASE 10C**. Stay tuned!")
+        st.markdown("""
+        **Yang akan ada di sini:**
+        - 📋 Tabel rekap harian
+        - 📊 Achievement per hari
+        - 🔍 Filter tanggal
+        - 📥 Export Excel
+        """)
+    
+    # =========================================================================
+    # 📈 SUB-TAB 3: DASHBOARD (PLACEHOLDER)
+    # =========================================================================
+    elif _dp_subtab == "📈 Dashboard":
+        st.info("🚧 **Halaman Dashboard** akan diisi di **FASE 10D**. Stay tuned!")
+        st.markdown("""
+        **Yang akan ada di sini:**
+        - 📊 KPI Cards (Total SPD, STD, APC, NSB)
+        - 📈 Trend Chart SPD
+        - 📊 Bar Chart STD
+        - 📉 Chart APC & NSB
+        - 🏆 Status Achievement
+        """)
+    
+    # =========================================================================
+    # 📥 SUB-TAB 4: EXPORT (PLACEHOLDER)
+    # =========================================================================
+    elif _dp_subtab == "📥 Export":
+        st.info("🚧 **Halaman Export** akan diisi di **FASE 10C**. Stay tuned!")
+        st.markdown("""
+        **Yang akan ada di sini:**
+        - 📥 Download Excel (Data Harian)
+        - 📄 Download PDF (Rekap Bulanan)
+        - 🎨 Download PPT (Dashboard)
+        """)
+
 
 # --- EDIT DATA ---
 elif selected_tab == "➕ Edit Data (Admin)":    
