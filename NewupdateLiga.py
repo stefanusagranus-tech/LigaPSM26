@@ -3673,6 +3673,29 @@ st.sidebar.markdown(
         div[data-testid="stRadio"] [data-testid="stMarkdownVisibility"] {
             display: none;
         }
+        /* =========================================================================
+        🎯 FORCE HIDE RADIO DOT — GLOBAL (SEMUA RADIO)
+        ========================================================================= */
+        div[data-testid="stRadio"] input[type="radio"],
+        div[data-testid="stRadio"] [type="radio"],
+        div[data-testid="stRadio"] > div > div > label > div:first-child,
+        div[data-testid="stRadio"] div[role="radiogroup"] > label > div:first-child,
+        div[data-testid="stRadio"] [data-baseweb="radio"] > div:first-child,
+        input[type="radio"] {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+            position: absolute !important;
+            pointer-events: none !important;
+        }
+
+        /* Sembunyikan SVG bullet kalau ada */
+        div[data-testid="stRadio"] svg[data-testid="stRadioButtonCustomIcon"],
+        div[data-testid="stRadio"] [data-testid="stRadioButtonCustomIcon"] {
+            display: none !important;
+        }
     </style>
 """,
     unsafe_allow_html=True,
