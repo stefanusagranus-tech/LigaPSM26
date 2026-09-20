@@ -376,6 +376,362 @@ def show_success_dialog(
                 transform: translateY(0) !important;
                 box-shadow: 0 0 15px {t['glow']} !important;
             }}
+            /* =========================================================================
+            📦 PAKET 2: MEDIUM WINS
+            ========================================================================= */
+
+            /* P2.1. CARD WRAPPER UNIVERSAL */
+            .rpg-card {{
+                background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.85) 100%);
+                border: 1.5px solid #9a7b38;
+                border-radius: 12px;
+                padding: 16px 20px;
+                margin-bottom: 16px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+                transition: all 0.3s ease;
+            }}
+            .rpg-card:hover {{
+                border-color: #d4af37;
+                box-shadow: 0 6px 20px rgba(212, 175, 55, 0.2);
+            }}
+            .rpg-card-title {{
+                font-family: 'Cinzel', serif;
+                font-size: 14px;
+                font-weight: 800;
+                color: #f7e7b4;
+                margin-bottom: 10px;
+                letter-spacing: 1px;
+                text-transform: uppercase;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }}
+            .rpg-card-title::before {{
+                content: "⚜️";
+                color: #d4af37;
+                font-size: 12px;
+            }}
+            .rpg-card-content {{
+                color: #cbd5e1;
+                font-family: 'Quicksand', sans-serif;
+                font-size: 13px;
+                line-height: 1.6;
+            }}
+
+            /* P2.2. SKELETON LOADING */
+            @keyframes skeletonPulse {{
+                0%, 100% {{ opacity: 0.4; }}
+                50% {{ opacity: 0.8; }}
+            }}
+            .skeleton-box {{
+                background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+                background-size: 200% 100%;
+                animation: skeletonPulse 1.5s infinite ease-in-out;
+                border-radius: 8px;
+                height: 20px;
+                margin-bottom: 8px;
+            }}
+
+            /* P2.3. TOAST CUSTOM */
+            div[data-testid="stToast"] {{
+                background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+                border: 2px solid #d4af37 !important;
+                border-radius: 10px !important;
+                box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3) !important;
+            }}
+            div[data-testid="stToast"] p,
+            div[data-testid="stToast"] span {{
+                color: #f7e7b4 !important;
+                font-family: 'Cinzel', serif !important;
+                font-weight: 700 !important;
+                font-size: 13px !important;
+            }}
+            div[data-testid="stToast"] svg {{
+                fill: #d4af37 !important;
+            }}
+
+            /* P2.4. SPINNER CUSTOM */
+            div[data-testid="stSpinner"] > div {{
+                border-top-color: #d4af37 !important;
+                border-right-color: #d4af37 !important;
+            }}
+            div[data-testid="stSpinner"] p,
+            div[data-testid="stSpinner"] span {{
+                color: #f7e7b4 !important;
+                font-family: 'Cinzel', serif !important;
+                font-weight: 700 !important;
+            }}
+
+            /* P2.5. ALERT CUSTOM */
+            div[data-testid="stAlert"] {{
+                background: rgba(15, 23, 42, 0.95) !important;
+                border: 1.5px solid #9a7b38 !important;
+                border-radius: 10px !important;
+                color: #f7e7b4 !important;
+                box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5) !important;
+            }}
+            div[data-testid="stAlert"] p,
+            div[data-testid="stAlert"] span,
+            div[data-testid="stAlert"] div {{
+                color: #f7e7b4 !important;
+                font-family: 'Quicksand', sans-serif !important;
+                font-weight: 600 !important;
+            }}
+            div[data-testid="stAlert"] svg {{
+                fill: #d4af37 !important;
+            }}
+
+            /* P2.6. PROGRESS BAR CUSTOM */
+            div[data-testid="stProgress"] > div > div {{
+                background: linear-gradient(90deg, #d4af37 0%, #fbbf24 100%) !important;
+                box-shadow: 0 0 10px rgba(212, 175, 55, 0.5) !important;
+            }}
+            div[data-testid="stProgress"] > div {{
+                background: rgba(30, 41, 59, 0.8) !important;
+                border: 1px solid #9a7b38 !important;
+                border-radius: 6px !important;
+            }}
+            /* =========================================================================
+            🚀 WELCOME SCREEN — VERSI SIMPLE (DOUBLE BRACES READY)
+            ========================================================================= */
+
+            @keyframes welcomeEnter {{
+                0% {{
+                    opacity: 0;
+                    transform: scale(0.9) translateY(30px);
+                    filter: blur(10px);
+                }}
+                100% {{
+                    opacity: 1;
+                    transform: scale(1) translateY(0);
+                    filter: blur(0);
+                }}
+            }}
+
+            @keyframes welcomeIconPulse {{
+                0%, 100% {{
+                    transform: scale(1);
+                    filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.6));
+                }}
+                50% {{
+                    transform: scale(1.08);
+                    filter: drop-shadow(0 0 35px rgba(212, 175, 55, 1));
+                }}
+            }}
+
+            @keyframes welcomeShimmer {{
+                0% {{ background-position: -1000px 0; }}
+                100% {{ background-position: 1000px 0; }}
+            }}
+
+            @keyframes welcomeSparkFloat {{
+                0%, 100% {{
+                    transform: translateY(0) rotate(0deg);
+                    opacity: 0.6;
+                }}
+                50% {{
+                    transform: translateY(-15px) rotate(180deg);
+                    opacity: 1;
+                }}
+            }}
+
+            @keyframes spinSlow {{
+                from {{ transform: rotate(0deg); }}
+                to {{ transform: rotate(360deg); }}
+            }}
+
+            .welcome-overlay {{
+                position: fixed;
+                top: 0; left: 0;
+                width: 100vw; height: 100vh;
+                z-index: 999999;
+                background: radial-gradient(ellipse at top, #1e3a5f 0%, #0f172a 50%, #05070c 100%);
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                overflow: hidden;
+                animation: welcomeEnter 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+            }}
+
+            /* Ornamen sudut */
+            .welcome-corner {{
+                position: absolute;
+                color: #d4af37;
+                font-size: 20px;
+                opacity: 0.7;
+                filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.8));
+            }}
+            .welcome-corner-tl {{ top: 30px; left: 30px; }}
+            .welcome-corner-tr {{ top: 30px; right: 30px; }}
+            .welcome-corner-bl {{ bottom: 30px; left: 30px; }}
+            .welcome-corner-br {{ bottom: 30px; right: 30px; }}
+
+            /* Avatar */
+            .welcome-avatar {{
+                width: 140px;
+                height: 140px;
+                border-radius: 50%;
+                background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
+                border: 4px solid #d4af37;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-size: 70px;
+                margin-bottom: 32px;
+                animation: welcomeIconPulse 2.5s infinite ease-in-out;
+                position: relative;
+                z-index: 10;
+            }}
+
+            .welcome-avatar::before {{
+                content: "";
+                position: absolute;
+                inset: -12px;
+                border-radius: 50%;
+                border: 2px dashed #b45309;
+                animation: spinSlow 20s linear infinite;
+            }}
+
+            .welcome-avatar::after {{
+                content: "";
+                position: absolute;
+                inset: -24px;
+                border-radius: 50%;
+                border: 1px solid rgba(212, 175, 55, 0.4);
+                animation: spinSlow 30s linear infinite reverse;
+            }}
+
+            /* Sparkles */
+            .welcome-spark {{
+                position: absolute;
+                color: #fbbf24;
+                font-size: 24px;
+                filter: drop-shadow(0 0 10px #fbbf24);
+                animation: welcomeSparkFloat 3s infinite ease-in-out;
+            }}
+            .welcome-spark-1 {{ top: 20%; left: 28%; animation-delay: 0s; }}
+            .welcome-spark-2 {{ top: 25%; right: 26%; animation-delay: 0.5s; }}
+            .welcome-spark-3 {{ bottom: 28%; left: 24%; animation-delay: 1s; }}
+            .welcome-spark-4 {{ bottom: 25%; right: 28%; animation-delay: 1.5s; }}
+
+            /* Sapaan */
+            .welcome-greeting {{
+                font-family: 'Quicksand', sans-serif;
+                font-size: 16px;
+                color: #d4af37;
+                font-weight: 700;
+                letter-spacing: 6px;
+                text-transform: uppercase;
+                margin-bottom: 8px;
+                text-align: center;
+                animation: welcomeEnter 1s cubic-bezier(0.25, 1, 0.5, 1);
+                opacity: 0.9;
+            }}
+
+            /* Nama user */
+            .welcome-name {{
+                font-family: 'MedievalSharp', serif;
+                font-size: 44px;
+                font-weight: 900;
+                letter-spacing: 3px;
+                text-align: center;
+                margin: 0 0 40px 0;
+                line-height: 1.1;
+                background: linear-gradient(
+                    90deg,
+                    #f7e7b4 0%,
+                    #d4af37 25%,
+                    #f7e7b4 50%,
+                    #d4af37 75%,
+                    #f7e7b4 100%
+                );
+                background-size: 1000px 100%;
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                text-shadow: 0 0 30px rgba(212, 175, 55, 0.5);
+                animation: welcomeEnter 1.2s cubic-bezier(0.25, 1, 0.5, 1),
+                        welcomeShimmer 4s infinite linear;
+                filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.4));
+            }}
+
+            /* Tombol Masuk */
+            .welcome-btn-container {{
+                animation: welcomeEnter 1.6s cubic-bezier(0.25, 1, 0.5, 1);
+                max-width: 320px;
+                width: 100%;
+            }}
+
+            .welcome-btn-container div.stButton > button {{
+                background: linear-gradient(135deg, #b45309 0%, #d97706 100%) !important;
+                color: #ffffff !important;
+                border: 2px solid #fbbf24 !important;
+                border-radius: 50px !important;
+                font-family: 'Cinzel', serif !important;
+                font-weight: 900 !important;
+                font-size: 15px !important;
+                letter-spacing: 2px !important;
+                padding: 18px 40px !important;
+                height: auto !important;
+                min-height: 64px !important;
+                text-transform: uppercase !important;
+                box-shadow: 
+                    0 0 25px rgba(251, 191, 36, 0.4),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+                transition: all 0.3s ease !important;
+                width: 100% !important;
+            }}
+
+            .welcome-btn-container div.stButton > button:hover {{
+                background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%) !important;
+                transform: translateY(-3px) scale(1.02) !important;
+                box-shadow: 
+                    0 0 40px rgba(251, 191, 36, 0.7),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+            }}
+
+            /* Responsive Mobile */
+            @media (max-width: 768px) {{
+                .welcome-avatar {{
+                    width: 100px;
+                    height: 100px;
+                    font-size: 50px;
+                    margin-bottom: 24px;
+                }}
+                .welcome-greeting {{
+                    font-size: 13px;
+                    letter-spacing: 4px;
+                }}
+                .welcome-name {{
+                    font-size: 26px;
+                    letter-spacing: 2px;
+                    margin-bottom: 30px;
+                }}
+                .welcome-spark {{ font-size: 16px; }}
+                .welcome-corner {{ font-size: 16px; }}
+                .welcome-btn-container div.stButton > button {{
+                    font-size: 13px !important;
+                    padding: 14px 30px !important;
+                    min-height: 56px !important;
+                }}
+            }}
+
+            @media (max-width: 380px) {{
+                .welcome-avatar {{
+                    width: 80px;
+                    height: 80px;
+                    font-size: 40px;
+                }}
+                .welcome-name {{
+                    font-size: 20px;
+                    letter-spacing: 1px;
+                }}
+                .welcome-greeting {{
+                    font-size: 11px;
+                    letter-spacing: 3px;
+                }}
+            }}
         </style>
         """,
         unsafe_allow_html=True,
@@ -1643,7 +1999,69 @@ def log_activity(action, detail=""):
     
     except Exception as e:
         print(f"[LOG_ACTIVITY ERROR] {e}")
+
+# =========================================================================
+# 🚀 WELCOME SCREEN — VERSI SIMPLE
+# =========================================================================
+def show_welcome_screen():
+    """
+    Tampilkan welcome screen keren setelah login berhasil.
+    Versi simple: hanya sapaan + nama + tombol masuk.
+    """
+    _username = st.session_state.get("username", "User")
+    
+    # Waktu login
+    _now = datetime.now(ZoneInfo("Asia/Jakarta"))
+    _hour = _now.hour
+    
+    # Sapaan berdasarkan waktu
+    if 4 <= _hour < 11:
+        _sapaan = "Selamat Pagi"
+    elif 11 <= _hour < 15:
+        _sapaan = "Selamat Siang"
+    elif 15 <= _hour < 18:
+        _sapaan = "Selamat Sore"
+    else:
+        _sapaan = "Selamat Malam"
+    
+    # Avatar based on username (konsisten)
+    import hashlib
+    _avatar_list = ["🧙‍♂️", "🧝‍♂️", "⚔️", "🎯", "🛡️", "🦁", "🦅", "🐺", "👑", "💎", "🔮", "🔥"]
+    _h = int(hashlib.md5(_username.upper().encode()).hexdigest(), 16)
+    _avatar = _avatar_list[_h % len(_avatar_list)]
+    
+    # Admin pakai avatar khusus
+    if any(x in _username.lower() for x in ["admin", "chief", "cos", "lavitality"]):
+        _avatar = "👑"
+    
+    # Render HTML
+    st.markdown(f"""
+    <div class="welcome-overlay">
+        <div class="welcome-corner welcome-corner-tl">⚜️</div>
+        <div class="welcome-corner welcome-corner-tr">⚜️</div>
+        <div class="welcome-corner welcome-corner-bl">⚜️</div>
+        <div class="welcome-corner welcome-corner-br">⚜️</div>
         
+        <div class="welcome-spark welcome-spark-1">✦</div>
+        <div class="welcome-spark welcome-spark-2">✦</div>
+        <div class="welcome-spark welcome-spark-3">✦</div>
+        <div class="welcome-spark welcome-spark-4">✦</div>
+        
+        <div class="welcome-avatar">{_avatar}</div>
+        
+        <p class="welcome-greeting">{_sapaan}</p>
+        <h1 class="welcome-name">{_username}</h1>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Tombol Masuk
+    st.markdown('<div class="welcome-btn-container">', unsafe_allow_html=True)
+    if st.button("⚔️ MASUK KE APLIKASI", use_container_width=True, key="btn_enter_app"):
+        st.session_state["welcome_shown"] = True
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.stop()        
 
 
 # --- INISIALISASI GLOBAL PERIODS_DICT ---
@@ -2521,13 +2939,12 @@ def show_login_page():
             st.session_state.role = user_info.get("role", "Staff Toko")
             st.session_state["session_id"] = str(_uuid_module.uuid4())[:8]
             
-            # ✅ Log LOGIN (queue saja)
-            log_activity("LOGIN", f"Login sebagai {user_info['nama']}")
+            # Set flag welcome screen
+            st.session_state["welcome_shown"] = False
             
-            # 🌙 Cek ganti hari — auto-flush kalau perlu
+            log_activity("LOGIN", f"Login sebagai {user_info['nama']}")
             check_and_auto_flush_log()
             
-            st.toast(f"Selamat Datang, {user_info['nama']}!", icon="✅")
             st.rerun()
         else:
           # Catat LOGIN_FAILED (opsional)
@@ -2568,8 +2985,13 @@ if "redirect_to_main_tab" not in st.session_state:
     st.session_state["redirect_to_main_tab"] = False
 
 if not st.session_state.logged_in:
-  show_login_page()
-  st.stop()
+    show_login_page()
+    st.stop()
+
+# 🚀 Tampilkan welcome screen (hanya 1x setelah login)
+if not st.session_state.get("welcome_shown", False):
+    show_welcome_screen()
+    st.stop()
 
 # ==========================================================
 # 7. SIDEBAR DASHBOARD - GAYA CODINGLAB (BAGIAN 1)
