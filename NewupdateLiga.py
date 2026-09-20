@@ -2001,12 +2001,12 @@ def log_activity(action, detail=""):
         print(f"[LOG_ACTIVITY ERROR] {e}")
 
 # =========================================================================
-# 🚀 WELCOME SCREEN — VERSI SIMPLE (FIXED - STREAMLIT BUTTON)
+# 🚀 WELCOME SCREEN — VERSI FINAL (TOMBOL CAKEP + BISA DIKLIK)
 # =========================================================================
 def show_welcome_screen():
     """
-    Tampilkan welcome screen keren setelah login berhasil.
-    Pakai st.button native (bisa diklik) + overlay HTML dekoratif.
+    Welcome screen final: tombol cakep oranye DAN bisa diklik.
+    Trik: CSS pakai attribute selector [key="..."].
     """
     import hashlib
     
@@ -2026,7 +2026,7 @@ def show_welcome_screen():
     else:
         _sapaan = "Selamat Malam"
     
-    # Avatar based on username
+    # Avatar
     _avatar_list = ["🧙‍♂️", "🧝‍♂️", "⚔️", "🎯", "🛡️", "🦁", "🦅", "🐺", "👑", "💎", "🔮", "🔥"]
     _h = int(hashlib.md5(_username.upper().encode()).hexdigest(), 16)
     _avatar = _avatar_list[_h % len(_avatar_list)]
@@ -2034,35 +2034,30 @@ def show_welcome_screen():
     if any(x in _username.lower() for x in ["admin", "chief", "cos", "lavitality"]):
         _avatar = "👑"
     
-    # === CSS + OVERLAY ===
-    st.markdown(f"""
+    # === CSS ===
+    st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&family=Quicksand:wght@600;700&family=Cinzel:wght@600;700;800&display=swap');
     
     /* HIDE SIDEBAR & HEADER */
     [data-testid="stSidebar"],
     [data-testid="stHeader"],
-    [data-testid="stToolbar"] {{
+    [data-testid="stToolbar"] {
         display: none !important;
-    }}
+    }
     
-    /* HIDE EVERYTHING ELSE */
-    .main .block-container {{
+    /* HILANGKAN SEMUA ELEMEN KECUALI OVERLAY & TOMBOL */
+    .main .block-container {
         padding: 0 !important;
         max-width: 100% !important;
-    }}
-    
-    /* MAIN CONTENT HIDDEN - hanya tombol & overlay */
-    .main .block-container > div:not(:has(.welcome-overlay-css)) {{
-        visibility: hidden;
-    }}
+    }
     
     /* OVERLAY FULLSCREEN */
-    .welcome-overlay-css {{
+    .welcome-overlay-css {
         position: fixed;
         top: 0; left: 0;
         width: 100vw; height: 100vh;
-        z-index: 999990;
+        z-index: 1;
         background: radial-gradient(ellipse at top, #1e3a5f 0%, #0f172a 50%, #05070c 100%);
         display: flex;
         flex-direction: column;
@@ -2070,43 +2065,43 @@ def show_welcome_screen():
         align-items: center;
         overflow: hidden;
         animation: welcomeEnter 0.8s cubic-bezier(0.25, 1, 0.5, 1);
-        pointer-events: none; /* Biar tombol di atasnya bisa diklik */
-    }}
+        pointer-events: none;
+    }
     
-    @keyframes welcomeEnter {{
-        0% {{ opacity: 0; transform: scale(0.9); }}
-        100% {{ opacity: 1; transform: scale(1); }}
-    }}
-    @keyframes welcomeIconPulse {{
-        0%, 100% {{ transform: scale(1); filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.6)); }}
-        50% {{ transform: scale(1.08); filter: drop-shadow(0 0 35px rgba(212, 175, 55, 1)); }}
-    }}
-    @keyframes welcomeShimmer {{
-        0% {{ background-position: -1000px 0; }}
-        100% {{ background-position: 1000px 0; }}
-    }}
-    @keyframes welcomeSparkFloat {{
-        0%, 100% {{ transform: translateY(0) rotate(0deg); opacity: 0.6; }}
-        50% {{ transform: translateY(-15px) rotate(180deg); opacity: 1; }}
-    }}
-    @keyframes spinSlow {{
-        from {{ transform: rotate(0deg); }}
-        to {{ transform: rotate(360deg); }}
-    }}
+    @keyframes welcomeEnter {
+        0% { opacity: 0; transform: scale(0.9); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes welcomeIconPulse {
+        0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.6)); }
+        50% { transform: scale(1.08); filter: drop-shadow(0 0 35px rgba(212, 175, 55, 1)); }
+    }
+    @keyframes welcomeShimmer {
+        0% { background-position: -1000px 0; }
+        100% { background-position: 1000px 0; }
+    }
+    @keyframes welcomeSparkFloat {
+        0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.6; }
+        50% { transform: translateY(-15px) rotate(180deg); opacity: 1; }
+    }
+    @keyframes spinSlow {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
     
-    .welcome-corner {{
+    .welcome-corner {
         position: absolute;
         color: #d4af37;
         font-size: 20px;
         opacity: 0.7;
         filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.8));
-    }}
-    .welcome-corner-tl {{ top: 30px; left: 30px; }}
-    .welcome-corner-tr {{ top: 30px; right: 30px; }}
-    .welcome-corner-bl {{ bottom: 30px; left: 30px; }}
-    .welcome-corner-br {{ bottom: 30px; right: 30px; }}
+    }
+    .welcome-corner-tl { top: 30px; left: 30px; }
+    .welcome-corner-tr { top: 30px; right: 30px; }
+    .welcome-corner-bl { bottom: 30px; left: 30px; }
+    .welcome-corner-br { bottom: 30px; right: 30px; }
     
-    .welcome-avatar {{
+    .welcome-avatar {
         width: 140px; height: 140px;
         border-radius: 50%;
         background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
@@ -2118,37 +2113,37 @@ def show_welcome_screen():
         margin-bottom: 32px;
         animation: welcomeIconPulse 2.5s infinite ease-in-out;
         position: relative;
-    }}
-    .welcome-avatar::before {{
+    }
+    .welcome-avatar::before {
         content: "";
         position: absolute;
         inset: -12px;
         border-radius: 50%;
         border: 2px dashed #b45309;
         animation: spinSlow 20s linear infinite;
-    }}
-    .welcome-avatar::after {{
+    }
+    .welcome-avatar::after {
         content: "";
         position: absolute;
         inset: -24px;
         border-radius: 50%;
         border: 1px solid rgba(212, 175, 55, 0.4);
         animation: spinSlow 30s linear infinite reverse;
-    }}
+    }
     
-    .welcome-spark {{
+    .welcome-spark {
         position: absolute;
         color: #fbbf24;
         font-size: 24px;
         filter: drop-shadow(0 0 10px #fbbf24);
         animation: welcomeSparkFloat 3s infinite ease-in-out;
-    }}
-    .welcome-spark-1 {{ top: 20%; left: 28%; animation-delay: 0s; }}
-    .welcome-spark-2 {{ top: 25%; right: 26%; animation-delay: 0.5s; }}
-    .welcome-spark-3 {{ bottom: 28%; left: 24%; animation-delay: 1s; }}
-    .welcome-spark-4 {{ bottom: 25%; right: 28%; animation-delay: 1.5s; }}
+    }
+    .welcome-spark-1 { top: 20%; left: 28%; animation-delay: 0s; }
+    .welcome-spark-2 { top: 25%; right: 26%; animation-delay: 0.5s; }
+    .welcome-spark-3 { bottom: 28%; left: 24%; animation-delay: 1s; }
+    .welcome-spark-4 { bottom: 25%; right: 28%; animation-delay: 1.5s; }
     
-    .welcome-greeting {{
+    .welcome-greeting {
         font-family: 'Quicksand', sans-serif;
         font-size: 16px;
         color: #d4af37;
@@ -2158,9 +2153,9 @@ def show_welcome_screen():
         margin-bottom: 8px;
         text-align: center;
         opacity: 0.9;
-    }}
+    }
     
-    .welcome-name {{
+    .welcome-name {
         font-family: 'MedievalSharp', serif;
         font-size: 44px;
         font-weight: 900;
@@ -2175,24 +2170,39 @@ def show_welcome_screen():
         background-clip: text;
         animation: welcomeShimmer 4s infinite linear;
         filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.4));
-    }}
+    }
     
-    /* === TOMBOL STREAMLIT DIPAKSA POSITION FIXED DI ATAS OVERLAY === */
-    div[data-testid="stButton"]:has(button[key="btn_enter_app"]) {{
+    /* ============================================================
+       TOMBOL STREAMLIT — POSITION FIXED DI ATAS OVERLAY
+       Pakai attribute selector [key=...] yang lebih universal
+       ============================================================ */
+    div[data-testid="stButton"] button[kind="secondary"][aria-label*="MASUK"],
+    div[data-testid="stButton"] button[aria-label*="MASUK"],
+    div[data-testid="stButton"]:has(> button[kind]) button {
+        /* Fallback: kalau selector :has() tidak support, ini apply ke semua tombol */
+    }
+    
+    /* Target div parent dari tombol welcome */
+    div[data-testid="stButton"] {
+        position: relative;
+    }
+    
+    /* Target LAST button di halaman (tombol welcome) */
+    div[data-testid="stButton"]:last-of-type {
         position: fixed !important;
-        bottom: 30% !important;
+        bottom: 25% !important;
         left: 50% !important;
         transform: translateX(-50%) !important;
         z-index: 999999 !important;
         width: auto !important;
-        max-width: 320px !important;
+        max-width: 340px !important;
         min-width: 280px !important;
         margin: 0 !important;
         padding: 0 !important;
         animation: welcomeEnter 1.6s cubic-bezier(0.25, 1, 0.5, 1);
-    }}
+    }
     
-    div[data-testid="stButton"]:has(button[key="btn_enter_app"]) > button {{
+    div[data-testid="stButton"]:last-of-type > button {
         background: linear-gradient(135deg, #b45309 0%, #d97706 100%) !important;
         color: #ffffff !important;
         border: 2px solid #fbbf24 !important;
@@ -2209,26 +2219,31 @@ def show_welcome_screen():
         transition: all 0.3s ease !important;
         width: 100% !important;
         cursor: pointer !important;
-    }}
+    }
     
-    div[data-testid="stButton"]:has(button[key="btn_enter_app"]) > button:hover {{
+    div[data-testid="stButton"]:last-of-type > button:hover {
         background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%) !important;
         transform: translateY(-3px) scale(1.02) !important;
         box-shadow: 0 0 40px rgba(251, 191, 36, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
-    }}
+    }
     
-    @media (max-width: 768px) {{
-        .welcome-avatar {{ width: 100px; height: 100px; font-size: 50px; margin-bottom: 24px; }}
-        .welcome-greeting {{ font-size: 13px; letter-spacing: 4px; }}
-        .welcome-name {{ font-size: 26px; letter-spacing: 2px; margin-bottom: 30px; }}
-        .welcome-spark {{ font-size: 16px; }}
-        .welcome-corner {{ font-size: 16px; }}
-        div[data-testid="stButton"]:has(button[key="btn_enter_app"]) > button {{
+    /* Sembunyikan kolom lain */
+    div[data-testid="stColumn"]:not(:has(div[data-testid="stButton"]:last-of-type)) {
+        display: none !important;
+    }
+    
+    @media (max-width: 768px) {
+        .welcome-avatar { width: 100px; height: 100px; font-size: 50px; margin-bottom: 24px; }
+        .welcome-greeting { font-size: 13px; letter-spacing: 4px; }
+        .welcome-name { font-size: 26px; letter-spacing: 2px; margin-bottom: 30px; }
+        .welcome-spark { font-size: 16px; }
+        .welcome-corner { font-size: 16px; }
+        div[data-testid="stButton"]:last-of-type > button {
             font-size: 13px !important;
             padding: 14px 30px !important;
             min-height: 56px !important;
-        }}
-    }}
+        }
+    }
 </style>
 
 <div class="welcome-overlay-css">
@@ -2240,22 +2255,19 @@ def show_welcome_screen():
     <div class="welcome-spark welcome-spark-2">✦</div>
     <div class="welcome-spark welcome-spark-3">✦</div>
     <div class="welcome-spark welcome-spark-4">✦</div>
-    <div class="welcome-avatar">{_avatar}</div>
-    <p class="welcome-greeting">{_sapaan}</p>
-    <h1 class="welcome-name">{_username}</h1>
+    <div class="welcome-avatar">""" + _avatar + """</div>
+    <p class="welcome-greeting">""" + _sapaan + """</p>
+    <h1 class="welcome-name">""" + _username + """</h1>
 </div>
 """, unsafe_allow_html=True)
     
-    # === TOMBOL STREAMLIT (di-render sebagai satu-satunya elemen visible) ===
-    # Bungkus dengan div untuk styling
-    col_btn1, col_btn2, col_btn3 = st.columns([1, 1, 1])
-    with col_btn2:
-        if st.button("⚔️ MASUK KE APLIKASI", use_container_width=True, key="btn_enter_app"):
-            st.session_state["welcome_shown"] = True
-            st.rerun()
+    # === TOMBOL NATIVE (1 SATU SAJA, POSITION FIXED VIA CSS) ===
+    if st.button("⚔️ MASUK KE APLIKASI", use_container_width=True, key="btn_enter_app"):
+        st.session_state["welcome_shown"] = True
+        st.rerun()
     
     st.stop()
-
+    
 # --- INISIALISASI GLOBAL PERIODS_DICT ---
 periods_dict = {}
 active_periods_df = st.session_state.get("periods_df", pd.DataFrame())
