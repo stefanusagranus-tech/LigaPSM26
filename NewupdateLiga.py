@@ -14241,7 +14241,7 @@ elif selected_tab == "📝 Input Data":
                             )
             
     # =========================================================================
-    # SUB TAB 2: INPUT SALES PPS (LOGIKA TANGGAL FIX)
+    # SUB TAB 2: INPUT SALES PPS (LOGIKA TANGGAL FIX + FILTER ROLE)
     # =========================================================================
     elif active_sub_tab == "🎯 Input Sales PPS":
         st.markdown(
@@ -14257,12 +14257,71 @@ elif selected_tab == "📝 Input Data":
             )
         else:
 
-            # Ambil daftar personil
-            all_personnel = (
-                sorted(person_df["person_name"].dropna().unique().tolist())
-                if not person_df.empty and "person_name" in person_df.columns
-                else [current_user]
-            )
+            # =============================================================
+            # 👥 HELPER: AMBIL PERSONIL BERDASARKAN ROLE
+            # =============================================================
+            def get_personil_by_role(role_filter=None):
+                """
+                Ambil daftar personil dari master, filter berdasarkan role.
+                
+                Args:
+                    role_filter (str atau list): 
+                        - None → semua role
+                        - "Staff" → hanya role Staff
+                        - ["Kasir", "Staff"] → role Kasir dan Staff
+                
+                Returns:
+                    list: Daftar nama personil (UPPERCASE), sorted
+                """
+                try:
+                    _person_df = st.session_state.get("person_df", pd.DataFrame()).copy()
+                    
+                    if _person_df.empty:
+                        return []
+                    
+                    # Normalisasi kolom
+                    _person_df.columns = _person_df.columns.astype(str).str.strip().str.lower()
+                    
+                    # Filter active = 1
+                    if "active" in _person_df.columns:
+                        _person_df = _person_df[pd.to_numeric(_person_df["active"], errors="coerce") == 1]
+                    
+                    # Filter role
+                    if role_filter is not None and "role" in _person_df.columns:
+                        if isinstance(role_filter, str):
+                            _roles = [role_filter.lower()]
+                        else:
+                            _roles = [r.lower() for r in role_filter]
+                        
+                        _person_df = _person_df[
+                            _person_df["role"].astype(str).str.strip().str.lower().isin(_roles)
+                        ]
+                    
+                    # Ambil nama unik, sorted
+                    if "person_name" in _person_df.columns:
+                        _names = sorted(
+                            _person_df["person_name"].dropna().astype(str).str.strip().str.upper().unique().tolist()
+                        )
+                        return _names
+                    
+                    return []
+                except Exception as e:
+                    print(f"[get_personil_by_role ERROR] {e}")
+                    return []
+
+            # =============================================================
+            # 📥 AMBIL DAFTAR PERSONIL
+            # =============================================================
+            # ✅ Ambil SEMUA personil (untuk kasir — semua role bisa jadi kasir)
+            all_personnel = get_personil_by_role(role_filter=None)
+            if not all_personnel:
+                all_personnel = [current_user]
+
+            # ✅ Ambil KHUSUS Staff (untuk dropdown staf)
+            staff_only_personnel = get_personil_by_role(role_filter="Staff")
+            if not staff_only_personnel:
+                # Fallback: kalau tidak ada role Staff, pakai semua
+                staff_only_personnel = all_personnel
 
             today_date = waktu_wib.date()
 
@@ -14300,22 +14359,32 @@ elif selected_tab == "📝 Input Data":
                         key="pps_shift_dyn",
                     )
 
-                    # Diubah agar semua user bisa memilih/mengubah nama staf
-                    user_idx = (
-                        all_personnel.index(current_user)
-                        if current_user in all_personnel
-                        else 0
-                    )
+                    # =========================================================
+                    # ✅ DROPDOWN STAF — HANYA ROLE "Staff"
+                    # =========================================================
+                    # Cari index user di list staf
+                    if current_user.upper() in [s.upper() for s in staff_only_personnel]:
+                        _staff_idx = [s.upper() for s in staff_only_personnel].index(current_user.upper())
+                    else:
+                        _staff_idx = 0
+
                     staff_name = st.selectbox(
-                        "Nama Staf / Personil",
-                        all_personnel,
-                        index=user_idx,
+                        "👥 Nama Staf / Personil",
+                        staff_only_personnel,
+                        index=_staff_idx,
                         key="pps_staff_dyn",
+                        help="Hanya nama dengan role 'Staff' yang muncul di sini",
                     )
 
                 with col_p2:
+                    # =========================================================
+                    # ✅ DROPDOWN KASIR — SEMUA ROLE (Kasir & Staff)
+                    # =========================================================
                     kasir_name = st.selectbox(
-                        "Nama Kasir", all_personnel, key="pps_kasir_dyn"
+                        "👤 Nama Kasir",
+                        all_personnel,
+                        key="pps_kasir_dyn",
+                        help="Semua personil bisa jadi kasir (Kasir maupun Staff)",
                     )
 
                     # Pastikan default_date tidak melebih batas min/max
