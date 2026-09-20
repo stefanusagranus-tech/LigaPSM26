@@ -2001,13 +2001,16 @@ def log_activity(action, detail=""):
         print(f"[LOG_ACTIVITY ERROR] {e}")
 
 # =========================================================================
-# 🚀 WELCOME SCREEN — VERSI SIMPLE (FIXED + CSS INLINE)
+# 🚀 WELCOME SCREEN — VERSI SIMPLE (FIXED + TOMBOL DI DALAM)
 # =========================================================================
 def show_welcome_screen():
     """
     Tampilkan welcome screen keren setelah login berhasil.
-    CSS di-inject langsung di fungsi biar pasti ke-load.
+    Tombol masuk ada DI DALAM overlay (via JS).
     """
+    import hashlib
+    import streamlit.components.v1 as components
+    
     _username = st.session_state.get("username", "User")
     
     # Waktu login
@@ -2025,7 +2028,6 @@ def show_welcome_screen():
         _sapaan = "Selamat Malam"
     
     # Avatar based on username (konsisten)
-    import hashlib
     _avatar_list = ["🧙‍♂️", "🧝‍♂️", "⚔️", "🎯", "🛡️", "🦁", "🦅", "🐺", "👑", "💎", "🔮", "🔥"]
     _h = int(hashlib.md5(_username.upper().encode()).hexdigest(), 16)
     _avatar = _avatar_list[_h % len(_avatar_list)]
@@ -2034,196 +2036,226 @@ def show_welcome_screen():
     if any(x in _username.lower() for x in ["admin", "chief", "cos", "lavitality"]):
         _avatar = "👑"
     
-    # === CSS WELCOME SCREEN (INLINE) ===
-    st.markdown("""
-<style>
-@keyframes welcomeEnter {
-    0% { opacity: 0; transform: scale(0.9) translateY(30px); filter: blur(10px); }
-    100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
-}
-@keyframes welcomeIconPulse {
-    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.6)); }
-    50% { transform: scale(1.08); filter: drop-shadow(0 0 35px rgba(212, 175, 55, 1)); }
-}
-@keyframes welcomeShimmer {
-    0% { background-position: -1000px 0; }
-    100% { background-position: 1000px 0; }
-}
-@keyframes welcomeSparkFloat {
-    0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.6; }
-    50% { transform: translateY(-15px) rotate(180deg); opacity: 1; }
-}
-@keyframes spinSlow {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
+    # === HTML + CSS + JS (ALL IN ONE) ===
+    html_welcome = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&family=Quicksand:wght@600;700&family=Cinzel:wght@600;700;800&display=swap');
+        
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            overflow: hidden;
+            font-family: 'Quicksand', sans-serif;
+        }}
+        
+        @keyframes welcomeEnter {{
+            0% {{ opacity: 0; transform: scale(0.9) translateY(30px); filter: blur(10px); }}
+            100% {{ opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }}
+        }}
+        @keyframes welcomeIconPulse {{
+            0%, 100% {{ transform: scale(1); filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.6)); }}
+            50% {{ transform: scale(1.08); filter: drop-shadow(0 0 35px rgba(212, 175, 55, 1)); }}
+        }}
+        @keyframes welcomeShimmer {{
+            0% {{ background-position: -1000px 0; }}
+            100% {{ background-position: 1000px 0; }}
+        }}
+        @keyframes welcomeSparkFloat {{
+            0%, 100% {{ transform: translateY(0) rotate(0deg); opacity: 0.6; }}
+            50% {{ transform: translateY(-15px) rotate(180deg); opacity: 1; }}
+        }}
+        @keyframes spinSlow {{
+            from {{ transform: rotate(0deg); }}
+            to {{ transform: rotate(360deg); }}
+        }}
+        
+        .welcome-overlay {{
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: radial-gradient(ellipse at top, #1e3a5f 0%, #0f172a 50%, #05070c 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            animation: welcomeEnter 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+        }}
+        
+        .welcome-corner {{
+            position: absolute;
+            color: #d4af37;
+            font-size: 20px;
+            opacity: 0.7;
+            filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.8));
+        }}
+        .welcome-corner-tl {{ top: 30px; left: 30px; }}
+        .welcome-corner-tr {{ top: 30px; right: 30px; }}
+        .welcome-corner-bl {{ bottom: 30px; left: 30px; }}
+        .welcome-corner-br {{ bottom: 30px; right: 30px; }}
+        
+        .welcome-avatar {{
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
+            border: 4px solid #d4af37;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 70px;
+            margin-bottom: 32px;
+            animation: welcomeIconPulse 2.5s infinite ease-in-out;
+            position: relative;
+            z-index: 10;
+        }}
+        .welcome-avatar::before {{
+            content: "";
+            position: absolute;
+            inset: -12px;
+            border-radius: 50%;
+            border: 2px dashed #b45309;
+            animation: spinSlow 20s linear infinite;
+        }}
+        .welcome-avatar::after {{
+            content: "";
+            position: absolute;
+            inset: -24px;
+            border-radius: 50%;
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            animation: spinSlow 30s linear infinite reverse;
+        }}
+        
+        .welcome-spark {{
+            position: absolute;
+            color: #fbbf24;
+            font-size: 24px;
+            filter: drop-shadow(0 0 10px #fbbf24);
+            animation: welcomeSparkFloat 3s infinite ease-in-out;
+        }}
+        .welcome-spark-1 {{ top: 20%; left: 28%; animation-delay: 0s; }}
+        .welcome-spark-2 {{ top: 25%; right: 26%; animation-delay: 0.5s; }}
+        .welcome-spark-3 {{ bottom: 28%; left: 24%; animation-delay: 1s; }}
+        .welcome-spark-4 {{ bottom: 25%; right: 28%; animation-delay: 1.5s; }}
+        
+        .welcome-greeting {{
+            font-family: 'Quicksand', sans-serif;
+            font-size: 16px;
+            color: #d4af37;
+            font-weight: 700;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            text-align: center;
+            animation: welcomeEnter 1s cubic-bezier(0.25, 1, 0.5, 1);
+            opacity: 0.9;
+        }}
+        
+        .welcome-name {{
+            font-family: 'MedievalSharp', serif;
+            font-size: 44px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            text-align: center;
+            margin: 0 0 40px 0;
+            line-height: 1.1;
+            background: linear-gradient(90deg, #f7e7b4 0%, #d4af37 25%, #f7e7b4 50%, #d4af37 75%, #f7e7b4 100%);
+            background-size: 1000px 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: welcomeEnter 1.2s cubic-bezier(0.25, 1, 0.5, 1), welcomeShimmer 4s infinite linear;
+            filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.4));
+        }}
+        
+        .welcome-btn {{
+            background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+            color: #ffffff;
+            border: 2px solid #fbbf24;
+            border-radius: 50px;
+            font-family: 'Cinzel', serif;
+            font-weight: 900;
+            font-size: 15px;
+            letter-spacing: 2px;
+            padding: 18px 60px;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 0 25px rgba(251, 191, 36, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            animation: welcomeEnter 1.6s cubic-bezier(0.25, 1, 0.5, 1);
+            min-width: 280px;
+        }}
+        .welcome-btn:hover {{
+            background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 0 40px rgba(251, 191, 36, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        }}
+        .welcome-btn:active {{
+            transform: translateY(0) scale(1);
+        }}
+        
+        @media (max-width: 768px) {{
+            .welcome-avatar {{ width: 100px; height: 100px; font-size: 50px; margin-bottom: 24px; }}
+            .welcome-greeting {{ font-size: 13px; letter-spacing: 4px; }}
+            .welcome-name {{ font-size: 26px; letter-spacing: 2px; margin-bottom: 30px; }}
+            .welcome-spark {{ font-size: 16px; }}
+            .welcome-corner {{ font-size: 16px; }}
+            .welcome-btn {{ font-size: 13px; padding: 14px 40px; min-width: 240px; }}
+        }}
+    </style>
+    </head>
+    <body>
 
-.welcome-overlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw; height: 100vh;
-    z-index: 999999;
-    background: radial-gradient(ellipse at top, #1e3a5f 0%, #0f172a 50%, #05070c 100%);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-    animation: welcomeEnter 0.8s cubic-bezier(0.25, 1, 0.5, 1);
-}
+    <div class="welcome-overlay">
+        <div class="welcome-corner welcome-corner-tl">⚜️</div>
+        <div class="welcome-corner welcome-corner-tr">⚜️</div>
+        <div class="welcome-corner welcome-corner-bl">⚜️</div>
+        <div class="welcome-corner welcome-corner-br">⚜️</div>
+        
+        <div class="welcome-spark welcome-spark-1">✦</div>
+        <div class="welcome-spark welcome-spark-2">✦</div>
+        <div class="welcome-spark welcome-spark-3">✦</div>
+        <div class="welcome-spark welcome-spark-4">✦</div>
+        
+        <div class="welcome-avatar">{_avatar}</div>
+        
+        <p class="welcome-greeting">{_sapaan}</p>
+        <h1 class="welcome-name">{_username}</h1>
+        
+        <button class="welcome-btn" onclick="enterApp()">⚔️ MASUK KE APLIKASI</button>
+    </div>
 
-.welcome-corner {
-    position: absolute;
-    color: #d4af37;
-    font-size: 20px;
-    opacity: 0.7;
-    filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.8));
-}
-.welcome-corner-tl { top: 30px; left: 30px; }
-.welcome-corner-tr { top: 30px; right: 30px; }
-.welcome-corner-bl { bottom: 30px; left: 30px; }
-.welcome-corner-br { bottom: 30px; right: 30px; }
+    <script>
+        function enterApp() {{
+            // Kirim sinyal ke Streamlit via URL params
+            const url = new URL(window.parent.location.href);
+            url.searchParams.set('welcome_entered', '1');
+            window.parent.location.href = url.toString();
+        }}
+    </script>
 
-.welcome-avatar {
-    width: 140px;
-    height: 140px;
-    border-radius: 50%;
-    background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
-    border: 4px solid #d4af37;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 70px;
-    margin-bottom: 32px;
-    animation: welcomeIconPulse 2.5s infinite ease-in-out;
-    position: relative;
-    z-index: 10;
-}
-.welcome-avatar::before {
-    content: "";
-    position: absolute;
-    inset: -12px;
-    border-radius: 50%;
-    border: 2px dashed #b45309;
-    animation: spinSlow 20s linear infinite;
-}
-.welcome-avatar::after {
-    content: "";
-    position: absolute;
-    inset: -24px;
-    border-radius: 50%;
-    border: 1px solid rgba(212, 175, 55, 0.4);
-    animation: spinSlow 30s linear infinite reverse;
-}
-
-.welcome-spark {
-    position: absolute;
-    color: #fbbf24;
-    font-size: 24px;
-    filter: drop-shadow(0 0 10px #fbbf24);
-    animation: welcomeSparkFloat 3s infinite ease-in-out;
-}
-.welcome-spark-1 { top: 20%; left: 28%; animation-delay: 0s; }
-.welcome-spark-2 { top: 25%; right: 26%; animation-delay: 0.5s; }
-.welcome-spark-3 { bottom: 28%; left: 24%; animation-delay: 1s; }
-.welcome-spark-4 { bottom: 25%; right: 28%; animation-delay: 1.5s; }
-
-.welcome-greeting {
-    font-family: 'Quicksand', sans-serif;
-    font-size: 16px;
-    color: #d4af37;
-    font-weight: 700;
-    letter-spacing: 6px;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-    text-align: center;
-    animation: welcomeEnter 1s cubic-bezier(0.25, 1, 0.5, 1);
-    opacity: 0.9;
-}
-
-.welcome-name {
-    font-family: 'MedievalSharp', serif;
-    font-size: 44px;
-    font-weight: 900;
-    letter-spacing: 3px;
-    text-align: center;
-    margin: 0 0 40px 0;
-    line-height: 1.1;
-    background: linear-gradient(90deg, #f7e7b4 0%, #d4af37 25%, #f7e7b4 50%, #d4af37 75%, #f7e7b4 100%);
-    background-size: 1000px 100%;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    text-shadow: 0 0 30px rgba(212, 175, 55, 0.5);
-    animation: welcomeEnter 1.2s cubic-bezier(0.25, 1, 0.5, 1), welcomeShimmer 4s infinite linear;
-    filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.4));
-}
-
-.welcome-btn-container {
-    animation: welcomeEnter 1.6s cubic-bezier(0.25, 1, 0.5, 1);
-    max-width: 320px;
-    width: 100%;
-}
-.welcome-btn-container div.stButton > button {
-    background: linear-gradient(135deg, #b45309 0%, #d97706 100%) !important;
-    color: #ffffff !important;
-    border: 2px solid #fbbf24 !important;
-    border-radius: 50px !important;
-    font-family: 'Cinzel', serif !important;
-    font-weight: 900 !important;
-    font-size: 15px !important;
-    letter-spacing: 2px !important;
-    padding: 18px 40px !important;
-    height: auto !important;
-    min-height: 64px !important;
-    text-transform: uppercase !important;
-    box-shadow: 0 0 25px rgba(251, 191, 36, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
-    transition: all 0.3s ease !important;
-    width: 100% !important;
-}
-.welcome-btn-container div.stButton > button:hover {
-    background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%) !important;
-    transform: translateY(-3px) scale(1.02) !important;
-    box-shadow: 0 0 40px rgba(251, 191, 36, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
-}
-
-@media (max-width: 768px) {
-    .welcome-avatar { width: 100px; height: 100px; font-size: 50px; margin-bottom: 24px; }
-    .welcome-greeting { font-size: 13px; letter-spacing: 4px; }
-    .welcome-name { font-size: 26px; letter-spacing: 2px; margin-bottom: 30px; }
-    .welcome-spark { font-size: 16px; }
-    .welcome-corner { font-size: 16px; }
-    .welcome-btn-container div.stButton > button {
-        font-size: 13px !important;
-        padding: 14px 30px !important;
-        min-height: 56px !important;
-    }
-}
-@media (max-width: 380px) {
-    .welcome-avatar { width: 80px; height: 80px; font-size: 40px; }
-    .welcome-name { font-size: 20px; letter-spacing: 1px; }
-    .welcome-greeting { font-size: 11px; letter-spacing: 3px; }
-}
-</style>
-""", unsafe_allow_html=True)
+    </body>
+    </html>
+    """
     
-    # === HTML WELCOME SCREEN (TANPA INDENTASI) ===
-    html_welcome = f"""<div class="welcome-overlay">
-<div class="welcome-corner welcome-corner-tl">⚜️</div>
-<div class="welcome-corner welcome-corner-tr">⚜️</div>
-<div class="welcome-corner welcome-corner-bl">⚜️</div>
-<div class="welcome-corner welcome-corner-br">⚜️</div>
-<div class="welcome-spark welcome-spark-1">✦</div>
-<div class="welcome-spark welcome-spark-2">✦</div>
-<div class="welcome-spark welcome-spark-3">✦</div>
-<div class="welcome-spark welcome-spark-4">✦</div>
-<div class="welcome-avatar">{_avatar}</div>
-<p class="welcome-greeting">{_sapaan}</p>
-<h1 class="welcome-name">{_username}</h1>
-</div>"""
+    # Render full HTML via components.html (bukan st.markdown)
+    components.html(html_welcome, height=800, scrolling=False)
     
-    st.markdown(html_welcome, unsafe_allow_html=True)
+    # Cek URL param untuk masuk
+    _query_params = st.query_params
+    if _query_params.get("welcome_entered") == "1":
+        st.session_state["welcome_shown"] = True
+        st.query_params.clear()
+        st.rerun()
     
+    st.stop()    
     # === TOMBOL MASUK ===
     st.markdown('<div class="welcome-btn-container">', unsafe_allow_html=True)
     if st.button("⚔️ MASUK KE APLIKASI", use_container_width=True, key="btn_enter_app"):
