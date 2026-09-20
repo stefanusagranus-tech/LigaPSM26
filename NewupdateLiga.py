@@ -5617,7 +5617,9 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 text-align: center; font-family: monospace; font-size: 9.5px;
                 color: #b45309; font-style: italic;
             }}
-           /* JAM PANJANG + JAM PASIR */
+           /* =========================================================================
+            🕐 JAM PANJANG + JAM PASIR — RESPONSIVE FIX
+            ========================================================================= */
             .clock-bar-j {{
                 display: flex;
                 align-items: center;
@@ -5631,38 +5633,107 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                 max-width: 380px;
                 box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
                 box-sizing: border-box;
+                gap: 8px;
+                overflow: hidden;
             }}
+
             .clock-bar-left-j {{
                 font-family: 'Courier New', monospace;
                 font-size: 22px;
                 font-weight: 900;
                 color: #38bdf8;
                 text-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
-                letter-spacing: 2px;
-                flex: 1;
-                text-align: left;
+                letter-spacing: 1px;
+                flex: 0 0 auto;
+                white-space: nowrap;
+                line-height: 1;
             }}
+
             .clock-bar-center-j {{
                 font-size: 22px;
                 flex: 0 0 auto;
-                margin: 0 12px;
+                margin: 0 6px;
                 animation: hourglassSpinJ 2.5s infinite ease-in-out;
                 filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.8));
+                line-height: 1;
             }}
+
             @keyframes hourglassSpinJ {{
                 0% {{ transform: rotate(0deg); }}
                 50% {{ transform: rotate(180deg); }}
                 100% {{ transform: rotate(180deg); }}
             }}
+
             .clock-bar-right-j {{
                 font-family: monospace;
                 font-size: 10px;
                 font-weight: bold;
                 color: #cbd5e1;
-                flex: 1;
+                flex: 1 1 auto;
                 text-align: right;
                 letter-spacing: 0.3px;
                 line-height: 1.3;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                min-width: 0;
+            }}
+
+            /* =========================================================================
+            RESPONSIVE: MOBILE (≤ 600px) — TANGGAL TURUN KE BAWAH
+            ========================================================================= */
+            @media (max-width: 600px) {{
+                .clock-bar-j {{
+                    flex-wrap: wrap;
+                    padding: 8px 12px;
+                    gap: 6px;
+                }}
+                
+                .clock-bar-left-j {{
+                    font-size: 18px;
+                    letter-spacing: 0;
+                }}
+                
+                .clock-bar-center-j {{
+                    font-size: 18px;
+                    margin: 0 4px;
+                }}
+                
+                .clock-bar-right-j {{
+                    font-size: 9px;
+                    flex-basis: 100%;
+                    text-align: center;
+                    margin-top: 4px;
+                    padding-top: 4px;
+                    border-top: 1px dashed rgba(180, 83, 9, 0.3);
+                    white-space: normal;
+                    overflow: visible;
+                }}
+            }}
+
+            /* =========================================================================
+            RESPONSIVE: MOBILE KECIL (≤ 400px) — EKSTRA KOMPAK
+            ========================================================================= */
+            @media (max-width: 400px) {{
+                .clock-bar-j {{
+                    padding: 6px 10px;
+                    gap: 4px;
+                }}
+                
+                .clock-bar-left-j {{
+                    font-size: 16px;
+                }}
+                
+                .clock-bar-center-j {{
+                    font-size: 16px;
+                    margin: 0 3px;
+                }}
+                
+                .clock-bar-right-j {{
+                    font-size: 8.5px;
+                    margin-top: 3px;
+                    padding-top: 3px;
+                }}
             }}
             /* KATA BIJAK GUILD */
             .motivasi-box-j {{
@@ -5976,9 +6047,41 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     + "<div class='open-page-footer-j'>- Halaman 1 -</div>"
                 )
 
-                # ==========================================
+                               # ==========================================
                 # KANAN — Akumulasi + Motivasi
                 # ==========================================
+                
+                # ✅ HITUNG TARGET PSM YANG BENAR
+                _psm_target_v = 0
+                
+                # Ambil dari sales_item_df bulan ini
+                _si_bulan_psm = pd.DataFrame()
+                if not df_sales_item_j.empty and "period_id" in df_sales_item_j.columns:
+                    _si_bulan_psm = df_sales_item_j[
+                        df_sales_item_j["period_id"].astype(str).str.strip().isin(valid_month_pids_j)
+                    ].copy()
+                
+                if not _si_bulan_psm.empty:
+                    if mode_admin_j:
+                        # ADMIN: pakai target_qty (target toko)
+                        if "target_qty" in _si_bulan_psm.columns:
+                            _psm_target_v = int(
+                                pd.to_numeric(_si_bulan_psm["target_qty"], errors="coerce").fillna(0).sum()
+                            )
+                    else:
+                        # USER: pakai target_kasir × jumlah item
+                        if "target_kasir" in _si_bulan_psm.columns:
+                            _psm_target_v = int(
+                                pd.to_numeric(_si_bulan_psm["target_kasir"], errors="coerce").fillna(0).sum()
+                            )
+                
+                # Fallback kalau target kosong
+                if _psm_target_v <= 0:
+                    _psm_target_v = 1  # hindari bagi 0
+                
+                # Hitung persentase
+                _psm_pct_v = (psm_total_v / _psm_target_v * 100) if _psm_target_v > 0 else 0
+                
                 html_kanan_j = (
                     "<div class='open-page-title-j'>📊 " + ("AKUMULASI BULAN INI" if mode_admin_j else "AKUMULASI PRIBADI") + "</div>"
                     "<div class='open-page-sub-j'>" + ("Performa Toko Selama 1 Bulan" if mode_admin_j else "Performa Pribadi Bulan Ini") + "</div>"
@@ -5986,7 +6089,7 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
                     + _build_j_progress("⚡ PWP", pwp_aktif_v, pwp_target_v, "linear-gradient(90deg, #3b82f6, #60a5fa)")
                     + _build_j_progress("🎁 SG", sg_aktif_v, sg_target_v, "linear-gradient(90deg, #7c3aed, #a855f7)")
                     + _build_j_progress("💧 Sueger", sgr_redeem_v, sgr_syarat_v, "linear-gradient(90deg, #10b981, #34d399)")
-                    + _build_j_progress("📦 PSM", psm_total_v, max(psm_total_v, 1), "linear-gradient(90deg, #b45309, #d97706)")
+                    + _build_j_progress("📦 PSM", psm_total_v, _psm_target_v, "linear-gradient(90deg, #b45309, #d97706)")
                     + "<div style='margin-top:12px;'>"
                     + _build_j_stat_row("🥤 Ceban", f"{ceban_total_v:,} Pcs", "#db2777")
                     + "</div>"
