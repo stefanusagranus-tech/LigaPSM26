@@ -15108,7 +15108,7 @@ elif selected_tab == "➕ Edit Data (Admin)":
     st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
 
     # SUB TAB 1: EDIT SALES PERSONIL
-    if selected_sub_tab == "✏️ EDIT SALES PERSONIL":
+    if selected_sub_tab == "✏️ EDIT SALES PSM":
         st.markdown(
             "<h4 style='color: #38bdf8;'>✏️ Edit Transaksi Sales (Koreksi"
             " Input)</h4>",
@@ -15216,7 +15216,7 @@ elif selected_tab == "➕ Edit Data (Admin)":
                         st.rerun()
 
     # SUB TAB 2: HAPUS & RESET
-    elif selected_sub_tab == "🗑️ HAPUS & RESET":
+    elif selected_sub_tab == "🗑️ HAPUS & RESET PSM":
         st.markdown(
             "<h4 style='color: #38bdf8;'>🗑️ Hapus Transaksi / Reset Sales"
             " Personil</h4>",
@@ -15712,7 +15712,371 @@ elif selected_tab == "➕ Edit Data (Admin)":
                                     st.rerun()
                                 except Exception as _e:
                                     st.error(f"❌ Gagal update: {_e}")
-
+    # =========================================================================
+    # 🚨 HAPUS & RESET PPS (BARU)
+    # =========================================================================
+    elif selected_sub_tab == "🚨 HAPUS & RESET PPS":
+        
+        # =====================================================================
+        # 🏛️ SUB-HEADER
+        # =====================================================================
+        st.markdown("""
+        <div style='
+            background: linear-gradient(135deg, rgba(76, 29, 29, 0.9), rgba(30, 15, 15, 0.9));
+            border: 1.5px solid #dc2626;
+            border-left: 5px solid #ef4444;
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+        '>
+            <div style='
+                font-family: monospace;
+                font-size: 16px;
+                font-weight: 900;
+                color: #ef4444;
+                letter-spacing: 1.5px;
+                text-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+            '>🚨 HAPUS & RESET PPS</div>
+            <div style='
+                font-family: monospace;
+                font-size: 10px;
+                color: #fca5a5;
+                margin-top: 4px;
+                letter-spacing: 0.5px;
+            '>⚠️ Hati-hati: aksi hapus tidak bisa di-undo</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # =====================================================================
+        # 📥 AMBIL DATA PPS
+        # =====================================================================
+        _pps_del_all = st.session_state.get("sales_pps_df", pd.DataFrame()).copy()
+        
+        if _pps_del_all.empty:
+            st.info("📭 Belum ada data PPS untuk dihapus.")
+        else:
+            _pps_del_all.columns = _pps_del_all.columns.astype(str).str.strip().str.lower()
+            
+            if "updated_at" not in _pps_del_all.columns:
+                st.error("❌ Kolom 'updated_at' tidak ditemukan.")
+            else:
+                _pps_del_all["_dt"] = pd.to_datetime(_pps_del_all["updated_at"], errors="coerce")
+                _pps_del_all = _pps_del_all.dropna(subset=["_dt"])
+                
+                # =============================================================
+                # 🎛️ MODE HAPUS
+                # =============================================================
+                st.markdown("""
+                <div style='
+                    font-family: monospace;
+                    font-size: 12px;
+                    font-weight: 900;
+                    color: #fbbf24;
+                    letter-spacing: 1px;
+                    margin-bottom: 12px;
+                    padding-bottom: 8px;
+                    border-bottom: 1px dashed rgba(180, 83, 9, 0.4);
+                '>🎛️ PILIH MODE HAPUS</div>
+                """, unsafe_allow_html=True)
+                
+                _mode_hapus_pps = st.radio(
+                    "Mode Hapus:",
+                    [
+                        "🗑️ Hapus 1 Record Spesifik",
+                        "📅 Hapus Semua Transaksi Tanggal Tertentu",
+                        "👤 Hapus Semua Transaksi Kasir Tertentu",
+                    ],
+                    key="pps_delete_mode_radio",
+                    label_visibility="collapsed"
+                )
+                
+                st.markdown("---")
+                
+                # =============================================================
+                # 🗑️ MODE 1: HAPUS 1 RECORD
+                # =============================================================
+                if _mode_hapus_pps == "🗑️ Hapus 1 Record Spesifik":
+                    
+                    st.markdown("**🔍 Filter Record yang Mau Dihapus**")
+                    
+                    col_d1, col_d2, col_d3 = st.columns(3)
+                    
+                    with col_d1:
+                        _del_tanggal = st.date_input(
+                            "📅 Tanggal",
+                            value=pd.Timestamp.now().date(),
+                            key="pps_del_record_date"
+                        )
+                    
+                    _pps_del_tanggal = _pps_del_all[_pps_del_all["_dt"].dt.date == _del_tanggal].copy()
+                    
+                    with col_d2:
+                        if not _pps_del_tanggal.empty and "shift_personil" in _pps_del_tanggal.columns:
+                            _del_shift_list = ["Semua"] + sorted(_pps_del_tanggal["shift_personil"].dropna().astype(str).unique().tolist())
+                        else:
+                            _del_shift_list = ["Semua"]
+                        _del_shift = st.selectbox(
+                            "🕐 Shift",
+                            _del_shift_list,
+                            key="pps_del_record_shift"
+                        )
+                    
+                    if _del_shift != "Semua":
+                        _pps_del_shift = _pps_del_tanggal[_pps_del_tanggal["shift_personil"] == _del_shift].copy()
+                    else:
+                        _pps_del_shift = _pps_del_tanggal.copy()
+                    
+                    with col_d3:
+                        if not _pps_del_shift.empty and "kasir_name" in _pps_del_shift.columns:
+                            _del_kasir_list = ["Semua"] + sorted(_pps_del_shift["kasir_name"].dropna().astype(str).unique().tolist())
+                        else:
+                            _del_kasir_list = ["Semua"]
+                        _del_kasir = st.selectbox(
+                            "👤 Kasir",
+                            _del_kasir_list,
+                            key="pps_del_record_kasir"
+                        )
+                    
+                    if _del_kasir != "Semua":
+                        _pps_del_final = _pps_del_shift[_pps_del_shift["kasir_name"] == _del_kasir].copy()
+                    else:
+                        _pps_del_final = _pps_del_shift.copy()
+                    
+                    if _pps_del_final.empty:
+                        st.info(f"📭 Tidak ada record untuk filter ini.")
+                    else:
+                        # Pilih record
+                        _del_record_options = []
+                        for _idx, _row in _pps_del_final.iterrows():
+                            _lbl = f"🕐 {_row.get('shift_personil', '-')} | 👤 {_row.get('kasir_name', '-')} | 📅 {_row['_dt'].strftime('%d/%m/%Y')}"
+                            _del_record_options.append((_idx, _lbl))
+                        
+                        _del_record_labels = [opt[1] for opt in _del_record_options]
+                        
+                        _del_selected_label = st.radio(
+                            "Pilih record:",
+                            _del_record_labels,
+                            key="pps_del_record_select"
+                        )
+                        
+                        _del_selected_idx = None
+                        for _idx, _lbl in _del_record_options:
+                            if _lbl == _del_selected_label:
+                                _del_selected_idx = _idx
+                                break
+                        
+                        # Preview record
+                        if _del_selected_idx is not None:
+                            _del_row = _pps_del_final.loc[_del_selected_idx]
+                            
+                            st.markdown(f"""
+                            <div style='
+                                background: rgba(239, 68, 68, 0.1);
+                                border: 1.5px solid #ef4444;
+                                border-radius: 8px;
+                                padding: 12px 16px;
+                                margin: 16px 0;
+                                font-family: monospace;
+                                font-size: 11px;
+                                color: #fca5a5;
+                            '>
+                                <div style='font-weight: 900; margin-bottom: 8px; color: #ef4444;'>⚠️ Preview Record:</div>
+                                <div>🕐 Shift: <b>{_del_row.get('shift_personil', '-')}</b></div>
+                                <div>👤 Kasir: <b>{_del_row.get('kasir_name', '-')}</b></div>
+                                <div>📅 Tanggal: <b>{_del_row['_dt'].strftime('%d/%m/%Y')}</b></div>
+                                <div>⚔️ Syarat PWP: <b>{_del_row.get('syarat_pwp', 0)}</b></div>
+                                <div>🛡️ Redeem PWP: <b>{_del_row.get('redeem_pwp', 0)}</b></div>
+                                <div>📦 Qty PWP: <b>{_del_row.get('qty_pwp', 0)}</b></div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                            
+                            if st.button("🗑️ HAPUS RECORD INI", use_container_width=True, type="primary", key="pps_del_record_btn"):
+                                _detail_del = {
+                                    "🕐 Shift": _del_row.get('shift_personil', '-'),
+                                    "👤 Kasir": _del_row.get('kasir_name', '-'),
+                                    "📅 Tanggal": _del_row['_dt'].strftime('%d/%m/%Y'),
+                                    "⚔️ Syarat PWP": _del_row.get('syarat_pwp', 0),
+                                    "🛡️ Redeem PWP": _del_row.get('redeem_pwp', 0),
+                                }
+                                
+                                st.session_state["pending_delete_pps"] = {
+                                    "mode": "single",
+                                    "idx": _del_selected_idx,
+                                }
+                                
+                                show_delete_confirm_dialog(
+                                    _detail_del,
+                                    warning_text="Data PPS ini akan dihapus permanen!",
+                                    callback_key="del_pps_single_confirm"
+                                )
+                
+                # =============================================================
+                # 📅 MODE 2: HAPUS SEMUA TANGGAL
+                # =============================================================
+                elif _mode_hapus_pps == "📅 Hapus Semua Transaksi Tanggal Tertentu":
+                    
+                    st.markdown("**📅 Pilih Tanggal yang Mau Dihapus**")
+                    
+                    _del_all_tanggal = st.date_input(
+                        "Tanggal:",
+                        value=pd.Timestamp.now().date(),
+                        key="pps_del_all_date"
+                    )
+                    
+                    _pps_del_by_date = _pps_del_all[_pps_del_all["_dt"].dt.date == _del_all_tanggal].copy()
+                    
+                    if _pps_del_by_date.empty:
+                        st.info(f"📭 Tidak ada data PPS untuk tanggal {_del_all_tanggal.strftime('%d/%m/%Y')}")
+                    else:
+                        st.warning(f"⚠️ Akan menghapus **{len(_pps_del_by_date)} record** untuk tanggal **{_del_all_tanggal.strftime('%d/%m/%Y')}**")
+                        
+                        if st.button(f"🗑️ HAPUS SEMUA ({len(_pps_del_by_date)} RECORD)", use_container_width=True, type="primary", key="pps_del_all_date_btn"):
+                            _detail_del = {
+                                "📅 Tanggal": _del_all_tanggal.strftime('%d/%m/%Y'),
+                                "📊 Jumlah Record": f"{len(_pps_del_by_date)} record",
+                                "🕐 Shift": ", ".join(_pps_del_by_date['shift_personil'].dropna().astype(str).unique().tolist()),
+                            }
+                            
+                            st.session_state["pending_delete_pps"] = {
+                                "mode": "date",
+                                "tanggal": _del_all_tanggal,
+                            }
+                            
+                            show_delete_confirm_dialog(
+                                _detail_del,
+                                warning_text=f"Semua {len(_pps_del_by_date)} record tanggal {_del_all_tanggal.strftime('%d/%m/%Y')} akan dihapus!",
+                                callback_key="del_pps_date_confirm"
+                            )
+                
+                # =============================================================
+                # 👤 MODE 3: HAPUS SEMUA KASIR
+                # =============================================================
+                elif _mode_hapus_pps == "👤 Hapus Semua Transaksi Kasir Tertentu":
+                    
+                    st.markdown("**👤 Pilih Kasir yang Mau Dihapus Transaksinya**")
+                    
+                    # Ambil daftar kasir unik
+                    _del_kasir_all_list = sorted(_pps_del_all["kasir_name"].dropna().astype(str).unique().tolist()) if "kasir_name" in _pps_del_all.columns else []
+                    
+                    if not _del_kasir_all_list:
+                        st.info("📭 Belum ada kasir di data PPS.")
+                    else:
+                        _del_kasir_target = st.selectbox(
+                            "Pilih Kasir:",
+                            _del_kasir_all_list,
+                            key="pps_del_all_kasir"
+                        )
+                        
+                        _pps_del_by_kasir = _pps_del_all[_pps_del_all["kasir_name"] == _del_kasir_target].copy()
+                        
+                        if _pps_del_by_kasir.empty:
+                            st.info(f"📭 Tidak ada data untuk kasir {_del_kasir_target}")
+                        else:
+                            st.warning(f"⚠️ Akan menghapus **{len(_pps_del_by_kasir)} record** milik kasir **{_del_kasir_target}**")
+                            
+                            # Cek rentang tanggal
+                            _tgl_min = _pps_del_by_kasir["_dt"].min().strftime('%d/%m/%Y')
+                            _tgl_max = _pps_del_by_kasir["_dt"].max().strftime('%d/%m/%Y')
+                            st.caption(f"📅 Rentang: {_tgl_min} s/d {_tgl_max}")
+                            
+                            if st.button(f"🗑️ HAPUS SEMUA ({len(_pps_del_by_kasir)} RECORD)", use_container_width=True, type="primary", key="pps_del_all_kasir_btn"):
+                                _detail_del = {
+                                    "👤 Kasir": _del_kasir_target,
+                                    "📊 Jumlah Record": f"{len(_pps_del_by_kasir)} record",
+                                    "📅 Rentang": f"{_tgl_min} s/d {_tgl_max}",
+                                }
+                                
+                                st.session_state["pending_delete_pps"] = {
+                                    "mode": "kasir",
+                                    "kasir": _del_kasir_target,
+                                }
+                                
+                                show_delete_confirm_dialog(
+                                    _detail_del,
+                                    warning_text=f"Semua {len(_pps_del_by_kasir)} record kasir {_del_kasir_target} akan dihapus!",
+                                    callback_key="del_pps_kasir_confirm"
+                                )
+                
+                # =============================================================
+                # 💾 COMMIT DELETE (setelah user klik "YA, HAPUS")
+                # =============================================================
+                if st.session_state.get("del_pps_single_confirm_result", False):
+                    st.session_state["del_pps_single_confirm_result"] = False
+                    _pending_del = st.session_state.pop("pending_delete_pps", None)
+                    
+                    if _pending_del and _pending_del.get("mode") == "single":
+                        try:
+                            _idx_del = _pending_del["idx"]
+                            _pps_now = st.session_state.get("sales_pps_df", pd.DataFrame()).copy()
+                            _pps_now = _pps_now.drop(index=_idx_del, errors="ignore")
+                            st.session_state.sales_pps_df = _pps_now
+                            
+                            sync_periode_pps_from_sales()
+                            save_database(
+                                st.session_state.sales_item_df,
+                                st.session_state.sales_person_df,
+                                st.session_state.sales_pps_df,
+                                st.session_state.sales_store_df,
+                            )
+                            
+                            st.toast("🗑️ Record berhasil dihapus!", icon="✅")
+                            time.sleep(1.5)
+                            st.rerun()
+                        except Exception as _e:
+                            st.error(f"❌ Gagal hapus: {_e}")
+                
+                if st.session_state.get("del_pps_date_confirm_result", False):
+                    st.session_state["del_pps_date_confirm_result"] = False
+                    _pending_del = st.session_state.pop("pending_delete_pps", None)
+                    
+                    if _pending_del and _pending_del.get("mode") == "date":
+                        try:
+                            _tgl_del = _pending_del["tanggal"]
+                            _pps_now = st.session_state.get("sales_pps_df", pd.DataFrame()).copy()
+                            _pps_now["_dt"] = pd.to_datetime(_pps_now["updated_at"], errors="coerce")
+                            _pps_now = _pps_now[_pps_now["_dt"].dt.date != _tgl_del]
+                            _pps_now = _pps_now.drop(columns=["_dt"], errors="ignore")
+                            st.session_state.sales_pps_df = _pps_now
+                            
+                            sync_periode_pps_from_sales()
+                            save_database(
+                                st.session_state.sales_item_df,
+                                st.session_state.sales_person_df,
+                                st.session_state.sales_pps_df,
+                                st.session_state.sales_store_df,
+                            )
+                            
+                            st.toast(f"🗑️ Semua record tanggal {_tgl_del.strftime('%d/%m/%Y')} berhasil dihapus!", icon="✅")
+                            time.sleep(1.5)
+                            st.rerun()
+                        except Exception as _e:
+                            st.error(f"❌ Gagal hapus: {_e}")
+                
+                if st.session_state.get("del_pps_kasir_confirm_result", False):
+                    st.session_state["del_pps_kasir_confirm_result"] = False
+                    _pending_del = st.session_state.pop("pending_delete_pps", None)
+                    
+                    if _pending_del and _pending_del.get("mode") == "kasir":
+                        try:
+                            _kasir_del = _pending_del["kasir"]
+                            _pps_now = st.session_state.get("sales_pps_df", pd.DataFrame()).copy()
+                            _pps_now = _pps_now[_pps_now["kasir_name"] != _kasir_del]
+                            st.session_state.sales_pps_df = _pps_now
+                            
+                            sync_periode_pps_from_sales()
+                            save_database(
+                                st.session_state.sales_item_df,
+                                st.session_state.sales_person_df,
+                                st.session_state.sales_pps_df,
+                                st.session_state.sales_store_df,
+                            )
+                            
+                            st.toast(f"🗑️ Semua record kasir {_kasir_del} berhasil dihapus!", icon="✅")
+                            time.sleep(1.5)
+                            st.rerun()
+                        except Exception as _e:
+                            st.error(f"❌ Gagal hapus: {_e}")
 
 # --- TAB MASTER DATA & PENGATURAN ---
 elif selected_tab == "⚙️ Pengaturan & Master":
