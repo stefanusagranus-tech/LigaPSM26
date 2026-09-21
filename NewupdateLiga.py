@@ -53,6 +53,7 @@ from spreadsheet_connector import (
     generate_semua_laporan,
     isi_laporan_psm,
     isi_laporan_pwp,
+    isi_laporan_sg,
     
     # Heartbeat (FASE 4)
     write_heartbeat_to_sheet,
