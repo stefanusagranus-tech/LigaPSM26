@@ -337,6 +337,13 @@ def render_debug_panel():
                 st.sidebar.success(_msg)
             else:
                 st.sidebar.error(_msg)
+        
+        st.markdown("---")
+        st.markdown("### ⚡ Force Check")
+        if st.button("🚨 Force Check Stale User", key="btn_force_check", use_container_width=True):
+            # Reset flag biar check jalan
+            st.session_state["last_stale_check"] = 0
+            st.sidebar.info("Flag direset. Refresh halaman...")
 
 
 # ---------- Fungsi test individual ----------
