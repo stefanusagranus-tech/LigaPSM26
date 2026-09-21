@@ -2464,9 +2464,9 @@ def check_and_log_stale_users():
         
         # 🛡️ GUARD: Pastikan threshold valid
         _threshold = _INACTIVE_THRESHOLD_MIN
-        if _threshold is None or _threshold < 0.1:
+        if _threshold is None or _threshold < 2:
             print(f"[WARN] Threshold invalid ({_threshold}), pakai 0.5 menit")
-            _threshold = 0.5
+            _threshold = 5
         
         # Ambil user stale
         stale_users = get_stale_heartbeats(threshold_minutes=_threshold)
