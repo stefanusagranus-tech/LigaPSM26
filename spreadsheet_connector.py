@@ -317,12 +317,6 @@ def render_debug_panel():
             else:
                 st.sidebar.error(_msg)
 
-        st.markdown("### ⚡ Force Check")
-        if st.button("🚨 Force Check Stale User", key="btn_force_check", use_container_width=True):
-            # Reset flag biar check jalan
-            st.session_state["last_stale_check"] = 0
-            st.sidebar.info("Flag direset. Refresh halaman...")
-
         if st.button("📖 Lihat Semua Heartbeat", key="btn_debug_hb_read", use_container_width=True):
             ws = get_ws_audit("ACTIVITY_HEARTBEAT")
             if ws is None:
@@ -344,7 +338,60 @@ def render_debug_panel():
             else:
                 st.sidebar.error(_msg)
         
-        
+        st.markdown("---")
+        st.markdown("### 🚨 Force Trigger")
+
+        if st.button("🚨 Force Check Stale NOW", key="btn_force_stale", 
+                    use_container_width=True, type="primary"):
+            # Reset flag biar check langsung jalan
+            st.session_state["last_stale_check"] = 0
+            st.sidebar.info("✅ Flag direset! Refresh halaman (F5) sekarang.")
+            
+            # Trigger manual (khusus test)
+            try:
+                from zoneinfo import ZoneInfo
+                from datetime import datetime as _dt
+                _now = _dt.now(ZoneInfo("Asia/Jakarta"))
+                
+                # Ambil stale
+                _stale = get_stale_heartbeats(threshold_minutes=0.5)
+                
+                st.sidebar.write(f"📊 Ditemukan **{len(_stale)}** user stale:")
+                for _u in _stale:
+                    st.sidebar.write(f"• {_u['username']} — idle {_u['selisih_menit']} menit")
+                
+                # Catat AUTO_LOGOUT untuk tiap user
+                if _stale:
+                    if "pending_activity_logs" not in st.session_state:
+                        st.session_state["pending_activity_logs"] = []
+                    
+                    for _user in _stale:
+                        _waktu = _dt.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
+                        _log = {
+                            "timestamp": _waktu,
+                            "username": str(_user["username"]),
+                            "role": str(_user["role"]),
+                            "action": "AUTO_LOGOUT",
+                            "detail": f"[FORCE] Auto-logout setelah {_user['selisih_menit']} menit idle",
+                            "session_id": str(_user["session_id"]),
+                        }
+                        st.session_state["pending_activity_logs"].insert(0, _log)
+                        
+                        # Hapus dari heartbeat
+                        _ok_d, _msg_d = remove_heartbeat_from_sheet(_user["username"])
+                        st.sidebar.write(f"  🗑️ {_msg_d}")
+                    
+                    # Flush log
+                    _c, _m = append_logs_to_sheet(st.session_state["pending_activity_logs"])
+                    st.session_state["pending_activity_logs"] = []
+                    
+                    st.sidebar.success(f"✅ {_c} AUTO_LOGOUT dicatat & di-flush!")
+                    st.sidebar.info("👉 Cek `ACTIVITY_LOG` & `ACTIVITY_HEARTBEAT`")
+                else:
+                    st.sidebar.warning("⚠️ Tidak ada user stale")
+            
+            except Exception as e:
+                st.sidebar.error(f"❌ Error: {str(e)[:100]}")
 
 
 # ---------- Fungsi test individual ----------
