@@ -13046,11 +13046,11 @@ if selected_tab == "🏠 Menu Utama":
     
     render_maintenance_panel(
         show=True,
-        type="update",                          # "update" | "maintenance" | "info" | "warning"
+        type="update",
         title="SEDANG UPDATE FITUR BARU!",
-        message="Sistem sedang ditingkatkan. Fitur <b>Laporan Bulanan Otomatis</b> dan <b>Audit Trail</b> sedang dalam pengembangan. Mohon maklum kalau ada gangguan kecil ya! 🙏",
-        eta="Target selesai: Besok, 07:00 WIB",
-        progress=25,
+        message="...",
+        eta="...",
+        progress=75,
         badge_text="🚧 SEDANG DIKERJAKAN",
     )
     
