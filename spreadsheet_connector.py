@@ -2050,8 +2050,8 @@ def isi_laporan_pwp(bulan_int, tahun_int, sheet_name):
             for _row_idx in range(3, 3 + len(_pers_list)):
                 # Format range W1 (kolom D sampai AU) per baris
                 _ranges_to_format.append(f"D{_row_idx}:AU{_row_idx}")
-                # Format range W2 (kolom AX sampai CO) per baris
-                _ranges_to_format.append(f"AX{_row_idx}:CO{_row_idx}")
+                # Format range W2 (kolom AZ sampai CO) per baris
+                _ranges_to_format.append(f"AZ{_row_idx}:CO{_row_idx}")
             
             for _r in _ranges_to_format:
                 try:
