@@ -1034,3 +1034,579 @@ def clear_all_heartbeat():
     
     except Exception as e:
         return False, f"❌ Gagal: {str(e)[:150]}"
+
+
+
+# =========================================================================
+# 📊 GENERATOR LAPORAN BULANAN — MULTI PROGRAM (PSM, PWP, SG, SUEGER)
+# =========================================================================
+# Fungsi-fungsi ini generate laporan bulanan dengan format sesuai Excel user.
+# Setiap program punya sheet terpisah di Spreadsheet Laporan.
+# =========================================================================
+
+from datetime import timedelta as _td
+
+
+def _get_weeks_from_periode(periode_df, bulan_int, tahun_int, filter_prefix=None):
+    """
+    Ambil daftar periode untuk bulan tertentu.
+    Return list of dict {period_id, start, end, jhk, label, target}.
+    
+    Args:
+        periode_df: DataFrame dari session_state (periods_df atau periods_pps_df)
+        bulan_int: 1-12
+        tahun_int: 2026 dst
+        filter_prefix: "PWP", "SGS", "SGR" (opsional)
+    """
+    _list = []
+    if periode_df is None or periode_df.empty:
+        return _list
+    
+    _df = periode_df.copy()
+    _df.columns = _df.columns.astype(str).str.strip().str.lower()
+    
+    if "start_date" not in _df.columns or "end_date" not in _df.columns:
+        return _list
+    
+    _df["_start"] = pd.to_datetime(_df["start_date"], errors="coerce")
+    _df["_end"] = pd.to_datetime(_df["end_date"], errors="coerce")
+    _df = _df.dropna(subset=["_start", "_end"])
+    
+    # Filter bulan & tahun
+    _df = _df[(_df["_start"].dt.month == bulan_int) & (_df["_start"].dt.year == tahun_int)]
+    
+    # Filter prefix kalau ada
+    if filter_prefix:
+        _df = _df[_df["period_id"].astype(str).str.upper().str.startswith(filter_prefix, na=False)]
+    
+    _df = _df.sort_values("_start")
+    
+    for _, _row in _df.iterrows():
+        _pid = str(_row.get("period_id", "")).strip()
+        _start = _row["_start"].date()
+        _end = _row["_end"].date()
+        _jhk = (_end - _start).days + 1
+        
+        # Ambil target dari berbagai kolom
+        _target = 0
+        for _col in ["target_total", "target", "target_personil"]:
+            if _col in _row.index:
+                try:
+                    _val = pd.to_numeric(_row[_col], errors="coerce")
+                    if pd.notna(_val) and _val > 0:
+                        _target = int(_val)
+                        break
+                except Exception:
+                    pass
+        
+        _list.append({
+            "period_id": _pid,
+            "start": _start,
+            "end": _end,
+            "jhk": _jhk,
+            "target": _target,
+            "label": f"{_start.strftime('%d/%m')}-{_end.strftime('%d/%m')}",
+        })
+    
+    return _list
+
+
+def _hitung_target(toko, jhk):
+    """Hitung target pertoko & pershift. Return (pertoko, pershift)."""
+    if toko <= 0 or jhk <= 0:
+        return 0, 0
+    _pertoko = toko / jhk
+    _pershift = _pertoko / 2
+    return _pertoko, _pershift
+
+
+def _format_angka(val, desimal=2):
+    """Format angka: kalau 0 atau kosong → '-', kalau ada desimal → sesuai."""
+    if val is None:
+        return "-"
+    if isinstance(val, (int, float)):
+        if val == 0:
+            return "-"
+        if desimal == 0:
+            return str(int(val))
+        return f"{val:.{desimal}f}"
+    return str(val)
+
+
+def _bangun_sheet_psm(sales_person_df, periode_df, sales_item_df, person_df, bulan_int, tahun_int):
+    """
+    Bangun matrix laporan PSM (per hari, breakdown WEEK).
+    Return: (sheet_name, rows_matrix)
+    """
+    import calendar
+    _bulan_nama = calendar.month_name[bulan_int].upper()
+    _sheet_name = f"{_bulan_nama} {tahun_int}"
+    
+    if sales_person_df is None or sales_person_df.empty:
+        return _sheet_name, None
+    
+    _sp = sales_person_df.copy()
+    _sp.columns = _sp.columns.astype(str).str.strip().str.lower()
+    
+    if "updated_at" not in _sp.columns:
+        return _sheet_name, None
+    
+    _sp["_dt"] = pd.to_datetime(_sp["updated_at"], errors="coerce")
+    _sp = _sp.dropna(subset=["_dt"])
+    _sp = _sp[(_sp["_dt"].dt.month == bulan_int) & (_sp["_dt"].dt.year == tahun_int)]
+    
+    if _sp.empty:
+        return _sheet_name, None
+    
+    # Ambil periode PSM bulan ini
+    _weeks = _get_weeks_from_periode(periode_df, bulan_int, tahun_int)
+    
+    if not _weeks:
+        return _sheet_name, None
+    
+    # Ambil target toko per periode dari SALES_ITEM
+    _target_map = {}
+    if sales_item_df is not None and not sales_item_df.empty:
+        _si = sales_item_df.copy()
+        _si.columns = _si.columns.astype(str).str.strip().str.lower()
+        if "target_qty" in _si.columns and "period_id" in _si.columns:
+            _si["target_qty"] = pd.to_numeric(_si["target_qty"], errors="coerce").fillna(0)
+            _grp = _si.groupby(_si["period_id"].astype(str).str.strip())["target_qty"].sum()
+            _target_map = _grp.to_dict()
+    
+    # Assign target ke weeks
+    for _w in _weeks:
+        _w["target"] = int(_target_map.get(_w["period_id"], 0))
+    
+    # Ambil daftar personil aktif
+    _pers = person_df.copy() if person_df is not None else pd.DataFrame()
+    if not _pers.empty:
+        _pers.columns = _pers.columns.astype(str).str.strip().str.lower()
+        if "active" in _pers.columns:
+            _pers = _pers[pd.to_numeric(_pers["active"], errors="coerce") == 1]
+        _pers["person_clean"] = _pers["person_name"].astype(str).str.strip().str.upper()
+        _pers = _pers.sort_values("person_clean").drop_duplicates(subset=["person_clean"])
+    
+    if _pers.empty:
+        _names = _sp["person_name"].dropna().astype(str).str.upper().unique()
+        _pers = pd.DataFrame({"person_clean": _names, "nik": "-", "person_name": _names})
+    
+    if "nik" not in _pers.columns:
+        for _c in ["person_id", "nik_personil"]:
+            if _c in _pers.columns:
+                _pers["nik"] = _pers[_c]
+                break
+        else:
+            _pers["nik"] = "-"
+    
+    # Bangun matrix
+    # Row 1: Toko + WEEK labels
+    _row1 = ["", "Toko", "C383/KARANG SATRIA"]
+    for _idx, _w in enumerate(_weeks):
+        _row1.append(f"PSM WEEK {_idx+1}")
+        _cols_week = 3 + _w["jhk"] + 3  # 3 target + N hari + 3 footer
+        _row1.extend([""] * (_cols_week - 1))
+    _row1.extend(["FULL MONTH", "", "", ""])
+    
+    # Row 2: Header kolom
+    _row2 = ["No", "NIK", "Nama Personil"]
+    for _w in _weeks:
+        _row2.extend(["TGT TOKO", "TGT/hari", "TGT/shift"])
+        for _d in range(_w["jhk"]):
+            _row2.append(_w["start"].strftime("%d/%m") if _d == 0 else "")
+        _row2.extend(["TOTAL", "GAP", "ACV%"])
+    _row2.extend(["TOTAL", "GAP", "ACV%"])
+    
+    _rows = [_row1, _row2]
+    
+    for _idx, (_, _p) in enumerate(_pers.iterrows(), start=1):
+        _nama = str(_p.get("person_clean", "")).strip().upper()
+        _nik = str(_p.get("nik", "-")).replace(".0", "").strip()
+        if not _nik or _nik == "nan":
+            _nik = "-"
+        
+        _row = [_idx, _nik, _nama]
+        _grand_total = 0
+        _grand_target = 0
+        
+        for _w in _weeks:
+            _target_toko = _w["target"]
+            _target_pertoko, _target_pershift = _hitung_target(_target_toko, _w["jhk"])
+            
+            _row.extend([
+                _format_angka(_target_toko, 0),
+                _format_angka(_target_pertoko),
+                _format_angka(_target_pershift),
+            ])
+            
+            # N hari actual
+            _week_total = 0
+            for _d_offset in range(_w["jhk"]):
+                _tgl = _w["start"] + _td(days=_d_offset)
+                _mask = (_sp["person_name"].astype(str).str.upper() == _nama) & (_sp["_dt"].dt.date == _tgl)
+                if _mask.any():
+                    _qty = int(pd.to_numeric(_sp.loc[_mask, "actual_qty"], errors="coerce").fillna(0).sum())
+                else:
+                    _qty = 0
+                _row.append(_qty if _qty > 0 else "-")
+                _week_total += _qty
+            
+            # TOTAL, GAP, ACV% per week
+            _gap = _target_pertoko - _week_total
+            _acv = (_week_total / _target_pertoko * 100) if _target_pertoko > 0 else 0
+            
+            _row.append(_week_total if _week_total > 0 else "-")
+            _row.append(_format_angka(-_gap))
+            _row.append(f"{_acv:.1f}%" if _target_pertoko > 0 else "-")
+            
+            _grand_total += _week_total
+            _grand_target += _target_pertoko
+        
+        # Grand total
+        _row.append(_grand_total if _grand_total > 0 else "-")
+        _row.append(_format_angka(-(_grand_target - _grand_total)))
+        _row.append(f"{(_grand_total / _grand_target * 100):.1f}%" if _grand_target > 0 else "-")
+        
+        _rows.append(_row)
+    
+    # Row Total
+    _total_row = ["Total", "", ""]
+    _grand_total_all = 0
+    _grand_target_all = 0
+    for _w in _weeks:
+        _t_pertoko, _t_pershift = _hitung_target(_w["target"], _w["jhk"])
+        _total_row.extend([
+            _format_angka(_w["target"], 0),
+            _format_angka(_t_pertoko),
+            _format_angka(_t_pershift),
+        ])
+        _total_row.extend([""] * _w["jhk"])
+        _total_row.extend(["", "", ""])
+        _grand_target_all += _t_pertoko
+    _total_row.extend(["", "", ""])
+    _rows.append(_total_row)
+    
+    return _sheet_name, _rows
+
+
+def _bangun_sheet_pps(sales_pps_df, periode_pps_df, person_df, bulan_int, tahun_int,
+                     prefix, sheet_suffix, kolom_a, kolom_b, label_a, label_b):
+    """
+    Bangun matrix laporan PPS (PWP, SG, Sueger).
+    
+    Args:
+        prefix: "PWP" | "SGS" | "SGR"
+        sheet_suffix: "PWP" | "SG" | "SUEGER"
+        kolom_a: nama kolom untuk nilai A (syarat / qty_sg)
+        kolom_b: nama kolom untuk nilai B (qty_pwp / redeem_sueger)
+        label_a, label_b: label kolom
+    """
+    import calendar
+    _bulan_nama = calendar.month_name[bulan_int].upper()
+    _sheet_name = f"{_bulan_nama} {tahun_int}_{sheet_suffix}"
+    
+    if sales_pps_df is None or sales_pps_df.empty:
+        return _sheet_name, None
+    
+    _pps = sales_pps_df.copy()
+    _pps.columns = _pps.columns.astype(str).str.strip().str.lower()
+    
+    if "updated_at" not in _pps.columns:
+        return _sheet_name, None
+    
+    _pps["_dt"] = pd.to_datetime(_pps["updated_at"], errors="coerce")
+    _pps = _pps.dropna(subset=["_dt"])
+    _pps = _pps[(_pps["_dt"].dt.month == bulan_int) & (_pps["_dt"].dt.year == tahun_int)]
+    
+    if _pps.empty:
+        return _sheet_name, None
+    
+    # Ambil periode PPS
+    _weeks = _get_weeks_from_periode(periode_pps_df, bulan_int, tahun_int, filter_prefix=prefix)
+    
+    if not _weeks:
+        return _sheet_name, None
+    
+    # Ambil personil aktif
+    _pers = person_df.copy() if person_df is not None else pd.DataFrame()
+    if not _pers.empty:
+        _pers.columns = _pers.columns.astype(str).str.strip().str.lower()
+        if "active" in _pers.columns:
+            _pers = _pers[pd.to_numeric(_pers["active"], errors="coerce") == 1]
+        _pers["person_clean"] = _pers["person_name"].astype(str).str.strip().str.upper()
+        _pers = _pers.sort_values("person_clean").drop_duplicates(subset=["person_clean"])
+    
+    if _pers.empty:
+        if "kasir_name" in _pps.columns:
+            _names = _pps["kasir_name"].dropna().astype(str).str.upper().unique()
+            _pers = pd.DataFrame({"person_clean": _names, "nik": "-", "person_name": _names})
+        else:
+            return _sheet_name, None
+    
+    if "nik" not in _pers.columns:
+        for _c in ["person_id", "nik_personil"]:
+            if _c in _pers.columns:
+                _pers["nik"] = _pers[_c]
+                break
+        else:
+            _pers["nik"] = "-"
+    
+    # Bangun matrix
+    _row1 = ["", "Toko", "C383/KARANG SATRIA"]
+    for _idx, _w in enumerate(_weeks):
+        _row1.append(f"{sheet_suffix} WEEK {_idx+1}")
+        _cols_week = 3 + _w["jhk"] + 3
+        _row1.extend([""] * (_cols_week - 1))
+    _row1.extend(["FULL MONTH", "", "", ""])
+    
+    _row2 = ["No", "NIK", "Nama Personil"]
+    for _w in _weeks:
+        _row2.extend(["TGT TOKO", "TGT/hari", "TGT/shift"])
+        for _d in range(_w["jhk"]):
+            _row2.append(_w["start"].strftime("%d/%m") if _d == 0 else "")
+        _row2.extend(["TOTAL", "GAP", "ACV%"])
+    _row2.extend(["TOTAL", "GAP", "ACV%"])
+    
+    _rows = [_row1, _row2]
+    
+    for _idx, (_, _p) in enumerate(_pers.iterrows(), start=1):
+        _nama = str(_p.get("person_clean", "")).strip().upper()
+        _nik = str(_p.get("nik", "-")).replace(".0", "").strip()
+        if not _nik or _nik == "nan":
+            _nik = "-"
+        
+        _row = [_idx, _nik, _nama]
+        _grand_total = 0
+        _grand_target = 0
+        
+        for _w in _weeks:
+            _target_toko = _w["target"]
+            _target_pertoko, _target_pershift = _hitung_target(_target_toko, _w["jhk"])
+            
+            _row.extend([
+                _format_angka(_target_toko, 0),
+                _format_angka(_target_pertoko),
+                _format_angka(_target_pershift),
+            ])
+            
+            _week_total = 0
+            for _d_offset in range(_w["jhk"]):
+                _tgl = _w["start"] + _td(days=_d_offset)
+                
+                # Cari kolom kasir (bisa "kasir_name")
+                if "kasir_name" in _pps.columns:
+                    _mask = (_pps["kasir_name"].astype(str).str.upper() == _nama) & (_pps["_dt"].dt.date == _tgl)
+                else:
+                    _mask = pd.Series([False] * len(_pps), index=_pps.index)
+                
+                if _mask.any():
+                    _val_a = 0
+                    _val_b = 0
+                    if kolom_a in _pps.columns:
+                        _val_a = int(pd.to_numeric(_pps.loc[_mask, kolom_a], errors="coerce").fillna(0).sum())
+                    if kolom_b in _pps.columns:
+                        _val_b = int(pd.to_numeric(_pps.loc[_mask, kolom_b], errors="coerce").fillna(0).sum())
+                    
+                    if _val_a > 0 or _val_b > 0:
+                        _row.append(f"{_val_a}/{_val_b}" if _val_a > 0 else f"-/{_val_b}")
+                    else:
+                        _row.append("-")
+                    
+                    _week_total += _val_b
+                else:
+                    _row.append("-")
+            
+            _gap = _target_pertoko - _week_total
+            _acv = (_week_total / _target_pertoko * 100) if _target_pertoko > 0 else 0
+            
+            _row.append(_week_total if _week_total > 0 else "-")
+            _row.append(_format_angka(-_gap))
+            _row.append(f"{_acv:.1f}%" if _target_pertoko > 0 else "-")
+            
+            _grand_total += _week_total
+            _grand_target += _target_pertoko
+        
+        _row.append(_grand_total if _grand_total > 0 else "-")
+        _row.append(_format_angka(-(_grand_target - _grand_total)))
+        _row.append(f"{(_grand_total / _grand_target * 100):.1f}%" if _grand_target > 0 else "-")
+        
+        _rows.append(_row)
+    
+    # Row Total
+    _total_row = ["Total", "", ""]
+    for _w in _weeks:
+        _t_pertoko, _t_pershift = _hitung_target(_w["target"], _w["jhk"])
+        _total_row.extend([
+            _format_angka(_w["target"], 0),
+            _format_angka(_t_pertoko),
+            _format_angka(_t_pershift),
+        ])
+        _total_row.extend([""] * _w["jhk"])
+        _total_row.extend(["", "", ""])
+    _total_row.extend(["", "", ""])
+    _rows.append(_total_row)
+    
+    return _sheet_name, _rows
+
+
+# ==== PUBLIC FUNCTIONS ====
+
+def generate_laporan_psm(bulan_int, tahun_int):
+    """Generate laporan PSM bulanan (sheet: [BULAN] [TAHUN])."""
+    try:
+        _sp = st.session_state.get("sales_person_df", pd.DataFrame())
+        _per = st.session_state.get("periods_df", pd.DataFrame())
+        _si = st.session_state.get("sales_item_df", pd.DataFrame())
+        _pers = st.session_state.get("person_df", pd.DataFrame())
+        
+        _sheet_name, _rows = _bangun_sheet_psm(_sp, _per, _si, _pers, bulan_int, tahun_int)
+        
+        if _rows is None:
+            return False, f"❌ Tidak ada data PSM untuk bulan tersebut", 0
+        
+        _ok, _msg = write_laporan_bulanan(_sheet_name, _rows)
+        if not _ok:
+            return False, _msg, 0
+        
+        return True, f"✅ Laporan PSM {_sheet_name} tersimpan ({len(_rows)} baris)", len(_rows) - 2
+    except Exception as e:
+        import traceback
+        print(f"[GEN_PSM ERROR] {traceback.format_exc()}")
+        return False, f"❌ Gagal: {str(e)[:150]}", 0
+
+
+def generate_laporan_pwp(bulan_int, tahun_int):
+    """Generate laporan PWP bulanan (sheet: [BULAN] [TAHUN]_PWP)."""
+    try:
+        _pps = st.session_state.get("sales_pps_df", pd.DataFrame())
+        _per_pps = st.session_state.get("periods_pps_df", pd.DataFrame())
+        _pers = st.session_state.get("person_df", pd.DataFrame())
+        
+        _sheet_name, _rows = _bangun_sheet_pps(
+            _pps, _per_pps, _pers, bulan_int, tahun_int,
+            prefix="PWP", sheet_suffix="PWP",
+            kolom_a="syarat_pwp", kolom_b="qty_pwp",
+            label_a="Syarat", label_b="Qty"
+        )
+        
+        if _rows is None:
+            return False, "❌ Tidak ada data PWP untuk bulan tersebut", 0
+        
+        _ok, _msg = write_laporan_bulanan(_sheet_name, _rows)
+        if not _ok:
+            return False, _msg, 0
+        
+        return True, f"✅ Laporan PWP {_sheet_name} tersimpan ({len(_rows)} baris)", len(_rows) - 2
+    except Exception as e:
+        import traceback
+        print(f"[GEN_PWP ERROR] {traceback.format_exc()}")
+        return False, f"❌ Gagal: {str(e)[:150]}", 0
+
+
+def generate_laporan_sg(bulan_int, tahun_int):
+    """Generate laporan Serba Gratis (sheet: [BULAN] [TAHUN]_SG)."""
+    try:
+        _pps = st.session_state.get("sales_pps_df", pd.DataFrame())
+        _per_pps = st.session_state.get("periods_pps_df", pd.DataFrame())
+        _pers = st.session_state.get("person_df", pd.DataFrame())
+        
+        _sheet_name, _rows = _bangun_sheet_pps(
+            _pps, _per_pps, _pers, bulan_int, tahun_int,
+            prefix="SGS", sheet_suffix="SG",
+            kolom_a="qty_sg", kolom_b="qty_sg",
+            label_a="Qty", label_b="Qty"
+        )
+        
+        if _rows is None:
+            return False, "❌ Tidak ada data SG untuk bulan tersebut", 0
+        
+        _ok, _msg = write_laporan_bulanan(_sheet_name, _rows)
+        if not _ok:
+            return False, _msg, 0
+        
+        return True, f"✅ Laporan SG {_sheet_name} tersimpan ({len(_rows)} baris)", len(_rows) - 2
+    except Exception as e:
+        import traceback
+        print(f"[GEN_SG ERROR] {traceback.format_exc()}")
+        return False, f"❌ Gagal: {str(e)[:150]}", 0
+
+
+def generate_laporan_sueger(bulan_int, tahun_int):
+    """Generate laporan Sueger (sheet: [BULAN] [TAHUN]_SUEGER)."""
+    try:
+        _pps = st.session_state.get("sales_pps_df", pd.DataFrame())
+        _per_pps = st.session_state.get("periods_pps_df", pd.DataFrame())
+        _pers = st.session_state.get("person_df", pd.DataFrame())
+        
+        _sheet_name, _rows = _bangun_sheet_pps(
+            _pps, _per_pps, _pers, bulan_int, tahun_int,
+            prefix="SGR", sheet_suffix="SUEGER",
+            kolom_a="syarat_sueger", kolom_b="redeem_sueger",
+            label_a="Syarat", label_b="Redeem"
+        )
+        
+        if _rows is None:
+            return False, "❌ Tidak ada data Sueger untuk bulan tersebut", 0
+        
+        _ok, _msg = write_laporan_bulanan(_sheet_name, _rows)
+        if not _ok:
+            return False, _msg, 0
+        
+        return True, f"✅ Laporan Sueger {_sheet_name} tersimpan ({len(_rows)} baris)", len(_rows) - 2
+    except Exception as e:
+        import traceback
+        print(f"[GEN_SUEGER ERROR] {traceback.format_exc()}")
+        return False, f"❌ Gagal: {str(e)[:150]}", 0
+
+
+def generate_semua_laporan(bulan_int, tahun_int):
+    """
+    Generate 4 laporan sekaligus: PSM, PWP, SG, Sueger.
+    
+    Return:
+        dict {
+            "success": [list of dict {nama, pesan, baris}],
+            "failed": [list of dict {nama, error}],
+            "total_sheet": int,
+            "total_baris": int,
+        }
+    """
+    _result = {
+        "success": [],
+        "failed": [],
+        "total_sheet": 0,
+        "total_baris": 0,
+    }
+    
+    _laporan_list = [
+        ("PSM", generate_laporan_psm),
+        ("PWP", generate_laporan_pwp),
+        ("SG", generate_laporan_sg),
+        ("SUEGER", generate_laporan_sueger),
+    ]
+    
+    for _nama, _fungsi in _laporan_list:
+        try:
+            _ok, _msg, _n = _fungsi(bulan_int, tahun_int)
+            
+            if _ok:
+                _result["success"].append({
+                    "nama": _nama,
+                    "pesan": _msg,
+                    "baris": _n,
+                })
+                _result["total_sheet"] += 1
+                _result["total_baris"] += _n
+            else:
+                _result["failed"].append({
+                    "nama": _nama,
+                    "error": _msg,
+                })
+        except Exception as e:
+            _result["failed"].append({
+                "nama": _nama,
+                "error": f"❌ Error: {str(e)[:100]}",
+            })
+            continue
+    
+    return _result
