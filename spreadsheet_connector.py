@@ -1741,7 +1741,7 @@ def isi_laporan_psm(bulan_int, tahun_int, sheet_name):
                 "name": "W3",
                 "period_id": "S03",
                 "tanggal": list(range(16, 24)),         # 16-23
-                "col_target": "AD",
+                "col_target": "AE",
                 "col_actual_start": "AH",
                 "col_actual_end": "AO",
             },
@@ -1749,9 +1749,9 @@ def isi_laporan_psm(bulan_int, tahun_int, sheet_name):
                 "name": "W4",
                 "period_id": "S04",
                 "tanggal": list(range(24, 31)),         # 24-30
-                "col_target": "AQ",
-                "col_actual_start": "AU",
-                "col_actual_end": "BA",
+                "col_target": "AS",
+                "col_actual_start": "AV",
+                "col_actual_end": "BC",
             },
         ]
         
