@@ -13045,14 +13045,13 @@ if selected_tab == "🏠 Menu Utama":
     from maintenance_panel import render_maintenance_panel
     
     render_maintenance_panel(
-        show=True,
-        type="update",
-        title="SEDANG UPDATE FITUR BARU!",
-        message="...",
-        eta="...",
-        progress=75,
-        badge_text="🚧 SEDANG DIKERJAKAN",
-    )
+    show=True,
+    title="SEDANG UPDATE FITUR BARU",
+    message="Sistem sedang ditingkatkan. Fitur Laporan Bulanan Otomatis dan Audit Trail sedang dalam pengembangan. Mohon maklum kalau ada gangguan ya.",
+    eta="Target selesai: Besok, 07:00 WIB",
+    progress=25,
+    badge_text="SEDANG DIKERJAKAN",
+)
     
     # ... (kode Menu Utama yang sudah ada, seperti header, kartu RPG, dll)
 
