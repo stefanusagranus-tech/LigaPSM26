@@ -455,3 +455,184 @@ def _test_read_log():
                 st.dataframe(df.head(5), use_container_width=True)
     except Exception as e:
         st.sidebar.error(f"❌ {str(e)[:80]}")
+
+# =========================================================================
+# 💓 HEARTBEAT — TRACKING USER AKTIF
+# =========================================================================
+_HEARTBEAT_HEADER = ["username", "session_id", "role", "last_heartbeat", "status"]
+
+
+def write_heartbeat_to_sheet(username, session_id, role, status="ONLINE"):
+    """
+    Update/tambah baris heartbeat user di sheet ACTIVITY_HEARTBEAT.
+    Kalau username sudah ada → update. Kalau belum → tambah.
+    
+    Args:
+        username (str): nama user
+        session_id (str): ID sesi user
+        role (str): role user
+        status (str): "ONLINE" | "IDLE" | "AWAY"
+    
+    Returns: (success, message)
+    """
+    try:
+        with _AUDIT_LOCK:
+            ws = get_ws_audit("ACTIVITY_HEARTBEAT")
+            if ws is None:
+                return False, "❌ Gagal akses ACTIVITY_HEARTBEAT"
+            
+            # Pastikan header ada
+            try:
+                first_row = ws.row_values(1)
+                if not first_row or first_row[0].lower() != "username":
+                    ws.insert_row(_HEARTBEAT_HEADER, index=1)
+            except Exception:
+                pass
+            
+            # Waktu sekarang
+            now_str = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
+            
+            # Baca semua data untuk cari user
+            all_values = ws.get_all_values()
+            if len(all_values) < 1:
+                # Sheet kosong, langsung append
+                ws.append_row([username, session_id, role, now_str, status],
+                              value_input_option="USER_ENTERED")
+                return True, f"✅ Heartbeat ditambahkan: {username}"
+            
+            # Cari username di kolom B (index 1)
+            header = all_values[0]
+            col_username = 0
+            for idx, h in enumerate(header):
+                if h.lower().strip() == "username":
+                    col_username = idx
+                    break
+            
+            row_to_update = None
+            for row_idx, row in enumerate(all_values[1:], start=2):
+                if len(row) > col_username and row[col_username].strip().lower() == username.strip().lower():
+                    row_to_update = row_idx
+                    break
+            
+            if row_to_update:
+                # Update baris
+                ws.update(f"A{row_to_update}:E{row_to_update}",
+                          [[username, session_id, role, now_str, status]],
+                          value_input_option="USER_ENTERED")
+                return True, f"✅ Heartbeat diupdate: {username}"
+            else:
+                # Tambah baris baru
+                ws.append_row([username, session_id, role, now_str, status],
+                              value_input_option="USER_ENTERED")
+                return True, f"✅ Heartbeat ditambahkan: {username}"
+    
+    except Exception as e:
+        print(f"[WRITE_HEARTBEAT ERROR] {e}")
+        return False, f"❌ Gagal: {str(e)[:150]}"
+
+
+def remove_heartbeat_from_sheet(username):
+    """
+    Hapus baris heartbeat user (dipakai saat logout manual).
+    """
+    try:
+        with _AUDIT_LOCK:
+            ws = get_ws_audit("ACTIVITY_HEARTBEAT")
+            if ws is None:
+                return False, "❌ Gagal akses ACTIVITY_HEARTBEAT"
+            
+            all_values = ws.get_all_values()
+            if len(all_values) < 2:
+                return True, "Sheet kosong"
+            
+            header = all_values[0]
+            col_username = 0
+            for idx, h in enumerate(header):
+                if h.lower().strip() == "username":
+                    col_username = idx
+                    break
+            
+            # Cari baris user
+            for row_idx, row in enumerate(all_values[1:], start=2):
+                if len(row) > col_username and row[col_username].strip().lower() == username.strip().lower():
+                    ws.delete_rows(row_idx)
+                    return True, f"✅ Heartbeat dihapus: {username}"
+            
+            return True, f"ℹ️ User {username} tidak ada di heartbeat"
+    
+    except Exception as e:
+        print(f"[REMOVE_HEARTBEAT ERROR] {e}")
+        return False, f"❌ Gagal: {str(e)[:150]}"
+
+
+def get_stale_heartbeats(threshold_minutes=5):
+    """
+    Ambil daftar user yang heartbeat terakhirnya > threshold_minutes.
+    Return list of dict: [{"username": ..., "session_id": ..., "role": ..., "last_heartbeat": ...}]
+    """
+    try:
+        ws = get_ws_audit("ACTIVITY_HEARTBEAT")
+        if ws is None:
+            return []
+        
+        all_values = ws.get_all_values()
+        if len(all_values) < 2:
+            return []
+        
+        header = all_values[0]
+        col_idx = {}
+        for idx, h in enumerate(header):
+            col_idx[h.lower().strip()] = idx
+        
+        now = datetime.now(ZoneInfo("Asia/Jakarta"))
+        stale_users = []
+        
+        for row in all_values[1:]:
+            if len(row) < 4:
+                continue
+            
+            try:
+                _username = row[col_idx.get("username", 0)]
+                _session = row[col_idx.get("session_id", 1)]
+                _role = row[col_idx.get("role", 2)]
+                _last_hb_str = row[col_idx.get("last_heartbeat", 3)]
+                
+                _last_hb = datetime.strptime(_last_hb_str, "%d/%m/%Y %H:%M:%S").replace(tzinfo=ZoneInfo("Asia/Jakarta"))
+                _selisih_menit = (now - _last_hb).total_seconds() / 60
+                
+                if _selisih_menit > threshold_minutes:
+                    stale_users.append({
+                        "username": _username,
+                        "session_id": _session,
+                        "role": _role,
+                        "last_heartbeat": _last_hb_str,
+                        "selisih_menit": int(_selisih_menit),
+                    })
+            except Exception:
+                continue
+        
+        return stale_users
+    
+    except Exception as e:
+        print(f"[GET_STALE_HEARTBEAT ERROR] {e}")
+        return []
+
+
+def clear_all_heartbeat():
+    """Hapus semua baris heartbeat (kecuali header). Dipakai emergency."""
+    try:
+        with _AUDIT_LOCK:
+            ws = get_ws_audit("ACTIVITY_HEARTBEAT")
+            if ws is None:
+                return False, "❌ Gagal akses sheet"
+            
+            all_values = ws.get_all_values()
+            if len(all_values) <= 1:
+                return True, "Sheet sudah kosong"
+            
+            # Hapus baris 2 sampai akhir
+            ws.delete_rows(2, len(all_values))
+            return True, f"✅ {len(all_values) - 1} baris heartbeat dihapus"
+    
+    except Exception as e:
+        return False, f"❌ Gagal: {str(e)[:150]}"
