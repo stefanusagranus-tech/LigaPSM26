@@ -1954,7 +1954,7 @@ def isi_laporan_pwp(bulan_int, tahun_int, sheet_name):
         # Syarat tgl 2 = G, Redemp tgl 2 = H, % tgl 2 = I
         # Step: +3
         _w1_start_idx = _index_from_col("D")  # index 3
-        _w1_tanggal = list(range(1, 16))       # 1-15
+        _w1_tanggal = list(range(1, 15))       # 1-15
         
         # W2: mulai dari kolom AZ (index 51), tgl 16-30
         _w2_start_idx = _index_from_col("AZ")  # index 51
