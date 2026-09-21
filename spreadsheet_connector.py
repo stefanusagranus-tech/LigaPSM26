@@ -654,7 +654,7 @@ def remove_heartbeat_from_sheet(username):
         return False, f"❌ Gagal: {str(e)[:150]}"
 
 
-def get_stale_heartbeats(threshold_minutes=0.5):
+def get_stale_heartbeats(threshold_minutes=5):
     """
     Ambil daftar user yang heartbeat terakhirnya > threshold_minutes.
     
