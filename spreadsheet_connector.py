@@ -243,31 +243,119 @@ def backup_to_audit_sheet(state_getter):
 
 
 # =========================================================================
-# 📊 TULIS LAPORAN BULANAN
+# 📊 GENERATOR LAPORAN BULANAN PSM
 # =========================================================================
-def write_laporan_bulanan(sheet_name, rows_matrix):
+def generate_laporan_bulanan_psm(bulan_int, tahun_int, nama_bulan_str):
     """
-    Tulis matrix laporan ke Spreadsheet Laporan.
+    Generate laporan bulanan PSM ke Spreadsheet Laporan.
     
     Args:
-        sheet_name (str): nama sheet, contoh "SEPTEMBER 2026"
-        rows_matrix (list[list]): matrix data
+        bulan_int (int): 1-12
+        tahun_int (int): contoh 2026
+        nama_bulan_str (str): contoh "SEPTEMBER"
     
-    Returns:
-        (success: bool, message: str)
+    Returns: (success: bool, message: str, total_personil: int)
     """
     try:
-        with _LAPORAN_LOCK:
-            ws = get_ws_laporan(sheet_name)
-            if ws is None:
-                return False, f"❌ Gagal akses sheet {sheet_name}"
-
-            ws.clear()
-            ws.update(rows_matrix, "A1")
-
-        return True, f"✅ Laporan {sheet_name} tersimpan ({len(rows_matrix)} baris)"
+        import pandas as pd
+        
+        # === 1. Ambil data dari session state ===
+        _sp = st.session_state.get("sales_person_df", pd.DataFrame()).copy()
+        _pers = st.session_state.get("person_df", pd.DataFrame()).copy()
+        
+        if _sp.empty or _pers.empty:
+            return False, "❌ Data sales_person atau person_df kosong", 0
+        
+        # Normalisasi kolom
+        _sp.columns = _sp.columns.astype(str).str.strip().str.lower()
+        _pers.columns = _pers.columns.astype(str).str.strip().str.lower()
+        
+        # === 2. Filter bulan ===
+        if "updated_at" not in _sp.columns:
+            return False, "❌ Kolom 'updated_at' tidak ada di sales_person", 0
+        
+        _sp["_dt"] = pd.to_datetime(_sp["updated_at"], errors="coerce")
+        _sp = _sp.dropna(subset=["_dt"])
+        _sp = _sp[(_sp["_dt"].dt.month == bulan_int) & (_sp["_dt"].dt.year == tahun_int)]
+        
+        if _sp.empty:
+            return False, f"❌ Tidak ada data PSM untuk {nama_bulan_str} {tahun_int}", 0
+        
+        # === 3. Persiapkan pivot (personil × tanggal) ===
+        _sp["_tgl"] = _sp["_dt"].dt.day
+        _sp["qty"] = pd.to_numeric(_sp.get("actual_qty", 0), errors="coerce").fillna(0)
+        _sp["person_clean"] = _sp["person_name"].astype(str).str.strip().str.upper()
+        
+        _pivot = _sp.pivot_table(
+            index="person_clean",
+            columns="_tgl",
+            values="qty",
+            aggfunc="sum",
+            fill_value=0
+        )
+        
+        # === 4. Ambil daftar personil aktif ===
+        _pers_active = _pers.copy()
+        if "active" in _pers_active.columns:
+            _pers_active = _pers_active[pd.to_numeric(_pers_active["active"], errors="coerce") == 1]
+        
+        _pers_active["person_clean"] = _pers_active["person_name"].astype(str).str.strip().str.upper()
+        _pers_active = _pers_active.sort_values("person_clean").drop_duplicates(subset=["person_clean"])
+        
+        if _pers_active.empty:
+            return False, "❌ Tidak ada personil aktif", 0
+        
+        # === 5. Bangun matrix output ===
+        _rows_output = []
+        
+        # Baris 1: Header Toko + tanggal 1-31
+        _row1 = ["", "Toko", "C383/KARANG SATRIA"] + [str(d) for d in range(1, 32)]
+        _rows_output.append(_row1)
+        
+        # Baris 2: Header kolom + "ACTUAL" (merge nanti)
+        _row2 = ["No", "NIK", "Nama Personil", "ACTUAL"] + [""] * 30
+        _rows_output.append(_row2)
+        
+        # === 6. Data personil ===
+        _total_per_tgl = {d: 0 for d in range(1, 32)}
+        
+        for _idx, (_, _p_row) in enumerate(_pers_active.iterrows(), start=1):
+            _nama = str(_p_row.get("person_name", "")).strip().upper()
+            
+            # Ambil NIK / person_id
+            _nik = str(_p_row.get("person_id", 
+                       _p_row.get("nik", ""))).replace(".0", "").strip()
+            if not _nik or _nik == "nan":
+                _nik = "-"
+            
+            _row_data = [_idx, _nik, _nama]
+            
+            if _nama in _pivot.index:
+                for _d in range(1, 32):
+                    _val = int(_pivot.loc[_nama, _d]) if _d in _pivot.columns else 0
+                    _row_data.append(_val)
+                    _total_per_tgl[_d] += _val
+            else:
+                _row_data.extend([0] * 31)
+            
+            _rows_output.append(_row_data)
+        
+        # Baris Total
+        _total_row = ["Total", "", ""] + [str(_total_per_tgl[_d]) for _d in range(1, 32)]
+        _rows_output.append(_total_row)
+        
+        # === 7. Tulis ke Spreadsheet Laporan ===
+        _sheet_name = f"{nama_bulan_str.upper()} {tahun_int}"
+        _ok, _msg = write_laporan_bulanan(_sheet_name, _rows_output)
+        
+        if not _ok:
+            return False, _msg, 0
+        
+        return True, f"✅ Laporan {_sheet_name} tersimpan ({len(_rows_output)} baris)", len(_pers_active)
+    
     except Exception as e:
-        return False, f"❌ Gagal: {str(e)[:150]}"
+        import traceback
+        return False, f"❌ Gagal: {str(e)[:150]}", 0
 
 
 # =========================================================================
