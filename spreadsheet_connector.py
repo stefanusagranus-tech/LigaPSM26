@@ -209,7 +209,34 @@ def backup_to_audit_sheet(state_getter):
                         _result["failed"].append(f"⚠️ {_sheet_name}: data kosong")
                         continue
 
-                    _df_clean = _df.copy().fillna("")
+                    # Bersihkan NaN/inf dulu
+                    _df_clean = _df.copy()
+
+                    # Ganti NaN jadi string kosong
+                    _df_clean = _df_clean.fillna("")
+
+                    # Untuk kolom numerik, ganti inf/-inf jadi 0 atau ""
+                    for _col in _df_clean.columns:
+                        try:
+                            # Coba konversi ke numeric
+                            _numeric = pd.to_numeric(_df_clean[_col], errors="coerce")
+                            # Cari nilai inf
+                            _inf_mask = _numeric.apply(lambda x: x != x or x in [float('inf'), float('-inf')] if isinstance(x, (int, float)) else False)
+                            # Ganti inf dengan string kosong
+                            _df_clean.loc[_inf_mask, _col] = ""
+                        except Exception:
+                            pass
+
+                    # Konversi semua ke string dan bersihkan
+                    _df_clean = _df_clean.astype(str).replace({
+                        "nan": "",
+                        "NaN": "",
+                        "inf": "",
+                        "-inf": "",
+                        "Infinity": "",
+                        "-Infinity": "",
+                        "None": "",
+                    })
                     _df_clean.columns = _df_clean.columns.astype(str)
                     _df_clean = _df_clean.reset_index(drop=True)
 
@@ -362,6 +389,7 @@ def generate_laporan_bulanan_psm(bulan_int, tahun_int, nama_bulan_str):
 def write_laporan_bulanan(sheet_name, rows_matrix):
     """
     Tulis matrix laporan ke Spreadsheet Laporan.
+    Handle nama sheet dengan spasi (fix bug range).
     
     Args:
         sheet_name (str): nama sheet, contoh "SEPTEMBER 2026"
@@ -381,12 +409,29 @@ def write_laporan_bulanan(sheet_name, rows_matrix):
             
             # Tulis matrix
             if rows_matrix:
-                ws.update(rows_matrix, "A1")
+                # Cara 1: Pakai update dengan value_input_option
+                ws.update(
+                    values=rows_matrix,
+                    range_name="A1",
+                    value_input_option="USER_ENTERED"
+                )
             
             return True, f"✅ Laporan {sheet_name} tersimpan ({len(rows_matrix)} baris)"
     
     except Exception as e:
-        return False, f"❌ Gagal: {str(e)[:150]}"
+        _err = str(e)
+        # Kalau error "Unable to parse range", coba cara alternatif
+        if "Unable to parse range" in _err:
+            try:
+                # Cara 2: Tulis baris per baris (fallback)
+                ws.clear()
+                for _row_idx, _row in enumerate(rows_matrix, start=1):
+                    ws.insert_row(_row, index=_row_idx, value_input_option="USER_ENTERED")
+                return True, f"✅ Laporan {sheet_name} tersimpan ({len(rows_matrix)} baris) [fallback]"
+            except Exception as e2:
+                return False, f"❌ Gagal (fallback): {str(e2)[:150]}"
+        
+        return False, f"❌ Gagal: {_err[:150]}"
 
 
 # =========================================================================
