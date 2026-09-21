@@ -13038,6 +13038,23 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
 # MENU UTAMA: GAYA RPG RESPONSIVE (PORTAL GUILD ONLY)
 # =========================================================================
 if selected_tab == "🏠 Menu Utama":
+    
+    # =====================================================================
+    # 🎨 PANEL INFO "UNDER MAINTENANCE" — KHUSUS HALAMAN UTAMA
+    # =====================================================================
+    from maintenance_panel import render_maintenance_panel
+    
+    render_maintenance_panel(
+        show=True,
+        type="update",                          # "update" | "maintenance" | "info" | "warning"
+        title="SEDANG UPDATE FITUR BARU!",
+        message="Sistem sedang ditingkatkan. Fitur <b>Laporan Bulanan Otomatis</b> dan <b>Audit Trail</b> sedang dalam pengembangan. Mohon maklum kalau ada gangguan kecil ya! 🙏",
+        eta="Target selesai: Besok, 07:00 WIB",
+        progress=25,
+        badge_text="🚧 SEDANG DIKERJAKAN",
+    )
+    
+    # ... (kode Menu Utama yang sudah ada, seperti header, kartu RPG, dll)
 
     # -------------------------------------------------------------------------
     # 1. RENDER HEADER UTAMA MEDIEVAL ROYAL GUILD (HANYA DI TAB MENU UTAMA)
