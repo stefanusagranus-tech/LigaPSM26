@@ -356,6 +356,38 @@ def generate_laporan_bulanan_psm(bulan_int, tahun_int, nama_bulan_str):
     except Exception as e:
         return False, f"❌ Gagal: {str(e)[:150]}", 0
 
+# =========================================================================
+# 📊 TULIS LAPORAN BULANAN KE SPREADSHEET LAPORAN
+# =========================================================================
+def write_laporan_bulanan(sheet_name, rows_matrix):
+    """
+    Tulis matrix laporan ke Spreadsheet Laporan.
+    
+    Args:
+        sheet_name (str): nama sheet, contoh "SEPTEMBER 2026"
+        rows_matrix (list[list]): matrix data (baris × kolom)
+    
+    Returns:
+        (success: bool, message: str)
+    """
+    try:
+        with _LAPORAN_LOCK:
+            ws = get_ws_laporan(sheet_name)
+            if ws is None:
+                return False, f"❌ Gagal akses sheet {sheet_name}"
+            
+            # Bersihkan sheet dulu
+            ws.clear()
+            
+            # Tulis matrix
+            if rows_matrix:
+                ws.update(rows_matrix, "A1")
+            
+            return True, f"✅ Laporan {sheet_name} tersimpan ({len(rows_matrix)} baris)"
+    
+    except Exception as e:
+        return False, f"❌ Gagal: {str(e)[:150]}"
+
 
 # =========================================================================
 # 🧪 DEBUG PANEL — TEST SEMUA FUNGSI DARI UI
