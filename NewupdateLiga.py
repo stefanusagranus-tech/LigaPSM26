@@ -35,17 +35,28 @@ from spreadsheet_connector import render_debug_panel
 # 📦 IMPORT CONNECTOR (untuk log & backup ke Spreadsheet Audit)
 # =========================================================================
 from spreadsheet_connector import (
+    # Log & Backup
     append_logs_to_sheet,
     read_activity_log,
     backup_to_audit_sheet,
-    write_laporan_bulanan,
     render_debug_panel,
+    
+    # Laporan (versi lama)
+    write_laporan_bulanan,
+    generate_laporan_bulanan_psm,
+    
+    # Laporan (versi baru — multi program)
+    generate_laporan_psm,
+    generate_laporan_pwp,
+    generate_laporan_sg,
+    generate_laporan_sueger,
+    generate_semua_laporan,
+    
     # Heartbeat (FASE 4)
     write_heartbeat_to_sheet,
     remove_heartbeat_from_sheet,
     get_stale_heartbeats,
     clear_all_heartbeat,
-    generate_laporan_bulanan_psm
 )
 
 # ==========================================
@@ -19416,64 +19427,96 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                         st.error("❌ Gagal generate PPT.")
 
             # =========================================================================
-            # 📊 GENERATE LAPORAN BULANAN PSM
+            # 📊 GENERATE LAPORAN BULANAN (MULTI PROGRAM) — 1 TOMBOL
             # =========================================================================
             st.markdown("---")
-            st.markdown("#### 📊 Generate Laporan Bulanan PSM")
-            st.caption("Isi otomatis sheet laporan di LIGAPSM-LAPORAN (format: Toko, NIK, Nama Personil, kolom tanggal 1-31)")
-    
-            col_lap1, col_lap2, col_lap3 = st.columns(3)
-    
+            st.markdown("#### 📊 Generate Laporan Bulanan")
+            st.caption(
+                "Pilih bulan & tahun, lalu klik tombol. Sistem akan generate **4 sheet** "
+                "sekaligus: **PSM**, **PWP**, **SG**, **Sueger** di Spreadsheet **LIGAPSM-LAPORAN**."
+            )
+
+            col_lap1, col_lap2 = st.columns(2)
+
             with col_lap1:
                 _bulan_list = [
                     "Januari", "Februari", "Maret", "April", "Mei", "Juni",
                     "Juli", "Agustus", "September", "Oktober", "November", "Desember"
                 ]
                 _bulan_pilih = st.selectbox(
-                    "📅 Pilih Bulan",
+                    "📅 Bulan",
                     _bulan_list,
                     index=waktu_wib.month - 1,
-                    key="lap_bulan_select"
+                    key="lap_bulan_semua"
                 )
-    
+
             with col_lap2:
                 _tahun_pilih = st.number_input(
                     "📆 Tahun",
                     min_value=2024,
                     max_value=2030,
                     value=waktu_wib.year,
-                    key="lap_tahun_input"
+                    key="lap_tahun_semua"
                 )
-    
-            with col_lap3:
-                st.markdown("<br>", unsafe_allow_html=True)
-                _btn_generate_lap = st.button(
-                    "📊 GENERATE LAPORAN",
-                    use_container_width=True,
-                    type="primary",
-                    key="btn_generate_lap_bulanan"
-                )
-    
-            if _btn_generate_lap:
-                _bulan_int = _bulan_list.index(_bulan_pilih) + 1
-                _bulan_upper = _bulan_pilih.upper()
+
+            _bulan_int = _bulan_list.index(_bulan_pilih) + 1
+            _tahun_int = int(_tahun_pilih)
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            if st.button(
+                "🚀 GENERATE SEMUA LAPORAN",
+                use_container_width=True,
+                type="primary",
+                key="gen_semua"
+            ):
+                with st.spinner(
+                    f"⏳ Generate 4 laporan {_bulan_pilih} {_tahun_int}... "
+                    f"(mohon tunggu 5-10 detik)"
+                ):
+                    _result = generate_semua_laporan(_bulan_int, _tahun_int)
                 
-                with st.spinner(f"⏳ Generate laporan {_bulan_upper} {int(_tahun_pilih)}..."):
-                    _ok_lap, _msg_lap, _n_pers = generate_laporan_bulanan_psm(
-                        bulan_int=_bulan_int,
-                        tahun_int=int(_tahun_pilih),
-                        nama_bulan_str=_bulan_upper,
+                st.markdown("---")
+                
+                # ==== Tampilkan hasil ====
+                if _result["success"]:
+                    st.success(
+                        f"✅ **{_result['total_sheet']} sheet berhasil** — "
+                        f"Total {_result['total_baris']} baris"
                     )
-                
-                if _ok_lap:
-                    st.success(_msg_lap)
-                    st.info(f"👉 Cek sheet **{_bulan_upper} {int(_tahun_pilih)}** di Spreadsheet **LIGAPSM-LAPORAN**")
-                    st.caption(f"👥 Total personil: {_n_pers}")
                     
-                    # Log
-                    log_activity("REPORT", f"Generate laporan {_bulan_upper} {int(_tahun_pilih)}")
+                    with st.expander("📋 Detail Sheet yang Berhasil", expanded=True):
+                        for _s in _result["success"]:
+                            st.markdown(f"✅ **{_s['nama']}** — {_s['pesan']}")
+                
+                if _result["failed"]:
+                    st.error(f"❌ **{len(_result['failed'])} sheet gagal**")
+                    
+                    with st.expander("📋 Detail Error", expanded=True):
+                        for _f in _result["failed"]:
+                            st.markdown(f"❌ **{_f['nama']}** — {_f['error']}")
+                
+                if _result["success"]:
+                    st.info(
+                        f"👉 Cek spreadsheet **LIGAPSM-LAPORAN**. "
+                        f"Sheet: `{_bulan_pilih.upper()} {_tahun_int}`, "
+                        f"`{_bulan_pilih.upper()} {_tahun_int}_PWP`, "
+                        f"`{_bulan_pilih.upper()} {_tahun_int}_SG`, "
+                        f"`{_bulan_pilih.upper()} {_tahun_int}_SUEGER`"
+                    )
+                    
+                    # Log activity
+                    try:
+                        log_activity(
+                            "REPORT",
+                            f"Generate 4 laporan {_bulan_pilih} {_tahun_int}: "
+                            f"{_result['total_sheet']} sukses, "
+                            f"{len(_result['failed'])} gagal"
+                        )
+                    except Exception:
+                        pass
                     
                     time.sleep(2)
                     st.rerun()
                 else:
-                    st.error(_msg_lap)        
+                    st.error("❌ Semua sheet gagal. Cek error di atas.")        
