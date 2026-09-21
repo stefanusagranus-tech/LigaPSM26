@@ -250,7 +250,7 @@ def backup_to_audit_sheet(state_getter):
                     
                     # 3. Apply _safe_stringify ke SETIAP CELL
                     # Ini paling lambat tapi PALING AMAN
-                    _df_clean = _df_clean.applymap(_safe_stringify)
+                    _df_clean = _df_clean.map(_safe_stringify)
                     
                     # 4. Reset index
                     _df_clean = _df_clean.reset_index(drop=True)
