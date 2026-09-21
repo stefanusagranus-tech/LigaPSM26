@@ -187,13 +187,17 @@ def backup_to_audit_sheet(state_getter):
     _result = {"success": [], "failed": [], "total": 0}
 
     _backup_map = [
-        ("_BACKUP_SALES_PPS", "sales_pps_df"),
-        ("_BACKUP_PERIODE_PPS", "periods_pps_df"),
+        # PSM & PPS
         ("_BACKUP_SALES_ITEM", "sales_item_df"),
         ("_BACKUP_SALES_PERSON", "sales_person_df"),
+        ("_BACKUP_SALES_PPS", "sales_pps_df"),
         ("_BACKUP_PERIODE", "periods_df"),
+        ("_BACKUP_PERIODE_PPS", "periods_pps_df"),
         ("_BACKUP_MASTER_ITEM", "items_df"),
         ("_BACKUP_MASTER_PERSONIL", "person_df"),
+        # Daily Performance (BARU!)
+        ("_BACKUP_PERIODE_STOREPERFORMANCE", "periods_store_df"),
+        ("_BACKUP_SALES_STOREPERFORMANCE", "sales_store_df"),
     ]
 
     try:
@@ -390,6 +394,35 @@ def render_debug_panel():
                 else:
                     st.sidebar.warning("⚠️ Tidak ada user stale")
             
+            except Exception as e:
+                st.sidebar.error(f"❌ Error: {str(e)[:100]}")
+
+        st.markdown("---")
+        st.markdown("### 💾 Test Backup")
+
+        if st.button("💾 Test Backup 1 Sheet", key="btn_debug_backup_one", use_container_width=True):
+            try:
+                def _getter(key):
+                    return st.session_state.get(key, pd.DataFrame())
+                
+                _result = backup_to_audit_sheet(_getter)
+                
+                if _result["success"]:
+                    st.sidebar.success(f"✅ Backup OK: {len(_result['success'])} sheet")
+                    with st.sidebar.expander("Detail"):
+                        st.write(f"Total baris: {_result['total']:,}")
+                        st.write("**Sukses:**")
+                        for _s in _result["success"]:
+                            st.write(f"  ✅ {_s}")
+                        if _result["failed"]:
+                            st.write("**Gagal:**")
+                            for _f in _result["failed"]:
+                                st.write(f"  {_f}")
+                else:
+                    st.sidebar.error("❌ Semua sheet gagal di-backup")
+                    with st.sidebar.expander("Detail"):
+                        for _f in _result["failed"]:
+                            st.write(f"  {_f}")
             except Exception as e:
                 st.sidebar.error(f"❌ Error: {str(e)[:100]}")
 
