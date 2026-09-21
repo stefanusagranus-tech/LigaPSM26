@@ -708,6 +708,33 @@ def render_debug_panel():
                 st.sidebar.success(_msg)
                 st.sidebar.info(f"👉 Cek sheet `{_sheet_name}`")
             else:
+                st.sidebar.error(_msg)
+
+        st.markdown("---")
+        st.markdown("### 📊 Test Isi Laporan PWP")
+
+        if st.button(
+            "📊 ISI Kolom PWP (Bulan Ini)",
+            key="btn_isi_pwp",
+            use_container_width=True,
+        ):
+            from datetime import datetime
+            from zoneinfo import ZoneInfo
+            
+            _now = datetime.now(ZoneInfo("Asia/Jakarta"))
+            _bulan_int = _now.month
+            _tahun_int = _now.year
+            _bulan_str = _now.strftime("%B").upper()
+            _sheet_name = f"{_bulan_str} {_tahun_int}_PWP"
+            
+            st.sidebar.info(f"⏳ Isi kolom di sheet `{_sheet_name}`...")
+            
+            _ok, _msg, _n = isi_laporan_pwp(_bulan_int, _tahun_int, _sheet_name)
+            
+            if _ok:
+                st.sidebar.success(_msg)
+                st.sidebar.info(f"👉 Cek sheet `{_sheet_name}`")
+            else:
                 st.sidebar.error(_msg)       
 
 
@@ -1840,4 +1867,206 @@ def isi_laporan_psm(bulan_int, tahun_int, sheet_name):
     except Exception as e:
         import traceback
         print(f"[ISI_LAPORAN_PSM ERROR] {traceback.format_exc()}")
+        return False, f"❌ Gagal: {str(e)[:150]}", 0
+
+# =========================================================================
+# 📝 ISI LAPORAN PWP — HANYA SYARAT & REDEEM (Rumus Excel Dibiarkan)
+# =========================================================================
+def isi_laporan_pwp(bulan_int, tahun_int, sheet_name):
+    """
+    Isi kolom Struk Syarat & Struk Redemp di sheet PWP.
+    
+    Struktur:
+    - W1 (tgl 1-15): Kolom D, G, J, M, ... (syarat) & E, H, K, N, ... (redemp)
+    - W2 (tgl 16-30): Kolom AX, BA, BD, ... (syarat) & AY, BB, BE, ... (redemp)
+    
+    Rumus % Redempt dibiarkan.
+    Urutkan personil berdasarkan NIK ascending.
+    """
+    try:
+        # === 1. Ambil data ===
+        _pps = st.session_state.get("sales_pps_df", pd.DataFrame()).copy()
+        _pers = st.session_state.get("person_df", pd.DataFrame()).copy()
+        
+        if _pps.empty or _pers.empty:
+            return False, "❌ Data PPS atau person_df kosong", 0
+        
+        # Normalisasi kolom
+        _pps.columns = _pps.columns.astype(str).str.strip().str.lower()
+        _pers.columns = _pers.columns.astype(str).str.strip().str.lower()
+        
+        # === 2. Parse tanggal di sales_pps ===
+        if "updated_at" not in _pps.columns:
+            return False, "❌ Kolom updated_at tidak ada", 0
+        _pps["_dt"] = pd.to_datetime(_pps["updated_at"], errors="coerce")
+        _pps = _pps.dropna(subset=["_dt"])
+        
+        # === 3. Ambil daftar personil aktif — URUT NIK ASCENDING ===
+        if "active" in _pers.columns:
+            _pers = _pers[pd.to_numeric(_pers["active"], errors="coerce") == 1]
+        
+        _nik_col = None
+        for _c in ["nik", "person_id"]:
+            if _c in _pers.columns:
+                _nik_col = _c
+                break
+        
+        if _nik_col:
+            _pers["_nik_sort"] = pd.to_numeric(_pers[_nik_col], errors="coerce").fillna(99999999)
+            _pers = _pers.sort_values("_nik_sort", ascending=True)
+        
+        _pers["person_clean"] = _pers["person_name"].astype(str).str.strip().str.upper()
+        _pers = _pers.drop_duplicates(subset=["person_clean"])
+        _pers_list = _pers["person_clean"].tolist()
+        
+        if not _pers_list:
+            return False, "❌ Tidak ada personil aktif", 0
+        
+        # === 4. Buka worksheet ===
+        ws = get_ws_laporan(sheet_name)
+        if ws is None:
+            return False, f"❌ Sheet {sheet_name} tidak ditemukan", 0
+        
+        # === 5. Konfigurasi kolom per tanggal ===
+        # Struktur: tiap tanggal = 3 kolom (syarat, redemp, %rumus)
+        # Kita cuma isi kolom 1 (syarat) & 2 (redemp)
+        
+        # Generate mapping kolom untuk W1 (tgl 1-15)
+        # Start dari kolom D (index 3) dengan step 3
+        def _col_from_index(idx):
+            """Konversi index 0-based ke huruf Excel."""
+            result = ""
+            idx_1 = idx + 1  # 1-based
+            while idx_1 > 0:
+                idx_1, rem = divmod(idx_1 - 1, 26)
+                result = chr(65 + rem) + result
+            return result
+        
+        def _index_from_col(col):
+            """Konversi huruf kolom ke index 0-based."""
+            result = 0
+            for c in col:
+                result = result * 26 + (ord(c.upper()) - 64)
+            return result - 1
+        
+        # W1: mulai dari kolom D (index 3), tgl 1-15 (15 hari)
+        # Syarat tgl 1 = D, Redemp tgl 1 = E, % tgl 1 = F
+        # Syarat tgl 2 = G, Redemp tgl 2 = H, % tgl 2 = I
+        # Step: +3
+        _w1_start_idx = _index_from_col("D")  # index 3
+        _w1_tanggal = list(range(1, 16))       # 1-15
+        
+        # W2: mulai dari kolom AX (index 49), tgl 16-30
+        _w2_start_idx = _index_from_col("AX")  # index 49
+        _w2_tanggal = list(range(16, 31))      # 16-30
+        
+        # Bangun list mapping: [(tgl, col_syarat, col_redemp)]
+        _col_map = []
+        
+        for i, tgl in enumerate(_w1_tanggal):
+            _syr_idx = _w1_start_idx + i * 3
+            _red_idx = _syr_idx + 1
+            _col_map.append({
+                "tanggal": tgl,
+                "syarat": _col_from_index(_syr_idx),
+                "redemp": _col_from_index(_red_idx),
+            })
+        
+        for i, tgl in enumerate(_w2_tanggal):
+            _syr_idx = _w2_start_idx + i * 3
+            _red_idx = _syr_idx + 1
+            _col_map.append({
+                "tanggal": tgl,
+                "syarat": _col_from_index(_syr_idx),
+                "redemp": _col_from_index(_red_idx),
+            })
+        
+        # === 6. Bangun batch update ===
+        _updates = []
+        _formatted_ranges = []
+        
+        for _row_offset, _person in enumerate(_pers_list):
+            _row_idx = 3 + _row_offset
+            
+            for _cm in _col_map:
+                _tgl = _cm["tanggal"]
+                
+                # Filter data
+                _mask = (
+                    (_pps["kasir_name"].astype(str).str.upper() == _person) &
+                    (_pps["_dt"].dt.day == _tgl) &
+                    (_pps["_dt"].dt.month == bulan_int) &
+                    (_pps["_dt"].dt.year == tahun_int)
+                )
+                
+                # Nilai syarat
+                if _mask.any() and "syarat_pwp" in _pps.columns:
+                    _syarat = int(pd.to_numeric(_pps.loc[_mask, "syarat_pwp"], errors="coerce").fillna(0).sum())
+                else:
+                    _syarat = 0
+                
+                # Nilai redemp (qty_pwp)
+                if _mask.any() and "qty_pwp" in _pps.columns:
+                    _redemp = int(pd.to_numeric(_pps.loc[_mask, "qty_pwp"], errors="coerce").fillna(0).sum())
+                else:
+                    _redemp = 0
+                
+                # Update syarat
+                _updates.append({
+                    "range": f"{_cm['syarat']}{_row_idx}",
+                    "values": [[_syarat if _syarat > 0 else ""]],
+                })
+                _formatted_ranges.append(f"{_cm['syarat']}{_row_idx}")
+                
+                # Update redemp
+                _updates.append({
+                    "range": f"{_cm['redemp']}{_row_idx}",
+                    "values": [[_redemp if _redemp > 0 else ""]],
+                })
+                _formatted_ranges.append(f"{_cm['redemp']}{_row_idx}")
+        
+        # === 7. Batch update value ===
+        if _updates:
+            ws.batch_update(_updates, value_input_option="USER_ENTERED")
+        
+        # === 8. Set format center ===
+        try:
+            from gspread_formatting import (
+                CellFormat, TextFormat, HorizontalAlignment,
+                format_cell_range,
+            )
+            _fmt = CellFormat(
+                horizontalAlignment=HorizontalAlignment.CENTER,
+                verticalAlignment="MIDDLE",
+                textFormat=TextFormat(
+                    fontFamily="Calibri",
+                    fontSize=10,
+                    bold=True,
+                ),
+            )
+            # Format per cell (banyak), pakai batch
+            # Optimasi: format range besar per baris
+            _ranges_to_format = []
+            for _row_idx in range(3, 3 + len(_pers_list)):
+                # Format range W1 (kolom D sampai AU) per baris
+                _ranges_to_format.append(f"D{_row_idx}:AU{_row_idx}")
+                # Format range W2 (kolom AX sampai CO) per baris
+                _ranges_to_format.append(f"AX{_row_idx}:CO{_row_idx}")
+            
+            for _r in _ranges_to_format:
+                try:
+                    format_cell_range(ws, _r, _fmt)
+                except Exception:
+                    continue
+        
+        except ImportError:
+            print("[FORMAT WARN] gspread_formatting tidak terinstall")
+        except Exception as _e:
+            print(f"[FORMAT WARN] {_e}")
+        
+        return True, f"✅ {len(_updates)} cell di-update + format ({len(_pers_list)} personil)", len(_updates)
+    
+    except Exception as e:
+        import traceback
+        print(f"[ISI_LAPORAN_PWP ERROR] {traceback.format_exc()}")
         return False, f"❌ Gagal: {str(e)[:150]}", 0
