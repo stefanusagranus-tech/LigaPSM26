@@ -248,6 +248,7 @@ def backup_to_audit_sheet(state_getter):
 def generate_laporan_bulanan_psm(bulan_int, tahun_int, nama_bulan_str):
     """
     Generate laporan bulanan PSM ke Spreadsheet Laporan.
+    Format: Toko, NIK, Nama Personil, kolom tanggal 1-31.
     
     Args:
         bulan_int (int): 1-12
@@ -281,7 +282,7 @@ def generate_laporan_bulanan_psm(bulan_int, tahun_int, nama_bulan_str):
         if _sp.empty:
             return False, f"❌ Tidak ada data PSM untuk {nama_bulan_str} {tahun_int}", 0
         
-        # === 3. Persiapkan pivot (personil × tanggal) ===
+        # === 3. Pivot (personil × tanggal) ===
         _sp["_tgl"] = _sp["_dt"].dt.day
         _sp["qty"] = pd.to_numeric(_sp.get("actual_qty", 0), errors="coerce").fillna(0)
         _sp["person_clean"] = _sp["person_name"].astype(str).str.strip().str.upper()
@@ -294,7 +295,7 @@ def generate_laporan_bulanan_psm(bulan_int, tahun_int, nama_bulan_str):
             fill_value=0
         )
         
-        # === 4. Ambil daftar personil aktif ===
+        # === 4. Ambil personil aktif ===
         _pers_active = _pers.copy()
         if "active" in _pers_active.columns:
             _pers_active = _pers_active[pd.to_numeric(_pers_active["active"], errors="coerce") == 1]
@@ -305,14 +306,14 @@ def generate_laporan_bulanan_psm(bulan_int, tahun_int, nama_bulan_str):
         if _pers_active.empty:
             return False, "❌ Tidak ada personil aktif", 0
         
-        # === 5. Bangun matrix output ===
+        # === 5. Bangun matrix ===
         _rows_output = []
         
-        # Baris 1: Header Toko + tanggal 1-31
+        # Baris 1: Toko + tanggal 1-31
         _row1 = ["", "Toko", "C383/KARANG SATRIA"] + [str(d) for d in range(1, 32)]
         _rows_output.append(_row1)
         
-        # Baris 2: Header kolom + "ACTUAL" (merge nanti)
+        # Baris 2: Header kolom
         _row2 = ["No", "NIK", "Nama Personil", "ACTUAL"] + [""] * 30
         _rows_output.append(_row2)
         
@@ -322,9 +323,8 @@ def generate_laporan_bulanan_psm(bulan_int, tahun_int, nama_bulan_str):
         for _idx, (_, _p_row) in enumerate(_pers_active.iterrows(), start=1):
             _nama = str(_p_row.get("person_name", "")).strip().upper()
             
-            # Ambil NIK / person_id
-            _nik = str(_p_row.get("person_id", 
-                       _p_row.get("nik", ""))).replace(".0", "").strip()
+            # NIK / person_id
+            _nik = str(_p_row.get("person_id", _p_row.get("nik", ""))).replace(".0", "").strip()
             if not _nik or _nik == "nan":
                 _nik = "-"
             
@@ -354,7 +354,6 @@ def generate_laporan_bulanan_psm(bulan_int, tahun_int, nama_bulan_str):
         return True, f"✅ Laporan {_sheet_name} tersimpan ({len(_rows_output)} baris)", len(_pers_active)
     
     except Exception as e:
-        import traceback
         return False, f"❌ Gagal: {str(e)[:150]}", 0
 
 
