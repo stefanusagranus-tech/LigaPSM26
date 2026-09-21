@@ -173,16 +173,48 @@ def read_activity_log(_cache_buster=0):
 # =========================================================================
 # 💾 BACKUP KE SPREADSHEET AUDIT
 # =========================================================================
+def _safe_stringify(value):
+    """
+    Konversi value apapun jadi string aman untuk Google Sheets.
+    Handle: NaN, NaT, None, inf, -inf, string 'nan', dll.
+    """
+    try:
+        # Cek None / NaN / NaT
+        if value is None:
+            return ""
+        
+        # Cek NaN (pakai try karena NaN != NaN)
+        try:
+            if pd.isna(value):
+                return ""
+        except (ValueError, TypeError):
+            # pd.isna() bisa error untuk array/list
+            pass
+        
+        # Cek inf / -inf
+        if isinstance(value, float):
+            if value == float('inf') or value == float('-inf'):
+                return ""
+            if value != value:  # NaN check
+                return ""
+        
+        # Konversi ke string
+        _str = str(value).strip()
+        
+        # Cek string aneh
+        if _str.lower() in ["nan", "nat", "none", "inf", "-inf", "infinity", "-infinity", "<na>"]:
+            return ""
+        
+        return _str
+    
+    except Exception:
+        return ""
+
+
 def backup_to_audit_sheet(state_getter):
     """
-    Backup 7 sheet ke Spreadsheet Audit (tab _BACKUP_*).
-    
-    Args:
-        state_getter: fungsi lambda untuk ambil DataFrame dari session_state
-                      contoh: lambda k: st.session_state.get(k, pd.DataFrame())
-    
-    Returns:
-        dict {"success": [...], "failed": [...], "total": int}
+    Backup 9 sheet ke Spreadsheet Audit (tab _BACKUP_*).
+    Versi FIX KUAT — handle semua NaN/NaT/inf.
     """
     _result = {"success": [], "failed": [], "total": 0}
 
@@ -195,7 +227,7 @@ def backup_to_audit_sheet(state_getter):
         ("_BACKUP_PERIODE_PPS", "periods_pps_df"),
         ("_BACKUP_MASTER_ITEM", "items_df"),
         ("_BACKUP_MASTER_PERSONIL", "person_df"),
-        # Daily Performance (BARU!)
+        # Daily Performance
         ("_BACKUP_PERIODE_STOREPERFORMANCE", "periods_store_df"),
         ("_BACKUP_SALES_STOREPERFORMANCE", "sales_store_df"),
     ]
@@ -209,65 +241,52 @@ def backup_to_audit_sheet(state_getter):
                         _result["failed"].append(f"⚠️ {_sheet_name}: data kosong")
                         continue
 
-                    # Bersihkan NaN/inf dulu
+                    # === CLEANING 100% KUAT ===
+                    # 1. Copy
                     _df_clean = _df.copy()
-
-                    # Ganti NaN jadi string kosong
-                    _df_clean = _df_clean.fillna("")
-
-                    # Untuk kolom numerik, ganti inf/-inf jadi 0 atau ""
-                    for _col in _df_clean.columns:
-                        try:
-                            # Coba konversi ke numeric
-                            _numeric = pd.to_numeric(_df_clean[_col], errors="coerce")
-                            # Cari nilai inf
-                            _inf_mask = _numeric.apply(lambda x: x != x or x in [float('inf'), float('-inf')] if isinstance(x, (int, float)) else False)
-                            # Ganti inf dengan string kosong
-                            _df_clean.loc[_inf_mask, _col] = ""
-                        except Exception:
-                            pass
-
-                    # Konversi semua ke string dan bersihkan
-                    _df_clean = _df_clean.astype(str).replace({
-                        "nan": "",
-                        "NaN": "",
-                        "inf": "",
-                        "-inf": "",
-                        "Infinity": "",
-                        "-Infinity": "",
-                        "None": "",
-                    })
+                    
+                    # 2. Header jadi string
                     _df_clean.columns = _df_clean.columns.astype(str)
+                    
+                    # 3. Apply _safe_stringify ke SETIAP CELL
+                    # Ini paling lambat tapi PALING AMAN
+                    _df_clean = _df_clean.applymap(_safe_stringify)
+                    
+                    # 4. Reset index
                     _df_clean = _df_clean.reset_index(drop=True)
 
+                    # === TULIS KE SHEET ===
                     ws = get_ws_audit(_sheet_name)
                     if ws is None:
                         _result["failed"].append(f"❌ {_sheet_name}: worksheet gagal")
                         continue
 
                     ws.clear()
-                    header = [str(c) for c in _df_clean.columns.tolist()]
-                    ws.append_row(header)
-                    data_rows = _df_clean.astype(str).values.tolist()
+                    
+                    # Header
+                    header = _df_clean.columns.tolist()
+                    ws.append_row(header, value_input_option="USER_ENTERED")
+                    
+                    # Data
+                    data_rows = _df_clean.values.tolist()
                     if data_rows:
                         ws.append_rows(data_rows, value_input_option="USER_ENTERED")
 
                     _result["success"].append(_sheet_name)
                     _result["total"] += len(_df_clean)
-                    time.sleep(0.5)  # Delay antar sheet
+                    time.sleep(0.5)
 
                 except Exception as e:
                     _err = str(e)
                     if "429" in _err:
                         _result["failed"].append(f"❌ {_sheet_name}: Kuota habis")
                     else:
-                        _result["failed"].append(f"❌ {_sheet_name}: {_err[:50]}")
+                        _result["failed"].append(f"❌ {_sheet_name}: {_err[:60]}")
                     continue
     except Exception as e:
         _result["failed"].append(f"❌ Lock error: {str(e)[:80]}")
 
     return _result
-
 
 # =========================================================================
 # 📊 GENERATOR LAPORAN BULANAN PSM
