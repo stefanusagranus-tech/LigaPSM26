@@ -2383,8 +2383,8 @@ def log_activity(action, detail=""):
 # =========================================================================
 # 💓 HEARTBEAT SYSTEM — DETEKSI USER AKTIF
 # =========================================================================
-_HEARTBEAT_INTERVAL_SEC = 30      # update tiap 30 detik
-_INACTIVE_THRESHOLD_MIN = 5       # 5 menit idle = tidak aktif
+_HEARTBEAT_INTERVAL_SEC = 10      # update tiap 30 detik
+_INACTIVE_THRESHOLD_MIN = 0.5       # 5 menit idle = tidak aktif
 
 
 def update_heartbeat():
@@ -2457,16 +2457,16 @@ def check_and_log_stale_users():
         _last_check = st.session_state.get("last_stale_check", 0)
         _now = time.time()
         
-        if _now - _last_check < 300:  # 5 menit
+        if _now - _last_check < 15:  # 5 menit
             return
         
         st.session_state["last_stale_check"] = _now
         
         # 🛡️ GUARD: Pastikan threshold valid
         _threshold = _INACTIVE_THRESHOLD_MIN
-        if _threshold is None or _threshold < 2:
-            print(f"[WARN] Threshold invalid ({_threshold}), pakai 5 menit")
-            _threshold = 5
+        if _threshold is None or _threshold < 0.1:
+            print(f"[WARN] Threshold invalid ({_threshold}), pakai 0.5 menit")
+            _threshold = 0.5
         
         # Ambil user stale
         stale_users = get_stale_heartbeats(threshold_minutes=_threshold)
