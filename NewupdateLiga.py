@@ -45,7 +45,6 @@ from spreadsheet_connector import (
     remove_heartbeat_from_sheet,
     get_stale_heartbeats,
     clear_all_heartbeat,
-    generate_laporan_bulanan_psm
 )
 
 # ==========================================
