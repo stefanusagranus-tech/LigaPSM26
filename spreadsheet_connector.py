@@ -1956,8 +1956,8 @@ def isi_laporan_pwp(bulan_int, tahun_int, sheet_name):
         _w1_start_idx = _index_from_col("D")  # index 3
         _w1_tanggal = list(range(1, 16))       # 1-15
         
-        # W2: mulai dari kolom AX (index 49), tgl 16-30
-        _w2_start_idx = _index_from_col("AX")  # index 49
+        # W2: mulai dari kolom AZ (index 51), tgl 16-30
+        _w2_start_idx = _index_from_col("AZ")  # index 51
         _w2_tanggal = list(range(16, 31))      # 16-30
         
         # Bangun list mapping: [(tgl, col_syarat, col_redemp)]
