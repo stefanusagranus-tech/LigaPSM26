@@ -19051,68 +19051,6 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                     key="btn_gen_ppt_summary",
                 )
 
-        # =========================================================================
-        # 📊 GENERATE LAPORAN BULANAN PSM
-        # =========================================================================
-        st.markdown("---")
-        st.markdown("#### 📊 Generate Laporan Bulanan PSM")
-        st.caption("Isi otomatis sheet laporan di LIGAPSM-LAPORAN (format: Toko, NIK, Nama Personil, kolom tanggal 1-31)")
-
-        col_lap1, col_lap2, col_lap3 = st.columns(3)
-
-        with col_lap1:
-            _bulan_list = [
-                "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-                "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-            ]
-            _bulan_pilih = st.selectbox(
-                "📅 Pilih Bulan",
-                _bulan_list,
-                index=waktu_wib.month - 1,
-                key="lap_bulan_select"
-            )
-
-        with col_lap2:
-            _tahun_pilih = st.number_input(
-                "📆 Tahun",
-                min_value=2024,
-                max_value=2030,
-                value=waktu_wib.year,
-                key="lap_tahun_input"
-            )
-
-        with col_lap3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            _btn_generate_lap = st.button(
-                "📊 GENERATE LAPORAN",
-                use_container_width=True,
-                type="primary",
-                key="btn_generate_lap_bulanan"
-            )
-
-        if _btn_generate_lap:
-            _bulan_int = _bulan_list.index(_bulan_pilih) + 1
-            _bulan_upper = _bulan_pilih.upper()
-            
-            with st.spinner(f"⏳ Generate laporan {_bulan_upper} {int(_tahun_pilih)}..."):
-                _ok_lap, _msg_lap, _n_pers = generate_laporan_bulanan_psm(
-                    bulan_int=_bulan_int,
-                    tahun_int=int(_tahun_pilih),
-                    nama_bulan_str=_bulan_upper,
-                )
-            
-            if _ok_lap:
-                st.success(_msg_lap)
-                st.info(f"👉 Cek sheet **{_bulan_upper} {int(_tahun_pilih)}** di Spreadsheet **LIGAPSM-LAPORAN**")
-                st.caption(f"👥 Total personil: {_n_pers}")
-                
-                # Log
-                log_activity("REPORT", f"Generate laporan {_bulan_upper} {int(_tahun_pilih)}")
-                
-                time.sleep(2)
-                st.rerun()
-            else:
-                st.error(_msg_lap)
             # =========================================================
             # LOGIKA GENERATE
             # =========================================================
@@ -19476,3 +19414,66 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                         )
                     else:
                         st.error("❌ Gagal generate PPT.")
+
+            # =========================================================================
+            # 📊 GENERATE LAPORAN BULANAN PSM
+            # =========================================================================
+            st.markdown("---")
+            st.markdown("#### 📊 Generate Laporan Bulanan PSM")
+            st.caption("Isi otomatis sheet laporan di LIGAPSM-LAPORAN (format: Toko, NIK, Nama Personil, kolom tanggal 1-31)")
+    
+            col_lap1, col_lap2, col_lap3 = st.columns(3)
+    
+            with col_lap1:
+                _bulan_list = [
+                    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+                ]
+                _bulan_pilih = st.selectbox(
+                    "📅 Pilih Bulan",
+                    _bulan_list,
+                    index=waktu_wib.month - 1,
+                    key="lap_bulan_select"
+                )
+    
+            with col_lap2:
+                _tahun_pilih = st.number_input(
+                    "📆 Tahun",
+                    min_value=2024,
+                    max_value=2030,
+                    value=waktu_wib.year,
+                    key="lap_tahun_input"
+                )
+    
+            with col_lap3:
+                st.markdown("<br>", unsafe_allow_html=True)
+                _btn_generate_lap = st.button(
+                    "📊 GENERATE LAPORAN",
+                    use_container_width=True,
+                    type="primary",
+                    key="btn_generate_lap_bulanan"
+                )
+    
+            if _btn_generate_lap:
+                _bulan_int = _bulan_list.index(_bulan_pilih) + 1
+                _bulan_upper = _bulan_pilih.upper()
+                
+                with st.spinner(f"⏳ Generate laporan {_bulan_upper} {int(_tahun_pilih)}..."):
+                    _ok_lap, _msg_lap, _n_pers = generate_laporan_bulanan_psm(
+                        bulan_int=_bulan_int,
+                        tahun_int=int(_tahun_pilih),
+                        nama_bulan_str=_bulan_upper,
+                    )
+                
+                if _ok_lap:
+                    st.success(_msg_lap)
+                    st.info(f"👉 Cek sheet **{_bulan_upper} {int(_tahun_pilih)}** di Spreadsheet **LIGAPSM-LAPORAN**")
+                    st.caption(f"👥 Total personil: {_n_pers}")
+                    
+                    # Log
+                    log_activity("REPORT", f"Generate laporan {_bulan_upper} {int(_tahun_pilih)}")
+                    
+                    time.sleep(2)
+                    st.rerun()
+                else:
+                    st.error(_msg_lap)        
