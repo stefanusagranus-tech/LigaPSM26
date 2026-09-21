@@ -19192,9 +19192,9 @@ elif selected_tab == "⚙️ Pengaturan & Master":
             📊 *REPORT SUMMARY PENJUALAN {selected_month_name.upper()} {waktu_wib.year}*
             📅 _Generated: {_generate_str}_
             
-            🔥SEMANGAT PAGI, BERIKUT MATERI BRIEFING PAGI INI🔥
+            🔥SEMANGAT PAGI🔥
             ════════════════════════════════════════
-            *1️⃣ PROGRAM PSM ({selected_psm_period_opt.upper()})*
+           *1️⃣ PROGRAM PSM ({selected_psm_period_opt.upper()})*
             📦 Target PSM    : {int(target_psm_tot)} Pcs
             📊 Actual Qty    : {int(actual_psm_tot)} Pcs
             🎯 Achievement   : *{ach_psm:.1f}%*
