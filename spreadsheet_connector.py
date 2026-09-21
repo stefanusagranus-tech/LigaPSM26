@@ -737,6 +737,33 @@ def render_debug_panel():
             else:
                 st.sidebar.error(_msg)       
 
+        st.markdown("---")
+        st.markdown("### 📊 Test Isi Laporan SG")
+
+        if st.button(
+            "📊 ISI Kolom SG (Bulan Ini)",
+            key="btn_isi_sg",
+            use_container_width=True,
+        ):
+            from datetime import datetime
+            from zoneinfo import ZoneInfo
+            
+            _now = datetime.now(ZoneInfo("Asia/Jakarta"))
+            _bulan_int = _now.month
+            _tahun_int = _now.year
+            _bulan_str = _now.strftime("%B").upper()
+            _sheet_name = f"{_bulan_str} {_tahun_int}_SG"
+            
+            st.sidebar.info(f"⏳ Isi kolom di sheet `{_sheet_name}`...")
+            
+            _ok, _msg, _n = isi_laporan_sg(_bulan_int, _tahun_int, _sheet_name)
+            
+            if _ok:
+                st.sidebar.success(_msg)
+                st.sidebar.info(f"👉 Cek sheet `{_sheet_name}`")
+            else:
+                st.sidebar.error(_msg)
+
 
 # ---------- Fungsi test individual ----------
 
@@ -2069,4 +2096,185 @@ def isi_laporan_pwp(bulan_int, tahun_int, sheet_name):
     except Exception as e:
         import traceback
         print(f"[ISI_LAPORAN_PWP ERROR] {traceback.format_exc()}")
+        return False, f"❌ Gagal: {str(e)[:150]}", 0
+
+# =========================================================================
+# 📝 ISI LAPORAN SG — SERBA GRATIS (2 WEEK: 1-15 & 16-31)
+# Target dari PERIODE_PPS (SGS01 & SGS02), Actual dari SALES_PPS.qty_sg
+# =========================================================================
+def isi_laporan_sg(bulan_int, tahun_int, sheet_name):
+    """
+    Isi kolom TARGET TOKO & ACTUAL di sheet SG.
+    
+    Struktur (2 WEEK):
+    - W1 (tgl 1-15): Target D, Actual G-U (15 hari)
+    - W2 (tgl 16-31): Target Y, Actual AB-AQ (16 hari)
+    
+    Target dari PERIODE_PPS: SGS01 (W1), SGS02 (W2)
+    Actual dari SALES_PPS.qty_sg (per kasir per tanggal)
+    """
+    try:
+        # === 1. Ambil data ===
+        _pps = st.session_state.get("sales_pps_df", pd.DataFrame()).copy()
+        _per_pps = st.session_state.get("periods_pps_df", pd.DataFrame()).copy()
+        _pers = st.session_state.get("person_df", pd.DataFrame()).copy()
+        
+        if _pps.empty or _pers.empty:
+            return False, "❌ Data PPS atau person_df kosong", 0
+        
+        # Normalisasi
+        _pps.columns = _pps.columns.astype(str).str.strip().str.lower()
+        _per_pps.columns = _per_pps.columns.astype(str).str.strip().str.lower()
+        _pers.columns = _pers.columns.astype(str).str.strip().str.lower()
+        
+        # === 2. Ambil target dari PERIODE_PPS (SGS01 & SGS02) ===
+        _target_sgs01 = 0
+        _target_sgs02 = 0
+        
+        if not _per_pps.empty and "period_id" in _per_pps.columns:
+            _per_pps["_pid_clean"] = _per_pps["period_id"].astype(str).str.upper().str.strip()
+            
+            # SGS01 (W1)
+            _sgs01 = _per_pps[_per_pps["_pid_clean"].str.startswith("SGS01", na=False)]
+            if not _sgs01.empty and "target_total" in _sgs01.columns:
+                _target_sgs01 = int(pd.to_numeric(_sgs01.iloc[0]["target_total"], errors="coerce") or 0)
+            
+            # SGS02 (W2)
+            _sgs02 = _per_pps[_per_pps["_pid_clean"].str.startswith("SGS02", na=False)]
+            if not _sgs02.empty and "target_total" in _sgs02.columns:
+                _target_sgs02 = int(pd.to_numeric(_sgs02.iloc[0]["target_total"], errors="coerce") or 0)
+        
+        # === 3. Ambil personil by NIK ascending ===
+        if "active" in _pers.columns:
+            _pers = _pers[pd.to_numeric(_pers["active"], errors="coerce") == 1]
+        
+        _nik_col = None
+        for _c in ["nik", "person_id"]:
+            if _c in _pers.columns:
+                _nik_col = _c
+                break
+        
+        if _nik_col:
+            _pers["_nik_sort"] = pd.to_numeric(_pers[_nik_col], errors="coerce").fillna(99999999)
+            _pers = _pers.sort_values("_nik_sort", ascending=True)
+        
+        _pers["person_clean"] = _pers["person_name"].astype(str).str.strip().str.upper()
+        _pers = _pers.drop_duplicates(subset=["person_clean"])
+        _pers_list = _pers["person_clean"].tolist()
+        
+        if not _pers_list:
+            return False, "❌ Tidak ada personil aktif", 0
+        
+        # === 4. Parse tanggal sales_pps ===
+        if "updated_at" not in _pps.columns:
+            return False, "❌ Kolom updated_at tidak ada", 0
+        _pps["_dt"] = pd.to_datetime(_pps["updated_at"], errors="coerce")
+        _pps = _pps.dropna(subset=["_dt"])
+        
+        # === 5. Buka worksheet ===
+        ws = get_ws_laporan(sheet_name)
+        if ws is None:
+            return False, f"❌ Sheet {sheet_name} tidak ditemukan", 0
+        
+        # === 6. Config WEEK ===
+        _week_config = [
+            {
+                "name": "W1",
+                "target": _target_sgs01,
+                "tanggal": list(range(1, 16)),   # 1-15
+                "col_target": "D",
+                "col_actual_start": "G",
+                "col_actual_end": "U",
+            },
+            {
+                "name": "W2",
+                "target": _target_sgs02,
+                "tanggal": list(range(16, 32)),  # 16-31
+                "col_target": "Y",
+                "col_actual_start": "AB",
+                "col_actual_end": "AQ",
+            },
+        ]
+        
+        # === 7. Bangun batch update ===
+        _updates = []
+        _target_ranges = []
+        _actual_ranges = []
+        
+        # Target Toko (W1 & W2)
+        for _w in _week_config:
+            _target_val = _w["target"]
+            if _target_val > 0:
+                _target_values = [[_target_val] for _ in range(len(_pers_list))]
+                _range = f"{_w['col_target']}3:{_w['col_target']}{2 + len(_pers_list)}"
+                _updates.append({
+                    "range": _range,
+                    "values": _target_values,
+                })
+                _target_ranges.append(_range)
+        
+        # Actual per personil per tanggal
+        for _row_offset, _person in enumerate(_pers_list):
+            _row_idx = 3 + _row_offset
+            
+            for _w in _week_config:
+                _actual_values = []
+                
+                for _tgl in _w["tanggal"]:
+                    _mask = (
+                        (_pps["kasir_name"].astype(str).str.strip().str.upper() == _person) &
+                        (_pps["_dt"].dt.day == _tgl) &
+                        (_pps["_dt"].dt.month == bulan_int) &
+                        (_pps["_dt"].dt.year == tahun_int)
+                    )
+                    
+                    if _mask.any() and "qty_sg" in _pps.columns:
+                        _qty = int(pd.to_numeric(_pps.loc[_mask, "qty_sg"], errors="coerce").fillna(0).sum())
+                    else:
+                        _qty = 0
+                    
+                    _actual_values.append(_qty if _qty > 0 else "")
+                
+                _actual_range = f"{_w['col_actual_start']}{_row_idx}:{_w['col_actual_end']}{_row_idx}"
+                _updates.append({
+                    "range": _actual_range,
+                    "values": [_actual_values],
+                })
+                _actual_ranges.append(_actual_range)
+        
+        # === 8. Batch update ===
+        if _updates:
+            ws.batch_update(_updates, value_input_option="USER_ENTERED")
+        
+        # === 9. Format center ===
+        try:
+            from gspread_formatting import (
+                CellFormat, TextFormat, HorizontalAlignment,
+                format_cell_range,
+            )
+            _fmt = CellFormat(
+                horizontalAlignment=HorizontalAlignment.CENTER,
+                verticalAlignment="MIDDLE",
+                textFormat=TextFormat(
+                    fontFamily="Calibri",
+                    fontSize=10,
+                    bold=True,
+                ),
+            )
+            for _range in _target_ranges + _actual_ranges:
+                try:
+                    format_cell_range(ws, _range, _fmt)
+                except Exception:
+                    continue
+        except ImportError:
+            print("[FORMAT WARN] gspread_formatting tidak terinstall")
+        except Exception as _e:
+            print(f"[FORMAT WARN] {_e}")
+        
+        _info = f"Target W1={_target_sgs01}, W2={_target_sgs02}"
+        return True, f"✅ {len(_updates)} range di-update ({len(_pers_list)} personil). {_info}", len(_updates)
+    
+    except Exception as e:
+        import traceback
+        print(f"[ISI_LAPORAN_SG ERROR] {traceback.format_exc()}")
         return False, f"❌ Gagal: {str(e)[:150]}", 0
