@@ -13388,8 +13388,8 @@ if selected_tab == "🏠 Menu Utama":
     render_maintenance_panel(
     show=True,
     title="SEDANG UPDATE FITUR BARU",
-    message="Sistem sedang ditingkatkan. Fitur Laporan Bulanan Otomatis dan Audit Trail sedang dalam pengembangan. Mohon maklum kalau ada gangguan ya.",
-    eta="Target selesai: Besok, 07:00 WIB",
+    message="Sistem sedang ditingkatkan, kalo ada perlu WA aja. Fitur Laporan Bulanan otomatis dan laporan audit sedang dikerjakan. Mohon maklum kalau ada gangguan ya.",
+    eta="Target selesai: Seniatnya ",
     progress=25,
     badge_text="SEDANG DIKERJAKAN",
     )
