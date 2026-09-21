@@ -602,9 +602,18 @@ def remove_heartbeat_from_sheet(username):
 def get_stale_heartbeats(threshold_minutes=5):
     """
     Ambil daftar user yang heartbeat terakhirnya > threshold_minutes.
-    Return list of dict: [{"username": ..., "session_id": ..., "role": ..., "last_heartbeat": ...}]
+    
+    SAFETY:
+    - Guard threshold (minimal 2 menit)
+    - Skip kalau format tanggal salah
+    - Skip kalau user tidak valid
     """
     try:
+        # 🛡️ GUARD: Jangan izinkan threshold < 2 menit
+        if threshold_minutes is None or threshold_minutes < 2:
+            threshold_minutes = 5
+            print(f"[WARN] Threshold dipaksa jadi 5 menit")
+        
         ws = get_ws_audit("ACTIVITY_HEARTBEAT")
         if ws is None:
             return []
@@ -618,6 +627,12 @@ def get_stale_heartbeats(threshold_minutes=5):
         for idx, h in enumerate(header):
             col_idx[h.lower().strip()] = idx
         
+        # Cek header lengkap
+        for _req in ["username", "session_id", "last_heartbeat"]:
+            if _req not in col_idx:
+                print(f"[ERROR] Header '{_req}' tidak ditemukan. Header: {header}")
+                return []
+        
         now = datetime.now(ZoneInfo("Asia/Jakarta"))
         stale_users = []
         
@@ -626,12 +641,23 @@ def get_stale_heartbeats(threshold_minutes=5):
                 continue
             
             try:
-                _username = row[col_idx.get("username", 0)]
-                _session = row[col_idx.get("session_id", 1)]
-                _role = row[col_idx.get("role", 2)]
-                _last_hb_str = row[col_idx.get("last_heartbeat", 3)]
+                _username = row[col_idx["username"]].strip()
+                _session = row[col_idx["session_id"]].strip()
+                _role = row[col_idx.get("role", 2)].strip() if "role" in col_idx else "-"
+                _last_hb_str = row[col_idx["last_heartbeat"]].strip()
                 
-                _last_hb = datetime.strptime(_last_hb_str, "%d/%m/%Y %H:%M:%S").replace(tzinfo=ZoneInfo("Asia/Jakarta"))
+                # 🛡️ Skip kalau data kosong
+                if not _username or not _last_hb_str:
+                    continue
+                
+                # 🛡️ Skip baris DEBUG
+                if _username.upper() in ["DEBUG_TEST", "DEBUG_HEARTBEAT"]:
+                    continue
+                
+                # Parse tanggal
+                _last_hb = datetime.strptime(_last_hb_str, "%d/%m/%Y %H:%M:%S").replace(
+                    tzinfo=ZoneInfo("Asia/Jakarta")
+                )
                 _selisih_menit = (now - _last_hb).total_seconds() / 60
                 
                 if _selisih_menit > threshold_minutes:
@@ -642,7 +668,8 @@ def get_stale_heartbeats(threshold_minutes=5):
                         "last_heartbeat": _last_hb_str,
                         "selisih_menit": int(_selisih_menit),
                     })
-            except Exception:
+            except Exception as e_row:
+                print(f"[SKIP ROW] {e_row} - row: {row}")
                 continue
         
         return stale_users
