@@ -30,6 +30,16 @@ import matplotlib.pyplot as plt
 st.write("Streamlit version:", st.__version__)
 import uuid as _uuid_module
 from spreadsheet_connector import render_debug_panel
+# =========================================================================
+# 📦 IMPORT CONNECTOR (untuk log & backup ke Spreadsheet Audit)
+# =========================================================================
+from spreadsheet_connector import (
+    append_logs_to_sheet,
+    read_activity_log,
+    backup_to_audit_sheet,
+    write_laporan_bulanan,
+    render_debug_panel,
+)
 
 # ==========================================
 # 1. KONFIGURASI HALAMAN STREAMLIT
@@ -2216,67 +2226,38 @@ def _generate_session_id():
     return st.session_state["session_id"]
 
 
-# ==========================================
-# 📝 FUNGSI FLUSH PENDING LOGS (SISTEM ANTRIAN)
-# ==========================================
+# =========================================================================
+# 📝 FLUSH PENDING LOGS — APPEND KE SPREADSHEET AUDIT
+# =========================================================================
 def flush_pending_logs():
     """
-    Tulis semua log dari queue ke Google Sheets.
-    Dipanggil manual (tombol) atau auto saat ganti hari.
+    Tulis semua log dari queue ke Spreadsheet Audit (LIGAPSM_AUDIT).
+    
+    ✅ APPEND-ONLY — tidak baca sheet dulu (hemat quota)
+    ✅ LOCK global — anti race condition
+    ✅ TANPA retensi — audit trail utuh
+    ✅ 1 API call untuk semua log
     """
     try:
-        if "pending_activity_logs" not in st.session_state:
-            return 0, "Tidak ada log di queue"
-        
-        pending_logs = st.session_state["pending_activity_logs"]
+        pending_logs = st.session_state.get("pending_activity_logs", [])
         if not pending_logs:
             return 0, "Queue kosong"
         
-        # Ambil semua log (tanpa limit, karena manual)
-        pending_df = pd.DataFrame(pending_logs)
+        # Balik urutan (queue terbaru di depan) → kronologis
+        logs_to_write = list(reversed(pending_logs))
         
-        # Baca existing log
-        try:
-            existing_log = conn.read(worksheet="ACTIVITY_LOG", ttl=0)
-            if existing_log is None or existing_log.empty:
-                existing_log = pd.DataFrame(columns=[
-                    "timestamp", "username", "role", "action", "detail", "session_id"
-                ])
-        except Exception:
-            existing_log = pd.DataFrame(columns=[
-                "timestamp", "username", "role", "action", "detail", "session_id"
-            ])
+        # Panggil connector (append ke LIGAPSM_AUDIT)
+        count, msg = append_logs_to_sheet(logs_to_write)
         
-        # Anti-duplikat
-        if not existing_log.empty and "session_id" in existing_log.columns and "timestamp" in existing_log.columns:
-            existing_keys = set(
-                existing_log["session_id"].astype(str) + "|" + existing_log["timestamp"].astype(str)
-            )
-            pending_df["_key"] = pending_df["session_id"].astype(str) + "|" + pending_df["timestamp"].astype(str)
-            pending_df = pending_df[~pending_df["_key"].isin(existing_keys)]
-            pending_df = pending_df.drop(columns=["_key"])
-        
-        if pending_df.empty:
+        if count > 0:
+            # Clear queue HANYA setelah sukses
             st.session_state["pending_activity_logs"] = []
-            return 0, "Semua log sudah ada di sheet (duplikat)"
         
-        # Gabung & retensi max 1000 baris
-        combined_log = pd.concat([existing_log, pending_df], ignore_index=True)
-        if len(combined_log) > 1000:
-            combined_log = combined_log.tail(1000).reset_index(drop=True)
-        
-        conn.update(worksheet="ACTIVITY_LOG", data=combined_log)
-        
-        # Kosongkan queue
-        count = len(pending_df)
-        st.session_state["pending_activity_logs"] = []
-        
-        print(f"[FLUSH_LOG] Berhasil simpan {count} log.")
-        return count, f"✅ {count} log berhasil ditulis ke sheet"
+        return count, msg
     
     except Exception as e:
         print(f"[FLUSH_LOG ERROR] {e}")
-        return 0, f"❌ Gagal: {str(e)}"
+        return 0, f"❌ Gagal: {str(e)[:150]}"
 
 # =========================================================================
 # 🌙 AUTO-FLUSH & AUTO-BACKUP — DETEKSI GANTI HARI
@@ -2294,8 +2275,18 @@ def check_and_auto_flush_log():
         _today = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%Y-%m-%d")
         _last_flush_date = st.session_state.get("last_flush_date", None)
         
-        # Inisialisasi: kalau belum ada, set ke hari ini (skip flush pertama)
+        # Inisialisasi: kalau belum ada, coba flush dulu sebelum set tanggal
         if _last_flush_date is None:
+            # Coba flush log pending dari sesi sebelumnya (kalau ada)
+            _pending_count = len(st.session_state.get("pending_activity_logs", []))
+            if _pending_count > 0:
+                try:
+                    _count, _msg = flush_pending_logs()
+                    if _count > 0:
+                        print(f"[AUTO_FLUSH INIT] ✅ {_count} log flushed saat inisialisasi")
+                except Exception as e_init:
+                    print(f"[AUTO_FLUSH INIT ERROR] {e_init}")
+            
             st.session_state["last_flush_date"] = _today
             return
         
@@ -2327,7 +2318,17 @@ def check_and_auto_flush_log():
 # =========================================================================
 # 📝 LOG ACTIVITY — FILTERED (HANYA LOGIN, LOGOUT, INPUT)
 # =========================================================================
-_ACTIONS_TO_LOG = {"LOGIN", "LOGOUT", "INPUT"}
+_ACTIONS_TO_LOG = {
+    "LOGIN",          # User berhasil login
+    "LOGOUT",         # User logout manual
+    "INPUT",          # User input data
+    "LOGIN_FAILED",   # User gagal login
+    "AUTO_LOGOUT",    # User auto-logout karena idle (FASE 4)
+    "EDIT_DATA",      # Admin edit data
+    "DELETE_DATA",    # Admin hapus data
+    "SAVE_MASTER",    # Admin simpan master
+    "REPORT",         # Generate report
+}
 
 def log_activity(action, detail=""):
     """
@@ -3561,46 +3562,76 @@ def show_login_page():
 
       if submit_btn:
         if not username_input or not password_input:
-          st.warning("Username dan Password wajib diisi!")
-        elif (
-            username_input in USER_DATABASE
-            and USER_DATABASE[username_input]["password"] == password_input
-        ):
-            user_info = USER_DATABASE[username_input]
-            st.session_state.logged_in = True
-            st.session_state.username = user_info["nama"]
-            st.session_state.role = user_info.get("role", "Staff Toko")
-            st.session_state["session_id"] = str(_uuid_module.uuid4())[:8]
-            
-            # Set flag welcome screen
-            st.session_state["welcome_shown"] = False
-            
-            log_activity("LOGIN", f"Login sebagai {user_info['nama']}")
-            check_and_auto_flush_log()
-            
-            st.rerun()
+            st.warning("Username dan Password wajib diisi!")
         else:
-          # Catat LOGIN_FAILED (opsional)
-          try:
-              _fail_waktu = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
-              _fail_row = pd.DataFrame([{
-                  "timestamp": _fail_waktu,
-                  "username": str(username_input),
-                  "role": "-",
-                  "action": "LOGIN_FAILED",
-                  "detail": "Password salah",
-                  "session_id": "-",
-              }])
-              try:
-                  _exist = conn.read(worksheet="ACTIVITY_LOG", ttl=0)
-                  if _exist is None or _exist.empty:
-                      _exist = pd.DataFrame(columns=["timestamp", "username", "role", "action", "detail", "session_id"])
-              except Exception:
-                  _exist = pd.DataFrame(columns=["timestamp", "username", "role", "action", "detail", "session_id"])
-              conn.update(worksheet="ACTIVITY_LOG", data=pd.concat([_exist, _fail_row], ignore_index=True))
-          except Exception:
-              pass
-          st.error("Username atau Password salah!")
+            _login_success = False
+            _user_nama = ""
+            _user_role = "Staff Toko"
+            
+            # === CARA 1: Cek dari MASTER_PERSONIL ===
+            try:
+                _person_df_login = st.session_state.get("person_df", pd.DataFrame())
+                
+                if _person_df_login.empty:
+                    _person_df_login = conn.read(worksheet="MASTER_PERSONIL", ttl=60)
+                
+                if _person_df_login is not None and not _person_df_login.empty:
+                    _person_df_login.columns = _person_df_login.columns.astype(str).str.strip().str.lower()
+                    
+                    _match = _person_df_login[
+                        (_person_df_login["username"].astype(str).str.strip().str.lower() 
+                        == username_input.strip().lower()) &
+                        (_person_df_login["password"].astype(str).str.strip() 
+                        == password_input.strip())
+                    ]
+                    
+                    if not _match.empty:
+                        _row = _match.iloc[0]
+                        _login_success = True
+                        _user_nama = str(_row.get("person_name", username_input))
+                        _user_role = str(_row.get("role", "Staff Toko"))
+            except Exception as _e_login:
+                print(f"[LOGIN CHECK ERROR] {_e_login}")
+            
+            # === CARA 2: Fallback ke USER_DATABASE ===
+            if not _login_success:
+                if (username_input in USER_DATABASE 
+                    and USER_DATABASE[username_input]["password"] == password_input):
+                    _login_success = True
+                    _user_nama = USER_DATABASE[username_input]["nama"]
+                    _user_role = USER_DATABASE[username_input].get("role", "Staff Toko")
+            
+            # === PROSES LOGIN ===
+            if _login_success:
+                st.session_state.logged_in = True
+                st.session_state.username = _user_nama
+                st.session_state.role = _user_role
+                st.session_state["session_id"] = str(_uuid_module.uuid4())[:8]
+                st.session_state["welcome_shown"] = False
+                st.session_state["last_active"] = time.time()
+                
+                log_activity("LOGIN", f"Login sebagai {_user_nama}")
+                check_and_auto_flush_log()
+                st.rerun()
+            else:
+                # Log login gagal → queue (bukan tulis langsung)
+                try:
+                    _fail_waktu = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
+                    _fail_entry = {
+                        "timestamp": _fail_waktu,
+                        "username": str(username_input),
+                        "role": "-",
+                        "action": "LOGIN_FAILED",
+                        "detail": "Username atau password salah",
+                        "session_id": "-",
+                    }
+                    if "pending_activity_logs" not in st.session_state:
+                        st.session_state["pending_activity_logs"] = []
+                    st.session_state["pending_activity_logs"].insert(0, _fail_entry)
+                except Exception:
+                    pass
+                
+                st.error("❌ Username atau Password salah!")
     
 # =========================================================================
 # 🛡️ SUNTIKAN MEMORI UTAMA (WAJIB ADA AGAR VARIABEL LOGGED_IN TERDAFTAR)
