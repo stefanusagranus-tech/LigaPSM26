@@ -13552,7 +13552,7 @@ if selected_tab == "🏠 Menu Utama":
     title="SEDANG UPDATE FITUR BARU",
     message="Sistem sedang ditingkatkan, kalo ada perlu WA aja. Fitur Laporan Bulanan otomatis dan laporan audit sedang dikerjakan. Mohon maklum kalau ada gangguan ya.",
     eta="Target selesai: Seniatnya ",
-    progress=25,
+    progress=80,
     badge_text="SEDANG DIKERJAKAN",
     )
 
