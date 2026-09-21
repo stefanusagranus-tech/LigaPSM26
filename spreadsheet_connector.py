@@ -1649,15 +1649,14 @@ def generate_semua_laporan(bulan_int, tahun_int):
 # =========================================================================
 # 📝 ISI LAPORAN PSM — HANYA TARGET & ACTUAL (Rumus Excel Dibiarkan)
 # =========================================================================
+# =========================================================================
+# 📝 ISI LAPORAN PSM — HANYA TARGET & ACTUAL + FORMAT (Rumus Excel Dibiarkan)
+# =========================================================================
 def isi_laporan_psm(bulan_int, tahun_int, sheet_name):
     """
     Isi kolom TARGET TOKO & ACTUAL di sheet PSM yang sudah ada format + rumus.
-    
-    Kolom yang diisi:
-    - W1: Target D (baris 3-11), Actual G-M (tgl 1-7)
-    - W2: Target Q, Actual T-Z (tgl 8-15)
-    - W3: Target AD, Actual AH-AN (tgl 16-23)
-    - W4: Target AQ, Actual AU-BA (tgl 24-30)
+    Urutkan personil berdasarkan NIK (person_id) ascending.
+    Set alignment center untuk cell yang diisi.
     
     Return: (success, message, jumlah_update)
     """
@@ -1682,11 +1681,28 @@ def isi_laporan_psm(bulan_int, tahun_int, sheet_name):
             _grp = _si.groupby(_si["period_id"].astype(str).str.strip())["target_qty"].sum()
             _target_map = _grp.to_dict()
         
-        # === 3. Ambil daftar personil aktif ===
+        # === 3. Ambil daftar personil aktif — URUT BERDASARKAN NIK ASCENDING ===
         if "active" in _pers.columns:
             _pers = _pers[pd.to_numeric(_pers["active"], errors="coerce") == 1]
+        
+        # Cek kolom NIK
+        _nik_col = None
+        for _c in ["nik", "person_id"]:
+            if _c in _pers.columns:
+                _nik_col = _c
+                break
+        
+        if _nik_col:
+            # Konversi ke numeric untuk sorting
+            _pers["_nik_sort"] = pd.to_numeric(_pers[_nik_col], errors="coerce").fillna(99999999)
+            _pers = _pers.sort_values("_nik_sort", ascending=True)
+        else:
+            # Fallback: urut berdasarkan person_id string
+            if "person_id" in _pers.columns:
+                _pers = _pers.sort_values("person_id", ascending=True)
+        
         _pers["person_clean"] = _pers["person_name"].astype(str).str.strip().str.upper()
-        _pers = _pers.sort_values("person_clean").drop_duplicates(subset=["person_clean"])
+        _pers = _pers.drop_duplicates(subset=["person_clean"])
         _pers_list = _pers["person_clean"].tolist()
         
         if not _pers_list:
@@ -1704,61 +1720,59 @@ def isi_laporan_psm(bulan_int, tahun_int, sheet_name):
             return False, f"❌ Sheet {sheet_name} tidak ditemukan", 0
         
         # === 6. Konfigurasi kolom per WEEK ===
-        # Actual range: kolom awal & jumlah hari
         _week_config = [
             {
                 "name": "W1",
                 "period_id": "S01",
                 "tanggal": list(range(1, 8)),           # 1-7
                 "col_target": "D",
-                "col_actual_start": "G",                 # G, H, I, J, K, L, M
+                "col_actual_start": "G",
+                "col_actual_end": "M",
             },
             {
                 "name": "W2",
                 "period_id": "S02",
                 "tanggal": list(range(8, 16)),          # 8-15
                 "col_target": "Q",
-                "col_actual_start": "T",                 # T-U-V-W-X-Y-Z-AA? 
-                                                          # Tapi Excel pakai T-Z (7 hari) + AA = 8-15
-                # Catatan: Excel S02 punya 8 hari (8,9,10,11,12,13,14,15)
-                # Range: T3:AA3
+                "col_actual_start": "T",
+                "col_actual_end": "AA",
             },
             {
                 "name": "W3",
                 "period_id": "S03",
                 "tanggal": list(range(16, 24)),         # 16-23
                 "col_target": "AD",
-                "col_actual_start": "AH",                # AH-AO
+                "col_actual_start": "AH",
+                "col_actual_end": "AO",
             },
             {
                 "name": "W4",
                 "period_id": "S04",
                 "tanggal": list(range(24, 31)),         # 24-30
                 "col_target": "AQ",
-                "col_actual_start": "AU",                # AU-BA
+                "col_actual_start": "AU",
+                "col_actual_end": "BA",
             },
         ]
         
-        # === 7. Bangun batch update ===
-        # Kita update per kolom, bukan per cell, supaya efisien
+        # === 7. Bangun batch update untuk VALUE ===
         _updates = []
         
-        # Untuk TARGET: 1 nilai sama untuk semua personil
+        # TARGET: 1 nilai sama untuk semua personil
+        _target_ranges = []
         for _w in _week_config:
             _target_val = int(_target_map.get(_w["period_id"], 0))
-            
-            # Isi target untuk semua personil (baris 3-11, total 9 personil)
-            # Range: D3:D11, Q3:Q11, dst
             if _target_val > 0:
                 _target_values = [[_target_val] for _ in range(len(_pers_list))]
+                _range = f"{_w['col_target']}3:{_w['col_target']}{2 + len(_pers_list)}"
                 _updates.append({
-                    "range": f"{_w['col_target']}3:{_w['col_target']}{2 + len(_pers_list)}",
+                    "range": _range,
                     "values": _target_values,
                 })
+                _target_ranges.append(_range)
         
-        # Untuk ACTUAL: per personil per tanggal
-        _total_updates = 0
-        
+        # ACTUAL: per personil per tanggal
+        _actual_ranges = []
         for _row_offset, _person in enumerate(_pers_list):
             _row_idx = 3 + _row_offset
             
@@ -1766,7 +1780,6 @@ def isi_laporan_psm(bulan_int, tahun_int, sheet_name):
                 _actual_values = []
                 
                 for _tgl in _w["tanggal"]:
-                    # Filter data
                     _mask = (
                         (_sp["person_name"].astype(str).str.upper() == _person) &
                         (_sp["_dt"].dt.day == _tgl) &
@@ -1781,44 +1794,48 @@ def isi_laporan_psm(bulan_int, tahun_int, sheet_name):
                     
                     _actual_values.append(_qty if _qty > 0 else "")
                 
-                # Range untuk actual (misal G3:AA3 — panjang tergantung jumlah tanggal)
-                _col_start = _w["col_actual_start"]
-                _col_end = _col_start
-                # Geser sesuai jumlah hari
-                # Karena kolom alphabet bisa lebih dari 26 (AA, AB), kita hitung manual
-                
-                # Buat list alphabet
-                def _col_letter(idx):
-                    """Konversi index (0-based) ke huruf kolom Excel."""
-                    result = ""
-                    while idx >= 0:
-                        result = chr(ord('A') + idx % 26) + result
-                        idx = idx // 26 - 1
-                    return result
-                
-                # Konversi kolom start ke index
-                _col_start_idx = 0
-                for _c in _col_start:
-                    _col_start_idx = _col_start_idx * 26 + (ord(_c) - ord('A') + 1)
-                _col_start_idx -= 1  # 0-based
-                
-                # Kolom end = start + jumlah hari - 1
-                _col_end_idx = _col_start_idx + len(_w["tanggal"]) - 1
-                _col_end = _col_letter(_col_end_idx)
-                
-                _actual_range = f"{_col_start}{_row_idx}:{_col_end}{_row_idx}"
-                
+                _actual_range = f"{_w['col_actual_start']}{_row_idx}:{_w['col_actual_end']}{_row_idx}"
                 _updates.append({
                     "range": _actual_range,
                     "values": [_actual_values],
                 })
-                _total_updates += 1
+                _actual_ranges.append(_actual_range)
         
-        # === 8. Batch update ===
+        # === 8. Batch update untuk VALUE ===
         if _updates:
             ws.batch_update(_updates, value_input_option="USER_ENTERED")
         
-        return True, f"✅ {_total_updates} range di-update ({len(_pers_list)} personil)", _total_updates
+        # === 9. Set FORMAT: Center Alignment ===
+        try:
+            from gspread_formatting import (
+                CellFormat, TextFormat, HorizontalAlignment,
+                format_cell_range,
+            )
+            
+            # Format default untuk semua range yang di-update
+            _fmt = CellFormat(
+                horizontalAlignment=HorizontalAlignment.CENTER,
+                verticalAlignment="MIDDLE",
+                textFormat=TextFormat(
+                    fontFamily="Calibri",
+                    fontSize=10,
+                    bold=True,
+                ),
+            )
+            
+            for _range in _target_ranges + _actual_ranges:
+                try:
+                    format_cell_range(ws, _range, _fmt)
+                except Exception as _e_fmt:
+                    print(f"[FORMAT WARN] {_range}: {_e_fmt}")
+                    continue
+        
+        except ImportError:
+            print("[FORMAT WARN] gspread_formatting tidak terinstall, skip format")
+        except Exception as _e_fmt_all:
+            print(f"[FORMAT WARN] Gagal set format: {_e_fmt_all}")
+        
+        return True, f"✅ {len(_updates)} range di-update + format center ({len(_pers_list)} personil)", len(_updates)
     
     except Exception as e:
         import traceback
