@@ -410,6 +410,51 @@ def render_debug_panel():
             _test_all()
 
         st.markdown("---")
+        st.markdown("### 📊 Cek Quota API")
+
+        if st.button("📊 Hitung API Call Hari Ini", key="btn_cek_quota", use_container_width=True):
+            try:
+                # Hitung log activity hari ini
+                ws = get_ws_audit("ACTIVITY_LOG")
+                if ws is None:
+                    st.sidebar.error("Gagal akses ACTIVITY_LOG")
+                else:
+                    all_values = ws.get_all_values()
+                    
+                    from datetime import datetime
+                    from zoneinfo import ZoneInfo
+                    
+                    _today_str = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y")
+                    _today_count = sum(1 for row in all_values[1:] if len(row) > 0 and row[0].startswith(_today_str))
+                    
+                    # Hitung heartbeat aktif
+                    ws_hb = get_ws_audit("ACTIVITY_HEARTBEAT")
+                    _hb_count = 0
+                    if ws_hb is not None:
+                        _hb_values = ws_hb.get_all_values()
+                        _hb_count = max(0, len(_hb_values) - 1)
+                    
+                    st.sidebar.success(f"📊 Log hari ini: **{_today_count}** baris")
+                    st.sidebar.info(f"👥 User aktif: **{_hb_count}**")
+                    st.sidebar.caption(f"📅 Tanggal: {_today_str}")
+                    
+                    # Estimasi quota
+                    _est_read = _today_count * 2 + _hb_count * 20  # kasar
+                    _est_write = _today_count + _hb_count * 20
+                    
+                    st.sidebar.markdown("---")
+                    st.sidebar.markdown("**📈 Estimasi API Call:**")
+                    st.sidebar.write(f"• Read: ~**{_est_read}**")
+                    st.sidebar.write(f"• Write: ~**{_est_write}**")
+                    
+                    # Quota Google Sheets per day = 300 per minute × 60 × 24 = 432,000
+                    # Tapi praktiknya 100-300 request/menit per user
+                    st.sidebar.caption("💡 Limit: 300 read + 300 write per menit (per project)")
+            
+            except Exception as e:
+                st.sidebar.error(f"❌ Error: {str(e)[:100]}")
+
+        st.markdown("---")
         st.markdown("### ✍️ Test Write")
 
         if st.button("📝 Test Append Log", key="btn_debug_test_append", use_container_width=True):
