@@ -317,6 +317,12 @@ def render_debug_panel():
             else:
                 st.sidebar.error(_msg)
 
+        st.markdown("### ⚡ Force Check")
+        if st.button("🚨 Force Check Stale User", key="btn_force_check", use_container_width=True):
+            # Reset flag biar check jalan
+            st.session_state["last_stale_check"] = 0
+            st.sidebar.info("Flag direset. Refresh halaman...")
+
         if st.button("📖 Lihat Semua Heartbeat", key="btn_debug_hb_read", use_container_width=True):
             ws = get_ws_audit("ACTIVITY_HEARTBEAT")
             if ws is None:
@@ -338,12 +344,7 @@ def render_debug_panel():
             else:
                 st.sidebar.error(_msg)
         
-        st.markdown("---")
-        st.markdown("### ⚡ Force Check")
-        if st.button("🚨 Force Check Stale User", key="btn_force_check", use_container_width=True):
-            # Reset flag biar check jalan
-            st.session_state["last_stale_check"] = 0
-            st.sidebar.info("Flag direset. Refresh halaman...")
+        
 
 
 # ---------- Fungsi test individual ----------
@@ -606,7 +607,7 @@ def remove_heartbeat_from_sheet(username):
         return False, f"❌ Gagal: {str(e)[:150]}"
 
 
-def get_stale_heartbeats(threshold_minutes=5):
+def get_stale_heartbeats(threshold_minutes=0.5):
     """
     Ambil daftar user yang heartbeat terakhirnya > threshold_minutes.
     
@@ -617,9 +618,9 @@ def get_stale_heartbeats(threshold_minutes=5):
     """
     try:
         # 🛡️ GUARD: Jangan izinkan threshold < 2 menit
-        if threshold_minutes is None or threshold_minutes < 2:
-            threshold_minutes = 5
-            print(f"[WARN] Threshold dipaksa jadi 5 menit")
+        if threshold_minutes is None or threshold_minutes < 0.1:
+            threshold_minutes = 0.5
+            print(f"[WARN] Threshold dipaksa jadi 0.5 menit")
         
         ws = get_ws_audit("ACTIVITY_HEARTBEAT")
         if ws is None:
