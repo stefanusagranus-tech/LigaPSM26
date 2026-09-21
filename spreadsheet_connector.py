@@ -655,9 +655,10 @@ def render_debug_panel():
                 st.sidebar.error(f"❌ Error: {str(e)[:100]}")
 
         st.markdown("---")
-        st.markdown("### 📊 Test Laporan")
+        st.markdown("### 📊 Test Laporan (4 Program)")
 
-        if st.button("📊 Test Generate Laporan (Bulan Ini)", key="btn_debug_lap", use_container_width=True):
+        if st.button("🚀 Test Generate SEMUA Laporan", key="btn_debug_lap_all", 
+                    use_container_width=True, type="primary"):
             from datetime import datetime
             from zoneinfo import ZoneInfo
             
@@ -666,12 +667,31 @@ def render_debug_panel():
             _tahun_int = _now.year
             _bulan_str = _now.strftime("%B").upper()
             
-            _ok, _msg, _n = generate_laporan_bulanan_psm(_bulan_int, _tahun_int, _bulan_str)
+            _result = generate_semua_laporan(_bulan_int, _tahun_int)
             
+            st.sidebar.success(
+                f"✅ {_result['total_sheet']}/4 sheet sukses — "
+                f"Total {_result['total_baris']} baris"
+            )
+            
+            if _result["success"]:
+                with st.sidebar.expander("✅ Sukses", expanded=True):
+                    for _s in _result["success"]:
+                        st.write(f"✅ **{_s['nama']}** — {_s['baris']} baris")
+            
+            if _result["failed"]:
+                with st.sidebar.expander("❌ Gagal", expanded=True):
+                    for _f in _result["failed"]:
+                        st.write(f"❌ **{_f['nama']}** — {_f['error']}")
+
+        # Tombol test per program (opsional)
+        if st.button("📊 Test PSM saja", key="btn_debug_lap_psm", use_container_width=True):
+            from datetime import datetime
+            from zoneinfo import ZoneInfo
+            _now = datetime.now(ZoneInfo("Asia/Jakarta"))
+            _ok, _msg, _n = generate_laporan_psm(_now.month, _now.year)
             if _ok:
                 st.sidebar.success(_msg)
-                st.sidebar.info(f"👥 Personil: {_n}")
-                st.sidebar.write(f"👉 Cek LIGAPSM-LAPORAN → {_bulan_str} {_tahun_int}")
             else:
                 st.sidebar.error(_msg)        
 
