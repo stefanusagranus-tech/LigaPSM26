@@ -39,6 +39,11 @@ from spreadsheet_connector import (
     backup_to_audit_sheet,
     write_laporan_bulanan,
     render_debug_panel,
+    # Heartbeat (FASE 4)
+    write_heartbeat_to_sheet,
+    remove_heartbeat_from_sheet,
+    get_stale_heartbeats,
+    clear_all_heartbeat,
 )
 
 # ==========================================
@@ -2376,6 +2381,121 @@ def log_activity(action, detail=""):
         print(f"[LOG_ACTIVITY ERROR] {e}")
 
 # =========================================================================
+# 💓 HEARTBEAT SYSTEM — DETEKSI USER AKTIF
+# =========================================================================
+_HEARTBEAT_INTERVAL_SEC = 30      # update tiap 30 detik
+_INACTIVE_THRESHOLD_MIN = 5       # 5 menit idle = tidak aktif
+
+
+def update_heartbeat():
+    """
+    Update timestamp aktivitas user di session_state.
+    Dipanggil setiap rerun app.
+    """
+    if st.session_state.get("logged_in", False):
+        st.session_state["last_active"] = time.time()
+
+
+def should_write_heartbeat():
+    """
+    Cek apakah perlu tulis heartbeat ke sheet (tiap 30 detik).
+    Return True kalau perlu tulis.
+    """
+    _last_hb_write = st.session_state.get("last_heartbeat_write", 0)
+    _now = time.time()
+    
+    if _now - _last_hb_write >= _HEARTBEAT_INTERVAL_SEC:
+        return True
+    return False
+
+
+def write_my_heartbeat():
+    """
+    Tulis heartbeat user yang sedang aktif ke sheet.
+    """
+    try:
+        if not st.session_state.get("logged_in", False):
+            return
+        
+        _username = st.session_state.get("username", "")
+        _session_id = st.session_state.get("session_id", "")
+        _role = st.session_state.get("role", "")
+        
+        if not _username:
+            return
+        
+        # Cek apakah sudah waktunya tulis
+        if not should_write_heartbeat():
+            return
+        
+        # Tulis heartbeat
+        _ok, _msg = write_heartbeat_to_sheet(
+            username=str(_username),
+            session_id=str(_session_id),
+            role=str(_role),
+            status="ONLINE"
+        )
+        
+        if _ok:
+            st.session_state["last_heartbeat_write"] = time.time()
+    
+    except Exception as e:
+        print(f"[WRITE_MY_HEARTBEAT ERROR] {e}")
+
+
+def check_and_log_stale_users():
+    """
+    Cek user yang sudah tidak aktif > 5 menit.
+    Catat AUTO_LOGOUT ke queue & hapus dari heartbeat.
+    
+    Dipanggil saat app rerun (tiap 5 menit via flag).
+    """
+    try:
+        # Cek apakah sudah waktunya cek (tiap 5 menit)
+        _last_check = st.session_state.get("last_stale_check", 0)
+        _now = time.time()
+        
+        if _now - _last_check < 300:  # 5 menit = 300 detik
+            return
+        
+        st.session_state["last_stale_check"] = _now
+        
+        # Ambil user yang stale
+        stale_users = get_stale_heartbeats(threshold_minutes=_INACTIVE_THRESHOLD_MIN)
+        
+        if not stale_users:
+            return
+        
+        # Catat AUTO_LOGOUT untuk setiap user stale
+        for _user in stale_users:
+            try:
+                _waktu = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
+                _log_entry = {
+                    "timestamp": _waktu,
+                    "username": str(_user["username"]),
+                    "role": str(_user["role"]),
+                    "action": "AUTO_LOGOUT",
+                    "detail": f"Auto-logout setelah {_user['selisih_menit']} menit idle",
+                    "session_id": str(_user["session_id"]),
+                }
+                
+                # Masukkan ke queue
+                if "pending_activity_logs" not in st.session_state:
+                    st.session_state["pending_activity_logs"] = []
+                st.session_state["pending_activity_logs"].insert(0, _log_entry)
+                
+                # Hapus dari heartbeat sheet
+                remove_heartbeat_from_sheet(_user["username"])
+                
+                print(f"[AUTO_LOGOUT] {_user['username']} - idle {_user['selisih_menit']} menit")
+            
+            except Exception as e_user:
+                print(f"[STALE_USER ERROR] {e_user}")
+    
+    except Exception as e:
+        print(f"[CHECK_STALE ERROR] {e}")
+
+# =========================================================================
 # 🚀 WELCOME SCREEN — VERSI FINAL (AVATAR SAMA DENGAN HALL OF FAME)
 # =========================================================================
 def show_welcome_screen():
@@ -3657,6 +3777,14 @@ if not st.session_state.get("welcome_shown", False):
     show_welcome_screen()
     st.stop()
 
+# =========================================================================
+# 💓 HEARTBEAT — UPDATE & CHECK STALE (setelah welcome screen)
+# =========================================================================
+if st.session_state.get("logged_in", False):
+    update_heartbeat()          # Update timestamp lokal
+    write_my_heartbeat()        # Tulis ke sheet tiap 30 detik
+    check_and_log_stale_users() # Cek & log user yang idle
+
 # ==========================================================
 # 7. SIDEBAR DASHBOARD - GAYA CODINGLAB (BAGIAN 1)
 # ==========================================================
@@ -3944,12 +4072,29 @@ if _is_admin_user:
 st.sidebar.markdown("<hr style='margin: 15px 0; border-color: #27272a;'>", unsafe_allow_html=True)
 logout_text = "🚪" if st.session_state.sidebar_collapsed else "🚪 Keluar / Logout"
 if st.sidebar.button(logout_text, use_container_width=True, key="logout_sidebar"):
-    # ✅ Log LOGOUT (queue saja)
+    # Log logout
     log_activity("LOGOUT", "Logout dari sistem")
     
+    # Hapus heartbeat user
+    _my_username = st.session_state.get("username", "")
+    if _my_username:
+        try:
+            remove_heartbeat_from_sheet(_my_username)
+        except Exception as e_hb:
+            print(f"[LOGOUT HEARTBEAT ERROR] {e_hb}")
+    
+    # Flush log sebelum logout (biar langsung tersimpan)
+    try:
+        flush_pending_logs()
+    except Exception as e_flush:
+        print(f"[LOGOUT FLUSH ERROR] {e_flush}")
+    
+    # Clear session
     st.session_state.logged_in = False
     st.session_state.username = ""
     st.session_state.role = ""
+    st.session_state["last_active"] = 0
+    st.session_state["last_heartbeat_write"] = 0
     st.rerun()
     
 # =========================================================================

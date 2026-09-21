@@ -304,6 +304,40 @@ def render_debug_panel():
         if st.button("📜 Baca Activity Log", key="btn_debug_read_log", use_container_width=True):
             _test_read_log()
 
+        st.markdown("---")
+        st.markdown("### 💓 Test Heartbeat")
+
+        if st.button("💓 Test Write Heartbeat", key="btn_debug_hb_write", use_container_width=True):
+            from datetime import datetime
+            from zoneinfo import ZoneInfo
+            _now = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
+            _ok, _msg = write_heartbeat_to_sheet("DEBUG_HEARTBEAT", "debug-session", "system", "ONLINE")
+            if _ok:
+                st.sidebar.success(_msg)
+            else:
+                st.sidebar.error(_msg)
+
+        if st.button("📖 Lihat Semua Heartbeat", key="btn_debug_hb_read", use_container_width=True):
+            ws = get_ws_audit("ACTIVITY_HEARTBEAT")
+            if ws is None:
+                st.sidebar.error("Gagal akses sheet")
+            else:
+                all_values = ws.get_all_values()
+                if len(all_values) <= 1:
+                    st.sidebar.info("📭 Heartbeat kosong")
+                else:
+                    st.sidebar.success(f"✅ {len(all_values) - 1} user aktif")
+                    with st.sidebar.expander("Preview"):
+                        for row in all_values[:5]:
+                            st.write(row)
+
+        if st.button("🧹 Clear All Heartbeat", key="btn_debug_hb_clear", use_container_width=True):
+            _ok, _msg = clear_all_heartbeat()
+            if _ok:
+                st.sidebar.success(_msg)
+            else:
+                st.sidebar.error(_msg)
+
 
 # ---------- Fungsi test individual ----------
 
