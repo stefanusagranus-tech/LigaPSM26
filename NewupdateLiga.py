@@ -2448,25 +2448,39 @@ def check_and_log_stale_users():
     Cek user yang sudah tidak aktif > 5 menit.
     Catat AUTO_LOGOUT ke queue & hapus dari heartbeat.
     
-    Dipanggil saat app rerun (tiap 5 menit via flag).
+    🛡️ SAFETY GUARD:
+    - Skip kalau belum waktunya cek
+    - Skip kalau threshold < 2 menit
+    - Max auto-logout per sesi = 5 user (anti mass delete)
     """
     try:
-        # Cek apakah sudah waktunya cek (tiap 5 menit)
         _last_check = st.session_state.get("last_stale_check", 0)
         _now = time.time()
         
-        if _now - _last_check < 300:  # 5 menit = 300 detik
+        if _now - _last_check < 300:  # 5 menit
             return
         
         st.session_state["last_stale_check"] = _now
         
-        # Ambil user yang stale
-        stale_users = get_stale_heartbeats(threshold_minutes=_INACTIVE_THRESHOLD_MIN)
+        # 🛡️ GUARD: Pastikan threshold valid
+        _threshold = _INACTIVE_THRESHOLD_MIN
+        if _threshold is None or _threshold < 2:
+            print(f"[WARN] Threshold invalid ({_threshold}), pakai 5 menit")
+            _threshold = 5
+        
+        # Ambil user stale
+        stale_users = get_stale_heartbeats(threshold_minutes=_threshold)
+        
+        print(f"[CHECK_STALE] Ditemukan {len(stale_users)} user stale")
         
         if not stale_users:
             return
         
-        # Catat AUTO_LOGOUT untuk setiap user stale
+        # 🛡️ GUARD: Max 5 user per sesi cek (anti mass delete)
+        MAX_PER_CHECK = 5
+        stale_users = stale_users[:MAX_PER_CHECK]
+        
+        # Catat AUTO_LOGOUT
         for _user in stale_users:
             try:
                 _waktu = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
@@ -2479,15 +2493,13 @@ def check_and_log_stale_users():
                     "session_id": str(_user["session_id"]),
                 }
                 
-                # Masukkan ke queue
                 if "pending_activity_logs" not in st.session_state:
                     st.session_state["pending_activity_logs"] = []
                 st.session_state["pending_activity_logs"].insert(0, _log_entry)
                 
-                # Hapus dari heartbeat sheet
-                remove_heartbeat_from_sheet(_user["username"])
-                
-                print(f"[AUTO_LOGOUT] {_user['username']} - idle {_user['selisih_menit']} menit")
+                # 🛡️ Hapus dari heartbeat (dengan guard)
+                _ok_del, _msg_del = remove_heartbeat_from_sheet(_user["username"])
+                print(f"[AUTO_LOGOUT] {_user['username']} - {_msg_del}")
             
             except Exception as e_user:
                 print(f"[STALE_USER ERROR] {e_user}")
