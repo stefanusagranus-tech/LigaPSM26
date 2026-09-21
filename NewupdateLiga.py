@@ -2305,11 +2305,20 @@ def check_and_auto_flush_log():
                 if _count > 0:
                     print(f"[AUTO_FLUSH] ✅ {_count} log auto-flushed (ganti hari: {_last_flush_date} → {_today})")
             
-            # ✅ AUTO-BACKUP
+            # ✅ AUTO-BACKUP ke Spreadsheet Audit
             try:
-                backup_to_gsheets()
-                print(f"[AUTO_BACKUP] ✅ Backup otomatis saat ganti hari")
-                st.session_state["last_backup_time"] = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
+                _bk_result = backup_to_gsheets()
+                
+                if _bk_result["success"]:
+                    print(f"[AUTO_BACKUP] ✅ {len(_bk_result['success'])} sheet berhasil di-backup")
+                    print(f"[AUTO_BACKUP] Total: {_bk_result['total']:,} baris")
+                    st.session_state["last_backup_time"] = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
+                
+                if _bk_result["failed"]:
+                    print(f"[AUTO_BACKUP] ⚠️ {len(_bk_result['failed'])} sheet gagal")
+                    for _f in _bk_result["failed"]:
+                        print(f"  {_f}")
+                        
             except Exception as e_bk:
                 print(f"[AUTO_BACKUP ERROR] {e_bk}")
             
@@ -2784,73 +2793,38 @@ if not periods_dict and not active_periods_df.empty:
     }
 
 # =========================================================================
-# 💾 BACKUP TO GSHEETS — VERSI FIX (Anti-Gagal)
+# 💾 BACKUP KE SPREADSHEET AUDIT (Ganti dari backup_to_gsheets lama)
 # =========================================================================
 def backup_to_gsheets():
     """
-    Menyimpan salinan cadangan ke tab _BACKUP di Google Sheets.
+    Wrapper backup_to_audit_sheet.
+    Backup 7 sheet ke LIGAPSM_AUDIT (tab _BACKUP_*).
     
-    ⚡ PERBAIKAN:
-        - Delay antar sheet (hindari rate limit)
-        - Try-except per sheet (1 gagal tidak crash semua)
-        - Return dict hasil backup per sheet
-        - Kolom di-isi ulang kalau kosong
-    
-    Returns:
-        dict: {"success": [...], "failed": [...], "total": int}
+    Kompatibel dengan kode lama yang panggil `backup_to_gsheets()`.
     """
-    _result = {"success": [], "failed": [], "total": 0}
+    try:
+        # Getter untuk ambil DataFrame dari session_state
+        def _state_getter(key):
+            return st.session_state.get(key, pd.DataFrame())
+        
+        # Panggil connector (append ke LIGAPSM_AUDIT)
+        _result = backup_to_audit_sheet(_state_getter)
+        
+        # Log hasil
+        if _result["success"]:
+            print(f"[BACKUP_AUDIT] ✅ {len(_result['success'])} sheet berhasil")
+            print(f"[BACKUP_AUDIT] Total baris: {_result['total']}")
+        
+        if _result["failed"]:
+            print(f"[BACKUP_AUDIT] ⚠️ {len(_result['failed'])} sheet gagal:")
+            for _f in _result["failed"]:
+                print(f"  - {_f}")
+        
+        return _result
     
-    # Mapping: sheet name → session state key
-    _backup_map = [
-        ("SALES_PPS_BACKUP", "sales_pps_df"),
-        ("PERIODE_PPS_BACKUP", "periods_pps_df"),
-        ("SALES_ITEM_BACKUP", "sales_item_df"),
-        ("SALES_PERSON_BACKUP", "sales_person_df"),
-        ("PERIODE_BACKUP", "periods_df"),
-        ("MASTER_ITEM_BACKUP", "items_df"),
-        ("MASTER_PERSONIL_BACKUP", "person_df"),
-    ]
-    
-    for _sheet_name, _state_key in _backup_map:
-        try:
-            _df = st.session_state.get(_state_key, pd.DataFrame())
-            
-            if _df.empty:
-                _result["failed"].append(f"⚠️ {_sheet_name}: data kosong")
-                continue
-            
-            # Bersihkan DataFrame
-            _df_clean = _df.copy()
-            
-            # Isi NaN dengan string kosong
-            _df_clean = _df_clean.fillna("")
-            
-            # Pastikan kolom string
-            _df_clean.columns = _df_clean.columns.astype(str)
-            
-            # Reset index
-            _df_clean = _df_clean.reset_index(drop=True)
-            
-            # Update ke sheet
-            conn.update(worksheet=_sheet_name, data=_df_clean)
-            _result["success"].append(_sheet_name)
-            _result["total"] += len(_df_clean)
-            
-            # ⏱️ Delay antar sheet (penting!)
-            time.sleep(0.5)
-            
-        except Exception as e:
-            _err_msg = str(e)
-            if "429" in _err_msg or "Quota" in _err_msg:
-                _result["failed"].append(f"❌ {_sheet_name}: Kuota habis (tunggu 1 menit)")
-            elif "not found" in _err_msg.lower():
-                _result["failed"].append(f"❌ {_sheet_name}: Sheet tidak ditemukan")
-            else:
-                _result["failed"].append(f"❌ {_sheet_name}: {_err_msg[:50]}")
-            continue
-    
-    return _result
+    except Exception as e:
+        print(f"[BACKUP_AUDIT ERROR] {e}")
+        return {"success": [], "failed": [f"❌ Error: {str(e)[:100]}"], "total": 0}
 
 # ==========================================
 # 3. WAKTU REALTIME GMT+7 (WIB)
@@ -18527,18 +18501,32 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                     render_cooldown_box(_remain_str_bk2, "BACKUP COOLDOWN")
                 else:
                     if st.button("⚡ Jalankan Backup Otomatis", use_container_width=True, key="bk_auto_now"):
-                        with st.spinner("⏳ Backup ke tab _BACKUP... (delay 0.5 detik antar sheet)"):
+                        with st.spinner("⏳ Backup ke LIGAPSM_AUDIT... (delay 0.5 detik antar sheet)"):
                             _bk_result = backup_to_gsheets()
+                        
+                        if _bk_result["success"]:
+                            st.session_state["last_backup_time"] = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
                             
-                            if _bk_result["success"]:
-                                st.session_state["last_backup_time"] = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
-                                set_cooldown("backup_manual_sheet")
-                                render_backup_status(_bk_result)
-                                time.sleep(2)
-                                st.rerun()
-                            else:
-                                st.error("❌ Semua sheet gagal di-backup.")
-                                render_backup_status(_bk_result)
+                            # Tampilkan status detail
+                            st.success(f"✅ Backup berhasil: {len(_bk_result['success'])} sheet, {_bk_result['total']:,} baris")
+                            
+                            with st.expander("📋 Detail"):
+                                st.write("**Sheet sukses:**")
+                                for _s in _bk_result["success"]:
+                                    st.write(f"  ✅ {_s}")
+                                
+                                if _bk_result["failed"]:
+                                    st.write("**Sheet gagal:**")
+                                    for _f in _bk_result["failed"]:
+                                        st.write(f"  {_f}")
+                            
+                            time.sleep(1.5)
+                            st.rerun()
+                        else:
+                            st.error("❌ Backup gagal.")
+                            with st.expander("📋 Detail"):
+                                for _f in _bk_result["failed"]:
+                                    st.write(f"  {_f}")
             
             with col_bk2:
                 st.markdown("##### 📥 Backup Manual File (.xlsx)")
