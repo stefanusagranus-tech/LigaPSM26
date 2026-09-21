@@ -514,6 +514,27 @@ def render_debug_panel():
             except Exception as e:
                 st.sidebar.error(f"❌ Error: {str(e)[:100]}")
 
+        st.markdown("---")
+        st.markdown("### 📊 Test Laporan")
+
+        if st.button("📊 Test Generate Laporan (Bulan Ini)", key="btn_debug_lap", use_container_width=True):
+            from datetime import datetime
+            from zoneinfo import ZoneInfo
+            
+            _now = datetime.now(ZoneInfo("Asia/Jakarta"))
+            _bulan_int = _now.month
+            _tahun_int = _now.year
+            _bulan_str = _now.strftime("%B").upper()
+            
+            _ok, _msg, _n = generate_laporan_bulanan_psm(_bulan_int, _tahun_int, _bulan_str)
+            
+            if _ok:
+                st.sidebar.success(_msg)
+                st.sidebar.info(f"👥 Personil: {_n}")
+                st.sidebar.write(f"👉 Cek LIGAPSM-LAPORAN → {_bulan_str} {_tahun_int}")
+            else:
+                st.sidebar.error(_msg)        
+
 
 # ---------- Fungsi test individual ----------
 
