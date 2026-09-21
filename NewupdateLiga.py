@@ -44,6 +44,7 @@ from spreadsheet_connector import (
     remove_heartbeat_from_sheet,
     get_stale_heartbeats,
     clear_all_heartbeat,
+    generate_laporan_bulanan_psm,
 )
 
 # ==========================================
@@ -19049,6 +19050,68 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                     key="btn_gen_ppt_summary",
                 )
 
+        # =========================================================================
+        # 📊 GENERATE LAPORAN BULANAN PSM
+        # =========================================================================
+        st.markdown("---")
+        st.markdown("#### 📊 Generate Laporan Bulanan PSM")
+        st.caption("Isi otomatis sheet laporan di LIGAPSM-LAPORAN (format: Toko, NIK, Nama Personil, kolom tanggal 1-31)")
+
+        col_lap1, col_lap2, col_lap3 = st.columns(3)
+
+        with col_lap1:
+            _bulan_list = [
+                "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+            ]
+            _bulan_pilih = st.selectbox(
+                "📅 Pilih Bulan",
+                _bulan_list,
+                index=waktu_wib.month - 1,
+                key="lap_bulan_select"
+            )
+
+        with col_lap2:
+            _tahun_pilih = st.number_input(
+                "📆 Tahun",
+                min_value=2024,
+                max_value=2030,
+                value=waktu_wib.year,
+                key="lap_tahun_input"
+            )
+
+        with col_lap3:
+            st.markdown("<br>", unsafe_allow_html=True)
+            _btn_generate_lap = st.button(
+                "📊 GENERATE LAPORAN",
+                use_container_width=True,
+                type="primary",
+                key="btn_generate_lap_bulanan"
+            )
+
+        if _btn_generate_lap:
+            _bulan_int = _bulan_list.index(_bulan_pilih) + 1
+            _bulan_upper = _bulan_pilih.upper()
+            
+            with st.spinner(f"⏳ Generate laporan {_bulan_upper} {int(_tahun_pilih)}..."):
+                _ok_lap, _msg_lap, _n_pers = generate_laporan_bulanan_psm(
+                    bulan_int=_bulan_int,
+                    tahun_int=int(_tahun_pilih),
+                    nama_bulan_str=_bulan_upper,
+                )
+            
+            if _ok_lap:
+                st.success(_msg_lap)
+                st.info(f"👉 Cek sheet **{_bulan_upper} {int(_tahun_pilih)}** di Spreadsheet **LIGAPSM-LAPORAN**")
+                st.caption(f"👥 Total personil: {_n_pers}")
+                
+                # Log
+                log_activity("REPORT", f"Generate laporan {_bulan_upper} {int(_tahun_pilih)}")
+                
+                time.sleep(2)
+                st.rerun()
+            else:
+                st.error(_msg_lap)
             # =========================================================
             # LOGIKA GENERATE
             # =========================================================
@@ -19187,73 +19250,60 @@ elif selected_tab == "⚙️ Pengaturan & Master":
 
                 # Format WA
                 wa_text = f"""
-                📊 *REPORT SUMMARY PENJUALAN {selected_month_name.upper()} {waktu_wib.year}*
-                📅 _Generated: {_generate_str}_
-                ════════════════════════════════════════
-
-                *1️⃣ PROGRAM PSM ({selected_psm_period_opt.upper()})*
-                📦 Target PSM    : {int(target_psm_tot)} Pcs
-                📊 Actual Qty    : {int(actual_psm_tot)} Pcs
-                🎯 Achievement   : *{ach_psm:.1f}%*
-                ⭐ Poin PSM      : *{poin_psm:.2f}* (Max 20)
-
-                📆 *Target Harian:* {int(target_harian_psm)} Pcs/hari
-                🕐 *Target per Shift:*
+            📊 *REPORT SUMMARY PENJUALAN {selected_month_name.upper()} {waktu_wib.year}*
+            📅 _Generated: {_generate_str}_
+            
+            🔥SEMANGAT PAGI, BERIKUT MATERI BRIEFING PAGI INI🔥
+            ════════════════════════════════════════
+            *1️⃣ PROGRAM PSM ({selected_psm_period_opt.upper()})*
+            📦 Target PSM    : {int(target_psm_tot)} Pcs
+            📊 Actual Qty    : {int(actual_psm_tot)} Pcs
+            🎯 Achievement   : *{ach_psm:.1f}%*
+            ⭐ Poin PSM      : *{poin_psm:.2f}* (Max 20)
+            📆 *Target Harian:* {int(target_harian_psm)} Pcs/hari
+            🕐 *Target per Shift:*
                 • Shift 1 (40%) : {int(target_harian_psm * 0.40)} Pcs
                 • Shift 2 (40%) : {int(target_harian_psm * 0.40)} Pcs
                 • Shift 3 (20%) : {int(target_harian_psm * 0.20)} Pcs
-
-                ════════════════════════════════════════
-
-                *2️⃣ PROGRAM PWP*
-                📋 Syarat Redeem : {int(s_pwp)}
-                🎁 Total Redeem  : {int(r_pwp)}
-                📦 Target Qty    : {int(tq_pwp)} Pcs
-                📊 Actual Qty    : {int(q_pwp)} Pcs
-                🎯 Ach. Redeem   : *{ach_pwp_redeem:.1f}%*
-                🎯 Ach. Qty      : *{ach_pwp_qty:.1f}%*
-                ⭐ Poin PWP      : *{poin_pwp:.2f}* (Max 25)
-
-                📆 *Target Harian:* {int(target_harian_pwp)} Pcs/hari
-                🕐 *Target per Shift:*
+            ════════════════════════════════════════
+            *2️⃣ PROGRAM PWP*
+             📋 Syarat Redeem : {int(s_pwp)}
+             🎁 Total Redeem  : {int(r_pwp)}
+             📦 Target Qty    : {int(tq_pwp)} Pcs
+             📊 Actual Qty    : {int(q_pwp)} Pcs
+             🎯 Ach. Redeem   : *{ach_pwp_redeem:.1f}%*
+             🎯 Ach. Qty      : *{ach_pwp_qty:.1f}%*
+             ⭐ Poin PWP      : *{poin_pwp:.2f}* (Max 25)
+             📆 *Target Harian:* {int(target_harian_pwp)} Pcs/hari
+             🕐 *Target per Shift:*
                 • Shift 1 (40%) : {int(target_harian_pwp * 0.40)} Pcs
                 • Shift 2 (40%) : {int(target_harian_pwp * 0.40)} Pcs
                 • Shift 3 (20%) : {int(target_harian_pwp * 0.20)} Pcs
-
-                ════════════════════════════════════════
-
-                *3️⃣ PROGRAM SUEGER*
-                📋 Syarat Redeem : {int(s_sueger_val)}
-                🎁 Qty Redeem    : {int(r_sueger_val)}
-                🎯 Achievement   : *{ach_sueger:.1f}%*
-
-                ════════════════════════════════════════
-
-                *4️⃣ PROGRAM SERBA GRATIS (SG)*
-                📦 Target Qty    : {int(t_sg)} Pcs
-                📊 Actual Qty    : {int(q_sg)} Pcs
-                🎯 Achievement   : *{ach_sg:.1f}%*
-                ⭐ Poin SG       : *{poin_sg:.2f}* (Max 30)
-
-                📆 *Target Harian:* {int(target_harian_sg)} Pcs/hari
-                🕐 *Target per Shift:*
+            ════════════════════════════════════════
+            *3️⃣ PROGRAM SUEGER*
+             📋 Syarat Redeem : {int(s_sueger_val)}
+             🎁 Qty Redeem    : {int(r_sueger_val)}
+             🎯 Achievement   : *{ach_sueger:.1f}%*
+            ════════════════════════════════════════
+            *4️⃣ PROGRAM SERBA GRATIS (SG)*
+             📦 Target Qty    : {int(t_sg)} Pcs
+             📊 Actual Qty    : {int(q_sg)} Pcs
+             🎯 Achievement   : *{ach_sg:.1f}%*
+             ⭐ Poin SG       : *{poin_sg:.2f}* (Max 30)
+             📆 *Target Harian:* {int(target_harian_sg)} Pcs/hari
+             🕐 *Target per Shift:*
                 • Shift 1 (40%) : {int(target_harian_sg * 0.40)} Pcs
                 • Shift 2 (40%) : {int(target_harian_sg * 0.40)} Pcs
                 • Shift 3 (20%) : {int(target_harian_sg * 0.20)} Pcs
-
-                ════════════════════════════════════════
-
-                *5️⃣ CEMILAN CEBAN*
-                📦 Target Qty    : {int(t_ceban)} Pcs
-                📊 Actual Qty    : {int(q_ceban)} Pcs
-                🎯 Achievement   : *{ach_ceban:.1f}%*
-
-                ════════════════════════════════════════
-
-                🏆 *TOTAL POIN DIDAPAT: {total_poin_didapat:.2f}*
-
-                ════════════════════════════════════════
-                _Generated automatically via LigaPSM System_
+            ════════════════════════════════════════
+            *5️⃣ CEMILAN CEBAN*
+             📦 Target Qty    : {int(t_ceban)} Pcs
+             📊 Actual Qty    : {int(q_ceban)} Pcs
+             🎯 Achievement   : *{ach_ceban:.1f}%*
+            ════════════════════════════════════════
+             🏆 *TOTAL POIN DIDAPAT: {total_poin_didapat:.2f}*
+            ════════════════════════════════════════
+            _🔥SEKIAN DAN TERIMAKASIH DARI STAF KGS🔥_
                 """
 
                 # OUTPUT WA
