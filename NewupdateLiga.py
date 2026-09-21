@@ -29,7 +29,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 st.write("Streamlit version:", st.__version__)
 import uuid as _uuid_module
-
+from spreadsheet_connector import render_debug_panel
 
 # ==========================================
 # 1. KONFIGURASI HALAMAN STREAMLIT
@@ -4049,7 +4049,17 @@ if st.sidebar.button(logout_text, use_container_width=True, key="logout_sidebar"
     st.session_state.username = ""
     st.session_state.role = ""
     st.rerun()
+    
+# =========================================================================
+# 🧪 DEBUG PANEL (Khusus Admin)
+# =========================================================================
+_is_admin_user = any(
+    x in str(st.session_state.get("username", "")).lower()
+    for x in ["admin", "chief", "cos", "lavitality"]
+)
 
+if _is_admin_user:
+    render_debug_panel()
 
 # ==========================================
 # 9. MODUL TAB / SUB MENU
