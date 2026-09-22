@@ -14255,6 +14255,142 @@ elif selected_tab == "📝 Input Data":
             unsafe_allow_html=True,
     )
     
+    # =====================================================================
+    # 🎨 CSS TOMBOL — BORDER BERWARNA (Native, Responsive)
+    # =====================================================================
+    st.markdown(
+        """
+        <style>
+            /* ===================================================== */
+            /* BASE — semua tombol di section ini                     */
+            /* ===================================================== */
+            div[data-testid="stColumn"] div[data-testid="stButton"] > button {
+                background: transparent !important;
+                border-radius: 12px !important;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+                font-weight: 800 !important;
+                font-size: 14px !important;
+                letter-spacing: 0.5px !important;
+                padding: 12px 8px !important;
+                min-height: 52px !important;
+                transition: all 0.25s ease !important;
+                border-width: 2.5px !important;
+                border-style: solid !important;
+                box-shadow: 0 0 8px rgba(0, 0, 0, 0.3) !important;
+            }
+            
+            /* ===================================================== */
+            /* PSM — GOLD (kolom 1)                                   */
+            /* ===================================================== */
+            div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(1) div[data-testid="stButton"] > button {
+                border-color: #d4af37 !important;
+                color: #fbbf24 !important;
+                text-shadow: 0 0 8px rgba(251, 191, 36, 0.5) !important;
+            }
+            div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(1) div[data-testid="stButton"] > button:hover {
+                background: linear-gradient(135deg, #b45309 0%, #d97706 100%) !important;
+                color: #ffffff !important;
+                text-shadow: none !important;
+                box-shadow: 0 0 20px rgba(251, 191, 36, 0.8) !important;
+                transform: translateY(-2px) !important;
+            }
+            
+            /* ===================================================== */
+            /* PWP — PURPLE (kolom 2)                                 */
+            /* ===================================================== */
+            div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(2) div[data-testid="stButton"] > button {
+                border-color: #a855f7 !important;
+                color: #c084fc !important;
+                text-shadow: 0 0 8px rgba(168, 85, 247, 0.5) !important;
+            }
+            div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(2) div[data-testid="stButton"] > button:hover {
+                background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%) !important;
+                color: #ffffff !important;
+                text-shadow: none !important;
+                box-shadow: 0 0 20px rgba(168, 85, 247, 0.8) !important;
+                transform: translateY(-2px) !important;
+            }
+            
+            /* ===================================================== */
+            /* SG — ORANGE (kolom 3)                                  */
+            /* ===================================================== */
+            div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(3) div[data-testid="stButton"] > button {
+                border-color: #f97316 !important;
+                color: #fdba74 !important;
+                text-shadow: 0 0 8px rgba(249, 115, 22, 0.5) !important;
+            }
+            div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(3) div[data-testid="stButton"] > button:hover {
+                background: linear-gradient(135deg, #c2410c 0%, #f97316 100%) !important;
+                color: #ffffff !important;
+                text-shadow: none !important;
+                box-shadow: 0 0 20px rgba(249, 115, 22, 0.8) !important;
+                transform: translateY(-2px) !important;
+            }
+            
+            /* ===================================================== */
+            /* SUEGER — CYAN (kolom 4)                                */
+            /* ===================================================== */
+            div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(4) div[data-testid="stButton"] > button {
+                border-color: #06b6d4 !important;
+                color: #67e8f9 !important;
+                text-shadow: 0 0 8px rgba(6, 182, 212, 0.5) !important;
+            }
+            div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(4) div[data-testid="stButton"] > button:hover {
+                background: linear-gradient(135deg, #0e7490 0%, #06b6d4 100%) !important;
+                color: #ffffff !important;
+                text-shadow: none !important;
+                box-shadow: 0 0 20px rgba(6, 182, 212, 0.8) !important;
+                transform: translateY(-2px) !important;
+            }
+            
+            /* ===================================================== */
+            /* INPUT SEMUA — GREEN (kolom 5, lebih tebal)            */
+            /* ===================================================== */
+            div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(5) div[data-testid="stButton"] > button {
+                border-color: #10b981 !important;
+                border-width: 3px !important;
+                color: #6ee7b7 !important;
+                text-shadow: 0 0 10px rgba(16, 185, 129, 0.7) !important;
+            }
+            div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(5) div[data-testid="stButton"] > button:hover {
+                background: linear-gradient(135deg, #047857 0%, #10b981 100%) !important;
+                color: #ffffff !important;
+                text-shadow: none !important;
+                box-shadow: 0 0 25px rgba(16, 185, 129, 0.9) !important;
+                transform: translateY(-2px) scale(1.02) !important;
+            }
+            
+            /* ===================================================== */
+            /* RESPONSIVE — TABLET (≤ 768px)                          */
+            /* ===================================================== */
+            @media (max-width: 768px) {
+                div[data-testid="stColumn"] div[data-testid="stButton"] > button {
+                    font-size: 13px !important;
+                    min-height: 48px !important;
+                    padding: 10px 6px !important;
+                    border-width: 2px !important;
+                    border-radius: 10px !important;
+                }
+            }
+            
+            /* ===================================================== */
+            /* RESPONSIVE — HP (≤ 480px)                              */
+            /* ===================================================== */
+            @media (max-width: 480px) {
+                div[data-testid="stColumn"] div[data-testid="stButton"] > button {
+                    font-size: 11px !important;
+                    min-height: 44px !important;
+                    padding: 8px 4px !important;
+                    letter-spacing: 0 !important;
+                    border-radius: 8px !important;
+                    border-width: 2px !important;
+                }
+            }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+    
     active_sub_tab = st.radio(
         "",
         [
