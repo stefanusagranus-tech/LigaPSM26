@@ -14254,121 +14254,6 @@ elif selected_tab == "📝 Input Data":
         """,
             unsafe_allow_html=True,
     )
-    # =========================================================================
-    # 🎨 CSS CUSTOM — TOMBOL GENERATE LAPORAN (ROYAL GUILD THEME)
-    # =========================================================================
-    st.markdown(
-        """
-        <style>
-            /* ====== TOMBOL PSM (GOLD) ====== */
-            div[data-testid="stButton"] button[key="btn_input_psm"] {
-                background: linear-gradient(135deg, #b45309 0%, #d97706 100%) !important;
-                color: #ffffff !important;
-                border: 2px solid #fbbf24 !important;
-                border-radius: 10px !important;
-                font-family: 'Cinzel', serif !important;
-                font-weight: 900 !important;
-                font-size: 13px !important;
-                letter-spacing: 1px !important;
-                padding: 12px 8px !important;
-                box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3) !important;
-                transition: all 0.25s ease !important;
-                min-height: 50px !important;
-            }
-            div[data-testid="stButton"] button[key="btn_input_psm"]:hover {
-                background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%) !important;
-                transform: translateY(-2px) !important;
-                box-shadow: 0 6px 20px rgba(251, 191, 36, 0.6) !important;
-            }
-            
-            /* ====== TOMBOL PWP (PURPLE) ====== */
-            div[data-testid="stButton"] button[key="btn_input_pwp"] {
-                background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%) !important;
-                color: #ffffff !important;
-                border: 2px solid #d8b4fe !important;
-                border-radius: 10px !important;
-                font-family: 'Cinzel', serif !important;
-                font-weight: 900 !important;
-                font-size: 13px !important;
-                letter-spacing: 1px !important;
-                padding: 12px 8px !important;
-                box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3) !important;
-                transition: all 0.25s ease !important;
-                min-height: 50px !important;
-            }
-            div[data-testid="stButton"] button[key="btn_input_pwp"]:hover {
-                background: linear-gradient(135deg, #a855f7 0%, #d8b4fe 100%) !important;
-                transform: translateY(-2px) !important;
-                box-shadow: 0 6px 20px rgba(168, 85, 247, 0.6) !important;
-            }
-            
-            /* ====== TOMBOL SG (ORANGE) ====== */
-            div[data-testid="stButton"] button[key="btn_input_sg"] {
-                background: linear-gradient(135deg, #c2410c 0%, #f97316 100%) !important;
-                color: #ffffff !important;
-                border: 2px solid #fdba74 !important;
-                border-radius: 10px !important;
-                font-family: 'Cinzel', serif !important;
-                font-weight: 900 !important;
-                font-size: 13px !important;
-                letter-spacing: 1px !important;
-                padding: 12px 8px !important;
-                box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3) !important;
-                transition: all 0.25s ease !important;
-                min-height: 50px !important;
-            }
-            div[data-testid="stButton"] button[key="btn_input_sg"]:hover {
-                background: linear-gradient(135deg, #f97316 0%, #fdba74 100%) !important;
-                transform: translateY(-2px) !important;
-                box-shadow: 0 6px 20px rgba(249, 115, 22, 0.6) !important;
-            }
-            
-            /* ====== TOMBOL SUEGER (CYAN) ====== */
-            div[data-testid="stButton"] button[key="btn_input_sueger"] {
-                background: linear-gradient(135deg, #0e7490 0%, #06b6d4 100%) !important;
-                color: #ffffff !important;
-                border: 2px solid #67e8f9 !important;
-                border-radius: 10px !important;
-                font-family: 'Cinzel', serif !important;
-                font-weight: 900 !important;
-                font-size: 13px !important;
-                letter-spacing: 1px !important;
-                padding: 12px 8px !important;
-                box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3) !important;
-                transition: all 0.25s ease !important;
-                min-height: 50px !important;
-            }
-            div[data-testid="stButton"] button[key="btn_input_sueger"]:hover {
-                background: linear-gradient(135deg, #06b6d4 0%, #67e8f9 100%) !important;
-                transform: translateY(-2px) !important;
-                box-shadow: 0 6px 20px rgba(6, 182, 212, 0.6) !important;
-            }
-            
-            /* ====== TOMBOL INPUT SEMUA (GREEN) ====== */
-            div[data-testid="stButton"] button[key="btn_input_all"] {
-                background: linear-gradient(135deg, #047857 0%, #10b981 100%) !important;
-                color: #ffffff !important;
-                border: 3px solid #6ee7b7 !important;
-                border-radius: 10px !important;
-                font-family: 'Cinzel', serif !important;
-                font-weight: 900 !important;
-                font-size: 13px !important;
-                letter-spacing: 1.5px !important;
-                padding: 12px 8px !important;
-                box-shadow: 0 4px 15px rgba(16, 185, 129, 0.5), 
-                            inset 0 0 10px rgba(255, 255, 255, 0.1) !important;
-                transition: all 0.25s ease !important;
-                min-height: 50px !important;
-            }
-            div[data-testid="stButton"] button[key="btn_input_all"]:hover {
-                background: linear-gradient(135deg, #10b981 0%, #34d399 100%) !important;
-                transform: translateY(-2px) scale(1.02) !important;
-                box-shadow: 0 8px 25px rgba(16, 185, 129, 0.8) !important;
-            }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
     
     active_sub_tab = st.radio(
         "",
@@ -15527,6 +15412,90 @@ elif selected_tab == "📝 Input Data":
             "Sistem akan mengisi kolom target & actual di sheet laporan."
         )
         
+        # =====================================================================
+        # 🎨 CSS CUSTOM — WARNA TOMBOL GENERATE LAPORAN
+        # =====================================================================
+        st.markdown(
+            """
+            <style>
+                /* Wrapper untuk section ini */
+                .laporan-buttons-wrapper div[data-testid="stButton"] > button {
+                    border-radius: 10px !important;
+                    font-family: 'Cinzel', serif !important;
+                    font-weight: 900 !important;
+                    font-size: 13px !important;
+                    letter-spacing: 1px !important;
+                    padding: 14px 8px !important;
+                    min-height: 52px !important;
+                    transition: all 0.25s ease !important;
+                    color: #ffffff !important;
+                    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5) !important;
+                }
+                
+                /* Tombol 1: PSM (Gold) */
+                div[data-testid="stColumn"]:nth-child(1) div[data-testid="stButton"] > button {
+                    background: linear-gradient(135deg, #b45309 0%, #d97706 100%) !important;
+                    border: 2px solid #fbbf24 !important;
+                    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4) !important;
+                }
+                div[data-testid="stColumn"]:nth-child(1) div[data-testid="stButton"] > button:hover {
+                    background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%) !important;
+                    transform: translateY(-2px) !important;
+                    box-shadow: 0 6px 20px rgba(251, 191, 36, 0.7) !important;
+                }
+                
+                /* Tombol 2: PWP (Purple) */
+                div[data-testid="stColumn"]:nth-child(2) div[data-testid="stButton"] > button {
+                    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%) !important;
+                    border: 2px solid #d8b4fe !important;
+                    box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4) !important;
+                }
+                div[data-testid="stColumn"]:nth-child(2) div[data-testid="stButton"] > button:hover {
+                    background: linear-gradient(135deg, #a855f7 0%, #d8b4fe 100%) !important;
+                    transform: translateY(-2px) !important;
+                    box-shadow: 0 6px 20px rgba(168, 85, 247, 0.7) !important;
+                }
+                
+                /* Tombol 3: SG (Orange) */
+                div[data-testid="stColumn"]:nth-child(3) div[data-testid="stButton"] > button {
+                    background: linear-gradient(135deg, #c2410c 0%, #f97316 100%) !important;
+                    border: 2px solid #fdba74 !important;
+                    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4) !important;
+                }
+                div[data-testid="stColumn"]:nth-child(3) div[data-testid="stButton"] > button:hover {
+                    background: linear-gradient(135deg, #f97316 0%, #fdba74 100%) !important;
+                    transform: translateY(-2px) !important;
+                    box-shadow: 0 6px 20px rgba(249, 115, 22, 0.7) !important;
+                }
+                
+                /* Tombol 4: SUEGER (Cyan) */
+                div[data-testid="stColumn"]:nth-child(4) div[data-testid="stButton"] > button {
+                    background: linear-gradient(135deg, #0e7490 0%, #06b6d4 100%) !important;
+                    border: 2px solid #67e8f9 !important;
+                    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4) !important;
+                }
+                div[data-testid="stColumn"]:nth-child(4) div[data-testid="stButton"] > button:hover {
+                    background: linear-gradient(135deg, #06b6d4 0%, #67e8f9 100%) !important;
+                    transform: translateY(-2px) !important;
+                    box-shadow: 0 6px 20px rgba(6, 182, 212, 0.7) !important;
+                }
+                
+                /* Tombol 5: INPUT SEMUA (Green) */
+                div[data-testid="stColumn"]:nth-child(5) div[data-testid="stButton"] > button {
+                    background: linear-gradient(135deg, #047857 0%, #10b981 100%) !important;
+                    border: 3px solid #6ee7b7 !important;
+                    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.5) !important;
+                }
+                div[data-testid="stColumn"]:nth-child(5) div[data-testid="stButton"] > button:hover {
+                    background: linear-gradient(135deg, #10b981 0%, #34d399 100%) !important;
+                    transform: translateY(-2px) scale(1.02) !important;
+                    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.8) !important;
+                }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
+
         # === INFO: Sheet harus sudah ada ===
         st.info(
             "💡 **Penting:** Sheet laporan harus **sudah ada** di "
