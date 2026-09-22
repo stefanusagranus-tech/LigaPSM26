@@ -15413,139 +15413,131 @@ elif selected_tab == "📝 Input Data":
         )
         
         # =====================================================================
-        # 🎨 CSS CUSTOM — WARNA TOMBOL GENERATE LAPORAN
+        # 🎨 TOMBOL CUSTOM — HTML + st.button overlay
         # =====================================================================
-        st.markdown(
-            """
+        
+        # CSS untuk tombol overlay
+        st.markdown("""
             <style>
-                /* Wrapper untuk section ini */
-                .laporan-buttons-wrapper div[data-testid="stButton"] > button {
-                    border-radius: 10px !important;
-                    font-family: 'Cinzel', serif !important;
-                    font-weight: 900 !important;
-                    font-size: 13px !important;
-                    letter-spacing: 1px !important;
-                    padding: 14px 8px !important;
-                    min-height: 52px !important;
-                    transition: all 0.25s ease !important;
-                    color: #ffffff !important;
-                    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5) !important;
+                /* Container untuk tombol custom */
+                .custom-btn-wrapper {
+                    position: relative;
+                    margin-bottom: 8px;
                 }
                 
-                /* Tombol 1: PSM (Gold) */
-                div[data-testid="stColumn"]:nth-child(1) div[data-testid="stButton"] > button {
-                    background: linear-gradient(135deg, #b45309 0%, #d97706 100%) !important;
-                    border: 2px solid #fbbf24 !important;
-                    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4) !important;
-                }
-                div[data-testid="stColumn"]:nth-child(1) div[data-testid="stButton"] > button:hover {
-                    background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%) !important;
-                    transform: translateY(-2px) !important;
-                    box-shadow: 0 6px 20px rgba(251, 191, 36, 0.7) !important;
-                }
-                
-                /* Tombol 2: PWP (Purple) */
-                div[data-testid="stColumn"]:nth-child(2) div[data-testid="stButton"] > button {
-                    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%) !important;
-                    border: 2px solid #d8b4fe !important;
-                    box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4) !important;
-                }
-                div[data-testid="stColumn"]:nth-child(2) div[data-testid="stButton"] > button:hover {
-                    background: linear-gradient(135deg, #a855f7 0%, #d8b4fe 100%) !important;
-                    transform: translateY(-2px) !important;
-                    box-shadow: 0 6px 20px rgba(168, 85, 247, 0.7) !important;
+                /* HTML tombol visual */
+                .custom-btn-visual {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-height: 50px;
+                    border-radius: 10px;
+                    font-family: 'Cinzel', serif;
+                    font-weight: 900;
+                    font-size: 13px;
+                    letter-spacing: 1px;
+                    color: #ffffff;
+                    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+                    cursor: pointer;
+                    transition: all 0.25s ease;
+                    position: relative;
+                    z-index: 1;
                 }
                 
-                /* Tombol 3: SG (Orange) */
-                div[data-testid="stColumn"]:nth-child(3) div[data-testid="stButton"] > button {
-                    background: linear-gradient(135deg, #c2410c 0%, #f97316 100%) !important;
-                    border: 2px solid #fdba74 !important;
-                    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4) !important;
-                }
-                div[data-testid="stColumn"]:nth-child(3) div[data-testid="stButton"] > button:hover {
-                    background: linear-gradient(135deg, #f97316 0%, #fdba74 100%) !important;
-                    transform: translateY(-2px) !important;
-                    box-shadow: 0 6px 20px rgba(249, 115, 22, 0.7) !important;
+                .custom-btn-visual:hover {
+                    transform: translateY(-2px);
                 }
                 
-                /* Tombol 4: SUEGER (Cyan) */
-                div[data-testid="stColumn"]:nth-child(4) div[data-testid="stButton"] > button {
-                    background: linear-gradient(135deg, #0e7490 0%, #06b6d4 100%) !important;
-                    border: 2px solid #67e8f9 !important;
-                    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4) !important;
+                /* Tombol 1: PSM Gold */
+                .custom-btn-psm {
+                    background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+                    border: 2px solid #fbbf24;
+                    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
                 }
-                div[data-testid="stColumn"]:nth-child(4) div[data-testid="stButton"] > button:hover {
-                    background: linear-gradient(135deg, #06b6d4 0%, #67e8f9 100%) !important;
-                    transform: translateY(-2px) !important;
-                    box-shadow: 0 6px 20px rgba(6, 182, 212, 0.7) !important;
+                .custom-btn-psm:hover {
+                    background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%);
+                    box-shadow: 0 6px 20px rgba(251, 191, 36, 0.7);
                 }
                 
-                /* Tombol 5: INPUT SEMUA (Green) */
-                div[data-testid="stColumn"]:nth-child(5) div[data-testid="stButton"] > button {
-                    background: linear-gradient(135deg, #047857 0%, #10b981 100%) !important;
-                    border: 3px solid #6ee7b7 !important;
-                    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.5) !important;
+                /* Tombol 2: PWP Purple */
+                .custom-btn-pwp {
+                    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+                    border: 2px solid #d8b4fe;
+                    box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4);
                 }
-                div[data-testid="stColumn"]:nth-child(5) div[data-testid="stButton"] > button:hover {
-                    background: linear-gradient(135deg, #10b981 0%, #34d399 100%) !important;
-                    transform: translateY(-2px) scale(1.02) !important;
-                    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.8) !important;
+                .custom-btn-pwp:hover {
+                    background: linear-gradient(135deg, #a855f7 0%, #d8b4fe 100%);
+                    box-shadow: 0 6px 20px rgba(168, 85, 247, 0.7);
+                }
+                
+                /* Tombol 3: SG Orange */
+                .custom-btn-sg {
+                    background: linear-gradient(135deg, #c2410c 0%, #f97316 100%);
+                    border: 2px solid #fdba74;
+                    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+                }
+                .custom-btn-sg:hover {
+                    background: linear-gradient(135deg, #f97316 0%, #fdba74 100%);
+                    box-shadow: 0 6px 20px rgba(249, 115, 22, 0.7);
+                }
+                
+                /* Tombol 4: SUEGER Cyan */
+                .custom-btn-sueger {
+                    background: linear-gradient(135deg, #0e7490 0%, #06b6d4 100%);
+                    border: 2px solid #67e8f9;
+                    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4);
+                }
+                .custom-btn-sueger:hover {
+                    background: linear-gradient(135deg, #06b6d4 0%, #67e8f9 100%);
+                    box-shadow: 0 6px 20px rgba(6, 182, 212, 0.7);
+                }
+                
+                /* Tombol 5: INPUT SEMUA Green */
+                .custom-btn-all {
+                    background: linear-gradient(135deg, #047857 0%, #10b981 100%);
+                    border: 3px solid #6ee7b7;
+                    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.5);
+                }
+                .custom-btn-all:hover {
+                    background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+                    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.8);
+                    transform: translateY(-2px) scale(1.02);
+                }
+                
+                /* Tombol st.button — bikin transparan */
+                .custom-btn-overlay div[data-testid="stButton"] {
+                    position: absolute !important;
+                    inset: 0 !important;
+                    z-index: 10 !important;
+                    opacity: 0 !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                }
+                
+                .custom-btn-overlay div[data-testid="stButton"] button {
+                    width: 100% !important;
+                    height: 100% !important;
+                    cursor: pointer !important;
+                    background: transparent !important;
+                    border: none !important;
                 }
             </style>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        # === INFO: Sheet harus sudah ada ===
-        st.info(
-            "💡 **Penting:** Sheet laporan harus **sudah ada** di "
-            "spreadsheet `LIGAPSM-LAPORAN` sebelum diisi. "
-            "Kalau belum, duplicate template bulan sebelumnya dulu."
-        )
+        """, unsafe_allow_html=True)
         
-        st.markdown("---")
-        
-        # === FILTER BULAN & TAHUN ===
-        col_lap1, col_lap2 = st.columns(2)
-        
-        with col_lap1:
-            _bulan_list = [
-                "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-                "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-            ]
-            _bulan_pilih = st.selectbox(
-                "📅 Bulan",
-                _bulan_list,
-                index=waktu_wib.month - 1,
-                key="lap_bulan_input"
-            )
-        
-        with col_lap2:
-            _tahun_pilih = st.number_input(
-                "📆 Tahun",
-                min_value=2024,
-                max_value=2030,
-                value=waktu_wib.year,
-                key="lap_tahun_input"
-            )
-        
-        _bulan_int = _bulan_list.index(_bulan_pilih) + 1
-        _tahun_int = int(_tahun_pilih)
-        _bulan_upper = _bulan_pilih.upper()
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        # === 5 TOMBOL (PSM, PWP, SG, SUEGER, SEMUA) ===
+        # ==== 5 TOMBOL ====
         col_b1, col_b2, col_b3, col_b4, col_b5 = st.columns(5)
         
         # ---- PSM ----
         with col_b1:
-            if st.button(
-                "📊 PSM",
-                use_container_width=True,
-                key="btn_input_psm",
-                help="Isi laporan PSM (WEEK 1-4)"
-            ):
+            # HTML visual
+            st.markdown(
+                "<div class='custom-btn-wrapper'>"
+                "<div class='custom-btn-visual custom-btn-psm'>📊 PSM</div>"
+                "</div>",
+                unsafe_allow_html=True,
+            )
+            # Tombol asli (overlay)
+            if st.button("PSM", key="btn_input_psm", help="Isi laporan PSM"):
                 with st.spinner(f"⏳ Isi PSM {_bulan_upper} {_tahun_int}..."):
                     _sheet_psm = f"{_bulan_upper} {_tahun_int}_PSM"
                     _ok, _msg, _n = isi_laporan_psm(_bulan_int, _tahun_int, _sheet_psm)
@@ -15564,12 +15556,13 @@ elif selected_tab == "📝 Input Data":
         
         # ---- PWP ----
         with col_b2:
-            if st.button(
-                "⚡ PWP",
-                use_container_width=True,
-                key="btn_input_pwp",
-                help="Isi laporan PWP"
-            ):
+            st.markdown(
+                "<div class='custom-btn-wrapper'>"
+                "<div class='custom-btn-visual custom-btn-pwp'>⚡ PWP</div>"
+                "</div>",
+                unsafe_allow_html=True,
+            )
+            if st.button("PWP", key="btn_input_pwp", help="Isi laporan PWP"):
                 with st.spinner(f"⏳ Isi PWP {_bulan_upper} {_tahun_int}..."):
                     _sheet_pwp = f"{_bulan_upper} {_tahun_int}_PWP"
                     _ok, _msg, _n = isi_laporan_pwp(_bulan_int, _tahun_int, _sheet_pwp)
@@ -15588,12 +15581,13 @@ elif selected_tab == "📝 Input Data":
         
         # ---- SG ----
         with col_b3:
-            if st.button(
-                "🎁 SG",
-                use_container_width=True,
-                key="btn_input_sg",
-                help="Isi laporan Serba Gratis"
-            ):
+            st.markdown(
+                "<div class='custom-btn-wrapper'>"
+                "<div class='custom-btn-visual custom-btn-sg'>🎁 SG</div>"
+                "</div>",
+                unsafe_allow_html=True,
+            )
+            if st.button("SG", key="btn_input_sg", help="Isi laporan Serba Gratis"):
                 with st.spinner(f"⏳ Isi SG {_bulan_upper} {_tahun_int}..."):
                     _sheet_sg = f"{_bulan_upper} {_tahun_int}_SG"
                     _ok, _msg, _n = isi_laporan_sg(_bulan_int, _tahun_int, _sheet_sg)
@@ -15612,12 +15606,13 @@ elif selected_tab == "📝 Input Data":
         
         # ---- SUEGER ----
         with col_b4:
-            if st.button(
-                "💧 SUEGER",
-                use_container_width=True,
-                key="btn_input_sueger",
-                help="Isi laporan Sueger"
-            ):
+            st.markdown(
+                "<div class='custom-btn-wrapper'>"
+                "<div class='custom-btn-visual custom-btn-sueger'>💧 SUEGER</div>"
+                "</div>",
+                unsafe_allow_html=True,
+            )
+            if st.button("SUEGER", key="btn_input_sueger", help="Isi laporan Sueger"):
                 with st.spinner(f"⏳ Isi Sueger {_bulan_upper} {_tahun_int}..."):
                     _sheet_sueger = f"{_bulan_upper} {_tahun_int}_SUEGER"
                     _ok, _msg, _n = isi_laporan_sueger(_bulan_int, _tahun_int, _sheet_sueger)
@@ -15636,16 +15631,15 @@ elif selected_tab == "📝 Input Data":
         
         # ---- INPUT SEMUA ----
         with col_b5:
-            if st.button(
-                "📡 INPUT SEMUA",
-                use_container_width=True,
-                key="btn_input_all",
-                help="Isi 4 laporan sekaligus: PSM, PWP, SG, Sueger"
-            ):
-                with st.spinner(
-                    f"⏳ Isi 4 laporan {_bulan_upper} {_tahun_int}... "
-                    f"(mohon tunggu 5-10 detik)"
-                ):
+            st.markdown(
+                "<div class='custom-btn-wrapper'>"
+                "<div class='custom-btn-visual custom-btn-all'>📡 INPUT SEMUA</div>"
+                "</div>",
+                unsafe_allow_html=True,
+            )
+            if st.button("INPUT SEMUA", key="btn_input_all", help="Isi 4 laporan sekaligus"):
+                # ... (kode INPUT SEMUA sama seperti sebelumnya)
+                with st.spinner(f"⏳ Isi 4 laporan... (tunggu 5-10 detik)"):
                     _sheets = {
                         "PSM": (isi_laporan_psm, f"{_bulan_upper} {_tahun_int}_PSM"),
                         "PWP": (isi_laporan_pwp, f"{_bulan_upper} {_tahun_int}_PWP"),
@@ -15664,12 +15658,8 @@ elif selected_tab == "📝 Input Data":
                             else:
                                 _failed.append({"nama": _nama, "pesan": _msg})
                         except Exception as _e:
-                            _failed.append({
-                                "nama": _nama,
-                                "pesan": f"❌ {str(_e)[:100]}"
-                            })
+                            _failed.append({"nama": _nama, "pesan": f"❌ {str(_e)[:100]}"})
                     
-                    # Simpan hasil di session_state untuk tampil setelah rerun
                     st.session_state["_last_generate_all_result"] = {
                         "success": _success,
                         "failed": _failed,
@@ -15677,7 +15667,6 @@ elif selected_tab == "📝 Input Data":
                         "tahun": _tahun_int,
                     }
                     
-                    # Log
                     try:
                         log_activity(
                             "REPORT",
@@ -15688,47 +15677,6 @@ elif selected_tab == "📝 Input Data":
                         pass
                 
                 st.rerun()
-        
-        # === TAMPILKAN HASIL INPUT SEMUA ===
-        if "_last_generate_all_result" in st.session_state:
-            _res = st.session_state["_last_generate_all_result"]
-            
-            st.markdown("---")
-            
-            if _res["success"]:
-                st.success(
-                    f"✅ **{len(_res['success'])} dari 4 sheet berhasil** "
-                    f"({_res['bulan']} {_res['tahun']})"
-                )
-                
-                with st.expander("✅ Detail Sukses", expanded=True):
-                    for _s in _res["success"]:
-                        st.markdown(f"✅ **{_s['nama']}** — {_s['pesan']}")
-            
-            if _res["failed"]:
-                st.error(f"❌ **{len(_res['failed'])} sheet gagal**")
-                
-                with st.expander("❌ Detail Gagal", expanded=True):
-                    for _f in _res["failed"]:
-                        st.markdown(f"❌ **{_f['nama']}** — {_f['pesan']}")
-            
-            if _res["success"]:
-                st.info(
-                    f"👉 Cek spreadsheet **LIGAPSM-LAPORAN**. "
-                    f"Sheet: `{_res['bulan']} {_res['tahun']}_PSM`, "
-                    f"`_PWP`, `_SG`, `_SUEGER`."
-                )
-            
-            # Tombol clear hasil
-            if st.button("🗑️ Clear Hasil", key="clear_last_result"):
-                del st.session_state["_last_generate_all_result"]
-                st.rerun()
-        
-        st.markdown("---")
-        st.caption(
-            "💡 **Tips:** Klik satu per satu kalau mau lihat per-sheet. "
-            "Atau klik **📡 INPUT SEMUA** untuk isi 4 laporan sekaligus."
-        )
 
 # =============================================================================
 # 📊 DAILY PERFORMANCE TOKO — HALAMAN BARU
