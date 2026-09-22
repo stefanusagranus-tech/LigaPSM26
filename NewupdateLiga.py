@@ -54,6 +54,7 @@ from spreadsheet_connector import (
     isi_laporan_psm,
     isi_laporan_pwp,
     isi_laporan_sg,
+    isi_laporan_sueger,
     
     # Heartbeat (FASE 4)
     write_heartbeat_to_sheet,
