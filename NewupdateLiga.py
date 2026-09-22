@@ -30,6 +30,7 @@ import matplotlib.pyplot as plt
 st.write("Streamlit version:", st.__version__)
 import uuid as _uuid_module
 from spreadsheet_connector import render_debug_panel
+from themes import load_all_themes, load_global_css, load_laporan_buttons_css
 
 # =========================================================================
 # 📦 IMPORT CONNECTOR (untuk log & backup ke Spreadsheet Audit)
@@ -2892,6 +2893,10 @@ def check_login(input_username, input_password):
     return True
   return False
 
+# =============================================================================
+# LOAD THEMES (CSS GLOBAL)
+# =============================================================================
+load_global_css()
 
 # ==========================================
 # 6. HALAMAN LOGIN
@@ -14806,6 +14811,9 @@ elif selected_tab == "📝 Input Data":
     # SUB TAB 4: KIRIM FORMAT SPREADSHEET (GENERATE LAPORAN)
     # =========================================================================
     elif active_sub_tab == "📡 Kirim Format Spreadsheet":
+        # Load CSS tombol laporan
+        load_laporan_buttons_css()
+        
         st.markdown(
             "<h4 style='color: #00ff88; margin-top: 15px;'>📡 Kirim Format "
             "Spreadsheet</h4>",
