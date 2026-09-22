@@ -769,274 +769,274 @@ def show_success_dialog(
         unsafe_allow_html=True,
     )
     
-    # =========================================================================
-    # 💬 DIALOG KONFIRMASI EDIT — MENU EDIT DATA
-    # =========================================================================
-    @st.dialog("✏️ Konfirmasi Edit Data")
-    def show_edit_confirm_dialog(detail_dict, callback_key="confirm_edit"):
-        """
-        Dialog konfirmasi sebelum edit data.
-        """
-        # CSS Dialog
-        st.markdown("""
-        <style>
-            div[data-testid="stDialog"] > div {
-                background: radial-gradient(circle at top, #1e3a5f 0%, #0f172a 60%, #05070c 100%) !important;
-                border: 2px solid #b45309 !important;
-                border-radius: 14px !important;
-                box-shadow: 0 0 30px rgba(251, 191, 36, 0.4) !important;
-            }
-            div[data-testid="stDialog"] header { display: none !important; }
-            div[data-testid="stDialog"] [role="dialog"] > div:nth-child(2) {
-                padding: 20px 24px !important;
-            }
-            .edit-dialog-title {
-                text-align: center;
-                color: #fbbf24;
-                font-family: 'Cinzel', serif;
-                font-size: 18px;
-                font-weight: 900;
-                letter-spacing: 1.5px;
-                margin-bottom: 12px;
-                text-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
-            }
-            .edit-dialog-message {
-                text-align: center;
-                color: #cbd5e1;
-                font-family: 'Quicksand', sans-serif;
-                font-size: 12px;
-                margin-bottom: 16px;
-                padding: 10px;
-                background: rgba(0, 0, 0, 0.3);
-                border-left: 3px solid #b45309;
-                border-right: 3px solid #b45309;
-                border-radius: 6px;
-            }
-            .edit-detail-row {
-                display: flex;
-                justify-content: space-between;
-                padding: 6px 10px;
-                border-bottom: 1px dashed rgba(180, 83, 9, 0.3);
-                font-family: monospace;
-                font-size: 11px;
-            }
-            .edit-detail-row:last-child { border-bottom: none; }
-            .edit-detail-key { color: #94a3b8; font-weight: 600; }
-            .edit-detail-value { color: #fbbf24; font-weight: 800; }
-            div[data-testid="stDialog"] div.stButton > button {
-                border-radius: 10px !important;
-                font-family: 'Cinzel', serif !important;
-                font-weight: 900 !important;
-                font-size: 12px !important;
-                padding: 12px 20px !important;
-                margin-top: 8px !important;
-                text-transform: uppercase !important;
-                letter-spacing: 1px !important;
-            }
-        </style>
-        """, unsafe_allow_html=True)
-        
+# =========================================================================
+# 💬 DIALOG KONFIRMASI EDIT — MENU EDIT DATA
+# =========================================================================
+@st.dialog("✏️ Konfirmasi Edit Data")
+def show_edit_confirm_dialog(detail_dict, callback_key="confirm_edit"):
+    """
+    Dialog konfirmasi sebelum edit data.
+    """
+    # CSS Dialog
+    st.markdown("""
+    <style>
+        div[data-testid="stDialog"] > div {
+            background: radial-gradient(circle at top, #1e3a5f 0%, #0f172a 60%, #05070c 100%) !important;
+            border: 2px solid #b45309 !important;
+            border-radius: 14px !important;
+            box-shadow: 0 0 30px rgba(251, 191, 36, 0.4) !important;
+        }
+        div[data-testid="stDialog"] header { display: none !important; }
+        div[data-testid="stDialog"] [role="dialog"] > div:nth-child(2) {
+            padding: 20px 24px !important;
+        }
+        .edit-dialog-title {
+            text-align: center;
+            color: #fbbf24;
+            font-family: 'Cinzel', serif;
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            margin-bottom: 12px;
+            text-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
+        }
+        .edit-dialog-message {
+            text-align: center;
+            color: #cbd5e1;
+            font-family: 'Quicksand', sans-serif;
+            font-size: 12px;
+            margin-bottom: 16px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 3px solid #b45309;
+            border-right: 3px solid #b45309;
+            border-radius: 6px;
+        }
+        .edit-detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 10px;
+            border-bottom: 1px dashed rgba(180, 83, 9, 0.3);
+            font-family: monospace;
+            font-size: 11px;
+        }
+        .edit-detail-row:last-child { border-bottom: none; }
+        .edit-detail-key { color: #94a3b8; font-weight: 600; }
+        .edit-detail-value { color: #fbbf24; font-weight: 800; }
+        div[data-testid="stDialog"] div.stButton > button {
+            border-radius: 10px !important;
+            font-family: 'Cinzel', serif !important;
+            font-weight: 900 !important;
+            font-size: 12px !important;
+            padding: 12px 20px !important;
+            margin-top: 8px !important;
+            text-transform: uppercase !important;
+            letter-spacing: 1px !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    st.markdown(
+        "<div class='edit-dialog-title'>✏️ KONFIRMASI EDIT DATA</div>",
+        unsafe_allow_html=True
+    )
+    st.markdown(
+        "<div class='edit-dialog-message'>"
+        "Pastikan data yang akan diubah sudah benar. "
+        "Perubahan akan disimpan permanen."
+        "</div>",
+        unsafe_allow_html=True
+    )
+    
+    # Detail row
+    for key, val in detail_dict.items():
         st.markdown(
-            "<div class='edit-dialog-title'>✏️ KONFIRMASI EDIT DATA</div>",
+            f"<div class='edit-detail-row'>"
+            f"<span class='edit-detail-key'>{key}</span>"
+            f"<span class='edit-detail-value'>{val}</span>"
+            f"</div>",
             unsafe_allow_html=True
         )
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    col_ok, col_cancel = st.columns(2)
+    with col_ok:
+        if st.button("✅ YA, SIMPAN", use_container_width=True, key=f"{callback_key}_ok"):
+            st.session_state[f"{callback_key}_result"] = True
+            st.rerun()
+    with col_cancel:
+        if st.button("❌ BATAL", use_container_width=True, key=f"{callback_key}_cancel"):
+            st.session_state[f"{callback_key}_result"] = False
+            st.rerun()
+
+
+# =========================================================================
+# 💬 DIALOG KONFIRMASI HAPUS — MENU EDIT DATA
+# =========================================================================
+@st.dialog("🗑️ Konfirmasi Hapus Data")
+def show_delete_confirm_dialog(detail_dict, warning_text="", callback_key="confirm_delete"):
+    """
+    Dialog konfirmasi sebelum hapus data (dengan peringatan merah).
+    """
+    st.markdown("""
+    <style>
+        div[data-testid="stDialog"] > div {
+            background: radial-gradient(circle at top, #4c1d1d 0%, #1a0a0a 60%, #05070c 100%) !important;
+            border: 2px solid #dc2626 !important;
+            border-radius: 14px !important;
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.5) !important;
+        }
+        div[data-testid="stDialog"] header { display: none !important; }
+        div[data-testid="stDialog"] [role="dialog"] > div:nth-child(2) {
+            padding: 20px 24px !important;
+        }
+        .del-dialog-title {
+            text-align: center;
+            color: #ef4444;
+            font-family: 'Cinzel', serif;
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            margin-bottom: 12px;
+            text-shadow: 0 0 15px rgba(239, 68, 68, 0.8);
+        }
+        .del-dialog-warning {
+            text-align: center;
+            color: #fca5a5;
+            font-family: 'Quicksand', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1.5px solid #ef4444;
+            border-radius: 8px;
+            line-height: 1.5;
+        }
+        .del-detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 10px;
+            border-bottom: 1px dashed rgba(239, 68, 68, 0.3);
+            font-family: monospace;
+            font-size: 11px;
+        }
+        .del-detail-row:last-child { border-bottom: none; }
+        .del-detail-key { color: #94a3b8; font-weight: 600; }
+        .del-detail-value { color: #fca5a5; font-weight: 800; }
+        div[data-testid="stDialog"] div.stButton > button {
+            border-radius: 10px !important;
+            font-family: 'Cinzel', serif !important;
+            font-weight: 900 !important;
+            font-size: 12px !important;
+            padding: 12px 20px !important;
+            margin-top: 8px !important;
+            text-transform: uppercase !important;
+            letter-spacing: 1px !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    st.markdown(
+        "<div class='del-dialog-title'>🗑️ KONFIRMASI HAPUS</div>",
+        unsafe_allow_html=True
+    )
+    
+    if warning_text:
         st.markdown(
-            "<div class='edit-dialog-message'>"
-            "Pastikan data yang akan diubah sudah benar. "
-            "Perubahan akan disimpan permanen."
-            "</div>",
+            f"<div class='del-dialog-warning'>⚠️ {warning_text} ⚠️</div>",
             unsafe_allow_html=True
         )
-        
-        # Detail row
-        for key, val in detail_dict.items():
-            st.markdown(
-                f"<div class='edit-detail-row'>"
-                f"<span class='edit-detail-key'>{key}</span>"
-                f"<span class='edit-detail-value'>{val}</span>"
-                f"</div>",
-                unsafe_allow_html=True
-            )
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        col_ok, col_cancel = st.columns(2)
-        with col_ok:
-            if st.button("✅ YA, SIMPAN", use_container_width=True, key=f"{callback_key}_ok"):
-                st.session_state[f"{callback_key}_result"] = True
-                st.rerun()
-        with col_cancel:
-            if st.button("❌ BATAL", use_container_width=True, key=f"{callback_key}_cancel"):
-                st.session_state[f"{callback_key}_result"] = False
-                st.rerun()
-
-
-    # =========================================================================
-    # 💬 DIALOG KONFIRMASI HAPUS — MENU EDIT DATA
-    # =========================================================================
-    @st.dialog("🗑️ Konfirmasi Hapus Data")
-    def show_delete_confirm_dialog(detail_dict, warning_text="", callback_key="confirm_delete"):
-        """
-        Dialog konfirmasi sebelum hapus data (dengan peringatan merah).
-        """
-        st.markdown("""
-        <style>
-            div[data-testid="stDialog"] > div {
-                background: radial-gradient(circle at top, #4c1d1d 0%, #1a0a0a 60%, #05070c 100%) !important;
-                border: 2px solid #dc2626 !important;
-                border-radius: 14px !important;
-                box-shadow: 0 0 30px rgba(239, 68, 68, 0.5) !important;
-            }
-            div[data-testid="stDialog"] header { display: none !important; }
-            div[data-testid="stDialog"] [role="dialog"] > div:nth-child(2) {
-                padding: 20px 24px !important;
-            }
-            .del-dialog-title {
-                text-align: center;
-                color: #ef4444;
-                font-family: 'Cinzel', serif;
-                font-size: 18px;
-                font-weight: 900;
-                letter-spacing: 1.5px;
-                margin-bottom: 12px;
-                text-shadow: 0 0 15px rgba(239, 68, 68, 0.8);
-            }
-            .del-dialog-warning {
-                text-align: center;
-                color: #fca5a5;
-                font-family: 'Quicksand', sans-serif;
-                font-size: 12px;
-                font-weight: 700;
-                margin-bottom: 16px;
-                padding: 12px;
-                background: rgba(239, 68, 68, 0.15);
-                border: 1.5px solid #ef4444;
-                border-radius: 8px;
-                line-height: 1.5;
-            }
-            .del-detail-row {
-                display: flex;
-                justify-content: space-between;
-                padding: 6px 10px;
-                border-bottom: 1px dashed rgba(239, 68, 68, 0.3);
-                font-family: monospace;
-                font-size: 11px;
-            }
-            .del-detail-row:last-child { border-bottom: none; }
-            .del-detail-key { color: #94a3b8; font-weight: 600; }
-            .del-detail-value { color: #fca5a5; font-weight: 800; }
-            div[data-testid="stDialog"] div.stButton > button {
-                border-radius: 10px !important;
-                font-family: 'Cinzel', serif !important;
-                font-weight: 900 !important;
-                font-size: 12px !important;
-                padding: 12px 20px !important;
-                margin-top: 8px !important;
-                text-transform: uppercase !important;
-                letter-spacing: 1px !important;
-            }
-        </style>
-        """, unsafe_allow_html=True)
-        
+    
+    for key, val in detail_dict.items():
         st.markdown(
-            "<div class='del-dialog-title'>🗑️ KONFIRMASI HAPUS</div>",
+            f"<div class='del-detail-row'>"
+            f"<span class='del-detail-key'>{key}</span>"
+            f"<span class='del-detail-value'>{val}</span>"
+            f"</div>",
             unsafe_allow_html=True
         )
-        
-        if warning_text:
-            st.markdown(
-                f"<div class='del-dialog-warning'>⚠️ {warning_text} ⚠️</div>",
-                unsafe_allow_html=True
-            )
-        
-        for key, val in detail_dict.items():
-            st.markdown(
-                f"<div class='del-detail-row'>"
-                f"<span class='del-detail-key'>{key}</span>"
-                f"<span class='del-detail-value'>{val}</span>"
-                f"</div>",
-                unsafe_allow_html=True
-            )
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        col_ok, col_cancel = st.columns(2)
-        with col_ok:
-            if st.button("🗑️ YA, HAPUS", use_container_width=True, key=f"{callback_key}_ok"):
-                st.session_state[f"{callback_key}_result"] = True
-                st.rerun()
-        with col_cancel:
-            if st.button("❌ BATAL", use_container_width=True, key=f"{callback_key}_cancel"):
-                st.session_state[f"{callback_key}_result"] = False
-                st.rerun()
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    col_ok, col_cancel = st.columns(2)
+    with col_ok:
+        if st.button("🗑️ YA, HAPUS", use_container_width=True, key=f"{callback_key}_ok"):
+            st.session_state[f"{callback_key}_result"] = True
+            st.rerun()
+    with col_cancel:
+        if st.button("❌ BATAL", use_container_width=True, key=f"{callback_key}_cancel"):
+            st.session_state[f"{callback_key}_result"] = False
+            st.rerun()
 
-        # =====================================================================
-        # 🏛️ STRUKTUR HTML DIALOG
-        # =====================================================================
-        st.markdown(
-            f"""
-            <div class="dialog-frame">
-                <span class="corner corner-tl">⚜️</span>
-                <span class="corner corner-tr">⚜️</span>
-                <span class="corner corner-bl">⚜️</span>
-                <span class="corner corner-br">⚜️</span>
-                
-                <!-- HEADER BANNER -->
-                <div class="dialog-banner">
-                    <div class="dialog-icon-wrap">
-                        <span class="dialog-sparkle dialog-sparkle-1">✦</span>
-                        <span class="dialog-icon">{icon}</span>
-                        <span class="dialog-sparkle dialog-sparkle-2">✦</span>
-                        <span class="dialog-sparkle dialog-sparkle-3">✦</span>
-                    </div>
-                    <h2 class="dialog-title">TRANSAKSI BERHASIL</h2>
-                    <p class="dialog-subtitle">{subtitle}</p>
+    # =====================================================================
+    # 🏛️ STRUKTUR HTML DIALOG
+    # =====================================================================
+    st.markdown(
+        f"""
+        <div class="dialog-frame">
+            <span class="corner corner-tl">⚜️</span>
+            <span class="corner corner-tr">⚜️</span>
+            <span class="corner corner-bl">⚜️</span>
+            <span class="corner corner-br">⚜️</span>
+            
+            <!-- HEADER BANNER -->
+            <div class="dialog-banner">
+                <div class="dialog-icon-wrap">
+                    <span class="dialog-sparkle dialog-sparkle-1">✦</span>
+                    <span class="dialog-icon">{icon}</span>
+                    <span class="dialog-sparkle dialog-sparkle-2">✦</span>
+                    <span class="dialog-sparkle dialog-sparkle-3">✦</span>
                 </div>
-                
-                <!-- BODY -->
-                <div class="dialog-body">
-                    <div class="dialog-message">{title_msg}</div>
-                    <div class="detail-scroll">
-            """,
-            unsafe_allow_html=True,
-        )
-        
-        # Render baris detail
-        if detail_dict:
-            for key, val in detail_dict.items():
-                st.markdown(
-                    f"""
-                    <div class="detail-row">
-                        <span class="detail-key">{key}</span>
-                        <span class="detail-value">{val}</span>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-        else:
+                <h2 class="dialog-title">TRANSAKSI BERHASIL</h2>
+                <p class="dialog-subtitle">{subtitle}</p>
+            </div>
+            
+            <!-- BODY -->
+            <div class="dialog-body">
+                <div class="dialog-message">{title_msg}</div>
+                <div class="detail-scroll">
+        """,
+        unsafe_allow_html=True,
+    )
+    
+    # Render baris detail
+    if detail_dict:
+        for key, val in detail_dict.items():
             st.markdown(
-                "<div style='text-align:center; color:#94a3b8; font-size:11px; padding:10px;'>"
-                "— Tidak ada detail tambahan —</div>",
+                f"""
+                <div class="detail-row">
+                    <span class="detail-key">{key}</span>
+                    <span class="detail-value">{val}</span>
+                </div>
+                """,
                 unsafe_allow_html=True,
             )
-        
-        # Footer + tutup
+    else:
         st.markdown(
-            f"""
-                    </div>
-                    <div class="dialog-footer">
-                        <span class="pulse-dot"></span>
-                        <span>TERSINKRONISASI KE GOOGLE SHEETS</span>
-                    </div>
-                </div>
-            </div>
-            """,
+            "<div style='text-align:center; color:#94a3b8; font-size:11px; padding:10px;'>"
+            "— Tidak ada detail tambahan —</div>",
             unsafe_allow_html=True,
         )
-        
-        # Tombol Tutup
-        if st.button("⚜️ Tutup Gulungan ⚜️", use_container_width=True, key="btn_close_global_success_dialog"):
-            st.rerun()
+    
+    # Footer + tutup
+    st.markdown(
+        f"""
+                </div>
+                <div class="dialog-footer">
+                    <span class="pulse-dot"></span>
+                    <span>TERSINKRONISASI KE GOOGLE SHEETS</span>
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    
+    # Tombol Tutup
+    if st.button("⚜️ Tutup Gulungan ⚜️", use_container_width=True, key="btn_close_global_success_dialog"):
+        st.rerun()
 
 # =========================================================
 # 2. INISIALISASI KONEKSI GOOGLE SHEETS & FUNGSI DATABASE
@@ -16855,6 +16855,7 @@ elif selected_tab == "➕ Edit Data (Admin)":
                         )
                         time.sleep(1.5)
                         st.rerun()
+
     # =========================================================================
     # 🎯 EDIT SALES PPS (BARU)
     # =========================================================================
