@@ -14257,7 +14257,12 @@ elif selected_tab == "📝 Input Data":
 
     active_sub_tab = st.radio(
         "",
-        ["⚡ Multi Input Sales", "🎯 Input Sales PPS", "📱 Salin Format WA"],
+        [
+            "⚡ Multi Input Sales",
+            "🎯 Input Sales PPS",
+            "📱 Salin Format WA",
+            "📡 Kirim Format Spreadsheet",   # ← TAB BARU
+        ],
         horizontal=True,
         label_visibility="collapsed",
         key="custom_sub_tabs",
@@ -15393,6 +15398,255 @@ elif selected_tab == "📝 Input Data":
 
                 st.code(wa_sueger_text, language="markdown")
 
+        # =========================================================================
+        # SUB TAB 4: KIRIM FORMAT SPREADSHEET (GENERATE LAPORAN)
+        # =========================================================================
+        elif active_sub_tab == "📡 Kirim Format Spreadsheet":
+            st.markdown(
+                "<h4 style='color: #00ff88; margin-top: 15px;'>📡 Kirim Format "
+                "Spreadsheet</h4>",
+                unsafe_allow_html=True,
+            )
+            st.caption(
+                "Pilih bulan & tahun, lalu klik tombol per program. "
+                "Sistem akan mengisi kolom target & actual di sheet laporan."
+            )
+            
+            # === INFO: Sheet harus sudah ada ===
+            st.info(
+                "💡 **Penting:** Sheet laporan harus **sudah ada** di "
+                "spreadsheet `LIGAPSM-LAPORAN` sebelum diisi. "
+                "Kalau belum, duplicate template bulan sebelumnya dulu."
+            )
+            
+            st.markdown("---")
+            
+            # === FILTER BULAN & TAHUN ===
+            col_lap1, col_lap2 = st.columns(2)
+            
+            with col_lap1:
+                _bulan_list = [
+                    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+                ]
+                _bulan_pilih = st.selectbox(
+                    "📅 Bulan",
+                    _bulan_list,
+                    index=waktu_wib.month - 1,
+                    key="lap_bulan_input"
+                )
+            
+            with col_lap2:
+                _tahun_pilih = st.number_input(
+                    "📆 Tahun",
+                    min_value=2024,
+                    max_value=2030,
+                    value=waktu_wib.year,
+                    key="lap_tahun_input"
+                )
+            
+            _bulan_int = _bulan_list.index(_bulan_pilih) + 1
+            _tahun_int = int(_tahun_pilih)
+            _bulan_upper = _bulan_pilih.upper()
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            # === 5 TOMBOL (PSM, PWP, SG, SUEGER, SEMUA) ===
+            col_b1, col_b2, col_b3, col_b4, col_b5 = st.columns(5)
+            
+            # ---- PSM ----
+            with col_b1:
+                if st.button(
+                    "📊 PSM",
+                    use_container_width=True,
+                    type="primary",
+                    key="btn_input_psm",
+                    help="Isi laporan PSM (WEEK 1-4)"
+                ):
+                    with st.spinner(f"⏳ Isi PSM {_bulan_upper} {_tahun_int}..."):
+                        _sheet_psm = f"{_bulan_upper} {_tahun_int}_PSM"
+                        _ok, _msg, _n = isi_laporan_psm(_bulan_int, _tahun_int, _sheet_psm)
+                    
+                    if _ok:
+                        st.success(_msg)
+                        st.info(f"👉 Cek sheet **{_sheet_psm}**")
+                        try:
+                            log_activity("REPORT", f"Isi laporan PSM {_bulan_upper} {_tahun_int}")
+                        except Exception:
+                            pass
+                        time.sleep(1.5)
+                        st.rerun()
+                    else:
+                        st.error(_msg)
+            
+            # ---- PWP ----
+            with col_b2:
+                if st.button(
+                    "⚡ PWP",
+                    use_container_width=True,
+                    key="btn_input_pwp",
+                    help="Isi laporan PWP"
+                ):
+                    with st.spinner(f"⏳ Isi PWP {_bulan_upper} {_tahun_int}..."):
+                        _sheet_pwp = f"{_bulan_upper} {_tahun_int}_PWP"
+                        _ok, _msg, _n = isi_laporan_pwp(_bulan_int, _tahun_int, _sheet_pwp)
+                    
+                    if _ok:
+                        st.success(_msg)
+                        st.info(f"👉 Cek sheet **{_sheet_pwp}**")
+                        try:
+                            log_activity("REPORT", f"Isi laporan PWP {_bulan_upper} {_tahun_int}")
+                        except Exception:
+                            pass
+                        time.sleep(1.5)
+                        st.rerun()
+                    else:
+                        st.error(_msg)
+            
+            # ---- SG ----
+            with col_b3:
+                if st.button(
+                    "🎁 SG",
+                    use_container_width=True,
+                    key="btn_input_sg",
+                    help="Isi laporan Serba Gratis"
+                ):
+                    with st.spinner(f"⏳ Isi SG {_bulan_upper} {_tahun_int}..."):
+                        _sheet_sg = f"{_bulan_upper} {_tahun_int}_SG"
+                        _ok, _msg, _n = isi_laporan_sg(_bulan_int, _tahun_int, _sheet_sg)
+                    
+                    if _ok:
+                        st.success(_msg)
+                        st.info(f"👉 Cek sheet **{_sheet_sg}**")
+                        try:
+                            log_activity("REPORT", f"Isi laporan SG {_bulan_upper} {_tahun_int}")
+                        except Exception:
+                            pass
+                        time.sleep(1.5)
+                        st.rerun()
+                    else:
+                        st.error(_msg)
+            
+            # ---- SUEGER ----
+            with col_b4:
+                if st.button(
+                    "💧 SUEGER",
+                    use_container_width=True,
+                    key="btn_input_sueger",
+                    help="Isi laporan Sueger"
+                ):
+                    with st.spinner(f"⏳ Isi Sueger {_bulan_upper} {_tahun_int}..."):
+                        _sheet_sueger = f"{_bulan_upper} {_tahun_int}_SUEGER"
+                        _ok, _msg, _n = isi_laporan_sueger(_bulan_int, _tahun_int, _sheet_sueger)
+                    
+                    if _ok:
+                        st.success(_msg)
+                        st.info(f"👉 Cek sheet **{_sheet_sueger}**")
+                        try:
+                            log_activity("REPORT", f"Isi laporan Sueger {_bulan_upper} {_tahun_int}")
+                        except Exception:
+                            pass
+                        time.sleep(1.5)
+                        st.rerun()
+                    else:
+                        st.error(_msg)
+            
+            # ---- INPUT SEMUA ----
+            with col_b5:
+                if st.button(
+                    "📡 INPUT SEMUA",
+                    use_container_width=True,
+                    type="primary",
+                    key="btn_input_all",
+                    help="Isi 4 laporan sekaligus: PSM, PWP, SG, Sueger"
+                ):
+                    with st.spinner(
+                        f"⏳ Isi 4 laporan {_bulan_upper} {_tahun_int}... "
+                        f"(mohon tunggu 5-10 detik)"
+                    ):
+                        _sheets = {
+                            "PSM": (isi_laporan_psm, f"{_bulan_upper} {_tahun_int}_PSM"),
+                            "PWP": (isi_laporan_pwp, f"{_bulan_upper} {_tahun_int}_PWP"),
+                            "SG": (isi_laporan_sg, f"{_bulan_upper} {_tahun_int}_SG"),
+                            "SUEGER": (isi_laporan_sueger, f"{_bulan_upper} {_tahun_int}_SUEGER"),
+                        }
+                        
+                        _success = []
+                        _failed = []
+                        
+                        for _nama, (_fungsi, _sheet) in _sheets.items():
+                            try:
+                                _ok, _msg, _n = _fungsi(_bulan_int, _tahun_int, _sheet)
+                                if _ok:
+                                    _success.append({"nama": _nama, "pesan": _msg})
+                                else:
+                                    _failed.append({"nama": _nama, "pesan": _msg})
+                            except Exception as _e:
+                                _failed.append({
+                                    "nama": _nama,
+                                    "pesan": f"❌ {str(_e)[:100]}"
+                                })
+                        
+                        # Simpan hasil di session_state untuk tampil setelah rerun
+                        st.session_state["_last_generate_all_result"] = {
+                            "success": _success,
+                            "failed": _failed,
+                            "bulan": _bulan_upper,
+                            "tahun": _tahun_int,
+                        }
+                        
+                        # Log
+                        try:
+                            log_activity(
+                                "REPORT",
+                                f"Input SEMUA laporan {_bulan_upper} {_tahun_int}: "
+                                f"{len(_success)} sukses, {len(_failed)} gagal"
+                            )
+                        except Exception:
+                            pass
+                    
+                    st.rerun()
+            
+            # === TAMPILKAN HASIL INPUT SEMUA ===
+            if "_last_generate_all_result" in st.session_state:
+                _res = st.session_state["_last_generate_all_result"]
+                
+                st.markdown("---")
+                
+                if _res["success"]:
+                    st.success(
+                        f"✅ **{len(_res['success'])} dari 4 sheet berhasil** "
+                        f"({_res['bulan']} {_res['tahun']})"
+                    )
+                    
+                    with st.expander("✅ Detail Sukses", expanded=True):
+                        for _s in _res["success"]:
+                            st.markdown(f"✅ **{_s['nama']}** — {_s['pesan']}")
+                
+                if _res["failed"]:
+                    st.error(f"❌ **{len(_res['failed'])} sheet gagal**")
+                    
+                    with st.expander("❌ Detail Gagal", expanded=True):
+                        for _f in _res["failed"]:
+                            st.markdown(f"❌ **{_f['nama']}** — {_f['pesan']}")
+                
+                if _res["success"]:
+                    st.info(
+                        f"👉 Cek spreadsheet **LIGAPSM-LAPORAN**. "
+                        f"Sheet: `{_res['bulan']} {_res['tahun']}_PSM`, "
+                        f"`_PWP`, `_SG`, `_SUEGER`."
+                    )
+                
+                # Tombol clear hasil
+                if st.button("🗑️ Clear Hasil", key="clear_last_result"):
+                    del st.session_state["_last_generate_all_result"]
+                    st.rerun()
+            
+            st.markdown("---")
+            st.caption(
+                "💡 **Tips:** Klik satu per satu kalau mau lihat per-sheet. "
+                "Atau klik **📡 INPUT SEMUA** untuk isi 4 laporan sekaligus."
+            )
 
 # =============================================================================
 # 📊 DAILY PERFORMANCE TOKO — HALAMAN BARU
@@ -19429,98 +19683,3 @@ elif selected_tab == "⚙️ Pengaturan & Master":
                         )
                     else:
                         st.error("❌ Gagal generate PPT.")
-
-            # =========================================================================
-            # 📊 GENERATE LAPORAN BULANAN (MULTI PROGRAM) — 1 TOMBOL
-            # =========================================================================
-            st.markdown("---")
-            st.markdown("#### 📊 Generate Laporan Bulanan")
-            st.caption(
-                "Pilih bulan & tahun, lalu klik tombol. Sistem akan generate **4 sheet** "
-                "sekaligus: **PSM**, **PWP**, **SG**, **Sueger** di Spreadsheet **LIGAPSM-LAPORAN**."
-            )
-
-            col_lap1, col_lap2 = st.columns(2)
-
-            with col_lap1:
-                _bulan_list = [
-                    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-                    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-                ]
-                _bulan_pilih = st.selectbox(
-                    "📅 Bulan",
-                    _bulan_list,
-                    index=waktu_wib.month - 1,
-                    key="lap_bulan_semua"
-                )
-
-            with col_lap2:
-                _tahun_pilih = st.number_input(
-                    "📆 Tahun",
-                    min_value=2024,
-                    max_value=2030,
-                    value=waktu_wib.year,
-                    key="lap_tahun_semua"
-                )
-
-            _bulan_int = _bulan_list.index(_bulan_pilih) + 1
-            _tahun_int = int(_tahun_pilih)
-
-            st.markdown("<br>", unsafe_allow_html=True)
-
-            if st.button(
-                "🚀 GENERATE SEMUA LAPORAN",
-                use_container_width=True,
-                type="primary",
-                key="gen_semua"
-            ):
-                with st.spinner(
-                    f"⏳ Generate 4 laporan {_bulan_pilih} {_tahun_int}... "
-                    f"(mohon tunggu 5-10 detik)"
-                ):
-                    _result = generate_semua_laporan(_bulan_int, _tahun_int)
-                
-                st.markdown("---")
-                
-                # ==== Tampilkan hasil ====
-                if _result["success"]:
-                    st.success(
-                        f"✅ **{_result['total_sheet']} sheet berhasil** — "
-                        f"Total {_result['total_baris']} baris"
-                    )
-                    
-                    with st.expander("📋 Detail Sheet yang Berhasil", expanded=True):
-                        for _s in _result["success"]:
-                            st.markdown(f"✅ **{_s['nama']}** — {_s['pesan']}")
-                
-                if _result["failed"]:
-                    st.error(f"❌ **{len(_result['failed'])} sheet gagal**")
-                    
-                    with st.expander("📋 Detail Error", expanded=True):
-                        for _f in _result["failed"]:
-                            st.markdown(f"❌ **{_f['nama']}** — {_f['error']}")
-                
-                if _result["success"]:
-                    st.info(
-                        f"👉 Cek spreadsheet **LIGAPSM-LAPORAN**. "
-                        f"Sheet: `{_bulan_pilih.upper()} {_tahun_int}`, "
-                        f"`{_bulan_pilih.upper()} {_tahun_int}_PWP`, "
-                        f"`{_bulan_pilih.upper()} {_tahun_int}_SG`, "
-                        f"`{_bulan_pilih.upper()} {_tahun_int}_SUEGER`"
-                    )
-                    
-                    # Log activity
-                    try:
-                        log_activity(
-                            "REPORT",
-                            f"Generate 4 laporan {_bulan_pilih} {_tahun_int}: "
-                            f"{_result['total_sheet']} sukses, "
-                            f"{len(_result['failed'])} gagal"
-                        )
-                    except Exception:
-                        pass
-                    
-                    time.sleep(2)
-                    st.rerun()
-                else:
-                    st.error("❌ Semua sheet gagal. Cek error di atas.")        
