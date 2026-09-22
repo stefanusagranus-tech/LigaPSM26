@@ -3985,7 +3985,7 @@ else:
         "📝 Input Data",
         "📊 Daily Performance",
         "➕ Edit Data (Admin)",
-        "⚙️ Pengaturan & Master"
+        "⚙️ Master Data"
     ]
     st.sidebar.markdown("<p style='color:#a1a1aa; font-size:11px; font-weight:700; padding: 0 10px;'>📌 NAVIGASI MENU</p>", unsafe_allow_html=True)
 # 🚀 TAMBAHKAN SAKLAR PENGUNCI PERKEMAHAN INI TEPAT DI ATAS ST.SIDEBAR.RADIO ANDA:
@@ -17596,7 +17596,7 @@ elif selected_tab == "➕ Edit Data (Admin)":
                             st.error(f"❌ Gagal hapus: {_e}")
 
 # --- TAB MASTER DATA & PENGATURAN ---
-elif selected_tab == "⚙️ Pengaturan & Master":
+elif selected_tab == "⚙️ Master Data":
     st.markdown(
         "<h2 style='color: #00f0ff; text-shadow: 0 0 10px rgba(0,240,255,0.5);'>⚙️ "
         "Master Data & Pengaturan Sistem</h2>",
