@@ -30,7 +30,6 @@ import matplotlib.pyplot as plt
 st.write("Streamlit version:", st.__version__)
 import uuid as _uuid_module
 from spreadsheet_connector import render_debug_panel
-from themes import load_all_themes, load_global_css, load_laporan_buttons_css
 
 # =========================================================================
 # 📦 IMPORT CONNECTOR (untuk log & backup ke Spreadsheet Audit)
@@ -2893,10 +2892,738 @@ def check_login(input_username, input_password):
     return True
   return False
 
+
 # =============================================================================
-# LOAD THEMES (CSS GLOBAL)
+# CUSTOM CSS UNIVERSAL (ROYAL GUILD / RPG FANTASY THEME)
 # =============================================================================
-load_global_css()
+st.markdown(
+    """
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&family=Quicksand:wght@600;700&family=Cinzel:wght@600;700;800&display=swap');
+
+    /* -------------------------------------------------------------------------
+    1. BASE APP & BACKGROUND KERAJAAN — LEBIH LEMBUT
+    ------------------------------------------------------------------------- */
+    .stApp {
+        background: radial-gradient(ellipse at top, #1e3a5f 0%, #0f172a 45%, #0a0f1a 100%) !important;
+        color: #f1e5c7 !important;
+        font-family: 'Quicksand', sans-serif !important;
+    }
+
+    /* SCROLLBAR LEBIH TEBAL — MOBILE FRIENDLY */
+    ::-webkit-scrollbar {
+        width: 12px;
+        height: 12px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #0b0f19;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, #d4af37, #9a7b38);
+        border-radius: 6px;
+        border: 2px solid #0b0f19;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, #fbbf24, #d4af37);
+    }
+
+    /* -------------------------------------------------------------------------
+    2. LABEL & WIDGET TEKS — KONTRAS LEBIH TINGGI
+    ------------------------------------------------------------------------- */
+    label, p[data-testid="stWidgetLabel"], div[data-testid="stWidgetLabel"] label, label p {
+        color: #fef3c7 !important;
+        font-family: 'Cinzel', serif !important;
+        font-weight: 700 !important;
+        font-size: 13px !important;
+        letter-spacing: 0.5px !important;
+        text-shadow: 0 0 3px rgba(212, 175, 55, 0.2) !important;
+    }
+
+    /* -------------------------------------------------------------------------
+    3. INPUT BOX & DROPDOWN — LEBIH JELAS & TOUCH FRIENDLY
+    ------------------------------------------------------------------------- */
+    div[data-baseweb="input"] input, 
+    div[data-baseweb="select"] input,
+    div[data-baseweb="select"] span {
+        color: #f1e5c7 !important;
+        background-color: transparent !important;
+        font-weight: bold !important;
+    }
+    div[data-baseweb="input"] > div, 
+    div[data-baseweb="select"] > div {
+        background-color: rgba(15, 23, 42, 0.95) !important;
+        border: 1.5px solid #b45309 !important;
+        border-radius: 8px !important;
+        box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6) !important;
+        min-height: 44px !important;
+    }
+    div[data-baseweb="input"] svg, div[data-baseweb="select"] svg {
+        fill: #d4af37 !important;
+    }
+
+    /* -------------------------------------------------------------------------
+    4. METRICS / KARTU STATISTIK — GLOW SUBTLE
+    ------------------------------------------------------------------------- */
+    div[data-testid="stMetric"] {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+        border: 1.5px solid #b45309 !important;
+        padding: 16px !important;
+        border-radius: 12px !important;
+        box-shadow: 0 0 8px rgba(212, 175, 55, 0.15), inset 0 0 12px rgba(0, 0, 0, 0.5) !important;
+        position: relative !important;
+    }
+    div[data-testid="stMetric"] label {
+        color: #cbd5e1 !important;
+        font-family: 'Quicksand', sans-serif !important;
+        font-weight: 700 !important;
+        font-size: 12px !important;
+        letter-spacing: 0.5px !important;
+    }
+    div[data-testid="stMetric"] [data-testid="stMetricValue"] {
+        color: #f7e7b4 !important;
+        text-shadow: 0 0 8px rgba(212, 175, 55, 0.4), 1px 1px 2px #000 !important;
+        font-family: 'MedievalSharp', serif !important;
+        font-weight: 800 !important;
+        font-size: 28px !important;
+    }
+
+    /* -------------------------------------------------------------------------
+    5. ST.EXPANDER — LEBIH JELAS
+    ------------------------------------------------------------------------- */
+    div[data-testid="stExpander"] {
+        background: rgba(12, 20, 39, 0.9) !important;
+        border: 1.5px solid #9a7b38 !important;
+        border-radius: 10px !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+        overflow: hidden !important;
+        margin-bottom: 12px !important;
+    }
+    div[data-testid="stExpander"] summary {
+        background: linear-gradient(90deg, #1e3a5f 0%, #0f172a 100%) !important;
+        color: #f7e7b4 !important;
+        font-family: 'Cinzel', serif !important;
+        font-weight: 700 !important;
+        font-size: 14px !important;
+        border-bottom: 1.5px solid #b45309 !important;
+        padding: 12px 16px !important;
+        min-height: 44px !important;
+        transition: all 0.25s ease !important;
+    }
+    div[data-testid="stExpander"] summary:hover {
+        background: linear-gradient(90deg, #2d4f7c 0%, #1e3a5f 100%) !important;
+        color: #ffffff !important;
+    }
+    div[data-testid="stExpander"] summary svg {
+        fill: #d4af37 !important;
+    }
+    div[data-testid="stExpander"] [data-testid="stExpanderDetails"] {
+        padding: 16px !important;
+        background: rgba(8, 13, 25, 0.6) !important;
+    }
+
+    /* -------------------------------------------------------------------------
+    6. ST.DATAFRAME
+    ------------------------------------------------------------------------- */
+    div[data-testid="stDataFrame"], div[data-testid="stTable"] {
+        background-color: rgba(10, 17, 34, 0.9) !important;
+        border: 1.5px solid #d4af37 !important;
+        border-radius: 10px !important;
+        box-shadow: 0 0 8px rgba(212, 175, 55, 0.15) !important;
+        padding: 4px !important;
+    }
+    div[data-testid="stDataFrame"] iframe {
+        border-radius: 8px !important;
+    }
+
+    /* -------------------------------------------------------------------------
+    7. SIDEBAR KERAJAAN
+    ------------------------------------------------------------------------- */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #0c1427 0%, #05070c 100%) !important;
+        border-right: 2px solid #9a7b38 !important;
+        box-shadow: 5px 0 15px rgba(0, 0, 0, 0.5) !important;
+    }
+    [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] label {
+        color: #f1e5c7 !important;
+        font-weight: 600 !important;
+    }
+
+    /* -------------------------------------------------------------------------
+    8. TOMBOL ST.BUTTON — GLOW SUBTLE + TOUCH FRIENDLY
+    ------------------------------------------------------------------------- */
+    div.stButton > button, div.stFormSubmitButton > button {
+        background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%) !important;
+        color: #f7e7b4 !important;
+        border: 1.5px solid #d4af37 !important;
+        border-radius: 8px !important;
+        font-family: 'Cinzel', serif !important;
+        font-weight: bold !important;
+        font-size: 13px !important;
+        box-shadow: 0 0 6px rgba(212, 175, 55, 0.15) !important;
+        transition: all 0.3s ease !important;
+        min-height: 44px !important;
+        padding: 10px 16px !important;
+    }
+    div.stButton > button:hover, div.stFormSubmitButton > button:hover {
+        background: linear-gradient(180deg, #d4af37 0%, #9a7b38 100%) !important;
+        color: #0b0f19 !important;
+        box-shadow: 0 0 12px rgba(212, 175, 55, 0.5) !important;
+    }
+
+    /* -------------------------------------------------------------------------
+    9. TAB CONTROL (st.tabs)
+    ------------------------------------------------------------------------- */
+    div[data-baseweb="tab-list"] button {
+        background-color: transparent !important;
+    }
+    div[data-baseweb="tab-list"] button div[data-testid="stMarkdownContainer"] p {
+        color: #94a3b8 !important;
+        font-family: 'Cinzel', serif !important;
+        font-weight: 600 !important;
+    }
+    div[data-baseweb="tab-list"] button[aria-selected="true"] div[data-testid="stMarkdownContainer"] p {
+        color: #f7e7b4 !important;
+        font-weight: 800 !important;
+        text-shadow: 0 0 8px rgba(212, 175, 55, 0.6) !important;
+    }
+    div[data-baseweb="tab-highlight"] {
+        background-color: #d4af37 !important;
+        box-shadow: 0 0 8px rgba(212, 175, 55, 0.8) !important;
+    }
+
+    /* -------------------------------------------------------------------------
+    10. ALERT / INFO / WARNING / ERROR
+    ------------------------------------------------------------------------- */
+    div[data-testid="stAlert"] {
+        background: rgba(15, 23, 42, 0.95) !important;
+        border: 1.5px solid #b45309 !important;
+        border-radius: 10px !important;
+        box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.4) !important;
+    }
+    div[data-testid="stAlert"] svg {
+        fill: #d4af37 !important;
+    }
+
+    /* -------------------------------------------------------------------------
+    11. HEADER KERAJAAN (ROYAL FRAME)
+    ------------------------------------------------------------------------- */
+    .royal-outer-frame {
+        position: relative;
+        background: radial-gradient(circle, #1e3a5f 0%, #0f172a 100%);
+        border: 3px double #d4af37;
+        border-radius: 14px;
+        box-shadow: 0 0 15px rgba(212, 175, 55, 0.35), inset 0 0 20px rgba(0, 0, 0, 0.8);
+        padding: 10px 14px;
+        color: #f1e5c7;
+        font-family: 'Quicksand', sans-serif;
+    }
+    .corner-ornament { position: absolute; color: #d4af37; font-size: 10px; line-height: 1; opacity: 0.85; pointer-events: none; }
+    .top-left { top: 3px; left: 5px; }
+    .top-right { top: 3px; right: 5px; }
+    .bottom-left { bottom: 3px; left: 5px; }
+    .bottom-right { bottom: 3px; right: 5px; }
+    .guild-title-box { text-align: center; margin-bottom: 8px; }
+    .guild-title {
+        font-family: 'MedievalSharp', serif;
+        font-size: 16px;
+        color: #f7e7b4;
+        text-shadow: 0 0 8px rgba(212, 175, 55, 0.8), 2px 2px 4px #000;
+        margin: 0;
+        letter-spacing: 0.8px;
+    }
+    .guild-subtitle { font-size: 9px; color: #38bdf8; margin-top: 1px; letter-spacing: 0.3px; }
+    .bottom-row { display: flex; align-items: stretch; justify-content: space-between; gap: 10px; width: 100%; }
+    .royal-side-box {
+        flex: 1;
+        background: rgba(10, 17, 34, 0.75);
+        border: 1px solid #9a7b38;
+        border-radius: 8px;
+        padding: 6px 10px;
+        min-width: 0;
+        box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .box-title { font-size: 8px; color: #e5c158; font-weight: bold; letter-spacing: 0.6px; margin-bottom: 3px; text-transform: uppercase; }
+    .marquee-container { overflow: hidden; white-space: nowrap; width: 100%; border-radius: 5px; padding: 2px 0; margin-top: 2px; }
+    .marquee-text { display: inline-block; padding-left: 100%; animation: marquee 10s linear infinite; font-size: 10px; font-weight: bold; }
+
+    @keyframes marquee {
+        0%   { transform: translate(0, 0); }
+        100% { transform: translate(-100%, 0); }
+    }
+
+    .time-box-wrapper { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+    .hourglass-container { display: flex; align-items: center; justify-content: center; padding-right: 8px; }
+    .hourglass-spin {
+        font-size: 20px;
+        display: inline-block;
+        filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.8));
+        animation: spinHourglass 2.5s infinite ease-in-out;
+    }
+
+    @keyframes spinHourglass {
+        0% { transform: rotate(0deg); }
+        50% { transform: rotate(180deg); }
+        100% { transform: rotate(180deg); }
+    }
+
+    .right-clock-content { text-align: right; flex: 1; }
+    .greeting-text { font-size: 9px; color: #fcd34d; font-weight: bold; margin-bottom: 1px; }
+    .digital-clock { font-family: monospace; font-size: 13px; font-weight: bold; color: #38bdf8; text-shadow: 0 0 6px rgba(56, 189, 248, 0.5); line-height: 1.1; }
+    .digital-date { font-size: 9px; color: #cbd5e1; margin-top: 1px; font-weight: bold; }
+
+    @media (min-width: 650px) {
+        .guild-title { font-size: 18px; }
+        .guild-subtitle { font-size: 11px; }
+        .greeting-text { font-size: 10px; }
+        .digital-clock { font-size: 14px; }
+        .digital-date { font-size: 10px; }
+        .box-title { font-size: 9px; }
+        .marquee-text { font-size: 11px; }
+        .hourglass-spin { font-size: 24px; }
+    }
+
+    /* =========================================================================
+       🎯 GLOBAL: FIX BINGKAI EMAS + HIDE BULLET RADIO (REPLIKA INPUT DATA)
+       ========================================================================= */
+    
+    /* 1. Atur container radio group — HORIZONTAL WRAP */
+    div[data-testid="stRadio"] > div[role="radiogroup"] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        gap: 12px !important;
+        justify-content: center !important;
+        align-items: center !important;
+        width: 100% !important;
+    }
+    
+    /* 2. Sembunyikan bulat/bullet radio bawaan Streamlit secara mutlak */
+    div[data-testid="stRadio"] div[role="radiogroup"] label > div:first-child,
+    div[data-testid="stRadio"] [data-baseweb="radio"] > div:first-child,
+    div[data-testid="stRadio"] input[type="radio"] {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+    
+    /* 3. BINGKAI EMAS DASAR — SEMUA TOMBOL */
+    div[data-testid="stRadio"] div[role="radiogroup"] > label,
+    div[data-testid="stRadio"] [data-baseweb="radio"] {
+        background: linear-gradient(180deg, #2a1a0c 0%, #170d05 100%) !important;
+        border: 2px solid #b8860b !important;
+        box-shadow: 0 0 4px rgba(184, 134, 11, 0.3), inset 0 0 4px rgba(0, 0, 0, 0.8) !important;
+        border-radius: 8px !important;
+        padding: 10px 16px !important;
+        margin: 4px !important;
+        min-width: 130px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        cursor: pointer !important;
+        transition: all 0.25s ease-in-out !important;
+    }
+    
+    /* 4. Format Teks Default */
+    div[data-testid="stRadio"] label *,
+    div[data-testid="stRadio"] [data-baseweb="radio"] * {
+        color: #d4af37 !important;
+        font-family: 'Georgia', serif !important;
+        font-weight: bold !important;
+        font-size: 11px !important;
+        letter-spacing: 0.5px !important;
+        text-transform: uppercase !important;
+        background: transparent !important;
+    }
+    
+    /* 5. EFEK HOVER */
+    div[data-testid="stRadio"] label:hover,
+    div[data-testid="stRadio"] [data-baseweb="radio"]:hover {
+        border-color: #ffe57f !important;
+        background: linear-gradient(180deg, #422913 0%, #291607 100%) !important;
+        box-shadow: 0 0 10px rgba(255, 229, 127, 0.5) !important;
+        transform: translateY(-2px) !important;
+    }
+    
+    /* 6. EFEK TOMBOL YANG SEDANG DIKLIK / TERPILIH */
+    div[data-testid="stRadio"] label:has(input:checked),
+    div[data-testid="stRadio"] [data-baseweb="radio"]:has(input:checked),
+    div[data-testid="stRadio"] [aria-checked="true"] {
+        background: linear-gradient(180deg, #6e4218 0%, #3d230b 100%) !important;
+        border: 2px solid #fff3b0 !important;
+        box-shadow: 0 0 15px rgba(212, 175, 55, 0.9), inset 0 0 8px rgba(255, 243, 176, 0.5) !important;
+    }
+    
+    div[data-testid="stRadio"] label:has(input:checked) *,
+    div[data-testid="stRadio"] [data-baseweb="radio"]:has(input:checked) *,
+    div[data-testid="stRadio"] [aria-checked="true"] * {
+        color: #ffffff !important;
+        text-shadow: 0 0 6px rgba(255, 243, 176, 0.9) !important;
+    }
+    
+    /* =========================================================================
+       ⚠️ EXCEPTION: SIDEBAR RADIO — JANGAN IKUT STYLE INI
+       ========================================================================= */
+    /* Sidebar radio punya style sendiri, jadi kita override balik */
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] {
+        flex-direction: column !important;
+        gap: 10px !important;
+        justify-content: flex-start !important;
+        align-items: stretch !important;
+    }
+    
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] > label,
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 100% !important;
+        height: 44px !important;
+        background: linear-gradient(180deg, #162447 0%, #0c1427 100%) !important;
+        border: 1.5px solid #9a7b38 !important;
+        border-radius: 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        margin: 0 !important;
+        padding: 0 10px !important;
+        box-sizing: border-box !important;
+        cursor: pointer !important;
+        box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+    }
+    
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] > label * {
+        color: #f1e5c7 !important;
+        font-family: 'Cinzel', serif !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.5px !important;
+        white-space: nowrap !important;
+    }
+    
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) {
+        background: linear-gradient(135deg, #b8860b 0%, #785805 100%) !important;
+        border-color: #f7e7b4 !important;
+        box-shadow: 0 0 12px rgba(212, 175, 55, 0.6) !important;
+    }
+
+    /* =========================================================================
+    B. FLOATING PILL NAVBAR (DESKTOP > 768px)
+    ========================================================================= */
+    @media (min-width: 769px) {
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] {
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            width: 100% !important;
+            margin: 0 auto !important;
+        }
+        
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            justify-content: center !important;
+            align-items: center !important;
+            gap: 6px !important;
+            
+            background: #09101f !important;
+            border: 1.5px solid #2d3f66 !important;
+            border-radius: 50px !important;
+            padding: 6px 10px !important;
+            
+            margin: 10px auto !important;
+            width: fit-content !important;
+            max-width: 90% !important;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5) !important;
+        }
+        
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label {
+            background: transparent !important;
+            border: none !important;
+            border-radius: 30px !important;
+            height: 42px !important;
+            min-width: 44px !important;
+            padding: 0 12px !important;
+            margin: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            transition: all 0.3s ease-in-out !important;
+            flex: 0 0 auto !important;
+        }
+        
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label p,
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label span {
+            font-size: 0px !important;
+            color: transparent !important;
+        }
+        
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label p::first-letter,
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label span::first-letter {
+            font-size: 20px !important;
+            color: #a0aec0 !important;
+        }
+        
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover p::first-letter {
+            color: #d4af37 !important;
+        }
+        
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) {
+            background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%) !important;
+            padding: 0 16px !important;
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4) !important;
+        }
+        
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) p,
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) span {
+            font-size: 11px !important;
+            font-family: 'Cinzel', serif !important;
+            font-weight: 800 !important;
+            color: #0d1527 !important;
+            white-space: nowrap !important;
+        }
+        
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) p::first-letter,
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) span::first-letter {
+            font-size: 16px !important;
+            color: #0d1527 !important;
+        }
+    }
+
+    /* =========================================================================
+    C. STICKY TAB BAR (MOBILE ≤ 768px)
+    ========================================================================= */
+    @media (max-width: 768px) {
+        /* Wrapper — sticky di atas */
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] {
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 999 !important;
+            background: linear-gradient(180deg, #0a0f1a 0%, #0f172a 100%) !important;
+            padding: 8px 0 !important;
+            margin: 0 0 16px 0 !important;
+            border-bottom: 2px solid #b45309 !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6) !important;
+        }
+        
+        /* Kapsul utama — scrollable horizontal */
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            justify-content: flex-start !important;
+            align-items: center !important;
+            gap: 6px !important;
+            
+            padding: 0 12px !important;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            scrollbar-width: none !important;
+            
+            background: transparent !important;
+            border: none !important;
+            border-radius: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-shadow: none !important;
+        }
+        
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"]::-webkit-scrollbar {
+            display: none !important;
+        }
+        
+        /* Tombol item — pill dengan icon + teks */
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+            border: 1.5px solid #334155 !important;
+            border-radius: 22px !important;
+            height: 44px !important;
+            padding: 0 14px !important;
+            margin: 0 !important;
+            flex: 0 0 auto !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            white-space: nowrap !important;
+            cursor: pointer !important;
+            transition: all 0.25s ease !important;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+        }
+        
+        /* Icon (emoji pertama) */
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label p::first-letter,
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label span::first-letter {
+            font-size: 16px !important;
+            color: #a0aec0 !important;
+            margin-right: 4px !important;
+        }
+        
+        /* Teks — selalu terlihat */
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label p,
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label span {
+            font-size: 11px !important;
+            color: #cbd5e1 !important;
+            font-family: 'Cinzel', serif !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.3px !important;
+        }
+        
+        /* Active state */
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) {
+            background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%) !important;
+            border-color: #f7e7b4 !important;
+            box-shadow: 0 3px 10px rgba(212, 175, 55, 0.5) !important;
+        }
+        
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) p::first-letter,
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) span::first-letter {
+            color: #0d1527 !important;
+        }
+        
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) p,
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) span {
+            color: #0d1527 !important;
+            font-weight: 800 !important;
+        }
+    }
+
+
+    /* -------------------------------------------------------------------------
+       9. TOMBOL ST.BUTTON (TOMBOL EKSEKUSI GUILD)
+       ------------------------------------------------------------------------- */
+    div.stButton > button, div.stFormSubmitButton > button {
+        background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%) !important;
+        color: #f7e7b4 !important;
+        border: 1.5px solid #d4af37 !important;
+        border-radius: 8px !important;
+        font-family: 'Cinzel', serif !important;
+        font-weight: bold !important;
+        box-shadow: 0 0 10px rgba(212, 175, 55, 0.2) !important;
+        transition: all 0.3s ease !important;
+    }
+    div.stButton > button:hover, div.stFormSubmitButton > button:hover {
+        background: linear-gradient(180deg, #d4af37 0%, #9a7b38 100%) !important;
+        color: #0b0f19 !important;
+        box-shadow: 0 0 18px rgba(212, 175, 55, 0.7) !important;
+    }
+
+    /* -------------------------------------------------------------------------
+       10. TAB CONTROL KERAJAAN
+       ------------------------------------------------------------------------- */
+    div[data-baseweb="tab-list"] button {
+        background-color: transparent !important;
+    }
+    div[data-baseweb="tab-list"] button div[data-testid="stMarkdownContainer"] p {
+        color: #94a3b8 !important;
+        font-family: 'Cinzel', serif !important;
+        font-weight: 600 !important;
+    }
+    div[data-baseweb="tab-list"] button[aria-selected="true"] div[data-testid="stMarkdownContainer"] p {
+        color: #f7e7b4 !important;
+        font-weight: 800 !important;
+        text-shadow: 0 0 8px rgba(212, 175, 55, 0.6) !important;
+    }
+    div[data-baseweb="tab-highlight"] {
+        background-color: #d4af37 !important;
+        box-shadow: 0 0 8px rgba(212, 175, 55, 0.8) !important;
+    }
+
+    /* -------------------------------------------------------------------------
+       11. HEADER KERAJAAN (ROYAL FRAME STYLES)
+       ------------------------------------------------------------------------- */
+    .royal-outer-frame {
+        position: relative;
+        background: radial-gradient(circle, #162447 0%, #0c1427 100%);
+        border: 3px double #d4af37;
+        border-radius: 14px;
+        box-shadow: 0 0 15px rgba(212, 175, 55, 0.35), inset 0 0 20px rgba(0, 0, 0, 0.8);
+        padding: 10px 14px;
+        color: #f1e5c7;
+        font-family: 'Quicksand', sans-serif;
+    }
+    .corner-ornament { position: absolute; color: #d4af37; font-size: 10px; line-height: 1; opacity: 0.85; pointer-events: none; }
+    .top-left { top: 3px; left: 5px; }
+    .top-right { top: 3px; right: 5px; }
+    .bottom-left { bottom: 3px; left: 5px; }
+    .bottom-right { bottom: 3px; right: 5px; }
+    .guild-title-box { text-align: center; margin-bottom: 8px; }
+    .guild-title {
+        font-family: 'MedievalSharp', serif;
+        font-size: 16px;
+        color: #f7e7b4;
+        text-shadow: 0 0 8px rgba(212, 175, 55, 0.8), 2px 2px 4px #000;
+        margin: 0;
+        letter-spacing: 0.8px;
+    }
+    .guild-subtitle { font-size: 9px; color: #38bdf8; margin-top: 1px; letter-spacing: 0.3px; }
+    .bottom-row { display: flex; align-items: stretch; justify-content: space-between; gap: 10px; width: 100%; }
+    .royal-side-box {
+        flex: 1;
+        background: rgba(10, 17, 34, 0.75);
+        border: 1px solid #9a7b38;
+        border-radius: 8px;
+        padding: 6px 10px;
+        min-width: 0;
+        box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .box-title { font-size: 8px; color: #e5c158; font-weight: bold; letter-spacing: 0.6px; margin-bottom: 3px; text-transform: uppercase; }
+    .marquee-container { overflow: hidden; white-space: nowrap; width: 100%; border-radius: 5px; padding: 2px 0; margin-top: 2px; }
+    .marquee-text { display: inline-block; padding-left: 100%; animation: marquee 10s linear infinite; font-size: 10px; font-weight: bold; }
+
+    @keyframes marquee {
+        0%   { transform: translate(0, 0); }
+        100% { transform: translate(-100%, 0); }
+    }
+
+    .time-box-wrapper { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+    .hourglass-container { display: flex; align-items: center; justify-content: center; padding-right: 8px; }
+    .hourglass-spin {
+        font-size: 20px;
+        display: inline-block;
+        filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.8));
+        animation: spinHourglass 2.5s infinite ease-in-out;
+    }
+
+    @keyframes spinHourglass {
+        0% { transform: rotate(0deg); }
+        50% { transform: rotate(180deg); }
+        100% { transform: rotate(180deg); }
+    }
+
+    .right-clock-content { text-align: right; flex: 1; }
+    .greeting-text { font-size: 9px; color: #fcd34d; font-weight: bold; margin-bottom: 1px; }
+    .digital-clock { font-family: monospace; font-size: 13px; font-weight: bold; color: #38bdf8; text-shadow: 0 0 6px rgba(56, 189, 248, 0.5); line-height: 1.1; }
+    .digital-date { font-size: 9px; color: #cbd5e1; margin-top: 1px; font-weight: bold; }
+
+    @media (min-width: 650px) {
+        .guild-title { font-size: 18px; }
+        .guild-subtitle { font-size: 11px; }
+        .greeting-text { font-size: 10px; }
+        .digital-clock { font-size: 14px; }
+        .digital-date { font-size: 10px; }
+        .box-title { font-size: 9px; }
+        .marquee-text { font-size: 11px; }
+        .hourglass-spin { font-size: 24px; }
+    }
+</style>
+""",
+    unsafe_allow_html=True,
+)
+
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+if "username" not in st.session_state:
+    st.session_state.username = ""
+    
 
 # ==========================================
 # 6. HALAMAN LOGIN
@@ -14811,9 +15538,6 @@ elif selected_tab == "📝 Input Data":
     # SUB TAB 4: KIRIM FORMAT SPREADSHEET (GENERATE LAPORAN)
     # =========================================================================
     elif active_sub_tab == "📡 Kirim Format Spreadsheet":
-        # Load CSS tombol laporan
-        load_laporan_buttons_css()
-        
         st.markdown(
             "<h4 style='color: #00ff88; margin-top: 15px;'>📡 Kirim Format "
             "Spreadsheet</h4>",
