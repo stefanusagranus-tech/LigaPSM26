@@ -2409,7 +2409,7 @@ def log_activity(action, detail=""):
 # 💓 HEARTBEAT SYSTEM — DETEKSI USER AKTIF
 # =========================================================================
 _HEARTBEAT_INTERVAL_SEC = 30      # update tiap 30 detik
-_INACTIVE_THRESHOLD_MIN = 5       # 5 menit idle = tidak aktif
+_INACTIVE_THRESHOLD_MIN = 1       # 5 menit idle = tidak aktif
 
 
 def update_heartbeat():
@@ -2470,61 +2470,75 @@ def write_my_heartbeat():
 
 def check_and_log_stale_users():
     """
-    Cek user yang sudah tidak aktif > 5 menit.
-    Catat AUTO_LOGOUT ke queue & hapus dari heartbeat.
+    Cek user yang sudah tidak aktif > threshold menit.
+    Catat AUTO_LOGOUT LANGSUNG ke Spreadsheet Audit & hapus heartbeat.
     
     🛡️ SAFETY GUARD:
-    - Skip kalau belum waktunya cek
-    - Skip kalau threshold < 2 menit
-    - Max auto-logout per sesi = 5 user (anti mass delete)
+    - Skip kalau belum waktunya cek (min 5 menit interval)
+    - Skip kalau threshold < 10 menit
+    - Max auto-logout per sesi = 3 user (anti mass delete)
+    - Skip user yang heartbeat < threshold
+    - Skip kalau sedang tidak ada user aktif (jaga-jaga)
     """
     try:
-        _last_check = st.session_state.get("last_stale_check", 0)
         _now = time.time()
+        _last_check = st.session_state.get("last_stale_check", _now)
         
-        if _now - _last_check < 300:  # 5 menit
+        # ✅ FIX: Init _last_check = _now (bukan 0)
+        # Biar cek pertama nggak langsung mass auto-logout
+        if "last_stale_check" not in st.session_state:
+            st.session_state["last_stale_check"] = _now
+            print(f"[CHECK_STALE] Init last_check = {_now} (skip cek pertama)")
+            return
+        
+        # Interval cek: 5 menit (300 detik)
+        if _now - _last_check < 60:
             return
         
         st.session_state["last_stale_check"] = _now
         
-        # 🛡️ GUARD: Pastikan threshold valid
+        # 🛡️ GUARD: Threshold minimal 10 menit
         _threshold = _INACTIVE_THRESHOLD_MIN
-        if _threshold is None or _threshold < 2:
-            print(f"[WARN] Threshold invalid ({_threshold}), pakai 0.5 menit")
-            _threshold = 5
+        if _threshold is None or _threshold < 0.5:
+            print(f"[WARN] Threshold terlalu kecil ({_threshold}), paksa 15 menit")
+            _threshold = 15
         
         # Ambil user stale
         stale_users = get_stale_heartbeats(threshold_minutes=_threshold)
         
-        print(f"[CHECK_STALE] Ditemukan {len(stale_users)} user stale")
+        print(f"[CHECK_STALE] Ditemukan {len(stale_users)} user stale (> {_threshold} menit)")
         
         if not stale_users:
             return
         
-        # 🛡️ GUARD: Max 5 user per sesi cek (anti mass delete)
-        MAX_PER_CHECK = 5
+        # 🛡️ GUARD: Max 3 user per sesi cek (anti mass delete)
+        MAX_PER_CHECK = 3
         stale_users = stale_users[:MAX_PER_CHECK]
         
-        # Catat AUTO_LOGOUT
+        # === TULIS AUTO_LOGOUT LANGSUNG ===
         for _user in stale_users:
             try:
                 _waktu = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
-                _log_entry = {
-                    "timestamp": _waktu,
-                    "username": str(_user["username"]),
-                    "role": str(_user["role"]),
-                    "action": "AUTO_LOGOUT",
-                    "detail": f"Auto-logout setelah {_user['selisih_menit']} menit idle",
-                    "session_id": str(_user["session_id"]),
-                }
                 
-                if "pending_activity_logs" not in st.session_state:
-                    st.session_state["pending_activity_logs"] = []
-                st.session_state["pending_activity_logs"].insert(0, _log_entry)
+                # ✅ FIX: Direct write ke Spreadsheet Audit (bukan queue)
+                try:
+                    from spreadsheet_connector import append_logs_to_sheet
+                    _log_entry = {
+                        "timestamp": _waktu,
+                        "username": str(_user["username"]),
+                        "role": str(_user.get("role", "-")),
+                        "action": "AUTO_LOGOUT",
+                        "detail": f"Auto-logout setelah {_user['selisih_menit']} menit idle",
+                        "session_id": str(_user.get("session_id", "-")),
+                    }
+                    _count, _msg = append_logs_to_sheet([_log_entry])
+                    print(f"[AUTO_LOGOUT LOG] {_user['username']}: {_msg}")
+                except Exception as e_log:
+                    print(f"[AUTO_LOGOUT LOG FAIL] {_user['username']}: {e_log}")
                 
-                # 🛡️ Hapus dari heartbeat (dengan guard)
+                # 🛡️ Hapus dari heartbeat
                 _ok_del, _msg_del = remove_heartbeat_from_sheet(_user["username"])
-                print(f"[AUTO_LOGOUT] {_user['username']} - {_msg_del}")
+                print(f"[AUTO_LOGOUT HEARTBEAT] {_user['username']} - {_msg_del}")
             
             except Exception as e_user:
                 print(f"[STALE_USER ERROR] {e_user}")
@@ -3782,10 +3796,10 @@ if not st.session_state.get("welcome_shown", False):
 # =========================================================================
 # 💓 HEARTBEAT — UPDATE & CHECK STALE (setelah welcome screen)
 # =========================================================================
-#if st.session_state.get("logged_in", False):
-    #update_heartbeat()          # Update timestamp lokal
-    #write_my_heartbeat()        # Tulis ke sheet tiap 30 detik
-    #check_and_log_stale_users() # Cek & log user yang idle
+if st.session_state.get("logged_in", False):
+    update_heartbeat()          # Update timestamp lokal
+    write_my_heartbeat()        # Tulis ke sheet tiap 30 detik
+    check_and_log_stale_users() # Cek & log user yang idle
 
 # ==========================================================
 # 7. SIDEBAR DASHBOARD - GAYA CODINGLAB (BAGIAN 1)
@@ -4057,8 +4071,11 @@ if _is_admin_user:
 st.sidebar.markdown("<hr style='margin: 15px 0; border-color: #27272a;'>", unsafe_allow_html=True)
 logout_text = "🚪" if st.session_state.sidebar_collapsed else "🚪 Keluar / Logout"
 if st.sidebar.button(logout_text, use_container_width=True, key="logout_sidebar"):
-    # Log logout
-    log_activity("LOGOUT", "Logout dari sistem")
+    # Log logout — direct write ke Spreadsheet Audit
+    try:
+        log_activity("LOGOUT", "Logout dari sistem")
+    except Exception as e_logout:
+        print(f"[LOGOUT LOG FAIL] {e_logout}")
     
     # 🚧 FREEZE SEMENTARA — Heartbeat hapus dimatikan
     # _my_username = st.session_state.get("username", "")
@@ -4067,7 +4084,6 @@ if st.sidebar.button(logout_text, use_container_width=True, key="logout_sidebar"
     #         remove_heartbeat_from_sheet(_my_username)
     #     except Exception as e_hb:
     #         print(f"[LOGOUT HEARTBEAT ERROR] {e_hb}")
-    
     
     # Clear session
     st.session_state.logged_in = False
