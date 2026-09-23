@@ -3555,6 +3555,55 @@ st.markdown(
             font-weight: 800 !important;
         }
     }
+    
+        /* =========================================================================
+    🎯 FORM INPUT PPS — RAPI & SEJAJAR
+    ========================================================================= */
+    /* Semua label di form input PPS — tinggi seragam */
+    div[data-testid="stForm"] label p,
+    div[data-testid="stForm"] div[data-testid="stWidgetLabel"] p {
+        min-height: 24px !important;
+        display: flex !important;
+        align-items: center !important;
+        line-height: 1.3 !important;
+    }
+
+    /* Number input — tinggi seragam */
+    div[data-testid="stForm"] div[data-baseweb="input"] > div {
+        min-height: 44px !important;
+        height: 44px !important;
+    }
+
+    /* Selectbox — tinggi seragam */
+    div[data-testid="stForm"] div[data-baseweb="select"] > div {
+        min-height: 44px !important;
+        height: 44px !important;
+    }
+
+    /* Date input — tinggi seragam */
+    div[data-testid="stForm"] div[data-baseweb="input"] input[type="text"],
+    div[data-testid="stForm"] div[data-baseweb="input"] input[type="date"] {
+        height: 44px !important;
+    }
+
+    /* Column di form — align start biar rapi */
+    div[data-testid="stForm"] div[data-testid="stHorizontalBlock"] {
+        align-items: flex-start !important;
+    }
+
+    /* Mobile — stack semua field */
+    @media (max-width: 768px) {
+        div[data-testid="stForm"] div[data-testid="stHorizontalBlock"] {
+            flex-wrap: wrap !important;
+            gap: 12px !important;
+        }
+        
+        div[data-testid="stForm"] label p,
+        div[data-testid="stForm"] div[data-testid="stWidgetLabel"] p {
+            font-size: 12px !important;
+            min-height: auto !important;
+        }
+    }
 
     /* =========================================================================
     📱 UNIVERSAL RESPONSIVE — Android, iOS, Tablet, Desktop
@@ -3826,18 +3875,23 @@ if "username" not in st.session_state:
 # 6. HALAMAN LOGIN
 # ==========================================
 def show_login_page():
-  LOGO_URL = "https://raw.githubusercontent.com/stefanusagranus-tech/LigaPSM26/main/kgs_group_belgium_logo.jpg"
+    LOGO_URL = "https://raw.githubusercontent.com/stefanusagranus-tech/LigaPSM26/main/kgs_group_belgium_logo.jpg"
 
-  st.markdown(
-      f"""
+    st.markdown(
+        f"""
         <style>
+            /* ============ LOGIN PAGE — BIG & COMFORTABLE ============ */
             .login-card {{
-                background-color: #1e293b;
+                background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
                 padding: 35px 30px;
                 border-radius: 16px;
-                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+                border: 2px solid #9a7b38;
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 30px rgba(212, 175, 55, 0.15);
                 text-align: center;
                 margin-bottom: 20px;
+                max-width: 420px;
+                margin-left: auto;
+                margin-right: auto;
             }}
             .login-logo {{
                 width: 100px;
@@ -3850,120 +3904,222 @@ def show_login_page():
                 display: block;
                 margin-left: auto;
                 margin-right: auto;
+                box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
             }}
             .login-subtitle {{
                 color: #38bdf8;
-                font-size: 13px;
+                font-size: 14px;
                 margin-bottom: 0px;
+                font-weight: 700;
+                letter-spacing: 1px;
+            }}
+            
+            /* ============ FORM LOGIN ============ */
+            div[data-testid="stForm"] {{
+                background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85)) !important;
+                border: 2px solid #9a7b38 !important;
+                border-radius: 16px !important;
+                padding: 30px 24px !important;
+                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), inset 0 0 30px rgba(212, 175, 55, 0.05) !important;
+                max-width: 420px !important;
+                margin: 0 auto !important;
+            }}
+            
+            /* Label form */
+            div[data-testid="stForm"] label p {{
+                font-size: 14px !important;
+                font-weight: 800 !important;
+                letter-spacing: 1px !important;
+                color: #f7e7b4 !important;
+                text-transform: uppercase !important;
+                margin-bottom: 8px !important;
+            }}
+            
+            /* Input field */
+            div[data-testid="stForm"] div[data-baseweb="input"] > div {{
+                min-height: 56px !important;
+                background: rgba(10, 15, 26, 0.9) !important;
+                border: 2px solid #b45309 !important;
+                border-radius: 12px !important;
+                padding: 0 18px !important;
+                transition: all 0.25s ease !important;
+            }}
+            
+            div[data-testid="stForm"] div[data-baseweb="input"] > div:focus-within {{
+                border-color: #fbbf24 !important;
+                box-shadow: 0 0 20px rgba(251, 191, 36, 0.4) !important;
+            }}
+            
+            div[data-testid="stForm"] div[data-baseweb="input"] input {{
+                font-size: 15px !important;
+                font-weight: 600 !important;
+                color: #ffffff !important;
+                background: transparent !important;
+            }}
+            
+            div[data-testid="stForm"] div[data-baseweb="input"] input::placeholder {{
+                color: #64748b !important;
+                font-weight: 500 !important;
+            }}
+            
+            /* ✅ TOMBOL LOGIN — BESAR & NYAMAN */
+            div[data-testid="stForm"] div.stFormSubmitButton > button,
+            div[data-testid="stForm"] button[kind="secondaryFormSubmit"],
+            div[data-testid="stForm"] button[kind="primaryFormSubmit"] {{
+                width: 100% !important;
+                min-height: 60px !important;
+                background: linear-gradient(135deg, #b45309 0%, #d97706 50%, #fbbf24 100%) !important;
+                color: #0b0f19 !important;
+                border: 2px solid #fbbf24 !important;
+                border-radius: 14px !important;
+                font-family: 'Cinzel', serif !important;
+                font-size: 16px !important;
+                font-weight: 900 !important;
+                letter-spacing: 2px !important;
+                text-transform: uppercase !important;
+                padding: 18px 24px !important;
+                margin-top: 20px !important;
+                box-shadow: 
+                    0 6px 20px rgba(251, 191, 36, 0.4), 
+                    inset 0 2px 0 rgba(255, 255, 255, 0.2) !important;
+                transition: all 0.3s ease !important;
+                cursor: pointer !important;
+            }}
+            
+            div[data-testid="stForm"] div.stFormSubmitButton > button:hover,
+            div[data-testid="stForm"] button[kind="secondaryFormSubmit"]:hover,
+            div[data-testid="stForm"] button[kind="primaryFormSubmit"]:hover {{
+                background: linear-gradient(135deg, #d97706 0%, #fbbf24 50%, #fcd34d 100%) !important;
+                transform: translateY(-3px) !important;
+                box-shadow: 
+                    0 10px 30px rgba(251, 191, 36, 0.6), 
+                    inset 0 2px 0 rgba(255, 255, 255, 0.3) !important;
+            }}
+            
+            div[data-testid="stForm"] div.stFormSubmitButton > button:active {{
+                transform: translateY(0) !important;
+            }}
+            
+            /* Mobile — lebih besar lagi */
+            @media (max-width: 768px) {{
+                div[data-testid="stForm"] {{
+                    padding: 24px 18px !important;
+                }}
+                
+                div[data-testid="stForm"] div.stFormSubmitButton > button {{
+                    min-height: 64px !important;
+                    font-size: 15px !important;
+                    padding: 18px 20px !important;
+                    letter-spacing: 1.5px !important;
+                }}
             }}
         </style>
         <div class='login-card'>
             <img src='{LOGO_URL}' class='login-logo' alt='KGS Group Logo'>
-            <p class='login-subtitle'>Sistem Monitoring PSM Toko</p>
+            <p class='login-subtitle'>🔐 Sistem Monitoring PSM Toko</p>
         </div>
-    """,
-      unsafe_allow_html=True,
-  )
+        """,
+        unsafe_allow_html=True,
+    )
 
-  _, col2, _ = st.columns([1, 1.4, 1])
+    _, col2, _ = st.columns([1, 1.4, 1])
 
-  with col2:
-    with st.form("login_form", clear_on_submit=False):
-      username_input = st.text_input(
-          "Username", placeholder="Masukkan username"
-      ).strip()
-      password_input = st.text_input(
-          "Password", type="password", placeholder="Masukkan password"
-      )
-      submit_btn = st.form_submit_button(
-          "Masuk ke Aplikasi", use_container_width=True
-      )
+    with col2:
+        with st.form("login_form", clear_on_submit=False):
+            username_input = st.text_input(
+                "Username", placeholder="Masukkan username"
+            ).strip()
+            password_input = st.text_input(
+                "Password", type="password", placeholder="Masukkan password"
+            )
+            submit_btn = st.form_submit_button(
+                "🔐 Masuk ke Aplikasi", use_container_width=True
+            )
 
-
-      if submit_btn:
-        if not username_input or not password_input:
-            st.warning("Username dan Password wajib diisi!")
-        else:
-            _login_success = False
-            _user_nama = ""
-            _user_role = "Staff Toko"
-            
-            # === CARA 1: Cek dari MASTER_PERSONIL ===
-            try:
-                _person_df_login = st.session_state.get("person_df", pd.DataFrame())
-                
-                if _person_df_login.empty:
-                    _person_df_login = conn.read(worksheet="MASTER_PERSONIL", ttl=60)
-                
-                if _person_df_login is not None and not _person_df_login.empty:
-                    _person_df_login.columns = _person_df_login.columns.astype(str).str.strip().str.lower()
+            if submit_btn:
+                if not username_input or not password_input:
+                    st.warning("Username dan Password wajib diisi!")
+                else:
+                    _login_success = False
+                    _user_nama = ""
+                    _user_role = "Staff Toko"
                     
-                    _match = _person_df_login[
-                        (_person_df_login["username"].astype(str).str.strip().str.lower() 
-                        == username_input.strip().lower()) &
-                        (_person_df_login["password"].astype(str).str.strip() 
-                        == password_input.strip())
-                    ]
+                    # === CARA 1: Cek dari MASTER_PERSONIL ===
+                    try:
+                        _person_df_login = st.session_state.get("person_df", pd.DataFrame())
+                        
+                        if _person_df_login.empty:
+                            _person_df_login = conn.read(worksheet="MASTER_PERSONIL", ttl=60)
+                        
+                        if _person_df_login is not None and not _person_df_login.empty:
+                            _person_df_login.columns = _person_df_login.columns.astype(str).str.strip().str.lower()
+                            
+                            _match = _person_df_login[
+                                (_person_df_login["username"].astype(str).str.strip().str.lower() 
+                                == username_input.strip().lower()) &
+                                (_person_df_login["password"].astype(str).str.strip() 
+                                == password_input.strip())
+                            ]
+                            
+                            if not _match.empty:
+                                _row = _match.iloc[0]
+                                _login_success = True
+                                _user_nama = str(_row.get("person_name", username_input))
+                                _user_role = str(_row.get("role", "Staff Toko"))
+                    except Exception as _e_login:
+                        print(f"[LOGIN CHECK ERROR] {_e_login}")
                     
-                    if not _match.empty:
-                        _row = _match.iloc[0]
-                        _login_success = True
-                        _user_nama = str(_row.get("person_name", username_input))
-                        _user_role = str(_row.get("role", "Staff Toko"))
-            except Exception as _e_login:
-                print(f"[LOGIN CHECK ERROR] {_e_login}")
-            
-            # === CARA 2: Fallback ke USER_DATABASE ===
-            if not _login_success:
-                if (username_input in USER_DATABASE 
-                    and USER_DATABASE[username_input]["password"] == password_input):
-                    _login_success = True
-                    _user_nama = USER_DATABASE[username_input]["nama"]
-                    _user_role = USER_DATABASE[username_input].get("role", "Staff Toko")
-            
-            # === PROSES LOGIN ===
-            if _login_success:
-                st.session_state.logged_in = True
-                st.session_state.username = _user_nama
-                st.session_state.role = _user_role
-                st.session_state["session_id"] = str(_uuid_module.uuid4())[:8]
-                st.session_state["welcome_shown"] = False
-                st.session_state["last_active"] = time.time()
-                
-                # ✅ FIX v2: Reset tracker anti-duplikat
-                st.session_state["stale_logged_users"] = set()
-                st.session_state["last_stale_check"] = time.time()
-                
-                # 🧹 CLEANUP ON LOGIN
-                try:
-                    _cleaned = cleanup_stale_on_login(threshold_minutes=_CLEANUP_LOGIN_THRESHOLD_MIN)
-                    if _cleaned > 0:
-                        print(f"[LOGIN] 🧹 {_cleaned} user lama dibersihkan")
-                except Exception as e_clean:
-                    print(f"[LOGIN CLEANUP ERROR] {e_clean}")
-                
-                log_activity("LOGIN", f"Login sebagai {_user_nama}")
-                check_and_auto_flush_log()
-                st.rerun()
-            else:
-                # Log login gagal → queue (bukan tulis langsung)
-                try:
-                    _fail_waktu = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
-                    _fail_entry = {
-                        "timestamp": _fail_waktu,
-                        "username": str(username_input),
-                        "role": "-",
-                        "action": "LOGIN_FAILED",
-                        "detail": "Username atau password salah",
-                        "session_id": "-",
-                    }
-                    if "pending_activity_logs" not in st.session_state:
-                        st.session_state["pending_activity_logs"] = []
-                    st.session_state["pending_activity_logs"].insert(0, _fail_entry)
-                except Exception:
-                    pass
-                
-                st.error("❌ Username atau Password salah!")
+                    # === CARA 2: Fallback ke USER_DATABASE ===
+                    if not _login_success:
+                        if (username_input in USER_DATABASE 
+                            and USER_DATABASE[username_input]["password"] == password_input):
+                            _login_success = True
+                            _user_nama = USER_DATABASE[username_input]["nama"]
+                            _user_role = USER_DATABASE[username_input].get("role", "Staff Toko")
+                    
+                    # === PROSES LOGIN ===
+                    if _login_success:
+                        st.session_state.logged_in = True
+                        st.session_state.username = _user_nama
+                        st.session_state.role = _user_role
+                        st.session_state["session_id"] = str(_uuid_module.uuid4())[:8]
+                        st.session_state["welcome_shown"] = False
+                        st.session_state["last_active"] = time.time()
+                        
+                        # Reset tracker anti-duplikat
+                        st.session_state["stale_logged_users"] = set()
+                        st.session_state["last_stale_check"] = time.time()
+                        
+                        # 🧹 CLEANUP ON LOGIN
+                        try:
+                            _cleaned = cleanup_stale_on_login(threshold_minutes=_CLEANUP_LOGIN_THRESHOLD_MIN)
+                            if _cleaned > 0:
+                                print(f"[LOGIN] 🧹 {_cleaned} user lama dibersihkan")
+                        except Exception as e_clean:
+                            print(f"[LOGIN CLEANUP ERROR] {e_clean}")
+                        
+                        log_activity("LOGIN", f"Login sebagai {_user_nama}")
+                        check_and_auto_flush_log()
+                        st.rerun()
+                    else:
+                        # Log login gagal
+                        try:
+                            _fail_waktu = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
+                            _fail_entry = {
+                                "timestamp": _fail_waktu,
+                                "username": str(username_input),
+                                "role": "-",
+                                "action": "LOGIN_FAILED",
+                                "detail": "Username atau password salah",
+                                "session_id": "-",
+                            }
+                            if "pending_activity_logs" not in st.session_state:
+                                st.session_state["pending_activity_logs"] = []
+                            st.session_state["pending_activity_logs"].insert(0, _fail_entry)
+                        except Exception:
+                            pass
+                        
+                        st.error("❌ Username atau Password salah!")
     
 # =========================================================================
 # 🛡️ SUNTIKAN MEMORI UTAMA (WAJIB ADA AGAR VARIABEL LOGGED_IN TERDAFTAR)
@@ -13836,15 +13992,40 @@ if selected_tab == "🏠 Menu Utama":
                 border-radius: 16px;
                 padding: 24px;
                 margin-bottom: 15px;
-                min-height: 290px;
+                
+                /* ✅ FIX: Pakai height fixed biar 2 card sejajar */
+                min-height: 340px !important;
+                height: 340px !important;
+                max-height: 340px !important;
+                
                 display: flex;
                 flex-direction: column;
-                justify-content: flex-start;
+                justify-content: space-between;   /* ✅ Icon di atas, desc di tengah, badge di bawah */
                 align-items: center;
                 text-align: center;
                 position: relative;
                 transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
                 box-shadow: 0 0 15px rgba(56, 189, 248, 0.1);
+                
+                box-sizing: border-box !important;
+            }
+
+            /* ✅ Mobile: tinggi lebih kecil biar proporsional */
+            @media (max-width: 768px) {
+                .rpg-card-center-fixed {
+                    min-height: 300px !important;
+                    height: 300px !important;
+                    max-height: 300px !important;
+                    padding: 18px 14px !important;
+                }
+            }
+
+            /* ✅ Kolom di mobile: biar tetap 2 kolom, tidak stack */
+            @media (max-width: 768px) {
+                div[data-testid="stHorizontalBlock"]:has(.rpg-card-center-fixed) {
+                    flex-wrap: nowrap !important;
+                    gap: 8px !important;
+                }
             }
             .rpg-card-center-fixed:hover {
                 transform: translateY(-5px);
@@ -13929,9 +14110,11 @@ if selected_tab == "🏠 Menu Utama":
             """
             <div class='rpg-card-center-fixed'>
                 <div class='rpg-badge-fixed badge-dungeon'>🛡️ Alliance Mode</div>
-                <div class='rpg-icon-center-fixed'>🏰</div>
-                <div class='rpg-title-fixed'>ENTER GUILD</div>
-                <div class='rpg-desc-fixed'>Masuk ke Markas Besar Guild untuk memantau papan pengumuman performa total, grafik target kelompok, dan analisis pencapaian bersama.</div>
+                <div style='flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%;'>
+                    <div class='rpg-icon-center-fixed'>🏰</div>
+                    <div class='rpg-title-fixed'>ENTER GUILD</div>
+                    <div class='rpg-desc-fixed'>Masuk ke Markas Besar Guild untuk memantau papan pengumuman performa total, grafik target kelompok, dan analisis pencapaian bersama.</div>
+                </div>
             </div>
         """,
             unsafe_allow_html=True,
@@ -13990,9 +14173,11 @@ if selected_tab == "🏠 Menu Utama":
             """
             <div class='rpg-card-center-fixed'>
                 <div class='rpg-badge-fixed badge-prep'>🛡️ Solo Prep</div>
-                <div class='rpg-icon-center-fixed'>🎒</div>
-                <div class='rpg-title-fixed'>PREPARATION CAMP</div>
-                <div class='rpg-desc-fixed'>Lihat tas penyimpanan (Inventory) rapor pribadi Anda. Cek pencapaian individu, target harian staf, dan statistik performa Anda sendiri.</div>
+                <div style='flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%;'>
+                    <div class='rpg-icon-center-fixed'>🎒</div>
+                    <div class='rpg-title-fixed'>PREPARATION CAMP</div>
+                    <div class='rpg-desc-fixed'>Lihat tas penyimpanan (Inventory) rapor pribadi Anda. Cek pencapaian individu, target harian staf, dan statistik performa Anda sendiri.</div>
+                </div>
             </div>
         """,
             unsafe_allow_html=True,
@@ -15272,8 +15457,9 @@ elif selected_tab == "📝 Input Data":
                 st.markdown("---")
                 st.markdown("##### 🛒 Detail Indikator Penjualan PPS:")
 
-                col_q1, col_q2, col_q3 = st.columns(3)
-                with col_q1:
+                # ✅ LAYOUT 3×2 — Baris 1
+                col_row1_1, col_row1_2, col_row1_3 = st.columns(3)
+                with col_row1_1:
                     syarat_pwp = st.number_input(
                         "Syarat PWP",
                         min_value=0,
@@ -15281,6 +15467,7 @@ elif selected_tab == "📝 Input Data":
                         value=0,
                         key="pps_syarat_pwp_dyn",
                     )
+                with col_row1_2:
                     redeem_pwp = st.number_input(
                         "Redeem PWP",
                         min_value=0,
@@ -15288,7 +15475,7 @@ elif selected_tab == "📝 Input Data":
                         value=0,
                         key="pps_redeem_pwp_dyn",
                     )
-                with col_q2:
+                with col_row1_3:
                     qty_pwp = st.number_input(
                         "Qty PWP",
                         min_value=0,
@@ -15296,6 +15483,10 @@ elif selected_tab == "📝 Input Data":
                         value=0,
                         key="pps_qty_pwp_dyn",
                     )
+
+                # ✅ LAYOUT 3×2 — Baris 2
+                col_row2_1, col_row2_2, col_row2_3 = st.columns(3)
+                with col_row2_1:
                     qty_sg = st.number_input(
                         "Qty SG (Serba Gratis)",
                         min_value=0,
@@ -15303,7 +15494,7 @@ elif selected_tab == "📝 Input Data":
                         value=0,
                         key="pps_qty_sg_dyn",
                     )
-                with col_q3:
+                with col_row2_2:
                     syarat_sueger = st.number_input(
                         "Syarat Sueger",
                         min_value=0,
@@ -15311,6 +15502,7 @@ elif selected_tab == "📝 Input Data":
                         value=0,
                         key="pps_syarat_sueger_dyn",
                     )
+                with col_row2_3:
                     redeem_sueger = st.number_input(
                         "Redeem Sueger",
                         min_value=0,
@@ -15319,6 +15511,7 @@ elif selected_tab == "📝 Input Data":
                         key="pps_redeem_sueger_dyn",
                     )
 
+                # ✅ LAYOUT FULL WIDTH — Cemilan Ceban
                 cemilan_ceban = st.number_input(
                     "Cemilan Ceban",
                     min_value=0,
@@ -15659,20 +15852,27 @@ elif selected_tab == "📝 Input Data":
         st.caption(
             "Generate format laporan siap-copy untuk dikirim ke WhatsApp."
         )
+        
+        # ✅ LANGKAH 1: Pilih Tanggal DULU (full width, prominent)
+        st.markdown("##### 📅 Langkah 1: Pilih Tanggal Laporan")
+        selected_wa_date = st.date_input(
+            "Pilih Tanggal Laporan",
+            value=waktu_wib.date(),
+            key="wa_report_date",
+            label_visibility="collapsed",
+        )
 
-        col_f1, col_f2 = st.columns(2)
-        with col_f1:
-            wa_format_type = st.radio(
-                "Pilih Format Laporan:",
-                ["📋 Format Laporan PPS", "🥤 Format Laporan Sueger"],
-                key="wa_format_selector",
-            )
-        with col_f2:
-            selected_wa_date = st.date_input(
-                "Pilih Tanggal Laporan",
-                value=waktu_wib.date(),
-                key="wa_report_date",
-            )
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # ✅ LANGKAH 2: Pilih Format (radio 2 pilihan, sejajar horizontal)
+        st.markdown("##### 📋 Langkah 2: Pilih Format Laporan")
+        wa_format_type = st.radio(
+            "Pilih Format Laporan:",
+            ["📋 Format Laporan PPS", "🥤 Format Laporan Sueger"],
+            key="wa_format_selector",
+            horizontal=True,
+            label_visibility="collapsed",
+        )
 
         date_str_formatted = selected_wa_date.strftime("%d-%m-%Y")
 
