@@ -746,7 +746,12 @@ def write_heartbeat_to_sheet(username, session_id, role, status="ONLINE"):
 
 def remove_heartbeat_from_sheet(username):
     """
-    Hapus baris heartbeat user (dipakai saat logout manual).
+    Hapus baris heartbeat user (dipakai saat logout manual & auto-logout).
+    
+    ✅ FIX v2:
+    - Return status jelas: (True, msg) kalau berhasil hapus
+    - Return (False, msg) kalau user tidak ada (biar caller bisa skip log)
+    - Anti race condition via lock
     """
     try:
         with _AUDIT_LOCK:
@@ -756,7 +761,7 @@ def remove_heartbeat_from_sheet(username):
             
             all_values = ws.get_all_values()
             if len(all_values) < 2:
-                return True, "Sheet kosong"
+                return False, "⚠️ Sheet kosong / user tidak ada"
             
             header = all_values[0]
             col_username = 0
@@ -765,33 +770,34 @@ def remove_heartbeat_from_sheet(username):
                     col_username = idx
                     break
             
-            # Cari baris user
+            # Cari baris user — return False kalau tidak ketemu
             for row_idx, row in enumerate(all_values[1:], start=2):
                 if len(row) > col_username and row[col_username].strip().lower() == username.strip().lower():
                     ws.delete_rows(row_idx)
                     return True, f"✅ Heartbeat dihapus: {username}"
             
-            return True, f"ℹ️ User {username} tidak ada di heartbeat"
+            # ✅ FIX: Return False karena tidak ada yang dihapus
+            return False, f"ℹ️ User {username} tidak ada di heartbeat"
     
     except Exception as e:
         print(f"[REMOVE_HEARTBEAT ERROR] {e}")
         return False, f"❌ Gagal: {str(e)[:150]}"
 
-
-def get_stale_heartbeats(threshold_minutes=5):
+def get_stale_heartbeats(threshold_minutes=15):
     """
     Ambil daftar user yang heartbeat terakhirnya > threshold_minutes.
     
-    SAFETY:
-    - Guard threshold (minimal 2 menit)
-    - Skip kalau format tanggal salah
-    - Skip kalau user tidak valid
+    ✅ FIX v2:
+    - Sort by selisih_menit descending (paling stale duluan)
+    - Skip user SYSTEM/DEBUG
+    - Guard threshold minimal 0.5 menit
+    - Handle parsing error gracefully
     """
     try:
-        # 🛡️ GUARD: Jangan izinkan threshold < 2 menit
-        if threshold_minutes is None or threshold_minutes < 0.1:
-            threshold_minutes = 0.5
-            print(f"[WARN] Threshold dipaksa jadi 0.5 menit")
+        # 🛡️ GUARD: Threshold minimal 0.5 menit
+        if threshold_minutes is None or threshold_minutes < 0.5:
+            threshold_minutes = 15
+            print(f"[WARN] Threshold tidak valid, dipaksa jadi 15 menit")
         
         ws = get_ws_audit("ACTIVITY_HEARTBEAT")
         if ws is None:
@@ -806,10 +812,10 @@ def get_stale_heartbeats(threshold_minutes=5):
         for idx, h in enumerate(header):
             col_idx[h.lower().strip()] = idx
         
-        # Cek header lengkap
+        # Cek header wajib
         for _req in ["username", "session_id", "last_heartbeat"]:
             if _req not in col_idx:
-                print(f"[ERROR] Header '{_req}' tidak ditemukan. Header: {header}")
+                print(f"[ERROR] Header '{_req}' tidak ada. Header: {header}")
                 return []
         
         now = datetime.now(ZoneInfo("Asia/Jakarta"))
@@ -825,18 +831,18 @@ def get_stale_heartbeats(threshold_minutes=5):
                 _role = row[col_idx.get("role", 2)].strip() if "role" in col_idx else "-"
                 _last_hb_str = row[col_idx["last_heartbeat"]].strip()
                 
-                # 🛡️ Skip kalau data kosong
+                # Skip kalau data kosong
                 if not _username or not _last_hb_str:
                     continue
                 
-                # 🛡️ Skip baris DEBUG
-                if _username.upper() in ["DEBUG_TEST", "DEBUG_HEARTBEAT"]:
+                # 🛡️ Skip user sistem & test
+                if _username.upper() in ["DEBUG_TEST", "DEBUG_HEARTBEAT", "SYSTEM"]:
                     continue
                 
-                # Parse tanggal
-                _last_hb = datetime.strptime(_last_hb_str, "%d/%m/%Y %H:%M:%S").replace(
-                    tzinfo=ZoneInfo("Asia/Jakarta")
-                )
+                # Parse timestamp
+                _last_hb = datetime.strptime(
+                    _last_hb_str, "%d/%m/%Y %H:%M:%S"
+                ).replace(tzinfo=ZoneInfo("Asia/Jakarta"))
                 _selisih_menit = (now - _last_hb).total_seconds() / 60
                 
                 if _selisih_menit > threshold_minutes:
@@ -845,18 +851,20 @@ def get_stale_heartbeats(threshold_minutes=5):
                         "session_id": _session,
                         "role": _role,
                         "last_heartbeat": _last_hb_str,
-                        "selisih_menit": int(_selisih_menit),
+                        "selisih_menit": round(_selisih_menit, 1),
                     })
             except Exception as e_row:
-                print(f"[SKIP ROW] {e_row} - row: {row}")
+                print(f"[SKIP ROW] {e_row}")
                 continue
+        
+        # ✅ Sort paling stale duluan
+        stale_users.sort(key=lambda x: x["selisih_menit"], reverse=True)
         
         return stale_users
     
     except Exception as e:
         print(f"[GET_STALE_HEARTBEAT ERROR] {e}")
         return []
-
 
 def clear_all_heartbeat():
     """Hapus semua baris heartbeat (kecuali header). Dipakai emergency."""
