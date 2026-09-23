@@ -14397,6 +14397,7 @@ elif selected_tab == "📝 Input Data":
             "⚡ Multi Input Sales",
             "🎯 Input Sales PPS",
             "📄 Format dan Kirim Laporan",
+            "📲 Materi Briefing",
         ],
         horizontal=True,
         label_visibility="collapsed",
@@ -15828,6 +15829,613 @@ elif selected_tab == "📝 Input Data":
                     )
 
                 st.code(wa_sueger_text, language="markdown")
+
+    # =========================================================================
+    # SUB TAB: MATERI BRIEFING (ex-Report)
+    # Generate materi briefing: WhatsApp, PDF & PPT untuk tim
+    # =========================================================================
+    elif active_sub_tab == "📲 Materi Briefing":
+        st.markdown(
+            "<h4 style='color: #00ff88; margin-top: 15px;'>📲 Materi Briefing</h4>",
+            unsafe_allow_html=True,
+        )
+        st.caption(
+            "Pilih filter bulan & periode untuk generate materi briefing"
+            " (WhatsApp, PDF & PPT)."
+        )
+
+        col_rep1, col_rep2 = st.columns(2)
+        with col_rep1:
+            bulan_list = [
+                "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                "Juli", "Agustus", "September", "Oktober", "November",
+                "Desember",
+            ]
+            curr_month_idx = waktu_wib.month - 1
+            selected_month_name = st.selectbox(
+                "📅 Pilih Bulan Report",
+                bulan_list,
+                index=curr_month_idx,
+                key="rep_month_sel",
+            )
+            selected_month_num = bulan_list.index(selected_month_name) + 1
+
+        psm_periods_df = st.session_state.get("periods_df", pd.DataFrame())
+        psm_opt = ["Seluruh Penjualan 1 Bulan"]
+        if (
+            not psm_periods_df.empty
+            and "period_name" in psm_periods_df.columns
+        ):
+            psm_opt.extend(
+                psm_periods_df["period_name"].dropna().unique().tolist()
+            )
+
+        with col_rep2:
+            selected_psm_period_opt = st.selectbox(
+                "🎯 Filter Periode PSM",
+                psm_opt,
+                key="rep_period_sel",
+            )
+
+        col_btn_wa, col_btn_pdf, col_btn_ppt = st.columns(3)
+
+        with col_btn_wa:
+            btn_gen_wa = st.button(
+                "🚀 Generate Report WA",
+                use_container_width=True,
+                type="primary",
+                key="btn_gen_wa_summary",
+            )
+        with col_btn_pdf:
+            btn_gen_pdf = st.button(
+                "📄 Generate Report PDF",
+                use_container_width=True,
+                key="btn_gen_pdf_summary",
+            )
+        with col_btn_ppt:
+            btn_gen_ppt = st.button(
+                "🎨 Generate Report PPT",
+                use_container_width=True,
+                key="btn_gen_ppt_summary",
+            )
+
+        # =========================================================
+        # LOGIKA GENERATE
+        # =========================================================
+        if btn_gen_wa or btn_gen_pdf or btn_gen_ppt:
+            _report_type = (
+                "WA" if btn_gen_wa else ("PDF" if btn_gen_pdf else "PPT")
+            )
+            try:
+                log_activity(
+                    "REPORT", f"Generate materi briefing ({_report_type})"
+                )
+            except Exception:
+                pass
+
+            with st.spinner(
+                "🧙‍♂️ Membersihkan cache & menarik data segar..."
+            ):
+                st.cache_data.clear()
+                try:
+                    (
+                        p_df_fresh,
+                        p_pps_df_fresh,
+                        p_store_df_fresh,
+                        i_df_fresh,
+                        pers_df_fresh,
+                        si_df_fresh,
+                        sp_df_fresh,
+                        s_pps_df_fresh,
+                        s_store_df_fresh,
+                    ) = load_database()
+                    st.session_state.periods_df = p_df_fresh
+                    st.session_state.periods_pps_df = p_pps_df_fresh
+                    st.session_state.items_df = i_df_fresh
+                    st.session_state.person_df = pers_df_fresh
+                    st.session_state.sales_item_df = si_df_fresh
+                    st.session_state.sales_person_df = sp_df_fresh
+                    st.session_state.sales_pps_df = s_pps_df_fresh
+                    st.toast("✅ Data segar ditarik!", icon="⚡")
+                except Exception as e_fresh:
+                    st.warning(f"⚠️ Gagal refresh data: {e_fresh}")
+
+            _generate_time = datetime.now(ZoneInfo("Asia/Jakarta"))
+            _generate_str = _generate_time.strftime(
+                "%d/%m/%Y %H:%M:%S WIB"
+            )
+
+            # --- HITUNG PSM ---
+            target_psm_tot = 0
+            actual_psm_tot = 0
+            sales_item_df = st.session_state.get(
+                "sales_item_df", pd.DataFrame()
+            )
+            valid_period_ids = []
+
+            if not psm_periods_df.empty:
+                p_filtered = psm_periods_df.copy()
+                if "start_date" in p_filtered.columns:
+                    p_filtered["start_date"] = pd.to_datetime(
+                        p_filtered["start_date"], errors="coerce"
+                    )
+                    p_date_filtered = p_filtered[
+                        (
+                            p_filtered["start_date"].dt.month
+                            == selected_month_num
+                        )
+                        & (
+                            p_filtered["start_date"].dt.year
+                            == waktu_wib.year
+                        )
+                    ]
+                    if not p_date_filtered.empty:
+                        p_filtered = p_date_filtered
+                if (
+                    selected_psm_period_opt != "Seluruh Penjualan 1 Bulan"
+                    and "period_name" in p_filtered.columns
+                ):
+                    p_filtered = p_filtered[
+                        p_filtered["period_name"] == selected_psm_period_opt
+                    ]
+                if "period_id" in p_filtered.columns:
+                    valid_period_ids = (
+                        p_filtered["period_id"].dropna().unique().tolist()
+                    )
+
+            if not sales_item_df.empty:
+                s_item = sales_item_df.copy()
+                if valid_period_ids and "period_id" in s_item.columns:
+                    s_item_filtered = s_item[
+                        s_item["period_id"].isin(valid_period_ids)
+                    ]
+                    if not s_item_filtered.empty:
+                        s_item = s_item_filtered
+                elif selected_psm_period_opt != "Seluruh Penjualan 1 Bulan":
+                    s_item = s_item.iloc[0:0]
+                if "target_qty" in s_item.columns:
+                    target_psm_tot = pd.to_numeric(
+                        s_item["target_qty"], errors="coerce"
+                    ).sum()
+                if "actual_qty" in s_item.columns:
+                    actual_psm_tot = pd.to_numeric(
+                        s_item["actual_qty"], errors="coerce"
+                    ).sum()
+
+            ach_psm = (
+                (actual_psm_tot / target_psm_tot * 100)
+                if target_psm_tot > 0
+                else 0
+            )
+
+            # --- HITUNG PPS ---
+            periods_pps_df = st.session_state.get(
+                "periods_pps_df", pd.DataFrame()
+            )
+            pps_filtered = periods_pps_df.copy()
+            if (
+                not pps_filtered.empty
+                and "start_date" in pps_filtered.columns
+            ):
+                pps_filtered["start_date"] = pd.to_datetime(
+                    pps_filtered["start_date"], errors="coerce"
+                )
+                pps_filtered = pps_filtered[
+                    (
+                        pps_filtered["start_date"].dt.month
+                        == selected_month_num
+                    )
+                    & (
+                        pps_filtered["start_date"].dt.year
+                        == waktu_wib.year
+                    )
+                ]
+
+            def get_pps_by_prefix(df, prefix, col_name):
+                if (
+                    df.empty
+                    or "period_id" not in df.columns
+                    or col_name not in df.columns
+                ):
+                    return 0
+                sub_df = df[
+                    df["period_id"]
+                    .astype(str)
+                    .str.upper()
+                    .str.startswith(prefix, na=False)
+                ]
+                if sub_df.empty:
+                    return 0
+                return pd.to_numeric(
+                    sub_df[col_name], errors="coerce"
+                ).sum()
+
+            redeem_col_name = (
+                "redeem_total"
+                if "redeem_total" in pps_filtered.columns
+                else "deem_total"
+            )
+
+            s_pwp = get_pps_by_prefix(pps_filtered, "PWP", "syarat_total")
+            r_pwp = get_pps_by_prefix(pps_filtered, "PWP", redeem_col_name)
+            tq_pwp = get_pps_by_prefix(pps_filtered, "PWP", "target_total")
+            q_pwp = get_pps_by_prefix(pps_filtered, "PWP", "actual_qty")
+
+            ach_pwp_redeem = (r_pwp / s_pwp * 100) if s_pwp > 0 else 0
+            ach_pwp_qty = (q_pwp / tq_pwp * 100) if tq_pwp > 0 else 0
+
+            s_sueger_val = get_pps_by_prefix(
+                pps_filtered, "SGR", "syarat_total"
+            )
+            r_sueger_val = get_pps_by_prefix(
+                pps_filtered, "SGR", redeem_col_name
+            )
+            if r_sueger_val == 0:
+                r_sueger_val = get_pps_by_prefix(
+                    pps_filtered, "SGR", "actual_qty"
+                )
+            ach_sueger = (
+                (r_sueger_val / s_sueger_val * 100)
+                if s_sueger_val > 0
+                else 0
+            )
+
+            t_sg = get_pps_by_prefix(pps_filtered, "SGS", "target_total")
+            q_sg = get_pps_by_prefix(pps_filtered, "SGS", "actual_qty")
+            ach_sg = (q_sg / t_sg * 100) if t_sg > 0 else 0
+
+            t_ceban = get_pps_by_prefix(pps_filtered, "CBN", "target_total")
+            q_ceban = get_pps_by_prefix(pps_filtered, "CBN", "actual_qty")
+            ach_ceban = (
+                (q_ceban / t_ceban * 100) if t_ceban > 0 else 0
+            )
+
+            # --- TARGET HARIAN & PER SHIFT ---
+            _total_hari_report = 30
+            if (
+                valid_period_ids
+                and not psm_periods_df.empty
+                and "period_id" in psm_periods_df.columns
+            ):
+                _match_p = psm_periods_df[
+                    psm_periods_df["period_id"].isin(valid_period_ids)
+                ]
+                if (
+                    not _match_p.empty
+                    and "start_date" in _match_p.columns
+                    and "end_date" in _match_p.columns
+                ):
+                    try:
+                        _all_start = pd.to_datetime(
+                            _match_p["start_date"], errors="coerce"
+                        ).min()
+                        _all_end = pd.to_datetime(
+                            _match_p["end_date"], errors="coerce"
+                        ).max()
+                        if pd.notna(_all_start) and pd.notna(_all_end):
+                            _total_hari_report = (
+                                _all_end - _all_start
+                            ).days + 1
+                    except Exception:
+                        pass
+            if _total_hari_report <= 0:
+                _total_hari_report = 30
+
+            target_harian_psm = (
+                target_psm_tot / _total_hari_report
+                if _total_hari_report > 0
+                else 0
+            )
+            target_harian_pwp = (
+                tq_pwp / _total_hari_report
+                if _total_hari_report > 0
+                else 0
+            )
+            target_harian_sg = (
+                t_sg / _total_hari_report
+                if _total_hari_report > 0
+                else 0
+            )
+
+            if actual_psm_tot >= target_psm_tot and target_psm_tot > 0:
+                target_harian_psm = 0
+            if q_pwp >= tq_pwp and tq_pwp > 0:
+                target_harian_pwp = 0
+            if q_sg >= t_sg and t_sg > 0:
+                target_harian_sg = 0
+
+            poin_psm = 20 * (ach_psm / 100)
+            poin_pwp = 25 * (ach_pwp_qty / 100)
+            poin_sg = 30 * (ach_sg / 100)
+            total_poin_didapat = poin_psm + poin_pwp + poin_sg
+
+            # Format WA
+            wa_text = f"""
+            📊 *REPORT SUMMARY PENJUALAN {selected_month_name.upper()} {waktu_wib.year}*
+            📅 _Generated: {_generate_str}_
+
+            🔥SEMANGAT PAGI🔥
+            ════════════════════════════════════════
+            *1️⃣ PROGRAM PSM ({selected_psm_period_opt.upper()})*
+            📦 Target PSM    : {int(target_psm_tot)} Pcs
+            📊 Actual Qty    : {int(actual_psm_tot)} Pcs
+            🎯 Achievement   : *{ach_psm:.1f}%*
+            ⭐ Poin PSM      : *{poin_psm:.2f}* (Max 20)
+            📆 *Target Harian:* {int(target_harian_psm)} Pcs/hari
+            🕐 *Target per Shift:*
+                • Shift 1 (40%) : {int(target_harian_psm * 0.40)} Pcs
+                • Shift 2 (40%) : {int(target_harian_psm * 0.40)} Pcs
+                • Shift 3 (20%) : {int(target_harian_psm * 0.20)} Pcs
+            ════════════════════════════════════════
+            *2️⃣ PROGRAM PWP*
+            📋 Syarat Redeem : {int(s_pwp)}
+            🎁 Total Redeem  : {int(r_pwp)}
+            📦 Target Qty    : {int(tq_pwp)} Pcs
+            📊 Actual Qty    : {int(q_pwp)} Pcs
+            🎯 Ach. Redeem   : *{ach_pwp_redeem:.1f}%*
+            🎯 Ach. Qty      : *{ach_pwp_qty:.1f}%*
+            ⭐ Poin PWP      : *{poin_pwp:.2f}* (Max 25)
+            📆 *Target Harian:* {int(target_harian_pwp)} Pcs/hari
+            🕐 *Target per Shift:*
+                • Shift 1 (40%) : {int(target_harian_pwp * 0.40)} Pcs
+                • Shift 2 (40%) : {int(target_harian_pwp * 0.40)} Pcs
+                • Shift 3 (20%) : {int(target_harian_pwp * 0.20)} Pcs
+            ════════════════════════════════════════
+            *3️⃣ PROGRAM SUEGER*
+            📋 Syarat Redeem : {int(s_sueger_val)}
+            🎁 Qty Redeem    : {int(r_sueger_val)}
+            🎯 Achievement   : *{ach_sueger:.1f}%*
+            ════════════════════════════════════════
+            *4️⃣ PROGRAM SERBA GRATIS (SG)*
+            📦 Target Qty    : {int(t_sg)} Pcs
+            📊 Actual Qty    : {int(q_sg)} Pcs
+            🎯 Achievement   : *{ach_sg:.1f}%*
+            ⭐ Poin SG       : *{poin_sg:.2f}* (Max 30)
+            📆 *Target Harian:* {int(target_harian_sg)} Pcs/hari
+            🕐 *Target per Shift:*
+                • Shift 1 (40%) : {int(target_harian_sg * 0.40)} Pcs
+                • Shift 2 (40%) : {int(target_harian_sg * 0.40)} Pcs
+                • Shift 3 (20%) : {int(target_harian_sg * 0.20)} Pcs
+            ════════════════════════════════════════
+            *5️⃣ CEMILAN CEBAN*
+            📦 Target Qty    : {int(t_ceban)} Pcs
+            📊 Actual Qty    : {int(q_ceban)} Pcs
+            🎯 Achievement   : *{ach_ceban:.1f}%*
+            ════════════════════════════════════════
+            🏆 *TOTAL POIN DIDAPAT: {total_poin_didapat:.2f}*
+            ════════════════════════════════════════
+            _🔥SEKIAN DAN TERIMAKASIH DARI STAF KGS🔥_
+                """
+
+            # OUTPUT WA
+            if btn_gen_wa:
+                st.markdown(
+                    "##### 📝 Hasil Text Report (Siap Copas ke WA):"
+                )
+                st.code(wa_text, language="text")
+                st.caption(
+                    "💡 Tap & tahan di dalam text area untuk pilih semua,"
+                    " lalu copy"
+                )
+                st.info(f"✅ Data segar — Generate: {_generate_str}")
+
+            # OUTPUT PDF
+            if btn_gen_pdf:
+                _pdf_report_data = [
+                    {
+                        "title": (
+                            f"1. PROGRAM PSM - {selected_psm_period_opt}"
+                        ),
+                        "lines": [
+                            f"Target PSM     : {int(target_psm_tot)} Pcs",
+                            f"Actual Qty     : {int(actual_psm_tot)} Pcs",
+                            f"Achievement    : {ach_psm:.1f}%",
+                            f"Poin PSM       : {poin_psm:.2f} (Max 20)",
+                            "",
+                            f"Target Harian  : {int(target_harian_psm)} Pcs/hari",
+                            f"  - Shift 1 (40%) : {int(target_harian_psm * 0.40)} Pcs",
+                            f"  - Shift 2 (40%) : {int(target_harian_psm * 0.40)} Pcs",
+                            f"  - Shift 3 (20%) : {int(target_harian_psm * 0.20)} Pcs",
+                        ],
+                    },
+                    {
+                        "title": "2. PROGRAM PWP (Purchase with Purchase)",
+                        "lines": [
+                            f"Target Qty     : {int(tq_pwp)} Pcs",
+                            f"Actual Qty     : {int(q_pwp)} Pcs",
+                            f"Ach. Qty       : {ach_pwp_qty:.1f}%",
+                            f"Poin PWP       : {poin_pwp:.2f} (Max 25)",
+                            "",
+                            f"Target Harian  : {int(target_harian_pwp)} Pcs/hari",
+                            f"  - Shift 1 (40%) : {int(target_harian_pwp * 0.40)} Pcs",
+                            f"  - Shift 2 (40%) : {int(target_harian_pwp * 0.40)} Pcs",
+                            f"  - Shift 3 (20%) : {int(target_harian_pwp * 0.20)} Pcs",
+                        ],
+                    },
+                    {
+                        "title": "3. PROGRAM SUEGER",
+                        "lines": [
+                            f"Syarat Redeem  : {int(s_sueger_val)}",
+                            f"Qty Redeem     : {int(r_sueger_val)}",
+                            f"Achievement    : {ach_sueger:.1f}%",
+                        ],
+                    },
+                    {
+                        "title": "4. PROGRAM SERBA GRATIS (SG)",
+                        "lines": [
+                            f"Target Qty     : {int(t_sg)} Pcs",
+                            f"Actual Qty     : {int(q_sg)} Pcs",
+                            f"Achievement    : {ach_sg:.1f}%",
+                            f"Poin SG        : {poin_sg:.2f} (Max 30)",
+                            "",
+                            f"Target Harian  : {int(target_harian_sg)} Pcs/hari",
+                            f"  - Shift 1 (40%) : {int(target_harian_sg * 0.40)} Pcs",
+                            f"  - Shift 2 (40%) : {int(target_harian_sg * 0.40)} Pcs",
+                            f"  - Shift 3 (20%) : {int(target_harian_sg * 0.20)} Pcs",
+                        ],
+                    },
+                    {
+                        "title": "TOTAL POIN",
+                        "lines": [
+                            f"TOTAL POIN DIDAPAT : {total_poin_didapat:.2f}",
+                            "",
+                            "Catatan: Data sesuai inputan pada website.",
+                        ],
+                    },
+                ]
+
+                _pdf_title = (
+                    f"Report Summary Penjualan {selected_month_name}"
+                    f" {waktu_wib.year}"
+                )
+                _pdf_bytes = generate_pdf_report(
+                    _pdf_title, _pdf_report_data, _generate_str
+                )
+
+                if _pdf_bytes:
+                    st.success(
+                        f"✅ PDF berhasil dibuat — {_generate_str}"
+                    )
+                    st.download_button(
+                        label="📥 Download Report PDF",
+                        data=_pdf_bytes,
+                        file_name=(
+                            f"Report_PSM_{selected_month_name}_"
+                            f"{_generate_time.strftime('%Y%m%d_%H%M%S')}.pdf"
+                        ),
+                        mime="application/pdf",
+                        use_container_width=True,
+                        key="dl_pdf_report",
+                    )
+                else:
+                    st.error(
+                        "❌ Gagal generate PDF. Cek apakah `fpdf2`"
+                        " sudah di-install."
+                    )
+
+            # OUTPUT PPT
+            if btn_gen_ppt:
+                top3_kasir = []
+                _sp_leaderboard = st.session_state.get(
+                    "sales_person_df", pd.DataFrame()
+                ).copy()
+                if (
+                    not _sp_leaderboard.empty
+                    and "person_name" in _sp_leaderboard.columns
+                    and "actual_qty" in _sp_leaderboard.columns
+                ):
+                    if (
+                        valid_period_ids
+                        and "period_id" in _sp_leaderboard.columns
+                    ):
+                        _sp_leaderboard = _sp_leaderboard[
+                            _sp_leaderboard["period_id"].isin(
+                                valid_period_ids
+                            )
+                        ]
+                    _sp_leaderboard["actual_qty"] = pd.to_numeric(
+                        _sp_leaderboard["actual_qty"], errors="coerce"
+                    ).fillna(0)
+                    _grp_lb = (
+                        _sp_leaderboard.groupby("person_name")["actual_qty"]
+                        .sum()
+                        .reset_index()
+                    )
+                    _grp_lb = _grp_lb.sort_values(
+                        "actual_qty", ascending=False
+                    ).head(3)
+                    for _, _row in _grp_lb.iterrows():
+                        top3_kasir.append(
+                            (
+                                str(_row["person_name"]),
+                                int(_row["actual_qty"]),
+                                "Pcs",
+                            )
+                        )
+
+                psm_data = {
+                    "target": int(target_psm_tot),
+                    "actual": int(actual_psm_tot),
+                    "ach": ach_psm,
+                    "poin": poin_psm,
+                    "harian": int(target_harian_psm),
+                    "shift1": int(target_harian_psm * 0.40),
+                    "shift2": int(target_harian_psm * 0.40),
+                    "shift3": int(target_harian_psm * 0.20),
+                }
+                pwp_data = {
+                    "syarat": int(s_pwp),
+                    "redeem": int(r_pwp),
+                    "target": int(tq_pwp),
+                    "actual": int(q_pwp),
+                    "ach_redeem": ach_pwp_redeem,
+                    "ach_qty": ach_pwp_qty,
+                    "poin": poin_pwp,
+                    "harian": int(target_harian_pwp),
+                    "shift1": int(target_harian_pwp * 0.40),
+                    "shift2": int(target_harian_pwp * 0.40),
+                    "shift3": int(target_harian_pwp * 0.20),
+                }
+                sueger_data = {
+                    "syarat": int(s_sueger_val),
+                    "redeem": int(r_sueger_val),
+                    "ach": ach_sueger,
+                }
+                sg_data = {
+                    "target": int(t_sg),
+                    "actual": int(q_sg),
+                    "ach": ach_sg,
+                    "poin": poin_sg,
+                    "harian": int(target_harian_sg),
+                    "shift1": int(target_harian_sg * 0.40),
+                    "shift2": int(target_harian_sg * 0.40),
+                    "shift3": int(target_harian_sg * 0.20),
+                }
+                ceban_data = {
+                    "target": int(t_ceban),
+                    "actual": int(q_ceban),
+                    "ach": ach_ceban,
+                }
+
+                with st.spinner("🎨 Meracik slide PPT..."):
+                    _ppt_bytes = generate_ppt_report(
+                        title=(
+                            f"Report Summary Penjualan"
+                            f" {selected_month_name} {waktu_wib.year}"
+                        ),
+                        month_year_str=(
+                            f"{selected_month_name} {waktu_wib.year}"
+                        ),
+                        generated_time_str=_generate_str,
+                        psm_data=psm_data,
+                        pwp_data=pwp_data,
+                        sueger_data=sueger_data,
+                        sg_data=sg_data,
+                        ceban_data=ceban_data,
+                        total_poin=total_poin_didapat,
+                        top3_kasir=top3_kasir,
+                    )
+
+                if _ppt_bytes:
+                    st.success(
+                        "✅ PPT berhasil dibuat — 9 slide siap presentasi!"
+                    )
+                    st.download_button(
+                        label="📥 Download Report PPT (.pptx)",
+                        data=_ppt_bytes,
+                        file_name=(
+                            f"Report_PSM_{selected_month_name}_"
+                            f"{_generate_time.strftime('%Y%m%d_%H%M%S')}.pptx"
+                        ),
+                        mime=(
+                            "application/vnd.openxmlformats-officedocument"
+                            ".presentationml.presentation"
+                        ),
+                        use_container_width=True,
+                        key="dl_ppt_report",
+                    )
+                else:
+                    st.error("❌ Gagal generate PPT.")
 
 # =============================================================================
 # 📊 DAILY PERFORMANCE TOKO — HALAMAN BARU
