@@ -20792,37 +20792,37 @@ elif selected_tab == "⚙️ Master Data":
                     ]["_date"].nunique()
 
                     if not _login_logs.empty:
-                    _last_login_date = _login_logs.iloc[0]["_dt"]
-                    try:
-                        _now_naive = pd.Timestamp.now().tz_localize(None)
-                        _ll_naive = _last_login_date.tz_localize(None) if _last_login_date.tzinfo else _last_login_date
-                        _selisih_hari = (_now_naive - _ll_naive).days
-                        _selisih_jam = (_now_naive - _ll_naive).total_seconds() / 3600
-                    except Exception:
-                        _selisih_hari = 999
-                        _selisih_jam = 999
-                    
-                    # ✅ FIX: Cek apakah user SEDANG ONLINE
-                    try:
-                        _user_status = get_user_status(_user_upper, max_idle_minutes=2)
-                        _is_online = _user_status["is_online"]
-                        _durasi_str = _user_status["durasi_str"]
-                    except Exception:
-                        _is_online = False
-                        _durasi_str = "-"
-                    
-                    if _is_online:
-                        _status_icon = f"🟢 SEDANG ONLINE ({_durasi_str})"
-                    elif _selisih_jam < 1:
-                        _status_icon = f"🟡 Aktif {int(_selisih_jam * 60)} menit lalu"
-                    elif _selisih_jam < 24:
-                        _status_icon = f"🟡 {int(_selisih_jam)} jam lalu"
-                    elif _selisih_hari > 7:
-                        _status_icon = f"🔴 {_selisih_hari} HARI LALU"
+                        _last_login_date = _login_logs.iloc[0]["_dt"]
+                        try:
+                            _now_naive = pd.Timestamp.now().tz_localize(None)
+                            _ll_naive = _last_login_date.tz_localize(None) if _last_login_date.tzinfo else _last_login_date
+                            _selisih_hari = (_now_naive - _ll_naive).days
+                            _selisih_jam = (_now_naive - _ll_naive).total_seconds() / 3600
+                        except Exception:
+                            _selisih_hari = 999
+                            _selisih_jam = 999
+                        
+                        # ✅ FIX: Cek apakah user SEDANG ONLINE
+                        try:
+                            _user_status = get_user_status(_user_upper, max_idle_minutes=2)
+                            _is_online = _user_status["is_online"]
+                            _durasi_str = _user_status["durasi_str"]
+                        except Exception:
+                            _is_online = False
+                            _durasi_str = "-"
+                        
+                        if _is_online:
+                            _status_icon = f"🟢 SEDANG ONLINE ({_durasi_str})"
+                        elif _selisih_jam < 1:
+                            _status_icon = f"🟡 Aktif {int(_selisih_jam * 60)} menit lalu"
+                        elif _selisih_jam < 24:
+                            _status_icon = f"🟡 {int(_selisih_jam)} jam lalu"
+                        elif _selisih_hari > 7:
+                            _status_icon = f"🔴 {_selisih_hari} HARI LALU"
+                        else:
+                            _status_icon = f"🟠 {_selisih_hari} hari lalu"
                     else:
-                        _status_icon = f"🟠 {_selisih_hari} hari lalu"
-                else:
-                    _status_icon = "⚪ BELUM LOGIN"
+                        _status_icon = "⚪ BELUM LOGIN"
 
                     _user_summary.append({
                         "👤 User": _user,
