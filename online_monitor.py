@@ -207,8 +207,6 @@ def get_user_status(username, max_idle_minutes=2):
 def render_sidebar_online_panel():
     """
     Render panel "Sedang Online" di sidebar Streamlit.
-    
-    Panggil fungsi ini di dalam script utama (setelah user login).
     """
     try:
         # Skip kalau sidebar collapsed
@@ -219,7 +217,9 @@ def render_sidebar_online_panel():
         online_users = get_online_users(max_idle_minutes=_ONLINE_IDLE_THRESHOLD_MIN)
         online_count = len(online_users)
         
-        # CSS
+        # ============================================================
+        # CSS — GUNAKAN st.markdown TERPISAH
+        # ============================================================
         st.sidebar.markdown(
             """
             <style>
@@ -316,40 +316,45 @@ def render_sidebar_online_panel():
                 }
             </style>
             """,
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
         
-        # Bangun HTML
-        _html = f"""
-        <div class="online-panel">
-            <div class="online-header">
-                <span class="online-title"><span class="online-pulse"></span>SEDANG ONLINE</span>
-                <span class="online-count">{online_count}</span>
-            </div>
-        """
+        # ============================================================
+        # BANGUN HTML — PAKAI CARA YANG LEBIH AMAN
+        # ============================================================
+        _parts = []
+        _parts.append('<div class="online-panel">')
+        _parts.append('<div class="online-header">')
+        _parts.append('<span class="online-title"><span class="online-pulse"></span>SEDANG ONLINE</span>')
+        _parts.append(f'<span class="online-count">{online_count}</span>')
+        _parts.append('</div>')
         
         if online_users:
             for _u in online_users[:_MAX_ONLINE_DISPLAY]:
-                _html += f"""
-                <div class="online-user-row">
-                    <span class="online-user-avatar">{_u['avatar']}</span>
-                    <div class="online-user-info">
-                        <div class="online-user-name">{_u['username'][:18]}</div>
-                        <div class="online-user-time">🟢 {_u['durasi_str']}</div>
-                    </div>
-                </div>
-                """
+                _uname = str(_u['username'])[:18]
+                _avatar = _u['avatar']
+                _durasi = _u['durasi_str']
+                
+                _parts.append('<div class="online-user-row">')
+                _parts.append(f'<span class="online-user-avatar">{_avatar}</span>')
+                _parts.append('<div class="online-user-info">')
+                _parts.append(f'<div class="online-user-name">{_uname}</div>')
+                _parts.append(f'<div class="online-user-time">🟢 {_durasi}</div>')
+                _parts.append('</div>')
+                _parts.append('</div>')
             
             if online_count > _MAX_ONLINE_DISPLAY:
-                _html += f"""
-                <div class="online-empty">... dan {online_count - _MAX_ONLINE_DISPLAY} user lainnya</div>
-                """
+                _sisa = online_count - _MAX_ONLINE_DISPLAY
+                _parts.append(f'<div class="online-empty">... dan {_sisa} user lainnya</div>')
         else:
-            _html += """
-            <div class="online-empty">😴 Tidak ada user online</div>
-            """
+            _parts.append('<div class="online-empty">😴 Tidak ada user online</div>')
         
-        _html += "</div>"
+        _parts.append('</div>')
+        
+        # Gabungkan jadi 1 string HTML (tanpa newline & spasi ekstra)
+        _html = "".join(_parts)
+        
+        # Render
         st.sidebar.markdown(_html, unsafe_allow_html=True)
         
         # Tombol refresh
@@ -362,8 +367,7 @@ def render_sidebar_online_panel():
     
     except Exception as e:
         print(f"[RENDER_SIDEBAR_ONLINE_PANEL ERROR] {e}")
-
-
+        
 # =========================================================================
 # 🧹 CLEANUP ON LOGIN
 # =========================================================================
