@@ -3012,7 +3012,7 @@ st.markdown(
     1. BASE APP & BACKGROUND KERAJAAN
     ------------------------------------------------------------------------- */
     .stApp {
-        background: radial-gradient(ellipse at top, #1e3a5f 0%, #0f172a 45%, #0a0f1a 100%) !important;
+        background: radial-gradient(ellipse at top, #2d4f7c 0%, #1e3a5f 30%, #0f172a 70%, #0a0f1a 100%) !important;
         color: #f1e5c7 !important;
         font-family: 'Quicksand', sans-serif !important;
     }
@@ -3605,51 +3605,211 @@ st.markdown(
         }
     }
 
-    /* MOBILE (max 768px) */
+        /* =========================================================================
+    MOBILE FIX — Universal (Android, iOS)
+    ========================================================================= */
     @media (max-width: 768px) {
-        .main .block-container {
-            padding-left: 10px !important;
-            padding-right: 10px !important;
-            padding-top: 8px !important;
+        /* ✅ FIX #1: Reset margin & padding body */
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            overflow-x: hidden !important;
+            box-sizing: border-box !important;
+        }
+        
+        /* ✅ FIX #2: Container utama — padding cukup */
+        .main .block-container,
+        section.main > div.block-container,
+        div[data-testid="stMainBlockContainer"] {
+            padding-left: 16px !important;
+            padding-right: 16px !important;
+            padding-top: 12px !important;
+            padding-bottom: 24px !important;
+            margin: 0 !important;
+            max-width: 100% !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            overflow-x: hidden !important;
+        }
+        
+        /* ✅ FIX #3: Semua elemen jangan overflow */
+        .main .block-container > div,
+        div[data-testid="stVerticalBlock"],
+        div[data-testid="stHorizontalBlock"] {
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            overflow-x: hidden !important;
+        }
+        
+        /* ✅ FIX #4: Radio nav — HORIZONTAL SCROLL */
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] {
+            overflow-x: visible !important;
+        }
+        
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            justify-content: flex-start !important;
+            align-items: center !important;
+            gap: 8px !important;
+            
+            padding: 8px 16px !important;
+            margin: 0 -16px !important;   /* Extend untuk scroll natural */
+            
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            -webkit-overflow-scrolling: touch !important;
+            scrollbar-width: thin !important;
+            scrollbar-color: #d4af37 transparent !important;
+            
+            background: linear-gradient(180deg, #0a0f1a 0%, #0f172a 100%) !important;
+            border-radius: 0 !important;
+            box-sizing: content-box !important;
+            width: auto !important;
+            max-width: none !important;
+        }
+        
+        /* Tampilkan scrollbar tipis */
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"]::-webkit-scrollbar {
+            height: 4px !important;
+            display: block !important;
+        }
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"]::-webkit-scrollbar-thumb {
+            background: #d4af37 !important;
+            border-radius: 2px !important;
+        }
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"]::-webkit-scrollbar-track {
+            background: transparent !important;
+        }
+        
+        /* Tab pill — jangan shrink */
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label {
+            flex: 0 0 auto !important;
+            min-width: fit-content !important;
+            max-width: none !important;
+        }
+        
+        /* ✅ FIX #5: Heading jangan overflow */
+        h1, h2, h3, h4, h5, h6 {
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
             max-width: 100% !important;
         }
-        h1 { font-size: 22px !important; }
-        h2 { font-size: 18px !important; }
-        h3 { font-size: 16px !important; }
-        h4 { font-size: 14px !important; }
-        div[data-testid="stMetric"] { padding: 10px !important; }
-        div[data-testid="stMetric"] [data-testid="stMetricValue"] { font-size: 20px !important; }
+        
+        /* ✅ FIX #6: Alert / Info / Warning */
+        div[data-testid="stAlert"] {
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            word-wrap: break-word !important;
+        }
+        
+        /* ✅ FIX #7: Metric responsive */
+        div[data-testid="stMetric"] {
+            padding: 12px !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+        }
+        div[data-testid="stMetric"] [data-testid="stMetricValue"] {
+            font-size: 20px !important;
+            word-wrap: break-word !important;
+        }
+        
+        /* ✅ FIX #8: Tab control di dalam main content */
         div[data-baseweb="tab-list"] {
             overflow-x: auto !important;
             flex-wrap: nowrap !important;
             -webkit-overflow-scrolling: touch !important;
+            scrollbar-width: thin !important;
+            padding-bottom: 4px !important;
         }
-        div[data-testid="stDataFrame"] { overflow-x: auto !important; }
-        div.js-plotly-plot { width: 100% !important; }
-        div[data-testid="stRadio"] > div[role="radiogroup"] {
+        div[data-baseweb="tab-list"]::-webkit-scrollbar {
+            height: 3px !important;
+        }
+        div[data-baseweb="tab-list"]::-webkit-scrollbar-thumb {
+            background: #d4af37 !important;
+            border-radius: 2px !important;
+        }
+        div[data-baseweb="tab-list"] button {
+            flex: 0 0 auto !important;
+            white-space: nowrap !important;
+        }
+        
+        /* ✅ FIX #9: Dataframe scroll */
+        div[data-testid="stDataFrame"] {
             overflow-x: auto !important;
-            flex-wrap: nowrap !important;
-            gap: 6px !important;
-            padding-bottom: 8px !important;
-            -webkit-overflow-scrolling: touch !important;
+            max-width: 100% !important;
         }
-        section[data-testid="stSidebar"] {
-            min-width: 280px !important;
-            max-width: 320px !important;
+        
+        /* ✅ FIX #10: Chart responsive */
+        div.js-plotly-plot {
+            width: 100% !important;
+            max-width: 100% !important;
         }
-        div[data-testid="stHorizontalBlock"] { flex-wrap: wrap !important; }
+        
+        /* ✅ FIX #11: Code block jangan overflow */
+        pre, code {
+            max-width: 100% !important;
+            overflow-x: auto !important;
+            word-wrap: break-word !important;
+        }
+        
+        /* Heading scale down */
+        h1 { font-size: 20px !important; }
+        h2 { font-size: 17px !important; }
+        h3 { font-size: 15px !important; }
+        h4 { font-size: 13px !important; }
+        
+        /* ✅ FIX #12: Column stack */
+        div[data-testid="stHorizontalBlock"] {
+            flex-wrap: wrap !important;
+            gap: 8px !important;
+        }
+        div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {
+            min-width: 0 !important;
+            max-width: 100% !important;
+        }
     }
 
-    /* SMALL MOBILE (max 480px) */
+        /* SMALL MOBILE (max 480px) */
     @media (max-width: 480px) {
-        .main .block-container {
-            padding-left: 8px !important;
-            padding-right: 8px !important;
+        .main .block-container,
+        div[data-testid="stMainBlockContainer"] {
+            padding-left: 12px !important;
+            padding-right: 12px !important;
         }
+        
         h1 { font-size: 18px !important; }
-        h2 { font-size: 16px !important; }
-        div[data-testid="stMetric"] [data-testid="stMetricValue"] { font-size: 18px !important; }
-        div.stButton > button { width: 100% !important; }
+        h2 { font-size: 15px !important; }
+        h3 { font-size: 13px !important; }
+        
+        div[data-testid="stMetric"] {
+            padding: 10px !important;
+        }
+        div[data-testid="stMetric"] [data-testid="stMetricValue"] {
+            font-size: 18px !important;
+        }
+        
+        /* Tombol full width */
+        div.stButton > button {
+            width: 100% !important;
+            font-size: 12px !important;
+            min-height: 44px !important;
+        }
+        
+        /* Radio nav lebih compact */
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] {
+            padding: 6px 12px !important;
+            margin: 0 -12px !important;
+            gap: 6px !important;
+        }
+        
+        /* Heading jangan overflow */
+        h1, h2, h3, h4 {
+            word-break: break-word !important;
+            hyphens: auto !important;
+        }
     }
 </style>
 """,
