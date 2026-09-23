@@ -13559,7 +13559,7 @@ if selected_tab == "🏠 Menu Utama":
 
         components.html(rpg_header_html, height=175)
         
-     # =====================================================================
+    # =====================================================================
     # 🎨 PANEL INFO "UNDER MAINTENANCE" — KHUSUS HALAMAN UTAMA
     # =====================================================================
     from maintenance_panel import render_maintenance_panel
@@ -13567,9 +13567,9 @@ if selected_tab == "🏠 Menu Utama":
     render_maintenance_panel(
     show=True,
     title="SEDANG UPDATE FITUR BARU",
-    message="Sistem sedang ditingkatkan, kalo ada perlu WA aja. Fitur Laporan Bulanan otomatis dan laporan audit sedang dikerjakan. Mohon maklum kalau ada gangguan ya.",
+    message="Sistem sedang ditingkatkan, kalo ada perlu WA aja. Fix eror Log Activity dan penambahan fitur aneh lain nya. Mohon maklum kalau ada gangguan ya.",
     eta="Target selesai: Seniatnya ",
-    progress=80,
+    progress=10,
     badge_text="SEDANG DIKERJAKAN",
     )
 
