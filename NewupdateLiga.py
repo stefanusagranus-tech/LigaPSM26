@@ -106,6 +106,17 @@ from online_monitor import (
     cleanup_stale_on_login,
 )
 
+# =========================================================================
+# 📦 IMPORT UI HELPERS
+# =========================================================================
+from ui_helpers import (
+    render_splash_screen,
+    show_loading_overlay,
+    escape_html,
+    safe_html,
+    should_show_splash_on_tab_change,
+)
+
 # ==========================================
 # 1. KONFIGURASI HALAMAN STREAMLIT
 # ==========================================
@@ -1088,9 +1099,16 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 
 
 # Menggunakan cache dengan TTL 300 detik (5 menit) untuk mencegah Quota Limit
-@st.cache_data(ttl=300)
-def load_database():
-    """Membaca data sheet secara bertahap sesuai modul PSM, PPS, dan Store Performance."""
+@st.cache_data(ttl=600, show_spinner=False)  # ✅ 10 menit + no default spinner
+def load_database(_cache_buster=0):
+    """
+    Membaca data sheet secara bertahap.
+    
+    ✅ OPTIMASI v2:
+    - Cache 10 menit (hemat 50% API call)
+    - Manual refresh via _cache_buster
+    - Silent spinner (splash screen yang handle visual)
+    """
     try:
         # 1. Modul PSM & Master Data Umum
         periods_df = conn.read(worksheet="PERIODE")
@@ -1098,11 +1116,11 @@ def load_database():
         person_df = conn.read(worksheet="MASTER_PERSONIL")
         sales_item_df = conn.read(worksheet="SALES_ITEM")
         sales_person_df = conn.read(worksheet="SALES_PERSONIL")
-
+        
         # 2. Modul PPS
         periods_pps_df = conn.read(worksheet="PERIODE_PPS")
         sales_pps_df = conn.read(worksheet="SALES_PPS")
-
+        
         # 3. Modul Store Performance
         periods_store_df = conn.read(worksheet="PERIODE_STOREPERFORMANCE")
         sales_store_df = conn.read(worksheet="SALES_STOREPERFORMANCE")
@@ -1394,6 +1412,16 @@ def sync_store_sales_from_personnel():
 
 # Inisialisasi Session State Data
 if "data_loaded" not in st.session_state:
+    # 🎬 Splash screen (auto-hide 2 detik)
+    _splash = render_splash_screen(
+        title="MEMUAT DATA GUILD",
+        subtitle="Menyiapkan portal & menyinkronkan arsip kerajaan...",
+        icon="🔮",
+        duration_ms=1500,  # Auto-hide 1.5 detik
+        session_key="first_load",
+    )
+    
+    # Load database
     (
         p_df,
         p_pps_df,
@@ -1404,7 +1432,10 @@ if "data_loaded" not in st.session_state:
         sp_df,
         s_pps_df,
         s_store_df,
-    ) = load_database()
+    ) = load_database(
+        _cache_buster=st.session_state.get("db_cache_buster", 0)
+    )
+    
     st.session_state.periods_df = p_df
     st.session_state.periods_pps_df = p_pps_df
     st.session_state.periods_store_df = p_store_df
@@ -1415,8 +1446,8 @@ if "data_loaded" not in st.session_state:
     st.session_state.sales_pps_df = s_pps_df
     st.session_state.sales_store_df = s_store_df
     st.session_state.data_loaded = True
-
-    # Sinkronisasi awal agar PERIODE_PPS langsung terhitung saat aplikasi pertama kali dibuka
+    
+    # Sinkronisasi awal
     sync_periode_pps_from_sales()
 
 
@@ -2978,7 +3009,7 @@ st.markdown(
     @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&family=Quicksand:wght@600;700&family=Cinzel:wght@600;700;800&display=swap');
 
     /* -------------------------------------------------------------------------
-    1. BASE APP & BACKGROUND KERAJAAN — LEBIH LEMBUT
+    1. BASE APP & BACKGROUND KERAJAAN
     ------------------------------------------------------------------------- */
     .stApp {
         background: radial-gradient(ellipse at top, #1e3a5f 0%, #0f172a 45%, #0a0f1a 100%) !important;
@@ -2986,14 +3017,9 @@ st.markdown(
         font-family: 'Quicksand', sans-serif !important;
     }
 
-    /* SCROLLBAR LEBIH TEBAL — MOBILE FRIENDLY */
-    ::-webkit-scrollbar {
-        width: 12px;
-        height: 12px;
-    }
-    ::-webkit-scrollbar-track {
-        background: #0b0f19;
-    }
+    /* SCROLLBAR */
+    ::-webkit-scrollbar { width: 12px; height: 12px; }
+    ::-webkit-scrollbar-track { background: #0b0f19; }
     ::-webkit-scrollbar-thumb {
         background: linear-gradient(180deg, #d4af37, #9a7b38);
         border-radius: 6px;
@@ -3004,7 +3030,7 @@ st.markdown(
     }
 
     /* -------------------------------------------------------------------------
-    2. LABEL & WIDGET TEKS — KONTRAS LEBIH TINGGI
+    2. LABEL & WIDGET TEKS
     ------------------------------------------------------------------------- */
     label, p[data-testid="stWidgetLabel"], div[data-testid="stWidgetLabel"] label, label p {
         color: #fef3c7 !important;
@@ -3016,16 +3042,16 @@ st.markdown(
     }
 
     /* -------------------------------------------------------------------------
-    3. INPUT BOX & DROPDOWN — LEBIH JELAS & TOUCH FRIENDLY
+    3. INPUT BOX & DROPDOWN
     ------------------------------------------------------------------------- */
-    div[data-baseweb="input"] input, 
+    div[data-baseweb="input"] input,
     div[data-baseweb="select"] input,
     div[data-baseweb="select"] span {
         color: #f1e5c7 !important;
         background-color: transparent !important;
         font-weight: bold !important;
     }
-    div[data-baseweb="input"] > div, 
+    div[data-baseweb="input"] > div,
     div[data-baseweb="select"] > div {
         background-color: rgba(15, 23, 42, 0.95) !important;
         border: 1.5px solid #b45309 !important;
@@ -3038,7 +3064,7 @@ st.markdown(
     }
 
     /* -------------------------------------------------------------------------
-    4. METRICS / KARTU STATISTIK — GLOW SUBTLE
+    4. METRICS
     ------------------------------------------------------------------------- */
     div[data-testid="stMetric"] {
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
@@ -3053,7 +3079,6 @@ st.markdown(
         font-family: 'Quicksand', sans-serif !important;
         font-weight: 700 !important;
         font-size: 12px !important;
-        letter-spacing: 0.5px !important;
     }
     div[data-testid="stMetric"] [data-testid="stMetricValue"] {
         color: #f7e7b4 !important;
@@ -3064,7 +3089,7 @@ st.markdown(
     }
 
     /* -------------------------------------------------------------------------
-    5. ST.EXPANDER — LEBIH JELAS
+    5. ST.EXPANDER
     ------------------------------------------------------------------------- */
     div[data-testid="stExpander"] {
         background: rgba(12, 20, 39, 0.9) !important;
@@ -3089,9 +3114,7 @@ st.markdown(
         background: linear-gradient(90deg, #2d4f7c 0%, #1e3a5f 100%) !important;
         color: #ffffff !important;
     }
-    div[data-testid="stExpander"] summary svg {
-        fill: #d4af37 !important;
-    }
+    div[data-testid="stExpander"] summary svg { fill: #d4af37 !important; }
     div[data-testid="stExpander"] [data-testid="stExpanderDetails"] {
         padding: 16px !important;
         background: rgba(8, 13, 25, 0.6) !important;
@@ -3107,25 +3130,25 @@ st.markdown(
         box-shadow: 0 0 8px rgba(212, 175, 55, 0.15) !important;
         padding: 4px !important;
     }
-    div[data-testid="stDataFrame"] iframe {
-        border-radius: 8px !important;
-    }
+    div[data-testid="stDataFrame"] iframe { border-radius: 8px !important; }
 
     /* -------------------------------------------------------------------------
-    7. SIDEBAR KERAJAAN
+    7. SIDEBAR
     ------------------------------------------------------------------------- */
     [data-testid="stSidebar"] {
         background: linear-gradient(180deg, #0c1427 0%, #05070c 100%) !important;
         border-right: 2px solid #9a7b38 !important;
         box-shadow: 5px 0 15px rgba(0, 0, 0, 0.5) !important;
     }
-    [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] label {
+    [data-testid="stSidebar"] p,
+    [data-testid="stSidebar"] span,
+    [data-testid="stSidebar"] label {
         color: #f1e5c7 !important;
         font-weight: 600 !important;
     }
 
     /* -------------------------------------------------------------------------
-    8. TOMBOL ST.BUTTON — GLOW SUBTLE + TOUCH FRIENDLY
+    8. TOMBOL ST.BUTTON
     ------------------------------------------------------------------------- */
     div.stButton > button, div.stFormSubmitButton > button {
         background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%) !important;
@@ -3147,11 +3170,9 @@ st.markdown(
     }
 
     /* -------------------------------------------------------------------------
-    9. TAB CONTROL (st.tabs)
+    9. TAB CONTROL
     ------------------------------------------------------------------------- */
-    div[data-baseweb="tab-list"] button {
-        background-color: transparent !important;
-    }
+    div[data-baseweb="tab-list"] button { background-color: transparent !important; }
     div[data-baseweb="tab-list"] button div[data-testid="stMarkdownContainer"] p {
         color: #94a3b8 !important;
         font-family: 'Cinzel', serif !important;
@@ -3168,7 +3189,7 @@ st.markdown(
     }
 
     /* -------------------------------------------------------------------------
-    10. ALERT / INFO / WARNING / ERROR
+    10. ALERT
     ------------------------------------------------------------------------- */
     div[data-testid="stAlert"] {
         background: rgba(15, 23, 42, 0.95) !important;
@@ -3176,9 +3197,7 @@ st.markdown(
         border-radius: 10px !important;
         box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.4) !important;
     }
-    div[data-testid="stAlert"] svg {
-        fill: #d4af37 !important;
-    }
+    div[data-testid="stAlert"] svg { fill: #d4af37 !important; }
 
     /* -------------------------------------------------------------------------
     11. HEADER KERAJAAN (ROYAL FRAME)
@@ -3193,7 +3212,14 @@ st.markdown(
         color: #f1e5c7;
         font-family: 'Quicksand', sans-serif;
     }
-    .corner-ornament { position: absolute; color: #d4af37; font-size: 10px; line-height: 1; opacity: 0.85; pointer-events: none; }
+    .corner-ornament {
+        position: absolute;
+        color: #d4af37;
+        font-size: 10px;
+        line-height: 1;
+        opacity: 0.85;
+        pointer-events: none;
+    }
     .top-left { top: 3px; left: 5px; }
     .top-right { top: 3px; right: 5px; }
     .bottom-left { bottom: 3px; left: 5px; }
@@ -3262,10 +3288,8 @@ st.markdown(
     }
 
     /* =========================================================================
-       🎯 GLOBAL: FIX BINGKAI EMAS + HIDE BULLET RADIO (REPLIKA INPUT DATA)
-       ========================================================================= */
-    
-    /* 1. Atur container radio group — HORIZONTAL WRAP */
+    GLOBAL: FIX BINGKAI EMAS + HIDE BULLET RADIO
+    ========================================================================= */
     div[data-testid="stRadio"] > div[role="radiogroup"] {
         display: flex !important;
         flex-direction: row !important;
@@ -3275,8 +3299,7 @@ st.markdown(
         align-items: center !important;
         width: 100% !important;
     }
-    
-    /* 2. Sembunyikan bulat/bullet radio bawaan Streamlit secara mutlak */
+
     div[data-testid="stRadio"] div[role="radiogroup"] label > div:first-child,
     div[data-testid="stRadio"] [data-baseweb="radio"] > div:first-child,
     div[data-testid="stRadio"] input[type="radio"] {
@@ -3284,8 +3307,7 @@ st.markdown(
         width: 0 !important;
         height: 0 !important;
     }
-    
-    /* 3. BINGKAI EMAS DASAR — SEMUA TOMBOL */
+
     div[data-testid="stRadio"] div[role="radiogroup"] > label,
     div[data-testid="stRadio"] [data-baseweb="radio"] {
         background: linear-gradient(180deg, #2a1a0c 0%, #170d05 100%) !important;
@@ -3302,8 +3324,7 @@ st.markdown(
         cursor: pointer !important;
         transition: all 0.25s ease-in-out !important;
     }
-    
-    /* 4. Format Teks Default */
+
     div[data-testid="stRadio"] label *,
     div[data-testid="stRadio"] [data-baseweb="radio"] * {
         color: #d4af37 !important;
@@ -3314,8 +3335,7 @@ st.markdown(
         text-transform: uppercase !important;
         background: transparent !important;
     }
-    
-    /* 5. EFEK HOVER */
+
     div[data-testid="stRadio"] label:hover,
     div[data-testid="stRadio"] [data-baseweb="radio"]:hover {
         border-color: #ffe57f !important;
@@ -3323,8 +3343,7 @@ st.markdown(
         box-shadow: 0 0 10px rgba(255, 229, 127, 0.5) !important;
         transform: translateY(-2px) !important;
     }
-    
-    /* 6. EFEK TOMBOL YANG SEDANG DIKLIK / TERPILIH */
+
     div[data-testid="stRadio"] label:has(input:checked),
     div[data-testid="stRadio"] [data-baseweb="radio"]:has(input:checked),
     div[data-testid="stRadio"] [aria-checked="true"] {
@@ -3332,25 +3351,21 @@ st.markdown(
         border: 2px solid #fff3b0 !important;
         box-shadow: 0 0 15px rgba(212, 175, 55, 0.9), inset 0 0 8px rgba(255, 243, 176, 0.5) !important;
     }
-    
+
     div[data-testid="stRadio"] label:has(input:checked) *,
     div[data-testid="stRadio"] [data-baseweb="radio"]:has(input:checked) *,
     div[data-testid="stRadio"] [aria-checked="true"] * {
         color: #ffffff !important;
         text-shadow: 0 0 6px rgba(255, 243, 176, 0.9) !important;
     }
-    
-    /* =========================================================================
-       ⚠️ EXCEPTION: SIDEBAR RADIO — JANGAN IKUT STYLE INI
-       ========================================================================= */
-    /* Sidebar radio punya style sendiri, jadi kita override balik */
+
+    /* EXCEPTION: SIDEBAR RADIO */
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] {
         flex-direction: column !important;
         gap: 10px !important;
         justify-content: flex-start !important;
         align-items: stretch !important;
     }
-    
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] > label,
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] [data-baseweb="radio"] {
         width: 100% !important;
@@ -3370,7 +3385,6 @@ st.markdown(
         cursor: pointer !important;
         box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.4) !important;
     }
-    
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] > label * {
         color: #f1e5c7 !important;
         font-family: 'Cinzel', serif !important;
@@ -3379,7 +3393,6 @@ st.markdown(
         letter-spacing: 0.5px !important;
         white-space: nowrap !important;
     }
-    
     section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) {
         background: linear-gradient(135deg, #b8860b 0%, #785805 100%) !important;
         border-color: #f7e7b4 !important;
@@ -3387,7 +3400,7 @@ st.markdown(
     }
 
     /* =========================================================================
-    B. FLOATING PILL NAVBAR (DESKTOP > 768px)
+    FLOATING PILL NAVBAR (DESKTOP > 768px)
     ========================================================================= */
     @media (min-width: 769px) {
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] {
@@ -3397,7 +3410,6 @@ st.markdown(
             width: 100% !important;
             margin: 0 auto !important;
         }
-        
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] {
             display: flex !important;
             flex-direction: row !important;
@@ -3405,18 +3417,15 @@ st.markdown(
             justify-content: center !important;
             align-items: center !important;
             gap: 6px !important;
-            
             background: #09101f !important;
             border: 1.5px solid #2d3f66 !important;
             border-radius: 50px !important;
             padding: 6px 10px !important;
-            
             margin: 10px auto !important;
             width: fit-content !important;
             max-width: 90% !important;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5) !important;
         }
-        
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label {
             background: transparent !important;
             border: none !important;
@@ -3432,29 +3441,24 @@ st.markdown(
             transition: all 0.3s ease-in-out !important;
             flex: 0 0 auto !important;
         }
-        
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label p,
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label span {
             font-size: 0px !important;
             color: transparent !important;
         }
-        
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label p::first-letter,
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label span::first-letter {
             font-size: 20px !important;
             color: #a0aec0 !important;
         }
-        
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover p::first-letter {
             color: #d4af37 !important;
         }
-        
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) {
             background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%) !important;
             padding: 0 16px !important;
             box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4) !important;
         }
-        
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) p,
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) span {
             font-size: 11px !important;
@@ -3463,7 +3467,6 @@ st.markdown(
             color: #0d1527 !important;
             white-space: nowrap !important;
         }
-        
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) p::first-letter,
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) span::first-letter {
             font-size: 16px !important;
@@ -3472,10 +3475,9 @@ st.markdown(
     }
 
     /* =========================================================================
-    C. STICKY TAB BAR (MOBILE ≤ 768px)
+    STICKY TAB BAR (MOBILE ≤ 768px)
     ========================================================================= */
     @media (max-width: 768px) {
-        /* Wrapper — sticky di atas */
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] {
             position: sticky !important;
             top: 0 !important;
@@ -3486,8 +3488,6 @@ st.markdown(
             border-bottom: 2px solid #b45309 !important;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6) !important;
         }
-        
-        /* Kapsul utama — scrollable horizontal */
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] {
             display: flex !important;
             flex-direction: row !important;
@@ -3495,12 +3495,10 @@ st.markdown(
             justify-content: flex-start !important;
             align-items: center !important;
             gap: 6px !important;
-            
             padding: 0 12px !important;
             overflow-x: auto !important;
             -webkit-overflow-scrolling: touch !important;
             scrollbar-width: none !important;
-            
             background: transparent !important;
             border: none !important;
             border-radius: 0 !important;
@@ -3509,12 +3507,9 @@ st.markdown(
             max-width: 100% !important;
             box-shadow: none !important;
         }
-        
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"]::-webkit-scrollbar {
             display: none !important;
         }
-        
-        /* Tombol item — pill dengan icon + teks */
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label {
             background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
             border: 1.5px solid #334155 !important;
@@ -3531,16 +3526,12 @@ st.markdown(
             transition: all 0.25s ease !important;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
         }
-        
-        /* Icon (emoji pertama) */
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label p::first-letter,
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label span::first-letter {
             font-size: 16px !important;
             color: #a0aec0 !important;
             margin-right: 4px !important;
         }
-        
-        /* Teks — selalu terlihat */
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label p,
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label span {
             font-size: 11px !important;
@@ -3549,19 +3540,15 @@ st.markdown(
             font-weight: 700 !important;
             letter-spacing: 0.3px !important;
         }
-        
-        /* Active state */
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) {
             background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%) !important;
             border-color: #f7e7b4 !important;
             box-shadow: 0 3px 10px rgba(212, 175, 55, 0.5) !important;
         }
-        
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) p::first-letter,
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) span::first-letter {
             color: #0d1527 !important;
         }
-        
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) p,
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) span {
             color: #0d1527 !important;
@@ -3569,138 +3556,112 @@ st.markdown(
         }
     }
 
-
-    /* -------------------------------------------------------------------------
-       9. TOMBOL ST.BUTTON (TOMBOL EKSEKUSI GUILD)
-       ------------------------------------------------------------------------- */
-    div.stButton > button, div.stFormSubmitButton > button {
-        background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%) !important;
-        color: #f7e7b4 !important;
-        border: 1.5px solid #d4af37 !important;
-        border-radius: 8px !important;
-        font-family: 'Cinzel', serif !important;
-        font-weight: bold !important;
-        box-shadow: 0 0 10px rgba(212, 175, 55, 0.2) !important;
-        transition: all 0.3s ease !important;
-    }
-    div.stButton > button:hover, div.stFormSubmitButton > button:hover {
-        background: linear-gradient(180deg, #d4af37 0%, #9a7b38 100%) !important;
-        color: #0b0f19 !important;
-        box-shadow: 0 0 18px rgba(212, 175, 55, 0.7) !important;
+    /* =========================================================================
+    📱 UNIVERSAL RESPONSIVE — Android, iOS, Tablet, Desktop
+    ========================================================================= */
+    /* iOS Safe Area */
+    body {
+        padding-top: env(safe-area-inset-top, 0);
+        padding-bottom: env(safe-area-inset-bottom, 0);
     }
 
-    /* -------------------------------------------------------------------------
-       10. TAB CONTROL KERAJAAN
-       ------------------------------------------------------------------------- */
-    div[data-baseweb="tab-list"] button {
-        background-color: transparent !important;
-    }
-    div[data-baseweb="tab-list"] button div[data-testid="stMarkdownContainer"] p {
-        color: #94a3b8 !important;
-        font-family: 'Cinzel', serif !important;
-        font-weight: 600 !important;
-    }
-    div[data-baseweb="tab-list"] button[aria-selected="true"] div[data-testid="stMarkdownContainer"] p {
-        color: #f7e7b4 !important;
-        font-weight: 800 !important;
-        text-shadow: 0 0 8px rgba(212, 175, 55, 0.6) !important;
-    }
-    div[data-baseweb="tab-highlight"] {
-        background-color: #d4af37 !important;
-        box-shadow: 0 0 8px rgba(212, 175, 55, 0.8) !important;
+    /* Touch Target (minimum 48x48 untuk iOS) */
+    @media (hover: none) and (pointer: coarse) {
+        div.stButton > button,
+        div.stFormSubmitButton > button,
+        button[kind="primary"],
+        button[kind="secondary"] {
+            min-height: 48px !important;
+            padding: 12px 16px !important;
+            font-size: 14px !important;
+        }
+        div[data-baseweb="select"] > div {
+            min-height: 44px !important;
+        }
+        div[data-baseweb="input"] > div input {
+            min-height: 44px !important;
+            font-size: 16px !important;
+        }
     }
 
-    /* -------------------------------------------------------------------------
-       11. HEADER KERAJAAN (ROYAL FRAME STYLES)
-       ------------------------------------------------------------------------- */
-    .royal-outer-frame {
-        position: relative;
-        background: radial-gradient(circle, #162447 0%, #0c1427 100%);
-        border: 3px double #d4af37;
-        border-radius: 14px;
-        box-shadow: 0 0 15px rgba(212, 175, 55, 0.35), inset 0 0 20px rgba(0, 0, 0, 0.8);
-        padding: 10px 14px;
-        color: #f1e5c7;
-        font-family: 'Quicksand', sans-serif;
-    }
-    .corner-ornament { position: absolute; color: #d4af37; font-size: 10px; line-height: 1; opacity: 0.85; pointer-events: none; }
-    .top-left { top: 3px; left: 5px; }
-    .top-right { top: 3px; right: 5px; }
-    .bottom-left { bottom: 3px; left: 5px; }
-    .bottom-right { bottom: 3px; right: 5px; }
-    .guild-title-box { text-align: center; margin-bottom: 8px; }
-    .guild-title {
-        font-family: 'MedievalSharp', serif;
-        font-size: 16px;
-        color: #f7e7b4;
-        text-shadow: 0 0 8px rgba(212, 175, 55, 0.8), 2px 2px 4px #000;
-        margin: 0;
-        letter-spacing: 0.8px;
-    }
-    .guild-subtitle { font-size: 9px; color: #38bdf8; margin-top: 1px; letter-spacing: 0.3px; }
-    .bottom-row { display: flex; align-items: stretch; justify-content: space-between; gap: 10px; width: 100%; }
-    .royal-side-box {
-        flex: 1;
-        background: rgba(10, 17, 34, 0.75);
-        border: 1px solid #9a7b38;
-        border-radius: 8px;
-        padding: 6px 10px;
-        min-width: 0;
-        box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-    .box-title { font-size: 8px; color: #e5c158; font-weight: bold; letter-spacing: 0.6px; margin-bottom: 3px; text-transform: uppercase; }
-    .marquee-container { overflow: hidden; white-space: nowrap; width: 100%; border-radius: 5px; padding: 2px 0; margin-top: 2px; }
-    .marquee-text { display: inline-block; padding-left: 100%; animation: marquee 10s linear infinite; font-size: 10px; font-weight: bold; }
-
-    @keyframes marquee {
-        0%   { transform: translate(0, 0); }
-        100% { transform: translate(-100%, 0); }
+    /* Prevent Horizontal Scroll Global */
+    html, body, .stApp {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
     }
 
-    .time-box-wrapper { display: flex; align-items: center; justify-content: space-between; width: 100%; }
-    .hourglass-container { display: flex; align-items: center; justify-content: center; padding-right: 8px; }
-    .hourglass-spin {
-        font-size: 20px;
-        display: inline-block;
-        filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.8));
-        animation: spinHourglass 2.5s infinite ease-in-out;
+    /* Image Responsive */
+    img {
+        max-width: 100% !important;
+        height: auto !important;
     }
 
-    @keyframes spinHourglass {
-        0% { transform: rotate(0deg); }
-        50% { transform: rotate(180deg); }
-        100% { transform: rotate(180deg); }
+    /* TABLET (768px - 1024px) */
+    @media (min-width: 768px) and (max-width: 1024px) {
+        .main .block-container {
+            padding-left: 20px !important;
+            padding-right: 20px !important;
+            max-width: 900px !important;
+        }
     }
 
-    .right-clock-content { text-align: right; flex: 1; }
-    .greeting-text { font-size: 9px; color: #fcd34d; font-weight: bold; margin-bottom: 1px; }
-    .digital-clock { font-family: monospace; font-size: 13px; font-weight: bold; color: #38bdf8; text-shadow: 0 0 6px rgba(56, 189, 248, 0.5); line-height: 1.1; }
-    .digital-date { font-size: 9px; color: #cbd5e1; margin-top: 1px; font-weight: bold; }
+    /* MOBILE (max 768px) */
+    @media (max-width: 768px) {
+        .main .block-container {
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+            padding-top: 8px !important;
+            max-width: 100% !important;
+        }
+        h1 { font-size: 22px !important; }
+        h2 { font-size: 18px !important; }
+        h3 { font-size: 16px !important; }
+        h4 { font-size: 14px !important; }
+        div[data-testid="stMetric"] { padding: 10px !important; }
+        div[data-testid="stMetric"] [data-testid="stMetricValue"] { font-size: 20px !important; }
+        div[data-baseweb="tab-list"] {
+            overflow-x: auto !important;
+            flex-wrap: nowrap !important;
+            -webkit-overflow-scrolling: touch !important;
+        }
+        div[data-testid="stDataFrame"] { overflow-x: auto !important; }
+        div.js-plotly-plot { width: 100% !important; }
+        div[data-testid="stRadio"] > div[role="radiogroup"] {
+            overflow-x: auto !important;
+            flex-wrap: nowrap !important;
+            gap: 6px !important;
+            padding-bottom: 8px !important;
+            -webkit-overflow-scrolling: touch !important;
+        }
+        section[data-testid="stSidebar"] {
+            min-width: 280px !important;
+            max-width: 320px !important;
+        }
+        div[data-testid="stHorizontalBlock"] { flex-wrap: wrap !important; }
+    }
 
-    @media (min-width: 650px) {
-        .guild-title { font-size: 18px; }
-        .guild-subtitle { font-size: 11px; }
-        .greeting-text { font-size: 10px; }
-        .digital-clock { font-size: 14px; }
-        .digital-date { font-size: 10px; }
-        .box-title { font-size: 9px; }
-        .marquee-text { font-size: 11px; }
-        .hourglass-spin { font-size: 24px; }
+    /* SMALL MOBILE (max 480px) */
+    @media (max-width: 480px) {
+        .main .block-container {
+            padding-left: 8px !important;
+            padding-right: 8px !important;
+        }
+        h1 { font-size: 18px !important; }
+        h2 { font-size: 16px !important; }
+        div[data-testid="stMetric"] [data-testid="stMetricValue"] { font-size: 18px !important; }
+        div.stButton > button { width: 100% !important; }
     }
 </style>
 """,
     unsafe_allow_html=True,
 )
 
+
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 if "username" not in st.session_state:
     st.session_state.username = ""
     
-
 # ==========================================
 # 6. HALAMAN LOGIN
 # ==========================================
@@ -4101,6 +4062,18 @@ if st.session_state.get("redirect_to_main_tab", False):
 
 # Ini adalah baris kode st.sidebar.radio Anda (Jangan dihapus, pastikan posisinya berada di bawah kode if di atas):
 selected_tab = st.sidebar.radio("", menu_options, key="selected_tab", label_visibility="collapsed")
+# 🎬 Splash saat ganti tab
+if should_show_splash_on_tab_change(selected_tab, session_key="main_tab"):
+    # Cuma tampil kalau bukan tab pertama kali
+    if st.session_state.get("_tab_splash_init", False):
+        _tab_splash = render_splash_screen(
+            title="BERPINDAH HALAMAN",
+            subtitle="Membuka portal ke halaman berikutnya...",
+            icon="🌀",
+            duration_ms=800,
+        )
+    else:
+        st.session_state["_tab_splash_init"] = True
 # Auto-log kalau ganti tab
 if "last_logged_tab" not in st.session_state:
     st.session_state["last_logged_tab"] = None
@@ -4150,6 +4123,35 @@ if st.session_state.get("logged_in", False):
         render_sidebar_online_panel()
     except Exception as e_online:
         print(f"[SIDEBAR ONLINE ERROR] {e_online}")
+
+# =========================================================================
+# 🔄 TOMBOL REFRESH MANUAL — Refresh Data dari Google Sheets
+# =========================================================================
+if not st.session_state.get("sidebar_collapsed", False):
+    if st.sidebar.button(
+        "🔄 Refresh Data",
+        use_container_width=True,
+        key="btn_manual_refresh_data",
+        help="Ambil data terbaru dari Google Sheets (bypass cache)"
+    ):
+        # Naikkan cache buster
+        st.session_state["db_cache_buster"] = st.session_state.get("db_cache_buster", 0) + 1
+        
+        # Clear cache st.cache_data
+        st.cache_data.clear()
+        
+        # Splash screen
+        _refresh_splash = render_splash_screen(
+            title="MEMUAT ULANG DATA",
+            subtitle="Menarik data terbaru dari arsip kerajaan...",
+            icon="⚡",
+            duration_ms=1200,
+        )
+        
+        st.rerun()
+
+# Tombol Keluar / Logout
+st.sidebar.markdown("<hr style='margin: 15px 0; border-color: #27272a;'>", unsafe_allow_html=True)
 
 # Tombol Keluar / Logout
 st.sidebar.markdown("<hr style='margin: 15px 0; border-color: #27272a;'>", unsafe_allow_html=True)
