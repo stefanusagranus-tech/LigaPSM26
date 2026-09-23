@@ -4054,13 +4054,13 @@ if st.sidebar.button(logout_text, use_container_width=True, key="logout_sidebar"
     # Log logout
     log_activity("LOGOUT", "Logout dari sistem")
     
-    # Hapus heartbeat user
-    _my_username = st.session_state.get("username", "")
-    if _my_username:
-        try:
-            remove_heartbeat_from_sheet(_my_username)
-        except Exception as e_hb:
-            print(f"[LOGOUT HEARTBEAT ERROR] {e_hb}")
+    # 🚧 FREEZE SEMENTARA — Heartbeat hapus dimatikan
+    # _my_username = st.session_state.get("username", "")
+    # if _my_username:
+    #     try:
+    #         remove_heartbeat_from_sheet(_my_username)
+    #     except Exception as e_hb:
+    #         print(f"[LOGOUT HEARTBEAT ERROR] {e_hb}")
     
     
     # Clear session
@@ -19835,11 +19835,19 @@ elif selected_tab == "⚙️ Master Data":
                             st.rerun()
 
         # =====================================================================
-        # 📊 TAB 2: DATABASE MONITORING
+        # 📊 TAB 2: DATABASE MONITORING + API USAGE
         # =====================================================================
         elif _admin_tab == "📊 Database":
-            st.markdown("### 📊 2. Database Monitoring")
-            st.caption("Info ukuran tiap tabel data & estimasi kuota Google Sheets.")
+            st.markdown("### 📊 2. Database & API Monitoring")
+            st.caption(
+                "Info ukuran tiap tabel data, estimasi kuota, dan monitoring "
+                "penggunaan API Google Sheets."
+            )
+
+            # =====================================================================
+            # 📋 SECTION A: TABEL INFO UKURAN
+            # =====================================================================
+            st.markdown("#### 📋 A. Ukuran Tiap Tabel Data")
 
             _db_data = []
             for _label, _key in [
@@ -19867,17 +19875,23 @@ elif selected_tab == "⚙️ Master Data":
                     "Ukuran (MB)": round(_size_mb, 3),
                 })
 
-            st.dataframe(pd.DataFrame(_db_data), use_container_width=True, hide_index=True)
+            st.dataframe(
+                pd.DataFrame(_db_data),
+                use_container_width=True,
+                hide_index=True
+            )
 
-            # === Info 3 Spreadsheet ===
+            # =====================================================================
+            # 📊 SECTION B: ESTIMASI KUOTA (3 SPREADSHEET)
+            # =====================================================================
             st.markdown("---")
-            st.markdown("##### 💾 Info 3 Spreadsheet")
+            st.markdown("#### 📊 B. Estimasi Kuota Tiap Spreadsheet")
 
             st.markdown("""
             <div class="quota-info-card">
                 <b>📌 Sistem ini pakai 3 spreadsheet terpisah:</b><br>
                 <ul style="margin: 6px 0 0 20px; padding: 0;">
-                    <li><b>📊 Data</b>: PERIODE, MASTER_ITEM, MASTER_PERSONIL, SALES_*, PERIODE_PPS, STORE_PERFORMANCE</li>
+                    <li><b>📊 Data</b>: PERIODE, MASTER_*, SALES_*, PERIODE_PPS, STORE_PERFORMANCE</li>
                     <li><b>📋 Audit</b>: ACTIVITY_LOG, ACTIVITY_HEARTBEAT, _BACKUP_*</li>
                     <li><b>📄 Laporan</b>: [BULAN] [TAHUN]_PSM/PWP/SG/SUEGER</li>
                 </ul>
@@ -19887,7 +19901,10 @@ elif selected_tab == "⚙️ Master Data":
             </div>
             """, unsafe_allow_html=True)
 
-            # === Estimasi kuota ===
+            # Hitung estimasi cell per spreadsheet
+            _max_cells = 10_000_000
+
+            # Spreadsheet DATA
             _est_cells_data = 0
             for _k in [
                 "sales_item_df", "sales_person_df", "sales_pps_df",
@@ -19898,26 +19915,311 @@ elif selected_tab == "⚙️ Master Data":
                 if not _df.empty:
                     _est_cells_data += len(_df) * max(len(_df.columns), 1)
 
-            _max_cells = 10_000_000
-            _pct_quota_data = min((_est_cells_data / _max_cells) * 100, 100)
+            _pct_data = min((_est_cells_data / _max_cells) * 100, 100)
 
-            st.markdown("##### 📊 Estimasi Kuota Spreadsheet Data")
-            st.markdown(
-                f"**{_est_cells_data:,}** / **{_max_cells:,}** cell "
-                f"(~**{_pct_quota_data:.2f}%**)"
+            # Spreadsheet AUDIT — estimasi dari jumlah log
+            _audit_log_count = 0
+            try:
+                from spreadsheet_connector import get_ws_audit
+                _ws_log = get_ws_audit("ACTIVITY_LOG")
+                if _ws_log is not None:
+                    _all_vals = _ws_log.get_all_values()
+                    _audit_log_count = max(0, len(_all_vals) - 1)
+            except Exception:
+                _audit_log_count = 0
+
+            # Audit: log (6 kolom) + heartbeat (~5 baris × 5 kolom) + backup (9 sheet)
+            _est_cells_audit = (
+                _audit_log_count * 6  # ACTIVITY_LOG
+                + 25                   # HEARTBEAT (estimasi kecil)
+                + _total_rows * 9      # _BACKUP_* (semua baris data)
             )
-            st.progress(_pct_quota_data / 100)
+            _pct_audit = min((_est_cells_audit / _max_cells) * 100, 100)
 
-            if _pct_quota_data < 50:
-                st.success(f"✅ Kuota aman ({_pct_quota_data:.2f}%)")
-            elif _pct_quota_data < 80:
-                st.warning(f"⚠️ Kuota mulai terpakai ({_pct_quota_data:.2f}%).")
-            else:
-                st.error(f"🚨 Kuota hampir penuh ({_pct_quota_data:.2f}%)! Lakukan cleanup.")
+            # Spreadsheet LAPORAN — estimasi 12 bulan × 4 sheet × (10 personil × 60 cell)
+            _est_cells_laporan = 12 * 4 * 10 * 60  # ~28.800 cell/tahun
+            _pct_laporan = min((_est_cells_laporan / _max_cells) * 100, 100)
 
-            # === Ringkasan Tabel ===
+            # === Tampilan 3 progress bar ===
+            col_s1, col_s2, col_s3 = st.columns(3)
+
+            with col_s1:
+                st.markdown("##### 📊 Spreadsheet Data")
+                st.markdown(
+                    f"**{_est_cells_data:,}** / **{_max_cells:,}** cell<br>"
+                    f"(~**{_pct_data:.2f}%**)",
+                    unsafe_allow_html=True
+                )
+                st.progress(_pct_data / 100)
+                if _pct_data < 50:
+                    st.success(f"✅ Aman")
+                elif _pct_data < 80:
+                    st.warning(f"⚠️ Terpakai")
+                else:
+                    st.error(f"🚨 Hampir Penuh")
+
+            with col_s2:
+                st.markdown("##### 📋 Spreadsheet Audit")
+                st.markdown(
+                    f"**{_est_cells_audit:,}** / **{_max_cells:,}** cell<br>"
+                    f"(~**{_pct_audit:.2f}%**)",
+                    unsafe_allow_html=True
+                )
+                st.progress(_pct_audit / 100)
+                if _pct_audit < 50:
+                    st.success(f"✅ Aman")
+                elif _pct_audit < 80:
+                    st.warning(f"⚠️ Terpakai")
+                else:
+                    st.error(f"🚨 Hampir Penuh")
+
+            with col_s3:
+                st.markdown("##### 📄 Spreadsheet Laporan")
+                st.markdown(
+                    f"**{_est_cells_laporan:,}** / **{_max_cells:,}** cell<br>"
+                    f"(~**{_pct_laporan:.2f}%**)",
+                    unsafe_allow_html=True
+                )
+                st.progress(_pct_laporan / 100)
+                if _pct_laporan < 50:
+                    st.success(f"✅ Aman")
+                elif _pct_laporan < 80:
+                    st.warning(f"⚠️ Terpakai")
+                else:
+                    st.error(f"🚨 Hampir Penuh")
+
+            # =====================================================================
+            # 🚀 SECTION C: API USAGE MONITORING (BARU)
+            # =====================================================================
             st.markdown("---")
-            st.markdown("##### 📋 Ringkasan Data")
+            st.markdown("#### 🚀 C. API Usage Google Sheets")
+            st.caption(
+                "Monitoring penggunaan API Google Sheets hari ini — "
+                "limit **300 read + 300 write per menit** per project."
+            )
+
+            # === Hitung API call berdasarkan log aktivitas hari ini ===
+            _today_date = datetime.now(ZoneInfo("Asia/Jakarta")).date()
+
+            # Baca log dari Spreadsheet Audit
+            _log_df_for_api = _load_activity_log_df()
+
+            # Filter log hari ini
+            _log_today_api = pd.DataFrame()
+            if not _log_df_for_api.empty:
+                _log_today_api = _log_df_for_api[
+                    _log_df_for_api["_dt"].dt.date == _today_date
+                ].copy()
+
+            # Hitung aksi hari ini
+            _actions_today = _log_today_api["action"].astype(str).str.upper().value_counts().to_dict() if not _log_today_api.empty else {}
+
+            _login_today = _actions_today.get("LOGIN", 0)
+            _logout_today = _actions_today.get("LOGOUT", 0)
+            _input_today = _actions_today.get("INPUT", 0)
+            _login_failed_today = _actions_today.get("LOGIN_FAILED", 0)
+            _auto_logout_today = _actions_today.get("AUTO_LOGOUT", 0)
+            _edit_today = _actions_today.get("EDIT_DATA", 0)
+            _delete_today = _actions_today.get("DELETE_DATA", 0)
+            _save_master_today = _actions_today.get("SAVE_MASTER", 0)
+            _report_today = _actions_today.get("REPORT", 0)
+
+            # === Estimasi API Call ===
+            # Setiap log = 1 write API
+            # Setiap login = 1 read (cek MASTER_PERSONIL) + 1 write (log)
+            # Setiap input = 1 write (save_database) + 1 write (log) = 2 write
+            # Setiap save_master = 1 write + 1 write (log)
+            # Setiap backup = 9 write
+            # Setiap refresh data = 9 read
+            # Setiap baca log activity = 1 read
+
+            # Estimasi hari ini
+            _api_writes_today = (
+                (_login_today + _logout_today + _login_failed_today + _auto_logout_today) * 1
+                + _input_today * 2
+                + _edit_today * 2
+                + _delete_today * 2
+                + _save_master_today * 2
+                + _report_today * 1
+            )
+
+            _api_reads_today = (
+                _login_today * 1     # Cek MASTER_PERSONIL
+                + _login_today * 1   # Load data awal
+                + _report_today * 1
+            )
+
+            # Backup otomatis: 9 write (kalau hari ini ada backup)
+            _last_backup_time_api = st.session_state.get("last_backup_time", "Belum pernah")
+            _backup_hari_ini = False
+            try:
+                _lb_date = _last_backup_time_api.split(" ")[0] if _last_backup_time_api != "Belum pernah" else ""
+                if _lb_date:
+                    _lb_parsed = datetime.strptime(_lb_date, "%d/%m/%Y").date()
+                    _backup_hari_ini = _lb_parsed == _today_date
+            except Exception:
+                _backup_hari_ini = False
+
+            if _backup_hari_ini:
+                _api_writes_today += 9
+
+            # === Metrics ===
+            col_api1, col_api2, col_api3, col_api4 = st.columns(4)
+            with col_api1:
+                st.metric("📝 Total Aksi Hari Ini", len(_log_today_api))
+            with col_api2:
+                st.metric(
+                    "📤 Write API (Est.)",
+                    f"{_api_writes_today}",
+                    help="Estimasi request write ke Google Sheets hari ini"
+                )
+            with col_api3:
+                st.metric(
+                    "📥 Read API (Est.)",
+                    f"{_api_reads_today}",
+                    help="Estimasi request read ke Google Sheets hari ini"
+                )
+            with col_api4:
+                st.metric(
+                    "💾 Backup Hari Ini",
+                    "✅ Ya" if _backup_hari_ini else "⏸️ Belum"
+                )
+
+            # === Detail Breakdown Aksi Hari Ini ===
+            st.markdown("##### 📋 Detail Aksi Hari Ini")
+
+            _detail_actions = [
+                ("🔓 Login", _login_today),
+                ("🚪 Logout", _logout_today),
+                ("📝 Input Data", _input_today),
+                ("✏️ Edit Data", _edit_today),
+                ("🗑️ Delete Data", _delete_today),
+                ("⚙️ Save Master", _save_master_today),
+                ("📊 Generate Report", _report_today),
+                ("❌ Login Gagal", _login_failed_today),
+                ("⏸️ Auto Logout", _auto_logout_today),
+            ]
+
+            col_a1, col_a2, col_a3 = st.columns(3)
+            _cols = [col_a1, col_a2, col_a3]
+
+            for _idx, (_label, _val) in enumerate(_detail_actions):
+                with _cols[_idx % 3]:
+                    _color = "#fbbf24" if _val > 0 else "#64748b"
+                    st.markdown(
+                        f"""
+                        <div style='
+                            background: rgba(15, 23, 42, 0.6);
+                            border-left: 3px solid {_color};
+                            border-radius: 6px;
+                            padding: 8px 12px;
+                            margin-bottom: 6px;
+                            font-family: monospace;
+                        '>
+                            <div style='color: #94a3b8; font-size: 10px;'>{_label}</div>
+                            <div style='color: {_color}; font-size: 16px; font-weight: 900;'>{_val}</div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
+            # === Status Kuota API ===
+            st.markdown("---")
+            st.markdown("##### 🚦 Status Kuota API")
+
+            # Limit per menit: 300 read + 300 write
+            # Estimasi peak per jam (asumsi semua aksi terkumpul di 1 jam)
+            _peak_hour_writes = _api_writes_today  # Worst case: semua aksi di 1 jam
+            _peak_hour_reads = _api_reads_today
+
+            # Limit per jam = 300 × 60 = 18.000
+            _limit_per_hour = 300 * 60
+
+            _pct_write_api = min((_peak_hour_writes / _limit_per_hour) * 100, 100)
+            _pct_read_api = min((_peak_hour_reads / _limit_per_hour) * 100, 100)
+
+            col_w1, col_w2 = st.columns(2)
+
+            with col_w1:
+                st.markdown("**📤 Write API (worst case)**")
+                st.markdown(
+                    f"**{_peak_hour_writes}** request (asumsi peak 1 jam)<br>"
+                    f"Limit: **{_limit_per_hour:,}**/jam<br>"
+                    f"Penggunaan: **~{_pct_write_api:.3f}%**",
+                    unsafe_allow_html=True
+                )
+                if _pct_write_api < 50:
+                    st.success(f"✅ Sangat aman")
+                elif _pct_write_api < 80:
+                    st.warning(f"⚠️ Perlu monitoring")
+                else:
+                    st.error(f"🚨 Mendekati limit!")
+
+            with col_w2:
+                st.markdown("**📥 Read API (worst case)**")
+                st.markdown(
+                    f"**{_peak_hour_reads}** request (asumsi peak 1 jam)<br>"
+                    f"Limit: **{_limit_per_hour:,}**/jam<br>"
+                    f"Penggunaan: **~{_pct_read_api:.3f}%**",
+                    unsafe_allow_html=True
+                )
+                if _pct_read_api < 50:
+                    st.success(f"✅ Sangat aman")
+                elif _pct_read_api < 80:
+                    st.warning(f"⚠️ Perlu monitoring")
+                else:
+                    st.error(f"🚨 Mendekati limit!")
+
+            # === Rekomendasi ===
+            st.markdown("---")
+            st.markdown("##### 💡 Rekomendasi")
+
+            if _pct_write_api < 5 and _pct_read_api < 5:
+                st.success(
+                    "✅ **Sistem sangat aman.** Penggunaan API masih jauh dari limit. "
+                    "Traffic web kamu sangat ringan."
+                )
+            elif _pct_write_api < 30 and _pct_read_api < 30:
+                st.info(
+                    "ℹ️ **Penggunaan API normal.** Tidak perlu khawatir untuk saat ini."
+                )
+            else:
+                st.warning(
+                    "⚠️ **Perhatikan penggunaan API.** Pertimbangkan untuk: "
+                    "cache lebih lama, batch write, atau tambah delay antar request."
+                )
+
+            # === Info Tambahan ===
+            with st.expander("ℹ️ Info Limit Google Sheets API"):
+                st.markdown("""
+                **📊 Limit Google Sheets API (per project):**
+                - **Read**: 300 request / menit
+                - **Write**: 300 request / menit
+                - Reset tiap 60 detik
+
+                **📌 Tips hemat API:**
+                1. ✅ **Cache 5 menit** untuk `load_database()` (sudah diterapkan)
+                2. ✅ **Batch write** untuk backup (9 sheet dalam 1 sesi)
+                3. ✅ **Append-only** untuk log (tanpa read dulu)
+                4. ✅ **3 spreadsheet terpisah** — limit bertambah 3×
+
+                **💡 Estimasi aman:**
+                - **< 5.000 write/hari** = sangat aman
+                - **5.000-10.000 write/hari** = perlu monitoring
+                - **> 10.000 write/hari** = pertimbangkan migrasi ke database
+
+                **📊 Traffic web kamu:**
+                - ~10-15 user aktif
+                - ~100-200 aksi/hari
+                - **Estimasi:** ~500-1000 API call/hari
+                - **Status:** ✅ **Jauh dari bahaya**
+                """)
+
+            # =====================================================================
+            # 📊 SECTION D: RINGKASAN DATA
+            # =====================================================================
+            st.markdown("---")
+            st.markdown("#### 📊 D. Ringkasan Data")
 
             _total_rows_db = 0
             for _k in [
@@ -19929,7 +20231,13 @@ elif selected_tab == "⚙️ Master Data":
                 if not _df.empty:
                     _total_rows_db += len(_df)
 
-            st.info(f"📦 **Total {_total_rows_db:,} baris** tersebar di 9 tabel data.")
+            col_r1, col_r2, col_r3 = st.columns(3)
+            with col_r1:
+                st.metric("📦 Total Baris Data", f"{_total_rows_db:,}")
+            with col_r2:
+                st.metric("📜 Total Log Tersimpan", f"{_audit_log_count:,}")
+            with col_r3:
+                st.metric("📅 Log Hari Ini", len(_log_today_api))
 
         # =====================================================================
         # 📜 TAB 3: ACTIVITY LOG (DENGAN GRAFIK)
