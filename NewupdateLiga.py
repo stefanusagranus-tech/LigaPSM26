@@ -3661,7 +3661,7 @@ if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 if "username" not in st.session_state:
     st.session_state.username = ""
-    
+
 # ==========================================
 # 6. HALAMAN LOGIN
 # ==========================================
@@ -13654,9 +13654,9 @@ if selected_tab == "🏠 Menu Utama":
     render_maintenance_panel(
     show=True,
     title="SEDANG UPDATE FITUR BARU",
-    message="Sistem sedang ditingkatkan, kalo ada perlu WA aja. Fix eror Log Activity dan penambahan fitur aneh lain nya. Mohon maklum kalau ada gangguan ya.",
+    message="Sistem sedang ditingkatkan, kalo ada perlu WA aja. Fix eror, Optimalisasi web dan penambahan fitur aneh lain nya. Mohon maklum kalau ada gangguan ya.",
     eta="Target selesai: Seniatnya ",
-    progress=10,
+    progress=50,
     badge_text="SEDANG DIKERJAKAN",
     )
 
