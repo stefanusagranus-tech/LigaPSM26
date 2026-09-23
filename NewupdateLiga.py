@@ -63,6 +63,49 @@ from spreadsheet_connector import (
     clear_all_heartbeat,
 )
 
+# =========================================================================
+# 📦 IMPORT CONNECTOR (untuk log & backup ke Spreadsheet Audit)
+# =========================================================================
+from spreadsheet_connector import (
+    # Log & Backup
+    append_logs_to_sheet,
+    read_activity_log,
+    backup_to_audit_sheet,
+    render_debug_panel,
+    
+    # Laporan (versi lama)
+    write_laporan_bulanan,
+    generate_laporan_bulanan_psm,
+    
+    # Laporan (versi baru — multi program)
+    generate_laporan_psm,
+    generate_laporan_pwp,
+    generate_laporan_sg,
+    generate_laporan_sueger,
+    generate_semua_laporan,
+    isi_laporan_psm,
+    isi_laporan_pwp,
+    isi_laporan_sg,
+    isi_laporan_sueger,
+
+    # Heartbeat (FASE 4)
+    write_heartbeat_to_sheet,
+    remove_heartbeat_from_sheet,
+    get_stale_heartbeats,
+    clear_all_heartbeat,
+)
+
+# =========================================================================
+# 📦 IMPORT ONLINE MONITOR (fitur monitoring user online)
+# =========================================================================
+from online_monitor import (
+    get_online_users,
+    get_user_status,
+    render_sidebar_online_panel,
+    get_online_avatar,
+    cleanup_stale_on_login,
+)
+
 # ==========================================
 # 1. KONFIGURASI HALAMAN STREAMLIT
 # ==========================================
@@ -2566,100 +2609,6 @@ def check_and_log_stale_users():
     except Exception as e:
         print(f"[CHECK_STALE ERROR] {e}")
 
-def cleanup_stale_on_login(threshold_minutes=None):
-    """
-    🧹 CLEANUP ON LOGIN (Lapis 3)
-    Dipanggil setiap kali user baru login.
-    Hapus SEMUA heartbeat yang sudah idle > threshold,
-    meskipun user lain baru masuk 1 jam atau 4 jam kemudian.
-    
-    Berbeda dengan check_and_log_stale_users():
-    - check_and_log_stale_users() → cek berkala (interval 60 detik)
-    - cleanup_stale_on_login()    → cek SEGERA saat login (tanpa interval)
-    
-    🛡️ Safety:
-    - Max 10 user per cleanup (anti mass delete)
-    - Skip user SYSTEM/DEBUG
-    - Skip diri sendiri
-    - Threshold default 15 menit
-    
-    Return: jumlah user yang di-cleanup
-    """
-    try:
-        if threshold_minutes is None:
-            threshold_minutes = _CLEANUP_LOGIN_THRESHOLD_MIN
-        
-        _current_user = st.session_state.get("username", "").strip()
-        
-        print(f"[CLEANUP_LOGIN] Mulai (threshold={threshold_minutes} menit)")
-        
-        # Ambil SEMUA user stale
-        stale_users = get_stale_heartbeats(threshold_minutes=threshold_minutes)
-        
-        if not stale_users:
-            print(f"[CLEANUP_LOGIN] ✅ Tidak ada user stale")
-            return 0
-        
-        print(f"[CLEANUP_LOGIN] 🔍 Ditemukan {len(stale_users)} user stale")
-        
-        # Filter: jangan hapus diri sendiri
-        stale_users = [
-            u for u in stale_users
-            if u["username"].upper() != _current_user.upper()
-        ]
-        
-        # Max 10 user per cleanup
-        MAX_PER_CLEANUP = 10
-        stale_users = stale_users[:MAX_PER_CLEANUP]
-        
-        if not stale_users:
-            print(f"[CLEANUP_LOGIN] ✅ Tidak ada user lain yang stale")
-            return 0
-        
-        _waktu = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
-        _total_logout = 0
-        
-        for _user in stale_users:
-            try:
-                _username = str(_user["username"])
-                
-                # Hapus heartbeat
-                _ok_del, _msg_del = remove_heartbeat_from_sheet(_username)
-                print(f"[CLEANUP_LOGIN] {_username}: {_msg_del}")
-                
-                if not _ok_del:
-                    continue
-                
-                # Log AUTO_LOGOUT
-                try:
-                    from spreadsheet_connector import append_logs_to_sheet
-                    _log_entry = {
-                        "timestamp": _waktu,
-                        "username": _username,
-                        "role": str(_user.get("role", "-")),
-                        "action": "AUTO_LOGOUT",
-                        "detail": (
-                            f"Auto-logout saat login user baru "
-                            f"({_user['selisih_menit']} menit idle)"
-                        ),
-                        "session_id": str(_user.get("session_id", "-")),
-                    }
-                    _count, _msg = append_logs_to_sheet([_log_entry])
-                    print(f"[CLEANUP_LOGIN LOG] {_username}: {_msg}")
-                    _total_logout += 1
-                except Exception as e_log:
-                    print(f"[CLEANUP_LOGIN LOG FAIL] {_username}: {e_log}")
-            
-            except Exception as e_user:
-                print(f"[CLEANUP_LOGIN ERROR] {_user.get('username', '?')}: {e_user}")
-        
-        print(f"[CLEANUP_LOGIN] ✅ Total {_total_logout} user di-cleanup")
-        return _total_logout
-    
-    except Exception as e:
-        print(f"[CLEANUP_LOGIN ERROR] {e}")
-        return 0
-
 # =========================================================================
 # 🚀 WELCOME SCREEN — VERSI FINAL (AVATAR SAMA DENGAN HALL OF FAME)
 # =========================================================================
@@ -3864,7 +3813,7 @@ def show_login_page():
                 st.session_state["stale_logged_users"] = set()
                 st.session_state["last_stale_check"] = time.time()
                 
-                # 🧹 CLEANUP ON LOGIN: Bersihkan user lama yang idle > 15 menit
+                # 🧹 CLEANUP ON LOGIN
                 try:
                     _cleaned = cleanup_stale_on_login(threshold_minutes=_CLEANUP_LOGIN_THRESHOLD_MIN)
                     if _cleaned > 0:
@@ -4193,6 +4142,18 @@ if _is_admin_user:
         unsafe_allow_html=True
     )
 
+# =========================================================================
+# 📡 PANEL "SEDANG ONLINE" — Real-time User Monitoring
+# =========================================================================
+if st.session_state.get("logged_in", False):
+    try:
+        render_sidebar_online_panel()
+    except Exception as e_online:
+        print(f"[SIDEBAR ONLINE ERROR] {e_online}")
+
+# Tombol Keluar / Logout
+st.sidebar.markdown("<hr style='margin: 15px 0; border-color: #27272a;'>", unsafe_allow_html=True)
+logout_text = "🚪" if st.session_state.sidebar_collapsed else "🚪 Keluar / Logout"
 # Tombol Keluar / Logout
 st.sidebar.markdown("<hr style='margin: 15px 0; border-color: #27272a;'>", unsafe_allow_html=True)
 logout_text = "🚪" if st.session_state.sidebar_collapsed else "🚪 Keluar / Logout"
@@ -20427,19 +20388,30 @@ elif selected_tab == "⚙️ Master Data":
             _log_sheet_df = _load_activity_log_df()
             _total_logs = len(_log_sheet_df) if not _log_sheet_df.empty else 0
 
-            col_info, col_refresh = st.columns([3, 1])
+            col_info, col_online, col_refresh = st.columns([2, 1, 1])
+
             with col_info:
                 if _total_logs > 0:
-                    st.success(f"✅ **{_total_logs:,} log** tersimpan di Spreadsheet Audit.")
+                    st.success(f"✅ **{_total_logs:,} log** tersimpan.")
                 else:
-                    st.info("📭 Belum ada log tersimpan.")
+                    st.info("📭 Belum ada log.")
+            
+            with col_online:
+                # Info user online real-time
+                try:
+                    _online_now = get_online_users(max_idle_minutes=2)
+                    _online_now_count = len(_online_now)
+                    if _online_now_count > 0:
+                        st.info(f"🟢 **{_online_now_count}** user online")
+                    else:
+                        st.warning("😴 Tidak ada user online")
+                except Exception:
+                    st.caption("—")
+            
             with col_refresh:
-                if st.button("🔄 Refresh Log", use_container_width=True, key="btn_refresh_log"):
+                if st.button("🔄 Refresh", use_container_width=True, key="btn_refresh_log"):
                     st.session_state["log_cache_buster"] = st.session_state.get("log_cache_buster", 0) + 1
                     st.rerun()
-
-            if _log_sheet_df.empty:
-                st.stop()
 
             st.markdown("---")
 
@@ -20521,15 +20493,32 @@ elif selected_tab == "⚙️ Master Data":
 
                 _avg_durasi = sum(_durations) / len(_durations) if _durations else 0
 
-                col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+                # === HITUNG TAMBAHAN ===
+                _total_logout_manual = len(_log_filtered[
+                    _log_filtered["action"].astype(str).str.upper() == "LOGOUT"
+                ])
+                _total_auto_logout = len(_log_filtered[
+                    _log_filtered["action"].astype(str).str.upper() == "AUTO_LOGOUT"
+                ])
+                _total_login_failed = len(_log_filtered[
+                    _log_filtered["action"].astype(str).str.upper() == "LOGIN_FAILED"
+                ])
+                
+                col_m1, col_m2, col_m3 = st.columns(3)
                 with col_m1:
                     st.metric("🔓 Total Login", f"{_total_login:,}")
                 with col_m2:
-                    st.metric("👥 User Unik", _unique_users)
+                    st.metric("🚪 Logout Manual", f"{_total_logout_manual:,}")
                 with col_m3:
-                    st.metric("⏱️ Rata Durasi", f"{_avg_durasi:.1f} jam")
+                    st.metric("⏸️ Auto-Logout (Idle)", f"{_total_auto_logout:,}")
+                
+                col_m4, col_m5, col_m6 = st.columns(3)
                 with col_m4:
-                    st.metric("📝 Total Input", f"{_total_input:,}")
+                    st.metric("👥 User Unik", _unique_users)
+                with col_m5:
+                    st.metric("⏱️ Rata Durasi", f"{_avg_durasi:.1f} jam")
+                with col_m6:
+                    st.metric("❌ Login Gagal", f"{_total_login_failed:,}")
 
                 st.markdown("---")
 
@@ -20803,22 +20792,37 @@ elif selected_tab == "⚙️ Master Data":
                     ]["_date"].nunique()
 
                     if not _login_logs.empty:
-                        _last_login_date = _login_logs.iloc[0]["_dt"]
-                        try:
-                            _now_naive = pd.Timestamp.now().tz_localize(None)
-                            _ll_naive = _last_login_date.tz_localize(None) if _last_login_date.tzinfo else _last_login_date
-                            _selisih_hari = (_now_naive - _ll_naive).days
-                        except Exception:
-                            _selisih_hari = 999
-
-                        if _selisih_hari > 7:
-                            _status_icon = f"🟡 {_selisih_hari} HARI LALU"
-                        elif _selisih_hari > 1:
-                            _status_icon = f"🟢 {_selisih_hari} hari lalu"
-                        else:
-                            _status_icon = "🟢 AKTIF HARI INI"
+                    _last_login_date = _login_logs.iloc[0]["_dt"]
+                    try:
+                        _now_naive = pd.Timestamp.now().tz_localize(None)
+                        _ll_naive = _last_login_date.tz_localize(None) if _last_login_date.tzinfo else _last_login_date
+                        _selisih_hari = (_now_naive - _ll_naive).days
+                        _selisih_jam = (_now_naive - _ll_naive).total_seconds() / 3600
+                    except Exception:
+                        _selisih_hari = 999
+                        _selisih_jam = 999
+                    
+                    # ✅ FIX: Cek apakah user SEDANG ONLINE
+                    try:
+                        _user_status = get_user_status(_user_upper, max_idle_minutes=2)
+                        _is_online = _user_status["is_online"]
+                        _durasi_str = _user_status["durasi_str"]
+                    except Exception:
+                        _is_online = False
+                        _durasi_str = "-"
+                    
+                    if _is_online:
+                        _status_icon = f"🟢 SEDANG ONLINE ({_durasi_str})"
+                    elif _selisih_jam < 1:
+                        _status_icon = f"🟡 Aktif {int(_selisih_jam * 60)} menit lalu"
+                    elif _selisih_jam < 24:
+                        _status_icon = f"🟡 {int(_selisih_jam)} jam lalu"
+                    elif _selisih_hari > 7:
+                        _status_icon = f"🔴 {_selisih_hari} HARI LALU"
                     else:
-                        _status_icon = "⚪ BELUM LOGIN"
+                        _status_icon = f"🟠 {_selisih_hari} hari lalu"
+                else:
+                    _status_icon = "⚪ BELUM LOGIN"
 
                     _user_summary.append({
                         "👤 User": _user,
