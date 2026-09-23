@@ -15283,17 +15283,6 @@ elif selected_tab == "📝 Input Data":
     # Layout: ATAS-BAWAH (semua device — web, Android, PC)
     # =========================================================================
     elif active_sub_tab == "📄 Format dan Kirim Laporan":
-        st.markdown(
-            "<h4 style='color: #00ff88; margin-top: 15px;'>📄 Format dan Kirim"
-            " Laporan</h4>",
-            unsafe_allow_html=True,
-        )
-        st.caption(
-            "Kelola laporan toko di satu tempat — kirim ke spreadsheet & generate"
-            " format WhatsApp."
-        )
-
-        st.markdown("---")
 
         # =====================================================================
         # BAGIAN 1: KIRIM LAPORAN SPREADSHEET (ATAS)
