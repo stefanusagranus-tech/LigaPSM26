@@ -19928,11 +19928,22 @@ elif selected_tab == "⚙️ Master Data":
             except Exception:
                 _audit_log_count = 0
 
+            # ✅ FIX: Hitung _total_rows_audit lokal (tidak bergantung Section A)
+            _total_rows_audit = 0
+            for _k_audit in [
+                "sales_item_df", "sales_person_df", "sales_pps_df",
+                "periods_df", "periods_pps_df", "items_df", "person_df",
+                "periods_store_df", "sales_store_df",
+            ]:
+                _df_audit = st.session_state.get(_k_audit, pd.DataFrame())
+                if not _df_audit.empty:
+                    _total_rows_audit += len(_df_audit)
+
             # Audit: log (6 kolom) + heartbeat (~5 baris × 5 kolom) + backup (9 sheet)
             _est_cells_audit = (
-                _audit_log_count * 6  # ACTIVITY_LOG
-                + 25                   # HEARTBEAT (estimasi kecil)
-                + _total_rows * 9      # _BACKUP_* (semua baris data)
+                _audit_log_count * 6        # ACTIVITY_LOG
+                + 25                        # HEARTBEAT (estimasi kecil)
+                + _total_rows_audit * 9     # _BACKUP_* (semua baris data)
             )
             _pct_audit = min((_est_cells_audit / _max_cells) * 100, 100)
 
