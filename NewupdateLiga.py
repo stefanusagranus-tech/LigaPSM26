@@ -2365,6 +2365,10 @@ def log_activity(action, detail=""):
     """
     Catat aktivitas user LANGSUNG ke Spreadsheet Audit (LIGAPSM_AUDIT).
     Tidak ada queue, tidak ada flush.
+    
+    Hanya log aksi penting:
+    LOGIN, LOGOUT, INPUT, LOGIN_FAILED, AUTO_LOGOUT,
+    EDIT_DATA, DELETE_DATA, SAVE_MASTER, REPORT
     """
     try:
         _action_upper = str(action).upper()
@@ -2389,12 +2393,14 @@ def log_activity(action, detail=""):
             "session_id": _session_id,
         }
 
-        # TULIS LANGSUNG ke Spreadsheet Audit
-        from spreadsheet_connector import append_logs_to_sheet
-        _count, _msg = append_logs_to_sheet([_log_entry])
-
-        if _count == 0:
-            print(f"[LOG_ACTIVITY FAIL] {_action_upper}: {_msg}")
+        # ✅ TULIS LANGSUNG ke Spreadsheet Audit
+        try:
+            from spreadsheet_connector import append_logs_to_sheet
+            _count, _msg = append_logs_to_sheet([_log_entry])
+            if _count == 0:
+                print(f"[LOG_ACTIVITY FAIL] {_action_upper}: {_msg}")
+        except Exception as e_conn:
+            print(f"[LOG_ACTIVITY CONN FAIL] {_action_upper}: {e_conn}")
 
     except Exception as e:
         print(f"[LOG_ACTIVITY ERROR] {e}")
@@ -14757,6 +14763,7 @@ elif selected_tab == "📝 Input Data":
                                         )
 
                         if inserted_count > 0:
+                            # === STEP 1: SIMPAN KE DATABASE ===
                             try:
                                 with st.spinner(
                                     "⏳ Menyimpan & Menjumlahkan Data Sales..."
@@ -14787,39 +14794,41 @@ elif selected_tab == "📝 Input Data":
                                         st.session_state.sales_pps_df,
                                         st.session_state.sales_store_df,
                                     )
-
-                                    # ✅ Log INPUT (queue saja, tanpa backup)
-                                    log_activity("INPUT", f"PSM: {inserted_count} item untuk {m_person}")
-                                                
-                                    # ✅ PANGGIL DIALOG GLOBAL — TEMA GOLD
-                                show_success_dialog(
-                                    title_msg=f"<b>{inserted_count} item penjualan</b> telah dicatat oleh dewan guild!",
-                                    subtitle="Penjualan Tersimpan di Gulungan Kerajaan",
-                                    icon="⚜️",
-                                    theme="gold",
-                                    detail_dict={
-                                        "👤 Personil": m_person,
-                                        "📅 Tanggal": m_date.strftime("%d/%m/%Y"),
-                                        "📋 Periode": m_period_name,
-                                        "📦 Jumlah Item": f"{inserted_count} produk",
-                                    }
-                                )
-                            except Exception as e:
-                                st.error(f"❌ Terjadi kesalahan penyimpanan: {str(e)}")
-                                
-                                show_success_popup(
-                                    inserted_count,
-                                    m_person,
-                                    m_date.strftime("%d/%m/%Y"),
-                                )
                             except Exception as e:
                                 st.error(
                                     f"❌ Terjadi kesalahan penyimpanan: {str(e)}"
                                 )
+                                st.stop()
+
+                            # === STEP 2: LOG INPUT (kalau gagal, jangan ganggu user) ===
+                            try:
+                                log_activity(
+                                    "INPUT",
+                                    f"PSM: {inserted_count} item untuk {m_person}"
+                                )
+                            except Exception as e_log:
+                                print(f"[LOG INPUT PSM FAIL] {e_log}")
+
+                            # === STEP 3: DIALOG SUKSES ===
+                            show_success_dialog(
+                                title_msg=(
+                                    f"<b>{inserted_count} item penjualan</b> "
+                                    f"telah dicatat oleh dewan guild!"
+                                ),
+                                subtitle="Penjualan Tersimpan di Gulungan Kerajaan",
+                                icon="⚜️",
+                                theme="gold",
+                                detail_dict={
+                                    "👤 Personil": m_person,
+                                    "📅 Tanggal": m_date.strftime("%d/%m/%Y"),
+                                    "📋 Periode": m_period_name,
+                                    "📦 Jumlah Item": f"{inserted_count} produk",
+                                }
+                            )
                         else:
                             st.warning(
-                                "⚠️ Tidak ada Qty produk yang diisi (semua bernilai"
-                                " 0)."
+                                "⚠️ Tidak ada Qty produk yang diisi "
+                                "(semua bernilai 0)."
                             )
             
     # =========================================================================
@@ -15102,6 +15111,7 @@ elif selected_tab == "📝 Input Data":
                     "updated_at": str(tanggal_pps),
                 }
             
+                # === STEP 1: SIMPAN KE DATABASE ===
                 try:
                     with st.spinner("⏳ Memproses & Menyingkronkan Data..."):
                         new_pps_df = pd.DataFrame([new_pps_record])
@@ -15112,7 +15122,7 @@ elif selected_tab == "📝 Input Data":
                             [st.session_state.sales_pps_df, new_pps_df],
                             ignore_index=True,
                         )
-                    
+
                         # Jalankan sinkronisasi
                         sync_periode_pps_from_sales()
 
@@ -15123,31 +15133,40 @@ elif selected_tab == "📝 Input Data":
                             st.session_state.sales_pps_df,
                             st.session_state.sales_store_df,
                         )
-
-                        # ✅ Log INPUT (queue saja, tanpa backup)
-                        log_activity("INPUT", f"PPS: {staff_name} / {kasir_name} / {tanggal_pps.strftime('%d/%m/%Y')}")
-                    
-                    show_success_dialog(
-                        title_msg="<b>Data Sales PPS</b> berhasil disegel oleh mage!",
-                        subtitle="Sinkronisasi ke PERIODE_PPS Berhasil",
-                        icon="🔮",
-                        theme="purple",
-                        detail_dict={
-                            "👤 Staf": staff_name,
-                            "🎯 Kasir": kasir_name,
-                            "📅 Tanggal": tanggal_pps.strftime("%d/%m/%Y"),
-                            "🕐 Shift": shift_personil,
-                            "⚔️ Syarat PWP": syarat_pwp,
-                            "🛡️ Redeem PWP": redeem_pwp,
-                            "📦 Qty PWP": qty_pwp,
-                            "🎁 Qty SG": qty_sg,
-                            "💧 Syarat Sueger": syarat_sueger,
-                            "💧 Redeem Sueger": redeem_sueger,
-                            "🥤 Cemilan Ceban": cemilan_ceban,
-                        }
-                    ) 
                 except Exception as e:
                     st.error(f"❌ Gagal menyimpan data SALES_PPS: {str(e)}")
+                    st.stop()
+
+                # === STEP 2: LOG INPUT (kalau gagal, jangan ganggu user) ===
+                try:
+                    log_activity(
+                        "INPUT",
+                        f"PPS: {staff_name} / {kasir_name} / "
+                        f"{tanggal_pps.strftime('%d/%m/%Y')}"
+                    )
+                except Exception as e_log:
+                    print(f"[LOG INPUT PPS FAIL] {e_log}")
+
+                # === STEP 3: DIALOG SUKSES ===
+                show_success_dialog(
+                    title_msg="<b>Data Sales PPS</b> berhasil disegel oleh mage!",
+                    subtitle="Sinkronisasi ke PERIODE_PPS Berhasil",
+                    icon="🔮",
+                    theme="purple",
+                    detail_dict={
+                        "👤 Staf": staff_name,
+                        "🎯 Kasir": kasir_name,
+                        "📅 Tanggal": tanggal_pps.strftime("%d/%m/%Y"),
+                        "🕐 Shift": shift_personil,
+                        "⚔️ Syarat PWP": syarat_pwp,
+                        "🛡️ Redeem PWP": redeem_pwp,
+                        "📦 Qty PWP": qty_pwp,
+                        "🎁 Qty SG": qty_sg,
+                        "💧 Syarat Sueger": syarat_sueger,
+                        "💧 Redeem Sueger": redeem_sueger,
+                        "🥤 Cemilan Ceban": cemilan_ceban,
+                    }
+                )
 
     # =========================================================================
     # SUB TAB: FORMAT DAN KIRIM LAPORAN
