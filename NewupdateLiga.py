@@ -3879,13 +3879,13 @@ def show_login_page():
     BG_URL = "https://i.imgur.com/2NR5pIO.jpeg"
 
     # =====================================================================
-    # 🎨 CSS FULL — LOGIN PAGE MODERN MEDIEVAL
+    # 🎨 CSS LOGIN PAGE
     # =====================================================================
     st.markdown(f"""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&family=Cinzel:wght@400;600;700;900&family=Quicksand:wght@400;600;700&display=swap');
         
-        /* ==================== HIDE STREAMLIT DEFAULT ==================== */
+        /* HIDE STREAMLIT DEFAULT */
         [data-testid="stSidebar"],
         [data-testid="stHeader"],
         [data-testid="stToolbar"],
@@ -3897,15 +3897,10 @@ def show_login_page():
             visibility: hidden !important;
         }}
         
-        /* ==================== BACKGROUND FULLSCREEN ==================== */
+        /* BACKGROUND */
         .stApp {{
             background-image: 
-                linear-gradient(
-                    135deg,
-                    rgba(10, 15, 26, 0.75) 0%,
-                    rgba(15, 23, 42, 0.80) 50%,
-                    rgba(10, 15, 26, 0.85) 100%
-                ),
+                linear-gradient(135deg, rgba(10, 15, 26, 0.75) 0%, rgba(15, 23, 42, 0.80) 50%, rgba(10, 15, 26, 0.85) 100%),
                 url('{BG_URL}') !important;
             background-size: cover !important;
             background-position: center center !important;
@@ -3914,68 +3909,51 @@ def show_login_page():
             min-height: 100vh !important;
         }}
         
-        /* ==================== MAIN CONTAINER — FULL WIDTH DI HP ==================== */
         .main .block-container {{
-            padding: 20px 16px !important;
+            padding: 40px 16px !important;
             max-width: 100% !important;
             width: 100% !important;
             margin: 0 auto !important;
             box-sizing: border-box !important;
         }}
         
-        /* ==================== LOGIN CARD WRAPPER ==================== */
+        /* ==================== CARD LOGIN ==================== */
         .login-card-wrapper {{
-            background: linear-gradient(135deg, 
-                rgba(15, 23, 42, 0.95) 0%, 
-                rgba(30, 41, 59, 0.92) 50%, 
-                rgba(15, 23, 42, 0.95) 100%);
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.92) 50%, rgba(15, 23, 42, 0.95) 100%);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 2px solid rgba(212, 175, 55, 0.4);
             border-radius: 24px;
             padding: 40px 32px 32px 32px;
-            box-shadow: 
-                0 25px 60px rgba(0, 0, 0, 0.7),
-                0 0 80px rgba(212, 175, 55, 0.15),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7), 0 0 80px rgba(212, 175, 55, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05);
             position: relative;
             overflow: hidden;
             width: 100%;
             max-width: 440px;
             margin: 0 auto 24px auto;
             box-sizing: border-box;
+            text-align: center;
         }}
         
         .login-card-wrapper::before {{
             content: "";
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
+            top: 0; left: 0; right: 0;
             height: 4px;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                #d4af37 20%,
-                #fbbf24 50%,
-                #d4af37 80%,
-                transparent
-            );
+            background: linear-gradient(90deg, transparent, #d4af37 20%, #fbbf24 50%, #d4af37 80%, transparent);
             box-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
         }}
         
-        /* Ornamen sudut */
         .login-card-wrapper::after {{
             content: "⚜️";
             position: absolute;
-            bottom: 12px;
-            right: 16px;
+            bottom: 12px; right: 16px;
             color: #d4af37;
             font-size: 18px;
             filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.8));
         }}
         
-        /* ==================== LOGO ==================== */
+        /* LOGO */
         .login-logo-box {{
             text-align: center;
             margin-bottom: 20px;
@@ -3988,14 +3966,12 @@ def show_login_page():
             border-radius: 20px;
             background: #ffffff;
             padding: 10px;
-            box-shadow: 
-                0 8px 25px rgba(0, 0, 0, 0.5),
-                0 0 30px rgba(212, 175, 55, 0.3);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5), 0 0 30px rgba(212, 175, 55, 0.3);
             border: 2px solid rgba(212, 175, 55, 0.5);
             display: inline-block;
         }}
         
-        /* ==================== TITLE ==================== */
+        /* TITLE */
         .login-title-h1 {{
             font-family: 'MedievalSharp', 'Cinzel', serif;
             font-size: 26px;
@@ -4004,9 +3980,7 @@ def show_login_page():
             text-align: center;
             margin: 0 0 8px 0;
             letter-spacing: 1.5px;
-            text-shadow: 
-                0 0 20px rgba(251, 191, 36, 0.6),
-                2px 2px 4px rgba(0, 0, 0, 0.8);
+            text-shadow: 0 0 20px rgba(251, 191, 36, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.8);
         }}
         
         .login-subtitle-p {{
@@ -4023,13 +3997,8 @@ def show_login_page():
         .login-divider-line {{
             width: 60%;
             height: 1px;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(212, 175, 55, 0.5),
-                transparent
-            );
-            margin: 0 auto 24px auto;
+            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.5), transparent);
+            margin: 0 auto 0 auto;
             position: relative;
         }}
         
@@ -4045,18 +4014,8 @@ def show_login_page():
             padding: 0 8px;
         }}
         
-        /* ==================== FORM WRAPPER ==================== */
-        .login-form-wrapper {{
-            width: 100%;
-            max-width: 440px;
-            margin: 0 auto;
-            box-sizing: border-box;
-        }}
-        
-        /* ==================== FORM LABELS ==================== */
-        div[data-testid="stTextInput"] {{
-            margin-bottom: 4px !important;
-        }}
+        /* FORM STYLING */
+        div[data-testid="stTextInput"] {{ margin-bottom: 4px !important; }}
         
         div[data-testid="stTextInput"] label p {{
             font-family: 'Cinzel', serif !important;
@@ -4068,7 +4027,6 @@ def show_login_page():
             margin-bottom: 8px !important;
         }}
         
-        /* ==================== INPUT FIELDS ==================== */
         div[data-testid="stTextInput"] div[data-baseweb="input"] > div {{
             min-height: 54px !important;
             height: 54px !important;
@@ -4082,15 +4040,9 @@ def show_login_page():
             box-sizing: border-box !important;
         }}
         
-        div[data-testid="stTextInput"] div[data-baseweb="input"] > div:hover {{
-            border-color: rgba(212, 175, 55, 0.7) !important;
-        }}
-        
         div[data-testid="stTextInput"] div[data-baseweb="input"] > div:focus-within {{
             border-color: #fbbf24 !important;
-            box-shadow: 
-                0 0 0 3px rgba(251, 191, 36, 0.15),
-                inset 0 2px 6px rgba(0, 0, 0, 0.5) !important;
+            box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.15), inset 0 2px 6px rgba(0, 0, 0, 0.5) !important;
             background: rgba(10, 15, 26, 1) !important;
         }}
         
@@ -4100,7 +4052,6 @@ def show_login_page():
             font-weight: 600 !important;
             color: #ffffff !important;
             background: transparent !important;
-            letter-spacing: 0.3px !important;
         }}
         
         div[data-testid="stTextInput"] div[data-baseweb="input"] input::placeholder {{
@@ -4109,12 +4060,9 @@ def show_login_page():
             font-size: 14px !important;
         }}
         
-        /* Icon mata password */
-        div[data-testid="stTextInput"] button {{
-            color: #d4af37 !important;
-        }}
+        div[data-testid="stTextInput"] button {{ color: #d4af37 !important; }}
         
-        /* ==================== TOMBOL LOGIN ==================== */
+        /* TOMBOL LOGIN */
         div[data-testid="stFormSubmitButton"] > button {{
             width: 100% !important;
             min-height: 58px !important;
@@ -4131,9 +4079,7 @@ def show_login_page():
             text-transform: uppercase !important;
             padding: 0 24px !important;
             margin-top: 20px !important;
-            box-shadow: 
-                0 8px 25px rgba(251, 191, 36, 0.4),
-                inset 0 2px 0 rgba(255, 255, 255, 0.25) !important;
+            box-shadow: 0 8px 25px rgba(251, 191, 36, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.25) !important;
             transition: all 0.3s ease !important;
             cursor: pointer !important;
         }}
@@ -4141,9 +4087,7 @@ def show_login_page():
         div[data-testid="stFormSubmitButton"] > button:hover {{
             background-position: 100% 0 !important;
             transform: translateY(-3px) !important;
-            box-shadow: 
-                0 12px 35px rgba(251, 191, 36, 0.6),
-                inset 0 2px 0 rgba(255, 255, 255, 0.35) !important;
+            box-shadow: 0 12px 35px rgba(251, 191, 36, 0.6), inset 0 2px 0 rgba(255, 255, 255, 0.35) !important;
             color: #0b0f19 !important;
         }}
         
@@ -4152,7 +4096,6 @@ def show_login_page():
             font-weight: 900 !important;
         }}
         
-        /* ==================== FORM CONTAINER ==================== */
         div[data-testid="stForm"] {{
             border: none !important;
             padding: 0 !important;
@@ -4163,7 +4106,7 @@ def show_login_page():
         /* ==================== MOBILE ==================== */
         @media (max-width: 768px) {{
             .main .block-container {{
-                padding: 16px 12px !important;
+                padding: 20px 16px !important;
             }}
             
             .login-card-wrapper {{
@@ -4178,9 +4121,7 @@ def show_login_page():
                 height: 90px !important;
             }}
             
-            .login-title-h1 {{
-                font-size: 22px !important;
-            }}
+            .login-title-h1 {{ font-size: 22px !important; }}
             
             .login-subtitle-p {{
                 font-size: 11px !important;
@@ -4188,25 +4129,30 @@ def show_login_page():
                 margin-bottom: 20px !important;
             }}
             
-            .login-form-wrapper {{
-                max-width: 100% !important;
-            }}
-            
             div[data-testid="stTextInput"] div[data-baseweb="input"] > div {{
                 min-height: 56px !important;
                 height: 56px !important;
-                font-size: 16px !important;
             }}
             
             div[data-testid="stTextInput"] div[data-baseweb="input"] input {{
-                font-size: 16px !important; /* prevent zoom iOS */
+                font-size: 16px !important;
             }}
             
             div[data-testid="stFormSubmitButton"] > button {{
                 min-height: 60px !important;
                 height: 60px !important;
                 font-size: 14px !important;
-                letter-spacing: 2px !important;
+            }}
+            
+            /* Kolom form full width */
+            div[data-testid="stHorizontalBlock"]:has(div[data-testid="stForm"]) {{
+                flex-wrap: wrap !important;
+            }}
+            
+            div[data-testid="stHorizontalBlock"]:has(div[data-testid="stForm"]) > div[data-testid="stColumn"] {{
+                width: 100% !important;
+                flex: 1 1 100% !important;
+                min-width: 100% !important;
             }}
         }}
         
@@ -4225,63 +4171,47 @@ def show_login_page():
                 letter-spacing: 1px !important;
                 margin-bottom: 18px !important;
             }}
-            
-            div[data-testid="stTextInput"] div[data-baseweb="input"] > div {{
-                min-height: 54px !important;
-                height: 54px !important;
-            }}
-            
-            div[data-testid="stFormSubmitButton"] > button {{
-                min-height: 58px !important;
-                height: 58px !important;
-                font-size: 13px !important;
-            }}
         }}
     </style>
     """, unsafe_allow_html=True)
     
     # =====================================================================
-    # 🎯 LAYOUT LOGIN — CARD CENTER (PAKAI "".join() BIAR TIDAK BOCOR)
+    # 🎯 CARD HEADER — 1 LINE HTML (ANTI BOCOR)
     # =====================================================================
-    _card_parts = []
-    _card_parts.append('<div class="login-card-wrapper">')
-    _card_parts.append('<div class="login-logo-box">')
-    _card_parts.append(f'<img src="{LOGO_URL}" alt="KGS Group Logo">')
-    _card_parts.append('</div>')
-    _card_parts.append('<h1 class="login-title-h1">⚜️ LIGA PSM ⚜️</h1>')
-    _card_parts.append('<p class="login-subtitle-p">Sistem Monitoring PSM Toko</p>')
-    _card_parts.append('<div class="login-divider-line"></div>')
-    _card_parts.append('</div>')
-    
-    _card_html = "".join(_card_parts)
+    _card_html = (
+        '<div class="login-card-wrapper">'
+        '<div class="login-logo-box">'
+        f'<img src="{LOGO_URL}" alt="KGS Group Logo">'
+        '</div>'
+        '<h1 class="login-title-h1">⚜️ LIGA PSM ⚜️</h1>'
+        '<p class="login-subtitle-p">Sistem Monitoring PSM Toko</p>'
+        '<div class="login-divider-line"></div>'
+        '</div>'
+    )
     st.markdown(_card_html, unsafe_allow_html=True)
     
     # =====================================================================
-    # 📝 FORM LOGIN — FULL WIDTH DI HP, MAX 440px DI DESKTOP
+    # 📝 FORM LOGIN — Centered Desktop, Full Width Mobile
     # =====================================================================
-    # Wrapper CSS biar form centered tapi full di HP
-    st.markdown("""
-    <div class="login-form-wrapper">
-    """, unsafe_allow_html=True)
+    _, col_form, _ = st.columns([1, 2, 1])
     
-    with st.form("login_form", clear_on_submit=False):
-        username_input = st.text_input(
-            "Username",
-            placeholder="Masukkan username",
-            key="login_username_input"
-        ).strip()
-        password_input = st.text_input(
-            "Password",
-            type="password",
-            placeholder="Masukkan password",
-            key="login_password_input"
-        )
-        submit_btn = st.form_submit_button(
-            "⚔️ MASUK APLIKASI ⚔️",
-            use_container_width=True
-        )
-    
-    st.markdown("</div>", unsafe_allow_html=True)
+    with col_form:
+        with st.form("login_form_main", clear_on_submit=False):
+            username_input = st.text_input(
+                "Username",
+                placeholder="Masukkan username",
+                key="login_username_field"
+            ).strip()
+            password_input = st.text_input(
+                "Password",
+                type="password",
+                placeholder="Masukkan password",
+                key="login_password_field"
+            )
+            submit_btn = st.form_submit_button(
+                "⚔️ MASUK APLIKASI ⚔️",
+                use_container_width=True
+            )
     
     # =====================================================================
     # 🚀 PROSES LOGIN
@@ -4294,7 +4224,7 @@ def show_login_page():
             _user_nama = ""
             _user_role = "Staff Toko"
             
-            # === CARA 1: Cek dari MASTER_PERSONIL ===
+            # Cek dari MASTER_PERSONIL
             try:
                 _person_df_login = st.session_state.get("person_df", pd.DataFrame())
                 
@@ -4319,7 +4249,7 @@ def show_login_page():
             except Exception as _e_login:
                 print(f"[LOGIN CHECK ERROR] {_e_login}")
             
-            # === CARA 2: Fallback ke USER_DATABASE ===
+            # Fallback USER_DATABASE
             if not _login_success:
                 if (username_input in USER_DATABASE 
                     and USER_DATABASE[username_input]["password"] == password_input):
@@ -4327,7 +4257,6 @@ def show_login_page():
                     _user_nama = USER_DATABASE[username_input]["nama"]
                     _user_role = USER_DATABASE[username_input].get("role", "Staff Toko")
             
-            # === PROSES LOGIN ===
             if _login_success:
                 st.session_state.logged_in = True
                 st.session_state.username = _user_nama
@@ -4336,11 +4265,9 @@ def show_login_page():
                 st.session_state["welcome_shown"] = False
                 st.session_state["last_active"] = time.time()
                 
-                # Reset tracker auto-logout
                 st.session_state["stale_logged_users"] = set()
                 st.session_state["last_stale_check"] = time.time()
                 
-                # Cleanup on login
                 try:
                     _cleaned = cleanup_stale_on_login(
                         threshold_minutes=_CLEANUP_LOGIN_THRESHOLD_MIN
@@ -4354,7 +4281,6 @@ def show_login_page():
                 check_and_auto_flush_log()
                 st.rerun()
             else:
-                # Log login gagal
                 try:
                     _fail_waktu = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
                     _fail_entry = {
@@ -4372,540 +4298,6 @@ def show_login_page():
                     pass
                 
                 st.error("❌ Username atau Password salah!")
-    LOGO_URL = "https://raw.githubusercontent.com/stefanusagranus-tech/LigaPSM26/main/kgs_group_belgium_logo.jpg"
-    BG_URL = "https://i.imgur.com/2NR5pIO.jpeg"
-
-    # =====================================================================
-    # 🎨 CSS FULL — LOGIN PAGE MODERN MEDIEVAL
-    # =====================================================================
-    st.markdown(f"""
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&family=Cinzel:wght@400;600;700;900&family=Quicksand:wght@400;600;700&display=swap');
-        
-        /* ==================== HIDE STREAMLIT DEFAULT ==================== */
-        [data-testid="stSidebar"],
-        [data-testid="stHeader"],
-        [data-testid="stToolbar"],
-        [data-testid="stDecoration"],
-        .stDeployButton,
-        #MainMenu,
-        footer {{
-            display: none !important;
-            visibility: hidden !important;
-        }}
-        
-        /* ==================== BACKGROUND FULLSCREEN ==================== */
-        .stApp {{
-            background-image: 
-                linear-gradient(
-                    135deg,
-                    rgba(10, 15, 26, 0.75) 0%,
-                    rgba(15, 23, 42, 0.80) 50%,
-                    rgba(10, 15, 26, 0.85) 100%
-                ),
-                url('{BG_URL}') !important;
-            background-size: cover !important;
-            background-position: center center !important;
-            background-repeat: no-repeat !important;
-            background-attachment: fixed !important;
-            min-height: 100vh !important;
-        }}
-        
-        .main .block-container {{
-            padding: 0 !important;
-            max-width: 100% !important;
-        }}
-        
-        /* ==================== CARD LOGIN — GLASSMORPHISM ==================== */
-        .login-wrapper {{
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            box-sizing: border-box;
-        }}
-        
-        .login-card {{
-            background: linear-gradient(
-                135deg,
-                rgba(15, 23, 42, 0.92) 0%,
-                rgba(30, 41, 59, 0.88) 50%,
-                rgba(15, 23, 42, 0.92) 100%
-            );
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 2px solid rgba(212, 175, 55, 0.4);
-            border-radius: 24px;
-            padding: 40px 32px;
-            width: 100%;
-            max-width: 440px;
-            box-shadow: 
-                0 25px 60px rgba(0, 0, 0, 0.7),
-                0 0 80px rgba(212, 175, 55, 0.15),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            position: relative;
-            overflow: hidden;
-            box-sizing: border-box;
-        }}
-        
-        /* Ornamen sudut */
-        .login-card::before,
-        .login-card::after {{
-            content: "⚜️";
-            position: absolute;
-            color: #d4af37;
-            font-size: 18px;
-            filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.8));
-        }}
-        .login-card::before {{
-            top: 12px;
-            left: 16px;
-        }}
-        .login-card::after {{
-            bottom: 12px;
-            right: 16px;
-        }}
-        
-        /* Garis emas atas */
-        .login-card-top-line {{
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                #d4af37 20%,
-                #fbbf24 50%,
-                #d4af37 80%,
-                transparent
-            );
-            box-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
-        }}
-        
-        /* ==================== LOGO ==================== */
-        .login-logo-container {{
-            text-align: center;
-            margin-bottom: 20px;
-        }}
-        
-        .login-logo {{
-            width: 110px;
-            height: 110px;
-            object-fit: contain;
-            border-radius: 20px;
-            background: #ffffff;
-            padding: 10px;
-            box-shadow: 
-                0 8px 25px rgba(0, 0, 0, 0.5),
-                0 0 30px rgba(212, 175, 55, 0.3);
-            border: 2px solid rgba(212, 175, 55, 0.5);
-        }}
-        
-        /* ==================== TITLE ==================== */
-        .login-title {{
-            font-family: 'MedievalSharp', 'Cinzel', serif;
-            font-size: 26px;
-            font-weight: 900;
-            color: #fbbf24;
-            text-align: center;
-            margin: 0 0 8px 0;
-            letter-spacing: 1.5px;
-            text-shadow: 
-                0 0 20px rgba(251, 191, 36, 0.6),
-                2px 2px 4px rgba(0, 0, 0, 0.8);
-        }}
-        
-        .login-subtitle {{
-            font-family: 'Quicksand', sans-serif;
-            font-size: 12px;
-            color: #94a3b8;
-            text-align: center;
-            margin: 0 0 28px 0;
-            letter-spacing: 2px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }}
-        
-        .login-divider {{
-            width: 60%;
-            height: 1px;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(212, 175, 55, 0.5),
-                transparent
-            );
-            margin: 0 auto 28px auto;
-            position: relative;
-        }}
-        
-        .login-divider::before {{
-            content: "⚔";
-            position: absolute;
-            top: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: #d4af37;
-            font-size: 14px;
-            background: rgba(15, 23, 42, 1);
-            padding: 0 8px;
-        }}
-        
-        /* ==================== FORM LABELS ==================== */
-        div[data-testid="stTextInput"] {{
-            margin-bottom: 4px !important;
-        }}
-        
-        div[data-testid="stTextInput"] label p {{
-            font-family: 'Cinzel', serif !important;
-            font-size: 12px !important;
-            font-weight: 700 !important;
-            letter-spacing: 2px !important;
-            color: #f7e7b4 !important;
-            text-transform: uppercase !important;
-            margin-bottom: 8px !important;
-        }}
-        
-        /* ==================== INPUT FIELDS ==================== */
-        div[data-testid="stTextInput"] div[data-baseweb="input"] > div {{
-            min-height: 54px !important;
-            height: 54px !important;
-            background: rgba(10, 15, 26, 0.85) !important;
-            border: 2px solid rgba(180, 83, 9, 0.6) !important;
-            border-radius: 12px !important;
-            padding: 0 16px !important;
-            transition: all 0.3s ease !important;
-            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5) !important;
-        }}
-        
-        div[data-testid="stTextInput"] div[data-baseweb="input"] > div:hover {{
-            border-color: rgba(212, 175, 55, 0.7) !important;
-        }}
-        
-        div[data-testid="stTextInput"] div[data-baseweb="input"] > div:focus-within {{
-            border-color: #fbbf24 !important;
-            box-shadow: 
-                0 0 0 3px rgba(251, 191, 36, 0.15),
-                inset 0 2px 6px rgba(0, 0, 0, 0.5) !important;
-            background: rgba(10, 15, 26, 1) !important;
-        }}
-        
-        div[data-testid="stTextInput"] div[data-baseweb="input"] input {{
-            font-family: 'Quicksand', sans-serif !important;
-            font-size: 15px !important;
-            font-weight: 600 !important;
-            color: #ffffff !important;
-            background: transparent !important;
-            letter-spacing: 0.3px !important;
-        }}
-        
-        div[data-testid="stTextInput"] div[data-baseweb="input"] input::placeholder {{
-            color: #64748b !important;
-            font-weight: 500 !important;
-            font-size: 14px !important;
-        }}
-        
-        /* Icon mata password */
-        div[data-testid="stTextInput"] button {{
-            color: #d4af37 !important;
-        }}
-        
-        /* ==================== TOMBOL LOGIN ==================== */
-        div[data-testid="stFormSubmitButton"] > button {{
-            width: 100% !important;
-            min-height: 58px !important;
-            height: 58px !important;
-            background: linear-gradient(135deg, #b45309 0%, #d97706 50%, #fbbf24 100%) !important;
-            background-size: 200% 200% !important;
-            color: #0b0f19 !important;
-            border: 2px solid #fbbf24 !important;
-            border-radius: 14px !important;
-            font-family: 'Cinzel', serif !important;
-            font-size: 15px !important;
-            font-weight: 900 !important;
-            letter-spacing: 2.5px !important;
-            text-transform: uppercase !important;
-            padding: 0 24px !important;
-            margin-top: 20px !important;
-            box-shadow: 
-                0 8px 25px rgba(251, 191, 36, 0.4),
-                inset 0 2px 0 rgba(255, 255, 255, 0.25) !important;
-            transition: all 0.3s ease !important;
-            cursor: pointer !important;
-        }}
-        
-        div[data-testid="stFormSubmitButton"] > button:hover {{
-            background-position: 100% 0 !important;
-            transform: translateY(-3px) !important;
-            box-shadow: 
-                0 12px 35px rgba(251, 191, 36, 0.6),
-                inset 0 2px 0 rgba(255, 255, 255, 0.35) !important;
-            color: #0b0f19 !important;
-        }}
-        
-        div[data-testid="stFormSubmitButton"] > button:active {{
-            transform: translateY(0) !important;
-        }}
-        
-        div[data-testid="stFormSubmitButton"] > button p {{
-            color: #0b0f19 !important;
-            font-weight: 900 !important;
-        }}
-        
-        /* ==================== FORM CONTAINER ==================== */
-        div[data-testid="stForm"] {{
-            border: none !important;
-            padding: 0 !important;
-            background: transparent !important;
-        }}
-        
-        /* ==================== HILANGKAN BORDER KOSONG ==================== */
-        div[data-testid="stVerticalBlock"] > div:has(> div[data-testid="stForm"]) {{
-            gap: 0 !important;
-        }}
-        
-        /* ==================== MOBILE RESPONSIVE ==================== */
-        @media (max-width: 768px) {{
-            .login-wrapper {{
-                padding: 12px;
-                align-items: flex-start;
-                padding-top: 40px;
-            }}
-            
-            .login-card {{
-                padding: 32px 22px;
-                border-radius: 20px;
-                max-width: 100%;
-            }}
-            
-            .login-logo {{
-                width: 90px;
-                height: 90px;
-            }}
-            
-            .login-title {{
-                font-size: 22px;
-            }}
-            
-            .login-subtitle {{
-                font-size: 11px;
-                letter-spacing: 1.5px;
-            }}
-            
-            div[data-testid="stTextInput"] div[data-baseweb="input"] > div {{
-                min-height: 50px !important;
-                height: 50px !important;
-            }}
-            
-            div[data-testid="stFormSubmitButton"] > button {{
-                min-height: 54px !important;
-                height: 54px !important;
-                font-size: 14px !important;
-                letter-spacing: 2px !important;
-            }}
-        }}
-        
-        @media (max-width: 480px) {{
-            .login-card {{
-                padding: 28px 18px;
-            }}
-            
-            .login-logo {{
-                width: 80px;
-                height: 80px;
-                padding: 8px;
-            }}
-            
-            .login-title {{
-                font-size: 20px;
-                letter-spacing: 1px;
-            }}
-            
-            .login-subtitle {{
-                font-size: 10px;
-                letter-spacing: 1px;
-                margin-bottom: 20px;
-            }}
-            
-            .login-divider {{
-                margin-bottom: 20px;
-            }}
-        }}
-    </style>
-    """, unsafe_allow_html=True)
-    
-    # =====================================================================
-    # 🎯 LAYOUT LOGIN — CARD CENTER
-    # =====================================================================
-    _, col_center, _ = st.columns([1, 1.3, 1])
-    
-    with col_center:
-        # Container card HTML
-        st.markdown(f"""
-        <div style="
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(30, 41, 59, 0.88) 50%, rgba(15, 23, 42, 0.92) 100%);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 2px solid rgba(212, 175, 55, 0.4);
-            border-radius: 24px;
-            padding: 40px 32px 32px 32px;
-            box-shadow: 
-                0 25px 60px rgba(0, 0, 0, 0.7),
-                0 0 80px rgba(212, 175, 55, 0.15);
-            position: relative;
-            overflow: hidden;
-        ">
-            <!-- Garis emas atas -->
-            <div style="
-                position: absolute;
-                top: 0; left: 0; right: 0;
-                height: 4px;
-                background: linear-gradient(90deg, transparent, #d4af37 20%, #fbbf24 50%, #d4af37 80%, transparent);
-                box-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
-            "></div>
-            
-            <!-- Logo -->
-            <div style="text-align: center; margin-bottom: 20px;">
-                <img src="{LOGO_URL}" style="
-                    width: 110px;
-                    height: 110px;
-                    object-fit: contain;
-                    border-radius: 20px;
-                    background: #ffffff;
-                    padding: 10px;
-                    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5), 0 0 30px rgba(212, 175, 55, 0.3);
-                    border: 2px solid rgba(212, 175, 55, 0.5);
-                    display: inline-block;
-                " alt="KGS Group Logo">
-            </div>
-            
-            <!-- Title -->
-            <h1 style="
-                font-family: 'MedievalSharp', 'Cinzel', serif;
-                font-size: 26px;
-                font-weight: 900;
-                color: #fbbf24;
-                text-align: center;
-                margin: 0 0 8px 0;
-                letter-spacing: 1.5px;
-                text-shadow: 0 0 20px rgba(251, 191, 36, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.8);
-            ">⚜️ LIGA PSM ⚜️</h1>
-            
-            <p style="
-                font-family: 'Quicksand', sans-serif;
-                font-size: 12px;
-                color: #94a3b8;
-                text-align: center;
-                margin: 0 0 24px 0;
-                letter-spacing: 2px;
-                font-weight: 600;
-                text-transform: uppercase;
-            ">Sistem Monitoring PSM Toko</p>
-            
-            <!-- Divider -->
-            <div style="
-                width: 60%;
-                height: 1px;
-                background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.5), transparent);
-                margin: 0 auto 24px auto;
-                position: relative;
-            "></div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Form login (Native Streamlit)
-        with st.form("login_form", clear_on_submit=False):
-            username_input = st.text_input(
-                "Username",
-                placeholder="Masukkan username",
-                key="login_username_input"
-            ).strip()
-            password_input = st.text_input(
-                "Password",
-                type="password",
-                placeholder="Masukkan password",
-                key="login_password_input"
-            )
-            submit_btn = st.form_submit_button(
-                "⚔️ MASUK APLIKASI ⚔️",
-                use_container_width=True
-            )
-        
-        if submit_btn:
-            if not username_input or not password_input:
-                st.warning("⚠️ Username dan Password wajib diisi!")
-            else:
-                _login_success = False
-                _user_nama = ""
-                _user_role = "Staff Toko"
-                
-                # === CARA 1: Cek dari MASTER_PERSONIL ===
-                try:
-                    _person_df_login = st.session_state.get("person_df", pd.DataFrame())
-                    
-                    if _person_df_login.empty:
-                        _person_df_login = conn.read(worksheet="MASTER_PERSONIL", ttl=60)
-                    
-                    if _person_df_login is not None and not _person_df_login.empty:
-                        _person_df_login.columns = _person_df_login.columns.astype(str).str.strip().str.lower()
-                        
-                        _match = _person_df_login[
-                            (_person_df_login["username"].astype(str).str.strip().str.lower() 
-                            == username_input.strip().lower()) &
-                            (_person_df_login["password"].astype(str).str.strip() 
-                            == password_input.strip())
-                        ]
-                        
-                        if not _match.empty:
-                            _row = _match.iloc[0]
-                            _login_success = True
-                            _user_nama = str(_row.get("person_name", username_input))
-                            _user_role = str(_row.get("role", "Staff Toko"))
-                except Exception as _e_login:
-                    print(f"[LOGIN CHECK ERROR] {_e_login}")
-                
-                # === CARA 2: Fallback ke USER_DATABASE ===
-                if not _login_success:
-                    if (username_input in USER_DATABASE 
-                        and USER_DATABASE[username_input]["password"] == password_input):
-                        _login_success = True
-                        _user_nama = USER_DATABASE[username_input]["nama"]
-                        _user_role = USER_DATABASE[username_input].get("role", "Staff Toko")
-                
-                # === PROSES LOGIN ===
-                if _login_success:
-                    st.session_state.logged_in = True
-                    st.session_state.username = _user_nama
-                    st.session_state.role = _user_role
-                    st.session_state["session_id"] = str(_uuid_module.uuid4())[:8]
-                    st.session_state["welcome_shown"] = False
-                    st.session_state["last_active"] = time.time()
-                    
-                    log_activity("LOGIN", f"Login sebagai {_user_nama}")
-                    check_and_auto_flush_log()
-                    st.rerun()
-                else:
-                    # Log login gagal
-                    try:
-                        _fail_waktu = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
-                        _fail_entry = {
-                            "timestamp": _fail_waktu,
-                            "username": str(username_input),
-                            "role": "-",
-                            "action": "LOGIN_FAILED",
-                            "detail": "Username atau password salah",
-                            "session_id": "-",
-                        }
-                        if "pending_activity_logs" not in st.session_state:
-                            st.session_state["pending_activity_logs"] = []
-                        st.session_state["pending_activity_logs"].insert(0, _fail_entry)
-                    except Exception:
-                        pass
-                    
-                    st.error("❌ Username atau Password salah!")
 
 # =========================================================================
 # 🛡️ SUNTIKAN MEMORI UTAMA (WAJIB ADA AGAR VARIABEL LOGGED_IN TERDAFTAR)
