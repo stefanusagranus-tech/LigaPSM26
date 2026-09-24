@@ -101,61 +101,45 @@ st.set_page_config(
 
 SPREADSHEET_ID = "1kJ-OsjLEsFuNyyBg2TwxlWz8Ape4lwF9h0t66q3ldQk"
 
-# =========================================================================
-# 🎉 DIALOG GLOBAL ROYAL GUILD — SUKSES NOTIFIKASI
-# =========================================================================
-@st.dialog(" ")
+
+#pemanggil st dialog global#
+@st.dialog("")  # ← KOSONGIN (gak perlu hide header lagi)
 def show_success_dialog(
     title_msg: str,
     detail_dict: dict,
     subtitle: str = "Pencatatan Berhasil Disimpan",
     icon: str = "⚜️",
-    theme: str = "gold",  # "gold" | "blue" | "green" | "purple"
+    theme: str = "gold",
 ):
     """
-    Dialog global Royal Guild dengan tema medieval fantasy.
-    
-    Args:
-        title_msg (str): Pesan utama sukses.
-        detail_dict (dict): Detail info (key-value) untuk ditampilkan.
-        subtitle (str): Sub-judul di bawah icon.
-        icon (str): Emoji/karakter icon utama (default: ⚜️).
-        theme (str): Tema warna — "gold", "blue", "green", "purple".
+    Dialog sukses dengan HTML custom.
+    Versi 2: CSS & HTML dipisah biar Streamlit 1.64 render semuanya.
     """
-    
     # =====================================================================
-    # 🎨 PALET WARNA PER TEMA
+    # 🎨 PALET WARNA
     # =====================================================================
     themes = {
         "gold": {
-            "primary": "#d4af37",
-            "secondary": "#fbbf24",
-            "light": "#f7e7b4",
-            "dark": "#78350f",
+            "primary": "#d4af37", "secondary": "#fbbf24",
+            "light": "#f7e7b4", "dark": "#78350f",
             "gradient": "linear-gradient(135deg, #78350f 0%, #b45309 50%, #d4af37 100%)",
             "glow": "rgba(212, 175, 55, 0.6)",
         },
         "blue": {
-            "primary": "#3b82f6",
-            "secondary": "#60a5fa",
-            "light": "#dbeafe",
-            "dark": "#1e3a8a",
+            "primary": "#3b82f6", "secondary": "#60a5fa",
+            "light": "#dbeafe", "dark": "#1e3a8a",
             "gradient": "linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%)",
             "glow": "rgba(59, 130, 246, 0.6)",
         },
         "green": {
-            "primary": "#10b981",
-            "secondary": "#34d399",
-            "light": "#d1fae5",
-            "dark": "#064e3b",
+            "primary": "#10b981", "secondary": "#34d399",
+            "light": "#d1fae5", "dark": "#064e3b",
             "gradient": "linear-gradient(135deg, #064e3b 0%, #059669 50%, #10b981 100%)",
             "glow": "rgba(16, 185, 129, 0.6)",
         },
         "purple": {
-            "primary": "#a855f7",
-            "secondary": "#c084fc",
-            "light": "#e9d5ff",
-            "dark": "#4c1d95",
+            "primary": "#a855f7", "secondary": "#c084fc",
+            "light": "#e9d5ff", "dark": "#4c1d95",
             "gradient": "linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #a855f7 100%)",
             "glow": "rgba(168, 85, 247, 0.6)",
         },
@@ -163,653 +147,150 @@ def show_success_dialog(
     t = themes.get(theme, themes["gold"])
     
     # =====================================================================
-    # 🎨 CSS KUSUS DIALOG (dalam iframe dialog Streamlit)
+    # 1️⃣ CSS DULU (st.markdown TERPISAH)
+    # =====================================================================
+    _css = f"""
+    <style>
+        /* Container dialog */
+        div[data-testid="stDialog"] > div {{
+            background: radial-gradient(circle at top, #162447 0%, #0c1427 60%, #05070c 100%) !important;
+            border: 3px double {t['primary']} !important;
+            border-radius: 16px !important;
+            box-shadow: 0 0 40px {t['glow']}, inset 0 0 30px rgba(0, 0, 0, 0.8) !important;
+        }}
+        
+        /* Body padding */
+        div[data-testid="stDialog"] [role="dialog"] > div:nth-child(2) {{
+            padding: 20px 25px 25px 25px !important;
+        }}
+        
+        /* Detail row */
+        .detail-row {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 7px 4px;
+            border-bottom: 1px dashed {t['primary']}44;
+            font-family: 'Quicksand', sans-serif;
+            font-size: 12px;
+        }}
+        .detail-row:last-child {{ border-bottom: none; }}
+        .detail-key {{
+            color: #94a3b8;
+            font-weight: 600;
+        }}
+        .detail-value {{
+            color: {t['light']};
+            font-weight: 800;
+            text-align: right;
+        }}
+        
+        /* Tombol */
+        div[data-testid="stDialog"] div.stButton > button {{
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%) !important;
+            color: {t['light']} !important;
+            border: 2px solid {t['primary']} !important;
+            border-radius: 10px !important;
+            font-family: 'Cinzel', serif !important;
+            font-weight: 900 !important;
+            font-size: 13px !important;
+            letter-spacing: 1.5px !important;
+            padding: 12px 20px !important;
+            margin-top: 14px !important;
+            box-shadow: 0 0 12px {t['glow']} !important;
+            text-transform: uppercase !important;
+            transition: all 0.3s ease !important;
+        }}
+        div[data-testid="stDialog"] div.stButton > button:hover {{
+            background: {t['gradient']} !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 25px {t['glow']} !important;
+            transform: translateY(-2px) !important;
+        }}
+    </style>
+    """
+    st.markdown(_css, unsafe_allow_html=True)
+    
+    # =====================================================================
+    # 2️⃣ BANNER HEADER (st.markdown TERPISAH)
+    # =====================================================================
+    _banner = (
+        f"<div style='background: {t['gradient']}; "
+        f"border-radius: 12px; padding: 22px 18px 18px 18px; "
+        f"text-align: center; margin-bottom: 18px; "
+        f"box-shadow: 0 4px 20px {t['glow']}; "
+        f"border: 1px solid rgba(255, 255, 255, 0.15);'>"
+        
+        f"<div style='font-size: 42px; margin-bottom: 8px; "
+        f"filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));'>{icon}</div>"
+        
+        f"<h2 style='font-family: MedievalSharp, Cinzel, serif; "
+        f"font-size: 20px; font-weight: 900; color: #ffffff; "
+        f"margin: 0; letter-spacing: 1.5px; "
+        f"text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);'>TRANSAKSI BERHASIL</h2>"
+        
+        f"<p style='font-family: Quicksand, sans-serif; font-size: 11px; "
+        f"color: rgba(255, 255, 255, 0.9); margin: 4px 0 0 0; "
+        f"font-weight: 600;'>{subtitle}</p>"
+        
+        f"</div>"
+    )
+    st.markdown(_banner, unsafe_allow_html=True)
+    
+    # =====================================================================
+    # 3️⃣ PESAN UTAMA
+    # =====================================================================
+    _msg = (
+        f"<div style='font-family: Quicksand, sans-serif; font-size: 13px; "
+        f"color: {t['light']}; text-align: center; margin-bottom: 16px; "
+        f"padding: 10px 14px; background: rgba(0, 0, 0, 0.25); "
+        f"border-left: 3px solid {t['primary']}; "
+        f"border-right: 3px solid {t['primary']}; "
+        f"border-radius: 6px; font-weight: 600;'>{title_msg}</div>"
+    )
+    st.markdown(_msg, unsafe_allow_html=True)
+    
+    # =====================================================================
+    # 4️⃣ DETAIL ROWS (loop terpisah)
+    # =====================================================================
+    if detail_dict:
+        # Wrapper scroll
+        st.markdown(
+            f"<div style='background: rgba(10, 17, 34, 0.6); "
+            f"border: 1.5px solid {t['primary']}; border-radius: 10px; "
+            f"padding: 12px 14px; margin-bottom: 10px;'>",
+            unsafe_allow_html=True
+        )
+        
+        for _k, _v in detail_dict.items():
+            st.markdown(
+                f"<div class='detail-row'>"
+                f"<span class='detail-key'>{_k}</span>"
+                f"<span class='detail-value'>{_v}</span>"
+                f"</div>",
+                unsafe_allow_html=True
+            )
+        
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+    # =====================================================================
+    # 5️⃣ FOOTER STATUS
     # =====================================================================
     st.markdown(
-        f"""
-        <style>
-            @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&family=Cinzel:wght@700;900&family=Quicksand:wght@600;700&display=swap');
-            
-            /* Container utama dialog */
-            div[data-testid="stDialog"] > div {{
-                background: radial-gradient(circle at top, #162447 0%, #0c1427 60%, #05070c 100%) !important;
-                border: 3px double {t['primary']} !important;
-                border-radius: 16px !important;
-                box-shadow: 0 0 40px {t['glow']}, inset 0 0 30px rgba(0, 0, 0, 0.8) !important;
-                padding: 0 !important;
-            }}
-            
-            /* ============================================================ */
-            /* HIDE HEADER BAWAAN DIALOG — STREAMLIT 1.64+ */
-            div[data-testid="stDialog"] header,
-            div[data-testid="stDialog"] > div > div:first-child,
-            div[data-testid="stDialog"] [role="dialog"] > div:first-child,
-            div[data-testid="stModal"] header,
-            div[data-testid="stModal"] > div > div:first-child {{
-                display: none !important;
-                visibility: hidden !important;
-                height: 0 !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                border: none !important;
-                overflow: hidden !important;
-            }}
-
-            div[data-testid="stDialog"] [role="dialog"] > div:nth-child(2),
-            div[data-testid="stDialog"] [role="dialog"] > div,
-            div[data-testid="stModal"] [role="dialog"] > div {{
-                padding: 20px 25px 25px 25px !important;
-            }}
-            
-            /* ============================================================ */
-            /* ORNAMEN SUDUT EMAS */
-            /* ============================================================ */
-            .dialog-frame {{
-                position: relative;
-                padding: 5px;
-            }}
-            .dialog-frame .corner {{
-                position: absolute;
-                color: {t['primary']};
-                font-size: 14px;
-                line-height: 1;
-                filter: drop-shadow(0 0 6px {t['glow']});
-                animation: cornerPulse 3s infinite ease-in-out;
-            }}
-            .dialog-frame .corner-tl {{ top: -5px; left: -5px; }}
-            .dialog-frame .corner-tr {{ top: -5px; right: -5px; }}
-            .dialog-frame .corner-bl {{ bottom: -5px; left: -5px; }}
-            .dialog-frame .corner-br {{ bottom: -5px; right: -5px; }}
-            
-            @keyframes cornerPulse {{
-                0%, 100% {{ filter: drop-shadow(0 0 6px {t['glow']}); opacity: 0.85; }}
-                50% {{ filter: drop-shadow(0 0 15px {t['glow']}); opacity: 1; }}
-            }}
-            
-            /* ============================================================ */
-            /* HEADER BANNER */
-            /* ============================================================ */
-            .dialog-banner {{
-                background: {t['gradient']};
-                border-radius: 12px;
-                padding: 22px 18px 18px 18px;
-                text-align: center;
-                margin-bottom: 18px;
-                position: relative;
-                overflow: hidden;
-                box-shadow: 0 4px 20px {t['glow']}, inset 0 1px 0 rgba(255, 255, 255, 0.2);
-                border: 1px solid rgba(255, 255, 255, 0.15);
-            }}
-            .dialog-banner::before {{
-                content: "";
-                position: absolute;
-                top: -50%;
-                left: -50%;
-                width: 200%;
-                height: 200%;
-                background: linear-gradient(
-                    45deg,
-                    transparent 30%,
-                    rgba(255, 255, 255, 0.15) 50%,
-                    transparent 70%
-                );
-                animation: shimmer 3s infinite linear;
-            }}
-            @keyframes shimmer {{
-                0% {{ transform: translateX(-100%) translateY(-100%) rotate(45deg); }}
-                100% {{ transform: translateX(100%) translateY(100%) rotate(45deg); }}
-            }}
-            
-            .dialog-icon-wrap {{
-                position: relative;
-                display: inline-block;
-                margin-bottom: 8px;
-            }}
-            .dialog-icon {{
-                font-size: 42px;
-                display: inline-block;
-                animation: iconFloat 2.5s infinite ease-in-out;
-                filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
-                position: relative;
-                z-index: 2;
-            }}
-            @keyframes iconFloat {{
-                0%, 100% {{ transform: translateY(0) scale(1); }}
-                50% {{ transform: translateY(-4px) scale(1.05); }}
-            }}
-            .dialog-sparkle {{
-                position: absolute;
-                color: #ffffff;
-                font-size: 12px;
-                opacity: 0.8;
-                animation: sparkleAnim 2s infinite ease-in-out;
-            }}
-            .dialog-sparkle-1 {{ top: -6px; left: -12px; animation-delay: 0s; }}
-            .dialog-sparkle-2 {{ top: 0; right: -14px; animation-delay: 0.5s; }}
-            .dialog-sparkle-3 {{ bottom: -4px; left: -8px; animation-delay: 1s; }}
-            @keyframes sparkleAnim {{
-                0%, 100% {{ opacity: 0.3; transform: scale(0.8); }}
-                50% {{ opacity: 1; transform: scale(1.2); }}
-            }}
-            
-            .dialog-title {{
-                font-family: 'MedievalSharp', 'Cinzel', serif;
-                font-size: 20px;
-                font-weight: 900;
-                color: #ffffff;
-                margin: 0;
-                letter-spacing: 1.5px;
-                text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 255, 255, 0.3);
-                position: relative;
-                z-index: 2;
-            }}
-            .dialog-subtitle {{
-                font-family: 'Quicksand', sans-serif;
-                font-size: 11px;
-                color: rgba(255, 255, 255, 0.9);
-                margin: 4px 0 0 0;
-                font-weight: 600;
-                letter-spacing: 0.5px;
-                position: relative;
-                z-index: 2;
-            }}
-            
-            /* ============================================================ */
-            /* BODY PESAN */
-            /* ============================================================ */
-            .dialog-body {{
-                margin-top: 12px;
-            }}
-            .dialog-message {{
-                font-family: 'Quicksand', sans-serif;
-                font-size: 13px;
-                color: {t['light']};
-                text-align: center;
-                margin-bottom: 16px;
-                padding: 10px 14px;
-                background: rgba(0, 0, 0, 0.25);
-                border-left: 3px solid {t['primary']};
-                border-right: 3px solid {t['primary']};
-                border-radius: 6px;
-                font-weight: 600;
-                letter-spacing: 0.3px;
-            }}
-            
-            /* ============================================================ */
-            /* DETAIL ROWS — SEPERTI SCROLL */
-            /* ============================================================ */
-            .detail-scroll {{
-                background: rgba(10, 17, 34, 0.6);
-                border: 1.5px solid {t['primary']};
-                border-radius: 10px;
-                padding: 12px 14px;
-                box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.6), 0 0 10px {t['glow']};
-            }}
-            .detail-row {{
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 7px 4px;
-                border-bottom: 1px dashed rgba({t['primary'].replace('#', '')}, 0.25);
-                font-family: 'Quicksand', sans-serif;
-                font-size: 12px;
-                transition: all 0.2s ease;
-            }}
-            .detail-row:last-child {{
-                border-bottom: none;
-            }}
-            .detail-row:hover {{
-                background: rgba(255, 255, 255, 0.03);
-                padding-left: 8px;
-            }}
-            .detail-key {{
-                color: #94a3b8;
-                font-weight: 600;
-                display: flex;
-                align-items: center;
-                gap: 6px;
-            }}
-            .detail-key::before {{
-                content: "▸";
-                color: {t['primary']};
-                font-weight: bold;
-                font-size: 10px;
-            }}
-            .detail-value {{
-                color: {t['light']};
-                font-weight: 800;
-                font-family: 'Cinzel', 'MedievalSharp', serif;
-                letter-spacing: 0.5px;
-                text-shadow: 0 0 6px {t['glow']};
-                text-align: right;
-                max-width: 55%;
-                word-break: break-word;
-            }}
-            
-            /* ============================================================ */
-            /* FOOTER STATUS */
-            /* ============================================================ */
-            .dialog-footer {{
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 8px;
-                margin-top: 16px;
-                padding: 8px 12px;
-                background: rgba(16, 185, 129, 0.1);
-                border: 1px solid rgba(16, 185, 129, 0.4);
-                border-radius: 20px;
-                font-family: 'Quicksand', sans-serif;
-                font-size: 11px;
-                font-weight: 700;
-                color: #34d399;
-                letter-spacing: 0.5px;
-            }}
-            .dialog-footer .pulse-dot {{
-                width: 8px;
-                height: 8px;
-                border-radius: 50%;
-                background: #10b981;
-                box-shadow: 0 0 8px #10b981;
-                animation: pulseDot 1.5s infinite ease-in-out;
-            }}
-            @keyframes pulseDot {{
-                0%, 100% {{ transform: scale(1); opacity: 1; }}
-                50% {{ transform: scale(1.4); opacity: 0.5; }}
-            }}
-            
-            /* ============================================================ */
-            /* TOMBOL CLOSE — ROYAL STYLE */
-            /* ============================================================ */
-            div[data-testid="stDialog"] div.stButton > button {{
-                background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%) !important;
-                color: {t['light']} !important;
-                border: 2px solid {t['primary']} !important;
-                border-radius: 10px !important;
-                font-family: 'Cinzel', 'MedievalSharp', serif !important;
-                font-weight: 900 !important;
-                font-size: 13px !important;
-                letter-spacing: 1.5px !important;
-                padding: 12px 20px !important;
-                margin-top: 14px !important;
-                box-shadow: 0 0 12px {t['glow']}, inset 0 0 10px rgba(0, 0, 0, 0.5) !important;
-                transition: all 0.3s ease !important;
-                text-transform: uppercase !important;
-            }}
-            div[data-testid="stDialog"] div.stButton > button:hover {{
-                background: {t['gradient']} !important;
-                color: #ffffff !important;
-                border-color: {t['secondary']} !important;
-                box-shadow: 0 0 25px {t['glow']}, inset 0 0 15px rgba(255, 255, 255, 0.2) !important;
-                transform: translateY(-2px) !important;
-            }}
-            div[data-testid="stDialog"] div.stButton > button:active {{
-                transform: translateY(0) !important;
-                box-shadow: 0 0 15px {t['glow']} !important;
-            }}
-            /* =========================================================================
-            📦 PAKET 2: MEDIUM WINS
-            ========================================================================= */
-
-            /* P2.1. CARD WRAPPER UNIVERSAL */
-            .rpg-card {{
-                background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.85) 100%);
-                border: 1.5px solid #9a7b38;
-                border-radius: 12px;
-                padding: 16px 20px;
-                margin-bottom: 16px;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-                transition: all 0.3s ease;
-            }}
-            .rpg-card:hover {{
-                border-color: #d4af37;
-                box-shadow: 0 6px 20px rgba(212, 175, 55, 0.2);
-            }}
-            .rpg-card-title {{
-                font-family: 'Cinzel', serif;
-                font-size: 14px;
-                font-weight: 800;
-                color: #f7e7b4;
-                margin-bottom: 10px;
-                letter-spacing: 1px;
-                text-transform: uppercase;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            }}
-            .rpg-card-title::before {{
-                content: "⚜️";
-                color: #d4af37;
-                font-size: 12px;
-            }}
-            .rpg-card-content {{
-                color: #cbd5e1;
-                font-family: 'Quicksand', sans-serif;
-                font-size: 13px;
-                line-height: 1.6;
-            }}
-
-            /* P2.2. SKELETON LOADING */
-            @keyframes skeletonPulse {{
-                0%, 100% {{ opacity: 0.4; }}
-                50% {{ opacity: 0.8; }}
-            }}
-            .skeleton-box {{
-                background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
-                background-size: 200% 100%;
-                animation: skeletonPulse 1.5s infinite ease-in-out;
-                border-radius: 8px;
-                height: 20px;
-                margin-bottom: 8px;
-            }}
-
-            /* P2.3. TOAST CUSTOM */
-            div[data-testid="stToast"] {{
-                background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
-                border: 2px solid #d4af37 !important;
-                border-radius: 10px !important;
-                box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3) !important;
-            }}
-            div[data-testid="stToast"] p,
-            div[data-testid="stToast"] span {{
-                color: #f7e7b4 !important;
-                font-family: 'Cinzel', serif !important;
-                font-weight: 700 !important;
-                font-size: 13px !important;
-            }}
-            div[data-testid="stToast"] svg {{
-                fill: #d4af37 !important;
-            }}
-
-            /* P2.4. SPINNER CUSTOM */
-            div[data-testid="stSpinner"] > div {{
-                border-top-color: #d4af37 !important;
-                border-right-color: #d4af37 !important;
-            }}
-            div[data-testid="stSpinner"] p,
-            div[data-testid="stSpinner"] span {{
-                color: #f7e7b4 !important;
-                font-family: 'Cinzel', serif !important;
-                font-weight: 700 !important;
-            }}
-
-            /* P2.5. ALERT CUSTOM */
-            div[data-testid="stAlert"] {{
-                background: rgba(15, 23, 42, 0.95) !important;
-                border: 1.5px solid #9a7b38 !important;
-                border-radius: 10px !important;
-                color: #f7e7b4 !important;
-                box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5) !important;
-            }}
-            div[data-testid="stAlert"] p,
-            div[data-testid="stAlert"] span,
-            div[data-testid="stAlert"] div {{
-                color: #f7e7b4 !important;
-                font-family: 'Quicksand', sans-serif !important;
-                font-weight: 600 !important;
-            }}
-            div[data-testid="stAlert"] svg {{
-                fill: #d4af37 !important;
-            }}
-
-            /* P2.6. PROGRESS BAR CUSTOM */
-            div[data-testid="stProgress"] > div > div {{
-                background: linear-gradient(90deg, #d4af37 0%, #fbbf24 100%) !important;
-                box-shadow: 0 0 10px rgba(212, 175, 55, 0.5) !important;
-            }}
-            div[data-testid="stProgress"] > div {{
-                background: rgba(30, 41, 59, 0.8) !important;
-                border: 1px solid #9a7b38 !important;
-                border-radius: 6px !important;
-            }}
-            /* =========================================================================
-            🚀 WELCOME SCREEN — VERSI SIMPLE (DOUBLE BRACES READY)
-            ========================================================================= */
-
-            @keyframes welcomeEnter {{
-                0% {{
-                    opacity: 0;
-                    transform: scale(0.9) translateY(30px);
-                    filter: blur(10px);
-                }}
-                100% {{
-                    opacity: 1;
-                    transform: scale(1) translateY(0);
-                    filter: blur(0);
-                }}
-            }}
-
-            @keyframes welcomeIconPulse {{
-                0%, 100% {{
-                    transform: scale(1);
-                    filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.6));
-                }}
-                50% {{
-                    transform: scale(1.08);
-                    filter: drop-shadow(0 0 35px rgba(212, 175, 55, 1));
-                }}
-            }}
-
-            @keyframes welcomeShimmer {{
-                0% {{ background-position: -1000px 0; }}
-                100% {{ background-position: 1000px 0; }}
-            }}
-
-            @keyframes welcomeSparkFloat {{
-                0%, 100% {{
-                    transform: translateY(0) rotate(0deg);
-                    opacity: 0.6;
-                }}
-                50% {{
-                    transform: translateY(-15px) rotate(180deg);
-                    opacity: 1;
-                }}
-            }}
-
-            @keyframes spinSlow {{
-                from {{ transform: rotate(0deg); }}
-                to {{ transform: rotate(360deg); }}
-            }}
-
-            .welcome-overlay {{
-                position: fixed;
-                top: 0; left: 0;
-                width: 100vw; height: 100vh;
-                z-index: 999999;
-                background: radial-gradient(ellipse at top, #1e3a5f 0%, #0f172a 50%, #05070c 100%);
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                overflow: hidden;
-                animation: welcomeEnter 0.8s cubic-bezier(0.25, 1, 0.5, 1);
-            }}
-
-            /* Ornamen sudut */
-            .welcome-corner {{
-                position: absolute;
-                color: #d4af37;
-                font-size: 20px;
-                opacity: 0.7;
-                filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.8));
-            }}
-            .welcome-corner-tl {{ top: 30px; left: 30px; }}
-            .welcome-corner-tr {{ top: 30px; right: 30px; }}
-            .welcome-corner-bl {{ bottom: 30px; left: 30px; }}
-            .welcome-corner-br {{ bottom: 30px; right: 30px; }}
-
-            /* Avatar */
-            .welcome-avatar {{
-                width: 140px;
-                height: 140px;
-                border-radius: 50%;
-                background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
-                border: 4px solid #d4af37;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                font-size: 70px;
-                margin-bottom: 32px;
-                animation: welcomeIconPulse 2.5s infinite ease-in-out;
-                position: relative;
-                z-index: 10;
-            }}
-
-            .welcome-avatar::before {{
-                content: "";
-                position: absolute;
-                inset: -12px;
-                border-radius: 50%;
-                border: 2px dashed #b45309;
-                animation: spinSlow 20s linear infinite;
-            }}
-
-            .welcome-avatar::after {{
-                content: "";
-                position: absolute;
-                inset: -24px;
-                border-radius: 50%;
-                border: 1px solid rgba(212, 175, 55, 0.4);
-                animation: spinSlow 30s linear infinite reverse;
-            }}
-
-            /* Sparkles */
-            .welcome-spark {{
-                position: absolute;
-                color: #fbbf24;
-                font-size: 24px;
-                filter: drop-shadow(0 0 10px #fbbf24);
-                animation: welcomeSparkFloat 3s infinite ease-in-out;
-            }}
-            .welcome-spark-1 {{ top: 20%; left: 28%; animation-delay: 0s; }}
-            .welcome-spark-2 {{ top: 25%; right: 26%; animation-delay: 0.5s; }}
-            .welcome-spark-3 {{ bottom: 28%; left: 24%; animation-delay: 1s; }}
-            .welcome-spark-4 {{ bottom: 25%; right: 28%; animation-delay: 1.5s; }}
-
-            /* Sapaan */
-            .welcome-greeting {{
-                font-family: 'Quicksand', sans-serif;
-                font-size: 16px;
-                color: #d4af37;
-                font-weight: 700;
-                letter-spacing: 6px;
-                text-transform: uppercase;
-                margin-bottom: 8px;
-                text-align: center;
-                animation: welcomeEnter 1s cubic-bezier(0.25, 1, 0.5, 1);
-                opacity: 0.9;
-            }}
-
-            /* Nama user */
-            .welcome-name {{
-                font-family: 'MedievalSharp', serif;
-                font-size: 44px;
-                font-weight: 900;
-                letter-spacing: 3px;
-                text-align: center;
-                margin: 0 0 40px 0;
-                line-height: 1.1;
-                background: linear-gradient(
-                    90deg,
-                    #f7e7b4 0%,
-                    #d4af37 25%,
-                    #f7e7b4 50%,
-                    #d4af37 75%,
-                    #f7e7b4 100%
-                );
-                background-size: 1000px 100%;
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                background-clip: text;
-                text-shadow: 0 0 30px rgba(212, 175, 55, 0.5);
-                animation: welcomeEnter 1.2s cubic-bezier(0.25, 1, 0.5, 1),
-                        welcomeShimmer 4s infinite linear;
-                filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.4));
-            }}
-
-            /* Tombol Masuk */
-            .welcome-btn-container {{
-                animation: welcomeEnter 1.6s cubic-bezier(0.25, 1, 0.5, 1);
-                max-width: 320px;
-                width: 100%;
-            }}
-
-            .welcome-btn-container div.stButton > button {{
-                background: linear-gradient(135deg, #b45309 0%, #d97706 100%) !important;
-                color: #ffffff !important;
-                border: 2px solid #fbbf24 !important;
-                border-radius: 50px !important;
-                font-family: 'Cinzel', serif !important;
-                font-weight: 900 !important;
-                font-size: 15px !important;
-                letter-spacing: 2px !important;
-                padding: 18px 40px !important;
-                height: auto !important;
-                min-height: 64px !important;
-                text-transform: uppercase !important;
-                box-shadow: 
-                    0 0 25px rgba(251, 191, 36, 0.4),
-                    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
-                transition: all 0.3s ease !important;
-                width: 100% !important;
-            }}
-
-            .welcome-btn-container div.stButton > button:hover {{
-                background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%) !important;
-                transform: translateY(-3px) scale(1.02) !important;
-                box-shadow: 
-                    0 0 40px rgba(251, 191, 36, 0.7),
-                    inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
-            }}
-
-            /* Responsive Mobile */
-            @media (max-width: 768px) {{
-                .welcome-avatar {{
-                    width: 100px;
-                    height: 100px;
-                    font-size: 50px;
-                    margin-bottom: 24px;
-                }}
-                .welcome-greeting {{
-                    font-size: 13px;
-                    letter-spacing: 4px;
-                }}
-                .welcome-name {{
-                    font-size: 26px;
-                    letter-spacing: 2px;
-                    margin-bottom: 30px;
-                }}
-                .welcome-spark {{ font-size: 16px; }}
-                .welcome-corner {{ font-size: 16px; }}
-                .welcome-btn-container div.stButton > button {{
-                    font-size: 13px !important;
-                    padding: 14px 30px !important;
-                    min-height: 56px !important;
-                }}
-            }}
-
-            @media (max-width: 380px) {{
-                .welcome-avatar {{
-                    width: 80px;
-                    height: 80px;
-                    font-size: 40px;
-                }}
-                .welcome-name {{
-                    font-size: 20px;
-                    letter-spacing: 1px;
-                }}
-                .welcome-greeting {{
-                    font-size: 11px;
-                    letter-spacing: 3px;
-                }}
-            }}
-        </style>
-        """,
-        unsafe_allow_html=True,
+        "<div style='display: flex; align-items: center; "
+        "justify-content: center; gap: 8px; margin-top: 16px; "
+        "padding: 8px 12px; background: rgba(16, 185, 129, 0.1); "
+        "border: 1px solid rgba(16, 185, 129, 0.4); "
+        "border-radius: 20px; font-family: Quicksand, sans-serif; "
+        "font-size: 11px; font-weight: 700; color: #34d399;'>"
+        "● TERSINKRONISASI KE GOOGLE SHEETS</div>",
+        unsafe_allow_html=True
     )
-    # Tombol Tutup
+    
+    # =====================================================================
+    # 6️⃣ TOMBOL TUTUP
+    # =====================================================================
     if st.button("⚜️ Tutup Gulungan ⚜️", use_container_width=True, key="btn_close_global_success_dialog"):
-        # Clear flag supaya dialog gak muncul lagi
         if "_show_success_dialog" in st.session_state:
             del st.session_state["_show_success_dialog"]
         st.rerun()
