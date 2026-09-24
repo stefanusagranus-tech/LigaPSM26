@@ -18906,12 +18906,113 @@ elif selected_tab == "📊 Daily Performance":
                                 f"</table>"
                                 f"</div>"
                             )
+                                # === BUILD FOOTER (rata-rata + total) ===
+                            _avg_spd = int(_filtered_rekap["spd"].mean()) if not _filtered_rekap.empty else 0
+                            _avg_std = int(_filtered_rekap["std"].mean()) if not _filtered_rekap.empty else 0
+                            _avg_apc = int(_filtered_rekap["apc"].mean()) if not _filtered_rekap.empty else 0
+                            _total_spd_f = int(_filtered_rekap["spd"].sum())
+                            _total_nsb_tgt = int(_filtered_rekap["nsb_target"].sum())
+                            _total_nsb_act = int(_filtered_rekap["nsb_actual"].sum())
+                            _total_selisih_nsb = _total_nsb_tgt - _total_nsb_act
                             
-                            st.markdown(_leaderboard_html, unsafe_allow_html=True)
+                            # Warna selisih
+                            _selisih_color = "#34d399" if _total_selisih_nsb >= 0 else "#fca5a5"
+                            _selisih_icon = "✅" if _total_selisih_nsb >= 0 else "⚠️"
+                            
+                            _footer_html = (
+                                # === FOOTER: RATA-RATA ===
+                                f"<div style='overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 4px;'>"
+                                f"<table style='width: 100%; border-collapse: separate; border-spacing: 0; "
+                                f"font-family: monospace; min-width: 900px; margin-top: 12px;'>"
+                                
+                                f"<tbody>"
+                                
+                                # Row 1: RATA-RATA
+                                f"<tr style='background: linear-gradient(90deg, rgba(168, 85, 247, 0.12), rgba(124, 58, 237, 0.18)); "
+                                f"border-left: 4px solid #a855f7;'>"
+                                
+                                f"<td colspan='2' style='padding: 12px 14px; border-radius: 8px 0 0 8px; "
+                                f"font-family: monospace; font-size: 11px; font-weight: 900; color: #c084fc; "
+                                f"letter-spacing: 1px; text-transform: uppercase;'>"
+                                f"⚖️ Rata-Rata ({len(_filtered_rekap)} hari)</td>"
+                                
+                                f"<td style='padding: 12px 10px;'></td>"  # skip growth spd
+                                
+                                f"<td style='padding: 12px 10px; text-align: right; "
+                                f"font-family: monospace; font-size: 12px; font-weight: 900; color: #38bdf8; "
+                                f"white-space: nowrap;'>{_avg_std:,}</td>"
+                                
+                                f"<td style='padding: 12px 10px;'></td>"  # skip growth std
+                                
+                                f"<td style='padding: 12px 10px; text-align: right; "
+                                f"font-family: monospace; font-size: 12px; font-weight: 900; color: #a855f7; "
+                                f"white-space: nowrap;'>Rp {_avg_apc:,}</td>"
+                                
+                                f"<td style='padding: 12px 10px;'></td>"  # skip growth apc
+                                
+                                f"<td style='padding: 12px 10px;'></td>"  # skip nsb target
+                                
+                                f"<td style='padding: 12px 10px;'></td>"  # skip nsb aktual
+                                
+                                f"<td style='padding: 12px 14px; border-radius: 0 8px 8px 0;'></td>"
+                                
+                                f"</tr>"
+                                
+                                # Gap
+                                f"<tr style='height: 6px;'><td colspan='10' style='border: none;'></td></tr>"
+                                
+                                # Row 2: TOTAL NET SALES (SPD)
+                                f"<tr style='background: linear-gradient(90deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.22)); "
+                                f"border-left: 4px solid #fbbf24; box-shadow: inset 0 0 20px rgba(251, 191, 36, 0.08);'>"
+                                
+                                f"<td colspan='2' style='padding: 14px; border-radius: 8px 0 0 8px; "
+                                f"font-family: monospace; font-size: 12px; font-weight: 900; color: #fcd34d; "
+                                f"letter-spacing: 1px; text-transform: uppercase;'>"
+                                f"💰 TOTAL NET SALES</td>"
+                                
+                                f"<td colspan='8' style='padding: 14px; text-align: right; "
+                                f"border-radius: 0 8px 8px 0; "
+                                f"font-family: monospace; font-size: 18px; font-weight: 900; color: #fbbf24; "
+                                f"text-shadow: 0 0 15px rgba(251, 191, 36, 0.6); white-space: nowrap;'>"
+                                f"Rp {_total_spd_f:,}</td>"
+                                
+                                f"</tr>"
+                                
+                                # Gap
+                                f"<tr style='height: 6px;'><td colspan='10' style='border: none;'></td></tr>"
+                                
+                                # Row 3: TOTAL NSB
+                                f"<tr style='background: linear-gradient(90deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.15)); "
+                                f"border-left: 4px solid {_selisih_color};'>"
+                                
+                                f"<td colspan='2' style='padding: 12px 14px; border-radius: 8px 0 0 8px; "
+                                f"font-family: monospace; font-size: 11px; font-weight: 900; color: #fca5a5; "
+                                f"letter-spacing: 1px; text-transform: uppercase;'>"
+                                f"📊 TOTAL NSB</td>"
+                                
+                                f"<td colspan='4' style='padding: 12px 10px; text-align: right; "
+                                f"font-family: monospace; font-size: 11px; font-weight: 700; color: #94a3b8; "
+                                f"white-space: nowrap;'>"
+                                f"Target: <b style='color: #cbd5e1;'>Rp {_total_nsb_tgt:,}</b> &nbsp;|&nbsp; "
+                                f"Aktual: <b style='color: #e2e8f0;'>Rp {_total_nsb_act:,}</b></td>"
+                                
+                                f"<td colspan='4' style='padding: 12px 14px; text-align: right; border-radius: 0 8px 8px 0; "
+                                f"font-family: monospace; font-size: 13px; font-weight: 900; color: {_selisih_color}; "
+                                f"white-space: nowrap;'>"
+                                f"{_selisih_icon} Selisih: Rp {_total_selisih_nsb:,}</td>"
+                                
+                                f"</tr>"
+                                
+                                f"</tbody>"
+                                f"</table>"
+                                f"</div>"
+                            )
+                            
+                            st.markdown(_footer_html, unsafe_allow_html=True)
                             
                             # === INFO ===
                             st.caption(f"💡 Scroll horizontal untuk lihat semua kolom. **{len(_filtered_rekap)}** baris data.")
-    
+                            
     # =========================================================================
     # 📈 SUB-TAB 3: DASHBOARD (PLACEHOLDER)
     # =========================================================================
