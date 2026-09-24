@@ -18902,48 +18902,54 @@ elif selected_tab == "📊 Daily Performance":
 
                                 f"<tbody>"
 
-                                # Row 1: RATA-RATA
+                                # Row 1: RATA-RATA (List Text)
                                 f"<tr style='background: linear-gradient(90deg, rgba(168, 85, 247, 0.12), rgba(124, 58, 237, 0.18)); "
                                 f"border-left: 4px solid #a855f7;'>"
 
-                                # Kolom 1: Label
-                                f"<td style='padding: 12px 14px; border-radius: 8px 0 0 8px; "
-                                f"font-family: monospace; font-size: 11px; font-weight: 900; color: #c084fc; "
-                                f"letter-spacing: 1px; text-transform: uppercase; white-space: nowrap;'>"
-                                f"⚖️ Rata-Rata ({len(_filtered_rekap)} hari)</td>"
+                                f"<td colspan='10' style='padding: 16px 20px; border-radius: 8px; "
+                                f"font-family: monospace;'>"
 
-                                # Kolom 2: Rata SPD (KOLOM BARU)
-                                f"<td style='padding: 12px 10px; text-align: right; "
-                                f"font-family: monospace; font-size: 12px; font-weight: 900; color: #fbbf24; "
-                                f"white-space: nowrap;'>Rp {_avg_spd:,}</td>"
+                                # Judul
+                                f"<div style='font-size: 11px; font-weight: 900; color: #c084fc; "
+                                f"letter-spacing: 1.5px; text-transform: uppercase; "
+                                f"margin-bottom: 10px; padding-bottom: 6px; "
+                                f"border-bottom: 1px dashed rgba(168, 85, 247, 0.3);'>"
+                                f"⚖️ Rata-Rata ({len(_filtered_rekap)} Hari)</div>"
 
-                                # Kolom 3: Kosong (skip growth SPD)
-                                f"<td style='padding: 12px 10px;'></td>"
+                                # List Rata-Rata
+                                f"<div style='display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-around;'>"
 
-                                # Kolom 4: Rata STD
-                                f"<td style='padding: 12px 10px; text-align: right; "
-                                f"font-family: monospace; font-size: 12px; font-weight: 900; color: #38bdf8; "
-                                f"white-space: nowrap;'>{_avg_std:,}</td>"
+                                # Rata SPD
+                                f"<div style='text-align: center; min-width: 120px;'>"
+                                f"<div style='font-size: 9px; color: #94a3b8; letter-spacing: 0.5px; margin-bottom: 3px;'>💰 RATA SPD</div>"
+                                f"<div style='font-size: 14px; font-weight: 900; color: #fbbf24; "
+                                f"text-shadow: 0 0 8px rgba(251, 191, 36, 0.4);'>Rp {_avg_spd:,}</div>"
+                                f"</div>"
 
-                                # Kolom 5: Kosong (skip growth STD)
-                                f"<td style='padding: 12px 10px;'></td>"
+                                # Rata STD
+                                f"<div style='text-align: center; min-width: 120px;'>"
+                                f"<div style='font-size: 9px; color: #94a3b8; letter-spacing: 0.5px; margin-bottom: 3px;'>📄 RATA STD</div>"
+                                f"<div style='font-size: 14px; font-weight: 900; color: #38bdf8; "
+                                f"text-shadow: 0 0 8px rgba(56, 189, 248, 0.4);'>{_avg_std:,} struk</div>"
+                                f"</div>"
 
-                                # Kolom 6: Rata APC
-                                f"<td style='padding: 12px 10px; text-align: right; "
-                                f"font-family: monospace; font-size: 12px; font-weight: 900; color: #a855f7; "
-                                f"white-space: nowrap;'>Rp {_avg_apc:,}</td>"
+                                # Rata APC
+                                f"<div style='text-align: center; min-width: 120px;'>"
+                                f"<div style='font-size: 9px; color: #94a3b8; letter-spacing: 0.5px; margin-bottom: 3px;'>🧾 RATA APC</div>"
+                                f"<div style='font-size: 14px; font-weight: 900; color: #a855f7; "
+                                f"text-shadow: 0 0 8px rgba(168, 85, 247, 0.4);'>Rp {_avg_apc:,}</div>"
+                                f"</div>"
 
-                                # Kolom 7: Kosong (skip growth APC)
-                                f"<td style='padding: 12px 10px;'></td>"
+                                # Rata NSB Aktual (opsional)
+                                f"<div style='text-align: center; min-width: 120px;'>"
+                                f"<div style='font-size: 9px; color: #94a3b8; letter-spacing: 0.5px; margin-bottom: 3px;'>📊 RATA NSB</div>"
+                                f"<div style='font-size: 14px; font-weight: 900; color: #e2e8f0; "
+                                f"text-shadow: 0 0 8px rgba(226, 232, 240, 0.3);'>Rp {_avg_nsb_act:,}</div>"
+                                f"</div>"
 
-                                # Kolom 8: Kosong (NSB Target)
-                                f"<td style='padding: 12px 10px;'></td>"
+                                f"</div>"  # close flex container
 
-                                # Kolom 9: Kosong (NSB Aktual)
-                                f"<td style='padding: 12px 10px;'></td>"
-
-                                # Kolom 10: Kosong
-                                f"<td style='padding: 12px 14px; border-radius: 0 8px 8px 0;'></td>"
+                                f"</td>"
 
                                 f"</tr>"
 
