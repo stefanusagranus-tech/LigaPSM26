@@ -1336,7 +1336,7 @@ def show_edit_confirm_dialog(detail_dict, callback_key="confirm_edit"):
 # =========================================================================
 # 💬 DIALOG KONFIRMASI HAPUS — MENU EDIT DATA
 # =========================================================================
-@st.dialog("🗑️ Konfirmasi Hapus Data")
+@st.dialog("")
 def show_delete_confirm_dialog(detail_dict, warning_text="", callback_key="confirm_delete"):
     """
     Dialog konfirmasi sebelum hapus data (dengan peringatan merah).
