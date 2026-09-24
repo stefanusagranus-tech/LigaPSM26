@@ -18449,14 +18449,26 @@ elif selected_tab == "📊 Daily Performance":
             # === BARIS 3: NSB Actual ===
             st.markdown("**⚠️ NSB (Nota Selisih Barang)**")
             _input_nsb_actual = st.number_input(
-                "NSB Actual — Rp",
-                min_value=0,
+                "NSB Actual — Rp (boleh minus untuk selisih negatif)",
+                min_value=-999_999_999_999,   # praktis gak ada limit bawah
+                max_value=999_999_999_999,
                 step=1000,
                 value=0,
                 key="dp_input_nsb_actual",
-                help="Jumlah NSB aktual hari ini (isi 0 kalau tidak ada)"
+                help="Isi minus (-) kalau ada selisih negatif. Isi 0 kalau tidak ada."
             )
-            
+            if _input_nsb_actual < 0:
+                st.warning(
+                    f"⚠️ NSB **minus** (Rp {_input_nsb_actual:,}) — "
+                    f"artinya ada selisih negatif (barang rusak/hilang)."
+                )
+            elif _input_nsb_actual > 0:
+                st.info(
+                    f"ℹ️ NSB **plus** (Rp {_input_nsb_actual:,}) — "
+                    f"artinya ada penyesuaian positif."
+                )
+
+
             # === BARIS 4: Keterangan ===
             _input_keterangan = st.text_area(
                 "📝 Keterangan (Opsional)",
@@ -18474,7 +18486,7 @@ elif selected_tab == "📊 Daily Performance":
             )
         
         # =============================================================
-        # 💾 PROSES SIMPAN
+        # 💾 PROSES SIMPAN — WITH DIALOG KONFIRMASI
         # =============================================================
         if _btn_simpan:
             _errors = []
@@ -18484,16 +18496,58 @@ elif selected_tab == "📊 Daily Performance":
                 _errors.append("SPD harus lebih dari 0")
             if _input_std <= 0:
                 _errors.append("STD harus lebih dari 0")
-            if _input_nsb_actual < 0:
-                _errors.append("NSB Actual tidak boleh negatif")
             
             if _errors:
                 for _err in _errors:
                     st.error(f"❌ {_err}")
+                st.toast("❌ Gagal simpan, cek error di atas!", icon="⚠️")
             else:
+                # === HITUNG AUTO-VALUE ===
+                _apc_val = int(_input_spd / _input_std) if _input_std > 0 else 0
+                _nsb_target_val = int(_input_spd * (_active_period['nsb_percentage'] / 100)) if _active_period.get('nsb_percentage', 0) > 0 else 0
+                
+                # === SIMPAN KE SESSION STATE UNTUK COMMIT NANTI ===
+                st.session_state["pending_input_harian"] = {
+                    "tanggal": str(_input_tanggal),
+                    "spd": int(_input_spd),
+                    "std": int(_input_std),
+                    "apc": int(_apc_val),
+                    "nsb_target": int(_nsb_target_val),
+                    "nsb_actual": int(_input_nsb_actual),
+                    "keterangan": str(_input_keterangan),
+                    "apc_preview": _apc_val,
+                    "nsb_target_preview": _nsb_target_val,
+                }
+                
+                # === TAMPILKAN DIALOG KONFIRMASI ===
+                _nsb_icon = "🔻" if _input_nsb_actual < 0 else "🔺" if _input_nsb_actual > 0 else "➖"
+                _nsb_color = "minus (merah)" if _input_nsb_actual < 0 else "plus" if _input_nsb_actual > 0 else "kosong"
+                
+                show_edit_confirm_dialog(
+                    {
+                        "📅 Tanggal": _input_tanggal.strftime("%d/%m/%Y"),
+                        "📊 Periode": _active_period['period_name'],
+                        "💰 SPD": f"Rp {int(_input_spd):,}",
+                        "📄 STD": f"{int(_input_std)} struk",
+                        "🧾 APC (auto)": f"Rp {_apc_val:,}",
+                        "📈 NSB Target (auto)": f"Rp {_nsb_target_val:,}",
+                        f"{_nsb_icon} NSB Actual": f"Rp {int(_input_nsb_actual):,} ({_nsb_color})",
+                        "📝 Keterangan": _input_keterangan[:50] if _input_keterangan else "—",
+                    },
+                    callback_key="input_harian_confirm"
+                )
+
+        # =============================================================
+        # 💾 COMMIT SIMPAN (setelah user klik "YA, SIMPAN")
+        # =============================================================
+        if st.session_state.get("input_harian_confirm_result", False):
+            st.session_state["input_harian_confirm_result"] = False
+            _pending_harian = st.session_state.pop("pending_input_harian", None)
+            
+            if _pending_harian:
                 try:
                     with st.spinner("⏳ Menyimpan data harian..."):
-                        # Generate record_id
+                        # === LOAD EXISTING DULU ===
                         _existing_df = pd.DataFrame()
                         try:
                             _existing_df = conn.read(worksheet="SALES_STOREPERFORMANCE", ttl=0)
@@ -18504,6 +18558,7 @@ elif selected_tab == "📊 Daily Performance":
                         except Exception:
                             _existing_df = pd.DataFrame()
                         
+                        # === GENERATE RECORD ID ===
                         _max_id = 0
                         if not _existing_df.empty and "record_id" in _existing_df.columns:
                             _numeric_ids = (
@@ -18514,20 +18569,13 @@ elif selected_tab == "📊 Daily Performance":
                             )
                             if not _numeric_ids.empty:
                                 _max_id = _numeric_ids.astype(int).max()
-                        
                         _new_id = _max_id + 1
                         
-                        # Hitung APC & NSB Target
-                        _apc_val = int(_input_spd / _input_std)
-                        _nsb_target_val = int(_input_spd * (_active_period['nsb_percentage'] / 100))
-                        
-                        # Ambil username
                         _input_by = st.session_state.get("username", "unknown")
-                        
-                        # Waktu sekarang
                         _now_str = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
                         
-                        # === CEK APAKAH TANGGAL SUDAH ADA (Update vs Insert) ===
+                        # === CEK UPDATE VS INSERT ===
+                        _action = "insert"
                         if not _existing_df.empty and "tanggal" in _existing_df.columns:
                             _existing_df["_tgl"] = pd.to_datetime(_existing_df["tanggal"], errors="coerce").dt.date
                             _match = _existing_df[_existing_df["_tgl"] == _input_tanggal]
@@ -18535,12 +18583,12 @@ elif selected_tab == "📊 Daily Performance":
                             if not _match.empty:
                                 # === UPDATE ===
                                 _idx_update = _match.index[0]
-                                _existing_df.loc[_idx_update, "spd"] = int(_input_spd)
-                                _existing_df.loc[_idx_update, "std"] = int(_input_std)
-                                _existing_df.loc[_idx_update, "apc"] = int(_apc_val)
-                                _existing_df.loc[_idx_update, "nsb_target"] = int(_nsb_target_val)
-                                _existing_df.loc[_idx_update, "nsb_actual"] = int(_input_nsb_actual)
-                                _existing_df.loc[_idx_update, "keterangan"] = str(_input_keterangan)
+                                _existing_df.loc[_idx_update, "spd"] = int(_pending_harian["spd"])
+                                _existing_df.loc[_idx_update, "std"] = int(_pending_harian["std"])
+                                _existing_df.loc[_idx_update, "apc"] = int(_pending_harian["apc"])
+                                _existing_df.loc[_idx_update, "nsb_target"] = int(_pending_harian["nsb_target"])
+                                _existing_df.loc[_idx_update, "nsb_actual"] = int(_pending_harian["nsb_actual"])
+                                _existing_df.loc[_idx_update, "keterangan"] = str(_pending_harian["keterangan"])
                                 _existing_df.loc[_idx_update, "input_by"] = str(_input_by)
                                 _existing_df.loc[_idx_update, "updated_at"] = str(_now_str)
                                 
@@ -18554,35 +18602,30 @@ elif selected_tab == "📊 Daily Performance":
                                 _new_row = pd.DataFrame([{
                                     "record_id": f"SP{_new_id:05d}",
                                     "tanggal": str(_input_tanggal),
-                                    "spd": int(_input_spd),
-                                    "std": int(_input_std),
-                                    "apc": int(_apc_val),
-                                    "nsb_target": int(_nsb_target_val),
-                                    "nsb_actual": int(_input_nsb_actual),
-                                    "keterangan": str(_input_keterangan),
+                                    "spd": int(_pending_harian["spd"]),
+                                    "std": int(_pending_harian["std"]),
+                                    "apc": int(_pending_harian["apc"]),
+                                    "nsb_target": int(_pending_harian["nsb_target"]),
+                                    "nsb_actual": int(_pending_harian["nsb_actual"]),
+                                    "keterangan": str(_pending_harian["keterangan"]),
                                     "input_by": str(_input_by),
                                     "updated_at": str(_now_str),
                                 }])
-                                
                                 _df_to_save = pd.concat([_existing_df, _new_row], ignore_index=True)
-                                _action = "insert"
                         else:
-                            # === FIRST INSERT ===
                             _new_row = pd.DataFrame([{
                                 "record_id": f"SP{_new_id:05d}",
                                 "tanggal": str(_input_tanggal),
-                                "spd": int(_input_spd),
-                                "std": int(_input_std),
-                                "apc": int(_apc_val),
-                                "nsb_target": int(_nsb_target_val),
-                                "nsb_actual": int(_input_nsb_actual),
-                                "keterangan": str(_input_keterangan),
+                                "spd": int(_pending_harian["spd"]),
+                                "std": int(_pending_harian["std"]),
+                                "apc": int(_pending_harian["apc"]),
+                                "nsb_target": int(_pending_harian["nsb_target"]),
+                                "nsb_actual": int(_pending_harian["nsb_actual"]),
+                                "keterangan": str(_pending_harian["keterangan"]),
                                 "input_by": str(_input_by),
                                 "updated_at": str(_now_str),
                             }])
-                            
                             _df_to_save = _new_row
-                            _action = "insert"
                         
                         # === SIMPAN KE SHEET ===
                         conn.update(worksheet="SALES_STOREPERFORMANCE", data=_df_to_save)
@@ -18590,20 +18633,40 @@ elif selected_tab == "📊 Daily Performance":
                         st.cache_data.clear()
                         
                         # === LOG AKTIVITAS ===
-                        log_activity(
-                            "INPUT",
-                            f"Daily Performance {_action}: {_input_tanggal.strftime('%d/%m/%Y')} - SPD: {_input_spd:,}"
-                        )
+                        try:
+                            log_activity(
+                                "INPUT",
+                                f"Daily Performance {_action}: {_input_tanggal.strftime('%d/%m/%Y')} - SPD: {_pending_harian['spd']:,}"
+                            )
+                        except Exception:
+                            pass
                         
-                        # === SHOW SUCCESS DIALOG ===
+                        # === NOTIFIKASI DOUBLE ===
                         _action_text = "diperbarui" if _action == "update" else "disimpan"
                         
                         st.toast(f"✅ Data harian berhasil {_action_text}!", icon="🎉")
-                        time.sleep(1)
+                        time.sleep(0.5)
+                        
+                        show_success_dialog(
+                            title_msg=f"<b>Data Harian {_input_tanggal.strftime('%d/%m/%Y')}</b> berhasil {_action_text}!",
+                            subtitle=f"Tersimpan di Sheet SALES_STOREPERFORMANCE",
+                            icon="📊",
+                            theme="green" if _action == "insert" else "blue",
+                            detail_dict={
+                                "📅 Tanggal": _input_tanggal.strftime("%d/%m/%Y"),
+                                "💰 SPD": f"Rp {_pending_harian['spd']:,}",
+                                "📄 STD": f"{_pending_harian['std']} struk",
+                                "🧾 APC": f"Rp {_pending_harian['apc']:,}",
+                                "📈 NSB Target": f"Rp {_pending_harian['nsb_target']:,}",
+                                "📊 NSB Actual": f"Rp {_pending_harian['nsb_actual']:,}",
+                            }
+                        )
+                        time.sleep(2)
                         st.rerun()
                 
                 except Exception as _e:
                     st.error(f"❌ Gagal menyimpan data: {_e}")
+                    st.toast(f"❌ Gagal simpan: {str(_e)[:80]}", icon="⚠️")
                     import traceback
                     st.code(traceback.format_exc())
         
@@ -20818,7 +20881,6 @@ elif selected_tab == "⚙️ Master Data":
                                     log_activity("SAVE_MASTER", f"Tambah Periode Sales: {_pending['period_id']}")
                                 except Exception:
                                     pass
-                                
                                 
                                 show_success_dialog(
                                     title_msg=f"<b>Periode {_pending['period_name']}</b> berhasil disimpan!",
