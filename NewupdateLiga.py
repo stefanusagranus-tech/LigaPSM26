@@ -18682,6 +18682,9 @@ elif selected_tab == "📊 Daily Performance":
         # =============================================================
         if st.session_state.get("_show_success_dialog"):
             _dlg_data = st.session_state["_show_success_dialog"]
+            # 🐛 DEBUG DULU
+            st.success("🔍 Flag terdeteksi! Seharusnya dialog muncul...")
+            st.write("Data flag:", _dlg_data)
             show_success_dialog(
                 title_msg=_dlg_data["title_msg"],
                 subtitle=_dlg_data["subtitle"],
