@@ -20725,13 +20725,7 @@ elif selected_tab == "⚙️ Master Data":
         if sales_sub_menu == "➕ Tambah Periode Sales":
             st.markdown("##### ➕ Tambah Periode Sales Baru")
             st.caption("Isi data periode sales. SPD & APC akan dihitung otomatis di dashboard.")
-            
-            # List divisi (bisa dikembangkan)
-            _divisi_options = [
-                "FOOD", "NON-FOOD", "FRESH", "GROCERY",
-                "HOUSEHOLD", "PERSONAL CARE", "ELECTRONIC", "LAINNYA"
-            ]
-            
+             
             # Auto-generate ID berikutnya
             _next_id = generate_next_period_id(_ps_df)
             
