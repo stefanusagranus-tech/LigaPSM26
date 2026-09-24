@@ -2480,13 +2480,13 @@ def log_activity(action, detail=""):
         print(f"[LOG_ACTIVITY ERROR] {e}")
 
 # =========================================================================
-# 💓 KONFIGURASI HEARTBEAT & AUTO-LOGOUT
+# 💓 KONFIGURASI HEARTBEAT & AUTO-LOGOUT (v3 — lebih toleran)
 # =========================================================================
-_HEARTBEAT_INTERVAL_SEC = 30         # Tulis heartbeat tiap 30 detik (saat user aktif)
-_INACTIVE_THRESHOLD_MIN = 1          # Threshold idle cek berkala (uji coba: 1 menit)
-_STALE_CHECK_INTERVAL_SEC = 60       # Interval cek stale berkala (60 detik)
-_CLEANUP_LOGIN_THRESHOLD_MIN = 15    # Threshold cleanup saat login baru (15 menit)
-
+_HEARTBEAT_INTERVAL_SEC = 60          # ✅ Tulis heartbeat tiap 60 detik
+_INACTIVE_THRESHOLD_MIN = 15          # ✅ 15 MENIT baru dianggap idle
+_STALE_CHECK_INTERVAL_SEC = 300       # ✅ Cek stale tiap 5 MENIT
+_CLEANUP_LOGIN_THRESHOLD_MIN = 15     # ✅ Cleanup login 15 menit
+_HEARTBEAT_DISPLAY_MIN = 15           # ✅ Panel online: anggap online kalau < 15 menit
 
 def update_heartbeat():
     """
@@ -2573,10 +2573,11 @@ def check_and_log_stale_users():
         
         st.session_state["last_stale_check"] = _now
         
-        # Guard threshold
+        # 🛡️ GUARD: Threshold minimal 5 menit untuk production
         _threshold = _INACTIVE_THRESHOLD_MIN
-        if _threshold is None or _threshold < 1:
-            _threshold = 1
+        if _threshold is None or _threshold < 5:
+            print(f"[WARN] Threshold terlalu kecil ({_threshold}), paksa 5 menit")
+            _threshold = 5
         
         # Init tracker anti-duplikat
         if "stale_logged_users" not in st.session_state:
