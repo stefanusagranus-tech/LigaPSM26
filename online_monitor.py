@@ -156,7 +156,7 @@ def get_online_users(max_idle_minutes=None):
 # =========================================================================
 # 👤 HELPER: STATUS 1 USER
 # =========================================================================
-def get_user_status(username, max_idle_minutes=2):
+def get_user_status(username, max_idle_minutes=None):
     """
     Cek status 1 user (online/offline).
     
