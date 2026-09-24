@@ -18644,9 +18644,6 @@ elif selected_tab == "📊 Daily Performance":
                         # === NOTIFIKASI DOUBLE ===
                         _action_text = "diperbarui" if _action == "update" else "disimpan"
                         
-                        st.toast(f"✅ Data harian berhasil {_action_text}!", icon="🎉")
-                        time.sleep(0.5)
-                        
                         show_success_dialog(
                             title_msg=f"<b>Data Harian {_input_tanggal.strftime('%d/%m/%Y')}</b> berhasil {_action_text}!",
                             subtitle=f"Tersimpan di Sheet SALES_STOREPERFORMANCE",
