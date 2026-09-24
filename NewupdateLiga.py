@@ -56,39 +56,7 @@ from spreadsheet_connector import (
     isi_laporan_sg,
     isi_laporan_sueger,
 
-    # Heartbeat (FASE 4)
-    write_heartbeat_to_sheet,
-    remove_heartbeat_from_sheet,
-    get_stale_heartbeats,
-    clear_all_heartbeat,
-)
-
-# =========================================================================
-# 📦 IMPORT CONNECTOR (untuk log & backup ke Spreadsheet Audit)
-# =========================================================================
-from spreadsheet_connector import (
-    # Log & Backup
-    append_logs_to_sheet,
-    read_activity_log,
-    backup_to_audit_sheet,
-    render_debug_panel,
-    
-    # Laporan (versi lama)
-    write_laporan_bulanan,
-    generate_laporan_bulanan_psm,
-    
-    # Laporan (versi baru — multi program)
-    generate_laporan_psm,
-    generate_laporan_pwp,
-    generate_laporan_sg,
-    generate_laporan_sueger,
-    generate_semua_laporan,
-    isi_laporan_psm,
-    isi_laporan_pwp,
-    isi_laporan_sg,
-    isi_laporan_sueger,
-
-    # ✅ BARU: Periode Sales
+    # BARU: Periode Sales
     load_periode_sales,
     save_periode_sales,
     generate_next_period_id,
