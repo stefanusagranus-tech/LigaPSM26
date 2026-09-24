@@ -18888,7 +18888,7 @@ elif selected_tab == "📊 Daily Performance":
                             _avg_std = int(_filtered_rekap["std"].mean()) if not _filtered_rekap.empty else 0
                             _avg_apc = int(_filtered_rekap["apc"].mean()) if not _filtered_rekap.empty else 0
                             _total_spd_f = int(_filtered_rekap["spd"].sum())
-                            _total_nsb_tgt = int(_filtered_rekap["nsb_target"].sum())
+                            _total_nsb_tgt = int(_filtered_rekap["spd"].sum() * 0.0015)
                             _total_nsb_act = int(_filtered_rekap["nsb_actual"].sum())
                             _total_selisih_nsb = _total_nsb_tgt - _total_nsb_act
 
