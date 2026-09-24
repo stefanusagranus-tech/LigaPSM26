@@ -20871,7 +20871,6 @@ elif selected_tab == "⚙️ Master Data":
                                 "period_name": _new_pname,
                                 "start_date": str(_new_start),
                                 "end_date": str(_new_end),
-                                "divisi": _new_divisi,
                                 "target_net_sales": int(_new_ns),
                                 "target_std": int(_new_std),
                                 "target_gm_pct": float(_new_gm),
