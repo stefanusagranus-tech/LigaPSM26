@@ -104,7 +104,7 @@ SPREADSHEET_ID = "1kJ-OsjLEsFuNyyBg2TwxlWz8Ape4lwF9h0t66q3ldQk"
 # =========================================================================
 # 🎉 DIALOG GLOBAL ROYAL GUILD — SUKSES NOTIFIKASI
 # =========================================================================
-@st.dialog("✨ Transaksi Berhasil!")
+@st.dialog(" ")
 def show_success_dialog(
     title_msg: str,
     detail_dict: dict,
@@ -810,12 +810,12 @@ def show_success_dialog(
         """,
         unsafe_allow_html=True,
     )
-# Tombol Tutup
-if st.button("⚜️ Tutup Gulungan ⚜️", use_container_width=True, key="btn_close_global_success_dialog"):
-    # Clear flag supaya dialog gak muncul lagi
-    if "_show_success_dialog" in st.session_state:
-        del st.session_state["_show_success_dialog"]
-    st.rerun()
+    # Tombol Tutup
+    if st.button("⚜️ Tutup Gulungan ⚜️", use_container_width=True, key="btn_close_global_success_dialog"):
+        # Clear flag supaya dialog gak muncul lagi
+        if "_show_success_dialog" in st.session_state:
+            del st.session_state["_show_success_dialog"]
+        st.rerun()
 
 # =========================================================================
 # 🔍 FUNGSI: USER MONITOR PANEL (ADMIN ONLY)
