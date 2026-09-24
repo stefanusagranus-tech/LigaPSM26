@@ -2237,21 +2237,25 @@ def isi_laporan_sueger(bulan_int, tahun_int, sheet_name):
         return False, f"❌ Gagal: {str(e)[:150]}", 0
 
 # =========================================================================
-# 📅 PERIODE SALES — LOAD, SAVE, GENERATE ID
+# 📅 PERIODE SALES — BACA/TULIS KE PERIODE_STOREPERFORMANCE
 # =========================================================================
+_PERIODE_SALES_HEADER = [
+    "period_id", "period_name", "start_date", "end_date",
+    "target_net_sales", "target_std", "target_apc",
+    "nsb_percentage", "status",
+]
+
+
 def load_periode_sales():
     """
-    Baca sheet PERIODE_SALES dari Spreadsheet Data.
+    Baca sheet PERIODE_STOREPERFORMANCE dari Spreadsheet Data.
     Return DataFrame dengan kolom standar.
-    Kalau sheet belum ada, return DataFrame kosong.
     """
     try:
-        # Pakai gspread (sama seperti get_ws_audit tapi ke Spreadsheet Data)
         client = _get_client()
         if client is None:
             return pd.DataFrame()
         
-        # Ambil ID spreadsheet Data dari secrets
         _id_data = st.secrets.get("spreadsheet_id", "")
         if not _id_data:
             print("[LOAD_PERIODE_SALES] ⚠️ spreadsheet_id belum di-set")
@@ -2259,32 +2263,28 @@ def load_periode_sales():
         
         sh = client.open_by_key(_id_data)
         
-        # Coba ambil worksheet PERIODE_SALES
         try:
-            ws = sh.worksheet("PERIODE_SALES")
+            ws = sh.worksheet("PERIODE_STOREPERFORMANCE")
         except gspread.WorksheetNotFound:
-            # Kalau belum ada, bikin baru dengan header
-            ws = sh.add_worksheet(title="PERIODE_SALES", rows=1000, cols=15)
-            _header = [
-                "period_id", "period_name", "start_date", "end_date",
-                "divisi", "target_net_sales", "target_std", "target_gm_pct",
-                "keterangan", "created_at", "created_by"
-            ]
-            ws.append_row(_header, value_input_option="USER_ENTERED")
-            return pd.DataFrame(columns=_header)
+            ws = sh.add_worksheet(title="PERIODE_STOREPERFORMANCE", rows=1000, cols=12)
+            ws.append_row(_PERIODE_SALES_HEADER, value_input_option="USER_ENTERED")
+            return pd.DataFrame(columns=_PERIODE_SALES_HEADER)
         
-        # Baca data
         all_values = ws.get_all_values()
         if len(all_values) < 2:
-            return pd.DataFrame(columns=all_values[0] if all_values else [])
+            return pd.DataFrame(columns=all_values[0] if all_values else _PERIODE_SALES_HEADER)
         
         df = pd.DataFrame(all_values[1:], columns=all_values[0])
         df.columns = df.columns.astype(str).str.strip().str.lower()
         
-        # Normalisasi tipe data
-        for _col in ["target_net_sales", "target_std", "target_gm_pct"]:
+        # Normalisasi angka
+        for _col in ["target_net_sales", "target_std", "target_apc", "nsb_percentage"]:
             if _col in df.columns:
                 df[_col] = pd.to_numeric(df[_col], errors="coerce").fillna(0)
+        
+        # Filter baris kosong
+        if "period_id" in df.columns:
+            df = df[df["period_id"].astype(str).str.strip() != ""].reset_index(drop=True)
         
         return df
     
@@ -2295,7 +2295,7 @@ def load_periode_sales():
 
 def save_periode_sales(df_data):
     """
-    Simpan DataFrame ke sheet PERIODE_SALES.
+    Simpan DataFrame ke sheet PERIODE_STOREPERFORMANCE.
     Ganti seluruh isi sheet (clear + write ulang).
     """
     try:
@@ -2310,23 +2310,24 @@ def save_periode_sales(df_data):
         sh = client.open_by_key(_id_data)
         
         try:
-            ws = sh.worksheet("PERIODE_SALES")
+            ws = sh.worksheet("PERIODE_STOREPERFORMANCE")
         except gspread.WorksheetNotFound:
-            ws = sh.add_worksheet(title="PERIODE_SALES", rows=1000, cols=15)
+            ws = sh.add_worksheet(title="PERIODE_STOREPERFORMANCE", rows=1000, cols=12)
         
-        # Clear & write ulang
         ws.clear()
+        ws.append_row(_PERIODE_SALES_HEADER, value_input_option="USER_ENTERED")
         
         if df_data.empty:
-            return True, "✅ Sheet dikosongkan"
+            return True, "✅ Sheet dikosongkan (header tetap ada)"
         
-        # Header
-        _header = df_data.columns.tolist()
-        ws.append_row(_header, value_input_option="USER_ENTERED")
+        _df_save = df_data.copy()
+        for _col in _PERIODE_SALES_HEADER:
+            if _col not in _df_save.columns:
+                _df_save[_col] = ""
+        _df_save = _df_save[_PERIODE_SALES_HEADER]
         
-        # Data (convert ke string aman)
         _rows = []
-        for _, _row in df_data.iterrows():
+        for _, _row in _df_save.iterrows():
             _row_clean = [_safe_stringify(v) for v in _row.values]
             _rows.append(_row_clean)
         
@@ -2340,9 +2341,7 @@ def save_periode_sales(df_data):
 
 
 def generate_next_period_id(df_existing):
-    """
-    Generate ID periode berikutnya (SLS001, SLS002, ...).
-    """
+    """Generate ID periode berikutnya (SLS001, SLS002, ...)."""
     if df_existing is None or df_existing.empty:
         return "SLS001"
     
@@ -2356,7 +2355,3 @@ def generate_next_period_id(df_existing):
             _max_num = max(_max_num, int(_match.group(1)))
     
     return f"SLS{_max_num + 1:03d}"
-
-
-# Import re di atas file kalau belum
-import re
