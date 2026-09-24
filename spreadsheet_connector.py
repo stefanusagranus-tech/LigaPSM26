@@ -2235,3 +2235,128 @@ def isi_laporan_sueger(bulan_int, tahun_int, sheet_name):
         import traceback
         print(f"[ISI_LAPORAN_SUEGER ERROR] {traceback.format_exc()}")
         return False, f"❌ Gagal: {str(e)[:150]}", 0
+
+# =========================================================================
+# 📅 PERIODE SALES — LOAD, SAVE, GENERATE ID
+# =========================================================================
+def load_periode_sales():
+    """
+    Baca sheet PERIODE_SALES dari Spreadsheet Data.
+    Return DataFrame dengan kolom standar.
+    Kalau sheet belum ada, return DataFrame kosong.
+    """
+    try:
+        # Pakai gspread (sama seperti get_ws_audit tapi ke Spreadsheet Data)
+        client = _get_client()
+        if client is None:
+            return pd.DataFrame()
+        
+        # Ambil ID spreadsheet Data dari secrets
+        _id_data = st.secrets.get("spreadsheet_id", "")
+        if not _id_data:
+            print("[LOAD_PERIODE_SALES] ⚠️ spreadsheet_id belum di-set")
+            return pd.DataFrame()
+        
+        sh = client.open_by_key(_id_data)
+        
+        # Coba ambil worksheet PERIODE_SALES
+        try:
+            ws = sh.worksheet("PERIODE_SALES")
+        except gspread.WorksheetNotFound:
+            # Kalau belum ada, bikin baru dengan header
+            ws = sh.add_worksheet(title="PERIODE_SALES", rows=1000, cols=15)
+            _header = [
+                "period_id", "period_name", "start_date", "end_date",
+                "divisi", "target_net_sales", "target_std", "target_gm_pct",
+                "keterangan", "created_at", "created_by"
+            ]
+            ws.append_row(_header, value_input_option="USER_ENTERED")
+            return pd.DataFrame(columns=_header)
+        
+        # Baca data
+        all_values = ws.get_all_values()
+        if len(all_values) < 2:
+            return pd.DataFrame(columns=all_values[0] if all_values else [])
+        
+        df = pd.DataFrame(all_values[1:], columns=all_values[0])
+        df.columns = df.columns.astype(str).str.strip().str.lower()
+        
+        # Normalisasi tipe data
+        for _col in ["target_net_sales", "target_std", "target_gm_pct"]:
+            if _col in df.columns:
+                df[_col] = pd.to_numeric(df[_col], errors="coerce").fillna(0)
+        
+        return df
+    
+    except Exception as e:
+        print(f"[LOAD_PERIODE_SALES ERROR] {e}")
+        return pd.DataFrame()
+
+
+def save_periode_sales(df_data):
+    """
+    Simpan DataFrame ke sheet PERIODE_SALES.
+    Ganti seluruh isi sheet (clear + write ulang).
+    """
+    try:
+        client = _get_client()
+        if client is None:
+            return False, "❌ Client gagal"
+        
+        _id_data = st.secrets.get("spreadsheet_id", "")
+        if not _id_data:
+            return False, "❌ spreadsheet_id belum di-set"
+        
+        sh = client.open_by_key(_id_data)
+        
+        try:
+            ws = sh.worksheet("PERIODE_SALES")
+        except gspread.WorksheetNotFound:
+            ws = sh.add_worksheet(title="PERIODE_SALES", rows=1000, cols=15)
+        
+        # Clear & write ulang
+        ws.clear()
+        
+        if df_data.empty:
+            return True, "✅ Sheet dikosongkan"
+        
+        # Header
+        _header = df_data.columns.tolist()
+        ws.append_row(_header, value_input_option="USER_ENTERED")
+        
+        # Data (convert ke string aman)
+        _rows = []
+        for _, _row in df_data.iterrows():
+            _row_clean = [_safe_stringify(v) for v in _row.values]
+            _rows.append(_row_clean)
+        
+        if _rows:
+            ws.append_rows(_rows, value_input_option="USER_ENTERED")
+        
+        return True, f"✅ {len(_rows)} baris tersimpan"
+    
+    except Exception as e:
+        return False, f"❌ Gagal: {str(e)[:150]}"
+
+
+def generate_next_period_id(df_existing):
+    """
+    Generate ID periode berikutnya (SLS001, SLS002, ...).
+    """
+    if df_existing is None or df_existing.empty:
+        return "SLS001"
+    
+    if "period_id" not in df_existing.columns:
+        return "SLS001"
+    
+    _max_num = 0
+    for _pid in df_existing["period_id"].astype(str):
+        _match = re.search(r'SLS(\d+)', _pid.upper())
+        if _match:
+            _max_num = max(_max_num, int(_match.group(1)))
+    
+    return f"SLS{_max_num + 1:03d}"
+
+
+# Import re di atas file kalau belum
+import re
