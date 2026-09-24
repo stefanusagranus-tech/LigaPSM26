@@ -1234,7 +1234,7 @@ def _get_user_monitor_data():
 # =========================================================================
 # 💬 DIALOG KONFIRMASI EDIT — MENU EDIT DATA
 # =========================================================================
-@st.dialog("✏️ Konfirmasi Edit Data")
+@st.dialog("")
 def show_edit_confirm_dialog(detail_dict, callback_key="confirm_edit"):
     """
     Dialog konfirmasi sebelum edit data.
@@ -1298,6 +1298,10 @@ def show_edit_confirm_dialog(detail_dict, callback_key="confirm_edit"):
     </style>
     """, unsafe_allow_html=True)
     
+    st.markdown(
+        "<div class='edit-dialog-title'>✏️ KONFIRMASI EDIT DATA</div>",
+        unsafe_allow_html=True
+    )
     st.markdown(
         "<div class='edit-dialog-message'>"
         "Pastikan data yang akan diubah sudah benar. "
