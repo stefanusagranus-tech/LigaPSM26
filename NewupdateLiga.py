@@ -18473,7 +18473,8 @@ elif selected_tab == "📊 Daily Performance":
                             pass
                 
                 # ==========================================
-                # 📋 VIEW 2: TABEL REKAP
+                # ==========================================
+                # 📋 VIEW 2: TABEL REKAP (LEADERBOARD STYLE)
                 # ==========================================
                 elif st.session_state["rekap_view"] == "tabel":
                     st.markdown("##### 📋 Tabel Rekap Harian")
@@ -18515,7 +18516,7 @@ elif selected_tab == "📊 Daily Performance":
                     if _status_filter != "Semua":
                         _filtered_rekap = _filtered_rekap[_filtered_rekap["_status"] == _status_filter]
 
-                    # Sort desc
+                    # Sort desc (terbaru di atas)
                     _filtered_rekap = _filtered_rekap.sort_values("_tgl", ascending=False).reset_index(drop=True)
 
                     # === HEADER INFO + DOWNLOAD EXCEL ===
@@ -18713,10 +18714,10 @@ elif selected_tab == "📊 Daily Performance":
                         # 📋 MODE 2: LEADERBOARD TABLE (HTML Custom)
                         # ==========================================
                         elif st.session_state["rekap_table_view"] == "table":
-                            
+
                             # === BUILD ROWS HTML ===
                             _table_rows_html = ""
-                            
+
                             for _idx, _row in _filtered_rekap.iterrows():
                                 _tgl_str = _row["_tgl"].strftime("%d/%m/%Y")
                                 _spd_val = int(_row["spd"])
@@ -18728,8 +18729,7 @@ elif selected_tab == "📊 Daily Performance":
                                 _growth_spd = _row["_growth_spd"]
                                 _growth_std = _row["_growth_std"]
                                 _growth_apc = _row["_growth_apc"]
-                                
-                                # Warna berdasarkan status
+
                                 if "AMAN" in _status:
                                     _st_color = "#34d399"
                                     _st_icon = "🟢"
@@ -18746,8 +18746,7 @@ elif selected_tab == "📊 Daily Performance":
                                     _st_color = "#94a3b8"
                                     _st_icon = "⚪"
                                     _row_accent = "#64748b"
-                                
-                                # Growth formatting
+
                                 def _growth_html(g):
                                     if g is None or pd.isna(g):
                                         return "<span style='color:#475569; font-size:10px;'>—</span>"
@@ -18757,63 +18756,50 @@ elif selected_tab == "📊 Daily Performance":
                                         return f"<span style='color:#fca5a5; font-size:10px; font-weight:900;'>🔽 {g}%</span>"
                                     else:
                                         return "<span style='color:#94a3b8; font-size:10px; font-weight:900;'>➖ 0%</span>"
-                                
+
                                 _g_spd = _growth_html(_growth_spd)
                                 _g_std = _growth_html(_growth_std)
                                 _g_apc = _growth_html(_growth_apc)
-                                
-                                # Warna baris selang-seling (zebra)
+
                                 _row_bg = "rgba(15, 23, 42, 0.85)" if _idx % 2 == 0 else "rgba(30, 41, 59, 0.7)"
-                                
-                                # Rounded corners
+
                                 _table_rows_html += (
                                     f"<tr style='background: {_row_bg}; "
-                                    f"border-left: 4px solid {_row_accent}; "
-                                    f"transition: all 0.2s ease;'>"
-                                    
-                                    # Tanggal
+                                    f"border-left: 4px solid {_row_accent};'>"
+
                                     f"<td style='padding: 12px 14px; border-radius: 8px 0 0 8px; "
                                     f"font-family: monospace; font-size: 12px; font-weight: 900; color: #fbbf24; "
                                     f"white-space: nowrap;'>📅 {_tgl_str}</td>"
-                                    
-                                    # SPD
+
                                     f"<td style='padding: 12px 10px; text-align: right; "
                                     f"font-family: monospace; font-size: 12px; font-weight: 900; color: #fbbf24; "
                                     f"white-space: nowrap;'>Rp {_spd_val:,}</td>"
-                                    
-                                    # Growth SPD
+
                                     f"<td style='padding: 12px 10px; text-align: center; "
                                     f"white-space: nowrap;'>{_g_spd}</td>"
-                                    
-                                    # STD
+
                                     f"<td style='padding: 12px 10px; text-align: right; "
                                     f"font-family: monospace; font-size: 12px; font-weight: 700; color: #38bdf8; "
                                     f"white-space: nowrap;'>{_std_val:,}</td>"
-                                    
-                                    # Growth STD
+
                                     f"<td style='padding: 12px 10px; text-align: center; "
                                     f"white-space: nowrap;'>{_g_std}</td>"
-                                    
-                                    # APC
+
                                     f"<td style='padding: 12px 10px; text-align: right; "
                                     f"font-family: monospace; font-size: 12px; font-weight: 700; color: #a855f7; "
                                     f"white-space: nowrap;'>Rp {_apc_val:,}</td>"
-                                    
-                                    # Growth APC
+
                                     f"<td style='padding: 12px 10px; text-align: center; "
                                     f"white-space: nowrap;'>{_g_apc}</td>"
-                                    
-                                    # NSB Target
+
                                     f"<td style='padding: 12px 10px; text-align: right; "
                                     f"font-family: monospace; font-size: 11px; color: #94a3b8; "
                                     f"white-space: nowrap;'>Rp {_nsb_tgt:,}</td>"
-                                    
-                                    # NSB Aktual
+
                                     f"<td style='padding: 12px 10px; text-align: right; "
                                     f"font-family: monospace; font-size: 12px; font-weight: 700; color: #e2e8f0; "
                                     f"white-space: nowrap;'>Rp {_nsb_act:,}</td>"
-                                    
-                                    # Status
+
                                     f"<td style='padding: 12px 14px; text-align: center; "
                                     f"border-radius: 0 8px 8px 0; white-space: nowrap;'>"
                                     f"<span style='background: {_row_accent}22; border: 1.5px solid {_st_color}; "
@@ -18821,96 +18807,180 @@ elif selected_tab == "📊 Daily Performance":
                                     f"font-family: monospace; font-size: 10px; font-weight: 900; "
                                     f"display: inline-block;'>{_st_icon} {_status[2:]}</span>"
                                     f"</td>"
-                                    
+
                                     f"</tr>"
-                                    
-                                    # Gap antar baris
                                     f"<tr style='height: 6px;'><td colspan='10' style='border: none;'></td></tr>"
                                 )
-                            
+
                             # === BUILD TABEL LENGKAP ===
                             _leaderboard_html = (
-                                # Wrapper (overflow-x untuk mobile scroll)
                                 f"<div style='overflow-x: auto; -webkit-overflow-scrolling: touch; "
                                 f"padding: 4px; margin-top: 10px;'>"
-                                
-                                # Table
+
                                 f"<table style='width: 100%; border-collapse: separate; "
                                 f"border-spacing: 0; font-family: monospace; min-width: 900px;'>"
-                                
-                                # === HEADER ===
+
+                                # HEADER
                                 f"<thead>"
                                 f"<tr style='background: linear-gradient(90deg, #1e3a5f 0%, #b45309 50%, #1e3a5f 100%); "
                                 f"box-shadow: 0 4px 12px rgba(180, 83, 9, 0.4);'>"
-                                
-                                f"<th style='padding: 14px 14px; text-align: left; "
-                                f"font-family: monospace; font-size: 11px; font-weight: 900; "
-                                f"color: #f7e7b4; letter-spacing: 1px; text-transform: uppercase; "
-                                f"border-radius: 8px 0 0 8px; border-bottom: 2px solid #fbbf24;'>"
-                                f"📅 Tanggal</th>"
-                                
-                                f"<th style='padding: 14px 10px; text-align: right; "
-                                f"font-family: monospace; font-size: 11px; font-weight: 900; "
-                                f"color: #f7e7b4; letter-spacing: 1px; text-transform: uppercase; "
-                                f"border-bottom: 2px solid #fbbf24;'>💰 SPD</th>"
-                                
-                                f"<th style='padding: 14px 10px; text-align: center; "
-                                f"font-family: monospace; font-size: 11px; font-weight: 900; "
-                                f"color: #f7e7b4; letter-spacing: 1px; text-transform: uppercase; "
-                                f"border-bottom: 2px solid #fbbf24;'>📈 Growth</th>"
-                                
-                                f"<th style='padding: 14px 10px; text-align: right; "
-                                f"font-family: monospace; font-size: 11px; font-weight: 900; "
-                                f"color: #f7e7b4; letter-spacing: 1px; text-transform: uppercase; "
-                                f"border-bottom: 2px solid #fbbf24;'>📄 STD</th>"
-                                
-                                f"<th style='padding: 14px 10px; text-align: center; "
-                                f"font-family: monospace; font-size: 11px; font-weight: 900; "
-                                f"color: #f7e7b4; letter-spacing: 1px; text-transform: uppercase; "
-                                f"border-bottom: 2px solid #fbbf24;'>📈 Growth</th>"
-                                
-                                f"<th style='padding: 14px 10px; text-align: right; "
-                                f"font-family: monospace; font-size: 11px; font-weight: 900; "
-                                f"color: #f7e7b4; letter-spacing: 1px; text-transform: uppercase; "
-                                f"border-bottom: 2px solid #fbbf24;'>🧾 APC</th>"
-                                
-                                f"<th style='padding: 14px 10px; text-align: center; "
-                                f"font-family: monospace; font-size: 11px; font-weight: 900; "
-                                f"color: #f7e7b4; letter-spacing: 1px; text-transform: uppercase; "
-                                f"border-bottom: 2px solid #fbbf24;'>📈 Growth</th>"
-                                
-                                f"<th style='padding: 14px 10px; text-align: right; "
-                                f"font-family: monospace; font-size: 11px; font-weight: 900; "
-                                f"color: #f7e7b4; letter-spacing: 1px; text-transform: uppercase; "
-                                f"border-bottom: 2px solid #fbbf24;'>🎯 NSB Tgt</th>"
-                                
-                                f"<th style='padding: 14px 10px; text-align: right; "
-                                f"font-family: monospace; font-size: 11px; font-weight: 900; "
-                                f"color: #f7e7b4; letter-spacing: 1px; text-transform: uppercase; "
-                                f"border-bottom: 2px solid #fbbf24;'>📊 NSB Akt</th>"
-                                
-                                f"<th style='padding: 14px 14px; text-align: center; "
-                                f"font-family: monospace; font-size: 11px; font-weight: 900; "
-                                f"color: #f7e7b4; letter-spacing: 1px; text-transform: uppercase; "
-                                f"border-radius: 0 8px 8px 0; border-bottom: 2px solid #fbbf24;'>"
-                                f"🏆 Status</th>"
-                                
+
+                                f"<th style='padding: 14px 14px; text-align: left; font-family: monospace; "
+                                f"font-size: 11px; font-weight: 900; color: #f7e7b4; letter-spacing: 1px; "
+                                f"text-transform: uppercase; border-radius: 8px 0 0 8px; "
+                                f"border-bottom: 2px solid #fbbf24;'>📅 Tanggal</th>"
+
+                                f"<th style='padding: 14px 10px; text-align: right; font-family: monospace; "
+                                f"font-size: 11px; font-weight: 900; color: #f7e7b4; letter-spacing: 1px; "
+                                f"text-transform: uppercase; border-bottom: 2px solid #fbbf24;'>💰 SPD</th>"
+
+                                f"<th style='padding: 14px 10px; text-align: center; font-family: monospace; "
+                                f"font-size: 11px; font-weight: 900; color: #f7e7b4; letter-spacing: 1px; "
+                                f"text-transform: uppercase; border-bottom: 2px solid #fbbf24;'>📈 Growth</th>"
+
+                                f"<th style='padding: 14px 10px; text-align: right; font-family: monospace; "
+                                f"font-size: 11px; font-weight: 900; color: #f7e7b4; letter-spacing: 1px; "
+                                f"text-transform: uppercase; border-bottom: 2px solid #fbbf24;'>📄 STD</th>"
+
+                                f"<th style='padding: 14px 10px; text-align: center; font-family: monospace; "
+                                f"font-size: 11px; font-weight: 900; color: #f7e7b4; letter-spacing: 1px; "
+                                f"text-transform: uppercase; border-bottom: 2px solid #fbbf24;'>📈 Growth</th>"
+
+                                f"<th style='padding: 14px 10px; text-align: right; font-family: monospace; "
+                                f"font-size: 11px; font-weight: 900; color: #f7e7b4; letter-spacing: 1px; "
+                                f"text-transform: uppercase; border-bottom: 2px solid #fbbf24;'>🧾 APC</th>"
+
+                                f"<th style='padding: 14px 10px; text-align: center; font-family: monospace; "
+                                f"font-size: 11px; font-weight: 900; color: #f7e7b4; letter-spacing: 1px; "
+                                f"text-transform: uppercase; border-bottom: 2px solid #fbbf24;'>📈 Growth</th>"
+
+                                f"<th style='padding: 14px 10px; text-align: right; font-family: monospace; "
+                                f"font-size: 11px; font-weight: 900; color: #f7e7b4; letter-spacing: 1px; "
+                                f"text-transform: uppercase; border-bottom: 2px solid #fbbf24;'>🎯 NSB Tgt</th>"
+
+                                f"<th style='padding: 14px 10px; text-align: right; font-family: monospace; "
+                                f"font-size: 11px; font-weight: 900; color: #f7e7b4; letter-spacing: 1px; "
+                                f"text-transform: uppercase; border-bottom: 2px solid #fbbf24;'>📊 NSB Akt</th>"
+
+                                f"<th style='padding: 14px 14px; text-align: center; font-family: monospace; "
+                                f"font-size: 11px; font-weight: 900; color: #f7e7b4; letter-spacing: 1px; "
+                                f"text-transform: uppercase; border-radius: 0 8px 8px 0; "
+                                f"border-bottom: 2px solid #fbbf24;'>🏆 Status</th>"
+
                                 f"</tr>"
                                 f"</thead>"
-                                
-                                # === BODY ===
+
+                                # BODY
                                 f"<tbody style='background: transparent;'>"
                                 f"{_table_rows_html}"
                                 f"</tbody>"
-                                
+
                                 f"</table>"
                                 f"</div>"
                             )
-                            
+
                             st.markdown(_leaderboard_html, unsafe_allow_html=True)
-                            
-                            
-                            # === INFO ===
+
+                            # ==========================================
+                            # 📊 FOOTER: RATA-RATA & TOTAL
+                            # ==========================================
+                            _avg_spd = int(_filtered_rekap["spd"].mean()) if not _filtered_rekap.empty else 0
+                            _avg_std = int(_filtered_rekap["std"].mean()) if not _filtered_rekap.empty else 0
+                            _avg_apc = int(_filtered_rekap["apc"].mean()) if not _filtered_rekap.empty else 0
+                            _total_spd_f = int(_filtered_rekap["spd"].sum())
+                            _total_nsb_tgt = int(_filtered_rekap["nsb_target"].sum())
+                            _total_nsb_act = int(_filtered_rekap["nsb_actual"].sum())
+                            _total_selisih_nsb = _total_nsb_tgt - _total_nsb_act
+
+                            _selisih_color = "#34d399" if _total_selisih_nsb >= 0 else "#fca5a5"
+                            _selisih_icon = "✅" if _total_selisih_nsb >= 0 else "⚠️"
+
+                            _footer_html = (
+                                f"<div style='overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 4px;'>"
+                                f"<table style='width: 100%; border-collapse: separate; border-spacing: 0; "
+                                f"font-family: monospace; min-width: 900px; margin-top: 12px;'>"
+
+                                f"<tbody>"
+
+                                # Row 1: RATA-RATA
+                                f"<tr style='background: linear-gradient(90deg, rgba(168, 85, 247, 0.12), rgba(124, 58, 237, 0.18)); "
+                                f"border-left: 4px solid #a855f7;'>"
+
+                                f"<td colspan='2' style='padding: 12px 14px; border-radius: 8px 0 0 8px; "
+                                f"font-family: monospace; font-size: 11px; font-weight: 900; color: #c084fc; "
+                                f"letter-spacing: 1px; text-transform: uppercase;'>"
+                                f"⚖️ Rata-Rata ({len(_filtered_rekap)} hari)</td>"
+
+                                f"<td style='padding: 12px 10px;'></td>"
+
+                                f"<td style='padding: 12px 10px; text-align: right; "
+                                f"font-family: monospace; font-size: 12px; font-weight: 900; color: #38bdf8; "
+                                f"white-space: nowrap;'>{_avg_std:,}</td>"
+
+                                f"<td style='padding: 12px 10px;'></td>"
+
+                                f"<td style='padding: 12px 10px; text-align: right; "
+                                f"font-family: monospace; font-size: 12px; font-weight: 900; color: #a855f7; "
+                                f"white-space: nowrap;'>Rp {_avg_apc:,}</td>"
+
+                                f"<td style='padding: 12px 10px;'></td>"
+                                f"<td style='padding: 12px 10px;'></td>"
+                                f"<td style='padding: 12px 10px;'></td>"
+
+                                f"<td style='padding: 12px 14px; border-radius: 0 8px 8px 0;'></td>"
+
+                                f"</tr>"
+
+                                f"<tr style='height: 6px;'><td colspan='10' style='border: none;'></td></tr>"
+
+                                # Row 2: TOTAL NET SALES
+                                f"<tr style='background: linear-gradient(90deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.22)); "
+                                f"border-left: 4px solid #fbbf24;'>"
+
+                                f"<td colspan='2' style='padding: 14px; border-radius: 8px 0 0 8px; "
+                                f"font-family: monospace; font-size: 12px; font-weight: 900; color: #fcd34d; "
+                                f"letter-spacing: 1px; text-transform: uppercase;'>"
+                                f"💰 TOTAL NET SALES</td>"
+
+                                f"<td colspan='8' style='padding: 14px; text-align: right; "
+                                f"border-radius: 0 8px 8px 0; "
+                                f"font-family: monospace; font-size: 18px; font-weight: 900; color: #fbbf24; "
+                                f"text-shadow: 0 0 15px rgba(251, 191, 36, 0.6); white-space: nowrap;'>"
+                                f"Rp {_total_spd_f:,}</td>"
+
+                                f"</tr>"
+
+                                f"<tr style='height: 6px;'><td colspan='10' style='border: none;'></td></tr>"
+
+                                # Row 3: TOTAL NSB
+                                f"<tr style='background: linear-gradient(90deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.15)); "
+                                f"border-left: 4px solid {_selisih_color};'>"
+
+                                f"<td colspan='2' style='padding: 12px 14px; border-radius: 8px 0 0 8px; "
+                                f"font-family: monospace; font-size: 11px; font-weight: 900; color: #fca5a5; "
+                                f"letter-spacing: 1px; text-transform: uppercase;'>"
+                                f"📊 TOTAL NSB</td>"
+
+                                f"<td colspan='4' style='padding: 12px 10px; text-align: right; "
+                                f"font-family: monospace; font-size: 11px; font-weight: 700; color: #94a3b8; "
+                                f"white-space: nowrap;'>"
+                                f"Target: <b style='color: #cbd5e1;'>Rp {_total_nsb_tgt:,}</b> &nbsp;|&nbsp; "
+                                f"Aktual: <b style='color: #e2e8f0;'>Rp {_total_nsb_act:,}</b></td>"
+
+                                f"<td colspan='4' style='padding: 12px 14px; text-align: right; "
+                                f"border-radius: 0 8px 8px 0; font-family: monospace; font-size: 13px; "
+                                f"font-weight: 900; color: {_selisih_color}; white-space: nowrap;'>"
+                                f"{_selisih_icon} Selisih: Rp {_total_selisih_nsb:,}</td>"
+
+                                f"</tr>"
+
+                                f"</tbody>"
+                                f"</table>"
+                                f"</div>"
+                            )
+
+                            st.markdown(_footer_html, unsafe_allow_html=True)
+
                             st.caption(f"💡 Scroll horizontal untuk lihat semua kolom. **{len(_filtered_rekap)}** baris data.")
     
     # =========================================================================
