@@ -103,7 +103,7 @@ SPREADSHEET_ID = "1kJ-OsjLEsFuNyyBg2TwxlWz8Ape4lwF9h0t66q3ldQk"
 
 
 #pemanggil st dialog global#
-@st.dialog("")  # ← KOSONGIN (gak perlu hide header lagi)
+@st.dialog(" ")  # ← KOSONGIN (gak perlu hide header lagi)
 def show_success_dialog(
     title_msg: str,
     detail_dict: dict,
