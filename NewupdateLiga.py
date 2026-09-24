@@ -822,7 +822,442 @@ def show_success_dialog(
         """,
         unsafe_allow_html=True,
     )
+
+# =========================================================================
+# 🔍 FUNGSI: USER MONITOR PANEL (ADMIN ONLY)
+# =========================================================================
+def _render_user_monitor_panel():
+    """
+    🔍 PANEL USER MONITOR
+    Tampilkan daftar semua user + status & last login.
+    """
+    import pandas as pd
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
     
+    # =========================================================
+    # 🎨 CSS PANEL
+    # =========================================================
+    st.markdown("""
+    <style>
+        .user-monitor-container { max-width: 1000px; margin: 0 auto; padding: 20px 16px; }
+        .user-monitor-header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+            border: 2px solid #d4af37;
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        .user-monitor-header::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #d4af37, #fbbf24, #d4af37, transparent);
+            box-shadow: 0 0 12px rgba(251, 191, 36, 0.6);
+        }
+        .user-monitor-title {
+            font-family: 'Cinzel', serif;
+            font-size: 22px;
+            font-weight: 900;
+            color: #fbbf24;
+            letter-spacing: 2px;
+            margin: 0 0 5px 0;
+            text-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
+        }
+        .user-monitor-subtitle {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 12px;
+            color: #94a3b8;
+            letter-spacing: 1px;
+        }
+        .user-metric-card {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9));
+            border: 1.5px solid #b45309;
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        .user-metric-label {
+            font-family: monospace;
+            font-size: 10px;
+            color: #94a3b8;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .user-metric-value {
+            font-family: 'Cinzel', serif;
+            font-size: 24px;
+            font-weight: 900;
+            color: #fbbf24;
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
+        }
+        .user-metric-value.online { color: #10b981; text-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
+        .user-metric-value.idle { color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.5); }
+        .user-metric-value.offline { color: #ef4444; text-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+        .user-metric-value.never { color: #94a3b8; }
+        .user-table-wrap {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1.5px solid #9a7b38;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 16px;
+        }
+        .user-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .user-table th {
+            background: linear-gradient(90deg, #1e3a5f, #0f172a);
+            color: #f7e7b4;
+            padding: 12px 10px;
+            text-align: left;
+            font-weight: 900;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+            border-bottom: 1.5px solid #b45309;
+            text-transform: uppercase;
+        }
+        .user-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid rgba(180, 83, 9, 0.2);
+            color: #e2e8f0;
+            font-weight: 600;
+        }
+        .user-table tr:hover td { background: rgba(180, 83, 9, 0.1); }
+        .user-table tr:last-child td { border-bottom: none; }
+        .status-pill {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            font-family: monospace;
+        }
+        .status-pill.online { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
+        .status-pill.idle { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }
+        .status-pill.offline { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid #ef4444; }
+        .status-pill.never { background: rgba(100, 116, 139, 0.2); color: #94a3b8; border: 1px solid #64748b; }
+        .user-avatar-cell { font-size: 18px; text-align: center; width: 50px; }
+        .user-name-cell { color: #ffffff; font-weight: 900; font-size: 12px; }
+        .user-role-cell { color: #94a3b8; font-size: 10px; }
+        .refresh-info {
+            display: inline-block;
+            padding: 8px 12px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #94a3b8;
+            font-family: monospace;
+            font-size: 11px;
+            text-align: center;
+            width: 100%;
+        }
+        @media (max-width: 768px) {
+            .user-monitor-container { padding: 12px 8px; }
+            .user-monitor-title { font-size: 18px; letter-spacing: 1px; }
+            .user-monitor-subtitle { font-size: 10px; }
+            .user-metric-value { font-size: 20px; }
+            .user-table { font-size: 10px; }
+            .user-table th, .user-table td { padding: 8px 6px; }
+            .user-avatar-cell { font-size: 14px; width: 36px; }
+            .user-name-cell { font-size: 10px; }
+            .status-pill { font-size: 8px; padding: 3px 6px; }
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # =========================================================
+    # WRAPPER
+    # =========================================================
+    st.markdown('<div class="user-monitor-container">', unsafe_allow_html=True)
+    
+    # HEADER
+    st.markdown("""
+    <div class="user-monitor-header">
+        <div class="user-monitor-title">👥 USER ONLINE MONITOR</div>
+        <div class="user-monitor-subtitle">Pantau status & login terakhir semua user</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # TOMBOL
+    col_btn1, col_btn2, col_btn3 = st.columns([1, 1, 1])
+    
+    with col_btn1:
+        if st.button("🔄 Refresh Data", use_container_width=True, key="btn_refresh_user_monitor", type="primary"):
+            st.cache_data.clear()
+            st.session_state["user_monitor_last_refresh"] = datetime.now(
+                ZoneInfo("Asia/Jakarta")
+            ).strftime("%d/%m/%Y %H:%M:%S")
+            st.rerun()
+    
+    with col_btn2:
+        _last_refresh = st.session_state.get("user_monitor_last_refresh", None)
+        if _last_refresh:
+            st.markdown(
+                f"<div class='refresh-info'>🕐 {_last_refresh}</div>",
+                unsafe_allow_html=True
+            )
+        else:
+            st.markdown(
+                "<div class='refresh-info'>🕐 Data di-cache 5 menit</div>",
+                unsafe_allow_html=True
+            )
+    
+    with col_btn3:
+        if st.button("❌ Tutup Panel", use_container_width=True, key="btn_close_user_monitor"):
+            st.session_state["show_user_monitor"] = False
+            st.rerun()
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # LOAD DATA
+    with st.spinner("⏳ Mengambil data user..."):
+        _user_data = _get_user_monitor_data()
+    
+    if not _user_data:
+        st.warning("⚠️ Tidak ada data user. Cek MASTER_PERSONIL & ACTIVITY_HEARTBEAT.")
+        st.markdown("</div>", unsafe_allow_html=True)
+        return
+    
+    # METRICS
+    _total = len(_user_data)
+    _online = sum(1 for u in _user_data if u["status_key"] == "online")
+    _idle = sum(1 for u in _user_data if u["status_key"] == "idle")
+    _offline = sum(1 for u in _user_data if u["status_key"] == "offline")
+    _never = sum(1 for u in _user_data if u["status_key"] == "never")
+    
+    col_m1, col_m2, col_m3, col_m4, col_m5 = st.columns(5)
+    with col_m1:
+        st.markdown(f"<div class='user-metric-card'><div class='user-metric-label'>👥 Total</div><div class='user-metric-value'>{_total}</div></div>", unsafe_allow_html=True)
+    with col_m2:
+        st.markdown(f"<div class='user-metric-card'><div class='user-metric-label'>🟢 Online</div><div class='user-metric-value online'>{_online}</div></div>", unsafe_allow_html=True)
+    with col_m3:
+        st.markdown(f"<div class='user-metric-card'><div class='user-metric-label'>🟡 Idle</div><div class='user-metric-value idle'>{_idle}</div></div>", unsafe_allow_html=True)
+    with col_m4:
+        st.markdown(f"<div class='user-metric-card'><div class='user-metric-label'>🔴 Offline</div><div class='user-metric-value offline'>{_offline}</div></div>", unsafe_allow_html=True)
+    with col_m5:
+        st.markdown(f"<div class='user-metric-card'><div class='user-metric-label'>⚪ Belum</div><div class='user-metric-value never'>{_never}</div></div>", unsafe_allow_html=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # FILTER & SORT
+    col_f1, col_f2 = st.columns(2)
+    with col_f1:
+        _filter = st.selectbox(
+            "🔍 Filter Status",
+            ["Semua", "🟢 Online", "🟡 Idle", "🔴 Offline", "⚪ Belum Login"],
+            key="user_monitor_filter"
+        )
+    with col_f2:
+        _sort = st.selectbox(
+            "📊 Urutkan",
+            ["Last Login Terbaru", "Nama A-Z", "Status"],
+            key="user_monitor_sort"
+        )
+    
+    _filtered = _user_data.copy()
+    _status_map = {"🟢 Online": "online", "🟡 Idle": "idle", "🔴 Offline": "offline", "⚪ Belum Login": "never"}
+    if _filter in _status_map:
+        _filtered = [u for u in _filtered if u["status_key"] == _status_map[_filter]]
+    
+    if _sort == "Nama A-Z":
+        _filtered = sorted(_filtered, key=lambda x: x["username"].upper())
+    elif _sort == "Status":
+        _order = {"online": 0, "idle": 1, "offline": 2, "never": 3}
+        _filtered = sorted(_filtered, key=lambda x: (_order.get(x["status_key"], 99), x["username"].upper()))
+    else:
+        _filtered = sorted(
+            _filtered,
+            key=lambda x: x.get("last_login_dt") or datetime.min.replace(tzinfo=ZoneInfo("Asia/Jakarta")),
+            reverse=True
+        )
+    
+    # TABEL
+    if not _filtered:
+        st.info(f"Tidak ada user dengan status **{_filter}**.")
+    else:
+        _tbl = ['<div class="user-table-wrap"><table class="user-table">']
+        _tbl.append('<thead><tr>')
+        _tbl.append('<th style="text-align:center;">👤</th>')
+        _tbl.append('<th>NAMA</th><th>STATUS</th><th>LAST LOGIN</th><th>AKTIF</th><th>ROLE</th>')
+        _tbl.append('</tr></thead><tbody>')
+        
+        for _u in _filtered:
+            _tbl.append('<tr>')
+            _tbl.append(f'<td class="user-avatar-cell">{_u["avatar"]}</td>')
+            _tbl.append(f'<td class="user-name-cell">{_u["username"]}</td>')
+            _tbl.append(f'<td><span class="status-pill {_u["status_key"]}">{_u["status_label"]}</span></td>')
+            _tbl.append(f'<td>{_u["last_login_str"]}</td>')
+            _tbl.append(f'<td>{_u["durasi_str"]}</td>')
+            _tbl.append(f'<td class="user-role-cell">{_u["role"]}</td>')
+            _tbl.append('</tr>')
+        
+        _tbl.append('</tbody></table></div>')
+        st.markdown("".join(_tbl), unsafe_allow_html=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.caption(f"💡 Menampilkan **{len(_filtered)}** dari **{_total}** user.")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+# =========================================================================
+# 🔍 FUNGSI: AMBIL DATA USER (Cache 5 menit)
+# =========================================================================
+@st.cache_data(ttl=300, show_spinner=False)
+def _get_user_monitor_data():
+    """Ambil data user monitor dari MASTER_PERSONIL, HEARTBEAT, & LOG."""
+    import pandas as pd
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    import hashlib
+    
+    try:
+        from spreadsheet_connector import get_ws_audit
+        
+        _avatar_pool = ["🧙‍♂️", "🧝‍♂️", "🧝‍♀️", "⚔️", "🎯", "🛡️", "🦁", "🦅", "🐺", "👑", "💎", "🔮", "🔥", "🏹", "🪄", "🗡️"]
+        
+        def _get_avatar(name):
+            h = int(hashlib.md5(str(name).upper().encode()).hexdigest(), 16)
+            return _avatar_pool[h % len(_avatar_pool)]
+        
+        # 1. User master
+        _person_df = st.session_state.get("person_df", pd.DataFrame()).copy()
+        _users_master = []
+        if not _person_df.empty:
+            _person_df.columns = _person_df.columns.astype(str).str.strip().str.lower()
+            if "person_name" in _person_df.columns:
+                _active = _person_df
+                if "active" in _person_df.columns:
+                    _active = _person_df[pd.to_numeric(_person_df["active"], errors="coerce") == 1]
+                for _, _row in _active.iterrows():
+                    _uname = str(_row.get("person_name", "")).strip().upper()
+                    if _uname:
+                        _users_master.append({"username": _uname, "role": str(_row.get("role", "-")).strip()})
+        
+        if not _users_master:
+            return []
+        
+        # 2. Heartbeat
+        _heartbeat_map = {}
+        try:
+            _ws_hb = get_ws_audit("ACTIVITY_HEARTBEAT")
+            if _ws_hb is not None:
+                _hb_values = _ws_hb.get_all_values()
+                if len(_hb_values) > 1:
+                    _hb_idx = {h.lower().strip(): i for i, h in enumerate(_hb_values[0])}
+                    for _row in _hb_values[1:]:
+                        if len(_row) < 4:
+                            continue
+                        try:
+                            _uname = _row[_hb_idx.get("username", 0)].strip().upper()
+                            _hb_str = _row[_hb_idx.get("last_heartbeat", 3)].strip()
+                            if _uname and _hb_str:
+                                _hb_dt = datetime.strptime(_hb_str, "%d/%m/%Y %H:%M:%S").replace(tzinfo=ZoneInfo("Asia/Jakarta"))
+                                _heartbeat_map[_uname] = _hb_dt
+                        except Exception:
+                            continue
+        except Exception as e_hb:
+            print(f"[HB ERROR] {e_hb}")
+        
+        # 3. Last login
+        _last_login_map = {}
+        try:
+            _ws_log = get_ws_audit("ACTIVITY_LOG")
+            if _ws_log is not None:
+                _log_values = _ws_log.get_all_values()
+                if len(_log_values) > 1:
+                    _log_idx = {h.lower().strip(): i for i, h in enumerate(_log_values[0])}
+                    _log_recent = _log_values[-500:] if len(_log_values) > 500 else _log_values[1:]
+                    for _row in _log_recent:
+                        if len(_row) < 4:
+                            continue
+                        try:
+                            _uname = _row[_log_idx.get("username", 1)].strip().upper()
+                            _action = _row[_log_idx.get("action", 3)].strip().upper()
+                            _ts_str = _row[_log_idx.get("timestamp", 0)].strip()
+                            if _action != "LOGIN" or not _uname or not _ts_str:
+                                continue
+                            try:
+                                _ts_dt = datetime.strptime(_ts_str, "%d/%m/%Y %H:%M:%S").replace(tzinfo=ZoneInfo("Asia/Jakarta"))
+                            except Exception:
+                                continue
+                            if _uname not in _last_login_map or _ts_dt > _last_login_map[_uname]:
+                                _last_login_map[_uname] = _ts_dt
+                        except Exception:
+                            continue
+        except Exception as e_log:
+            print(f"[LOG ERROR] {e_log}")
+        
+        # 4. Gabung
+        _now = datetime.now(ZoneInfo("Asia/Jakarta"))
+        _result = []
+        for _user in _users_master:
+            _uname = _user["username"]
+            _avatar = _get_avatar(_uname)
+            _role = _user.get("role", "-")
+            _hb_dt = _heartbeat_map.get(_uname, None)
+            _login_dt = _last_login_map.get(_uname, None)
+            
+            _status_key = "never"
+            _status_label = "⚪ BELUM LOGIN"
+            _durasi_str = "—"
+            
+            if _hb_dt:
+                _detik = (_now - _hb_dt).total_seconds()
+                _menit = _detik / 60
+                if _menit <= 15:
+                    _durasi_str = f"{int(_detik)}s lalu" if _detik < 60 else f"{int(_menit)}m lalu"
+                    _status_key = "online"
+                    _status_label = "🟢 ONLINE"
+                elif _menit <= 30:
+                    _durasi_str = f"{int(_menit)}m lalu"
+                    _status_key = "idle"
+                    _status_label = "🟡 IDLE"
+                else:
+                    _durasi_str = f"{int(_menit / 60)}j lalu"
+                    _status_key = "offline"
+                    _status_label = "🔴 OFFLINE"
+            elif _login_dt:
+                _hari = (_now - _login_dt).days
+                _status_key = "offline"
+                _status_label = f"🔴 {_hari}h lalu" if _hari > 7 else (f"🔴 {_hari}hr lalu" if _hari > 0 else "🔴 OFFLINE")
+            
+            if _login_dt:
+                _diff = (_now - _login_dt).total_seconds()
+                if _diff < 60:
+                    _login_str = f"{int(_diff)}s lalu"
+                elif _diff < 3600:
+                    _login_str = f"{int(_diff / 60)}m lalu"
+                elif _diff < 86400:
+                    _login_str = f"{int(_diff / 3600)}j lalu"
+                else:
+                    _login_str = _login_dt.strftime("%d/%m %H:%M")
+            else:
+                _login_str = "—"
+            
+            _result.append({
+                "username": _uname, "role": _role, "avatar": _avatar,
+                "status_key": _status_key, "status_label": _status_label,
+                "last_login_dt": _login_dt, "last_login_str": _login_str,
+                "durasi_str": _durasi_str,
+            })
+        
+        return _result
+    
+    except Exception as e:
+        print(f"[USER MONITOR ERROR] {e}")
+        return []
+
 # =========================================================================
 # 💬 DIALOG KONFIRMASI EDIT — MENU EDIT DATA
 # =========================================================================
@@ -4518,6 +4953,7 @@ else:
     """, unsafe_allow_html=True
     )
     st.sidebar.button("▶", on_click=toggle_sidebar_size, key="toggle_size_btn_close", use_container_width=True)
+    
     # =========================================================================
     # 🔍 TOMBOL "CEK USER" — Hanya untuk Admin
     # =========================================================================
