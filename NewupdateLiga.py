@@ -179,15 +179,30 @@ def show_success_dialog(
                 padding: 0 !important;
             }}
             
-            /* Header default dialog disembunyikan (kita bikin sendiri) */
-            div[data-testid="stDialog"] header {{
+            /* ============================================================ */
+            /* HIDE HEADER BAWAAN DIALOG — STREAMLIT 1.64+                 */
+            /* ============================================================ */
+            /* Coba semua kemungkinan selector */
+            div[data-testid="stDialog"] header,
+            div[data-testid="stDialog"] > div > div:first-child,
+            div[data-testid="stDialog"] [role="dialog"] > div:first-child,
+            div[data-testid="stModal"] header,
+            div[data-testid="stModal"] > div > div:first-child {
                 display: none !important;
-            }}
-            
-            /* Body dialog */
-            div[data-testid="stDialog"] [role="dialog"] > div:nth-child(2) {{
+                visibility: hidden !important;
+                height: 0 !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                border: none !important;
+                overflow: hidden !important;
+            }
+
+            /* Body dialog — reset padding */
+            div[data-testid="stDialog"] [role="dialog"] > div:nth-child(2),
+            div[data-testid="stDialog"] [role="dialog"] > div,
+            div[data-testid="stModal"] [role="dialog"] > div {
                 padding: 20px 25px 25px 25px !important;
-            }}
+            }
             
             /* ============================================================ */
             /* ORNAMEN SUDUT EMAS */
@@ -18679,9 +18694,6 @@ elif selected_tab == "📊 Daily Performance":
         # =============================================================
         if st.session_state.get("_show_success_dialog"):
             _dlg_data = st.session_state["_show_success_dialog"]
-            # 🐛 DEBUG DULU
-            st.success("🔍 Flag terdeteksi! Seharusnya dialog muncul...")
-            st.write("Data flag:", _dlg_data)
             show_success_dialog(
                 title_msg=_dlg_data["title_msg"],
                 subtitle=_dlg_data["subtitle"],
