@@ -1431,7 +1431,7 @@ def show_delete_confirm_dialog(detail_dict, warning_text="", callback_key="confi
         if st.button("❌ BATAL", use_container_width=True, key=f"{callback_key}_cancel"):
             st.session_state[f"{callback_key}_result"] = False
             st.rerun()
-
+            
     # =====================================================================
     # 🏛️ STRUKTUR HTML DIALOG
     # =====================================================================
