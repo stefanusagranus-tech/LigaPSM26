@@ -20927,8 +20927,7 @@ elif selected_tab == "⚙️ Master Data":
                 # Dropdown pilih periode
                 _ps_df["_label"] = (
                     _ps_df["period_id"].astype(str) + " — " +
-                    _ps_df["period_name"].astype(str) + " (" +
-                    _ps_df["divisi"].astype(str) + ")"
+                    _ps_df["period_name"].astype(str) + ")"
                 )
                 _selected_label = st.selectbox(
                     "📋 Pilih Periode",
