@@ -18710,163 +18710,207 @@ elif selected_tab == "📊 Daily Performance":
                                         st.markdown(_compact_html, unsafe_allow_html=True)
 
                         # ==========================================
-                        # 📋 MODE 2: NATIVE TABLE (st.dataframe + Styler)
+                        # 📋 MODE 2: LEADERBOARD TABLE (HTML Custom)
                         # ==========================================
                         elif st.session_state["rekap_table_view"] == "table":
-                            _display_df = _filtered_rekap.copy()
-
-                            _display_df["Tanggal"] = _display_df["_tgl"].dt.strftime("%d/%m/%Y")
-                            _display_df["SPD"] = _display_df["spd"].apply(lambda x: f"Rp {int(x):,}")
-                            _display_df["STD"] = _display_df["std"].apply(lambda x: f"{int(x):,}")
-                            _display_df["APC"] = _display_df["apc"].apply(lambda x: f"Rp {int(x):,}")
-                            _display_df["NSB Target"] = _display_df["nsb_target"].apply(lambda x: f"Rp {int(x):,}")
-                            _display_df["NSB Aktual"] = _display_df["nsb_actual"].apply(lambda x: f"Rp {int(x):,}")
-                            _display_df["Status"] = _display_df["_status"]
-
-                            def _fmt_growth_arrow(g):
-                                if g is None or pd.isna(g):
-                                    return "—"
-                                if g > 0:
-                                    return f"🔼 +{g}%"
-                                elif g < 0:
-                                    return f"🔽 {g}%"
-                                else:
-                                    return "➖ 0.0%"
-
-                            _display_df["Growth SPD"] = _display_df["_growth_spd"].apply(_fmt_growth_arrow)
-                            _display_df["Growth STD"] = _display_df["_growth_std"].apply(_fmt_growth_arrow)
-                            _display_df["Growth APC"] = _display_df["_growth_apc"].apply(_fmt_growth_arrow)
-
-                            _cols_display = [
-                                "Tanggal",
-                                "SPD", "Growth SPD",
-                                "STD", "Growth STD",
-                                "APC", "Growth APC",
-                                "NSB Target", "NSB Aktual",
-                                "Status",
-                            ]
-                            _display_df = _display_df[_cols_display]
-
-                            def _style_row(row):
-                                _status = row["Status"]
+                            
+                            # === BUILD ROWS HTML ===
+                            _table_rows_html = ""
+                            
+                            for _idx, _row in _filtered_rekap.iterrows():
+                                _tgl_str = _row["_tgl"].strftime("%d/%m/%Y")
+                                _spd_val = int(_row["spd"])
+                                _std_val = int(_row["std"])
+                                _apc_val = int(_row["apc"])
+                                _nsb_tgt = int(_row["nsb_target"])
+                                _nsb_act = int(_row["nsb_actual"])
+                                _status = _row["_status"]
+                                _growth_spd = _row["_growth_spd"]
+                                _growth_std = _row["_growth_std"]
+                                _growth_apc = _row["_growth_apc"]
+                                
+                                # Warna berdasarkan status
                                 if "AMAN" in _status:
-                                    return ["background-color: rgba(16, 185, 129, 0.08); border-bottom: 1px solid rgba(16, 185, 129, 0.3);"] * len(row)
+                                    _st_color = "#34d399"
+                                    _st_icon = "🟢"
+                                    _row_accent = "#10b981"
                                 elif "WARNING" in _status:
-                                    return ["background-color: rgba(245, 158, 11, 0.08); border-bottom: 1px solid rgba(245, 158, 11, 0.3);"] * len(row)
+                                    _st_color = "#fbbf24"
+                                    _st_icon = "🟡"
+                                    _row_accent = "#f59e0b"
                                 elif "OVER" in _status:
-                                    return ["background-color: rgba(239, 68, 68, 0.08); border-bottom: 1px solid rgba(239, 68, 68, 0.3);"] * len(row)
+                                    _st_color = "#fca5a5"
+                                    _st_icon = "🔴"
+                                    _row_accent = "#ef4444"
                                 else:
-                                    return ["background-color: transparent; border-bottom: 1px solid rgba(100, 116, 139, 0.2);"] * len(row)
-
-                            def _style_growth_cell(val):
-                                if pd.isna(val) or val == "—":
-                                    return "color: #64748b; text-align: center;"
-                                val_str = str(val)
-                                if "🔼" in val_str:
-                                    return "color: #34d399; text-align: center; font-weight: 900;"
-                                elif "🔽" in val_str:
-                                    return "color: #fca5a5; text-align: center; font-weight: 900;"
-                                else:
-                                    return "color: #94a3b8; text-align: center; font-weight: 900;"
-
-                            # Cek versi pandas untuk applymap vs map
-                            try:
-                                _styler = _display_df.style \
-                                    .apply(_style_row, axis=1) \
-                                    .applymap(_style_growth_cell, subset=["Growth SPD", "Growth STD", "Growth APC"])
-                            except AttributeError:
-                                _styler = _display_df.style \
-                                    .apply(_style_row, axis=1) \
-                                    .map(_style_growth_cell, subset=["Growth SPD", "Growth STD", "Growth APC"])
-
-                            _styler = _styler \
-                                .set_properties(subset=["SPD"], **{"color": "#fbbf24", "font-weight": "900"}) \
-                                .set_properties(subset=["STD"], **{"color": "#38bdf8", "font-weight": "700"}) \
-                                .set_properties(subset=["APC"], **{"color": "#a855f7", "font-weight": "700"}) \
-                                .set_properties(subset=["NSB Target"], **{"color": "#94a3b8"}) \
-                                .set_properties(subset=["NSB Aktual"], **{"color": "#e2e8f0", "font-weight": "700"}) \
-                                .set_properties(subset=["Tanggal"], **{"color": "#fbbf24", "font-weight": "900"}) \
-                                .set_properties(subset=["Status"], **{"text-align": "center", "font-weight": "900"}) \
-                                .set_properties(**{
-                                    "font-family": "monospace",
-                                    "font-size": "12px",
-                                    "padding": "8px 10px",
-                                }) \
-                                .set_table_styles([
-                                    {"selector": "thead th", "props": [
-                                        ("background", "linear-gradient(90deg, #1e3a5f, #0f172a)"),
-                                        ("color", "#f7e7b4"),
-                                        ("font-weight", "900"),
-                                        ("font-size", "10px"),
-                                        ("letter-spacing", "0.5px"),
-                                        ("text-align", "center"),
-                                        ("padding", "10px 8px"),
-                                        ("border-bottom", "1.5px solid #b45309"),
-                                    ]},
-                                ])
-
-                            st.dataframe(
-                                _styler,
-                                use_container_width=True,
-                                hide_index=True,
-                                height=min(600, 40 + len(_display_df) * 38),
+                                    _st_color = "#94a3b8"
+                                    _st_icon = "⚪"
+                                    _row_accent = "#64748b"
+                                
+                                # Growth formatting
+                                def _growth_html(g):
+                                    if g is None or pd.isna(g):
+                                        return "<span style='color:#475569; font-size:10px;'>—</span>"
+                                    if g > 0:
+                                        return f"<span style='color:#34d399; font-size:10px; font-weight:900;'>🔼 {g}%</span>"
+                                    elif g < 0:
+                                        return f"<span style='color:#fca5a5; font-size:10px; font-weight:900;'>🔽 {g}%</span>"
+                                    else:
+                                        return "<span style='color:#94a3b8; font-size:10px; font-weight:900;'>➖ 0%</span>"
+                                
+                                _g_spd = _growth_html(_growth_spd)
+                                _g_std = _growth_html(_growth_std)
+                                _g_apc = _growth_html(_growth_apc)
+                                
+                                # Warna baris selang-seling (zebra)
+                                _row_bg = "rgba(15, 23, 42, 0.85)" if _idx % 2 == 0 else "rgba(30, 41, 59, 0.7)"
+                                
+                                # Rounded corners
+                                _table_rows_html += (
+                                    f"<tr style='background: {_row_bg}; "
+                                    f"border-left: 4px solid {_row_accent}; "
+                                    f"transition: all 0.2s ease;'>"
+                                    
+                                    # Tanggal
+                                    f"<td style='padding: 12px 14px; border-radius: 8px 0 0 8px; "
+                                    f"font-family: monospace; font-size: 12px; font-weight: 900; color: #fbbf24; "
+                                    f"white-space: nowrap;'>📅 {_tgl_str}</td>"
+                                    
+                                    # SPD
+                                    f"<td style='padding: 12px 10px; text-align: right; "
+                                    f"font-family: monospace; font-size: 12px; font-weight: 900; color: #fbbf24; "
+                                    f"white-space: nowrap;'>Rp {_spd_val:,}</td>"
+                                    
+                                    # Growth SPD
+                                    f"<td style='padding: 12px 10px; text-align: center; "
+                                    f"white-space: nowrap;'>{_g_spd}</td>"
+                                    
+                                    # STD
+                                    f"<td style='padding: 12px 10px; text-align: right; "
+                                    f"font-family: monospace; font-size: 12px; font-weight: 700; color: #38bdf8; "
+                                    f"white-space: nowrap;'>{_std_val:,}</td>"
+                                    
+                                    # Growth STD
+                                    f"<td style='padding: 12px 10px; text-align: center; "
+                                    f"white-space: nowrap;'>{_g_std}</td>"
+                                    
+                                    # APC
+                                    f"<td style='padding: 12px 10px; text-align: right; "
+                                    f"font-family: monospace; font-size: 12px; font-weight: 700; color: #a855f7; "
+                                    f"white-space: nowrap;'>Rp {_apc_val:,}</td>"
+                                    
+                                    # Growth APC
+                                    f"<td style='padding: 12px 10px; text-align: center; "
+                                    f"white-space: nowrap;'>{_g_apc}</td>"
+                                    
+                                    # NSB Target
+                                    f"<td style='padding: 12px 10px; text-align: right; "
+                                    f"font-family: monospace; font-size: 11px; color: #94a3b8; "
+                                    f"white-space: nowrap;'>Rp {_nsb_tgt:,}</td>"
+                                    
+                                    # NSB Aktual
+                                    f"<td style='padding: 12px 10px; text-align: right; "
+                                    f"font-family: monospace; font-size: 12px; font-weight: 700; color: #e2e8f0; "
+                                    f"white-space: nowrap;'>Rp {_nsb_act:,}</td>"
+                                    
+                                    # Status
+                                    f"<td style='padding: 12px 14px; text-align: center; "
+                                    f"border-radius: 0 8px 8px 0; white-space: nowrap;'>"
+                                    f"<span style='background: {_row_accent}22; border: 1.5px solid {_st_color}; "
+                                    f"color: {_st_color}; padding: 4px 10px; border-radius: 12px; "
+                                    f"font-family: monospace; font-size: 10px; font-weight: 900; "
+                                    f"display: inline-block;'>{_st_icon} {_status[2:]}</span>"
+                                    f"</td>"
+                                    
+                                    f"</tr>"
+                                    
+                                    # Gap antar baris
+                                    f"<tr style='height: 6px;'><td colspan='10' style='border: none;'></td></tr>"
+                                )
+                            
+                            # === BUILD TABEL LENGKAP ===
+                            _leaderboard_html = (
+                                # Wrapper (overflow-x untuk mobile scroll)
+                                f"<div style='overflow-x: auto; -webkit-overflow-scrolling: touch; "
+                                f"padding: 4px; margin-top: 10px;'>"
+                                
+                                # Table
+                                f"<table style='width: 100%; border-collapse: separate; "
+                                f"border-spacing: 0; font-family: monospace; min-width: 900px;'>"
+                                
+                                # === HEADER ===
+                                f"<thead>"
+                                f"<tr style='background: linear-gradient(90deg, #1e3a5f 0%, #b45309 50%, #1e3a5f 100%); "
+                                f"box-shadow: 0 4px 12px rgba(180, 83, 9, 0.4);'>"
+                                
+                                f"<th style='padding: 14px 14px; text-align: left; "
+                                f"font-family: monospace; font-size: 11px; font-weight: 900; "
+                                f"color: #f7e7b4; letter-spacing: 1px; text-transform: uppercase; "
+                                f"border-radius: 8px 0 0 8px; border-bottom: 2px solid #fbbf24;'>"
+                                f"📅 Tanggal</th>"
+                                
+                                f"<th style='padding: 14px 10px; text-align: right; "
+                                f"font-family: monospace; font-size: 11px; font-weight: 900; "
+                                f"color: #f7e7b4; letter-spacing: 1px; text-transform: uppercase; "
+                                f"border-bottom: 2px solid #fbbf24;'>💰 SPD</th>"
+                                
+                                f"<th style='padding: 14px 10px; text-align: center; "
+                                f"font-family: monospace; font-size: 11px; font-weight: 900; "
+                                f"color: #f7e7b4; letter-spacing: 1px; text-transform: uppercase; "
+                                f"border-bottom: 2px solid #fbbf24;'>📈 Growth</th>"
+                                
+                                f"<th style='padding: 14px 10px; text-align: right; "
+                                f"font-family: monospace; font-size: 11px; font-weight: 900; "
+                                f"color: #f7e7b4; letter-spacing: 1px; text-transform: uppercase; "
+                                f"border-bottom: 2px solid #fbbf24;'>📄 STD</th>"
+                                
+                                f"<th style='padding: 14px 10px; text-align: center; "
+                                f"font-family: monospace; font-size: 11px; font-weight: 900; "
+                                f"color: #f7e7b4; letter-spacing: 1px; text-transform: uppercase; "
+                                f"border-bottom: 2px solid #fbbf24;'>📈 Growth</th>"
+                                
+                                f"<th style='padding: 14px 10px; text-align: right; "
+                                f"font-family: monospace; font-size: 11px; font-weight: 900; "
+                                f"color: #f7e7b4; letter-spacing: 1px; text-transform: uppercase; "
+                                f"border-bottom: 2px solid #fbbf24;'>🧾 APC</th>"
+                                
+                                f"<th style='padding: 14px 10px; text-align: center; "
+                                f"font-family: monospace; font-size: 11px; font-weight: 900; "
+                                f"color: #f7e7b4; letter-spacing: 1px; text-transform: uppercase; "
+                                f"border-bottom: 2px solid #fbbf24;'>📈 Growth</th>"
+                                
+                                f"<th style='padding: 14px 10px; text-align: right; "
+                                f"font-family: monospace; font-size: 11px; font-weight: 900; "
+                                f"color: #f7e7b4; letter-spacing: 1px; text-transform: uppercase; "
+                                f"border-bottom: 2px solid #fbbf24;'>🎯 NSB Tgt</th>"
+                                
+                                f"<th style='padding: 14px 10px; text-align: right; "
+                                f"font-family: monospace; font-size: 11px; font-weight: 900; "
+                                f"color: #f7e7b4; letter-spacing: 1px; text-transform: uppercase; "
+                                f"border-bottom: 2px solid #fbbf24;'>📊 NSB Akt</th>"
+                                
+                                f"<th style='padding: 14px 14px; text-align: center; "
+                                f"font-family: monospace; font-size: 11px; font-weight: 900; "
+                                f"color: #f7e7b4; letter-spacing: 1px; text-transform: uppercase; "
+                                f"border-radius: 0 8px 8px 0; border-bottom: 2px solid #fbbf24;'>"
+                                f"🏆 Status</th>"
+                                
+                                f"</tr>"
+                                f"</thead>"
+                                
+                                # === BODY ===
+                                f"<tbody style='background: transparent;'>"
+                                f"{_table_rows_html}"
+                                f"</tbody>"
+                                
+                                f"</table>"
+                                f"</div>"
                             )
-
-                        # ==========================================
-                        # 📊 FOOTER: RATA-RATA & TOTAL (di luar if/elif)
-                        # ==========================================
-                        st.markdown("---")
-
-                        _avg_spd = int(_filtered_rekap["spd"].mean()) if not _filtered_rekap.empty else 0
-                        _avg_std = int(_filtered_rekap["std"].mean()) if not _filtered_rekap.empty else 0
-                        _avg_apc = int(_filtered_rekap["apc"].mean()) if not _filtered_rekap.empty else 0
-                        _total_spd_f = int(_filtered_rekap["spd"].sum())
-
-                        st.markdown(
-                            f"<div style='background: linear-gradient(135deg, rgba(251, 191, 36, 0.08), "
-                            f"rgba(180, 83, 9, 0.15)); border: 2px solid #b45309; border-radius: 12px; "
-                            f"padding: 16px 20px; margin-top: 16px;'>"
-
-                            f"<div style='font-family: monospace; font-size: 11px; color: #fbbf24; "
-                            f"font-weight: 900; letter-spacing: 1.5px; text-align: center; "
-                            f"margin-bottom: 12px;'>📊 RINGKASAN TABEL ({len(_filtered_rekap)} BARIS)</div>"
-
-                            f"<div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); "
-                            f"gap: 10px; margin-bottom: 12px;'>"
-
-                            f"<div style='background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; "
-                            f"border-radius: 8px; padding: 10px; text-align: center;'>"
-                            f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-bottom: 4px;'>📊 RATA SPD</div>"
-                            f"<div style='font-family: monospace; font-size: 13px; color: #fbbf24; font-weight: 900;'>Rp {_avg_spd:,}</div>"
-                            f"</div>"
-
-                            f"<div style='background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; "
-                            f"border-radius: 8px; padding: 10px; text-align: center;'>"
-                            f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-bottom: 4px;'>📄 RATA STD</div>"
-                            f"<div style='font-family: monospace; font-size: 13px; color: #38bdf8; font-weight: 900;'>{_avg_std:,} struk</div>"
-                            f"</div>"
-
-                            f"<div style='background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; "
-                            f"border-radius: 8px; padding: 10px; text-align: center;'>"
-                            f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-bottom: 4px;'>🧾 RATA APC</div>"
-                            f"<div style='font-family: monospace; font-size: 13px; color: #a855f7; font-weight: 900;'>Rp {_avg_apc:,}</div>"
-                            f"</div>"
-
-                            f"</div>"
-
-                            f"<div style='background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), "
-                            f"rgba(245, 158, 11, 0.2)); border: 1.5px solid #fbbf24; border-radius: 8px; "
-                            f"padding: 12px; text-align: center;'>"
-                            f"<div style='font-family: monospace; font-size: 10px; color: #fcd34d; "
-                            f"letter-spacing: 1px; margin-bottom: 4px;'>💰 TOTAL NET SALES (SUM SPD)</div>"
-                            f"<div style='font-family: monospace; font-size: 18px; color: #fbbf24; "
-                            f"font-weight: 900; text-shadow: 0 0 12px rgba(251, 191, 36, 0.5);'>"
-                            f"Rp {_total_spd_f:,}</div>"
-                            f"</div>"
-
-                            f"</div>",
-                            unsafe_allow_html=True
-                        )
+                            
+                            st.markdown(_leaderboard_html, unsafe_allow_html=True)
+                            
+                            # === INFO ===
+                            st.caption(f"💡 Scroll horizontal untuk lihat semua kolom. **{len(_filtered_rekap)}** baris data.")
     
     # =========================================================================
     # 📈 SUB-TAB 3: DASHBOARD (PLACEHOLDER)
