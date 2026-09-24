@@ -17948,7 +17948,7 @@ elif selected_tab == "📊 Daily Performance":
                         <span class="dp-auto-value">Rp {_preview_apc:,}</span>
                     </div>
                     <div class="dp-auto-row">
-                        <span class="dp-auto-label">⚠️ NSB Target (SPD × {_active_period['nsb_percentage']}%)</span>
+                        <span class="dp-auto-label">⚠️ NSB Target (SPD × {_nsb_pct_display}%)
                         <span class="dp-auto-value">Rp {_preview_nsb_target:,}</span>
                     </div>
                 </div>
