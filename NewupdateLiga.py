@@ -20685,22 +20685,22 @@ elif selected_tab == "⚙️ Master Data":
             unsafe_allow_html=True,
         )
         
-        # === LOAD DATA PERIODE SALES (Opsi B) ===
+        # === LOAD DATA PERIODE SALES ===
         if "periode_sales_df" not in st.session_state:
             with st.spinner("⏳ Memuat data periode sales..."):
                 st.session_state.periode_sales_df = load_periode_sales()
         
         _ps_df = st.session_state.periode_sales_df.copy()
         
-        # === HEADER + TOMBOL REFRESH ===
+        # === HEADER + REFRESH ===
         col_h1, col_h2 = st.columns([3, 1])
         with col_h1:
-            st.caption(
-                f"📊 Total: **{len(_ps_df)}** periode sales terdaftar"
-            )
+            st.caption(f"📊 Total: **{len(_ps_df)}** periode sales terdaftar")
         with col_h2:
             if st.button("🔄 Refresh", use_container_width=True, key="ps_refresh"):
                 st.session_state.periode_sales_df = load_periode_sales()
+                st.toast("✅ Data periode sales di-refresh!", icon="🔄")
+                time.sleep(0.8)
                 st.rerun()
         
         # === NAVIGASI 3 MENU ===
@@ -20724,9 +20724,8 @@ elif selected_tab == "⚙️ Master Data":
         # =======================================================================
         if sales_sub_menu == "➕ Tambah Periode Sales":
             st.markdown("##### ➕ Tambah Periode Sales Baru")
-            st.caption("Isi data periode sales. SPD & APC akan dihitung otomatis di dashboard.")
-             
-            # Auto-generate ID berikutnya
+            st.caption("Isi data periode sales. SPD & APC akan dihitung otomatis.")
+            
             _next_id = generate_next_period_id(_ps_df)
             
             with st.form("form_tambah_periode_sales"):
@@ -20736,8 +20735,7 @@ elif selected_tab == "⚙️ Master Data":
                     _new_pid = st.text_input(
                         "🆔 ID Periode",
                         value=_next_id,
-                        key="ps_add_pid",
-                        help="Auto-generate, bisa diubah manual"
+                        key="ps_add_pid"
                     ).strip().upper()
                     
                     _new_pname = st.text_input(
@@ -20764,8 +20762,7 @@ elif selected_tab == "⚙️ Master Data":
                         min_value=0,
                         step=100000,
                         value=0,
-                        key="ps_add_ns",
-                        help="Target Net Sales untuk divisi ini"
+                        key="ps_add_ns"
                     )
                     
                     _new_std = st.number_input(
@@ -20773,8 +20770,7 @@ elif selected_tab == "⚙️ Master Data":
                         min_value=0,
                         step=1,
                         value=0,
-                        key="ps_add_std",
-                        help="Target jumlah struk"
+                        key="ps_add_std"
                     )
                     
                     _new_gm = st.number_input(
@@ -20783,8 +20779,7 @@ elif selected_tab == "⚙️ Master Data":
                         max_value=100.0,
                         step=0.1,
                         value=0.0,
-                        key="ps_add_gm",
-                        help="Target Gross Margin persen"
+                        key="ps_add_gm"
                     )
                     
                     _new_ket = st.text_area(
@@ -20800,43 +20795,34 @@ elif selected_tab == "⚙️ Master Data":
                     type="primary"
                 )
             
-            # === PREVIEW LIVE ===
-            if _new_start < _new_end and _new_ns > 0:
+            # === PREVIEW LIVE (HTML 1 BARIS) ===
+            if _new_start < _new_end and _new_ns > 0 and _new_std > 0:
                 _jhk = (_new_end - _new_start).days + 1
                 _spd_auto = int(_new_ns / _jhk) if _jhk > 0 else 0
                 _apc_auto = int(_spd_auto / _new_std) if _new_std > 0 else 0
                 _nsb_target = int(_new_ns * (_new_gm / 100)) if _new_gm > 0 else 0
                 
-                st.markdown(f"""
-                <div style='
-                    background: linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(14, 165, 233, 0.12));
-                    border: 1.5px solid #38bdf8;
-                    border-radius: 10px;
-                    padding: 14px 18px;
-                    margin: 12px 0;
-                    font-family: monospace;
-                    font-size: 12px;
-                    color: #7dd3fc;
-                '>
-                    <div style='font-weight: 900; color: #38bdf8; margin-bottom: 8px; letter-spacing: 1px;'>📊 ESTIMASI OTOMATIS</div>
-                    <div style='display: flex; justify-content: space-between; padding: 3px 0;'>
-                        <span>📆 JHK (Jumlah Hari Kerja)</span>
-                        <span style='color: #38bdf8; font-weight: 900;'>{_jhk} hari</span>
-                    </div>
-                    <div style='display: flex; justify-content: space-between; padding: 3px 0;'>
-                        <span>💰 SPD (Net Sales ÷ JHK)</span>
-                        <span style='color: #38bdf8; font-weight: 900;'>Rp {_spd_auto:,}</span>
-                    </div>
-                    <div style='display: flex; justify-content: space-between; padding: 3px 0;'>
-                        <span>🧾 APC (SPD ÷ STD)</span>
-                        <span style='color: #38bdf8; font-weight: 900;'>Rp {_apc_auto:,}</span>
-                    </div>
-                    <div style='display: flex; justify-content: space-between; padding: 3px 0;'>
-                        <span>📈 NSB Target (Net Sales × GM%)</span>
-                        <span style='color: #38bdf8; font-weight: 900;'>Rp {_nsb_target:,}</span>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+                # Build HTML in ONE LINE
+                _preview_html = (
+                    "<div style='background: linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(14, 165, 233, 0.12)); "
+                    "border: 1.5px solid #38bdf8; border-radius: 10px; padding: 14px 18px; margin: 12px 0; "
+                    "font-family: monospace; font-size: 12px; color: #7dd3fc;'>"
+                    "<div style='font-weight: 900; color: #38bdf8; margin-bottom: 8px; letter-spacing: 1px;'>📊 ESTIMASI OTOMATIS</div>"
+                    f"<div style='display: flex; justify-content: space-between; padding: 3px 0;'>"
+                    f"<span>📆 JHK (Jumlah Hari Kerja)</span>"
+                    f"<span style='color: #38bdf8; font-weight: 900;'>{_jhk} hari</span></div>"
+                    f"<div style='display: flex; justify-content: space-between; padding: 3px 0;'>"
+                    f"<span>💰 SPD (Net Sales ÷ JHK)</span>"
+                    f"<span style='color: #38bdf8; font-weight: 900;'>Rp {_spd_auto:,}</span></div>"
+                    f"<div style='display: flex; justify-content: space-between; padding: 3px 0;'>"
+                    f"<span>🧾 APC (SPD ÷ STD)</span>"
+                    f"<span style='color: #38bdf8; font-weight: 900;'>Rp {_apc_auto:,}</span></div>"
+                    f"<div style='display: flex; justify-content: space-between; padding: 3px 0;'>"
+                    f"<span>📈 NSB Target (Net Sales × GM%)</span>"
+                    f"<span style='color: #38bdf8; font-weight: 900;'>Rp {_nsb_target:,}</span></div>"
+                    "</div>"
+                )
+                st.markdown(_preview_html, unsafe_allow_html=True)
             
             # === PROSES SIMPAN ===
             if _btn_save_periode:
@@ -20852,7 +20838,6 @@ elif selected_tab == "⚙️ Master Data":
                 if _new_std <= 0:
                     _errors.append("Target STD harus > 0")
                 
-                # Cek duplikat ID
                 if not _ps_df.empty and "period_id" in _ps_df.columns:
                     if _new_pid in _ps_df["period_id"].astype(str).str.upper().values:
                         _errors.append(f"ID Periode '{_new_pid}' sudah ada!")
@@ -20860,60 +20845,107 @@ elif selected_tab == "⚙️ Master Data":
                 if _errors:
                     for _err in _errors:
                         st.error(f"❌ {_err}")
+                    st.toast("❌ Gagal simpan, cek error di atas!", icon="⚠️")
                 else:
+                    # Simpan state untuk dialog konfirmasi
+                    st.session_state["pending_add_periode_sales"] = {
+                        "period_id": _new_pid,
+                        "period_name": _new_pname,
+                        "start_date": str(_new_start),
+                        "end_date": str(_new_end),
+                        "target_net_sales": int(_new_ns),
+                        "target_std": int(_new_std),
+                        "target_gm_pct": float(_new_gm),
+                        "keterangan": str(_new_ket),
+                    }
+                    
+                    _jhk_prev = (_new_end - _new_start).days + 1
+                    _spd_prev = int(_new_ns / _jhk_prev) if _jhk_prev > 0 else 0
+                    _apc_prev = int(_spd_prev / _new_std) if _new_std > 0 else 0
+                    _nsb_prev = int(_new_ns * (_new_gm / 100)) if _new_gm > 0 else 0
+                    
+                    show_edit_confirm_dialog(
+                        {
+                            "🆔 ID Periode": _new_pid,
+                            "📝 Nama": _new_pname,
+                            "📅 Mulai": _new_start.strftime("%d/%m/%Y"),
+                            "📅 Selesai": _new_end.strftime("%d/%m/%Y"),
+                            "💰 Net Sales": f"Rp {_new_ns:,}",
+                            "📄 STD": f"{_new_std} struk",
+                            "📊 GM%": f"{_new_gm}%",
+                            "⏱️ JHK": f"{_jhk_prev} hari",
+                            "💵 SPD": f"Rp {_spd_prev:,}",
+                            "🧾 APC": f"Rp {_apc_prev:,}",
+                            "📈 NSB": f"Rp {_nsb_prev:,}",
+                        },
+                        callback_key="add_periode_sales_confirm"
+                    )
+            
+            # === COMMIT SIMPAN (setelah user klik YA) ===
+            if st.session_state.get("add_periode_sales_confirm_result", False):
+                st.session_state["add_periode_sales_confirm_result"] = False
+                _pending = st.session_state.pop("pending_add_periode_sales", None)
+                
+                if _pending:
                     try:
                         with st.spinner("⏳ Menyimpan periode sales..."):
                             _now_str = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
                             _username = st.session_state.get("username", "unknown")
                             
                             _new_row = pd.DataFrame([{
-                                "period_id": _new_pid,
-                                "period_name": _new_pname,
-                                "start_date": str(_new_start),
-                                "end_date": str(_new_end),
-                                "target_net_sales": int(_new_ns),
-                                "target_std": int(_new_std),
-                                "target_gm_pct": float(_new_gm),
-                                "keterangan": str(_new_ket),
+                                "period_id": _pending["period_id"],
+                                "period_name": _pending["period_name"],
+                                "start_date": _pending["start_date"],
+                                "end_date": _pending["end_date"],
+                                "target_net_sales": _pending["target_net_sales"],
+                                "target_std": _pending["target_std"],
+                                "target_gm_pct": _pending["target_gm_pct"],
+                                "keterangan": _pending["keterangan"],
                                 "created_at": _now_str,
                                 "created_by": str(_username),
                             }])
                             
-                            # Gabung ke df existing
                             if _ps_df.empty:
                                 _ps_new = _new_row
                             else:
                                 _ps_new = pd.concat([_ps_df, _new_row], ignore_index=True)
                             
-                            # Save ke sheet
                             _ok, _msg = save_periode_sales(_ps_new)
                             
                             if _ok:
                                 st.session_state.periode_sales_df = _ps_new
                                 
-                                # Log aktivitas
                                 try:
-                                    log_activity(
-                                        "SAVE_MASTER",
-                                        f"Tambah Periode Sales: {_new_pid} - {_new_pname}"
-                                    )
+                                    log_activity("SAVE_MASTER", f"Tambah Periode Sales: {_pending['period_id']}")
                                 except Exception:
                                     pass
                                 
-                                show_swal(
-                                    "Berhasil!",
-                                    f"Periode {_new_pname} berhasil disimpan!",
-                                    "success"
+                                # ✅ NOTIFIKASI DOUBLE: Toast + Dialog
+                                st.toast(f"✅ Periode {_pending['period_id']} berhasil disimpan!", icon="🎉")
+                                time.sleep(0.5)
+                                
+                                show_success_dialog(
+                                    title_msg=f"<b>Periode {_pending['period_name']}</b> berhasil disimpan!",
+                                    subtitle="Tersimpan di Sheet PERIODE_SALES",
+                                    icon="⚜️",
+                                    theme="gold",
+                                    detail_dict={
+                                        "🆔 ID Periode": _pending["period_id"],
+                                        "📝 Nama": _pending["period_name"],
+                                        "💰 Net Sales": f"Rp {_pending['target_net_sales']:,}",
+                                        "📄 STD": f"{_pending['target_std']} struk",
+                                        "📊 GM%": f"{_pending['target_gm_pct']}%",
+                                    }
                                 )
-                                time.sleep(1.5)
+                                time.sleep(2)
                                 st.rerun()
                             else:
                                 st.error(_msg)
+                                st.toast(f"❌ {_msg}", icon="⚠️")
                     
                     except Exception as _e:
                         st.error(f"❌ Gagal simpan: {_e}")
-                        import traceback
-                        st.code(traceback.format_exc())
+                        st.toast("❌ Terjadi error!", icon="⚠️")
         
         # =======================================================================
         # MENU 2: EDIT & HAPUS PERIODE
@@ -20922,12 +20954,11 @@ elif selected_tab == "⚙️ Master Data":
             st.markdown("##### ✏️ Edit & Hapus Periode Sales")
             
             if _ps_df.empty:
-                st.info("📭 Belum ada periode sales yang terdaftar. Tambah dulu di menu pertama.")
+                st.info("📭 Belum ada periode sales yang terdaftar.")
             else:
-                # Dropdown pilih periode
                 _ps_df["_label"] = (
                     _ps_df["period_id"].astype(str) + " — " +
-                    _ps_df["period_name"].astype(str) + ")"
+                    _ps_df["period_name"].astype(str)
                 )
                 _selected_label = st.selectbox(
                     "📋 Pilih Periode",
@@ -20935,7 +20966,6 @@ elif selected_tab == "⚙️ Master Data":
                     key="ps_edit_select"
                 )
                 
-                # Cari row yang dipilih
                 _selected_pid = _selected_label.split(" — ")[0].strip()
                 _match_row = _ps_df[_ps_df["period_id"].astype(str) == _selected_pid]
                 
@@ -20944,7 +20974,6 @@ elif selected_tab == "⚙️ Master Data":
                 else:
                     _row = _match_row.iloc[0]
                     
-                    # Parse tanggal
                     try:
                         _curr_start = pd.to_datetime(_row.get("start_date")).date()
                         _curr_end = pd.to_datetime(_row.get("end_date")).date()
@@ -20961,7 +20990,7 @@ elif selected_tab == "⚙️ Master Data":
                                 value=str(_row.get("period_name", "")),
                                 key="ps_edit_pname"
                             )
-                                             
+                            
                             _edit_start = st.date_input(
                                 "📅 Tanggal Mulai",
                                 value=_curr_start,
@@ -21023,82 +21052,117 @@ elif selected_tab == "⚙️ Master Data":
                                 use_container_width=True
                             )
                     
-                    # === PROSES UPDATE ===
+                    # === UPDATE ===
                     if _btn_update:
                         if _edit_start > _edit_end:
                             st.error("❌ Tanggal mulai tidak boleh melebihi tanggal selesai!")
+                            st.toast("❌ Cek tanggal!", icon="⚠️")
                         elif _edit_ns <= 0 or _edit_std <= 0:
                             st.error("❌ Target Net Sales & STD harus > 0!")
+                            st.toast("❌ Cek target!", icon="⚠️")
                         else:
+                            st.session_state["pending_update_periode_sales"] = {
+                                "period_id": _selected_pid,
+                                "period_name": _edit_pname,
+                                "start_date": str(_edit_start),
+                                "end_date": str(_edit_end),
+                                "target_net_sales": int(_edit_ns),
+                                "target_std": int(_edit_std),
+                                "target_gm_pct": float(_edit_gm),
+                                "keterangan": str(_edit_ket),
+                            }
+                            
+                            show_edit_confirm_dialog(
+                                {
+                                    "🆔 ID Periode": _selected_pid,
+                                    "📝 Nama": _edit_pname,
+                                    "📅 Mulai": _edit_start.strftime("%d/%m/%Y"),
+                                    "📅 Selesai": _edit_end.strftime("%d/%m/%Y"),
+                                    "💰 Net Sales": f"Rp {_edit_ns:,}",
+                                    "📄 STD": f"{_edit_std} struk",
+                                    "📊 GM%": f"{_edit_gm}%",
+                                },
+                                callback_key="update_periode_sales_confirm"
+                            )
+                    
+                    # === COMMIT UPDATE ===
+                    if st.session_state.get("update_periode_sales_confirm_result", False):
+                        st.session_state["update_periode_sales_confirm_result"] = False
+                        _pending_upd = st.session_state.pop("pending_update_periode_sales", None)
+                        
+                        if _pending_upd:
                             try:
                                 with st.spinner("⏳ Mengupdate periode..."):
                                     _ps_updated = _ps_df.copy()
                                     _idx_upd = _ps_updated[
-                                        _ps_updated["period_id"].astype(str) == _selected_pid
+                                        _ps_updated["period_id"].astype(str) == _pending_upd["period_id"]
                                     ].index
                                     
-                                    _ps_updated.loc[_idx_upd, "period_name"] = _edit_pname
-                                    _ps_updated.loc[_idx_upd, "start_date"] = str(_edit_start)
-                                    _ps_updated.loc[_idx_upd, "end_date"] = str(_edit_end)
-                                    _ps_updated.loc[_idx_upd, "divisi"] = _edit_divisi
-                                    _ps_updated.loc[_idx_upd, "target_net_sales"] = int(_edit_ns)
-                                    _ps_updated.loc[_idx_upd, "target_std"] = int(_edit_std)
-                                    _ps_updated.loc[_idx_upd, "target_gm_pct"] = float(_edit_gm)
-                                    _ps_updated.loc[_idx_upd, "keterangan"] = str(_edit_ket)
+                                    _ps_updated.loc[_idx_upd, "period_name"] = _pending_upd["period_name"]
+                                    _ps_updated.loc[_idx_upd, "start_date"] = _pending_upd["start_date"]
+                                    _ps_updated.loc[_idx_upd, "end_date"] = _pending_upd["end_date"]
+                                    _ps_updated.loc[_idx_upd, "target_net_sales"] = _pending_upd["target_net_sales"]
+                                    _ps_updated.loc[_idx_upd, "target_std"] = _pending_upd["target_std"]
+                                    _ps_updated.loc[_idx_upd, "target_gm_pct"] = _pending_upd["target_gm_pct"]
+                                    _ps_updated.loc[_idx_upd, "keterangan"] = _pending_upd["keterangan"]
                                     
-                                    # Drop kolom _label sebelum save
                                     _ps_save = _ps_updated.drop(columns=["_label"], errors="ignore")
-                                    
                                     _ok, _msg = save_periode_sales(_ps_save)
                                     
                                     if _ok:
                                         st.session_state.periode_sales_df = _ps_save
                                         
                                         try:
-                                            log_activity(
-                                                "EDIT_DATA",
-                                                f"Edit Periode Sales: {_selected_pid}"
-                                            )
+                                            log_activity("EDIT_DATA", f"Edit Periode Sales: {_pending_upd['period_id']}")
                                         except Exception:
                                             pass
                                         
-                                        show_swal(
-                                            "Berhasil!",
-                                            f"Periode {_edit_pname} berhasil diupdate!",
-                                            "success"
+                                        # ✅ NOTIFIKASI
+                                        st.toast(f"✅ Periode {_pending_upd['period_id']} berhasil diupdate!", icon="🎉")
+                                        time.sleep(0.5)
+                                        
+                                        show_success_dialog(
+                                            title_msg=f"<b>Periode {_pending_upd['period_name']}</b> berhasil diupdate!",
+                                            subtitle="Perubahan Tersimpan",
+                                            icon="✏️",
+                                            theme="blue",
+                                            detail_dict={
+                                                "🆔 ID Periode": _pending_upd["period_id"],
+                                                "📝 Nama": _pending_upd["period_name"],
+                                                "💰 Net Sales": f"Rp {_pending_upd['target_net_sales']:,}",
+                                                "📄 STD": f"{_pending_upd['target_std']} struk",
+                                            }
                                         )
-                                        time.sleep(1.5)
+                                        time.sleep(2)
                                         st.rerun()
                                     else:
                                         st.error(_msg)
-                            
+                                        st.toast(f"❌ {_msg}", icon="⚠️")
                             except Exception as _e:
                                 st.error(f"❌ Gagal update: {_e}")
                     
-                    # === PROSES HAPUS (via dialog konfirmasi) ===
+                    # === DELETE (via dialog konfirmasi) ===
                     if _btn_delete:
-                        _detail_del = {
-                            "🆔 ID Periode": _selected_pid,
-                            "📝 Nama": str(_row.get("period_name", "")),
-                            "🏢 Divisi": str(_row.get("divisi", "")),
-                            "📅 Rentang": (
-                                f"{_curr_start.strftime('%d/%m/%Y')} - "
-                                f"{_curr_end.strftime('%d/%m/%Y')}"
-                            ),
-                        }
-                        
                         st.session_state["pending_delete_periode_sales"] = {
                             "period_id": _selected_pid,
                             "period_name": str(_row.get("period_name", "")),
                         }
                         
                         show_delete_confirm_dialog(
-                            _detail_del,
+                            {
+                                "🆔 ID Periode": _selected_pid,
+                                "📝 Nama": str(_row.get("period_name", "")),
+                                "📅 Rentang": (
+                                    f"{_curr_start.strftime('%d/%m/%Y')} - "
+                                    f"{_curr_end.strftime('%d/%m/%Y')}"
+                                ),
+                                "💰 Net Sales": f"Rp {int(pd.to_numeric(_row.get('target_net_sales', 0), errors='coerce') or 0):,}",
+                            },
                             warning_text=f"Periode {_selected_pid} akan dihapus permanen!",
                             callback_key="del_periode_sales_confirm"
                         )
                     
-                    # === COMMIT HAPUS ===
+                    # === COMMIT DELETE ===
                     if st.session_state.get("del_periode_sales_confirm_result", False):
                         st.session_state["del_periode_sales_confirm_result"] = False
                         _pending_del = st.session_state.pop("pending_delete_periode_sales", None)
@@ -21107,22 +21171,15 @@ elif selected_tab == "⚙️ Master Data":
                             try:
                                 with st.spinner("⏳ Menghapus periode..."):
                                     _pid_del = _pending_del["period_id"]
-                                    
-                                    _ps_new = _ps_df[
-                                        _ps_df["period_id"].astype(str) != _pid_del
-                                    ].copy()
+                                    _ps_new = _ps_df[_ps_df["period_id"].astype(str) != _pid_del].copy()
                                     _ps_new = _ps_new.drop(columns=["_label"], errors="ignore")
-                                    
                                     _ok, _msg = save_periode_sales(_ps_new)
                                     
                                     if _ok:
                                         st.session_state.periode_sales_df = _ps_new
                                         
                                         try:
-                                            log_activity(
-                                                "DELETE_DATA",
-                                                f"Hapus Periode Sales: {_pid_del}"
-                                            )
+                                            log_activity("DELETE_DATA", f"Hapus Periode Sales: {_pid_del}")
                                         except Exception:
                                             pass
                                         
@@ -21131,6 +21188,7 @@ elif selected_tab == "⚙️ Master Data":
                                         st.rerun()
                                     else:
                                         st.error(_msg)
+                                        st.toast(f"❌ {_msg}", icon="⚠️")
                             except Exception as _e:
                                 st.error(f"❌ Gagal hapus: {_e}")
         
@@ -21143,7 +21201,6 @@ elif selected_tab == "⚙️ Master Data":
             if _ps_df.empty:
                 st.info("📭 Belum ada periode sales yang terdaftar.")
             else:
-                # === HITUNG STATUS OTOMATIS ===
                 _today = waktu_wib.date()
                 
                 _status_list = []
@@ -21164,7 +21221,6 @@ elif selected_tab == "⚙️ Master Data":
                     _status_list.append({
                         "period_id": str(_r.get("period_id", "")),
                         "period_name": str(_r.get("period_name", "")),
-                        "divisi": str(_r.get("divisi", "")),
                         "start_date": _s,
                         "end_date": _e,
                         "status": _status,
@@ -21174,7 +21230,7 @@ elif selected_tab == "⚙️ Master Data":
                         "keterangan": str(_r.get("keterangan", "")),
                     })
                 
-                # === KPI CARDS ===
+                # KPI
                 _total = len(_status_list)
                 _aktif = sum(1 for x in _status_list if "Aktif" in x["status"])
                 _akan = sum(1 for x in _status_list if "Akan" in x["status"])
@@ -21192,7 +21248,6 @@ elif selected_tab == "⚙️ Master Data":
                 
                 st.markdown("---")
                 
-                # === FILTER ===
                 _filter = st.selectbox(
                     "🔍 Filter Status",
                     ["Semua", "🟢 Aktif", "🟡 Akan Datang", "🔴 Selesai"],
@@ -21205,14 +21260,12 @@ elif selected_tab == "⚙️ Master Data":
                 if not _status_list:
                     st.info(f"📭 Tidak ada periode dengan status **{_filter}**.")
                 else:
-                    # === LIST KARTU PERIODE ===
                     for _item in _status_list:
                         _jhk = (_item["end_date"] - _item["start_date"]).days + 1
                         _spd_auto = int(_item["target_net_sales"] / _jhk) if _jhk > 0 else 0
                         _apc_auto = int(_spd_auto / _item["target_std"]) if _item["target_std"] > 0 else 0
                         _nsb_target = int(_item["target_net_sales"] * (_item["target_gm_pct"] / 100))
                         
-                        # Warna badge
                         if "Aktif" in _item["status"]:
                             _badge_bg = "rgba(16, 185, 129, 0.2)"
                             _badge_border = "#10b981"
@@ -21226,152 +21279,86 @@ elif selected_tab == "⚙️ Master Data":
                             _badge_border = "#ef4444"
                             _badge_color = "#fca5a5"
                         
-                        # Progress bar (khusus yang aktif)
+                        # Progress bar (khusus aktif)
                         if "Aktif" in _item["status"]:
                             _hari_ke = (_today - _item["start_date"]).days + 1
                             _pct_progress = int((_hari_ke / _jhk) * 100)
-                            _progress_html = f"""
-                            <div style='margin-top: 12px;'>
-                                <div style='display: flex; justify-content: space-between;
-                                            font-family: monospace; font-size: 10px;
-                                            color: #94a3b8; margin-bottom: 4px;'>
-                                    <span>📆 Progress: Hari ke-{_hari_ke} dari {_jhk}</span>
-                                    <span style='color: {_badge_color}; font-weight: 900;'>{_pct_progress}%</span>
-                                </div>
-                                <div style='height: 8px; background: rgba(15, 23, 42, 0.8);
-                                            border-radius: 4px; overflow: hidden;
-                                            border: 1px solid {_badge_border};'>
-                                    <div style='width: {_pct_progress}%; height: 100%;
-                                                background: linear-gradient(90deg, {_badge_border}, {_badge_color});
-                                                box-shadow: 0 0 8px {_badge_color};'></div>
-                                </div>
-                            </div>
-                            """
+                            _progress_html = (
+                                "<div style='margin-top: 12px;'>"
+                                "<div style='display: flex; justify-content: space-between; font-family: monospace; "
+                                "font-size: 10px; color: #94a3b8; margin-bottom: 4px;'>"
+                                f"<span>📆 Progress: Hari ke-{_hari_ke} dari {_jhk}</span>"
+                                f"<span style='color: {_badge_color}; font-weight: 900;'>{_pct_progress}%</span>"
+                                "</div>"
+                                "<div style='height: 8px; background: rgba(15, 23, 42, 0.8); border-radius: 4px; "
+                                f"overflow: hidden; border: 1px solid {_badge_border};'>"
+                                f"<div style='width: {_pct_progress}%; height: 100%; "
+                                f"background: linear-gradient(90deg, {_badge_border}, {_badge_color}); "
+                                f"box-shadow: 0 0 8px {_badge_color};'></div>"
+                                "</div></div>"
+                            )
                         else:
                             _progress_html = ""
                         
-                        st.markdown(f"""
-                        <div style='
-                            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85));
-                            border: 1.5px solid #9a7b38;
-                            border-left: 5px solid {_badge_border};
-                            border-radius: 12px;
-                            padding: 16px 20px;
-                            margin-bottom: 12px;
-                            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-                        '>
-                            <div style='display: flex; justify-content: space-between;
-                                        align-items: flex-start; margin-bottom: 12px;'>
-                                <div>
-                                    <div style='font-family: monospace; font-size: 15px;
-                                                font-weight: 900; color: #fbbf24;
-                                                letter-spacing: 0.5px; margin-bottom: 4px;'>
-                                        {_item["period_id"]} — {_item["period_name"]}
-                                    </div>
-                                    <div style='font-family: monospace; font-size: 11px;
-                                                color: #94a3b8;'>
-                                        🏢 {_item["divisi"]} | 📅
-                                        {_item["start_date"].strftime('%d/%m/%Y')} -
-                                        {_item["end_date"].strftime('%d/%m/%Y')}
-                                    </div>
-                                </div>
-                                <div style='
-                                    background: {_badge_bg};
-                                    border: 1.5px solid {_badge_border};
-                                    color: {_badge_color};
-                                    padding: 6px 12px; border-radius: 20px;
-                                    font-family: monospace; font-size: 10px;
-                                    font-weight: 900; white-space: nowrap;
-                                    letter-spacing: 0.5px;
-                                '>{_item["status"]}</div>
-                            </div>
+                         # Build card HTML in ONE LINE
+                        _card_html = (
+                            "<div style='background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85)); "
+                            f"border: 1.5px solid #9a7b38; border-left: 5px solid {_badge_border}; "
+                            "border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; "
+                            "box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);'>"
                             
-                            <div style='display: grid;
-                                        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-                                        gap: 10px;
-                                        margin-top: 10px;'>
-                                <div style='background: rgba(30, 41, 59, 0.6);
-                                            border: 1px solid #334155; border-radius: 8px;
-                                            padding: 8px 10px;'>
-                                    <div style='font-family: monospace; font-size: 9px;
-                                                color: #94a3b8; margin-bottom: 2px;'>
-                                        💰 NET SALES
-                                    </div>
-                                    <div style='font-family: monospace; font-size: 12px;
-                                                color: #fbbf24; font-weight: 900;'>
-                                        Rp {_item["target_net_sales"]:,}
-                                    </div>
-                                </div>
-                                
-                                <div style='background: rgba(30, 41, 59, 0.6);
-                                            border: 1px solid #334155; border-radius: 8px;
-                                            padding: 8px 10px;'>
-                                    <div style='font-family: monospace; font-size: 9px;
-                                                color: #94a3b8; margin-bottom: 2px;'>
-                                        📄 STD
-                                    </div>
-                                    <div style='font-family: monospace; font-size: 12px;
-                                                color: #38bdf8; font-weight: 900;'>
-                                        {_item["target_std"]} struk
-                                    </div>
-                                </div>
-                                
-                                <div style='background: rgba(30, 41, 59, 0.6);
-                                            border: 1px solid #334155; border-radius: 8px;
-                                            padding: 8px 10px;'>
-                                    <div style='font-family: monospace; font-size: 9px;
-                                                color: #94a3b8; margin-bottom: 2px;'>
-                                        💵 SPD (AUTO)
-                                    </div>
-                                    <div style='font-family: monospace; font-size: 12px;
-                                                color: #a855f7; font-weight: 900;'>
-                                        Rp {_spd_auto:,}
-                                    </div>
-                                </div>
-                                
-                                <div style='background: rgba(30, 41, 59, 0.6);
-                                            border: 1px solid #334155; border-radius: 8px;
-                                            padding: 8px 10px;'>
-                                    <div style='font-family: monospace; font-size: 9px;
-                                                color: #94a3b8; margin-bottom: 2px;'>
-                                        🧾 APC (AUTO)
-                                    </div>
-                                    <div style='font-family: monospace; font-size: 12px;
-                                                color: #10b981; font-weight: 900;'>
-                                        Rp {_apc_auto:,}
-                                    </div>
-                                </div>
-                                
-                                <div style='background: rgba(30, 41, 59, 0.6);
-                                            border: 1px solid #334155; border-radius: 8px;
-                                            padding: 8px 10px;'>
-                                    <div style='font-family: monospace; font-size: 9px;
-                                                color: #94a3b8; margin-bottom: 2px;'>
-                                        📈 GM%
-                                    </div>
-                                    <div style='font-family: monospace; font-size: 12px;
-                                                color: #fbbf24; font-weight: 900;'>
-                                        {_item["target_gm_pct"]:.1f}%
-                                    </div>
-                                </div>
-                                
-                                <div style='background: rgba(30, 41, 59, 0.6);
-                                            border: 1px solid #334155; border-radius: 8px;
-                                            padding: 8px 10px;'>
-                                    <div style='font-family: monospace; font-size: 9px;
-                                                color: #94a3b8; margin-bottom: 2px;'>
-                                        📊 NSB TARGET
-                                    </div>
-                                    <div style='font-family: monospace; font-size: 12px;
-                                                color: #06b6d4; font-weight: 900;'>
-                                        Rp {_nsb_target:,}
-                                    </div>
-                                </div>
-                            </div>
+                            "<div style='display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;'>"
+                            "<div>"
+                            f"<div style='font-family: monospace; font-size: 15px; font-weight: 900; color: #fbbf24; "
+                            f"letter-spacing: 0.5px; margin-bottom: 4px;'>"
+                            f"{_item['period_id']} — {_item['period_name']}</div>"
+                            f"<div style='font-family: monospace; font-size: 11px; color: #94a3b8;'>"
+                            f"📅 {_item['start_date'].strftime('%d/%m/%Y')} - {_item['end_date'].strftime('%d/%m/%Y')}</div>"
+                            "</div>"
+                            f"<div style='background: {_badge_bg}; border: 1.5px solid {_badge_border}; "
+                            f"color: {_badge_color}; padding: 6px 12px; border-radius: 20px; "
+                            f"font-family: monospace; font-size: 10px; font-weight: 900; "
+                            f"white-space: nowrap; letter-spacing: 0.5px;'>{_item['status']}</div>"
+                            "</div>"
                             
-                            {_progress_html}
-                        </div>
-                        """, unsafe_allow_html=True)
+                            "<div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); "
+                            "gap: 10px; margin-top: 10px;'>"
+                            
+                            "<div style='background: rgba(30, 41, 59, 0.6); border: 1px solid #334155; border-radius: 8px; padding: 8px 10px;'>"
+                            "<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-bottom: 2px;'>💰 NET SALES</div>"
+                            f"<div style='font-family: monospace; font-size: 12px; color: #fbbf24; font-weight: 900;'>"
+                            f"Rp {_item['target_net_sales']:,}</div></div>"
+                            
+                            "<div style='background: rgba(30, 41, 59, 0.6); border: 1px solid #334155; border-radius: 8px; padding: 8px 10px;'>"
+                            "<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-bottom: 2px;'>📄 STD</div>"
+                            f"<div style='font-family: monospace; font-size: 12px; color: #38bdf8; font-weight: 900;'>"
+                            f"{_item['target_std']} struk</div></div>"
+                            
+                            "<div style='background: rgba(30, 41, 59, 0.6); border: 1px solid #334155; border-radius: 8px; padding: 8px 10px;'>"
+                            "<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-bottom: 2px;'>💵 SPD (AUTO)</div>"
+                            f"<div style='font-family: monospace; font-size: 12px; color: #a855f7; font-weight: 900;'>"
+                            f"Rp {_spd_auto:,}</div></div>"
+                            
+                            "<div style='background: rgba(30, 41, 59, 0.6); border: 1px solid #334155; border-radius: 8px; padding: 8px 10px;'>"
+                            "<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-bottom: 2px;'>🧾 APC (AUTO)</div>"
+                            f"<div style='font-family: monospace; font-size: 12px; color: #10b981; font-weight: 900;'>"
+                            f"Rp {_apc_auto:,}</div></div>"
+                            
+                            "<div style='background: rgba(30, 41, 59, 0.6); border: 1px solid #334155; border-radius: 8px; padding: 8px 10px;'>"
+                            "<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-bottom: 2px;'>📈 GM%</div>"
+                            f"<div style='font-family: monospace; font-size: 12px; color: #fbbf24; font-weight: 900;'>"
+                            f"{_item['target_gm_pct']:.1f}%</div></div>"
+                            
+                            "<div style='background: rgba(30, 41, 59, 0.6); border: 1px solid #334155; border-radius: 8px; padding: 8px 10px;'>"
+                            "<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-bottom: 2px;'>📊 NSB TARGET</div>"
+                            f"<div style='font-family: monospace; font-size: 12px; color: #06b6d4; font-weight: 900;'>"
+                            f"Rp {_nsb_target:,}</div></div>"
+                            
+                            "</div>"
+                            f"{_progress_html}"
+                            "</div>"
+                        )
+                        st.markdown(_card_html, unsafe_allow_html=True)
 
    # SUB TAB 4: INPUT & PENGATURAN PERIODE PPS & SUEGER
     elif selected_master_sub == "📦 PPS & Sueger":
