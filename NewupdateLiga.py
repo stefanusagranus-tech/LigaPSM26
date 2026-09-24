@@ -20746,12 +20746,6 @@ elif selected_tab == "⚙️ Master Data":
                         key="ps_add_pname"
                     ).strip()
                     
-                    _new_divisi = st.selectbox(
-                        "🏢 Divisi",
-                        _divisi_options,
-                        key="ps_add_divisi"
-                    )
-                    
                     _new_start = st.date_input(
                         "📅 Tanggal Mulai",
                         value=waktu_wib.date(),
