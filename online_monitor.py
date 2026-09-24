@@ -30,7 +30,7 @@ _AVATAR_POOL = [
     "⚗️", "🧛‍♂️", "🧟‍♂️", "🐉", "🦉", "🐻", "🦊", "🦌"
 ]
 
-_ONLINE_IDLE_THRESHOLD_MIN = 2  # User dianggap online kalau heartbeat < 2 menit
+_ONLINE_IDLE_THRESHOLD_MIN = 15  # User dianggap online kalau heartbeat < 2 menit
 _MAX_ONLINE_DISPLAY = 10        # Max user tampil di panel sidebar
 _SKIP_USERS = ["DEBUG_TEST", "DEBUG_HEARTBEAT", "SYSTEM"]
 
