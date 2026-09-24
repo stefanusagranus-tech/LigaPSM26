@@ -1234,7 +1234,7 @@ def _get_user_monitor_data():
 # =========================================================================
 # 💬 DIALOG KONFIRMASI EDIT — MENU EDIT DATA
 # =========================================================================
-@st.dialog("")
+@st.dialog(" ")
 def show_edit_confirm_dialog(detail_dict, callback_key="confirm_edit"):
     """
     Dialog konfirmasi sebelum edit data.
@@ -1336,7 +1336,7 @@ def show_edit_confirm_dialog(detail_dict, callback_key="confirm_edit"):
 # =========================================================================
 # 💬 DIALOG KONFIRMASI HAPUS — MENU EDIT DATA
 # =========================================================================
-@st.dialog("")
+@st.dialog(" ")
 def show_delete_confirm_dialog(detail_dict, warning_text="", callback_key="confirm_delete"):
     """
     Dialog konfirmasi sebelum hapus data (dengan peringatan merah).
