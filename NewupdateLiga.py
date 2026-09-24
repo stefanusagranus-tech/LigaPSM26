@@ -18666,9 +18666,6 @@ elif selected_tab == "📊 Daily Performance":
                             "📊 NSB Actual": f"Rp {_pending_harian['nsb_actual']:,}",
                         },
                     }
-                    
-                    # Rerun SEKALI untuk trigger render dialog dari flag
-                    st.rerun()
                 
                 except Exception as _e:
                     st.error(f"❌ Gagal menyimpan data: {_e}")
