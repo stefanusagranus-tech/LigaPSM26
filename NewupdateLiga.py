@@ -20264,8 +20264,15 @@ elif selected_tab == "⚙️ Master Data":
                         key="ps_add_std"
                     )
                     
-                    # ✅ GM% — DISABLED (auto-fill 0, nanti di-develop)
-                    _new_gm = 0.0
+                    _new_gm = st.number_input(
+                        "💹 Target GM (%)",
+                        min_value=0.0,
+                        max_value=100.0,
+                        step=0.1,
+                        value=0.0,
+                        key="ps_add_gm",
+                        help="Target Gross Margin (opsional)"
+                    )
                     
                     _new_status = st.selectbox(
                         "🎯 Status Awal",
