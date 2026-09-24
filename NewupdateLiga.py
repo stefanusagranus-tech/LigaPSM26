@@ -18906,32 +18906,46 @@ elif selected_tab == "📊 Daily Performance":
                                 f"<tr style='background: linear-gradient(90deg, rgba(168, 85, 247, 0.12), rgba(124, 58, 237, 0.18)); "
                                 f"border-left: 4px solid #a855f7;'>"
 
-                                f"<td colspan='2' style='padding: 12px 14px; border-radius: 8px 0 0 8px; "
+                                # Kolom 1: Label
+                                f"<td style='padding: 12px 14px; border-radius: 8px 0 0 8px; "
                                 f"font-family: monospace; font-size: 11px; font-weight: 900; color: #c084fc; "
-                                f"letter-spacing: 1px; text-transform: uppercase;'>"
+                                f"letter-spacing: 1px; text-transform: uppercase; white-space: nowrap;'>"
                                 f"⚖️ Rata-Rata ({len(_filtered_rekap)} hari)</td>"
 
+                                # Kolom 2: Rata SPD (KOLOM BARU)
+                                f"<td style='padding: 12px 10px; text-align: right; "
+                                f"font-family: monospace; font-size: 12px; font-weight: 900; color: #fbbf24; "
+                                f"white-space: nowrap;'>Rp {_avg_spd:,}</td>"
+
+                                # Kolom 3: Kosong (skip growth SPD)
                                 f"<td style='padding: 12px 10px;'></td>"
 
+                                # Kolom 4: Rata STD
                                 f"<td style='padding: 12px 10px; text-align: right; "
                                 f"font-family: monospace; font-size: 12px; font-weight: 900; color: #38bdf8; "
                                 f"white-space: nowrap;'>{_avg_std:,}</td>"
 
+                                # Kolom 5: Kosong (skip growth STD)
                                 f"<td style='padding: 12px 10px;'></td>"
 
+                                # Kolom 6: Rata APC
                                 f"<td style='padding: 12px 10px; text-align: right; "
                                 f"font-family: monospace; font-size: 12px; font-weight: 900; color: #a855f7; "
                                 f"white-space: nowrap;'>Rp {_avg_apc:,}</td>"
 
-                                f"<td style='padding: 12px 10px;'></td>"
-                                f"<td style='padding: 12px 10px;'></td>"
+                                # Kolom 7: Kosong (skip growth APC)
                                 f"<td style='padding: 12px 10px;'></td>"
 
+                                # Kolom 8: Kosong (NSB Target)
+                                f"<td style='padding: 12px 10px;'></td>"
+
+                                # Kolom 9: Kosong (NSB Aktual)
+                                f"<td style='padding: 12px 10px;'></td>"
+
+                                # Kolom 10: Kosong
                                 f"<td style='padding: 12px 14px; border-radius: 0 8px 8px 0;'></td>"
 
                                 f"</tr>"
-
-                                f"<tr style='height: 6px;'><td colspan='10' style='border: none;'></td></tr>"
 
                                 # Row 2: TOTAL NET SALES
                                 f"<tr style='background: linear-gradient(90deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.22)); "
