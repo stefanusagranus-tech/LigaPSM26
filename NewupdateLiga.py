@@ -180,14 +180,12 @@ def show_success_dialog(
             }}
             
             /* ============================================================ */
-            /* HIDE HEADER BAWAAN DIALOG — STREAMLIT 1.64+                 */
-            /* ============================================================ */
-            /* Coba semua kemungkinan selector */
+            /* HIDE HEADER BAWAAN DIALOG — STREAMLIT 1.64+ */
             div[data-testid="stDialog"] header,
             div[data-testid="stDialog"] > div > div:first-child,
             div[data-testid="stDialog"] [role="dialog"] > div:first-child,
             div[data-testid="stModal"] header,
-            div[data-testid="stModal"] > div > div:first-child {
+            div[data-testid="stModal"] > div > div:first-child {{
                 display: none !important;
                 visibility: hidden !important;
                 height: 0 !important;
@@ -195,14 +193,13 @@ def show_success_dialog(
                 margin: 0 !important;
                 border: none !important;
                 overflow: hidden !important;
-            }
+            }}
 
-            /* Body dialog — reset padding */
             div[data-testid="stDialog"] [role="dialog"] > div:nth-child(2),
             div[data-testid="stDialog"] [role="dialog"] > div,
-            div[data-testid="stModal"] [role="dialog"] > div {
+            div[data-testid="stModal"] [role="dialog"] > div {{
                 padding: 20px 25px 25px 25px !important;
-            }
+            }}
             
             /* ============================================================ */
             /* ORNAMEN SUDUT EMAS */
