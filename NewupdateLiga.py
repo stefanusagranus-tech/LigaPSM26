@@ -20830,8 +20830,6 @@ elif selected_tab == "⚙️ Master Data":
                                 except Exception:
                                     pass
                                 
-                                st.toast(f"✅ Periode {_pending['period_id']} berhasil disimpan!", icon="🎉")
-                                time.sleep(0.5)
                                 
                                 show_success_dialog(
                                     title_msg=f"<b>Periode {_pending['period_name']}</b> berhasil disimpan!",
