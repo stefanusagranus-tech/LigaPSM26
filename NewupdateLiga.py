@@ -20961,9 +20961,6 @@ elif selected_tab == "⚙️ Master Data":
                                 value=str(_row.get("period_name", "")),
                                 key="ps_edit_pname"
                             )
-                            
-                            _curr_div = str(_row.get("divisi", "FOOD"))
-                            _div_idx = _divisi_options.index(_curr_div) if _curr_div in _divisi_options else 0
                                              
                             _edit_start = st.date_input(
                                 "📅 Tanggal Mulai",
