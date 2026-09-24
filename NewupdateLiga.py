@@ -1299,10 +1299,6 @@ def show_edit_confirm_dialog(detail_dict, callback_key="confirm_edit"):
     """, unsafe_allow_html=True)
     
     st.markdown(
-        "<div class='edit-dialog-title'>✏️ KONFIRMASI EDIT DATA</div>",
-        unsafe_allow_html=True
-    )
-    st.markdown(
         "<div class='edit-dialog-message'>"
         "Pastikan data yang akan diubah sudah benar. "
         "Perubahan akan disimpan permanen."
