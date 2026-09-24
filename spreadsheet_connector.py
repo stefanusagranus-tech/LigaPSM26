@@ -2243,7 +2243,7 @@ def isi_laporan_sueger(bulan_int, tahun_int, sheet_name):
 _PERIODE_SALES_HEADER = [
     "period_id", "period_name", "start_date", "end_date",
     "target_net_sales", "target_std", "target_apc",
-    "nsb_percentage", "status",
+    "nsb_percentage", "target_gm_pct", "status",
 ]
 
 
@@ -2279,7 +2279,7 @@ def load_periode_sales():
         df.columns = df.columns.astype(str).str.strip().str.lower()
         
         # Normalisasi angka
-        for _col in ["target_net_sales", "target_std", "target_apc", "nsb_percentage"]:
+        for _col in ["target_net_sales", "target_std", "target_apc", "nsb_percentage", "target_gm_pct"]:
             if _col in df.columns:
                 df[_col] = pd.to_numeric(df[_col], errors="coerce").fillna(0)
         

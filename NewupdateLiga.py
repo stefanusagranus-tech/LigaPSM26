@@ -20213,12 +20213,9 @@ elif selected_tab == "⚙️ Master Data":
         st.markdown("<hr style='border-color: rgba(180, 83, 9, 0.3); margin: 15px 0;'>",
                     unsafe_allow_html=True)
         
-        # =======================================================================
-        # MENU 1: TAMBAH PERIODE SALES
-        # =======================================================================
         if sales_sub_menu == "➕ Tambah Periode Sales":
             st.markdown("##### ➕ Tambah Periode Sales Baru")
-            st.caption("Isi Net Sales & STD. APC & NSB% dihitung otomatis.")
+            st.caption("Isi Net Sales & STD. APC, NSB% & GM% dihitung otomatis.")
             
             _next_id = generate_next_period_id(_ps_df)
             
@@ -20267,6 +20264,9 @@ elif selected_tab == "⚙️ Master Data":
                         key="ps_add_std"
                     )
                     
+                    # ✅ GM% — DISABLED (auto-fill 0, nanti di-develop)
+                    _new_gm = 0.0
+                    
                     _new_status = st.selectbox(
                         "🎯 Status Awal",
                         ["Aktif", "Selesai", "Draft"],
@@ -20287,6 +20287,7 @@ elif selected_tab == "⚙️ Master Data":
                 _spd_auto = int(_new_ns / _jhk) if _jhk > 0 else 0
                 _apc_auto = int(_spd_auto / _new_std) if _new_std > 0 else 0
                 _nsb_auto = round(_new_ns * 0.0015, 2)  # 0.15%
+                _gm_auto = _new_gm  # sementara 0
                 
                 _preview_html = (
                     "<div style='background: linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(14, 165, 233, 0.12)); "
@@ -20305,6 +20306,9 @@ elif selected_tab == "⚙️ Master Data":
                     f"<div style='display: flex; justify-content: space-between; padding: 3px 0;'>"
                     f"<span>📊 NSB% (Net Sales × 0.15%)</span>"
                     f"<span style='color: #38bdf8; font-weight: 900;'>{_nsb_auto}</span></div>"
+                    f"<div style='display: flex; justify-content: space-between; padding: 3px 0;'>"
+                    f"<span>💹 GM% (Coming Soon)</span>"
+                    f"<span style='color: #64748b; font-weight: 900;'>{_gm_auto}%</span></div>"
                     "</div>"
                 )
                 st.markdown(_preview_html, unsafe_allow_html=True)
@@ -20347,6 +20351,7 @@ elif selected_tab == "⚙️ Master Data":
                         "target_std": int(_new_std),
                         "target_apc": int(_apc_prev),
                         "nsb_percentage": float(_nsb_prev),
+                        "target_gm_pct": float(_new_gm),   # ✅ TAMBAH INI (auto 0)
                         "status": str(_new_status),
                     }
                     
@@ -20362,6 +20367,7 @@ elif selected_tab == "⚙️ Master Data":
                             "💵 SPD": f"Rp {_spd_prev:,}",
                             "🧾 APC": f"Rp {_apc_prev:,}",
                             "📊 NSB%": f"{_nsb_prev}",
+                            "💹 GM%": f"{_new_gm}% (Coming Soon)",
                             "🎯 Status": _new_status,
                         },
                         callback_key="add_periode_sales_confirm"
@@ -20404,6 +20410,7 @@ elif selected_tab == "⚙️ Master Data":
                                         "📄 STD": f"{_pending['target_std']} struk",
                                         "🧾 APC": f"Rp {_pending['target_apc']:,}",
                                         "📊 NSB%": f"{_pending['nsb_percentage']}",
+                                        "💹 GM%": f"{_pending['target_gm_pct']}%",
                                     }
                                 )
                                 time.sleep(2)
