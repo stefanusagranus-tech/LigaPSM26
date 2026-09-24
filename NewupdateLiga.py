@@ -795,6 +795,12 @@ def show_success_dialog(
         """,
         unsafe_allow_html=True,
     )
+# Tombol Tutup
+if st.button("⚜️ Tutup Gulungan ⚜️", use_container_width=True, key="btn_close_global_success_dialog"):
+    # Clear flag supaya dialog gak muncul lagi
+    if "_show_success_dialog" in st.session_state:
+        del st.session_state["_show_success_dialog"]
+    st.rerun()
 
 # =========================================================================
 # 🔍 FUNGSI: USER MONITOR PANEL (ADMIN ONLY)
@@ -18640,32 +18646,49 @@ elif selected_tab == "📊 Daily Performance":
                             )
                         except Exception:
                             pass
-                        
-                        # === NOTIFIKASI DOUBLE ===
-                        _action_text = "diperbarui" if _action == "update" else "disimpan"
-                        
-                        show_success_dialog(
-                            title_msg=f"<b>Data Harian {_input_tanggal.strftime('%d/%m/%Y')}</b> berhasil {_action_text}!",
-                            subtitle=f"Tersimpan di Sheet SALES_STOREPERFORMANCE",
-                            icon="📊",
-                            theme="green" if _action == "insert" else "blue",
-                            detail_dict={
-                                "📅 Tanggal": _input_tanggal.strftime("%d/%m/%Y"),
-                                "💰 SPD": f"Rp {_pending_harian['spd']:,}",
-                                "📄 STD": f"{_pending_harian['std']} struk",
-                                "🧾 APC": f"Rp {_pending_harian['apc']:,}",
-                                "📈 NSB Target": f"Rp {_pending_harian['nsb_target']:,}",
-                                "📊 NSB Actual": f"Rp {_pending_harian['nsb_actual']:,}",
-                            }
-                        )
-                        time.sleep(2)
-                        st.rerun()
+                    
+                    # === SIMPAN FLAG (bukan panggil dialog langsung) ===
+                    _action_text = "diperbarui" if _action == "update" else "disimpan"
+                    
+                    st.toast(f"✅ Data harian berhasil {_action_text}!", icon="🎉")
+                    
+                    st.session_state["_show_success_dialog"] = {
+                        "title_msg": f"<b>Data Harian {_input_tanggal.strftime('%d/%m/%Y')}</b> berhasil {_action_text}!",
+                        "subtitle": "Tersimpan di Sheet SALES_STOREPERFORMANCE",
+                        "icon": "📊",
+                        "theme": "green" if _action == "insert" else "blue",
+                        "detail_dict": {
+                            "📅 Tanggal": _input_tanggal.strftime("%d/%m/%Y"),
+                            "💰 SPD": f"Rp {_pending_harian['spd']:,}",
+                            "📄 STD": f"{_pending_harian['std']} struk",
+                            "🧾 APC": f"Rp {_pending_harian['apc']:,}",
+                            "📈 NSB Target": f"Rp {_pending_harian['nsb_target']:,}",
+                            "📊 NSB Actual": f"Rp {_pending_harian['nsb_actual']:,}",
+                        },
+                    }
+                    
+                    # Rerun SEKALI untuk trigger render dialog dari flag
+                    st.rerun()
                 
                 except Exception as _e:
                     st.error(f"❌ Gagal menyimpan data: {_e}")
                     st.toast(f"❌ Gagal simpan: {str(_e)[:80]}", icon="⚠️")
                     import traceback
                     st.code(traceback.format_exc())
+
+
+        # =============================================================
+        # 🎬 RENDER DIALOG DARI STATE FLAG (muncul di iterasi berikutnya)
+        # =============================================================
+        if st.session_state.get("_show_success_dialog"):
+            _dlg_data = st.session_state["_show_success_dialog"]
+            show_success_dialog(
+                title_msg=_dlg_data["title_msg"],
+                subtitle=_dlg_data["subtitle"],
+                icon=_dlg_data["icon"],
+                theme=_dlg_data["theme"],
+                detail_dict=_dlg_data["detail_dict"],
+            )
         
         # =============================================================
         # 📋 PREVIEW DATA 5 HARI TERAKHIR
