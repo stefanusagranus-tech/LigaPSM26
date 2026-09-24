@@ -13625,168 +13625,184 @@ if "portal_prep_ready" in st.session_state and st.session_state.portal_prep_read
             unsafe_allow_html=True
         )
 
-        st.markdown("<h1 style='color: #f59e0b; font-family: monospace; font-size: 32px; text-shadow: 0 0 15px rgba(245,158,11,0.4); text-align: center; margin-bottom: 5px;'>⛺ PREPARATION CAMP ⛺</h1>", unsafe_allow_html=True)
-        col_camp1, col_camp2, col_camp3 = st.columns(3)
-    
-        #================
-        #Kartu nama anjay#
-        #================
-        with col_camp1:
-            st.markdown("<div class='camp-card'><div class='camp-icon'>📜</div><div class='camp-title'>ANGGOTA GUILD</div><div class='camp-desc'>Buka gulungan piagam untuk memeriksa status level, poin atribut, dan rapor performa penjualan individu Anda.</div></div>", unsafe_allow_html=True)
-            if st.button("Lihat Status ➔", use_container_width=True, key="btn_camp_status"):
-                placeholder = st.empty()
-                with placeholder.container():
-                    # --- LAYAR LOADING FULLSCREEN: RITUAL PENCATATAN NAMA HERO (ANTI-STUCK) ---
-                    st.markdown(
-                        """
-                        <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
-                            <div class="magic-portal-container" style="position: relative; width: 150px; height: 150px; display: flex; justify-content: center; align-items: center;">
-                                <!-- Efek Ring Sihir Emas Berpusing Pelan -->
-                                <svg width="160" height="160" viewBox="0 0 160 160" style="position: absolute;">
-                                    <circle cx="80" cy="80" r="70" stroke="#d97706" stroke-width="2" stroke-dasharray="8, 6" fill="none" style="transform-origin: 80px 80px; animation: spin-clockwise 10s infinite linear;" />
-                                    <circle cx="80" cy="80" r="50" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="3, 4" fill="none" style="transform-origin: 80px 80px; animation: spin-counter 6s infinite linear;" />
-                                </svg>
-                                <div style="font-size: 50px; filter: drop-shadow(0 0 12px #d97706); animation: pulse-core 2s infinite ease-in-out;">📜</div>
-                            </div>
-                            <h1 style='color: #fbbf24; font-family: monospace; animation: blink 1.5s infinite; font-size: 22px; margin-top: 40px; letter-spacing: 2px; text-shadow: 0 0 15px rgba(251,191,36,0.4);'>RECORDING HERO NAME...</h1>
-                            <p style='color: #475569; font-size: 13px; margin-top: 5px; font-family: monospace;'>Reading spreadsheet registry and stabilizing guild roster...</p>
-                            <style>
-                                @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-                                [data-testid="stSidebar"] { display: none !important; }
-                                [data-testid="stHeader"] { display: none !important; }
-                                @keyframes spin-clockwise { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-                                @keyframes spin-counter { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
-                                @keyframes pulse-core { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
-                            </style>
+        st.markdown("<h1 style='color: #f59e0b; font-family: monospace; font-size: 28px; text-shadow: 0 0 15px rgba(245,158,11,0.4); text-align: center; margin-bottom: 20px;'>⛺ PREPARATION CAMP ⛺</h1>", unsafe_allow_html=True)
+        
+        # ✅ 3 CARD VERTICAL — Full width, stack ke bawah
+        
+        # ==============
+        # KARTU 1: ANGGOTA GUILD
+        # ==============
+        st.markdown(
+            """
+            <div class='camp-card'>
+                <div class='camp-icon'>📜</div>
+                <div class='camp-title'>ANGGOTA GUILD</div>
+                <div class='camp-desc'>Buka gulungan piagam untuk memeriksa status level, poin atribut, dan rapor performa penjualan individu Anda.</div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        if st.button("Lihat Status ➔", use_container_width=True, key="btn_camp_status"):
+            placeholder = st.empty()
+            with placeholder.container():
+                st.markdown(
+                    """
+                    <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
+                        <div class="magic-portal-container" style="position: relative; width: 150px; height: 150px; display: flex; justify-content: center; align-items: center;">
+                            <svg width="160" height="160" viewBox="0 0 160 160" style="position: absolute;">
+                                <circle cx="80" cy="80" r="70" stroke="#d97706" stroke-width="2" stroke-dasharray="8, 6" fill="none" style="transform-origin: 80px 80px; animation: spin-clockwise 10s infinite linear;" />
+                                <circle cx="80" cy="80" r="50" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="3, 4" fill="none" style="transform-origin: 80px 80px; animation: spin-counter 6s infinite linear;" />
+                            </svg>
+                            <div style="font-size: 50px; filter: drop-shadow(0 0 12px #d97706); animation: pulse-core 2s infinite ease-in-out;">📜</div>
                         </div>
-                        """, 
-                        unsafe_allow_html=True
-                    )
-                    # Menjalankan bar simulasi pemuatan selama ~3 detik
-                    progress_bar = st.progress(0)
-                    for percent_complete in range(100):
-                        time.sleep(0.03) 
-                        progress_bar.progress(percent_complete + 1)
-                
-                placeholder.empty()
-                # Nyalakan status sub-menu dan segarkan halaman untuk menampilkan Back Card
-                st.session_state.current_camp_menu = "status"
-                st.rerun()
-                
-        with col_camp2:
-            st.markdown("<div class='camp-card'><div class='camp-icon'>🎯</div><div class='camp-title'>QUIZ CAMPAIGN</div><div class='camp-desc'>Cek papan pengumuman untuk melihat quest musiman, tugas mingguan PSM, serta daily target buruan Anda.</div></div>", unsafe_allow_html=True)
-            if st.button("Ambil Quest ➔", use_container_width=True, key="btn_camp_quest"):
-                placeholder_loading = st.empty()
-                with placeholder_loading.container():
-                    # 🧙‍♂️ RITUAL LOADING FULLSCREEN: LINGKARAN SIHIR + PENCATATAN BUKU GAIB
-                    st.markdown(
-                        """
-                        <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
-                            <!-- LINGKARAN SIHIR VEKTOR BERPENDAR NEON -->
-                            <div class="magic-circle-container" style="position: relative; width: 200px; height: 100px; display: flex; justify-content: center; align-items: center;">
-                                <svg width="200" height="200" viewBox="0 0 200 200" style="position: absolute; top: -50px;">
-                                    <circle cx="100" cy="100" r="90" class="vector-glow" stroke="#00f0ff" stroke-width="3" stroke-dasharray="15, 10" fill="none" />
-                                    <circle cx="100" cy="100" r="65" class="vector-glow-inner" stroke="#a855f7" stroke-width="2" stroke-dasharray="4, 6" fill="none" />
-                                    <polygon points="100,25 165,140 35,140" stroke="#fbbf24" stroke-width="1.5" fill="none" class="vector-glow" style="transform-origin: 100px 100px; animation: spin-clockwise 12s infinite linear;" />
-                                </svg>
-                                <!-- EMOJI BUKU BERPUTAR DI TENGAH SEGITIGA SIHIR -->
-                                <div class="magic-core-book" style="position: absolute; font-size: 55px; filter: drop-shadow(0 0 15px #00f0ff); animation: pulse-book 1.5s infinite ease-in-out; z-index: 10;">📖</div>
-                            </div>
-                            <!-- TEKS ANIMASI PENCATATAN DATA -->
-                            <h1 id="txt-magic-title" style='color: #00f0ff; font-family: monospace; animation: blink-text 1.2s infinite; font-size: 22px; margin-top: 70px; letter-spacing: 2px; text-shadow: 0 0 15px rgba(0,240,255,0.5); text-align: center;'>LOGGING ADVENTURE DATA...</h1>
-                            <p id="txt-magic-sub" style='color: #64748b; font-size: 13px; margin-top: 5px; font-family: monospace; text-align: center; max-width: 320px; padding: 0 15px;'>Opening the heavy leather journal and engraving your guild performance...</p>
-                            <!-- GAUNG GAYA ANIMASI CSS -->
-                            <style>
-                                @keyframes spin-clockwise { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-                                .vector-glow { transform-origin: 100px 100px; animation: spin-clockwise 10s infinite linear; filter: drop-shadow(0 0 12px #00f0ff); }
-                                .vector-glow-inner { transform-origin: 100px 100px; animation: spin-clockwise 6s infinite linear; reverse; filter: drop-shadow(0 0 10px #a855f7); }
-                                @keyframes pulse-book { 0%, 100% { transform: scale(1) rotateY(0deg); } 50% { transform: scale(1.15) rotateY(180deg); } }
-                                @keyframes blink-text { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-                            </style>
+                        <h1 style='color: #fbbf24; font-family: monospace; animation: blink 1.5s infinite; font-size: 22px; margin-top: 40px; letter-spacing: 2px; text-shadow: 0 0 15px rgba(251,191,36,0.4);'>RECORDING HERO NAME...</h1>
+                        <p style='color: #475569; font-size: 13px; margin-top: 5px; font-family: monospace;'>Reading spreadsheet registry and stabilizing guild roster...</p>
+                        <style>
+                            @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+                            [data-testid="stSidebar"] { display: none !important; }
+                            [data-testid="stHeader"] { display: none !important; }
+                            @keyframes spin-clockwise { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                            @keyframes spin-counter { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+                            @keyframes pulse-core { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+                        </style>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+                progress_bar = st.progress(0)
+                for percent_complete in range(100):
+                    time.sleep(0.03)
+                    progress_bar.progress(percent_complete + 1)
+            
+            placeholder.empty()
+            st.session_state.current_camp_menu = "status"
+            st.rerun()
+        
+        st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
+        
+        # ==============
+        # KARTU 2: QUIZ CAMPAIGN
+        # ==============
+        st.markdown(
+            """
+            <div class='camp-card'>
+                <div class='camp-icon'>🎯</div>
+                <div class='camp-title'>QUIZ CAMPAIGN</div>
+                <div class='camp-desc'>Cek papan pengumuman untuk melihat quest musiman, tugas mingguan PSM, serta daily target buruan Anda.</div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        if st.button("Ambil Quest ➔", use_container_width=True, key="btn_camp_quest"):
+            # ... (kode loading & redirect yang sama seperti sebelumnya) ...
+            placeholder_loading = st.empty()
+            with placeholder_loading.container():
+                st.markdown(
+                    """
+                    <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
+                        <div class="magic-circle-container" style="position: relative; width: 200px; height: 100px; display: flex; justify-content: center; align-items: center;">
+                            <svg width="200" height="200" viewBox="0 0 200 200" style="position: absolute; top: -50px;">
+                                <circle cx="100" cy="100" r="90" class="vector-glow" stroke="#00f0ff" stroke-width="3" stroke-dasharray="15, 10" fill="none" />
+                                <circle cx="100" cy="100" r="65" class="vector-glow-inner" stroke="#a855f7" stroke-width="2" stroke-dasharray="4, 6" fill="none" />
+                                <polygon points="100,25 165,140 35,140" stroke="#fbbf24" stroke-width="1.5" fill="none" class="vector-glow" style="transform-origin: 100px 100px; animation: spin-clockwise 12s infinite linear;" />
+                            </svg>
+                            <div class="magic-core-book" style="position: absolute; font-size: 55px; filter: drop-shadow(0 0 15px #00f0ff); animation: pulse-book 1.5s infinite ease-in-out; z-index: 10;">📖</div>
                         </div>
-                        """, 
-                        unsafe_allow_html=True
-                    )
-                    
-                    # Jeda khidmat simulasi prapencatatan mantra (3 detik)
-                    progress_bar = st.progress(0)
-                    for percent_complete in range(100):
-                        time.sleep(0.02)
-                        progress_bar.progress(percent_complete + 1)
-                        if percent_complete == 40:
-                            st.markdown("<script>window.parent.document.getElementById('txt-magic-title').innerHTML = 'SYNCHRONIZING REWARD LOGS...'; window.parent.document.getElementById('txt-magic-sub').innerHTML = 'Inking down total item counts and verifying sueger elixirs...';</script>", unsafe_allow_html=True)
-                        elif percent_complete == 80:
-                            st.markdown("<script>window.parent.document.getElementById('txt-magic-title').innerHTML = 'STABILIZING MANA CONNECTIONS...'; window.parent.document.getElementById('txt-magic-sub').innerHTML = 'Polishing crystal emblems and locking privacy gates...';</script>", unsafe_allow_html=True)
-                    
-                    # 🔔 LAYAR KEDUA: PENGUMUMAN SELAMAT DATANG DI RESEPSIONIS GUILD
-                    st.markdown(
-                        """
-                        <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
-                            <div style='font-size: 70px; filter: drop-shadow(0 0 20px #fbbf24); animation: welcome-bounce 1s infinite alternate;'>🛎️</div>
-                            <h1 style='color: #fbbf24; font-family: monospace; font-size: 26px; margin-top: 30px; letter-spacing: 2px; text-shadow: 0 0 20px rgba(251,191,36,0.6); text-align: center; padding: 0 10px;'>SELAMAT DATANG DI RESEPSIONIS GUILD</h1>
-                            <p style='color: #ffffff; font-size: 14px; margin-top: 10px; font-family: monospace; text-align: center; font-style: italic;'>Silakan pilih buku panduan di meja resepsionis untuk melanjutkan tugas.</p>
-                            <style>
-                                @keyframes welcome-bounce { from { transform: translateY(0); } to { transform: translateY(-12px); } }
-                            </style>
+                        <h1 style='color: #00f0ff; font-family: monospace; animation: blink-text 1.2s infinite; font-size: 22px; margin-top: 70px; letter-spacing: 2px; text-shadow: 0 0 15px rgba(0,240,255,0.5); text-align: center;'>LOGGING ADVENTURE DATA...</h1>
+                        <p style='color: #64748b; font-size: 13px; margin-top: 5px; font-family: monospace; text-align: center; max-width: 320px; padding: 0 15px;'>Opening the heavy leather journal and engraving your guild performance...</p>
+                        <style>
+                            @keyframes spin-clockwise { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                            .vector-glow { transform-origin: 100px 100px; animation: spin-clockwise 10s infinite linear; filter: drop-shadow(0 0 12px #00f0ff); }
+                            .vector-glow-inner { transform-origin: 100px 100px; animation: spin-clockwise 6s infinite linear; reverse; filter: drop-shadow(0 0 10px #a855f7); }
+                            @keyframes pulse-book { 0%, 100% { transform: scale(1) rotateY(0deg); } 50% { transform: scale(1.15) rotateY(180deg); } }
+                            @keyframes blink-text { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+                        </style>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+                progress_bar = st.progress(0)
+                for percent_complete in range(100):
+                    time.sleep(0.02)
+                    progress_bar.progress(percent_complete + 1)
+                
+                st.markdown(
+                    """
+                    <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
+                        <div style='font-size: 70px; filter: drop-shadow(0 0 20px #fbbf24); animation: welcome-bounce 1s infinite alternate;'>🛎️</div>
+                        <h1 style='color: #fbbf24; font-family: monospace; font-size: 26px; margin-top: 30px; letter-spacing: 2px; text-shadow: 0 0 20px rgba(251,191,36,0.6); text-align: center; padding: 0 10px;'>SELAMAT DATANG DI RESEPSIONIS GUILD</h1>
+                        <p style='color: #ffffff; font-size: 14px; margin-top: 10px; font-family: monospace; text-align: center; font-style: italic;'>Silakan pilih buku panduan di meja resepsionis untuk melanjutkan tugas.</p>
+                        <style>@keyframes welcome-bounce { from { transform: translateY(0); } to { transform: translateY(-12px); } }</style>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+                time.sleep(1.8)
+            
+            placeholder_loading.empty()
+            st.session_state.current_camp_menu = "quiz_campaign"
+            st.session_state["campaign_sub_page"] = "resepsionis_utama"
+            st.rerun()
+        
+        st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
+        
+        # ==============
+        # KARTU 3: UPGRADE SKILL
+        # ==============
+        st.markdown(
+            """
+            <div class='camp-card'>
+                <div class='camp-icon'>⚔️</div>
+                <div class='camp-title'>UPGRADE SKILL</div>
+                <div class='camp-desc'>Masuki ruang latihan untuk mengasah keahlian bertarung Anda (Shortcut penginputan data transaksi penjualan).</div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        if st.button("Latih Skill ➔", use_container_width=True, key="btn_camp_skill"):
+            # ... (kode loading & redirect yang sama seperti sebelumnya) ...
+            placeholder = st.empty()
+            with placeholder.container():
+                st.markdown(
+                    """
+                    <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
+                        <div class="forge-container" style="position: relative; width: 150px; height: 150px; display: flex; justify-content: center; align-items: center;">
+                            <div class="anvil" style="font-size: 70px; z-index: 10; animation: strike 0.8s infinite ease-in-out;">⚒️</div>
+                            <div class="spark circle1"></div>
+                            <div class="spark circle2"></div>
                         </div>
-                        """, 
-                        unsafe_allow_html=True
-                    )
-                    time.sleep(1.8) # Jeda waktu agar pengguna bisa membaca tulisan selamat datang
+                        <h1 style='color: #f97316; font-family: monospace; animation: blink 1.2s infinite; font-size: 26px; margin-top: 40px; letter-spacing: 2px; text-shadow: 0 0 15px rgba(249,115,22,0.5);'>FORGING YOUR SALES SKILL...</h1>
+                        <p id="forge-status" style='color: #64748b; font-size: 13px; margin-top: 5px; font-family: monospace;'>Heating the metal and sharpening performance attributes...</p>
+                        <p id="progress-text" style='color: #fbbf24; font-family: monospace; font-size: 18px; font-weight: bold; margin-top: 25px;'>FORGING PROGRESS: 0%</p>
+                        <style>
+                            @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+                            @keyframes strike { 0%, 100% { transform: scale(1) translateY(0); } 50% { transform: scale(0.9) translateY(8px); filter: drop-shadow(0 0 25px #fbbf24); } }
+                            @keyframes explode { 0% { transform: scale(0.3); opacity: 1; border-style: solid; } 50% { border-style: dashed; } 100% { transform: scale(1.1); opacity: 0; border-style: dotted; } }
+                            .spark { position: absolute; border-radius: 50%; border: 2px solid #ef4444; box-sizing: border-box; }
+                            .circle1 { width: 120px; height: 120px; animation: explode 1.6s infinite linear; filter: drop-shadow(0 0 10px #f97316); }
+                            .circle2 { width: 140px; height: 140px; animation: explode 1.6s infinite linear; animation-delay: 0.8s; filter: drop-shadow(0 0 10px #ef4444); }
+                        </style>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+                progress_bar = st.progress(0)
+                for percent_complete in range(100):
+                    time.sleep(0.04)
+                    current_percent = percent_complete + 1
+                    progress_bar.progress(current_percent)
                 
-                placeholder_loading.empty()
-                
-                # Mengaktifkan gerbang alihan menuju halaman 2 Buku Resepsionis
-                st.session_state.current_camp_menu = "quiz_campaign"
-                st.session_state["campaign_sub_page"] = "resepsionis_utama"
-                st.rerun()
-
-                
-        # =========================================================================
-        # ⚔️ KARTU 3: UPGRADE SKILL (EDISI RITUAL PENEMPAAN SENJATA 1-100)
-        # =========================================================================
-        with col_camp3:
-            st.markdown("<div class='camp-card'><div class='camp-icon'>⚔️</div><div class='camp-title'>UPGRADE SKILL</div><div class='camp-desc'>Masuki ruang latihan untuk mengasah keahlian bertarung Anda (Shortcut penginputan data transaksi penjualan).</div></div>", unsafe_allow_html=True)
-            if st.button("Latih Skill ➔", use_container_width=True, key="btn_camp_skill"):
-                placeholder = st.empty()
-                with placeholder.container():
-                    # --- LAYAR LOADING FULLSCREEN: BLACKSMITH FORGING (MURNI TANPA TAG STYLE YANG RAWAN BOCOR) ---
-                    st.markdown(
-                        """
-                        <div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'>
-                            <div class="forge-container" style="position: relative; width: 150px; height: 150px; display: flex; justify-content: center; align-items: center;">
-                                <div class="anvil" style="font-size: 70px; z-index: 10; animation: strike 0.8s infinite ease-in-out;">⚒️</div>
-                                <div class="spark circle1"></div>
-                                <div class="spark circle2"></div>
-                            </div>
-                            <h1 style='color: #f97316; font-family: monospace; animation: blink 1.2s infinite; font-size: 26px; margin-top: 40px; letter-spacing: 2px; text-shadow: 0 0 15px rgba(249,115,22,0.5);'>FORGING YOUR SALES SKILL...</h1>
-                            <p id="forge-status" style='color: #64748b; font-size: 13px; margin-top: 5px; font-family: monospace;'>Heating the metal and sharpening performance attributes...</p>
-                            <p id="progress-text" style='color: #fbbf24; font-family: monospace; font-size: 18px; font-weight: bold; margin-top: 25px;'>FORGING PROGRESS: 0%</p>
-                        </div>
-                        """, unsafe_allow_html=True
-                    )
-                    
-                    # Progress bar simulasi tempa berjalan mundur lambat khidmat
-                    progress_bar = st.progress(0)
-                    for percent_complete in range(100):
-                        time.sleep(0.04) 
-                        current_percent = percent_complete + 1
-                        progress_bar.progress(current_percent)
-                        st.markdown(f"<script>window.parent.document.getElementById('progress-text').innerHTML = 'FORGING PROGRESS: {current_percent}%'; if ({current_percent} > 40 && {current_percent} < 80) {{ window.parent.document.getElementById('forge-status').innerHTML = 'Tempering blade core and structuring transaction logs...'; }} else if ({current_percent} >= 80) {{ window.parent.document.getElementById('forge-status').innerHTML = 'Quenching weapon in holy water! Stabilization complete!'; }}</script>", unsafe_allow_html=True)
-                    
-                    # Sukses Screen Pendek
-                    st.markdown("<div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'><h1 style='color: #fbbf24; font-family: monospace; font-size: 32px; text-shadow: 0 0 20px rgba(251,191,36,0.6);'>⚔️ WEAPON UPGRADED!</h1><p style='color: #ffffff; font-size: 15px; margin-top: 10px; font-family: monospace;'>Entering training ground with your sharpest sword...</p></div>", unsafe_allow_html=True)
-                    time.sleep(1.2)
-                
-                # 🚀 KUNCI PERBAIKAN EMERGENSI: MENGGUNAKAN GERBANG ALIHAN AMAN (ANTI-TABRAKAN WIDGET)
-                placeholder.empty()
-                st.session_state.portal_prep_ready = False  # Menutup layar perkemahan
-                
-                # Alih-alih menembak widget langsung, kita nyalakan saklar bantuan sementara
-                st.session_state.redirect_to_input = True
-                
-                st.rerun()
-                
+                st.markdown("<div style='background-color: #0c1020; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;'><h1 style='color: #fbbf24; font-family: monospace; font-size: 32px; text-shadow: 0 0 20px rgba(251,191,36,0.6);'>⚔️ WEAPON UPGRADED!</h1><p style='color: #ffffff; font-size: 15px; margin-top: 10px; font-family: monospace;'>Entering training ground with your sharpest sword...</p></div>", unsafe_allow_html=True)
+                time.sleep(1.2)
+            
+            placeholder.empty()
+            st.session_state.portal_prep_ready = False
+            st.session_state.redirect_to_input = True
+            st.rerun()
+        
+        st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
+        
+        # Tombol kembali
         st.markdown("<div class='leave-camp-box'>", unsafe_allow_html=True)
         if st.button("🚪 KEMBALI KE BERANDA KOTA", use_container_width=True, key="btn_leave_camp"):
             st.session_state.portal_prep_ready = False
@@ -17906,113 +17922,364 @@ elif selected_tab == "➕ Edit Data (Admin)":
     
     st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
 
-    # SUB TAB 1: EDIT SALES PERSONIL
+    # =========================================================================
+    # SUB TAB 1: EDIT SALES PSM (MULTI INPUT + FILTER BULAN)
+    # =========================================================================
     if selected_sub_tab == "✏️ EDIT SALES PSM":
         st.markdown(
-            "<h4 style='color: #38bdf8;'>✏️ Edit Transaksi Sales (Koreksi"
-            " Input)</h4>",
+            "<h4 style='color: #38bdf8;'>✏️ Edit Transaksi Sales (Multi Input)</h4>",
             unsafe_allow_html=True,
         )
-        if not edit_periods_dict:
-            st.warning("⚠️ Tidak ada data periode yang tersedia di sheet PERIODE.")
+        st.caption("💡 Ubah banyak item sekaligus — hemat API, lebih cepat")
+        
+        # Pastikan data siap
+        sp_df = st.session_state.get("sales_person_df", pd.DataFrame()).copy()
+        periods_df_edit = st.session_state.get("periods_df", pd.DataFrame()).copy()
+        
+        if sp_df.empty:
+            st.warning("⚠️ Belum ada data transaksi.")
+        elif periods_df_edit.empty:
+            st.warning("⚠️ Tidak ada data periode. Cek sheet PERIODE.")
         else:
-            e_period_name = st.selectbox(
-                "Pilih Periode", list(edit_periods_dict.keys()), key="edit_period"
+            # Normalisasi kolom
+            periods_df_edit.columns = periods_df_edit.columns.astype(str).str.strip().str.lower()
+            sp_df.columns = sp_df.columns.astype(str).str.strip().str.lower()
+            
+            # =========================================================
+            # ✅ STEP 1: FILTER BULAN
+            # =========================================================
+            _edit_bulan_list = [
+                "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                "Juli", "Agustus", "September", "Oktober", "November", "Desember",
+            ]
+            _edit_bulan_pilih = st.selectbox(
+                "📅 Pilih Bulan",
+                _edit_bulan_list,
+                index=waktu_wib.month - 1,
+                key="edit_psm_bulan_pilih",
             )
-            e_p_id = edit_periods_dict[e_period_name]
-            p_start, p_end = get_period_date_bounds(e_p_id)
-
-            sp_sub = (
-                sp_df[sp_df["period_id"].astype(str) == str(e_p_id)].copy()
-                if not sp_df.empty and "period_id" in sp_df.columns
-                else pd.DataFrame()
-            )
-
-            if sp_sub.empty:
-                st.info("Belum ada data transaksi di periode ini untuk diedit.")
-            else:
-                e_person = st.selectbox(
-                    "Pilih Personil", sp_sub["person_name"].unique(), key="edit_person"
-                )
-                sp_person_sub = sp_sub[sp_sub["person_name"] == e_person]
-
-                if sp_person_sub.empty:
-                    st.info("Tidak ada transaksi untuk personil ini.")
-                else:
-                    sp_person_sub["label_trx"] = sp_person_sub.apply(
-                        lambda r: (
-                            f"[{r.get('updated_at', '-')}] {r['item_name']} -"
-                            f" {r['actual_qty']} Pcs"
-                        ),
-                        axis=1,
-                    )
-                    selected_label = st.selectbox(
-                        "Pilih Transaksi yang Akan Diedit",
-                        sp_person_sub["label_trx"].tolist(),
-                        key="edit_trx_select",
-                    )
-                    selected_row = sp_person_sub[
-                        sp_person_sub["label_trx"] == selected_label
-                    ].iloc[0]
-
-                    st.markdown("---")
-                    col_e1, col_e2 = st.columns(2)
+            _edit_bulan_int = _edit_bulan_list.index(_edit_bulan_pilih) + 1
+            _edit_tahun_int = waktu_wib.year
+            
+            # =========================================================
+            # ✅ STEP 2: FILTER PERIODE BY BULAN
+            # =========================================================
+            _edit_periods_filtered = {}
+            
+            if all(c in periods_df_edit.columns for c in ["period_id", "period_name", "start_date", "end_date"]):
+                for _, _row in periods_df_edit.iterrows():
                     try:
-                        raw_date = pd.to_datetime(selected_row.get("updated_at")).date()
+                        _pid = str(_row["period_id"]).strip()
+                        _pname = str(_row["period_name"]).strip()
+                        _start = pd.to_datetime(_row["start_date"], errors="coerce")
+                        _end = pd.to_datetime(_row["end_date"], errors="coerce")
+                        
+                        if pd.isna(_start) or pd.isna(_end):
+                            continue
+                        
+                        # ✅ Filter by bulan (dari start_date)
+                        if _start.month != _edit_bulan_int or _start.year != _edit_tahun_int:
+                            continue
+                        
+                        # Label dengan rentang tanggal
+                        if _start.month == _end.month:
+                            _label = f"{_start.day} - {_end.day} {_start.strftime('%B %Y')}"
+                        else:
+                            _label = f"{_start.strftime('%d %b')} - {_end.strftime('%d %b %Y')}"
+                        
+                        # Kalau ada nama custom, tambahkan
+                        if _pname and _pname.lower() not in ["nan", "-", ""]:
+                            _label += f" | {_pname}"
+                        
+                        _edit_periods_filtered[_label] = _pid
                     except Exception:
-                        raw_date = p_start
-
-                    safe_e_date = (
-                        p_start
-                        if raw_date < p_start
-                        else (p_end if raw_date > p_end else raw_date)
+                        continue
+            
+            if not _edit_periods_filtered:
+                st.warning(
+                    f"⚠️ Tidak ada periode di bulan **{_edit_bulan_pilih}** {_edit_tahun_int}. "
+                    f"Hubungi admin atau pilih bulan lain."
+                )
+            else:
+                _edit_period_label = st.selectbox(
+                    "📆 Pilih Periode",
+                    list(_edit_periods_filtered.keys()),
+                    key="edit_psm_period_pilih",
+                )
+                e_p_id = _edit_periods_filtered[_edit_period_label]
+                
+                # Batas tanggal untuk date picker
+                try:
+                    p_start, p_end = get_period_date_bounds(e_p_id)
+                    if isinstance(p_start, (pd.Timestamp, datetime)):
+                        p_start = p_start.date()
+                    if isinstance(p_end, (pd.Timestamp, datetime)):
+                        p_end = p_end.date()
+                except Exception:
+                    p_start = waktu_wib.date() - timedelta(days=30)
+                    p_end = waktu_wib.date() + timedelta(days=30)
+                
+                # =========================================================
+                # ✅ STEP 3: FILTER PERSONIL
+                # =========================================================
+                # Filter data transaksi untuk periode ini
+                sp_sub = sp_df[
+                    sp_df["period_id"].astype(str).str.strip() == str(e_p_id).strip()
+                ].copy()
+                
+                if sp_sub.empty:
+                    st.info(f"📭 Belum ada data transaksi di periode **{_edit_period_label}**.")
+                else:
+                    # Ambil daftar personil yang ada transaksi di periode ini
+                    _edit_personil_available = sorted(
+                        sp_sub["person_name"].dropna().astype(str).str.strip().str.upper().unique().tolist()
                     )
-
-                    with col_e1:
-                        new_e_date = st.date_input(
-                            "Ubah Tanggal Transaksi",
-                            value=safe_e_date,
-                            min_value=p_start,
-                            max_value=p_end,
-                            key="edit_date_val",
+                    
+                    if not _edit_personil_available:
+                        st.info("Tidak ada personil di periode ini.")
+                    else:
+                        e_person = st.selectbox(
+                            "👤 Pilih Personil",
+                            _edit_personil_available,
+                            key="edit_psm_person_pilih",
                         )
-                    with col_e2:
-                        new_e_qty = st.number_input(
-                            "Ubah Jumlah Qty (Pcs)",
-                            min_value=0,
-                            step=1,
-                            value=int(selected_row["actual_qty"]),
-                            key="edit_qty_val",
-                        )
-
-                    if st.button(
-                        "💾 Simpan Perubahan Edit",
-                        use_container_width=True,
-                        key="btn_save_edit",
-                    ):
-                        idx = selected_row.name
-                        st.session_state.sales_person_df.loc[idx, "actual_qty"] = new_e_qty
-                        st.session_state.sales_person_df.loc[idx, "updated_at"] = str(
-                            new_e_date
-                        )
-
-                        sync_store_sales_from_personnel()
-                        save_database(
-                            st.session_state.sales_item_df,
-                            st.session_state.sales_person_df,
-                            st.session_state.sales_pps_df,
-                            st.session_state.sales_store_df,
-                        )
-                        # ✅ LOG AKTIVITAS
-                        log_activity(
-                            "EDIT_DATA",
-                            f"Edit transaksi {e_person} - {selected_label}"
-                        )
-
-                        st.toast("🎉 Perubahan data sukses disimpan!", icon="✅")
-                        st.success("✅ Perubahan transaksi berhasil disimpan permanen!")
-                        time.sleep(1.5)
-                        st.rerun()
+                        
+                        # Filter transaksi personil ini
+                        sp_person_sub = sp_sub[
+                            sp_sub["person_name"].astype(str).str.upper() == e_person.upper()
+                        ].copy()
+                        
+                        if sp_person_sub.empty:
+                            st.info(f"Tidak ada transaksi untuk **{e_person}** di periode ini.")
+                        else:
+                            # =========================================================
+                            # GROUP BY ITEM — Total qty per item
+                            # =========================================================
+                            sp_person_sub["actual_qty"] = pd.to_numeric(
+                                sp_person_sub["actual_qty"], errors="coerce"
+                            ).fillna(0)
+                            
+                            # Normalize item_id
+                            sp_person_sub["item_id_clean"] = (
+                                sp_person_sub["item_id"].astype(str).str.strip().str.replace(".0", "", regex=False)
+                            )
+                            
+                            # Group by item
+                            grouped_items = (
+                                sp_person_sub.groupby(["item_id_clean", "item_name"])
+                                .agg(
+                                    total_qty=("actual_qty", "sum"),
+                                )
+                                .reset_index()
+                            )
+                            grouped_items = grouped_items.sort_values("item_name").reset_index(drop=True)
+                            
+                            if grouped_items.empty:
+                                st.info("Tidak ada item untuk personil ini.")
+                            else:
+                                _total_qty_all = int(grouped_items["total_qty"].sum())
+                                _total_produk = len(grouped_items)
+                                
+                                st.markdown("---")
+                                st.markdown(
+                                    f"##### 📦 Daftar Item — {e_person} "
+                                    f"<span style='color: #94a3b8; font-size: 13px;'>"
+                                    f"({_total_produk} produk, {_total_qty_all} total qty)</span>",
+                                    unsafe_allow_html=True,
+                                )
+                                
+                                # =========================================================
+                                # PILIH TANGGAL (untuk update)
+                                # =========================================================
+                                _default_date_edit = p_end
+                                if isinstance(_default_date_edit, (pd.Timestamp, datetime)):
+                                    _default_date_edit = _default_date_edit.date()
+                                if _default_date_edit < p_start or _default_date_edit > p_end:
+                                    _default_date_edit = p_end if p_end >= p_start else p_start
+                                
+                                new_edit_date = st.date_input(
+                                    "📅 Tanggal Transaksi (berlaku untuk semua item yang diubah)",
+                                    value=_default_date_edit,
+                                    min_value=p_start,
+                                    max_value=p_end,
+                                    key=f"edit_psm_date_{e_p_id}_{e_person}",
+                                )
+                                
+                                # Info
+                                st.markdown(
+                                    "<div style='color: #94a3b8; font-size: 11px; "
+                                    "padding: 8px 12px; background: rgba(30, 41, 59, 0.5); "
+                                    "border-left: 3px solid #38bdf8; "
+                                    "border-radius: 6px; font-family: monospace; margin-bottom: 16px;'>"
+                                    "💡 <b>Info:</b> Ubah qty di bawah ini. "
+                                    "Yang <b>tidak diubah</b> akan diabaikan (tidak save ulang)."
+                                    "</div>",
+                                    unsafe_allow_html=True,
+                                )
+                                
+                                # =========================================================
+                                # FORM MULTI INPUT
+                                # =========================================================
+                                with st.form(key=f"form_edit_psm_{e_p_id}_{e_person}"):
+                                    st.markdown("##### ✏️ Ubah Qty Item:")
+                                    
+                                    new_values = {}
+                                    col_m1, col_m2 = st.columns(2)
+                                    
+                                    for idx, item_row in grouped_items.iterrows():
+                                        target_col = col_m1 if (idx % 2 == 0) else col_m2
+                                        _iid = str(item_row["item_id_clean"])
+                                        _iname = str(item_row["item_name"])
+                                        _curr_qty = int(item_row["total_qty"])
+                                        
+                                        with target_col:
+                                            _new_qty = st.number_input(
+                                                f"📌 {_iname}",
+                                                min_value=0,
+                                                step=1,
+                                                value=_curr_qty,
+                                                key=f"edit_psm_qty_{e_p_id}_{_iid}",
+                                                help=f"Item ID: {_iid} | Saat ini: {_curr_qty} pcs",
+                                            )
+                                            new_values[_iid] = {
+                                                "item_name": _iname,
+                                                "old_qty": _curr_qty,
+                                                "new_qty": int(_new_qty),
+                                            }
+                                    
+                                    st.markdown("---")
+                                    
+                                    # =========================================================
+                                    # PREVIEW PERUBAHAN
+                                    # =========================================================
+                                    _changes = [
+                                        (v["item_name"], v["old_qty"], v["new_qty"])
+                                        for v in new_values.values()
+                                        if v["old_qty"] != v["new_qty"]
+                                    ]
+                                    
+                                    if _changes:
+                                        st.markdown("##### 📊 Preview Perubahan:")
+                                        for _name, _old, _new in _changes:
+                                            _delta = _new - _old
+                                            _icon = "📈" if _delta > 0 else "📉"
+                                            _color = "#10b981" if _delta > 0 else "#ef4444"
+                                            _sign = "+" if _delta > 0 else ""
+                                            
+                                            st.markdown(
+                                                f"<div style='display: flex; justify-content: space-between; "
+                                                f"padding: 8px 12px; margin: 4px 0; "
+                                                f"background: rgba(15, 23, 42, 0.6); "
+                                                f"border-left: 3px solid {_color}; "
+                                                f"border-radius: 6px; font-family: monospace; font-size: 12px;'>"
+                                                f"<span style='color: #e2e8f0;'>{_icon} {_name}</span>"
+                                                f"<span style='color: {_color}; font-weight: 900;'>"
+                                                f"{_old} → {_new} ({_sign}{_delta})</span>"
+                                                f"</div>",
+                                                unsafe_allow_html=True,
+                                            )
+                                    else:
+                                        st.info("ℹ️ Belum ada perubahan. Ubah qty di atas untuk melihat preview.")
+                                    
+                                    st.markdown("---")
+                                    btn_save_multi = st.form_submit_button(
+                                        "💾 Simpan Semua Perubahan",
+                                        use_container_width=True,
+                                        type="primary",
+                                    )
+                                
+                                # =========================================================
+                                # PROSES SIMPAN
+                                # =========================================================
+                                if btn_save_multi:
+                                    if not _changes:
+                                        st.warning("⚠️ Tidak ada perubahan untuk disimpan.")
+                                    else:
+                                        try:
+                                            with st.spinner(f"⏳ Menyimpan {len(_changes)} perubahan..."):
+                                                # Ambil dataframe utama (fresh)
+                                                _sp_now = st.session_state.get("sales_person_df", pd.DataFrame()).copy()
+                                                
+                                                # Normalisasi kolom matching
+                                                _sp_now["_pid"] = _sp_now["period_id"].astype(str).str.strip()
+                                                _sp_now["_pname"] = _sp_now["person_name"].astype(str).str.strip().str.upper()
+                                                _sp_now["_iid"] = (
+                                                    _sp_now["item_id"].astype(str).str.strip().str.replace(".0", "", regex=False)
+                                                )
+                                                
+                                                _total_updated = 0
+                                                
+                                                for _iid, _data in new_values.items():
+                                                    if _data["old_qty"] == _data["new_qty"]:
+                                                        continue
+                                                    
+                                                    # Cari row yang match
+                                                    _mask = (
+                                                        (_sp_now["_pid"] == str(e_p_id).strip()) &
+                                                        (_sp_now["_pname"] == e_person.upper()) &
+                                                        (_sp_now["_iid"] == _iid)
+                                                    )
+                                                    
+                                                    if not _mask.any():
+                                                        continue
+                                                    
+                                                    _match_rows = _sp_now[_mask]
+                                                    
+                                                    # Kalau 1 row → update langsung
+                                                    if len(_match_rows) == 1:
+                                                        _idx = _match_rows.index[0]
+                                                        st.session_state.sales_person_df.loc[_idx, "actual_qty"] = _data["new_qty"]
+                                                        st.session_state.sales_person_df.loc[_idx, "updated_at"] = str(new_edit_date)
+                                                        _total_updated += 1
+                                                    else:
+                                                        # Multiple rows (item sama beberapa tanggal):
+                                                        # Consolidate ke row pertama
+                                                        _first_idx = _match_rows.index[0]
+                                                        _other_idx = _match_rows.index[1:]
+                                                        
+                                                        st.session_state.sales_person_df.loc[_first_idx, "actual_qty"] = _data["new_qty"]
+                                                        st.session_state.sales_person_df.loc[_first_idx, "updated_at"] = str(new_edit_date)
+                                                        
+                                                        # Hapus row lain
+                                                        st.session_state.sales_person_df = (
+                                                            st.session_state.sales_person_df.drop(_other_idx)
+                                                        )
+                                                        
+                                                        _total_updated += 1
+                                                
+                                                # Cleanup kolom temporary
+                                                cols_to_drop = ["_pid", "_pname", "_iid"]
+                                                for _c in cols_to_drop:
+                                                    if _c in st.session_state.sales_person_df.columns:
+                                                        st.session_state.sales_person_df = (
+                                                            st.session_state.sales_person_df.drop(columns=[_c])
+                                                        )
+                                                
+                                                # Sync & save
+                                                sync_store_sales_from_personnel()
+                                                save_database(
+                                                    st.session_state.sales_item_df,
+                                                    st.session_state.sales_person_df,
+                                                    st.session_state.sales_pps_df,
+                                                    st.session_state.sales_store_df,
+                                                )
+                                                
+                                                # Log
+                                                log_activity(
+                                                    "EDIT_DATA",
+                                                    f"Multi-edit {_total_updated} item untuk {e_person} di {_edit_period_label}",
+                                                )
+                                                
+                                                # Notif
+                                                st.toast(f"✅ {_total_updated} item berhasil diupdate!", icon="🎉")
+                                                st.success(f"✅ {_total_updated} item berhasil disimpan permanen!")
+                                                time.sleep(1.5)
+                                                st.rerun()
+                                        
+                                        except Exception as e_save:
+                                            st.error(f"❌ Gagal menyimpan: {str(e_save)}")
+                                            import traceback
+                                            st.code(traceback.format_exc())
 
     # SUB TAB 2: HAPUS & RESET
     elif selected_sub_tab == "🗑️ HAPUS & RESET PSM":
