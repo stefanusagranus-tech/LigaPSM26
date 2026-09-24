@@ -20962,20 +20962,9 @@ elif selected_tab == "⚙️ Master Data":
                                 key="ps_edit_pname"
                             )
                             
-                            _divisi_options = [
-                                "FOOD", "NON-FOOD", "FRESH", "GROCERY",
-                                "HOUSEHOLD", "PERSONAL CARE", "ELECTRONIC", "LAINNYA"
-                            ]
                             _curr_div = str(_row.get("divisi", "FOOD"))
                             _div_idx = _divisi_options.index(_curr_div) if _curr_div in _divisi_options else 0
-                            
-                            _edit_divisi = st.selectbox(
-                                "🏢 Divisi",
-                                _divisi_options,
-                                index=_div_idx,
-                                key="ps_edit_divisi"
-                            )
-                            
+                                             
                             _edit_start = st.date_input(
                                 "📅 Tanggal Mulai",
                                 value=_curr_start,
