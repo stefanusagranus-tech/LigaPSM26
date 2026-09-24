@@ -17927,8 +17927,17 @@ elif selected_tab == "📊 Daily Performance":
                 _preview_apc = int(_input_spd / _input_std)
             else:
                 _preview_apc = 0
-            
-            _preview_nsb_target = int(_input_spd * (_active_period['nsb_percentage'] / 100)) if _input_spd > 0 else 0
+
+            # ✅ FIX: NSB Target = (Target Net Sales × NSB%) ÷ JHK
+            _jhk_period = _active_period.get('jhk', 30)  # ambil dari periode aktif
+            _target_net_sales_bulanan = _active_period.get('target_net_sales', 0)
+            _nsb_pct = _active_period.get('nsb_percentage', 0.15)
+
+            # NSB Target = Target NS × NSB% ÷ JHK
+            # Karena NSB% di sheet dalam bentuk pecahan (0.0015 = 0.15%)
+            _preview_nsb_target = int(
+                (_target_net_sales_bulanan * _nsb_pct) / _jhk_period
+            ) if _jhk_period > 0 else 0
             
             if _input_spd > 0:
                 st.markdown(f"""
