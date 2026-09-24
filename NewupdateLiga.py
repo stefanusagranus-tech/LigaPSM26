@@ -19271,12 +19271,6 @@ elif selected_tab == "➕ Edit Data (Admin)":
                                                     "EDIT_DATA",
                                                     f"Multi-edit {_total_updated} item untuk {e_person} di {_edit_period_label}",
                                                 )
-                                                
-                                                # Notif
-                                                st.toast(f"✅ {_total_updated} item berhasil diupdate!", icon="🎉")
-                                                st.success(f"✅ {_total_updated} item berhasil disimpan permanen!")
-                                                time.sleep(1.5)
-                                                st.rerun()
                                         
                                         except Exception as e_save:
                                             st.error(f"❌ Gagal menyimpan: {str(e_save)}")
@@ -20374,9 +20368,6 @@ elif selected_tab == "⚙️ Master Data":
                                 st.session_state.sales_store_df,
                             )
 
-                            show_swal("Berhasil!", f"Produk {new_item_name} berhasil disimpan!", "success")
-                            time.sleep(1.5)
-                            st.rerun()
                         except Exception as e:
                             st.error(f"❌ Gagal menambahkan produk: {e}")
 
@@ -20474,9 +20465,7 @@ elif selected_tab == "⚙️ Master Data":
                                     st.session_state.sales_pps_df,
                                     st.session_state.sales_store_df,
                                 )
-                                show_swal("Tersimpan!", "Perubahan item berhasil disimpan!", "success")
-                                time.sleep(1.5)
-                                st.rerun()
+
                             except Exception as e:
                                 st.error(f"❌ Gagal memperbarui item: {e}")
 
@@ -21025,10 +21014,6 @@ elif selected_tab == "⚙️ Master Data":
                                         except Exception:
                                             pass
                                         
-                                        # ✅ NOTIFIKASI
-                                        st.toast(f"✅ Periode {_pending_upd['period_id']} berhasil diupdate!", icon="🎉")
-                                        time.sleep(0.5)
-                                        
                                         show_success_dialog(
                                             title_msg=f"<b>Periode {_pending_upd['period_name']}</b> berhasil diupdate!",
                                             subtitle="Perubahan Tersimpan",
@@ -21383,9 +21368,6 @@ elif selected_tab == "⚙️ Master Data":
                             
                             save_master_table("PERIODE_PPS", st.session_state.periode_pps_df)
 
-                            st.toast("✅ Program Sueger berhasil disimpan ke PERIODE_PPS!", icon="🎉")
-                            time.sleep(1.2)
-                            st.rerun()
                         except Exception as e:
                             st.error(f"❌ Gagal menyimpan program Sueger: {e}")
 
@@ -21482,12 +21464,6 @@ elif selected_tab == "⚙️ Master Data":
                                 "PERIODE_PPS", st.session_state.periods_pps_df
                             )
 
-                            st.toast(
-                                "✅ Periode PPS berhasil disimpan ke PERIODE_PPS!",
-                                icon="🎉",
-                            )
-                            time.sleep(1.2)
-                            st.rerun()
                         except Exception as e:
                             st.error(f"❌ Gagal menyimpan Periode PPS: {e}")
 
@@ -21552,9 +21528,6 @@ elif selected_tab == "⚙️ Master Data":
 
                                             save_master_table("PERIODE_PPS", st.session_state.periode_pps_df)
                                             
-                                            st.toast("✅ Perubahan berhasil disimpan ke PERIODE_PPS!", icon="💾")
-                                            time.sleep(1.2)
-                                            st.rerun()
                                         except Exception as e:
                                             st.error(f"❌ Gagal memperbarui: {e}")
 
