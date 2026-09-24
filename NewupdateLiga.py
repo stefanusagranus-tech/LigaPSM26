@@ -18012,7 +18012,7 @@ elif selected_tab == "📊 Daily Performance":
             else:
                 # === HITUNG AUTO-VALUE ===
                 _apc_val = int(_input_spd / _input_std) if _input_std > 0 else 0
-                _nsb_target_val = int(_input_spd * (_active_period['nsb_percentage'] / 100)) if _active_period.get('nsb_percentage', 0) > 0 else 0
+                _nsb_target_val = int(_input_spd * 0.0015) if _input_spd > 0 else 0
                 
                 # === SIMPAN KE SESSION STATE UNTUK COMMIT NANTI ===
                 st.session_state["pending_input_harian"] = {
