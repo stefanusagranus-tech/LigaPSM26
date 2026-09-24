@@ -18477,16 +18477,16 @@ elif selected_tab == "📊 Daily Performance":
                 # ==========================================
                 elif st.session_state["rekap_view"] == "tabel":
                     st.markdown("##### 📋 Tabel Rekap Harian")
-                    
+
                     # === FILTER BAR ===
                     st.markdown("###### 🔍 Filter Data")
-                    
+
                     col_f1, col_f2 = st.columns(2)
-                    
+
                     with col_f1:
                         _min_date = _rekap_df["_tgl"].min().date()
                         _max_date = _rekap_df["_tgl"].max().date()
-                        
+
                         _date_range = st.date_input(
                             "📅 Rentang Tanggal",
                             value=(_min_date, _max_date),
@@ -18494,42 +18494,41 @@ elif selected_tab == "📊 Daily Performance":
                             max_value=_max_date,
                             key="rekap_date_range"
                         )
-                    
+
                     with col_f2:
                         _status_filter = st.selectbox(
                             "🎯 Status",
                             ["Semua", "🟢 AMAN", "🟡 WARNING", "🔴 OVER", "⚪ N/A"],
                             key="rekap_status_filter"
                         )
-                    
+
                     # === APPLY FILTER ===
                     _filtered_rekap = _rekap_df.copy()
-                    
+
                     if isinstance(_date_range, tuple) and len(_date_range) == 2:
                         _start_d, _end_d = _date_range
                         _filtered_rekap = _filtered_rekap[
                             (_filtered_rekap["_tgl"].dt.date >= _start_d) &
                             (_filtered_rekap["_tgl"].dt.date <= _end_d)
                         ]
-                    
+
                     if _status_filter != "Semua":
                         _filtered_rekap = _filtered_rekap[_filtered_rekap["_status"] == _status_filter]
-                    
-                    # Sort desc (terbaru di atas)
+
+                    # Sort desc
                     _filtered_rekap = _filtered_rekap.sort_values("_tgl", ascending=False).reset_index(drop=True)
-                    
-                    # === HEADER INFO ===
+
+                    # === HEADER INFO + DOWNLOAD EXCEL ===
                     st.markdown("---")
-                    
+
                     _col_info1, _col_info2 = st.columns([3, 1])
+
                     with _col_info1:
                         st.caption(f"📊 Menampilkan **{len(_filtered_rekap)}** baris data")
+
                     with _col_info2:
-                        # Download Excel
                         try:
                             _export_df = _filtered_rekap.copy()
-                            
-                            # Format kolom untuk Excel
                             _export_df["Tanggal"] = _export_df["_tgl"].dt.strftime("%d/%m/%Y")
                             _export_df["SPD"] = _export_df["spd"].apply(lambda x: f"Rp {int(x):,}")
                             _export_df["STD"] = _export_df["std"].apply(lambda x: f"{int(x):,}")
@@ -18543,18 +18542,18 @@ elif selected_tab == "📊 Daily Performance":
                             _export_df["Selisih"] = _export_df["_selisih_nsb"].apply(lambda x: f"Rp {int(x):,}")
                             _export_df["Status"] = _export_df["_status"]
                             _export_df["Keterangan"] = _export_df.get("keterangan", "")
-                            
+
                             _cols_final = ["Tanggal", "SPD", "Growth SPD", "STD", "Growth STD",
                                         "APC", "Growth APC", "NSB Target", "NSB Aktual",
                                         "Growth NSB", "Selisih", "Status", "Keterangan"]
                             _cols_final = [c for c in _cols_final if c in _export_df.columns]
                             _export_df = _export_df[_cols_final]
-                            
+
                             _output = io.BytesIO()
                             with pd.ExcelWriter(_output, engine="xlsxwriter") as _writer:
                                 _export_df.to_excel(_writer, sheet_name="Rekap Harian", index=False)
                             _excel_bytes = _output.getvalue()
-                            
+
                             st.download_button(
                                 label="📥 Excel",
                                 data=_excel_bytes,
@@ -18565,163 +18564,296 @@ elif selected_tab == "📊 Daily Performance":
                             )
                         except Exception as _e_dl:
                             st.button("📥 Excel", disabled=True, use_container_width=True)
-                    
-                    # === TABEL / CARD VIEW ===
+
+                    # === TOGGLE VIEW MODE ===
                     if _filtered_rekap.empty:
                         st.info(f"📭 Tidak ada data untuk filter ini.")
                     else:
-                        # Deteksi mobile (lebar layar < 768px biasanya HP)
-                        # Streamlit gak bisa deteksi lebar, jadi kita pakai card view
-                        # sebagai DEFAULT dan tampilkan dataframe native sebagai secondary
-                        
-                        # === BUILD CARD VIEW (mobile-friendly) ===
-                        for _idx, _row in _filtered_rekap.iterrows():
-                            _tgl_str = _row["_tgl"].strftime("%d/%m/%Y")
-                            _spd_val = int(_row["spd"])
-                            _std_val = int(_row["std"])
-                            _apc_val = int(_row["apc"])
-                            _nsb_tgt = int(_row["nsb_target"])
-                            _nsb_act = int(_row["nsb_actual"])
-                            _selisih = int(_row["_selisih_nsb"])
-                            _status = _row["_status"]
-                            _growth_spd = _row["_growth_spd"]
-                            _growth_std = _row["_growth_std"]
-                            _growth_apc = _row["_growth_apc"]
-                            _growth_nsb = _row["_growth_nsb_actual"]
-                            
-                            # Warna status
-                            if "AMAN" in _status:
-                                _st_color = "#34d399"
-                                _st_bg = "rgba(16, 185, 129, 0.12)"
-                            elif "WARNING" in _status:
-                                _st_color = "#fbbf24"
-                                _st_bg = "rgba(245, 158, 11, 0.12)"
-                            elif "OVER" in _status:
-                                _st_color = "#fca5a5"
-                                _st_bg = "rgba(239, 68, 68, 0.12)"
-                            else:
-                                _st_color = "#94a3b8"
-                                _st_bg = "rgba(100, 116, 139, 0.12)"
-                            
-                            # Growth indicator
-                            def _growth_badge(g):
+                        if "rekap_table_view" not in st.session_state:
+                            st.session_state["rekap_table_view"] = "grid"
+
+                        col_tv1, col_tv2 = st.columns(2)
+
+                        with col_tv1:
+                            _is_grid = st.session_state["rekap_table_view"] == "grid"
+                            if st.button(
+                                "🗂️ COMPACT GRID",
+                                use_container_width=True,
+                                key="btn_rekap_grid",
+                                type="primary" if _is_grid else "secondary",
+                            ):
+                                st.session_state["rekap_table_view"] = "grid"
+                                st.rerun()
+
+                        with col_tv2:
+                            _is_table = st.session_state["rekap_table_view"] == "table"
+                            if st.button(
+                                "📋 TABEL NATIVE",
+                                use_container_width=True,
+                                key="btn_rekap_table",
+                                type="primary" if _is_table else "secondary",
+                            ):
+                                st.session_state["rekap_table_view"] = "table"
+                                st.rerun()
+
+                        st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
+
+                        # ==========================================
+                        # 🗂️ MODE 1: COMPACT GRID (3 kolom/baris)
+                        # ==========================================
+                        if st.session_state["rekap_table_view"] == "grid":
+                            _chunk_size = 3
+                            _rows_list = [
+                                _filtered_rekap.iloc[i:i+_chunk_size]
+                                for i in range(0, len(_filtered_rekap), _chunk_size)
+                            ]
+
+                            for _chunk in _rows_list:
+                                _cols = st.columns(3)
+
+                                for _i, (_, _row) in enumerate(_chunk.iterrows()):
+                                    with _cols[_i]:
+                                        _tgl_str = _row["_tgl"].strftime("%d/%m")
+                                        _tgl_year = _row["_tgl"].strftime("%Y")
+                                        _spd_val = int(_row["spd"])
+                                        _std_val = int(_row["std"])
+                                        _apc_val = int(_row["apc"])
+                                        _nsb_act = int(_row["nsb_actual"])
+                                        _status = _row["_status"]
+                                        _growth_spd = _row["_growth_spd"]
+                                        _growth_std = _row["_growth_std"]
+                                        _growth_apc = _row["_growth_apc"]
+
+                                        if "AMAN" in _status:
+                                            _st_color = "#34d399"
+                                            _st_bg = "rgba(16, 185, 129, 0.15)"
+                                            _st_icon = "🟢"
+                                        elif "WARNING" in _status:
+                                            _st_color = "#fbbf24"
+                                            _st_bg = "rgba(245, 158, 11, 0.15)"
+                                            _st_icon = "🟡"
+                                        elif "OVER" in _status:
+                                            _st_color = "#fca5a5"
+                                            _st_bg = "rgba(239, 68, 68, 0.15)"
+                                            _st_icon = "🔴"
+                                        else:
+                                            _st_color = "#94a3b8"
+                                            _st_bg = "rgba(100, 116, 139, 0.15)"
+                                            _st_icon = "⚪"
+
+                                        def _growth_badge_compact(g):
+                                            if g is None or pd.isna(g):
+                                                return "<span style='color:#475569; font-size:8px;'>—</span>"
+                                            if g > 0:
+                                                return f"<span style='color:#34d399; font-size:9px; font-weight:900;'>🔼+{g}%</span>"
+                                            elif g < 0:
+                                                return f"<span style='color:#fca5a5; font-size:9px; font-weight:900;'>🔽{g}%</span>"
+                                            else:
+                                                return "<span style='color:#94a3b8; font-size:9px; font-weight:900;'>➖0%</span>"
+
+                                        _gb_spd = _growth_badge_compact(_growth_spd)
+                                        _gb_std = _growth_badge_compact(_growth_std)
+                                        _gb_apc = _growth_badge_compact(_growth_apc)
+
+                                        def _fmt_compact(v):
+                                            if v >= 1_000_000:
+                                                return f"{v/1_000_000:.1f}jt"
+                                            elif v >= 1_000:
+                                                return f"{v/1_000:.0f}K"
+                                            return str(v)
+
+                                        _spd_compact = _fmt_compact(_spd_val)
+                                        _apc_compact = _fmt_compact(_apc_val)
+                                        _nsb_compact = _fmt_compact(_nsb_act)
+
+                                        _compact_html = (
+                                            f"<div style='background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85)); "
+                                            f"border: 1.5px solid #9a7b38; border-top: 3px solid {_st_color}; "
+                                            f"border-radius: 10px; padding: 10px 8px; margin-bottom: 8px; "
+                                            f"box-shadow: 0 3px 8px rgba(0,0,0,0.3);'>"
+
+                                            f"<div style='text-align: center; margin-bottom: 8px; "
+                                            f"padding-bottom: 6px; border-bottom: 1px dashed rgba(180, 83, 9, 0.25);'>"
+                                            f"<div style='font-family: monospace; font-size: 12px; font-weight: 900; color: #fbbf24;'>📅 {_tgl_str}</div>"
+                                            f"<div style='font-family: monospace; font-size: 8px; color: #64748b;'>{_tgl_year}</div>"
+                                            f"<div style='background: {_st_bg}; border: 1px solid {_st_color}; "
+                                            f"color: {_st_color}; padding: 2px 6px; border-radius: 8px; "
+                                            f"font-family: monospace; font-size: 8px; font-weight: 900; "
+                                            f"display: inline-block; margin-top: 3px;'>{_st_icon} {_status[2:]}</div>"
+                                            f"</div>"
+
+                                            f"<div style='margin-bottom: 6px;'>"
+                                            f"<div style='font-family: monospace; font-size: 8px; color: #94a3b8;'>💰 SPD</div>"
+                                            f"<div style='font-family: monospace; font-size: 11px; color: #fbbf24; font-weight: 900;'>Rp {_spd_compact}</div>"
+                                            f"<div>{_gb_spd}</div>"
+                                            f"</div>"
+
+                                            f"<div style='margin-bottom: 6px;'>"
+                                            f"<div style='font-family: monospace; font-size: 8px; color: #94a3b8;'>📄 STD</div>"
+                                            f"<div style='font-family: monospace; font-size: 11px; color: #38bdf8; font-weight: 900;'>{_std_val}</div>"
+                                            f"<div>{_gb_std}</div>"
+                                            f"</div>"
+
+                                            f"<div style='margin-bottom: 6px;'>"
+                                            f"<div style='font-family: monospace; font-size: 8px; color: #94a3b8;'>🧾 APC</div>"
+                                            f"<div style='font-family: monospace; font-size: 11px; color: #a855f7; font-weight: 900;'>Rp {_apc_compact}</div>"
+                                            f"<div>{_gb_apc}</div>"
+                                            f"</div>"
+
+                                            f"<div>"
+                                            f"<div style='font-family: monospace; font-size: 8px; color: #94a3b8;'>📊 NSB</div>"
+                                            f"<div style='font-family: monospace; font-size: 11px; color: #e2e8f0; font-weight: 900;'>Rp {_nsb_compact}</div>"
+                                            f"</div>"
+
+                                            f"</div>"
+                                        )
+                                        st.markdown(_compact_html, unsafe_allow_html=True)
+
+                        # ==========================================
+                        # 📋 MODE 2: NATIVE TABLE (st.dataframe + Styler)
+                        # ==========================================
+                        elif st.session_state["rekap_table_view"] == "table":
+                            _display_df = _filtered_rekap.copy()
+
+                            _display_df["Tanggal"] = _display_df["_tgl"].dt.strftime("%d/%m/%Y")
+                            _display_df["SPD"] = _display_df["spd"].apply(lambda x: f"Rp {int(x):,}")
+                            _display_df["STD"] = _display_df["std"].apply(lambda x: f"{int(x):,}")
+                            _display_df["APC"] = _display_df["apc"].apply(lambda x: f"Rp {int(x):,}")
+                            _display_df["NSB Target"] = _display_df["nsb_target"].apply(lambda x: f"Rp {int(x):,}")
+                            _display_df["NSB Aktual"] = _display_df["nsb_actual"].apply(lambda x: f"Rp {int(x):,}")
+                            _display_df["Status"] = _display_df["_status"]
+
+                            def _fmt_growth_arrow(g):
                                 if g is None or pd.isna(g):
-                                    return "<span style='color:#64748b; font-size:9px;'>— N/A</span>"
+                                    return "—"
                                 if g > 0:
-                                    return f"<span style='color:#34d399; font-size:10px; font-weight:900;'>🔼 +{g}%</span>"
+                                    return f"🔼 +{g}%"
                                 elif g < 0:
-                                    return f"<span style='color:#fca5a5; font-size:10px; font-weight:900;'>🔽 {g}%</span>"
+                                    return f"🔽 {g}%"
                                 else:
-                                    return f"<span style='color:#94a3b8; font-size:10px; font-weight:900;'>➖ 0%</span>"
-                            
-                            _gb_spd = _growth_badge(_growth_spd)
-                            _gb_std = _growth_badge(_growth_std)
-                            _gb_apc = _growth_badge(_growth_apc)
-                            _gb_nsb = _growth_badge(_growth_nsb)
-                            
-                            # Card HTML (1 baris)
-                            _card_html = (
-                                f"<div style='background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85)); "
-                                f"border: 1.5px solid #9a7b38; border-left: 5px solid {_st_color}; "
-                                f"border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; "
-                                f"box-shadow: 0 4px 10px rgba(0,0,0,0.35);'>"
-                                
-                                # Header: Tanggal + Status
-                                f"<div style='display: flex; justify-content: space-between; align-items: center; "
-                                f"margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed rgba(180, 83, 9, 0.3);'>"
-                                f"<div style='font-family: monospace; font-size: 14px; font-weight: 900; "
-                                f"color: #fbbf24; letter-spacing: 0.5px;'>📅 {_tgl_str}</div>"
-                                f"<div style='background: {_st_bg}; border: 1.5px solid {_st_color}; "
-                                f"color: {_st_color}; padding: 4px 10px; border-radius: 12px; "
-                                f"font-family: monospace; font-size: 10px; font-weight: 900;'>{_status}</div>"
-                                f"</div>"
-                                
-                                # Grid 2x2: SPD, STD, APC, NSB
-                                f"<div style='display: grid; grid-template-columns: 1fr 1fr; gap: 10px;'>"
-                                
-                                # SPD
-                                f"<div>"
-                                f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-bottom: 2px;'>💰 SPD</div>"
-                                f"<div style='font-family: monospace; font-size: 13px; color: #fbbf24; font-weight: 900;'>Rp {_spd_val:,}</div>"
-                                f"<div style='margin-top: 2px;'>{_gb_spd}</div>"
-                                f"</div>"
-                                
-                                # STD
-                                f"<div>"
-                                f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-bottom: 2px;'>📄 STD</div>"
-                                f"<div style='font-family: monospace; font-size: 13px; color: #38bdf8; font-weight: 900;'>{_std_val:,} struk</div>"
-                                f"<div style='margin-top: 2px;'>{_gb_std}</div>"
-                                f"</div>"
-                                
-                                # APC
-                                f"<div>"
-                                f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-bottom: 2px;'>🧾 APC</div>"
-                                f"<div style='font-family: monospace; font-size: 13px; color: #a855f7; font-weight: 900;'>Rp {_apc_val:,}</div>"
-                                f"<div style='margin-top: 2px;'>{_gb_apc}</div>"
-                                f"</div>"
-                                
-                                # NSB Aktual
-                                f"<div>"
-                                f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-bottom: 2px;'>📊 NSB Aktual</div>"
-                                f"<div style='font-family: monospace; font-size: 13px; color: #e2e8f0; font-weight: 900;'>Rp {_nsb_act:,}</div>"
-                                f"<div style='margin-top: 2px;'>{_gb_nsb}</div>"
-                                f"</div>"
-                                
-                                f"</div>"
-                                
-                                # Footer: NSB Target + Selisih
-                                f"<div style='margin-top: 10px; padding-top: 8px; "
-                                f"border-top: 1px dashed rgba(180, 83, 9, 0.3); "
-                                f"display: flex; justify-content: space-between; font-family: monospace; font-size: 10px;'>"
-                                f"<span style='color: #94a3b8;'>🎯 Target: <b style='color: #cbd5e1;'>Rp {_nsb_tgt:,}</b></span>"
-                                f"<span style='color: #94a3b8;'>Selisih: <b style='color: {_st_color};'>Rp {_selisih:,}</b></span>"
-                                f"</div>"
-                                
-                                f"</div>"
+                                    return "➖ 0.0%"
+
+                            _display_df["Growth SPD"] = _display_df["_growth_spd"].apply(_fmt_growth_arrow)
+                            _display_df["Growth STD"] = _display_df["_growth_std"].apply(_fmt_growth_arrow)
+                            _display_df["Growth APC"] = _display_df["_growth_apc"].apply(_fmt_growth_arrow)
+
+                            _cols_display = [
+                                "Tanggal",
+                                "SPD", "Growth SPD",
+                                "STD", "Growth STD",
+                                "APC", "Growth APC",
+                                "NSB Target", "NSB Aktual",
+                                "Status",
+                            ]
+                            _display_df = _display_df[_cols_display]
+
+                            def _style_row(row):
+                                _status = row["Status"]
+                                if "AMAN" in _status:
+                                    return ["background-color: rgba(16, 185, 129, 0.08); border-bottom: 1px solid rgba(16, 185, 129, 0.3);"] * len(row)
+                                elif "WARNING" in _status:
+                                    return ["background-color: rgba(245, 158, 11, 0.08); border-bottom: 1px solid rgba(245, 158, 11, 0.3);"] * len(row)
+                                elif "OVER" in _status:
+                                    return ["background-color: rgba(239, 68, 68, 0.08); border-bottom: 1px solid rgba(239, 68, 68, 0.3);"] * len(row)
+                                else:
+                                    return ["background-color: transparent; border-bottom: 1px solid rgba(100, 116, 139, 0.2);"] * len(row)
+
+                            def _style_growth_cell(val):
+                                if pd.isna(val) or val == "—":
+                                    return "color: #64748b; text-align: center;"
+                                val_str = str(val)
+                                if "🔼" in val_str:
+                                    return "color: #34d399; text-align: center; font-weight: 900;"
+                                elif "🔽" in val_str:
+                                    return "color: #fca5a5; text-align: center; font-weight: 900;"
+                                else:
+                                    return "color: #94a3b8; text-align: center; font-weight: 900;"
+
+                            # Cek versi pandas untuk applymap vs map
+                            try:
+                                _styler = _display_df.style \
+                                    .apply(_style_row, axis=1) \
+                                    .applymap(_style_growth_cell, subset=["Growth SPD", "Growth STD", "Growth APC"])
+                            except AttributeError:
+                                _styler = _display_df.style \
+                                    .apply(_style_row, axis=1) \
+                                    .map(_style_growth_cell, subset=["Growth SPD", "Growth STD", "Growth APC"])
+
+                            _styler = _styler \
+                                .set_properties(subset=["SPD"], **{"color": "#fbbf24", "font-weight": "900"}) \
+                                .set_properties(subset=["STD"], **{"color": "#38bdf8", "font-weight": "700"}) \
+                                .set_properties(subset=["APC"], **{"color": "#a855f7", "font-weight": "700"}) \
+                                .set_properties(subset=["NSB Target"], **{"color": "#94a3b8"}) \
+                                .set_properties(subset=["NSB Aktual"], **{"color": "#e2e8f0", "font-weight": "700"}) \
+                                .set_properties(subset=["Tanggal"], **{"color": "#fbbf24", "font-weight": "900"}) \
+                                .set_properties(subset=["Status"], **{"text-align": "center", "font-weight": "900"}) \
+                                .set_properties(**{
+                                    "font-family": "monospace",
+                                    "font-size": "12px",
+                                    "padding": "8px 10px",
+                                }) \
+                                .set_table_styles([
+                                    {"selector": "thead th", "props": [
+                                        ("background", "linear-gradient(90deg, #1e3a5f, #0f172a)"),
+                                        ("color", "#f7e7b4"),
+                                        ("font-weight", "900"),
+                                        ("font-size", "10px"),
+                                        ("letter-spacing", "0.5px"),
+                                        ("text-align", "center"),
+                                        ("padding", "10px 8px"),
+                                        ("border-bottom", "1.5px solid #b45309"),
+                                    ]},
+                                ])
+
+                            st.dataframe(
+                                _styler,
+                                use_container_width=True,
+                                hide_index=True,
+                                height=min(600, 40 + len(_display_df) * 38),
                             )
-                            
-                            st.markdown(_card_html, unsafe_allow_html=True)
-                        
-                        # === FOOTER: RATA-RATA & TOTAL ===
+
+                        # ==========================================
+                        # 📊 FOOTER: RATA-RATA & TOTAL (di luar if/elif)
+                        # ==========================================
                         st.markdown("---")
-                        
+
                         _avg_spd = int(_filtered_rekap["spd"].mean()) if not _filtered_rekap.empty else 0
                         _avg_std = int(_filtered_rekap["std"].mean()) if not _filtered_rekap.empty else 0
                         _avg_apc = int(_filtered_rekap["apc"].mean()) if not _filtered_rekap.empty else 0
                         _total_spd_f = int(_filtered_rekap["spd"].sum())
-                        
+
                         st.markdown(
                             f"<div style='background: linear-gradient(135deg, rgba(251, 191, 36, 0.08), "
                             f"rgba(180, 83, 9, 0.15)); border: 2px solid #b45309; border-radius: 12px; "
                             f"padding: 16px 20px; margin-top: 16px;'>"
-                            
+
                             f"<div style='font-family: monospace; font-size: 11px; color: #fbbf24; "
                             f"font-weight: 900; letter-spacing: 1.5px; text-align: center; "
                             f"margin-bottom: 12px;'>📊 RINGKASAN TABEL ({len(_filtered_rekap)} BARIS)</div>"
-                            
+
                             f"<div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); "
                             f"gap: 10px; margin-bottom: 12px;'>"
-                            
+
                             f"<div style='background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; "
                             f"border-radius: 8px; padding: 10px; text-align: center;'>"
                             f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-bottom: 4px;'>📊 RATA SPD</div>"
                             f"<div style='font-family: monospace; font-size: 13px; color: #fbbf24; font-weight: 900;'>Rp {_avg_spd:,}</div>"
                             f"</div>"
-                            
+
                             f"<div style='background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; "
                             f"border-radius: 8px; padding: 10px; text-align: center;'>"
                             f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-bottom: 4px;'>📄 RATA STD</div>"
                             f"<div style='font-family: monospace; font-size: 13px; color: #38bdf8; font-weight: 900;'>{_avg_std:,} struk</div>"
                             f"</div>"
-                            
+
                             f"<div style='background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; "
                             f"border-radius: 8px; padding: 10px; text-align: center;'>"
                             f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-bottom: 4px;'>🧾 RATA APC</div>"
                             f"<div style='font-family: monospace; font-size: 13px; color: #a855f7; font-weight: 900;'>Rp {_avg_apc:,}</div>"
                             f"</div>"
-                            
+
                             f"</div>"
-                            
+
                             f"<div style='background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), "
                             f"rgba(245, 158, 11, 0.2)); border: 1.5px solid #fbbf24; border-radius: 8px; "
                             f"padding: 12px; text-align: center;'>"
@@ -18731,7 +18863,7 @@ elif selected_tab == "📊 Daily Performance":
                             f"font-weight: 900; text-shadow: 0 0 12px rgba(251, 191, 36, 0.5);'>"
                             f"Rp {_total_spd_f:,}</div>"
                             f"</div>"
-                            
+
                             f"</div>",
                             unsafe_allow_html=True
                         )
