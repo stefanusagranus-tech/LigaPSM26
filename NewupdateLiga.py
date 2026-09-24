@@ -18212,17 +18212,292 @@ elif selected_tab == "📊 Daily Performance":
                     st.dataframe(_preview_show, use_container_width=True, hide_index=True)
     
     # =========================================================================
-    # 📊 SUB-TAB 2: REKAP (PLACEHOLDER)
+    # 📊 SUB-TAB 2: REKAP DATA HARIAN
     # =========================================================================
     elif _dp_subtab == "📊 Rekap":
-        st.info("🚧 **Halaman Rekap** akan diisi di **FASE 10C**. Stay tuned!")
-        st.markdown("""
-        **Yang akan ada di sini:**
-        - 📋 Tabel rekap harian
-        - 📊 Achievement per hari
-        - 🔍 Filter tanggal
-        - 📥 Export Excel
-        """)
+        
+        # === CEK PERIODE AKTIF ===
+        _active_period_rekap = get_active_period_store()
+        
+        if _active_period_rekap is None:
+            st.warning("⚠️ Belum ada periode aktif. Set dulu di menu Pengaturan Sales.")
+        else:
+            # === LOAD DATA HARIAN ===
+            _rekap_df = pd.DataFrame()
+            try:
+                _rekap_df = conn.read(worksheet="SALES_STOREPERFORMANCE", ttl=60)
+                if _rekap_df is None:
+                    _rekap_df = pd.DataFrame()
+                else:
+                    _rekap_df.columns = _rekap_df.columns.astype(str).str.strip().str.lower()
+            except Exception:
+                _rekap_df = pd.DataFrame()
+            
+            if _rekap_df.empty:
+                st.info("📭 Belum ada data harian yang tersimpan. Input dulu di menu **📝 Input Harian**.")
+            else:
+                # === NORMALISASI ===
+                _rekap_df["_tgl"] = pd.to_datetime(_rekap_df["tanggal"], errors="coerce")
+                _rekap_df = _rekap_df.dropna(subset=["_tgl"])
+                
+                # Konversi angka
+                for _col in ["spd", "std", "apc", "nsb_target", "nsb_actual"]:
+                    if _col in _rekap_df.columns:
+                        _rekap_df[_col] = pd.to_numeric(_rekap_df[_col], errors="coerce").fillna(0)
+                
+                # === HITUNG SELISIH NSB ===
+                _rekap_df["_selisih_nsb"] = _rekap_df["nsb_target"] - _rekap_df["nsb_actual"]
+                
+                # === STATUS ===
+                def _status_nsb(row):
+                    _target = row["nsb_target"]
+                    _actual = row["nsb_actual"]
+                    
+                    # Kalau tidak ada target, skip
+                    if _target == 0:
+                        return "⚪ N/A"
+                    
+                    # NSB Actual boleh negatif (barang rusak/hilang)
+                    # Budget = target. Kalau |actual| <= target → OK
+                    _actual_abs = abs(_actual)
+                    
+                    if _actual_abs <= _target:
+                        return "🟢 AMAN"
+                    elif _actual_abs <= _target * 1.5:
+                        return "🟡 WARNING"
+                    else:
+                        return "🔴 OVER"
+                
+                _rekap_df["_status"] = _rekap_df.apply(_status_nsb, axis=1)
+                
+                # ==========================================
+                # 📊 FILTER BAR
+                # ==========================================
+                st.markdown("##### 🔍 Filter Data")
+                
+                col_f1, col_f2, col_f3 = st.columns(3)
+                
+                with col_f1:
+                    _bulan_filter = st.selectbox(
+                        "📅 Bulan",
+                        ["Semua"] + [
+                            f"{i:02d} - {pd.Timestamp(2026, i, 1).strftime('%B')}"
+                            for i in range(1, 13)
+                        ],
+                        key="rekap_filter_bulan"
+                    )
+                
+                with col_f2:
+                    _status_filter = st.selectbox(
+                        "🎯 Status",
+                        ["Semua", "🟢 AMAN", "🟡 WARNING", "🔴 OVER"],
+                        key="rekap_filter_status"
+                    )
+                
+                with col_f3:
+                    _sort_order = st.selectbox(
+                        "🔄 Urutkan",
+                        ["Tanggal Terbaru", "Tanggal Terlama", "SPD Tertinggi"],
+                        key="rekap_sort"
+                    )
+                
+                # === APPLY FILTER ===
+                _filtered_rekap = _rekap_df.copy()
+                
+                # Filter bulan
+                if _bulan_filter != "Semua":
+                    _bulan_num = int(_bulan_filter.split(" - ")[0])
+                    _filtered_rekap = _filtered_rekap[_filtered_rekap["_tgl"].dt.month == _bulan_num]
+                
+                # Filter status
+                if _status_filter != "Semua":
+                    _filtered_rekap = _filtered_rekap[_filtered_rekap["_status"] == _status_filter]
+                
+                # Sort
+                if _sort_order == "Tanggal Terbaru":
+                    _filtered_rekap = _filtered_rekap.sort_values("_tgl", ascending=False)
+                elif _sort_order == "Tanggal Terlama":
+                    _filtered_rekap = _filtered_rekap.sort_values("_tgl", ascending=True)
+                elif _sort_order == "SPD Tertinggi":
+                    _filtered_rekap = _filtered_rekap.sort_values("spd", ascending=False)
+                
+                # ==========================================
+                # 📊 KPI SUMMARY
+                # ==========================================
+                st.markdown("---")
+                st.markdown("##### 📊 Ringkasan")
+                
+                _total_spd = int(_filtered_rekap["spd"].sum())
+                _total_std = int(_filtered_rekap["std"].sum())
+                _avg_apc = int(_total_spd / _total_std) if _total_std > 0 else 0
+                _total_nsb_actual = int(_filtered_rekap["nsb_actual"].sum())
+                _total_nsb_target = int(_filtered_rekap["nsb_target"].sum())
+                _total_selisih = _total_nsb_target - _total_nsb_actual
+                
+                col_k1, col_k2, col_k3, col_k4, col_k5 = st.columns(5)
+                
+                with col_k1:
+                    st.metric(
+                        "💰 Total SPD",
+                        f"Rp {_total_spd:,}",
+                        delta=f"{len(_filtered_rekap)} hari"
+                    )
+                
+                with col_k2:
+                    st.metric(
+                        "📄 Total STD",
+                        f"{_total_std:,} struk"
+                    )
+                
+                with col_k3:
+                    st.metric(
+                        "🧾 Rata APC",
+                        f"Rp {_avg_apc:,}"
+                    )
+                
+                with col_k4:
+                    _color_delta = "normal" if _total_nsb_actual <= _total_nsb_target else "inverse"
+                    st.metric(
+                        "📊 NSB Aktual",
+                        f"Rp {_total_nsb_actual:,}",
+                        delta=f"Budget: Rp {_total_nsb_target:,}",
+                        delta_color=_color_delta
+                    )
+                
+                with col_k5:
+                    _status_icon = "✅" if _total_selisih >= 0 else "⚠️"
+                    st.metric(
+                        f"{_status_icon} Selisih NSB",
+                        f"Rp {_total_selisih:,}"
+                    )
+                
+                # ==========================================
+                # 📋 TABEL REKAP
+                # ==========================================
+                st.markdown("---")
+                st.markdown(f"##### 📋 Tabel Rekap ({len(_filtered_rekap)} baris)")
+                
+                if _filtered_rekap.empty:
+                    st.info(f"📭 Tidak ada data untuk filter **{_status_filter}** di bulan **{_bulan_filter}**.")
+                else:
+                    # Build table HTML
+                    _table_html = (
+                        "<div style='background: rgba(15, 23, 42, 0.85); "
+                        "border: 1.5px solid #b45309; border-radius: 12px; "
+                        "overflow: hidden; padding: 4px;'>"
+                        "<table style='width: 100%; border-collapse: collapse; "
+                        "font-family: monospace; font-size: 11px;'>"
+                        
+                        # Header
+                        "<thead><tr style='background: linear-gradient(90deg, #1e3a5f, #0f172a);'>"
+                        "<th style='padding: 10px 8px; text-align: left; color: #f7e7b4; "
+                        "font-weight: 900; font-size: 10px; border-bottom: 1.5px solid #b45309;'>TANGGAL</th>"
+                        "<th style='padding: 10px 8px; text-align: right; color: #f7e7b4; "
+                        "font-weight: 900; font-size: 10px; border-bottom: 1.5px solid #b45309;'>SPD</th>"
+                        "<th style='padding: 10px 8px; text-align: right; color: #f7e7b4; "
+                        "font-weight: 900; font-size: 10px; border-bottom: 1.5px solid #b45309;'>STD</th>"
+                        "<th style='padding: 10px 8px; text-align: right; color: #f7e7b4; "
+                        "font-weight: 900; font-size: 10px; border-bottom: 1.5px solid #b45309;'>APC</th>"
+                        "<th style='padding: 10px 8px; text-align: right; color: #f7e7b4; "
+                        "font-weight: 900; font-size: 10px; border-bottom: 1.5px solid #b45309;'>NSB TARGET</th>"
+                        "<th style='padding: 10px 8px; text-align: right; color: #f7e7b4; "
+                        "font-weight: 900; font-size: 10px; border-bottom: 1.5px solid #b45309;'>NSB AKTUAL</th>"
+                        "<th style='padding: 10px 8px; text-align: right; color: #f7e7b4; "
+                        "font-weight: 900; font-size: 10px; border-bottom: 1.5px solid #b45309;'>SELISIH</th>"
+                        "<th style='padding: 10px 8px; text-align: center; color: #f7e7b4; "
+                        "font-weight: 900; font-size: 10px; border-bottom: 1.5px solid #b45309;'>STATUS</th>"
+                        "</tr></thead><tbody>"
+                    )
+                    
+                    # Body
+                    for _idx, _row in _filtered_rekap.iterrows():
+                        _tgl_str = _row["_tgl"].strftime("%d/%m/%Y")
+                        _spd_val = int(_row["spd"])
+                        _std_val = int(_row["std"])
+                        _apc_val = int(_row["apc"])
+                        _nsb_tgt = int(_row["nsb_target"])
+                        _nsb_act = int(_row["nsb_actual"])
+                        _selisih = int(_row["_selisih_nsb"])
+                        _status = _row["_status"]
+                        
+                        # Warna baris
+                        if "AMAN" in _status:
+                            _row_bg = "rgba(16, 185, 129, 0.08)"
+                            _status_color = "#34d399"
+                        elif "WARNING" in _status:
+                            _row_bg = "rgba(245, 158, 11, 0.08)"
+                            _status_color = "#fbbf24"
+                        elif "OVER" in _status:
+                            _row_bg = "rgba(239, 68, 68, 0.08)"
+                            _status_color = "#fca5a5"
+                        else:
+                            _row_bg = "transparent"
+                            _status_color = "#94a3b8"
+                        
+                        # Warna selisih
+                        _selisih_color = "#34d399" if _selisih >= 0 else "#fca5a5"
+                        
+                        _table_html += (
+                            f"<tr style='background: {_row_bg}; border-bottom: 1px solid rgba(180, 83, 9, 0.15);'>"
+                            f"<td style='padding: 8px; color: #e2e8f0; font-weight: 700;'>{_tgl_str}</td>"
+                            f"<td style='padding: 8px; text-align: right; color: #fbbf24; font-weight: 900;'>Rp {_spd_val:,}</td>"
+                            f"<td style='padding: 8px; text-align: right; color: #38bdf8; font-weight: 700;'>{_std_val:,}</td>"
+                            f"<td style='padding: 8px; text-align: right; color: #a855f7; font-weight: 700;'>Rp {_apc_val:,}</td>"
+                            f"<td style='padding: 8px; text-align: right; color: #94a3b8;'>Rp {_nsb_tgt:,}</td>"
+                            f"<td style='padding: 8px; text-align: right; color: #e2e8f0; font-weight: 700;'>Rp {_nsb_act:,}</td>"
+                            f"<td style='padding: 8px; text-align: right; color: {_selisih_color}; font-weight: 900;'>Rp {_selisih:,}</td>"
+                            f"<td style='padding: 8px; text-align: center; color: {_status_color}; font-weight: 900;'>{_status}</td>"
+                            f"</tr>"
+                        )
+                    
+                    _table_html += "</tbody></table></div>"
+                    st.markdown(_table_html, unsafe_allow_html=True)
+                    
+                    # ==========================================
+                    # 📥 EXPORT EXCEL
+                    # ==========================================
+                    st.markdown("---")
+                    st.markdown("##### 📥 Export Data")
+                    
+                    try:
+                        _export_df = _filtered_rekap.copy()
+                        _export_df = _export_df.rename(columns={
+                            "_tgl": "Tanggal",
+                            "spd": "SPD",
+                            "std": "STD",
+                            "apc": "APC",
+                            "nsb_target": "NSB Target",
+                            "nsb_actual": "NSB Aktual",
+                            "_selisih_nsb": "Selisih NSB",
+                            "_status": "Status",
+                            "keterangan": "Keterangan",
+                            "input_by": "Input By",
+                            "updated_at": "Updated At",
+                        })
+                        
+                        # Pilih kolom yang mau di-export
+                        _cols_export = ["Tanggal", "SPD", "STD", "APC", "NSB Target", 
+                                        "NSB Aktual", "Selisih NSB", "Status", "Keterangan", "Input By"]
+                        _cols_export = [c for c in _cols_export if c in _export_df.columns]
+                        _export_df = _export_df[_cols_export]
+                        
+                        _output = io.BytesIO()
+                        with pd.ExcelWriter(_output, engine="xlsxwriter") as _writer:
+                            _export_df.to_excel(_writer, sheet_name="Rekap Harian", index=False)
+                        _excel_bytes = _output.getvalue()
+                        
+                        _filename = f"Rekap_Harian_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+                        
+                        st.download_button(
+                            label="📥 Download Rekap (.xlsx)",
+                            data=_excel_bytes,
+                            file_name=_filename,
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            use_container_width=True,
+                            key="dl_rekap_excel"
+                        )
+                    except Exception as _e_dl:
+                        st.error(f"❌ Gagal menyiapkan file download: {_e_dl}")
     
     # =========================================================================
     # 📈 SUB-TAB 3: DASHBOARD (PLACEHOLDER)
