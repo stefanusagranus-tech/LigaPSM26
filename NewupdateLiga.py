@@ -18940,13 +18940,6 @@ elif selected_tab == "📊 Daily Performance":
                                 f"text-shadow: 0 0 8px rgba(168, 85, 247, 0.4);'>Rp {_avg_apc:,}</div>"
                                 f"</div>"
 
-                                # Rata NSB Aktual (opsional)
-                                f"<div style='text-align: center; min-width: 120px;'>"
-                                f"<div style='font-size: 9px; color: #94a3b8; letter-spacing: 0.5px; margin-bottom: 3px;'>📊 RATA NSB</div>"
-                                f"<div style='font-size: 14px; font-weight: 900; color: #e2e8f0; "
-                                f"text-shadow: 0 0 8px rgba(226, 232, 240, 0.3);'>Rp {_avg_nsb_act:,}</div>"
-                                f"</div>"
-
                                 f"</div>"  # close flex container
 
                                 f"</td>"
