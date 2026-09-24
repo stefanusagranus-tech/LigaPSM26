@@ -17935,9 +17935,7 @@ elif selected_tab == "📊 Daily Performance":
 
             # NSB Target = Target NS × NSB% ÷ JHK
             # Karena NSB% di sheet dalam bentuk pecahan (0.0015 = 0.15%)
-            _preview_nsb_target = int(
-                (_target_net_sales_bulanan * _nsb_pct) / _jhk_period
-            ) if _jhk_period > 0 else 0
+            _preview_nsb_target = int(_input_spd * 0.0015) if _input_spd > 0 else 0
             
             if _input_spd > 0:
                 st.markdown(f"""
