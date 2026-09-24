@@ -20719,212 +20719,212 @@ elif selected_tab == "⚙️ Master Data":
         st.markdown("<hr style='border-color: rgba(180, 83, 9, 0.3); margin: 15px 0;'>",
                     unsafe_allow_html=True)
         
-    # =======================================================================
-    # MENU 1: TAMBAH PERIODE SALES
-    # =======================================================================
-    if sales_sub_menu == "➕ Tambah Periode Sales":
-        st.markdown("##### ➕ Tambah Periode Sales Baru")
-        st.caption("Isi Net Sales & STD. APC & NSB% dihitung otomatis.")
-        
-        _next_id = generate_next_period_id(_ps_df)
-        
-        with st.form("form_tambah_periode_sales"):
-            col1, col2 = st.columns(2)
+        # =======================================================================
+        # MENU 1: TAMBAH PERIODE SALES
+        # =======================================================================
+        if sales_sub_menu == "➕ Tambah Periode Sales":
+            st.markdown("##### ➕ Tambah Periode Sales Baru")
+            st.caption("Isi Net Sales & STD. APC & NSB% dihitung otomatis.")
             
-            with col1:
-                _new_pid = st.text_input(
-                    "🆔 ID Periode",
-                    value=_next_id,
-                    key="ps_add_pid"
-                ).strip().upper()
+            _next_id = generate_next_period_id(_ps_df)
+            
+            with st.form("form_tambah_periode_sales"):
+                col1, col2 = st.columns(2)
                 
-                _new_pname = st.text_input(
-                    "📝 Nama Periode",
-                    placeholder="Contoh: Sales Q1 2026",
-                    key="ps_add_pname"
-                ).strip()
+                with col1:
+                    _new_pid = st.text_input(
+                        "🆔 ID Periode",
+                        value=_next_id,
+                        key="ps_add_pid"
+                    ).strip().upper()
+                    
+                    _new_pname = st.text_input(
+                        "📝 Nama Periode",
+                        placeholder="Contoh: Sales Q1 2026",
+                        key="ps_add_pname"
+                    ).strip()
+                    
+                    _new_start = st.date_input(
+                        "📅 Tanggal Mulai",
+                        value=waktu_wib.date(),
+                        key="ps_add_start"
+                    )
+                    
+                    _new_end = st.date_input(
+                        "📅 Tanggal Selesai",
+                        value=waktu_wib.date(),
+                        key="ps_add_end"
+                    )
                 
-                _new_start = st.date_input(
-                    "📅 Tanggal Mulai",
-                    value=waktu_wib.date(),
-                    key="ps_add_start"
+                with col2:
+                    _new_ns = st.number_input(
+                        "💰 Target Net Sales (Rp)",
+                        min_value=0,
+                        step=100000,
+                        value=0,
+                        key="ps_add_ns"
+                    )
+                    
+                    _new_std = st.number_input(
+                        "📄 Target STD (struk)",
+                        min_value=0,
+                        step=1,
+                        value=0,
+                        key="ps_add_std"
+                    )
+                    
+                    _new_status = st.selectbox(
+                        "🎯 Status Awal",
+                        ["Aktif", "Selesai", "Draft"],
+                        index=0,
+                        key="ps_add_status"
+                    )
+                
+                st.markdown("---")
+                _btn_save_periode = st.form_submit_button(
+                    "💾 SIMPAN PERIODE SALES",
+                    use_container_width=True,
+                    type="primary"
                 )
+            
+            # === PREVIEW LIVE (AUTO-CALCULATED) ===
+            if _new_start < _new_end and _new_ns > 0 and _new_std > 0:
+                _jhk = (_new_end - _new_start).days + 1
+                _spd_auto = int(_new_ns / _jhk) if _jhk > 0 else 0
+                _apc_auto = int(_spd_auto / _new_std) if _new_std > 0 else 0
+                _nsb_auto = round(_new_ns * 0.0015, 2)  # 0.15%
                 
-                _new_end = st.date_input(
-                    "📅 Tanggal Selesai",
-                    value=waktu_wib.date(),
-                    key="ps_add_end"
+                _preview_html = (
+                    "<div style='background: linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(14, 165, 233, 0.12)); "
+                    "border: 1.5px solid #38bdf8; border-radius: 10px; padding: 14px 18px; margin: 12px 0; "
+                    "font-family: monospace; font-size: 12px; color: #7dd3fc;'>"
+                    "<div style='font-weight: 900; color: #38bdf8; margin-bottom: 8px; letter-spacing: 1px;'>📊 ESTIMASI OTOMATIS</div>"
+                    f"<div style='display: flex; justify-content: space-between; padding: 3px 0;'>"
+                    f"<span>📆 JHK (Jumlah Hari Kerja)</span>"
+                    f"<span style='color: #38bdf8; font-weight: 900;'>{_jhk} hari</span></div>"
+                    f"<div style='display: flex; justify-content: space-between; padding: 3px 0;'>"
+                    f"<span>💵 SPD (Net Sales ÷ JHK)</span>"
+                    f"<span style='color: #38bdf8; font-weight: 900;'>Rp {_spd_auto:,}</span></div>"
+                    f"<div style='display: flex; justify-content: space-between; padding: 3px 0;'>"
+                    f"<span>🧾 APC (SPD ÷ STD)</span>"
+                    f"<span style='color: #38bdf8; font-weight: 900;'>Rp {_apc_auto:,}</span></div>"
+                    f"<div style='display: flex; justify-content: space-between; padding: 3px 0;'>"
+                    f"<span>📊 NSB% (Net Sales × 0.15%)</span>"
+                    f"<span style='color: #38bdf8; font-weight: 900;'>{_nsb_auto}</span></div>"
+                    "</div>"
                 )
+                st.markdown(_preview_html, unsafe_allow_html=True)
             
-            with col2:
-                _new_ns = st.number_input(
-                    "💰 Target Net Sales (Rp)",
-                    min_value=0,
-                    step=100000,
-                    value=0,
-                    key="ps_add_ns"
-                )
+            # === PROSES SIMPAN ===
+            if _btn_save_periode:
+                _errors = []
+                if not _new_pid:
+                    _errors.append("ID Periode wajib diisi")
+                if not _new_pname:
+                    _errors.append("Nama Periode wajib diisi")
+                if _new_start > _new_end:
+                    _errors.append("Tanggal mulai tidak boleh melebihi tanggal selesai")
+                if _new_ns <= 0:
+                    _errors.append("Target Net Sales harus > 0")
+                if _new_std <= 0:
+                    _errors.append("Target STD harus > 0")
                 
-                _new_std = st.number_input(
-                    "📄 Target STD (struk)",
-                    min_value=0,
-                    step=1,
-                    value=0,
-                    key="ps_add_std"
-                )
+                if not _ps_df.empty and "period_id" in _ps_df.columns:
+                    if _new_pid in _ps_df["period_id"].astype(str).str.upper().values:
+                        _errors.append(f"ID Periode '{_new_pid}' sudah ada!")
                 
-                _new_status = st.selectbox(
-                    "🎯 Status Awal",
-                    ["Aktif", "Selesai", "Draft"],
-                    index=0,
-                    key="ps_add_status"
-                )
+                if _errors:
+                    for _err in _errors:
+                        st.error(f"❌ {_err}")
+                    st.toast("❌ Gagal simpan, cek error di atas!", icon="⚠️")
+                else:
+                    # Hitung auto-value
+                    _jhk_prev = (_new_end - _new_start).days + 1
+                    _spd_prev = int(_new_ns / _jhk_prev) if _jhk_prev > 0 else 0
+                    _apc_prev = int(_spd_prev / _new_std) if _new_std > 0 else 0
+                    _nsb_prev = round(_new_ns * 0.0015, 2)
+                    
+                    st.session_state["pending_add_periode_sales"] = {
+                        "period_id": _new_pid,
+                        "period_name": _new_pname,
+                        "start_date": str(_new_start),
+                        "end_date": str(_new_end),
+                        "target_net_sales": int(_new_ns),
+                        "target_std": int(_new_std),
+                        "target_apc": int(_apc_prev),
+                        "nsb_percentage": float(_nsb_prev),
+                        "status": str(_new_status),
+                    }
+                    
+                    show_edit_confirm_dialog(
+                        {
+                            "🆔 ID Periode": _new_pid,
+                            "📝 Nama": _new_pname,
+                            "📅 Mulai": _new_start.strftime("%d/%m/%Y"),
+                            "📅 Selesai": _new_end.strftime("%d/%m/%Y"),
+                            "💰 Net Sales": f"Rp {_new_ns:,}",
+                            "📄 STD": f"{_new_std} struk",
+                            "⏱️ JHK": f"{_jhk_prev} hari",
+                            "💵 SPD": f"Rp {_spd_prev:,}",
+                            "🧾 APC": f"Rp {_apc_prev:,}",
+                            "📊 NSB%": f"{_nsb_prev}",
+                            "🎯 Status": _new_status,
+                        },
+                        callback_key="add_periode_sales_confirm"
+                    )
             
-            st.markdown("---")
-            _btn_save_periode = st.form_submit_button(
-                "💾 SIMPAN PERIODE SALES",
-                use_container_width=True,
-                type="primary"
-            )
-        
-        # === PREVIEW LIVE (AUTO-CALCULATED) ===
-        if _new_start < _new_end and _new_ns > 0 and _new_std > 0:
-            _jhk = (_new_end - _new_start).days + 1
-            _spd_auto = int(_new_ns / _jhk) if _jhk > 0 else 0
-            _apc_auto = int(_spd_auto / _new_std) if _new_std > 0 else 0
-            _nsb_auto = round(_new_ns * 0.0015, 2)  # 0.15%
-            
-            _preview_html = (
-                "<div style='background: linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(14, 165, 233, 0.12)); "
-                "border: 1.5px solid #38bdf8; border-radius: 10px; padding: 14px 18px; margin: 12px 0; "
-                "font-family: monospace; font-size: 12px; color: #7dd3fc;'>"
-                "<div style='font-weight: 900; color: #38bdf8; margin-bottom: 8px; letter-spacing: 1px;'>📊 ESTIMASI OTOMATIS</div>"
-                f"<div style='display: flex; justify-content: space-between; padding: 3px 0;'>"
-                f"<span>📆 JHK (Jumlah Hari Kerja)</span>"
-                f"<span style='color: #38bdf8; font-weight: 900;'>{_jhk} hari</span></div>"
-                f"<div style='display: flex; justify-content: space-between; padding: 3px 0;'>"
-                f"<span>💵 SPD (Net Sales ÷ JHK)</span>"
-                f"<span style='color: #38bdf8; font-weight: 900;'>Rp {_spd_auto:,}</span></div>"
-                f"<div style='display: flex; justify-content: space-between; padding: 3px 0;'>"
-                f"<span>🧾 APC (SPD ÷ STD)</span>"
-                f"<span style='color: #38bdf8; font-weight: 900;'>Rp {_apc_auto:,}</span></div>"
-                f"<div style='display: flex; justify-content: space-between; padding: 3px 0;'>"
-                f"<span>📊 NSB% (Net Sales × 0.15%)</span>"
-                f"<span style='color: #38bdf8; font-weight: 900;'>{_nsb_auto}</span></div>"
-                "</div>"
-            )
-            st.markdown(_preview_html, unsafe_allow_html=True)
-        
-        # === PROSES SIMPAN ===
-        if _btn_save_periode:
-            _errors = []
-            if not _new_pid:
-                _errors.append("ID Periode wajib diisi")
-            if not _new_pname:
-                _errors.append("Nama Periode wajib diisi")
-            if _new_start > _new_end:
-                _errors.append("Tanggal mulai tidak boleh melebihi tanggal selesai")
-            if _new_ns <= 0:
-                _errors.append("Target Net Sales harus > 0")
-            if _new_std <= 0:
-                _errors.append("Target STD harus > 0")
-            
-            if not _ps_df.empty and "period_id" in _ps_df.columns:
-                if _new_pid in _ps_df["period_id"].astype(str).str.upper().values:
-                    _errors.append(f"ID Periode '{_new_pid}' sudah ada!")
-            
-            if _errors:
-                for _err in _errors:
-                    st.error(f"❌ {_err}")
-                st.toast("❌ Gagal simpan, cek error di atas!", icon="⚠️")
-            else:
-                # Hitung auto-value
-                _jhk_prev = (_new_end - _new_start).days + 1
-                _spd_prev = int(_new_ns / _jhk_prev) if _jhk_prev > 0 else 0
-                _apc_prev = int(_spd_prev / _new_std) if _new_std > 0 else 0
-                _nsb_prev = round(_new_ns * 0.0015, 2)
+            # === COMMIT SIMPAN ===
+            if st.session_state.get("add_periode_sales_confirm_result", False):
+                st.session_state["add_periode_sales_confirm_result"] = False
+                _pending = st.session_state.pop("pending_add_periode_sales", None)
                 
-                st.session_state["pending_add_periode_sales"] = {
-                    "period_id": _new_pid,
-                    "period_name": _new_pname,
-                    "start_date": str(_new_start),
-                    "end_date": str(_new_end),
-                    "target_net_sales": int(_new_ns),
-                    "target_std": int(_new_std),
-                    "target_apc": int(_apc_prev),
-                    "nsb_percentage": float(_nsb_prev),
-                    "status": str(_new_status),
-                }
-                
-                show_edit_confirm_dialog(
-                    {
-                        "🆔 ID Periode": _new_pid,
-                        "📝 Nama": _new_pname,
-                        "📅 Mulai": _new_start.strftime("%d/%m/%Y"),
-                        "📅 Selesai": _new_end.strftime("%d/%m/%Y"),
-                        "💰 Net Sales": f"Rp {_new_ns:,}",
-                        "📄 STD": f"{_new_std} struk",
-                        "⏱️ JHK": f"{_jhk_prev} hari",
-                        "💵 SPD": f"Rp {_spd_prev:,}",
-                        "🧾 APC": f"Rp {_apc_prev:,}",
-                        "📊 NSB%": f"{_nsb_prev}",
-                        "🎯 Status": _new_status,
-                    },
-                    callback_key="add_periode_sales_confirm"
-                )
-        
-        # === COMMIT SIMPAN ===
-        if st.session_state.get("add_periode_sales_confirm_result", False):
-            st.session_state["add_periode_sales_confirm_result"] = False
-            _pending = st.session_state.pop("pending_add_periode_sales", None)
-            
-            if _pending:
-                try:
-                    with st.spinner("⏳ Menyimpan periode sales..."):
-                        _new_row = pd.DataFrame([_pending])
-                        
-                        if _ps_df.empty:
-                            _ps_new = _new_row
-                        else:
-                            _ps_new = pd.concat([_ps_df, _new_row], ignore_index=True)
-                        
-                        _ok, _msg = save_periode_sales(_ps_new)
-                        
-                        if _ok:
-                            st.session_state.periode_sales_df = _ps_new
+                if _pending:
+                    try:
+                        with st.spinner("⏳ Menyimpan periode sales..."):
+                            _new_row = pd.DataFrame([_pending])
                             
-                            try:
-                                log_activity("SAVE_MASTER", f"Tambah Periode Sales: {_pending['period_id']}")
-                            except Exception:
-                                pass
+                            if _ps_df.empty:
+                                _ps_new = _new_row
+                            else:
+                                _ps_new = pd.concat([_ps_df, _new_row], ignore_index=True)
                             
-                            st.toast(f"✅ Periode {_pending['period_id']} berhasil disimpan!", icon="🎉")
-                            time.sleep(0.5)
+                            _ok, _msg = save_periode_sales(_ps_new)
                             
-                            show_success_dialog(
-                                title_msg=f"<b>Periode {_pending['period_name']}</b> berhasil disimpan!",
-                                subtitle="Tersimpan di Sheet PERIODE_STOREPERFORMANCE",
-                                icon="⚜️",
-                                theme="gold",
-                                detail_dict={
-                                    "🆔 ID Periode": _pending["period_id"],
-                                    "📝 Nama": _pending["period_name"],
-                                    "💰 Net Sales": f"Rp {_pending['target_net_sales']:,}",
-                                    "📄 STD": f"{_pending['target_std']} struk",
-                                    "🧾 APC": f"Rp {_pending['target_apc']:,}",
-                                    "📊 NSB%": f"{_pending['nsb_percentage']}",
-                                }
-                            )
-                            time.sleep(2)
-                            st.rerun()
-                        else:
-                            st.error(_msg)
-                            st.toast(f"❌ {_msg}", icon="⚠️")
-                
-                except Exception as _e:
-                    st.error(f"❌ Gagal simpan: {_e}")
-                    st.toast("❌ Terjadi error!", icon="⚠️")
-        
+                            if _ok:
+                                st.session_state.periode_sales_df = _ps_new
+                                
+                                try:
+                                    log_activity("SAVE_MASTER", f"Tambah Periode Sales: {_pending['period_id']}")
+                                except Exception:
+                                    pass
+                                
+                                st.toast(f"✅ Periode {_pending['period_id']} berhasil disimpan!", icon="🎉")
+                                time.sleep(0.5)
+                                
+                                show_success_dialog(
+                                    title_msg=f"<b>Periode {_pending['period_name']}</b> berhasil disimpan!",
+                                    subtitle="Tersimpan di Sheet PERIODE_STOREPERFORMANCE",
+                                    icon="⚜️",
+                                    theme="gold",
+                                    detail_dict={
+                                        "🆔 ID Periode": _pending["period_id"],
+                                        "📝 Nama": _pending["period_name"],
+                                        "💰 Net Sales": f"Rp {_pending['target_net_sales']:,}",
+                                        "📄 STD": f"{_pending['target_std']} struk",
+                                        "🧾 APC": f"Rp {_pending['target_apc']:,}",
+                                        "📊 NSB%": f"{_pending['nsb_percentage']}",
+                                    }
+                                )
+                                time.sleep(2)
+                                st.rerun()
+                            else:
+                                st.error(_msg)
+                                st.toast(f"❌ {_msg}", icon="⚠️")
+                    
+                    except Exception as _e:
+                        st.error(f"❌ Gagal simpan: {_e}")
+                        st.toast("❌ Terjadi error!", icon="⚠️")
+            
         # =======================================================================
         # MENU 2: EDIT & HAPUS PERIODE
         # =======================================================================
