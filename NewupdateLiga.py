@@ -18324,153 +18324,536 @@ elif selected_tab == "📊 Daily Performance":
                 )
                 
                 # ==========================================
-                # 📊 VIEW 1: RINGKASAN
+                # 📊 VIEW 1: RINGKASAN (v2)
                 # ==========================================
                 if st.session_state["rekap_view"] == "ringkasan":
-                    st.markdown("##### 📊 Ringkasan Performa")
-                    
-                    # Info periode
-                    _jhk_p = _active_period_rekap.get("jhk", 30)
-                    _p_name = _active_period_rekap.get("period_name", "-")
-                    _p_start = _active_period_rekap.get("start_date", "-")
-                    _p_end = _active_period_rekap.get("end_date", "-")
-                    
-                    st.caption(
-                        f"📅 **{_p_name}** • "
-                        f"{_p_start.strftime('%d/%m/%Y') if hasattr(_p_start, 'strftime') else _p_start} — "
-                        f"{_p_end.strftime('%d/%m/%Y') if hasattr(_p_end, 'strftime') else _p_end} • "
-                        f"JHK: **{_jhk_p} hari**"
-                    )
-                    
-                    # === KPI SUMMARY ===
-                    _total_spd = int(_rekap_df["spd"].sum())
-                    _total_std = int(_rekap_df["std"].sum())
-                    _avg_apc = int(_total_spd / _total_std) if _total_std > 0 else 0
-                    _total_nsb_actual = int(_rekap_df["nsb_actual"].sum())
-                    _total_nsb_target = int(_rekap_df["nsb_target"].sum())
-                    _total_selisih = _total_nsb_target - _total_nsb_actual
-                    _hari_input = len(_rekap_df)
-                    
-                    col_k1, col_k2 = st.columns(2)
-                    with col_k1:
-                        st.metric(
-                            "💰 Total SPD",
-                            f"Rp {_total_spd:,}",
-                            delta=f"{_hari_input} hari input"
+
+                    # === FILTER TANGGAL ===
+                    st.markdown("###### 🔍 Filter Tanggal")
+
+                    _col_ft1, _col_ft2 = st.columns(2)
+
+                    with _col_ft1:
+                        _min_date_r = _rekap_df["_tgl"].min().date()
+                        _max_date_r = _rekap_df["_tgl"].max().date()
+
+                        _date_range_r = st.date_input(
+                            "📅 Rentang Tanggal",
+                            value=(_min_date_r, _max_date_r),
+                            min_value=_min_date_r,
+                            max_value=_max_date_r,
+                            key="rekap_ringkasan_date_range"
                         )
-                    with col_k2:
-                        st.metric(
-                            "📄 Total STD",
-                            f"{_total_std:,} struk"
+
+                    with _col_ft2:
+                        _chart_type_filter = st.selectbox(
+                            "📈 Pilih Chart",
+                            ["Semua (SPD/STD/APC)", "SPD", "STD", "APC"],
+                            key="rekap_ringkasan_chart_filter"
                         )
-                    
-                    col_k3, col_k4 = st.columns(2)
-                    with col_k3:
-                        st.metric("🧾 Rata-rata APC", f"Rp {_avg_apc:,}")
-                    with col_k4:
-                        _color_delta = "normal" if _total_nsb_actual <= _total_nsb_target else "inverse"
-                        st.metric(
-                            "📊 NSB Aktual",
-                            f"Rp {_total_nsb_actual:,}",
-                            delta=f"Budget: Rp {_total_nsb_target:,}",
-                            delta_color=_color_delta
-                        )
-                    
-                    # === SELISIH NSB ===
-                    st.markdown("---")
-                    _status_icon = "✅" if _total_selisih >= 0 else "⚠️"
-                    _status_color = "#34d399" if _total_selisih >= 0 else "#fca5a5"
-                    
-                    st.markdown(
-                        f"<div style='background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), "
-                        f"rgba(52, 211, 153, 0.12)); border: 1.5px solid {_status_color}; "
-                        f"border-radius: 12px; padding: 16px 20px; margin: 10px 0; text-align: center;'>"
-                        f"<div style='font-family: monospace; font-size: 11px; color: #94a3b8; "
-                        f"letter-spacing: 1.5px; margin-bottom: 6px;'>"
-                        f"{_status_icon} SELISIH NSB (BUDGET - AKTUAL)</div>"
-                        f"<div style='font-family: monospace; font-size: 24px; font-weight: 900; "
-                        f"color: {_status_color}; text-shadow: 0 0 15px {_status_color}88;'>"
-                        f"Rp {_total_selisih:,}</div>"
-                        f"<div style='font-family: monospace; font-size: 10px; color: #94a3b8; "
-                        f"margin-top: 6px;'>"
-                        f"{'✅ Aman! NSB masih dalam budget' if _total_selisih >= 0 else '⚠️ Over budget! NSB melebihi toleransi'}"
-                        f"</div></div>",
-                        unsafe_allow_html=True
-                    )
-                    
-                    # === TOTAL NET SALES 1 BULAN (SUM SPD) ===
-                    st.markdown("---")
-                    st.markdown(
-                        f"<div style='background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), "
-                        f"rgba(245, 158, 11, 0.15)); border: 2px solid #fbbf24; "
-                        f"border-radius: 12px; padding: 20px 24px; margin: 10px 0; text-align: center; "
-                        f"box-shadow: 0 0 25px rgba(251, 191, 36, 0.25);'>"
-                        f"<div style='font-family: monospace; font-size: 11px; color: #fcd34d; "
-                        f"letter-spacing: 2px; margin-bottom: 8px;'>"
-                        f"💰 TOTAL NET SALES (SUM SPD)</div>"
-                        f"<div style='font-family: monospace; font-size: 28px; font-weight: 900; "
-                        f"color: #fbbf24; text-shadow: 0 0 20px rgba(251, 191, 36, 0.6);'>"
-                        f"Rp {_total_spd:,}</div>"
-                        f"<div style='font-family: monospace; font-size: 10px; color: #fcd34d; "
-                        f"margin-top: 8px; opacity: 0.7;'>"
-                        f"Dari {_hari_input} hari input</div></div>",
-                        unsafe_allow_html=True
-                    )
-                    
-                    # === STATUS BREAKDOWN ===
-                    st.markdown("---")
-                    st.markdown("##### 🎯 Breakdown Status NSB")
-                    
-                    _status_counts = _rekap_df["_status"].value_counts().to_dict()
-                    _aman = _status_counts.get("🟢 AMAN", 0)
-                    _warning = _status_counts.get("🟡 WARNING", 0)
-                    _over = _status_counts.get("🔴 OVER", 0)
-                    _na = _status_counts.get("⚪ N/A", 0)
-                    
-                    col_s1, col_s2, col_s3, col_s4 = st.columns(4)
-                    with col_s1:
-                        st.metric("🟢 AMAN", _aman)
-                    with col_s2:
-                        st.metric("🟡 WARNING", _warning)
-                    with col_s3:
-                        st.metric("🔴 OVER", _over)
-                    with col_s4:
-                        st.metric("⚪ N/A", _na)
-                    
-                    # === SPARKLINE SPD ===
-                    if len(_rekap_df) > 1:
+
+                    # === APPLY FILTER ===
+                    _ringkasan_df = _rekap_df.copy()
+                    if isinstance(_date_range_r, tuple) and len(_date_range_r) == 2:
+                        _start_r, _end_r = _date_range_r
+                        _ringkasan_df = _ringkasan_df[
+                            (_ringkasan_df["_tgl"].dt.date >= _start_r) &
+                            (_ringkasan_df["_tgl"].dt.date <= _end_r)
+                        ]
+
+                    _ringkasan_df = _ringkasan_df.sort_values("_tgl", ascending=True).reset_index(drop=True)
+
+                    if _ringkasan_df.empty:
+                        st.warning("📭 Tidak ada data di rentang tanggal ini.")
+                    else:
+                        # ==========================================
+                        # 📊 HITUNG SEMUA METRIK
+                        # ==========================================
+                        _jhk = _active_period_rekap.get("jhk", 30)
+                        _target_ns = _active_period_rekap.get("target_net_sales", 0)
+                        _target_std_total = _active_period_rekap.get("target_std", 0)
+                        _target_apc = _active_period_rekap.get("target_apc", 0)
+                        _p_start = _active_period_rekap.get("start_date", None)
+                        _p_end = _active_period_rekap.get("end_date", None)
+
+                        _today = waktu_wib.date()
+
+                        # Hari berjalan (dari start_date ke hari ini, max jhk)
+                        if _p_start:
+                            _hari_berjalan = min((_today - _p_start).days + 1, _jhk)
+                            if _hari_berjalan < 1:
+                                _hari_berjalan = 1
+                        else:
+                            _hari_berjalan = len(_ringkasan_df)
+
+                        _sisa_hari = max(_jhk - _hari_berjalan, 1)
+
+                        # TF
+                        _tf = _hari_berjalan / _jhk if _jhk > 0 else 0
+
+                        # Actual
+                        _total_spd = int(_ringkasan_df["spd"].sum())
+                        _total_std = int(_ringkasan_df["std"].sum())
+                        _total_nsb_act = int(_ringkasan_df["nsb_actual"].sum())
+
+                        _avg_spd = int(_ringkasan_df["spd"].mean())
+                        _avg_std = int(_ringkasan_df["std"].mean())
+                        _avg_apc = int(_ringkasan_df["apc"].mean())
+
+                        # Target (untuk comparison)
+                        _target_spd_harian = int(_target_ns / _jhk) if _jhk > 0 else 0
+                        _target_nsb_bulanan = int(_total_spd * 0.0015)  # NS Aktual × 0.15%
+                        _budget_nsb_harian_awal = int(_target_spd_harian * 0.0015)
+
+                        # % Achieve
+                        _pct_spd = (_total_spd / _target_ns * 100) if _target_ns > 0 else 0
+                        _pct_std = (_total_std / _target_std_total * 100) if _target_std_total > 0 else 0
+                        _pct_apc = (_avg_apc / _target_apc * 100) if _target_apc > 0 else 0
+
+                        # Gap
+                        _gap_spd = _total_spd - _target_ns
+                        _gap_std = _total_std - _target_std_total
+                        _gap_apc = _avg_apc - _target_apc
+
+                        # Best Estimate (kalau belum achieved)
+                        _is_achieved = _total_spd >= _target_ns
+
+                        if _is_achieved:
+                            # Tampilkan target DEFAULT
+                            _be_spd = _target_spd_harian
+                            _be_std = int(_target_std_total / _jhk) if _jhk > 0 else 0
+                            _be_apc = _target_apc
+                            _be_nsb_budget = int(_be_spd * 0.0015)
+                            _be_status = "✅ ACHIEVED"
+                        else:
+                            # Best estimate
+                            _sisa_target_ns = max(_target_ns - _total_spd, 0)
+                            _be_spd = int(_sisa_target_ns / _sisa_hari) if _sisa_hari > 0 else 0
+
+                            _sisa_target_std = max(_target_std_total - _total_std, 0)
+                            _be_std = int(_sisa_target_std / _sisa_hari) if _sisa_hari > 0 else 0
+
+                            # APC best estimate = BE SPD / BE STD
+                            _be_apc = int(_be_spd / _be_std) if _be_std > 0 else 0
+
+                            # Budget NSB harian based on Best Estimate
+                            _be_nsb_budget = int(_be_spd * 0.0015)
+                            _be_status = "📈 BEST ESTIMATE"
+
+                        # Budget Adjust NSB/Hari
+                        # = ((Net Sales Aktual × 0.15%) - NSB Aktual) / Sisa Hari
+                        # Karena NSB Aktual biasanya minus, rumusnya:
+                        _nsb_gap_total = _target_nsb_bulanan - abs(_total_nsb_act)  # sisa budget
+                        _be_nsb_adjust = int(_nsb_gap_total / _sisa_hari) if _sisa_hari > 0 else 0
+
+                        # % NSB dari Net Sales
+                        _nsb_pct_from_ns = (abs(_total_nsb_act) / _total_spd * 100) if _total_spd > 0 else 0
+
+                        # ==========================================
+                        # 📊 KPI CARDS (8 Cards)
+                        # ==========================================
+                        st.markdown("##### 📊 Key Performance Indicators")
+
+                        # Baris 1: 4 cards
+                        col_r1_1, col_r1_2, col_r1_3, col_r1_4 = st.columns(4)
+
+                        with col_r1_1:
+                            st.metric(
+                                "📅 Hari Kerja",
+                                f"{_hari_berjalan} / {_jhk}",
+                                delta=f"{_sisa_hari} hari sisa"
+                            )
+
+                        with col_r1_2:
+                            _tf_pct = _tf * 100
+                            _tf_status = "🟢 On Track" if _tf_pct <= _pct_spd else "🔴 Behind"
+                            st.metric(
+                                "⏱️ Time Factor",
+                                f"{_tf_pct:.1f}%",
+                                delta=_tf_status,
+                                delta_color="normal"
+                            )
+
+                        with col_r1_3:
+                            _spd_delta = f"{_pct_spd:.1f}% | Gap: Rp {_gap_spd:,}"
+                            st.metric(
+                                "💰 Rata SPD",
+                                f"Rp {_avg_spd:,}",
+                                delta=_spd_delta,
+                                delta_color="normal" if _gap_spd >= 0 else "inverse"
+                            )
+
+                        with col_r1_4:
+                            _apc_delta = f"{_pct_apc:.1f}% | Gap: Rp {_gap_apc:,}"
+                            st.metric(
+                                "🧾 APC",
+                                f"Rp {_avg_apc:,}",
+                                delta=_apc_delta,
+                                delta_color="normal" if _gap_apc >= 0 else "inverse"
+                            )
+
+                        # Baris 2: 4 cards
+                        col_r2_1, col_r2_2, col_r2_3, col_r2_4 = st.columns(4)
+
+                        with col_r2_1:
+                            _std_delta = f"{_pct_std:.1f}% | Gap: {_gap_std:,}"
+                            st.metric(
+                                "📄 Rata STD",
+                                f"{_avg_std:,}",
+                                delta=_std_delta,
+                                delta_color="normal" if _gap_std >= 0 else "inverse"
+                            )
+
+                        with col_r2_2:
+                            st.metric(
+                                "📊 Total NSB",
+                                f"Rp {abs(_total_nsb_act):,}",
+                                delta=f"{_nsb_pct_from_ns:.2f}% dari NS",
+                                delta_color="off"
+                            )
+
+                        with col_r2_3:
+                            _selisih_nsb = _target_nsb_bulanan - abs(_total_nsb_act)
+                            _nsb_status = "✅ Aman" if _selisih_nsb >= 0 else "⚠️ Over"
+                            st.metric(
+                                "⚖️ Selisih NSB",
+                                f"Rp {_selisih_nsb:,}",
+                                delta=_nsb_status,
+                                delta_color="normal" if _selisih_nsb >= 0 else "inverse"
+                            )
+
+                        with col_r2_4:
+                            _ns_minus = _target_ns - _total_spd
+                            _ns_minus_str = f"-Rp {abs(_ns_minus):,}" if _ns_minus > 0 else f"+Rp {abs(_ns_minus):,}"
+                            st.metric(
+                                "💰 Total Net Sales",
+                                f"Rp {_total_spd:,}",
+                                delta=f"{_ns_minus_str} vs Target",
+                                delta_color="normal" if _ns_minus <= 0 else "inverse"
+                            )
+
+                        # ==========================================
+                        # 📊 INFO CARD: TOTAL NET SALES (Keterangan)
+                        # ==========================================
                         st.markdown("---")
-                        st.markdown("##### 📈 Trend SPD Harian")
-                        
+
+                        _sisa_target_ns = max(_target_ns - _total_spd, 0)
+                        _be_spd_display = int(_sisa_target_ns / _sisa_hari) if _sisa_hari > 0 else 0
+                        _tf_vs_sales = "⚠️ BEHIND" if (_tf * 100) > _pct_spd else "✅ ON TRACK"
+                        _tf_vs_sales_color = "#fca5a5" if (_tf * 100) > _pct_spd else "#34d399"
+
+                        st.markdown(
+                            f"<div style='background: linear-gradient(135deg, rgba(251, 191, 36, 0.08), "
+                            f"rgba(180, 83, 9, 0.15)); border: 2px solid #b45309; border-radius: 12px; "
+                            f"padding: 16px 20px; margin-top: 16px;'>"
+
+                            f"<div style='font-family: monospace; font-size: 12px; color: #fbbf24; "
+                            f"font-weight: 900; letter-spacing: 1.5px; text-align: center; "
+                            f"margin-bottom: 14px; padding-bottom: 10px; "
+                            f"border-bottom: 1px dashed rgba(180, 83, 9, 0.3);'>"
+                            f"💰 SUMMARY NET SALES</div>"
+
+                            f"<div style='display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-around;'>"
+
+                            f"<div style='text-align: center; min-width: 130px;'>"
+                            f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-bottom: 4px;'>📉 MINUS</div>"
+                            f"<div style='font-family: monospace; font-size: 13px; font-weight: 900; color: #fca5a5;'>"
+                            f"Rp {_ns_minus:,}</div></div>"
+
+                            f"<div style='text-align: center; min-width: 130px;'>"
+                            f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-bottom: 4px;'>🎯 TARGET BARU</div>"
+                            f"<div style='font-family: monospace; font-size: 13px; font-weight: 900; color: #fbbf24;'>"
+                            f"Rp {_be_spd_display:,}/hari</div></div>"
+
+                            f"<div style='text-align: center; min-width: 130px;'>"
+                            f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-bottom: 4px;'>📊 % SALES</div>"
+                            f"<div style='font-family: monospace; font-size: 13px; font-weight: 900; color: #38bdf8;'>"
+                            f"{_pct_spd:.1f}%</div></div>"
+
+                            f"<div style='text-align: center; min-width: 130px;'>"
+                            f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-bottom: 4px;'>⏱️ TF</div>"
+                            f"<div style='font-family: monospace; font-size: 13px; font-weight: 900; color: #a855f7;'>"
+                            f"{_tf*100:.1f}%</div></div>"
+
+                            f"<div style='text-align: center; min-width: 130px;'>"
+                            f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-bottom: 4px;'>🎯 STATUS</div>"
+                            f"<div style='font-family: monospace; font-size: 13px; font-weight: 900; color: {_tf_vs_sales_color};'>"
+                            f"{_tf_vs_sales}</div></div>"
+
+                            f"</div>"
+                            f"</div>",
+                            unsafe_allow_html=True
+                        )
+
+                        # ==========================================
+                        # 🎯 BEST ESTIMATE CARDS
+                        # ==========================================
+                        st.markdown("---")
+                        st.markdown("##### 🎯 Target Best Estimate")
+                        st.caption(_be_status)
+
+                        col_be1, col_be2, col_be3, col_be4 = st.columns(4)
+
+                        with col_be1:
+                            st.markdown(
+                                f"<div style='background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(14, 165, 233, 0.15)); "
+                                f"border: 1.5px solid #38bdf8; border-radius: 10px; padding: 14px 12px; text-align: center;'>"
+                                f"<div style='font-family: monospace; font-size: 10px; color: #38bdf8; "
+                                f"letter-spacing: 1px; margin-bottom: 6px;'>💰 SPD TARGET</div>"
+                                f"<div style='font-family: monospace; font-size: 16px; font-weight: 900; "
+                                f"color: #fbbf24;'>Rp {_be_spd:,}</div>"
+                                f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-top: 4px;'>per hari</div>"
+                                f"</div>",
+                                unsafe_allow_html=True
+                            )
+
+                        with col_be2:
+                            st.markdown(
+                                f"<div style='background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(14, 165, 233, 0.15)); "
+                                f"border: 1.5px solid #38bdf8; border-radius: 10px; padding: 14px 12px; text-align: center;'>"
+                                f"<div style='font-family: monospace; font-size: 10px; color: #38bdf8; "
+                                f"letter-spacing: 1px; margin-bottom: 6px;'>📄 STD TARGET</div>"
+                                f"<div style='font-family: monospace; font-size: 16px; font-weight: 900; "
+                                f"color: #38bdf8;'>{_be_std:,}</div>"
+                                f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-top: 4px;'>struk/hari</div>"
+                                f"</div>",
+                                unsafe_allow_html=True
+                            )
+
+                        with col_be3:
+                            st.markdown(
+                                f"<div style='background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(124, 58, 237, 0.15)); "
+                                f"border: 1.5px solid #a855f7; border-radius: 10px; padding: 14px 12px; text-align: center;'>"
+                                f"<div style='font-family: monospace; font-size: 10px; color: #a855f7; "
+                                f"letter-spacing: 1px; margin-bottom: 6px;'>🧾 APC TARGET</div>"
+                                f"<div style='font-family: monospace; font-size: 16px; font-weight: 900; "
+                                f"color: #a855f7;'>Rp {_be_apc:,}</div>"
+                                f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-top: 4px;'>per struk</div>"
+                                f"</div>",
+                                unsafe_allow_html=True
+                            )
+
+                        with col_be4:
+                            # Budget adjust NSB (bisa + atau -)
+                            _nsb_adjust_color = "#34d399" if _be_nsb_adjust >= 0 else "#fca5a5"
+                            _nsb_adjust_sign = "+" if _be_nsb_adjust >= 0 else ""
+                            st.markdown(
+                                f"<div style='background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.15)); "
+                                f"border: 1.5px solid #ef4444; border-radius: 10px; padding: 14px 12px; text-align: center;'>"
+                                f"<div style='font-family: monospace; font-size: 10px; color: #fca5a5; "
+                                f"letter-spacing: 1px; margin-bottom: 6px;'>📊 BUDGET NSB/HARI</div>"
+                                f"<div style='font-family: monospace; font-size: 16px; font-weight: 900; "
+                                f"color: {_nsb_adjust_color};'>{_nsb_adjust_sign}Rp {_nsb_adjust:,}</div>"
+                                f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-top: 4px;'>max SO/hari</div>"
+                                f"</div>",
+                                unsafe_allow_html=True
+                            )
+
+                        # ==========================================
+                        # 📈 CHART SPD/STD/APC (SINGLE-LINE + ANNOTATION)
+                        # ==========================================
+                        st.markdown("---")
+                        st.markdown(f"##### 📈 Trend {_chart_type_filter}")
+
                         try:
                             import plotly.graph_objects as go
-                            
-                            _fig = go.Figure()
-                            _fig.add_trace(go.Scatter(
-                                x=_rekap_df["_tgl"],
-                                y=_rekap_df["spd"],
-                                mode="lines+markers",
-                                line=dict(color="#fbbf24", width=3),
-                                marker=dict(size=8, color="#fbbf24",
-                                            line=dict(color="#78350f", width=1.5)),
-                                fill="tozeroy",
-                                fillcolor="rgba(251, 191, 36, 0.15)",
-                                name="SPD",
-                                hovertemplate="<b>%{x|%d/%m/%Y}</b><br>SPD: Rp %{y:,}<extra></extra>",
+
+                            # Tentukan metrics
+                            if _chart_type_filter == "SPD":
+                                _metrics_to_show = [("spd", "#fbbf24", "SPD", "Rp")]
+                            elif _chart_type_filter == "STD":
+                                _metrics_to_show = [("std", "#38bdf8", "STD", "")]
+                            elif _chart_type_filter == "APC":
+                                _metrics_to_show = [("apc", "#a855f7", "APC", "Rp")]
+                            else:
+                                # Semua → subplot 3 chart
+                                _metrics_to_show = [
+                                    ("spd", "#fbbf24", "SPD", "Rp"),
+                                    ("std", "#38bdf8", "STD", ""),
+                                    ("apc", "#a855f7", "APC", "Rp"),
+                                ]
+
+                            if len(_metrics_to_show) == 1:
+                                # Single chart
+                                _metric_key, _color, _label, _unit = _metrics_to_show[0]
+                                _y_vals = _ringkasan_df[_metric_key].tolist()
+                                _x_vals = _ringkasan_df["_tgl"].tolist()
+
+                                # Cari peak & valley
+                                _peak_idx = int(np.argmax(_y_vals))
+                                _valley_idx = int(np.argmin(_y_vals))
+
+                                _fig = go.Figure()
+
+                                # Line
+                                _fig.add_trace(go.Scatter(
+                                    x=_x_vals,
+                                    y=_y_vals,
+                                    mode="lines+markers",
+                                    line=dict(color=_color, width=3),
+                                    marker=dict(size=8, color=_color,
+                                                line=dict(color="#78350f", width=1.5)),
+                                    fill="tozeroy",
+                                    fillcolor=f"rgba{tuple(int(_color.lstrip('#')[i:i+2], 16) for i in (0, 2, 4)) + (0.15,)}",
+                                    name=_label,
+                                    hovertemplate=f"<b>%{{x|%d/%m/%Y}}</b><br>{_label}: {_unit} %{{y:,}}<extra></extra>",
+                                ))
+
+                                # Annotation peak
+                                _fig.add_annotation(
+                                    x=_x_vals[_peak_idx],
+                                    y=_y_vals[_peak_idx],
+                                    text=f"🔼 Peak: {_unit} {_y_vals[_peak_idx]:,}",
+                                    showarrow=True,
+                                    arrowhead=2,
+                                    arrowcolor="#34d399",
+                                    bgcolor="rgba(16, 185, 129, 0.9)",
+                                    bordercolor="#34d399",
+                                    font=dict(color="#ffffff", size=10, family="monospace"),
+                                    ax=0, ay=-30,
+                                )
+
+                                # Annotation valley (kalau beda dari peak)
+                                if _valley_idx != _peak_idx:
+                                    _fig.add_annotation(
+                                        x=_x_vals[_valley_idx],
+                                        y=_y_vals[_valley_idx],
+                                        text=f"🔽 Turun: {_unit} {_y_vals[_valley_idx]:,}",
+                                        showarrow=True,
+                                        arrowhead=2,
+                                        arrowcolor="#fca5a5",
+                                        bgcolor="rgba(239, 68, 68, 0.9)",
+                                        bordercolor="#ef4444",
+                                        font=dict(color="#ffffff", size=10, family="monospace"),
+                                        ax=0, ay=30,
+                                    )
+
+                                _fig.update_layout(
+                                    height=320,
+                                    margin=dict(l=10, r=10, t=20, b=20),
+                                    plot_bgcolor="rgba(15, 23, 42, 0.4)",
+                                    paper_bgcolor="rgba(0,0,0,0)",
+                                    font=dict(color="#fbbf24", family="monospace", size=10),
+                                    xaxis=dict(gridcolor="rgba(251, 191, 36, 0.1)", title="Tanggal"),
+                                    yaxis=dict(gridcolor="rgba(251, 191, 36, 0.1)", title=f"{_label} ({_unit})" if _unit else _label),
+                                    showlegend=False,
+                                )
+                                st.plotly_chart(_fig, use_container_width=True, key=f"chart_{_metric_key}_ringkasan")
+                            else:
+                                # Subplot 3 chart (SPD, STD, APC)
+                                from plotly.subplots import make_subplots
+
+                                _fig = make_subplots(
+                                    rows=3, cols=1,
+                                    shared_xaxes=True,
+                                    vertical_spacing=0.08,
+                                    subplot_titles=("💰 SPD", "📄 STD", "🧾 APC"),
+                                )
+
+                                for _i, (_metric_key, _color, _label, _unit) in enumerate(_metrics_to_show, start=1):
+                                    _y_vals = _ringkasan_df[_metric_key].tolist()
+                                    _x_vals = _ringkasan_df["_tgl"].tolist()
+                                    _peak_idx = int(np.argmax(_y_vals))
+
+                                    _fig.add_trace(
+                                        go.Scatter(
+                                            x=_x_vals,
+                                            y=_y_vals,
+                                            mode="lines+markers",
+                                            line=dict(color=_color, width=2.5),
+                                            marker=dict(size=6, color=_color),
+                                            name=_label,
+                                            hovertemplate=f"<b>%{{x|%d/%m}}</b><br>{_label}: {_unit} %{{y:,}}<extra></extra>",
+                                        ),
+                                        row=_i, col=1
+                                    )
+
+                                    # Annotation peak
+                                    _fig.add_annotation(
+                                        x=_x_vals[_peak_idx],
+                                        y=_y_vals[_peak_idx],
+                                        text=f"🔼 {_unit} {_y_vals[_peak_idx]:,}",
+                                        showarrow=True,
+                                        arrowhead=2,
+                                        arrowcolor=_color,
+                                        bgcolor=f"rgba{tuple(int(_color.lstrip('#')[i:i+2], 16) for i in (0, 2, 4)) + (0.9,)}",
+                                        font=dict(color="#ffffff", size=9, family="monospace"),
+                                        ax=0, ay=-20,
+                                        row=_i, col=1
+                                    )
+
+                                _fig.update_layout(
+                                    height=700,
+                                    margin=dict(l=10, r=10, t=40, b=20),
+                                    plot_bgcolor="rgba(15, 23, 42, 0.4)",
+                                    paper_bgcolor="rgba(0,0,0,0)",
+                                    font=dict(color="#fbbf24", family="monospace", size=10),
+                                    showlegend=False,
+                                )
+                                _fig.update_xaxes(gridcolor="rgba(251, 191, 36, 0.1)")
+                                _fig.update_yaxes(gridcolor="rgba(251, 191, 36, 0.1)")
+
+                                st.plotly_chart(_fig, use_container_width=True, key="chart_all_ringkasan")
+                        except Exception as _e_chart:
+                            st.warning(f"⚠️ Chart gagal render: {str(_e_chart)[:100]}")
+
+                        # ==========================================
+                        # 📉 CHART NSB (Monitor Naik/Turun)
+                        # ==========================================
+                        st.markdown("---")
+                        st.markdown("##### 📉 Trend NSB (Monitoring)")
+
+                        try:
+                            import plotly.graph_objects as go
+
+                            _nsb_vals = _ringkasan_df["nsb_actual"].tolist()
+                            _nsb_x = _ringkasan_df["_tgl"].tolist()
+
+                            # Budget line (dari average budget harian)
+                            _avg_budget_daily = int(_target_nsb_bulanan / _jhk) if _jhk > 0 else 0
+
+                            _fig_nsb = go.Figure()
+
+                            # Bar NSB
+                            _colors_nsb = ["#ef4444" if abs(v) > abs(_avg_budget_daily) else "#10b981" for v in _nsb_vals]
+
+                            _fig_nsb.add_trace(go.Bar(
+                                x=_nsb_x,
+                                y=_nsb_vals,
+                                marker=dict(color=_colors_nsb, line=dict(color="#78350f", width=1)),
+                                name="NSB Aktual",
+                                hovertemplate="<b>%{x|%d/%m}</b><br>NSB: Rp %{y:,}<extra></extra>",
                             ))
-                            _fig.update_layout(
-                                height=220,
-                                margin=dict(l=10, r=10, t=10, b=10),
+
+                            # Budget line (horizontal)
+                            _fig_nsb.add_hline(
+                                y=-_avg_budget_daily,
+                                line_dash="dash",
+                                line_color="#fbbf24",
+                                line_width=2,
+                                annotation_text=f"🎯 Budget: -Rp {_avg_budget_daily:,}",
+                                annotation_position="top right",
+                                annotation_font=dict(color="#fbbf24", size=10, family="monospace"),
+                            )
+
+                            _fig_nsb.update_layout(
+                                height=320,
+                                margin=dict(l=10, r=10, t=30, b=20),
                                 plot_bgcolor="rgba(15, 23, 42, 0.4)",
                                 paper_bgcolor="rgba(0,0,0,0)",
                                 font=dict(color="#fbbf24", family="monospace", size=10),
-                                xaxis=dict(gridcolor="rgba(251, 191, 36, 0.1)"),
-                                yaxis=dict(gridcolor="rgba(251, 191, 36, 0.1)"),
+                                xaxis=dict(gridcolor="rgba(251, 191, 36, 0.1)", title="Tanggal"),
+                                yaxis=dict(gridcolor="rgba(251, 191, 36, 0.1)", title="NSB (Rp)"),
                                 showlegend=False,
                             )
-                            st.plotly_chart(_fig, use_container_width=True, key="sparkline_spd_rekap")
-                        except Exception:
-                            pass
+                            st.plotly_chart(_fig_nsb, use_container_width=True, key="chart_nsb_ringkasan")
+
+                            st.caption(
+                                "🟢 Aman (dalam budget) | 🔴 Over budget | "
+                                "🎯 Garis kuning = budget harian (rata-rata)"
+                            )
+                        except Exception as _e_nsb:
+                            st.warning(f"⚠️ Chart NSB gagal render: {str(_e_nsb)[:100]}")
                 
                 # ==========================================
                 # ==========================================
