@@ -1425,21 +1425,26 @@ def get_active_period_store():
         df = load_periode_store()
         
         if df.empty:
+            print("[DEBUG] load_periode_store() return empty DF")
             return None
         
-        today = pd.Timestamp.now().date()
-        
-        # Filter periode aktif (hari ini masuk rentang)
+        # Konversi tanggal
         df["start_dt"] = pd.to_datetime(df["start_date"], errors="coerce").dt.date
         df["end_dt"] = pd.to_datetime(df["end_date"], errors="coerce").dt.date
+        
+        # Filter periode aktif (hari ini masuk rentang)
+        today = pd.Timestamp.now().date()
         
         aktif = df[
             (df["start_dt"] <= today) & 
             (df["end_dt"] >= today) &
-            (df["status"].astype(str).str.lower() == "aktif")
+            (df["status"].astype(str).str.lower().str.strip() == "aktif")
         ]
         
         if aktif.empty:
+            print(f"[DEBUG] Tidak ada periode aktif. Today: {today}")
+            for _i, _r in df.iterrows():
+                print(f"  Row {_i}: start={_r['start_dt']}, end={_r['end_dt']}, status='{_r.get('status', '')}'")
             return None
         
         row = aktif.iloc[0]
@@ -1451,8 +1456,8 @@ def get_active_period_store():
         _end = row["end_dt"]
         _target_net_sales = int(row["target_net_sales"])
         _target_std = int(row["target_std"])
-        _target_apc = int(row["target_apc"])
-        _nsb_pct = float(row["nsb_percentage"])
+        _target_apc = int(row["target_apc"]) if "target_apc" in row.index else 0
+        _nsb_pct = float(row["nsb_percentage"]) if "nsb_percentage" in row.index else 0.15
         
         # === AUTO-HITUNG JHK ===
         _jhk = (_end - _start).days + 1
@@ -1489,8 +1494,10 @@ def get_active_period_store():
     
     except Exception as e:
         print(f"[get_active_period_store ERROR] {e}")
+        import traceback
+        print(traceback.format_exc())
         return None
-
+        
 def generate_pdf_report(title, sections_data, generated_time_str):
     """
     Generate PDF Report PPS Toko Karang Satria — versi ringkas tanpa progress bar.
