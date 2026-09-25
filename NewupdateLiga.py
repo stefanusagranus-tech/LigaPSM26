@@ -1574,6 +1574,383 @@ def get_active_period_store(force_refresh=False):
         # Fallback ke cache lama kalau ada
         return st.session_state.get(_cache_key, None)
 
+def generate_ikt_pdf(data):
+    """
+    Generate PDF Simulasi IKT dengan grafik bulat (pie chart).
+    Pie chart untuk: NS, SPD, GM Rupiah.
+    """
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        import io as _io
+        
+        pdf = FPDF(orientation="P", unit="mm", format="A4")
+        pdf.set_auto_page_break(auto=True, margin=15)
+        pdf.add_page()
+        pdf.set_margins(left=12, top=12, right=12)
+        
+        # === WARNA ===
+        CLR_DARK = (12, 20, 39)
+        CLR_GOLD = (212, 175, 55)
+        CLR_GOLD_LIGHT = (247, 231, 180)
+        CLR_GREEN = (16, 185, 129)
+        CLR_RED = (239, 68, 68)
+        CLR_ORANGE = (245, 158, 11)
+        CLR_BLUE = (59, 130, 246)
+        CLR_PURPLE = (168, 85, 247)
+        CLR_TEXT = (30, 30, 30)
+        CLR_GRAY = (120, 120, 120)
+        
+        def _clean(text):
+            if text is None:
+                return ""
+            reps = {
+                "—": "-", "–": "-", "•": "*", "→": "->",
+                "≥": ">=", "≤": "<=", "×": "x", "…": "...",
+                "“": '"', "”": '"', "‘": "'", "’": "'",
+                "📊": "", "💰": "", "📅": "", "📄": "", "🧾": "",
+                "📈": "", "🎯": "", "💎": "", "✅": "[OK]",
+                "⚠️": "[!]", "🔴": "[X]", "⚜️": "",
+            }
+            for k, v in reps.items():
+                text = str(text).replace(k, v)
+            return text.encode("latin-1", "replace").decode("latin-1")
+        
+        def _fmt_rp(v):
+            return f"Rp {int(v):,}"
+        
+        # === HEADER ===
+        pdf.set_fill_color(*CLR_DARK)
+        pdf.rect(0, 0, 210, 32, style="F")
+        
+        pdf.set_draw_color(*CLR_GOLD)
+        pdf.set_line_width(0.8)
+        pdf.line(0, 32, 210, 32)
+        
+        pdf.set_xy(12, 8)
+        pdf.set_font("Helvetica", "B", 18)
+        pdf.set_text_color(*CLR_GOLD_LIGHT)
+        pdf.cell(186, 10, "INSENTIF KINERJA TOKO (IKT)", ln=1, align="C")
+        
+        pdf.set_x(12)
+        pdf.set_font("Helvetica", "B", 13)
+        pdf.set_text_color(*CLR_GOLD)
+        pdf.cell(186, 6, _clean(f"TOKO C383 - KARANG SATRIA"), ln=1, align="C")
+        
+        pdf.set_x(12)
+        pdf.set_font("Helvetica", "I", 10)
+        pdf.set_text_color(*CLR_GOLD_LIGHT)
+        pdf.cell(186, 5, _clean(f"{data['bulan']} {data['tahun']} | Hari ke-{data['hari_berjalan']} dari {data['jhk']}"), ln=1, align="C")
+        
+        pdf.ln(8)
+        
+        # === FUNGSI BUAT PIE CHART ===
+        def _buat_pie_chart(actual, target, label_actual="Actual", label_target="Target"):
+            """Bikin pie chart actual vs gap, return bytes."""
+            _gap = max(target - actual, 0)
+            _sisa = max(actual, 0)
+            
+            if _sisa + _gap == 0:
+                return None
+            
+            _labels = [label_actual, "Gap"]
+            _sizes = [_sisa, _gap]
+            _colors = ["#10b981", "#ef4444"]
+            
+            # Kalau over target (actual > target), warna beda
+            if actual >= target:
+                _labels = ["Actual (Achieved)", "Over"]
+                _sizes = [target, max(actual - target, 0)]
+                _colors = ["#10b981", "#fbbf24"]
+            
+            _fig, _ax = plt.subplots(figsize=(3, 3), facecolor="#ffffff")
+            _wedges, _texts, _autotexts = _ax.pie(
+                _sizes,
+                labels=_labels,
+                colors=_colors,
+                autopct="%1.1f%%",
+                startangle=90,
+                textprops={"fontsize": 9, "fontweight": "bold", "color": "#1f2937"},
+                wedgeprops={"edgecolor": "#78350f", "linewidth": 1.5},
+            )
+            
+            for _autotext in _autotexts:
+                _autotext.set_color("white")
+                _autotext.set_fontsize(10)
+            
+            _ax.axis("equal")
+            _buf = _io.BytesIO()
+            _fig.savefig(_buf, format="png", dpi=100, bbox_inches="tight", facecolor="#ffffff")
+            plt.close(_fig)
+            _buf.seek(0)
+            return _buf
+        
+        # === KONTEN: 3 PIE CHART ===
+        _charts_data = [
+            {
+                "title": "NET SALES",
+                "icon": "$",
+                "target": data["target_ns"],
+                "actual": data["actual_ns"],
+                "ach": data["ach_ns"],
+                "gap": data["gap_ns"],
+            },
+            {
+                "title": "SPD (Sales Per Day)",
+                "icon": "D",
+                "target": data["target_spd"],
+                "actual": data["actual_spd"],
+                "ach": data["ach_spd"],
+                "gap": data["gap_spd"],
+            },
+            {
+                "title": "GM RUPIAH",
+                "icon": "G",
+                "target": data["target_gm_rupiah"],
+                "actual": data["actual_gm_rupiah"],
+                "ach": data["ach_gm_rupiah"],
+                "gap": data["gap_gm_rupiah"],
+            },
+        ]
+        
+        for _chart in _charts_data:
+            # Header section
+            pdf.set_font("Helvetica", "B", 11)
+            pdf.set_text_color(*CLR_DARK)
+            pdf.set_fill_color(*CLR_GOLD_LIGHT)
+            pdf.cell(186, 8, _clean(f"  {_chart['title']}"), ln=1, fill=True)
+            pdf.ln(2)
+            
+            # Pie chart
+            _pie_buf = _buat_pie_chart(_chart["actual"], _chart["target"])
+            
+            if _pie_buf:
+                # Gambar pie di kiri
+                _pie_buf.seek(0)
+                pdf.image(_pie_buf, x=15, y=pdf.get_y(), w=50)
+            
+            # Data di kanan pie
+            _y_kanan = pdf.get_y() + 5
+            _x_kanan = 75
+            
+            pdf.set_xy(_x_kanan, _y_kanan)
+            pdf.set_font("Helvetica", "B", 10)
+            pdf.set_text_color(*CLR_TEXT)
+            pdf.cell(50, 6, _clean("Target:"), ln=0)
+            pdf.set_font("Helvetica", "", 10)
+            pdf.set_text_color(*CLR_GRAY)
+            pdf.cell(60, 6, _clean(_fmt_rp(_chart["target"])), ln=1)
+            
+            pdf.set_x(_x_kanan)
+            pdf.set_font("Helvetica", "B", 10)
+            pdf.set_text_color(*CLR_TEXT)
+            pdf.cell(50, 6, _clean("Actual:"), ln=0)
+            pdf.set_font("Helvetica", "B", 10)
+            pdf.set_text_color(*CLR_BLUE)
+            pdf.cell(60, 6, _clean(_fmt_rp(_chart["actual"])), ln=1)
+            
+            pdf.set_x(_x_kanan)
+            pdf.set_font("Helvetica", "B", 10)
+            pdf.set_text_color(*CLR_TEXT)
+            pdf.cell(50, 6, _clean("Achievement:"), ln=0)
+            _ach_color = CLR_GREEN if _chart["ach"] >= 100 else (CLR_ORANGE if _chart["ach"] >= 80 else CLR_RED)
+            pdf.set_font("Helvetica", "B", 11)
+            pdf.set_text_color(*_ach_color)
+            pdf.cell(60, 6, _clean(f"{_chart['ach']:.1f}%"), ln=1)
+            
+            pdf.set_x(_x_kanan)
+            pdf.set_font("Helvetica", "B", 10)
+            pdf.set_text_color(*CLR_TEXT)
+            pdf.cell(50, 6, _clean("Gap:"), ln=0)
+            _gap_color = CLR_GREEN if _chart["gap"] >= 0 else CLR_RED
+            pdf.set_font("Helvetica", "B", 10)
+            pdf.set_text_color(*_gap_color)
+            _gap_str = f"+{_fmt_rp(_chart['gap'])}" if _chart["gap"] >= 0 else _fmt_rp(_chart["gap"])
+            pdf.cell(60, 6, _clean(_gap_str), ln=1)
+            
+            # Spacer setelah pie
+            pdf.set_y(max(pdf.get_y(), _y_kanan + 45))
+            pdf.ln(4)
+            
+            # Garis pemisah
+            pdf.set_draw_color(*CLR_GOLD)
+            pdf.set_line_width(0.4)
+            pdf.line(12, pdf.get_y(), 198, pdf.get_y())
+            pdf.ln(4)
+        
+        # === BEST ESTIMATE SECTION ===
+        pdf.add_page()
+        
+        pdf.set_font("Helvetica", "B", 14)
+        pdf.set_text_color(*CLR_DARK)
+        pdf.set_fill_color(*CLR_GOLD_LIGHT)
+        pdf.cell(186, 10, _clean("  BEST ESTIMATE NET SALES"), ln=1, fill=True)
+        pdf.ln(4)
+        
+        pdf.set_font("Helvetica", "", 10)
+        pdf.set_text_color(*CLR_GRAY)
+        pdf.cell(186, 6, _clean(f"Untuk mencapai target di sisa {data['sisa_hari']} hari:"), ln=1)
+        pdf.ln(3)
+        
+        _be_data = [
+            ("Capai 100%", data["be_ns_100"], CLR_BLUE),
+            ("Capai 103%", data["be_ns_103"], CLR_PURPLE),
+            ("Capai 105%", data["be_ns_105"], CLR_GOLD),
+        ]
+        
+        for _label, _value, _color in _be_data:
+            pdf.set_fill_color(*_color)
+            pdf.set_text_color(255, 255, 255)
+            pdf.set_font("Helvetica", "B", 11)
+            pdf.cell(60, 10, _clean(f"  {_label}"), ln=0, fill=True)
+            
+            pdf.set_fill_color(245, 245, 245)
+            pdf.set_text_color(*CLR_DARK)
+            pdf.set_font("Helvetica", "B", 12)
+            pdf.cell(126, 10, _clean(f"  {_fmt_rp(_value)} / hari"), ln=1, fill=True)
+            pdf.ln(2)
+        
+        # === BEST ESTIMATE GM ===
+        pdf.ln(6)
+        pdf.set_font("Helvetica", "B", 14)
+        pdf.set_text_color(*CLR_DARK)
+        pdf.set_fill_color(*CLR_GOLD_LIGHT)
+        pdf.cell(186, 10, _clean("  BEST ESTIMATE GM% & SALES"), ln=1, fill=True)
+        pdf.ln(4)
+        
+        pdf.set_font("Helvetica", "", 10)
+        pdf.set_text_color(*CLR_GRAY)
+        pdf.cell(186, 6, _clean(f"Untuk mencapai GM Rupiah target:"), ln=1)
+        pdf.ln(3)
+        
+        pdf.set_fill_color(*CLR_PURPLE)
+        pdf.set_text_color(255, 255, 255)
+        pdf.set_font("Helvetica", "B", 11)
+        pdf.cell(80, 10, _clean(f"  Best Est GM%"), ln=0, fill=True)
+        pdf.set_fill_color(245, 245, 245)
+        pdf.set_text_color(*CLR_DARK)
+        pdf.set_font("Helvetica", "B", 12)
+        pdf.cell(106, 10, _clean(f"  {data['be_gm']:.2f}%"), ln=1, fill=True)
+        pdf.ln(2)
+        
+        pdf.set_fill_color(*CLR_GREEN)
+        pdf.set_text_color(255, 255, 255)
+        pdf.set_font("Helvetica", "B", 11)
+        pdf.cell(80, 10, _clean(f"  Best Est Sales/Hari"), ln=0, fill=True)
+        pdf.set_fill_color(245, 245, 245)
+        pdf.set_text_color(*CLR_DARK)
+        pdf.set_font("Helvetica", "B", 12)
+        pdf.cell(106, 10, _clean(f"  {_fmt_rp(data['be_sales_gm'])} / hari"), ln=1, fill=True)
+        
+        # === FOOTER ===
+        pdf.ln(10)
+        pdf.set_draw_color(*CLR_GOLD)
+        pdf.set_line_width(0.6)
+        pdf.line(12, pdf.get_y(), 198, pdf.get_y())
+        pdf.ln(3)
+        
+        pdf.set_font("Helvetica", "I", 9)
+        pdf.set_text_color(*CLR_GRAY)
+        pdf.cell(0, 5, _clean(f"Generated: {datetime.now(ZoneInfo('Asia/Jakarta')).strftime('%d/%m/%Y %H:%M:%S WIB')}"),
+                 align="C", ln=1)
+        
+        # Output
+        pdf_output = pdf.output(dest="S")
+        if isinstance(pdf_output, str):
+            return pdf_output.encode("latin-1")
+        return bytes(pdf_output)
+    
+    except Exception as e:
+        st.error(f"❌ Gagal generate PDF IKT: {e}")
+        import traceback
+        st.code(traceback.format_exc())
+        return None
+
+def generate_ikt_whatsapp_text(data):
+    """
+    Generate text WhatsApp untuk Simulasi IKT.
+    Return string — tinggal di-copy.
+    """
+    try:
+        def _fmt_rp(v):
+            return f"Rp {int(v):,}"
+        
+        def _status_emoji(ach):
+            if ach >= 100:
+                return "✅"
+            elif ach >= 80:
+                return "⚠️"
+            else:
+                return "🔴"
+        
+        _now = datetime.now(ZoneInfo("Asia/Jakarta"))
+        
+        _text = (
+            f"📊 *INSENTIF KINERJA TOKO (IKT)*\n"
+            f"🏢 Toko C383 - Karang Satria\n"
+            f"📅 *{data['bulan']} {data['tahun']}*\n"
+            f"⏱️ Hari ke-{data['hari_berjalan']} dari {data['jhk']} "
+            f"(sisa {data['sisa_hari']} hari)\n"
+            f"\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            
+            f"💰 *NET SALES*\n"
+            f"  Target : {_fmt_rp(data['target_ns'])}\n"
+            f"  Actual : {_fmt_rp(data['actual_ns'])}\n"
+            f"  Ach%   : *{data['ach_ns']:.2f}%* {_status_emoji(data['ach_ns'])}\n"
+            f"  Gap    : {_fmt_rp(data['gap_ns'])}\n\n"
+            
+            f"📅 *SPD (Sales Per Day)*\n"
+            f"  Target : {_fmt_rp(data['target_spd'])}\n"
+            f"  Actual : {_fmt_rp(data['actual_spd'])}\n"
+            f"  Ach%   : *{data['ach_spd']:.2f}%* {_status_emoji(data['ach_spd'])}\n"
+            f"  Gap    : {_fmt_rp(data['gap_spd'])}\n\n"
+            
+            f"📄 *STD (Struk Per Day)*\n"
+            f"  Target : {int(data['target_std']):,} struk\n"
+            f"  Actual : {int(data['actual_std']):,} struk\n"
+            f"  Ach%   : *{data['ach_std']:.2f}%* {_status_emoji(data['ach_std'])}\n"
+            f"  Gap    : {int(data['gap_std']):+,} struk\n\n"
+            
+            f"🧾 *APC (Average Per Customer)*\n"
+            f"  Target : {_fmt_rp(data['target_apc'])}\n"
+            f"  Actual : {_fmt_rp(data['actual_apc'])}\n"
+            f"  Ach%   : *{data['ach_apc']:.2f}%* {_status_emoji(data['ach_apc'])}\n"
+            f"  Gap    : {_fmt_rp(data['gap_apc'])}\n\n"
+            
+            f"📊 *GM% (Gross Margin)*\n"
+            f"  Target : {data['target_gm']:.2f}%\n"
+            f"  Actual : {data['actual_gm']:.2f}%\n"
+            f"  Ach%   : *{data['ach_gm']:.2f}%* {_status_emoji(data['ach_gm'])}\n"
+            f"  Gap    : {data['gap_gm']:+.2f}%\n\n"
+            
+            f"💎 *GM RUPIAH*\n"
+            f"  Target : {_fmt_rp(data['target_gm_rupiah'])}\n"
+            f"  Actual : {_fmt_rp(data['actual_gm_rupiah'])}\n"
+            f"  Ach%   : *{data['ach_gm_rupiah']:.2f}%* {_status_emoji(data['ach_gm_rupiah'])}\n"
+            f"  Gap    : {_fmt_rp(data['gap_gm_rupiah'])}\n\n"
+            
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            
+            f"🎯 *BEST ESTIMATE NET SALES*\n"
+            f"  Capai 100% → {_fmt_rp(data['be_ns_100'])}/hari\n"
+            f"  Capai 103% → {_fmt_rp(data['be_ns_103'])}/hari\n"
+            f"  Capai 105% → {_fmt_rp(data['be_ns_105'])}/hari\n\n"
+            
+            f"💎 *BEST ESTIMATE GM*\n"
+            f"  Best Est GM%   → {data['be_gm']:.2f}%\n"
+            f"  Best Est Sales → {_fmt_rp(data['be_sales_gm'])}/hari\n\n"
+            
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"_Generated: {_now.strftime('%d/%m/%Y %H:%M WIB')}_"
+        )
+        
+        return _text
+    
+    except Exception as e:
+        return f"❌ Error generate text: {e}"
+
 def generate_pdf_report(title, sections_data, generated_time_str):
     """
     Generate PDF Report PPS Toko Karang Satria — versi ringkas tanpa progress bar.
@@ -19673,18 +20050,501 @@ elif selected_tab == "📊 Daily Performance":
                             st.caption(f"💡 Scroll horizontal untuk lihat semua kolom. **{len(_filtered_rekap)}** baris data.")
     
     # =========================================================================
-    # 📈 SUB-TAB 3: DASHBOARD (PLACEHOLDER)
+    # 📈 SUB-TAB 3: SIMULASI IKT (Insentif Kinerja Toko)
     # =========================================================================
     elif _dp_subtab == "📈 Dashboard":
-        st.info("🚧 **Halaman Dashboard** akan diisi di **FASE 10D**. Stay tuned!")
-        st.markdown("""
-        **Yang akan ada di sini:**
-        - 📊 KPI Cards (Total SPD, STD, APC, NSB)
-        - 📈 Trend Chart SPD
-        - 📊 Bar Chart STD
-        - 📉 Chart APC & NSB
-        - 🏆 Status Achievement
-        """)
+        
+        # === CEK PERIODE AKTIF ===
+        _active_period_ikt = get_active_period_store()
+        
+        if _active_period_ikt is None:
+            st.warning("⚠️ Belum ada periode aktif. Set dulu di menu Pengaturan Sales.")
+        else:
+            # === LOAD DATA HARIAN ===
+            _ikt_df = load_daily_performance_cached() if "load_daily_performance_cached" in dir() else pd.DataFrame()
+            
+            if _ikt_df.empty:
+                st.info("📭 Belum ada data harian. Input dulu di menu **📝 Input Harian**.")
+            else:
+                # === NORMALISASI ===
+                _ikt_df["_tgl"] = pd.to_datetime(_ikt_df["tanggal"], errors="coerce")
+                _ikt_df = _ikt_df.dropna(subset=["_tgl"])
+                
+                for _col in ["spd", "std", "apc", "nsb_target", "nsb_actual"]:
+                    if _col in _ikt_df.columns:
+                        _ikt_df[_col] = pd.to_numeric(_ikt_df[_col], errors="coerce").fillna(0)
+                
+                _ikt_df = _ikt_df.sort_values("_tgl", ascending=True).reset_index(drop=True)
+                
+                # === FILTER BULAN ===
+                _ikt_bulan_list = [
+                    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+                ]
+                
+                _col_bulan, _col_spacer = st.columns([2, 3])
+                with _col_bulan:
+                    _ikt_bulan_pilih = st.selectbox(
+                        "📅 Pilih Bulan IKT",
+                        _ikt_bulan_list,
+                        index=waktu_wib.month - 1,
+                        key="ikt_bulan_pilih"
+                    )
+                
+                _ikt_bulan_int = _ikt_bulan_list.index(_ikt_bulan_pilih) + 1
+                _ikt_tahun = waktu_wib.year
+                
+                # Filter data by bulan
+                _ikt_df = _ikt_df[
+                    (_ikt_df["_tgl"].dt.month == _ikt_bulan_int) &
+                    (_ikt_df["_tgl"].dt.year == _ikt_tahun)
+                ].reset_index(drop=True)
+                
+                if _ikt_df.empty:
+                    st.info(f"📭 Tidak ada data untuk bulan **{_ikt_bulan_pilih} {_ikt_tahun}**.")
+                else:
+                    # ==========================================
+                    # 📊 HITUNG METRIK IKT
+                    # ==========================================
+                    _ikt_jhk = _active_period_ikt.get("jhk", 30)
+                    _ikt_target_ns = _active_period_ikt.get("target_net_sales", 0)
+                    _ikt_target_std_total = _active_period_ikt.get("target_std", 0)
+                    _ikt_target_apc = _active_period_ikt.get("target_apc", 0)
+                    _ikt_target_gm = _active_period_ikt.get("target_gm_pct", 0) or 0
+                    _ikt_p_start = _active_period_ikt.get("start_date", None)
+                    _ikt_p_end = _active_period_ikt.get("end_date", None)
+                    
+                    _ikt_today = waktu_wib.date()
+                    
+                    # Hari berjalan
+                    if _ikt_p_start:
+                        _ikt_hari_berjalan = min((_ikt_today - _ikt_p_start).days + 1, _ikt_jhk)
+                        if _ikt_hari_berjalan < 1:
+                            _ikt_hari_berjalan = 1
+                    else:
+                        _ikt_hari_berjalan = len(_ikt_df)
+                    
+                    _ikt_sisa_hari = max(_ikt_jhk - _ikt_hari_berjalan, 1)
+                    
+                    # Actual
+                    _ikt_total_ns = int(_ikt_df["spd"].sum())
+                    _ikt_total_std = int(_ikt_df["std"].sum())
+                    _ikt_avg_spd = int(_ikt_df["spd"].mean())
+                    _ikt_avg_std = int(_ikt_df["std"].mean())
+                    _ikt_avg_apc = int(_ikt_df["apc"].mean())
+                    
+                    # Target harian
+                    _ikt_target_spd_harian = int(_ikt_target_ns / _ikt_jhk) if _ikt_jhk > 0 else 0
+                    _ikt_target_std_harian = int(_ikt_target_std_total / _ikt_jhk) if _ikt_jhk > 0 else 0
+                    
+                    # GM Rupiah
+                    _ikt_target_gm_rupiah = int(_ikt_target_ns * (_ikt_target_gm / 100))
+                    
+                    # === INPUT GM% ACTUAL ===
+                    st.markdown("---")
+                    st.markdown("##### 🔧 Input GM% Actual")
+                    
+                    _col_gm1, _col_gm2 = st.columns([2, 1])
+                    with _col_gm1:
+                        _ikt_gm_actual = st.number_input(
+                            "📊 GM% Actual Bulan Ini",
+                            min_value=0.0,
+                            max_value=100.0,
+                            step=0.1,
+                            value=float(st.session_state.get("ikt_gm_actual", _ikt_target_gm)),
+                            key="ikt_gm_input",
+                            help="Gross Margin actual bulan ini"
+                        )
+                        st.session_state["ikt_gm_actual"] = _ikt_gm_actual
+                    with _col_gm2:
+                        st.markdown("<br>", unsafe_allow_html=True)
+                        if st.button("🎯 Hitung Simulasi", use_container_width=True, type="primary", key="ikt_hitung_btn"):
+                            st.toast(f"✅ GM% {_ikt_gm_actual}% dihitung!", icon="⚡")
+                            time.sleep(0.5)
+                            st.rerun()
+                    
+                    _ikt_actual_gm_rupiah = int(_ikt_total_ns * (_ikt_gm_actual / 100))
+                    
+                    # ==========================================
+                    # 📊 BEST ESTIMATE
+                    # ==========================================
+                    # NS Best Estimate untuk 100%, 103%, 105%
+                    def _hitung_be_ns(target_pct):
+                        _target_ns_baru = int(_ikt_target_ns * (target_pct / 100))
+                        _sisa_target = max(_target_ns_baru - _ikt_total_ns, 0)
+                        return int(_sisa_target / _ikt_sisa_hari) if _ikt_sisa_hari > 0 else 0
+                    
+                    _ikt_be_ns_100 = _hitung_be_ns(100)
+                    _ikt_be_ns_103 = _hitung_be_ns(103)
+                    _ikt_be_ns_105 = _hitung_be_ns(105)
+                    
+                    # BE SPD = BE NS (karena SPD = NS harian)
+                    _ikt_be_spd_100 = _ikt_be_ns_100
+                    _ikt_be_spd_103 = _ikt_be_ns_103
+                    _ikt_be_spd_105 = _ikt_be_ns_105
+                    
+                    # BE STD
+                    def _hitung_be_std(target_pct):
+                        _target_std_baru = int(_ikt_target_std_total * (target_pct / 100))
+                        _sisa_target = max(_target_std_baru - _ikt_total_std, 0)
+                        return int(_sisa_target / _ikt_sisa_hari) if _ikt_sisa_hari > 0 else 0
+                    
+                    _ikt_be_std_100 = _hitung_be_std(100)
+                    _ikt_be_std_103 = _hitung_be_std(103)
+                    _ikt_be_std_105 = _hitung_be_std(105)
+                    
+                    # BE APC = BE SPD / BE STD
+                    def _hitung_be_apc(be_spd, be_std):
+                        return int(be_spd / be_std) if be_std > 0 else 0
+                    
+                    _ikt_be_apc_100 = _hitung_be_apc(_ikt_be_spd_100, _ikt_be_std_100)
+                    _ikt_be_apc_103 = _hitung_be_apc(_ikt_be_spd_103, _ikt_be_std_103)
+                    _ikt_be_apc_105 = _hitung_be_apc(_ikt_be_spd_105, _ikt_be_std_105)
+                    
+                    # BE GM% (rumus: target_gm - actual_gm + target_gm)
+                    _ikt_be_gm = _ikt_target_gm - _ikt_gm_actual + _ikt_target_gm
+                    
+                    # BE Sales untuk GM Rupiah achieve
+                    _ikt_gap_gm_rupiah = max(_ikt_target_gm_rupiah - _ikt_actual_gm_rupiah, 0)
+                    _ikt_be_sales_gm = int(_ikt_gap_gm_rupiah / _ikt_sisa_hari / (_ikt_gm_actual / 100)) if _ikt_sisa_hari > 0 and _ikt_gm_actual > 0 else 0
+                    
+                    # ==========================================
+                    # 📊 HITUNG ACHIEVEMENT & GAP
+                    # ==========================================
+                    def _ach_gap(actual, target):
+                        _ach = (actual / target * 100) if target > 0 else 0
+                        _gap = actual - target
+                        return _ach, _gap
+                    
+                    _ikt_ach_ns, _ikt_gap_ns = _ach_gap(_ikt_total_ns, _ikt_target_ns)
+                    _ikt_ach_spd, _ikt_gap_spd = _ach_gap(_ikt_avg_spd, _ikt_target_spd_harian)
+                    _ikt_ach_std, _ikt_gap_std = _ach_gap(_ikt_total_std, _ikt_target_std_total)
+                    _ikt_ach_apc, _ikt_gap_apc = _ach_gap(_ikt_avg_apc, _ikt_target_apc)
+                    _ikt_ach_gm, _ikt_gap_gm = _ach_gap(_ikt_gm_actual, _ikt_target_gm)
+                    _ikt_ach_gm_rupiah, _ikt_gap_gm_rupiah_val = _ach_gap(_ikt_actual_gm_rupiah, _ikt_target_gm_rupiah)
+                    
+                    # ==========================================
+                    # 🎨 HEADER
+                    # ==========================================
+                    st.markdown("---")
+                    
+                    st.markdown(
+                        f"<div style='background: radial-gradient(circle, #1e3a5f 0%, #0f172a 100%); "
+                        f"border: 2px solid #b45309; border-radius: 14px; padding: 18px 24px; "
+                        f"margin-bottom: 20px; text-align: center; "
+                        f"box-shadow: 0 0 25px rgba(180, 83, 9, 0.35);'>"
+                        
+                        f"<div style='font-family: monospace; font-size: 11px; color: #94a3b8; "
+                        f"letter-spacing: 2px; margin-bottom: 6px;'>"
+                        f"⚜️ INSENTIF KINERJA TOKO (IKT) ⚜️</div>"
+                        
+                        f"<div style='font-family: Cinzel, serif; font-size: 22px; color: #fbbf24; "
+                        f"font-weight: 900; letter-spacing: 2px; "
+                        f"text-shadow: 0 0 15px rgba(251, 191, 36, 0.6); margin-bottom: 6px;'>"
+                        f"IKT BULAN {_ikt_bulan_pilih.upper()} {_ikt_tahun}</div>"
+                        
+                        f"<div style='font-family: monospace; font-size: 11px; color: #cbd5e1;'>"
+                        f"🏢 Toko C383 • Karang Satria • "
+                        f"📅 Hari ke-{_ikt_hari_berjalan} dari {_ikt_jhk} "
+                        f"(sisa {_ikt_sisa_hari} hari)</div>"
+                        
+                        f"</div>",
+                        unsafe_allow_html=True
+                    )
+                    
+                    # ==========================================
+                    # 📊 TABEL IKT
+                    # ==========================================
+                    st.markdown("##### 📊 Perbandingan Target vs Actual")
+                    
+                    # Helper: format rupiah
+                    def _fmt_rp(v):
+                        return f"Rp {int(v):,}"
+                    
+                    def _fmt_pct(v):
+                        return f"{v:.2f}%"
+                    
+                    def _status_icon(ach):
+                        if ach >= 100:
+                            return "✅"
+                        elif ach >= 80:
+                            return "⚠️"
+                        else:
+                            return "🔴"
+                    
+                    def _color_gap(gap):
+                        return "#34d399" if gap >= 0 else "#fca5a5"
+                    
+                    # Build rows
+                    _ikt_rows = [
+                        {
+                            "icon": "💰",
+                            "label": "NET SALES",
+                            "target": _fmt_rp(_ikt_target_ns),
+                            "actual": _fmt_rp(_ikt_total_ns),
+                            "ach": _ikt_ach_ns,
+                            "gap": _ikt_gap_ns,
+                            "gap_str": f"Rp {_ikt_gap_ns:+,}",
+                            "be": _fmt_rp(_ikt_be_ns_100),
+                        },
+                        {
+                            "icon": "📅",
+                            "label": "SPD (Harian)",
+                            "target": _fmt_rp(_ikt_target_spd_harian),
+                            "actual": _fmt_rp(_ikt_avg_spd),
+                            "ach": _ikt_ach_spd,
+                            "gap": _ikt_gap_spd,
+                            "gap_str": f"Rp {_ikt_gap_spd:+,}",
+                            "be": _fmt_rp(_ikt_be_spd_100),
+                        },
+                        {
+                            "icon": "📄",
+                            "label": "STD (Total)",
+                            "target": f"{_ikt_target_std_total:,}",
+                            "actual": f"{_ikt_total_std:,}",
+                            "ach": _ikt_ach_std,
+                            "gap": _ikt_gap_std,
+                            "gap_str": f"{_ikt_gap_std:+,}",
+                            "be": f"{_ikt_be_std_100:,}",
+                        },
+                        {
+                            "icon": "🧾",
+                            "label": "APC",
+                            "target": _fmt_rp(_ikt_target_apc),
+                            "actual": _fmt_rp(_ikt_avg_apc),
+                            "ach": _ikt_ach_apc,
+                            "gap": _ikt_gap_apc,
+                            "gap_str": f"Rp {_ikt_gap_apc:+,}",
+                            "be": _fmt_rp(_ikt_be_apc_100),
+                        },
+                        {
+                            "icon": "📊",
+                            "label": "GM%",
+                            "target": _fmt_pct(_ikt_target_gm),
+                            "actual": _fmt_pct(_ikt_gm_actual),
+                            "ach": _ikt_ach_gm,
+                            "gap": _ikt_gap_gm,
+                            "gap_str": f"{_ikt_gap_gm:+.2f}%",
+                            "be": _fmt_pct(_ikt_be_gm),
+                        },
+                        {
+                            "icon": "💎",
+                            "label": "GM RUPIAH",
+                            "target": _fmt_rp(_ikt_target_gm_rupiah),
+                            "actual": _fmt_rp(_ikt_actual_gm_rupiah),
+                            "ach": _ikt_ach_gm_rupiah,
+                            "gap": _ikt_gap_gm_rupiah_val,
+                            "gap_str": f"Rp {_ikt_gap_gm_rupiah_val:+,}",
+                            "be": _fmt_rp(_ikt_be_sales_gm),
+                        },
+                    ]
+                    
+                    # Build HTML table
+                    _table_html = (
+                        f"<div style='overflow-x: auto; -webkit-overflow-scrolling: touch;'>"
+                        f"<table style='width: 100%; border-collapse: separate; "
+                        f"border-spacing: 0; font-family: monospace; min-width: 850px; "
+                        f"background: rgba(15, 23, 42, 0.6); border-radius: 12px; overflow: hidden;'>"
+                        
+                        # Header
+                        f"<thead>"
+                        f"<tr style='background: linear-gradient(90deg, #1e3a5f 0%, #b45309 50%, #1e3a5f 100%);'>"
+                        f"<th style='padding: 14px 12px; text-align: left; font-size: 11px; "
+                        f"color: #f7e7b4; font-weight: 900; letter-spacing: 1px; "
+                        f"border-bottom: 2px solid #fbbf24;'>METRIC</th>"
+                        f"<th style='padding: 14px 12px; text-align: right; font-size: 11px; "
+                        f"color: #f7e7b4; font-weight: 900; letter-spacing: 1px; "
+                        f"border-bottom: 2px solid #fbbf24;'>TARGET</th>"
+                        f"<th style='padding: 14px 12px; text-align: right; font-size: 11px; "
+                        f"color: #f7e7b4; font-weight: 900; letter-spacing: 1px; "
+                        f"border-bottom: 2px solid #fbbf24;'>ACTUAL</th>"
+                        f"<th style='padding: 14px 12px; text-align: center; font-size: 11px; "
+                        f"color: #f7e7b4; font-weight: 900; letter-spacing: 1px; "
+                        f"border-bottom: 2px solid #fbbf24;'>ACH%</th>"
+                        f"<th style='padding: 14px 12px; text-align: right; font-size: 11px; "
+                        f"color: #f7e7b4; font-weight: 900; letter-spacing: 1px; "
+                        f"border-bottom: 2px solid #fbbf24;'>GAP</th>"
+                        f"<th style='padding: 14px 12px; text-align: right; font-size: 11px; "
+                        f"color: #f7e7b4; font-weight: 900; letter-spacing: 1px; "
+                        f"border-bottom: 2px solid #fbbf24;'>BEST EST</th>"
+                        f"</tr>"
+                        f"</thead>"
+                        
+                        f"<tbody>"
+                    )
+                    
+                    for _i, _r in enumerate(_ikt_rows):
+                        _row_bg = "rgba(15, 23, 42, 0.85)" if _i % 2 == 0 else "rgba(30, 41, 59, 0.7)"
+                        _ach_color = "#34d399" if _r["ach"] >= 100 else ("#fbbf24" if _r["ach"] >= 80 else "#fca5a5")
+                        _gap_color = _color_gap(_r["gap"])
+                        _icon = _status_icon(_r["ach"])
+                        
+                        _table_html += (
+                            f"<tr style='background: {_row_bg}; border-bottom: 1px solid rgba(180, 83, 9, 0.2);'>"
+                            
+                            f"<td style='padding: 12px 12px; font-size: 12px; font-weight: 900; "
+                            f"color: #fbbf24; white-space: nowrap;'>{_r['icon']} {_r['label']}</td>"
+                            
+                            f"<td style='padding: 12px 12px; text-align: right; font-size: 12px; "
+                            f"color: #94a3b8; font-weight: 700; white-space: nowrap;'>{_r['target']}</td>"
+                            
+                            f"<td style='padding: 12px 12px; text-align: right; font-size: 12px; "
+                            f"color: #e2e8f0; font-weight: 900; white-space: nowrap;'>{_r['actual']}</td>"
+                            
+                            f"<td style='padding: 12px 12px; text-align: center; font-size: 12px; "
+                            f"color: {_ach_color}; font-weight: 900; white-space: nowrap;'>"
+                            f"{_icon} {_r['ach']:.1f}%</td>"
+                            
+                            f"<td style='padding: 12px 12px; text-align: right; font-size: 12px; "
+                            f"color: {_gap_color}; font-weight: 900; white-space: nowrap;'>"
+                            f"{_r['gap_str']}</td>"
+                            
+                            f"<td style='padding: 12px 12px; text-align: right; font-size: 12px; "
+                            f"color: #a855f7; font-weight: 900; white-space: nowrap;'>"
+                            f"{_r['be']}</td>"
+                            
+                            f"</tr>"
+                        )
+                    
+                    _table_html += "</tbody></table></div>"
+                    
+                    st.markdown(_table_html, unsafe_allow_html=True)
+                    
+                    st.caption("💡 **Best Est** = target per hari untuk mencapai 100% di sisa waktu")
+                    
+                    # ==========================================
+                    # 🎯 BEST ESTIMATE NET SALES (100%, 103%, 105%)
+                    # ==========================================
+                    st.markdown("---")
+                    st.markdown("##### 🎯 Best Estimate Net Sales")
+                    
+                    _col_be1, _col_be2, _col_be3 = st.columns(3)
+                    
+                    with _col_be1:
+                        st.markdown(
+                            f"<div style='background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(14, 165, 233, 0.15)); "
+                            f"border: 1.5px solid #38bdf8; border-radius: 10px; padding: 16px; text-align: center;'>"
+                            f"<div style='font-family: monospace; font-size: 10px; color: #38bdf8; "
+                            f"letter-spacing: 1px; margin-bottom: 8px;'>🎯 CAPAI 100%</div>"
+                            f"<div style='font-family: monospace; font-size: 18px; font-weight: 900; "
+                            f"color: #fbbf24;'>Rp {_ikt_be_ns_100:,}</div>"
+                            f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-top: 6px;'>"
+                            f"per hari ({_ikt_sisa_hari} hari sisa)</div>"
+                            f"</div>",
+                            unsafe_allow_html=True
+                        )
+                    
+                    with _col_be2:
+                        st.markdown(
+                            f"<div style='background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(124, 58, 237, 0.15)); "
+                            f"border: 1.5px solid #a855f7; border-radius: 10px; padding: 16px; text-align: center;'>"
+                            f"<div style='font-family: monospace; font-size: 10px; color: #a855f7; "
+                            f"letter-spacing: 1px; margin-bottom: 8px;'>🚀 CAPAI 103%</div>"
+                            f"<div style='font-family: monospace; font-size: 18px; font-weight: 900; "
+                            f"color: #fbbf24;'>Rp {_ikt_be_ns_103:,}</div>"
+                            f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-top: 6px;'>"
+                            f"per hari</div>"
+                            f"</div>",
+                            unsafe_allow_html=True
+                        )
+                    
+                    with _col_be3:
+                        st.markdown(
+                            f"<div style='background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(217, 119, 6, 0.15)); "
+                            f"border: 1.5px solid #fbbf24; border-radius: 10px; padding: 16px; text-align: center;'>"
+                            f"<div style='font-family: monospace; font-size: 10px; color: #fbbf24; "
+                            f"letter-spacing: 1px; margin-bottom: 8px;'>🏆 CAPAI 105%</div>"
+                            f"<div style='font-family: monospace; font-size: 18px; font-weight: 900; "
+                            f"color: #fbbf24;'>Rp {_ikt_be_ns_105:,}</div>"
+                            f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-top: 6px;'>"
+                            f"per hari</div>"
+                            f"</div>",
+                            unsafe_allow_html=True
+                        )
+                    
+                    # ==========================================
+                    # 📄 EXPORT BUTTONS
+                    # ==========================================
+                    st.markdown("---")
+                    st.markdown("##### 📥 Export Simulasi IKT")
+                    
+                    _col_dl1, _col_dl2 = st.columns(2)
+                    
+                    # === DUMMY STATE UNTUK EXPORT ===
+                    if "ikt_export_data" not in st.session_state:
+                        st.session_state["ikt_export_data"] = {}
+                    
+                    # Simpan data untuk export
+                    st.session_state["ikt_export_data"] = {
+                        "bulan": _ikt_bulan_pilih,
+                        "tahun": _ikt_tahun,
+                        "hari_berjalan": _ikt_hari_berjalan,
+                        "jhk": _ikt_jhk,
+                        "sisa_hari": _ikt_sisa_hari,
+                        "period_name": _active_period_ikt.get("period_name", "-"),
+                        "target_ns": _ikt_target_ns,
+                        "actual_ns": _ikt_total_ns,
+                        "ach_ns": _ikt_ach_ns,
+                        "gap_ns": _ikt_gap_ns,
+                        "target_spd": _ikt_target_spd_harian,
+                        "actual_spd": _ikt_avg_spd,
+                        "ach_spd": _ikt_ach_spd,
+                        "gap_spd": _ikt_gap_spd,
+                        "target_std": _ikt_target_std_total,
+                        "actual_std": _ikt_total_std,
+                        "ach_std": _ikt_ach_std,
+                        "gap_std": _ikt_gap_std,
+                        "target_apc": _ikt_target_apc,
+                        "actual_apc": _ikt_avg_apc,
+                        "ach_apc": _ikt_ach_apc,
+                        "gap_apc": _ikt_gap_apc,
+                        "target_gm": _ikt_target_gm,
+                        "actual_gm": _ikt_gm_actual,
+                        "ach_gm": _ikt_ach_gm,
+                        "gap_gm": _ikt_gap_gm,
+                        "target_gm_rupiah": _ikt_target_gm_rupiah,
+                        "actual_gm_rupiah": _ikt_actual_gm_rupiah,
+                        "ach_gm_rupiah": _ikt_ach_gm_rupiah,
+                        "gap_gm_rupiah": _ikt_gap_gm_rupiah_val,
+                        "be_ns_100": _ikt_be_ns_100,
+                        "be_ns_103": _ikt_be_ns_103,
+                        "be_ns_105": _ikt_be_ns_105,
+                        "be_sales_gm": _ikt_be_sales_gm,
+                        "be_gm": _ikt_be_gm,
+                    }
+                    
+                    with _col_dl1:
+                        if st.button("📄 Generate PDF", use_container_width=True, type="primary", key="ikt_btn_pdf"):
+                            with st.spinner("⏳ Membuat PDF..."):
+                                _pdf_ikt = generate_ikt_pdf(st.session_state["ikt_export_data"])
+                                if _pdf_ikt:
+                                    st.session_state["ikt_pdf_bytes"] = _pdf_ikt
+                                    st.toast("✅ PDF siap di-download!", icon="📄")
+                                    st.rerun()
+                    
+                    with _col_dl2:
+                        if st.button("📱 Copy WhatsApp", use_container_width=True, key="ikt_btn_wa"):
+                            _wa_text = generate_ikt_whatsapp_text(st.session_state["ikt_export_data"])
+                            st.session_state["ikt_wa_text"] = _wa_text
+                            st.toast("✅ Text WhatsApp siap di-copy!", icon="📱")
+                            st.rerun()
+                    
+                    # === DOWNLOAD PDF ===
+                    if st.session_state.get("ikt_pdf_bytes"):
+                        st.download_button(
+                            label="📥 Download PDF IKT",
+                            data=st.session_state["ikt_pdf_bytes"],
+                            file_name=f"IKT_{_ikt_bulan_pilih}_{_ikt_tahun}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                            mime="application/pdf",
+                            use_container_width=True,
+                            key="ikt_dl_pdf"
+                        )
+                    
+                    # === SHOW WA TEXT ===
+                    if st.session_state.get("ikt_wa_text"):
+                        st.markdown("##### 📱 Text WhatsApp (Tinggal Copy)")
+                        st.code(st.session_state["ikt_wa_text"], language="markdown")
+                        st.caption("💡 Tap & tahan area di atas → **Select All** → **Copy**")
     
     # =========================================================================
     # 📥 SUB-TAB 4: EXPORT (PLACEHOLDER)
