@@ -18482,7 +18482,7 @@ elif selected_tab == "📊 Daily Performance":
                                 "💰 Actual Net Sales",
                                 f"Rp {_total_spd:,}",
                                 delta=f"{_tf_status_icon} {_tf_status_text} | TF: {_tf_pct:.1f}%",
-                                delta_color="off"  # ← NO auto-arrow
+                                delta_color="inverse"
                             )
 
                         with col_r1_3:
