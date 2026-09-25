@@ -18497,7 +18497,7 @@ elif selected_tab == "📊 Daily Performance":
                                 "💰 Rata SPD",
                                 f"Rp {_avg_spd:,}",
                                 delta=f"{_spd_status_icon} {_pct_spd_harian:.1f}% | Gap: Rp {_gap_spd_harian:,}",
-                                delta_color="off"
+                                delta_color="inverse"
                             )
 
                         with col_r1_4:
@@ -18507,7 +18507,7 @@ elif selected_tab == "📊 Daily Performance":
                                 "🧾 APC",
                                 f"Rp {_avg_apc:,}",
                                 delta=f"{_apc_status_icon} {_pct_apc:.1f}% | Gap: Rp {_gap_apc:,}",
-                                delta_color="off"
+                                delta_color="inverse"
                             )
 
                         # Baris 2: 4 cards
@@ -18520,7 +18520,7 @@ elif selected_tab == "📊 Daily Performance":
                                 "📄 Rata STD",
                                 f"{_avg_std:,}",
                                 delta=f"{_std_status_icon} {_pct_std:.1f}% | Gap: {_gap_std:,}",
-                                delta_color="off"
+                                delta_color="inverse"
                             )
 
                         with col_r2_2:
@@ -18528,7 +18528,7 @@ elif selected_tab == "📊 Daily Performance":
                                 "📊 Total NSB",
                                 f"Rp {abs(_total_nsb_act):,}",
                                 delta=f"📈 {_nsb_pct_from_ns:.2f}% dari Net Sales",
-                                delta_color="off"
+                                delta_color="inverse"
                             )
 
                         with col_r2_3:
@@ -18540,7 +18540,7 @@ elif selected_tab == "📊 Daily Performance":
                                 "⚖️ Selisih NSB",
                                 f"Rp {_selisih_nsb:,}",
                                 delta=f"{_nsb_status_icon} {_nsb_status_text}",
-                                delta_color="off"
+                                delta_color="inverse"
                             )
                         with col_r2_4:
                             _ns_minus = _target_ns - _total_spd
@@ -18551,7 +18551,7 @@ elif selected_tab == "📊 Daily Performance":
                                 "💰 Total Net Sales",
                                 f"Rp {_total_spd:,}",
                                 delta=f"{_ns_status_icon} {_ns_minus_str} vs Target",
-                                delta_color="off"
+                                delta_color="inverse"
                             )
 
                         # ==========================================
