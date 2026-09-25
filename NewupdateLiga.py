@@ -18472,33 +18472,17 @@ elif selected_tab == "📊 Daily Performance":
                             )
 
                         with col_r1_2:
-                        # ACTUAL NET SALES — HTML Custom
+                        # ACTUAL NET SALES
                             _tf_pct = _tf * 100
                             _on_track = _pct_spd >= _tf_pct
                             _tf_status_icon = "✅" if _on_track else "⚠️"
                             _tf_status_text = "On Track" if _on_track else "Behind"
-                            _tf_status_color = "#34d399" if _on_track else "#fca5a5"
                             
-                            st.markdown(
-                                f"<div style='background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85)); "
-                                f"border: 1.5px solid #9a7b38; border-left: 5px solid {_tf_status_color}; "
-                                f"border-radius: 12px; padding: 14px 16px; "
-                                f"box-shadow: 0 4px 10px rgba(0,0,0,0.3); min-height: 100px;'>"
-                                
-                                f"<div style='font-family: monospace; font-size: 10px; color: #94a3b8; "
-                                f"letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase;'>"
-                                f"💰 Persentase Net Sales</div>"
-                                
-                                f"<div style='font-family: monospace; font-size: 22px; font-weight: 900; "
-                                f"color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.3); "
-                                f"margin-bottom: 6px;'>{_pct_spd:.1f}%</div>"
-                                
-                                f"<div style='font-family: monospace; font-size: 10px; font-weight: 900; "
-                                f"color: {_tf_status_color}; letter-spacing: 0.3px;'>"
-                                f"{_tf_status_icon} {_tf_status_text} | TF: {_tf_pct:.1f}%</div>"
-                                
-                                f"</div>",
-                                unsafe_allow_html=True
+                            st.metric(
+                                "💰 Persentase Net Sales",
+                                f"Rp {_pct_spd:,}",
+                                delta=f"{_tf_status_icon} {_tf_status_text} | TF: {_tf_pct:.1f}%",
+                                delta_color="inverse"
                             )
 
                         with col_r1_3:
