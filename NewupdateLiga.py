@@ -1327,7 +1327,7 @@ def load_periode_store():
     Return DataFrame dengan kolom:
         period_id, period_name, start_date, end_date,
         target_net_sales, target_std, target_apc,
-        nsb_percentage, status
+        target_gm_pct, nsb_percentage, status
     """
     try:
         df = conn.read(worksheet="PERIODE_STOREPERFORMANCE", ttl=60)
@@ -1336,48 +1336,70 @@ def load_periode_store():
             return pd.DataFrame(columns=[
                 "period_id", "period_name", "start_date", "end_date",
                 "target_net_sales", "target_std", "target_apc",
-                "nsb_percentage", "status"
+                "target_gm_pct", "nsb_percentage", "status"
             ])
         
-        # Normalisasi kolom
+        # === NORMALISASI HEADER (lowercase semua) ===
         df.columns = df.columns.astype(str).str.strip().str.lower()
         
-        # Pastikan kolom ada
-        expected_cols = [
-            "period_id", "period_name", "start_date", "end_date",
-            "target_net_sales", "target_std", "target_apc",
-            "nsb_percentage", "status"
-        ]
-        for col in expected_cols:
-            if col not in df.columns:
-                df[col] = ""
+        # === ✅ FIX: RENAME KOLOM ALIAS ===
+        # Sheet kamu punya "target_gm", kode butuh "target_gm_pct"
+        _aliases = {
+            "target_gm": "target_gm_pct",
+            "target_gm_persen": "target_gm_pct",
+            "gm_pct": "target_gm_pct",
+            "gm_percentage": "target_gm_pct",
+            "target_gm_percentage": "target_gm_pct",
+        }
+        for _old, _new in _aliases.items():
+            if _old in df.columns and _new not in df.columns:
+                df = df.rename(columns={_old: _new})
         
-        # Normalisasi period_id
+        # === PASTIKAN KOLOM WAJIB ADA ===
+        _required_cols = {
+            "period_id": "",
+            "period_name": "",
+            "start_date": "",
+            "end_date": "",
+            "target_net_sales": 0,
+            "target_std": 0,
+            "target_apc": 0,
+            "target_gm_pct": 0,
+            "nsb_percentage": 0.15,
+            "status": "",
+        }
+        for _col, _default in _required_cols.items():
+            if _col not in df.columns:
+                df[_col] = _default
+        
+        # === NORMALISASI PERIOD_ID ===
         df["period_id"] = df["period_id"].astype(str).str.strip().str.upper()
         
-        # Konversi tanggal
+        # === KONVERSI TANGGAL ===
         df["start_date_dt"] = pd.to_datetime(df["start_date"], errors="coerce")
         df["end_date_dt"] = pd.to_datetime(df["end_date"], errors="coerce")
         
-        # Konversi numerik
-        for col in ["target_net_sales", "target_std", "target_apc"]:
-            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).astype(int)
+        # === KONVERSI NUMERIK ===
+        for _col in ["target_net_sales", "target_std", "target_apc"]:
+            df[_col] = pd.to_numeric(df[_col], errors="coerce").fillna(0).astype(int)
         
+        df["target_gm_pct"] = pd.to_numeric(df["target_gm_pct"], errors="coerce").fillna(0)
         df["nsb_percentage"] = pd.to_numeric(df["nsb_percentage"], errors="coerce").fillna(0)
         
-        # Filter baris yang tidak valid (period_id kosong)
+        # === FILTER BARIS KOSONG ===
         df = df[df["period_id"] != ""].reset_index(drop=True)
         
         return df
     
     except Exception as e:
         print(f"[load_periode_store ERROR] {e}")
+        import traceback
+        print(traceback.format_exc())
         return pd.DataFrame(columns=[
             "period_id", "period_name", "start_date", "end_date",
             "target_net_sales", "target_std", "target_apc",
-            "nsb_percentage", "status"
+            "target_gm_pct", "nsb_percentage", "status"
         ])
-
 
 def save_periode_store(df_data):
     """
@@ -1392,7 +1414,7 @@ def save_periode_store(df_data):
         expected_cols = [
             "period_id", "period_name", "start_date", "end_date",
             "target_net_sales", "target_std", "target_apc",
-            "nsb_percentage", "status"
+            "target_gm_pct", "nsb_percentage", "status"
         ]
         
         df_to_save = df_data[expected_cols].copy()
@@ -1529,6 +1551,7 @@ def get_active_period_store(force_refresh=False):
         _target_std = int(row["target_std"])
         _target_apc = int(row["target_apc"]) if "target_apc" in row.index else 0
         _nsb_pct = float(row["nsb_percentage"]) if "nsb_percentage" in row.index else 0.15
+        _target_gm_pct = float(row["target_gm_pct"]) if "target_gm_pct" in row.index else 0
         
         # === AUTO-HITUNG JHK ===
         _jhk = (_end - _start).days + 1
@@ -1559,6 +1582,7 @@ def get_active_period_store(force_refresh=False):
             "nsb_target_bulanan": _nsb_target_bulanan,
             "nsb_target_harian": _nsb_target_harian,
             "target_warning": _target_warning,
+            "target_gm_pct": _target_gm_pct,
         }
         
         # Simpan ke cache
