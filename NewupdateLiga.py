@@ -1576,22 +1576,19 @@ def get_active_period_store(force_refresh=False):
 
 def generate_ikt_pdf(data):
     """
-    Generate PDF Simulasi IKT dengan grafik bulat (pie chart).
-    Pie chart untuk: NS, SPD, GM Rupiah.
+    Generate PDF Simulasi IKT — 1 halaman, dengan 3 pie chart.
+    Layout: header logo + 3 pie chart + best estimate + tanda tangan.
     """
     try:
         import matplotlib
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
         import io as _io
-        
-        pdf = FPDF(orientation="P", unit="mm", format="A4")
-        pdf.set_auto_page_break(auto=True, margin=15)
-        pdf.add_page()
-        pdf.set_margins(left=12, top=12, right=12)
+        import os as _os
         
         # === WARNA ===
         CLR_DARK = (12, 20, 39)
+        CLR_NAVY = (30, 58, 95)
         CLR_GOLD = (212, 175, 55)
         CLR_GOLD_LIGHT = (247, 231, 180)
         CLR_GREEN = (16, 185, 129)
@@ -1601,6 +1598,7 @@ def generate_ikt_pdf(data):
         CLR_PURPLE = (168, 85, 247)
         CLR_TEXT = (30, 30, 30)
         CLR_GRAY = (120, 120, 120)
+        CLR_LIGHT_BG = (248, 250, 252)
         
         def _clean(text):
             if text is None:
@@ -1611,7 +1609,7 @@ def generate_ikt_pdf(data):
                 "“": '"', "”": '"', "‘": "'", "’": "'",
                 "📊": "", "💰": "", "📅": "", "📄": "", "🧾": "",
                 "📈": "", "🎯": "", "💎": "", "✅": "[OK]",
-                "⚠️": "[!]", "🔴": "[X]", "⚜️": "",
+                "⚠️": "[!]", "🔴": "[X]", "⚜️": "", "🏢": "",
             }
             for k, v in reps.items():
                 text = str(text).replace(k, v)
@@ -1620,242 +1618,299 @@ def generate_ikt_pdf(data):
         def _fmt_rp(v):
             return f"Rp {int(v):,}"
         
-        # === HEADER ===
-        pdf.set_fill_color(*CLR_DARK)
-        pdf.rect(0, 0, 210, 32, style="F")
-        
-        pdf.set_draw_color(*CLR_GOLD)
-        pdf.set_line_width(0.8)
-        pdf.line(0, 32, 210, 32)
-        
-        pdf.set_xy(12, 8)
-        pdf.set_font("Helvetica", "B", 18)
-        pdf.set_text_color(*CLR_GOLD_LIGHT)
-        pdf.cell(186, 10, "INSENTIF KINERJA TOKO (IKT)", ln=1, align="C")
-        
-        pdf.set_x(12)
-        pdf.set_font("Helvetica", "B", 13)
-        pdf.set_text_color(*CLR_GOLD)
-        pdf.cell(186, 6, _clean(f"TOKO C383 - KARANG SATRIA"), ln=1, align="C")
-        
-        pdf.set_x(12)
-        pdf.set_font("Helvetica", "I", 10)
-        pdf.set_text_color(*CLR_GOLD_LIGHT)
-        pdf.cell(186, 5, _clean(f"{data['bulan']} {data['tahun']} | Hari ke-{data['hari_berjalan']} dari {data['jhk']}"), ln=1, align="C")
-        
-        pdf.ln(8)
-        
-        # === FUNGSI BUAT PIE CHART ===
-        def _buat_pie_chart(actual, target, label_actual="Actual", label_target="Target"):
-            """Bikin pie chart actual vs gap, return bytes."""
+        # === BUAT PIE CHART ===
+        def _buat_pie_chart(actual, target):
             _gap = max(target - actual, 0)
             _sisa = max(actual, 0)
             
             if _sisa + _gap == 0:
                 return None
             
-            _labels = [label_actual, "Gap"]
-            _sizes = [_sisa, _gap]
-            _colors = ["#10b981", "#ef4444"]
-            
-            # Kalau over target (actual > target), warna beda
             if actual >= target:
-                _labels = ["Actual (Achieved)", "Over"]
+                _labels = ["Actual", "Over"]
                 _sizes = [target, max(actual - target, 0)]
                 _colors = ["#10b981", "#fbbf24"]
+            else:
+                _labels = ["Actual", "Gap"]
+                _sizes = [_sisa, _gap]
+                _colors = ["#10b981", "#ef4444"]
             
-            _fig, _ax = plt.subplots(figsize=(3, 3), facecolor="#ffffff")
+            _fig, _ax = plt.subplots(figsize=(2.2, 2.2), facecolor="white")
             _wedges, _texts, _autotexts = _ax.pie(
                 _sizes,
                 labels=_labels,
                 colors=_colors,
-                autopct="%1.1f%%",
+                autopct="%1.0f%%",
                 startangle=90,
-                textprops={"fontsize": 9, "fontweight": "bold", "color": "#1f2937"},
-                wedgeprops={"edgecolor": "#78350f", "linewidth": 1.5},
+                textprops={"fontsize": 7, "fontweight": "bold", "color": "#1f2937"},
+                wedgeprops={"edgecolor": "#78350f", "linewidth": 1.2},
             )
-            
-            for _autotext in _autotexts:
-                _autotext.set_color("white")
-                _autotext.set_fontsize(10)
-            
+            for _at in _autotexts:
+                _at.set_color("white")
+                _at.set_fontsize(7)
+                _at.set_fontweight("bold")
             _ax.axis("equal")
+            
             _buf = _io.BytesIO()
-            _fig.savefig(_buf, format="png", dpi=100, bbox_inches="tight", facecolor="#ffffff")
+            _fig.savefig(_buf, format="png", dpi=120, bbox_inches="tight", facecolor="white")
             plt.close(_fig)
             _buf.seek(0)
             return _buf
         
-        # === KONTEN: 3 PIE CHART ===
+        # === INIT PDF ===
+        pdf = FPDF(orientation="P", unit="mm", format="A4")
+        pdf.set_auto_page_break(auto=False)  # 1 halaman only
+        pdf.add_page()
+        pdf.set_margins(left=12, top=12, right=12)
+        
+        # ==========================================
+        # 🎨 HEADER
+        # ==========================================
+        # Background header
+        pdf.set_fill_color(*CLR_DARK)
+        pdf.rect(0, 0, 210, 34, style="F")
+        
+        # Garis emas di bawah header
+        pdf.set_draw_color(*CLR_GOLD)
+        pdf.set_line_width(1)
+        pdf.line(0, 34, 210, 34)
+        
+        # Logo di kiri
+        _logo_path = "alfamart_logo.png"
+        _logo_loaded = False
+        if _os.path.exists(_logo_path):
+            try:
+                pdf.image(_logo_path, x=12, y=5, w=22, h=22)
+                _logo_loaded = True
+            except Exception:
+                _logo_loaded = False
+        
+        # Kalau logo gagal, tulis text
+        if not _logo_loaded:
+            pdf.set_xy(12, 10)
+            pdf.set_font("Helvetica", "B", 14)
+            pdf.set_text_color(*CLR_GOLD)
+            pdf.cell(30, 10, "ALFAMART", ln=0, align="C")
+        
+        # Judul di kanan
+        _x_judul = 90 if _logo_loaded else 105
+        _lebar_judul = 210 - _x_judul - 12
+        
+        pdf.set_xy(_x_judul, 6)
+        pdf.set_font("Helvetica", "B", 15)
+        pdf.set_text_color(*CLR_GOLD_LIGHT)
+        pdf.cell(_lebar_judul, 7, "INSENTIF KINERJA TOKO (IKT)", ln=1, align="C")
+        
+        pdf.set_x(_x_judul)
+        pdf.set_font("Helvetica", "B", 11)
+        pdf.set_text_color(*CLR_GOLD)
+        pdf.cell(_lebar_judul, 6, "TOKO C383 - KARANG SATRIA", ln=1, align="C")
+        
+        pdf.set_x(_x_judul)
+        pdf.set_font("Helvetica", "I", 9)
+        pdf.set_text_color(*CLR_GOLD_LIGHT)
+        pdf.cell(
+            _lebar_judul, 5,
+            _clean(f"{data['bulan']} {data['tahun']}  |  Hari ke-{data['hari_berjalan']} dari {data['jhk']} (sisa {data['sisa_hari']} hari)"),
+            ln=1, align="C"
+        )
+        
+        # ==========================================
+        # 🥧 SECTION 1: 3 PIE CHART
+        # ==========================================
+        pdf.set_y(38)
+        
         _charts_data = [
             {
                 "title": "NET SALES",
-                "icon": "$",
                 "target": data["target_ns"],
                 "actual": data["actual_ns"],
                 "ach": data["ach_ns"],
                 "gap": data["gap_ns"],
+                "is_pct": False,
             },
             {
-                "title": "SPD (Sales Per Day)",
-                "icon": "D",
-                "target": data["target_spd"],
-                "actual": data["actual_spd"],
-                "ach": data["ach_spd"],
-                "gap": data["gap_spd"],
+                "title": "GM% (GROSS MARGIN)",
+                "target": data["target_gm"],
+                "actual": data["actual_gm"],
+                "ach": data["ach_gm"],
+                "gap": data["gap_gm"],
+                "is_pct": True,
             },
             {
                 "title": "GM RUPIAH",
-                "icon": "G",
                 "target": data["target_gm_rupiah"],
                 "actual": data["actual_gm_rupiah"],
                 "ach": data["ach_gm_rupiah"],
                 "gap": data["gap_gm_rupiah"],
+                "is_pct": False,
             },
         ]
         
-        for _chart in _charts_data:
-            # Header section
+        _row_height = 42  # Tinggi per section
+        _pie_w = 30  # Lebar pie chart (mm)
+        
+        for _i, _chart in enumerate(_charts_data):
+            _y_start = 38 + (_i * _row_height)
+            
+            # Background box
+            _bg_color = (250, 250, 250) if _i % 2 == 0 else (245, 248, 252)
+            pdf.set_fill_color(*_bg_color)
+            pdf.rect(12, _y_start, 186, _row_height - 2, style="F")
+            
+            # Border kotak
+            pdf.set_draw_color(*CLR_GOLD)
+            pdf.set_line_width(0.3)
+            pdf.rect(12, _y_start, 186, _row_height - 2, style="D")
+            
+            # Pie chart di kiri
+            _pie_buf = _buat_pie_chart(_chart["actual"], _chart["target"])
+            if _pie_buf:
+                pdf.image(_pie_buf, x=15, y=_y_start + 3, w=_pie_w, h=_pie_w)
+            
+            # Text di kanan
+            _x_text = 15 + _pie_w + 8
+            
+            # Judul section
+            pdf.set_xy(_x_text, _y_start + 3)
             pdf.set_font("Helvetica", "B", 11)
             pdf.set_text_color(*CLR_DARK)
-            pdf.set_fill_color(*CLR_GOLD_LIGHT)
-            pdf.cell(186, 8, _clean(f"  {_chart['title']}"), ln=1, fill=True)
-            pdf.ln(2)
+            pdf.cell(150, 6, _clean(_chart["title"]), ln=1)
             
-            # Pie chart
-            _pie_buf = _buat_pie_chart(_chart["actual"], _chart["target"])
-            
-            if _pie_buf:
-                # Gambar pie di kiri
-                _pie_buf.seek(0)
-                pdf.image(_pie_buf, x=15, y=pdf.get_y(), w=50)
-            
-            # Data di kanan pie
-            _y_kanan = pdf.get_y() + 5
-            _x_kanan = 75
-            
-            pdf.set_xy(_x_kanan, _y_kanan)
-            pdf.set_font("Helvetica", "B", 10)
-            pdf.set_text_color(*CLR_TEXT)
-            pdf.cell(50, 6, _clean("Target:"), ln=0)
-            pdf.set_font("Helvetica", "", 10)
+            # Target
+            pdf.set_x(_x_text)
+            pdf.set_font("Helvetica", "", 9)
             pdf.set_text_color(*CLR_GRAY)
-            pdf.cell(60, 6, _clean(_fmt_rp(_chart["target"])), ln=1)
+            pdf.cell(30, 5, _clean("Target"), ln=0)
             
-            pdf.set_x(_x_kanan)
             pdf.set_font("Helvetica", "B", 10)
             pdf.set_text_color(*CLR_TEXT)
-            pdf.cell(50, 6, _clean("Actual:"), ln=0)
+            _target_str = f"{_chart['target']:.2f}%" if _chart["is_pct"] else _fmt_rp(_chart["target"])
+            pdf.cell(120, 5, _clean(_target_str), ln=1)
+            
+            # Actual
+            pdf.set_x(_x_text)
+            pdf.set_font("Helvetica", "", 9)
+            pdf.set_text_color(*CLR_GRAY)
+            pdf.cell(30, 5, _clean("Actual"), ln=0)
+            
             pdf.set_font("Helvetica", "B", 10)
             pdf.set_text_color(*CLR_BLUE)
-            pdf.cell(60, 6, _clean(_fmt_rp(_chart["actual"])), ln=1)
+            _actual_str = f"{_chart['actual']:.2f}%" if _chart["is_pct"] else _fmt_rp(_chart["actual"])
+            pdf.cell(120, 5, _clean(_actual_str), ln=1)
             
-            pdf.set_x(_x_kanan)
-            pdf.set_font("Helvetica", "B", 10)
-            pdf.set_text_color(*CLR_TEXT)
-            pdf.cell(50, 6, _clean("Achievement:"), ln=0)
+            # Ach%
+            pdf.set_x(_x_text)
+            pdf.set_font("Helvetica", "", 9)
+            pdf.set_text_color(*CLR_GRAY)
+            pdf.cell(30, 5, _clean("Achievement"), ln=0)
+            
             _ach_color = CLR_GREEN if _chart["ach"] >= 100 else (CLR_ORANGE if _chart["ach"] >= 80 else CLR_RED)
-            pdf.set_font("Helvetica", "B", 11)
-            pdf.set_text_color(*_ach_color)
-            pdf.cell(60, 6, _clean(f"{_chart['ach']:.1f}%"), ln=1)
-            
-            pdf.set_x(_x_kanan)
             pdf.set_font("Helvetica", "B", 10)
-            pdf.set_text_color(*CLR_TEXT)
-            pdf.cell(50, 6, _clean("Gap:"), ln=0)
+            pdf.set_text_color(*_ach_color)
+            pdf.cell(120, 5, _clean(f"{_chart['ach']:.2f}%"), ln=1)
+            
+            # Gap
+            pdf.set_x(_x_text)
+            pdf.set_font("Helvetica", "", 9)
+            pdf.set_text_color(*CLR_GRAY)
+            pdf.cell(30, 5, _clean("Gap"), ln=0)
+            
             _gap_color = CLR_GREEN if _chart["gap"] >= 0 else CLR_RED
             pdf.set_font("Helvetica", "B", 10)
             pdf.set_text_color(*_gap_color)
-            _gap_str = f"+{_fmt_rp(_chart['gap'])}" if _chart["gap"] >= 0 else _fmt_rp(_chart["gap"])
-            pdf.cell(60, 6, _clean(_gap_str), ln=1)
-            
-            # Spacer setelah pie
-            pdf.set_y(max(pdf.get_y(), _y_kanan + 45))
-            pdf.ln(4)
-            
-            # Garis pemisah
-            pdf.set_draw_color(*CLR_GOLD)
-            pdf.set_line_width(0.4)
-            pdf.line(12, pdf.get_y(), 198, pdf.get_y())
-            pdf.ln(4)
+            if _chart["is_pct"]:
+                _gap_str = f"{_chart['gap']:+.2f}%"
+            else:
+                _gap_str = f"{_fmt_rp(_chart['gap'])}" if _chart["gap"] < 0 else f"+{_fmt_rp(_chart['gap'])}"
+            pdf.cell(120, 5, _clean(_gap_str), ln=1)
         
-        # === BEST ESTIMATE SECTION ===
-        pdf.add_page()
+        # ==========================================
+        # 🎯 SECTION 2: BEST ESTIMATE
+        # ==========================================
+        _y_be = 38 + (3 * _row_height) + 2
         
-        pdf.set_font("Helvetica", "B", 14)
-        pdf.set_text_color(*CLR_DARK)
-        pdf.set_fill_color(*CLR_GOLD_LIGHT)
-        pdf.cell(186, 10, _clean("  BEST ESTIMATE NET SALES"), ln=1, fill=True)
-        pdf.ln(4)
+        # Background
+        pdf.set_fill_color(*CLR_NAVY)
+        pdf.rect(12, _y_be, 186, 26, style="F")
         
-        pdf.set_font("Helvetica", "", 10)
-        pdf.set_text_color(*CLR_GRAY)
-        pdf.cell(186, 6, _clean(f"Untuk mencapai target di sisa {data['sisa_hari']} hari:"), ln=1)
-        pdf.ln(3)
+        # Judul
+        pdf.set_xy(15, _y_be + 2)
+        pdf.set_font("Helvetica", "B", 10)
+        pdf.set_text_color(*CLR_GOLD_LIGHT)
+        pdf.cell(180, 6, _clean("BEST ESTIMATE NET SALES (per hari)"), ln=1)
         
-        _be_data = [
-            ("Capai 100%", data["be_ns_100"], CLR_BLUE),
-            ("Capai 103%", data["be_ns_103"], CLR_PURPLE),
-            ("Capai 105%", data["be_ns_105"], CLR_GOLD),
+        # 3 angka BE
+        _be_items = [
+            ("Capai 100%", data["be_ns_100"]),
+            ("Capai 103%", data["be_ns_103"]),
+            ("Capai 105%", data["be_ns_105"]),
         ]
         
-        for _label, _value, _color in _be_data:
-            pdf.set_fill_color(*_color)
-            pdf.set_text_color(255, 255, 255)
-            pdf.set_font("Helvetica", "B", 11)
-            pdf.cell(60, 10, _clean(f"  {_label}"), ln=0, fill=True)
+        _box_w = 58
+        _box_gap = 3
+        _box_start_x = 15
+        
+        for _i, (_label, _value) in enumerate(_be_items):
+            _bx = _box_start_x + (_i * (_box_w + _box_gap))
+            _by = _y_be + 10
             
-            pdf.set_fill_color(245, 245, 245)
+            # Box
+            pdf.set_fill_color(*CLR_GOLD)
+            pdf.rect(_bx, _by, _box_w, 13, style="F")
+            
+            # Label
+            pdf.set_xy(_bx, _by + 1)
+            pdf.set_font("Helvetica", "B", 8)
             pdf.set_text_color(*CLR_DARK)
-            pdf.set_font("Helvetica", "B", 12)
-            pdf.cell(126, 10, _clean(f"  {_fmt_rp(_value)} / hari"), ln=1, fill=True)
-            pdf.ln(2)
+            pdf.cell(_box_w, 4, _clean(_label), ln=1, align="C")
+            
+            # Value
+            pdf.set_xy(_bx, _by + 5)
+            pdf.set_font("Helvetica", "B", 10)
+            pdf.set_text_color(*CLR_DARK)
+            pdf.cell(_box_w, 6, _clean(_fmt_rp(_value)), ln=1, align="C")
         
-        # === BEST ESTIMATE GM ===
-        pdf.ln(6)
-        pdf.set_font("Helvetica", "B", 14)
-        pdf.set_text_color(*CLR_DARK)
-        pdf.set_fill_color(*CLR_GOLD_LIGHT)
-        pdf.cell(186, 10, _clean("  BEST ESTIMATE GM% & SALES"), ln=1, fill=True)
-        pdf.ln(4)
+        # ==========================================
+        # ✍️ SECTION 3: TANDA TANGAN
+        # ==========================================
+        _y_ttd = _y_be + 32
         
-        pdf.set_font("Helvetica", "", 10)
-        pdf.set_text_color(*CLR_GRAY)
-        pdf.cell(186, 6, _clean(f"Untuk mencapai GM Rupiah target:"), ln=1)
-        pdf.ln(3)
-        
-        pdf.set_fill_color(*CLR_PURPLE)
-        pdf.set_text_color(255, 255, 255)
-        pdf.set_font("Helvetica", "B", 11)
-        pdf.cell(80, 10, _clean(f"  Best Est GM%"), ln=0, fill=True)
-        pdf.set_fill_color(245, 245, 245)
-        pdf.set_text_color(*CLR_DARK)
-        pdf.set_font("Helvetica", "B", 12)
-        pdf.cell(106, 10, _clean(f"  {data['be_gm']:.2f}%"), ln=1, fill=True)
-        pdf.ln(2)
-        
-        pdf.set_fill_color(*CLR_GREEN)
-        pdf.set_text_color(255, 255, 255)
-        pdf.set_font("Helvetica", "B", 11)
-        pdf.cell(80, 10, _clean(f"  Best Est Sales/Hari"), ln=0, fill=True)
-        pdf.set_fill_color(245, 245, 245)
-        pdf.set_text_color(*CLR_DARK)
-        pdf.set_font("Helvetica", "B", 12)
-        pdf.cell(106, 10, _clean(f"  {_fmt_rp(data['be_sales_gm'])} / hari"), ln=1, fill=True)
-        
-        # === FOOTER ===
-        pdf.ln(10)
+        # Garis pemisah
         pdf.set_draw_color(*CLR_GOLD)
-        pdf.set_line_width(0.6)
-        pdf.line(12, pdf.get_y(), 198, pdf.get_y())
-        pdf.ln(3)
+        pdf.set_line_width(0.5)
+        pdf.line(12, _y_ttd, 198, _y_ttd)
         
+        # Text TTD di kanan
+        _x_ttd = 130
+        
+        pdf.set_xy(_x_ttd, _y_ttd + 4)
+        pdf.set_font("Helvetica", "", 10)
+        pdf.set_text_color(*CLR_TEXT)
+        pdf.cell(68, 5, _clean("Dibuat oleh,"), ln=1, align="C")
+        
+        # Space untuk TTD (ruang kosong)
+        pdf.ln(15)
+        
+        # Nama staf + garis
+        pdf.set_x(_x_ttd)
+        pdf.set_draw_color(*CLR_DARK)
+        pdf.set_line_width(0.4)
+        pdf.line(_x_ttd, _y_ttd + 32, _x_ttd + 68, _y_ttd + 32)
+        
+        pdf.set_xy(_x_ttd, _y_ttd + 33)
+        pdf.set_font("Helvetica", "B", 10)
+        pdf.set_text_color(*CLR_DARK)
+        pdf.cell(68, 5, _clean("Staf Toko Karang Satria"), ln=1, align="C")
+        
+        # Tanggal di bawah
+        _tgl_hari_ini = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y")
+        pdf.set_x(_x_ttd)
         pdf.set_font("Helvetica", "I", 9)
         pdf.set_text_color(*CLR_GRAY)
-        pdf.cell(0, 5, _clean(f"Generated: {datetime.now(ZoneInfo('Asia/Jakarta')).strftime('%d/%m/%Y %H:%M:%S WIB')}"),
-                 align="C", ln=1)
+        pdf.cell(68, 5, _clean(f"Karang Satria, {_tgl_hari_ini}"), ln=1, align="C")
         
-        # Output
+        # === OUTPUT ===
         pdf_output = pdf.output(dest="S")
         if isinstance(pdf_output, str):
             return pdf_output.encode("latin-1")
