@@ -1416,16 +1416,31 @@ def save_periode_store(df_data):
         return False
 
 
-def get_active_period_store():
+def get_active_period_store(force_refresh=False):
     """
     Ambil periode aktif + auto-hitung JHK, target SPD, NSB target.
     Return dict atau None kalau tidak ada periode aktif.
+    
+    ✅ CACHE 5 menit di session_state — biar gak spam API.
+    ✅ force_refresh=True untuk bypass cache (tombol refresh manual).
     """
+    _cache_key = "_cached_active_period"
+    _cache_time_key = "_cached_active_period_time"
+    _now = time.time()
+    _last_fetch = st.session_state.get(_cache_time_key, 0)
+    
+    # Pakai cache kalau masih valid (5 menit) dan bukan force refresh
+    if not force_refresh and (_cache_key in st.session_state) and (_now - _last_fetch < 300):
+        return st.session_state.get(_cache_key)
+    
+    # === FETCH BARU ===
     try:
         df = load_periode_store()
         
         if df.empty:
             print("[DEBUG] load_periode_store() return empty DF")
+            st.session_state[_cache_key] = None
+            st.session_state[_cache_time_key] = _now
             return None
         
         # Konversi tanggal
@@ -1443,8 +1458,8 @@ def get_active_period_store():
         
         if aktif.empty:
             print(f"[DEBUG] Tidak ada periode aktif. Today: {today}")
-            for _i, _r in df.iterrows():
-                print(f"  Row {_i}: start={_r['start_dt']}, end={_r['end_dt']}, status='{_r.get('status', '')}'")
+            st.session_state[_cache_key] = None
+            st.session_state[_cache_time_key] = _now
             return None
         
         row = aktif.iloc[0]
@@ -1465,10 +1480,8 @@ def get_active_period_store():
         # === AUTO-HITUNG TARGET SPD (Harian) ===
         _target_spd = int(_target_net_sales / _jhk) if _jhk > 0 else 0
         
-        # === AUTO-HITUNG NSB TARGET (Bulanan) ===
+        # === AUTO-HITUNG NSB TARGET ===
         _nsb_target_bulanan = int(_target_net_sales * (_nsb_pct / 100))
-        
-        # === AUTO-HITUNG NSB TARGET (Harian) ===
         _nsb_target_harian = int(_target_spd * (_nsb_pct / 100))
         
         # === VALIDASI TARGET KOSONG ===
@@ -1476,7 +1489,7 @@ def get_active_period_store():
         if _target_net_sales <= 0 or _target_std <= 0 or _target_apc <= 0:
             _target_warning = True
         
-        return {
+        _result = {
             "period_id": _period_id,
             "period_name": _period_name,
             "start_date": _start,
@@ -1491,13 +1504,20 @@ def get_active_period_store():
             "nsb_target_harian": _nsb_target_harian,
             "target_warning": _target_warning,
         }
+        
+        # Simpan ke cache
+        st.session_state[_cache_key] = _result
+        st.session_state[_cache_time_key] = _now
+        
+        return _result
     
     except Exception as e:
         print(f"[get_active_period_store ERROR] {e}")
         import traceback
         print(traceback.format_exc())
-        return None
-
+        # Fallback ke cache lama kalau ada
+        return st.session_state.get(_cache_key, None)
+        
 def generate_pdf_report(title, sections_data, generated_time_str):
     """
     Generate PDF Report PPS Toko Karang Satria — versi ringkas tanpa progress bar.
@@ -17866,7 +17886,7 @@ elif selected_tab == "📊 Daily Performance":
         # =============================================================
         _existing_daily_df = pd.DataFrame()
         try:
-            _existing_daily_df = conn.read(worksheet="SALES_STOREPERFORMANCE", ttl=10)
+            _existing_daily_df = conn.read(worksheet="SALES_STOREPERFORMANCE", ttl=300)
             if _existing_daily_df is None:
                 _existing_daily_df = pd.DataFrame()
             else:
@@ -18141,9 +18161,41 @@ elif selected_tab == "📊 Daily Performance":
                             _df_to_save = _new_row
                         
                         # === SIMPAN KE SHEET ===
-                        conn.update(worksheet="SALES_STOREPERFORMANCE", data=_df_to_save)
-                        time.sleep(0.5)
-                        st.cache_data.clear()
+                        # === VALIDASI SEBELUM SAVE (cegah data corrupt) ===
+                        if _df_to_save is None or _df_to_save.empty:
+                            raise ValueError("❌ DataFrame kosong — save dibatalkan untuk mencegah data hilang!")
+
+                        # Cek minimal ada 1 row dengan data valid
+                        if "record_id" in _df_to_save.columns:
+                            _valid_rows = _df_to_save[_df_to_save["record_id"].astype(str).str.strip() != ""]
+                            if len(_valid_rows) == 0:
+                                raise ValueError("❌ Tidak ada record valid — save dibatalkan!")
+
+                        # === SIMPAN DENGAN RETRY ===
+                        _max_retries = 3
+                        _retry_delay = 2
+                        _ok_save = False
+
+                        for _attempt in range(_max_retries):
+                            try:
+                                conn.update(worksheet="SALES_STOREPERFORMANCE", data=_df_to_save)
+                                _ok_save = True
+                                break
+                            except Exception as _e_save:
+                                _err_msg = str(_e_save)
+                                if "429" in _err_msg or "quota" in _err_msg.lower():
+                                    # Quota habis, tunggu lebih lama
+                                    time.sleep(_retry_delay * (_attempt + 1) * 2)
+                                else:
+                                    time.sleep(_retry_delay)
+                                
+                                if _attempt == _max_retries - 1:
+                                    raise Exception(f"❌ Gagal save setelah {_max_retries} percobaan: {_err_msg[:100]}")
+
+                        if not _ok_save:
+                            raise Exception("❌ Save gagal — data TIDAK tersimpan, coba lagi nanti.")
+
+                        time.sleep(0.3)
                         
                         # === LOG AKTIVITAS ===
                         try:
@@ -18232,7 +18284,7 @@ elif selected_tab == "📊 Daily Performance":
             # === LOAD DATA HARIAN ===
             _rekap_df = pd.DataFrame()
             try:
-                _rekap_df = conn.read(worksheet="SALES_STOREPERFORMANCE", ttl=60)
+                _rekap_df = conn.read(worksheet="SALES_STOREPERFORMANCE", ttl=300)
                 if _rekap_df is None:
                     _rekap_df = pd.DataFrame()
                 else:
