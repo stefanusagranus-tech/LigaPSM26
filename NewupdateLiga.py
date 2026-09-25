@@ -1498,6 +1498,61 @@ def get_active_period_store():
         print(traceback.format_exc())
         return None
 
+def _kpi_card(label, value, sub_icon, sub_text, status_color, anim_type="pulse"):
+    """
+    Render KPI card HTML custom dengan animasi.
+    
+    anim_type:
+        - "pulse"    → icon berdenyut (default)
+        - "spin"     → icon berputar (untuk jam/TF)
+        - "bounce"   → icon naik-turun (untuk koin)
+        - "shake"    → icon goyang (untuk warning)
+        - "flip"     → icon flip (untuk kalender)
+        - "swing"    → icon miring goyang (untuk timbangan)
+        - "bar"      → animasi bar chart (untuk NSB)
+    """
+    
+    # Map animation type ke CSS
+    _anim_css = {
+        "pulse": "kpi-pulse",
+        "spin": "kpi-spin",
+        "bounce": "kpi-bounce",
+        "shake": "kpi-shake",
+        "flip": "kpi-flip",
+        "swing": "kpi-swing",
+        "bar": "kpi-bar",
+    }
+    _anim_class = _anim_css.get(anim_type, "kpi-pulse")
+    
+    return (
+        f"<div style='background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85)); "
+        f"border: 1.5px solid #9a7b38; border-left: 5px solid {status_color}; "
+        f"border-radius: 12px; padding: 14px 16px; "
+        f"box-shadow: 0 4px 10px rgba(0,0,0,0.3); min-height: 110px; "
+        f'transition: all 0.3s ease; position: relative; overflow: hidden;'
+        f"' onmouseover='this.style.transform=\"translateY(-3px)\"; this.style.boxShadow=\"0 8px 20px rgba(251, 191, 36, 0.3)\";' "
+        f"' onmouseout='this.style.transform=\"translateY(0)\"; this.style.boxShadow=\"0 4px 10px rgba(0,0,0,0.3)\";' "
+        f">"
+
+        # Label + Icon beranimasi
+        f"<div style='display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;'>"
+        f"<div style='font-family: monospace; font-size: 10px; color: #94a3b8; "
+        f"letter-spacing: 1px; text-transform: uppercase;'>{label}</div>"
+        f"<div class='{_anim_class}' style='font-size: 18px;'>{sub_icon}</div>"
+        f"</div>"
+
+        # Value
+        f"<div style='font-family: monospace; font-size: 22px; font-weight: 900; "
+        f"color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.3); "
+        f"margin-bottom: 6px; word-break: break-word;'>{value}</div>"
+
+        # Sub text
+        f"<div style='font-family: monospace; font-size: 10px; font-weight: 900; "
+        f"color: {status_color}; letter-spacing: 0.3px;'>{sub_text}</div>"
+
+        f"</div>"
+    )
+
 def generate_pdf_report(title, sections_data, generated_time_str):
     """
     Generate PDF Report PPS Toko Karang Satria — versi ringkas tanpa progress bar.
@@ -18461,6 +18516,86 @@ elif selected_tab == "📊 Daily Performance":
                         # ==========================================
                         st.markdown("##### 📊 Key Performance Indicators")
 
+                        # === CSS ANIMASI KPI ===
+                        st.markdown(
+                            """
+                            <style>
+                                /* === PULSE (default) === */
+                                @keyframes kpiPulse {
+                                    0%, 100% { transform: scale(1); opacity: 1; }
+                                    50% { transform: scale(1.15); opacity: 0.85; }
+                                }
+                                .kpi-pulse {
+                                    animation: kpiPulse 2s infinite ease-in-out;
+                                    display: inline-block;
+                                }
+                                
+                                /* === SPIN (jam/TF) === */
+                                @keyframes kpiSpin {
+                                    0% { transform: rotate(0deg); }
+                                    100% { transform: rotate(360deg); }
+                                }
+                                .kpi-spin {
+                                    animation: kpiSpin 4s infinite linear;
+                                    display: inline-block;
+                                }
+                                
+                                /* === BOUNCE (koin) === */
+                                @keyframes kpiBounce {
+                                    0%, 100% { transform: translateY(0); }
+                                    50% { transform: translateY(-6px); }
+                                }
+                                .kpi-bounce {
+                                    animation: kpiBounce 1.5s infinite ease-in-out;
+                                    display: inline-block;
+                                }
+                                
+                                /* === SHAKE (warning) === */
+                                @keyframes kpiShake {
+                                    0%, 100% { transform: rotate(0deg); }
+                                    25% { transform: rotate(-12deg); }
+                                    75% { transform: rotate(12deg); }
+                                }
+                                .kpi-shake {
+                                    animation: kpiShake 1.2s infinite ease-in-out;
+                                    display: inline-block;
+                                }
+                                
+                                /* === FLIP (kalender) === */
+                                @keyframes kpiFlip {
+                                    0%, 100% { transform: rotateY(0deg); }
+                                    50% { transform: rotateY(180deg); }
+                                }
+                                .kpi-flip {
+                                    animation: kpiFlip 3s infinite ease-in-out;
+                                    display: inline-block;
+                                }
+                                
+                                /* === SWING (timbangan) === */
+                                @keyframes kpiSwing {
+                                    0%, 100% { transform: rotate(-8deg); }
+                                    50% { transform: rotate(8deg); }
+                                }
+                                .kpi-swing {
+                                    animation: kpiSwing 2.5s infinite ease-in-out;
+                                    display: inline-block;
+                                    transform-origin: top center;
+                                }
+                                
+                                /* === BAR (chart NSB) === */
+                                @keyframes kpiBar {
+                                    0%, 100% { transform: scaleY(1); }
+                                    50% { transform: scaleY(1.4); }
+                                }
+                                .kpi-bar {
+                                    animation: kpiBar 1.8s infinite ease-in-out;
+                                    display: inline-block;
+                                    transform-origin: bottom center;
+                                }
+                            </style>
+                            """,
+                            unsafe_allow_html=True
+                        )
                         # === HITUNG SEMUA METRIK ===
                         _tf_pct = _tf * 100
                         _pct_spd_harian = (_avg_spd / _target_spd_harian * 100) if _target_spd_harian > 0 else 0
@@ -18508,9 +18643,10 @@ elif selected_tab == "📊 Daily Performance":
                                 _kpi_card(
                                     "📅 Hari Kerja",
                                     f"{_hari_berjalan} / {_jhk}",
-                                    "📆",
+                                    "📅",  # ← icon
                                     f"{_sisa_hari} hari sisa",
-                                    "#38bdf8"
+                                    "#38bdf8",
+                                    anim_type="flip"  # ← kalender flip
                                 ),
                                 unsafe_allow_html=True
                             )
@@ -18523,9 +18659,10 @@ elif selected_tab == "📊 Daily Performance":
                                 _kpi_card(
                                     "💰 Persentase Net Sales",
                                     f"{_pct_spd:,.2f}%",
-                                    _tf_icon,
+                                    "⏰",  # ← jam
                                     f"{_tf_status_text} | TF: {_tf_pct:.1f}%",
-                                    _tf_color
+                                    _tf_color,
+                                    anim_type="spin"  # ← jam berputar
                                 ),
                                 unsafe_allow_html=True
                             )
@@ -18538,9 +18675,10 @@ elif selected_tab == "📊 Daily Performance":
                                 _kpi_card(
                                     "💰 Rata SPD",
                                     f"Rp {_avg_spd:,}",
-                                    _spd_icon,
+                                    "💰",  # ← koin
                                     f"{_pct_spd_harian:.2f}% | Gap: {_spd_sign}Rp {_gap_spd_harian:,}",
-                                    _spd_color
+                                    _spd_color,
+                                    anim_type="bounce"  # ← koin naik-turun
                                 ),
                                 unsafe_allow_html=True
                             )
@@ -18553,9 +18691,10 @@ elif selected_tab == "📊 Daily Performance":
                                 _kpi_card(
                                     "🧾 APC",
                                     f"Rp {_avg_apc:,}",
-                                    _apc_icon,
+                                    "🧾",  # ← struk
                                     f"{_pct_apc:.2f}% | Gap: {_apc_sign}Rp {_gap_apc:,}",
-                                    _apc_color
+                                    _apc_color,
+                                    anim_type="pulse"  # ← pulse
                                 ),
                                 unsafe_allow_html=True
                             )
@@ -18571,9 +18710,10 @@ elif selected_tab == "📊 Daily Performance":
                                 _kpi_card(
                                     "📄 Rata STD",
                                     f"{_avg_std:,}",
-                                    _std_icon,
+                                    "📄",  # ← struk
                                     f"{_pct_std:.2f}% | Gap: {_std_sign}{_gap_std:,}",
-                                    _std_color
+                                    _std_color,
+                                    anim_type="swing"  # ← goyang
                                 ),
                                 unsafe_allow_html=True
                             )
@@ -18583,9 +18723,10 @@ elif selected_tab == "📊 Daily Performance":
                                 _kpi_card(
                                     "📊 Total NSB",
                                     f"Rp {abs(_total_nsb_act):,}",
-                                    "📈",
+                                    "📊",  # ← chart
                                     f"{_nsb_pct_from_ns:.2f}% dari Net Sales",
-                                    "#38bdf8"
+                                    "#38bdf8",
+                                    anim_type="bar"  # ← bar chart naik-turun
                                 ),
                                 unsafe_allow_html=True
                             )
@@ -18598,9 +18739,10 @@ elif selected_tab == "📊 Daily Performance":
                                 _kpi_card(
                                     "⚖️ Selisih NSB",
                                     f"Rp {_selisih_nsb:,}",
-                                    _nsb_icon,
+                                    "⚖️",  # ← timbangan
                                     _nsb_status,
-                                    _nsb_color
+                                    _nsb_color,
+                                    anim_type="swing"  # ← timbangan goyang
                                 ),
                                 unsafe_allow_html=True
                             )
@@ -18613,9 +18755,10 @@ elif selected_tab == "📊 Daily Performance":
                                 _kpi_card(
                                     "💰 Total Net Sales",
                                     f"Rp {_total_spd:,}",
-                                    _ns_icon,
+                                    "💎",  # ← diamond
                                     f"{_ns_minus_str} vs Target",
-                                    _ns_color
+                                    _ns_color,
+                                    anim_type="bounce"  # ← naik-turun
                                 ),
                                 unsafe_allow_html=True
                             )
