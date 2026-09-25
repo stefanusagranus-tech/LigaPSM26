@@ -18472,71 +18472,86 @@ elif selected_tab == "📊 Daily Performance":
                             )
 
                         with col_r1_2:
+                        # ACTUAL NET SALES
                             _tf_pct = _tf * 100
-                            _tf_status = "🟢 On Track" if _tf_pct <= _pct_spd else "🔴 Behind"
+                            _on_track = _pct_spd >= _tf_pct
+                            _tf_status_icon = "✅" if _on_track else "⚠️"
+                            _tf_status_text = "On Track" if _on_track else "Behind"
+                            
                             st.metric(
-                                "⏱️ Time Factor",
-                                f"{_tf_pct:.1f}%",
-                                delta=_tf_status,
-                                delta_color="normal"
+                                "💰 Actual Net Sales",
+                                f"Rp {_total_spd:,}",
+                                delta=f"{_tf_status_icon} {_tf_status_text} | TF: {_tf_pct:.1f}%",
+                                delta_color="off"  # ← NO auto-arrow
                             )
 
                         with col_r1_3:
-                            _spd_delta = f"{_pct_spd:.1f}% | Gap: Rp {_gap_spd:,}"
+                            # RATA SPD vs Target SPD
+                            _pct_spd_harian = (_avg_spd / _target_spd_harian * 100) if _target_spd_harian > 0 else 0
+                            _gap_spd_harian = _avg_spd - _target_spd_harian
+                            
+                            # Icon status (bukan arrow)
+                            _spd_status_icon = "✅" if _gap_spd_harian >= 0 else "⚠️"
+                            
                             st.metric(
                                 "💰 Rata SPD",
                                 f"Rp {_avg_spd:,}",
-                                delta=_spd_delta,
-                                delta_color="normal" if _gap_spd >= 0 else "inverse"
+                                delta=f"{_spd_status_icon} {_pct_spd_harian:.1f}% | Gap: Rp {_gap_spd_harian:,}",
+                                delta_color="off"
                             )
 
                         with col_r1_4:
-                            _apc_delta = f"{_pct_apc:.1f}% | Gap: Rp {_gap_apc:,}"
+                            _apc_status_icon = "✅" if _gap_apc >= 0 else "⚠️"
+                            
                             st.metric(
                                 "🧾 APC",
                                 f"Rp {_avg_apc:,}",
-                                delta=_apc_delta,
-                                delta_color="normal" if _gap_apc >= 0 else "inverse"
+                                delta=f"{_apc_status_icon} {_pct_apc:.1f}% | Gap: Rp {_gap_apc:,}",
+                                delta_color="off"
                             )
 
                         # Baris 2: 4 cards
                         col_r2_1, col_r2_2, col_r2_3, col_r2_4 = st.columns(4)
 
                         with col_r2_1:
-                            _std_delta = f"{_pct_std:.1f}% | Gap: {_gap_std:,}"
+                            _std_status_icon = "✅" if _gap_std >= 0 else "⚠️"
+                            
                             st.metric(
                                 "📄 Rata STD",
                                 f"{_avg_std:,}",
-                                delta=_std_delta,
-                                delta_color="normal" if _gap_std >= 0 else "inverse"
+                                delta=f"{_std_status_icon} {_pct_std:.1f}% | Gap: {_gap_std:,}",
+                                delta_color="off"
                             )
 
                         with col_r2_2:
                             st.metric(
                                 "📊 Total NSB",
                                 f"Rp {abs(_total_nsb_act):,}",
-                                delta=f"{_nsb_pct_from_ns:.2f}% dari NS",
+                                delta=f"📈 {_nsb_pct_from_ns:.2f}% dari Net Sales",
                                 delta_color="off"
                             )
 
                         with col_r2_3:
                             _selisih_nsb = _target_nsb_bulanan - abs(_total_nsb_act)
-                            _nsb_status = "✅ Aman" if _selisih_nsb >= 0 else "⚠️ Over"
+                            _nsb_status_icon = "✅" if _selisih_nsb >= 0 else "⚠️"
+                            _nsb_status_text = "Aman" if _selisih_nsb >= 0 else "Over Budget"
+                            
                             st.metric(
                                 "⚖️ Selisih NSB",
                                 f"Rp {_selisih_nsb:,}",
-                                delta=_nsb_status,
-                                delta_color="normal" if _selisih_nsb >= 0 else "inverse"
+                                delta=f"{_nsb_status_icon} {_nsb_status_text}",
+                                delta_color="off"
                             )
-
                         with col_r2_4:
                             _ns_minus = _target_ns - _total_spd
+                            _ns_status_icon = "✅" if _ns_minus <= 0 else "⚠️"
                             _ns_minus_str = f"-Rp {abs(_ns_minus):,}" if _ns_minus > 0 else f"+Rp {abs(_ns_minus):,}"
+                            
                             st.metric(
                                 "💰 Total Net Sales",
                                 f"Rp {_total_spd:,}",
-                                delta=f"{_ns_minus_str} vs Target",
-                                delta_color="normal" if _ns_minus <= 0 else "inverse"
+                                delta=f"{_ns_status_icon} {_ns_minus_str} vs Target",
+                                delta_color="off"
                             )
 
                         # ==========================================
