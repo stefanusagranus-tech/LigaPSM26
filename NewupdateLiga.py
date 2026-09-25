@@ -18457,101 +18457,167 @@ elif selected_tab == "📊 Daily Performance":
                         _nsb_pct_from_ns = (abs(_total_nsb_act) / _total_spd * 100) if _total_spd > 0 else 0
 
                         # ==========================================
-                        # 📊 KPI CARDS (8 Cards)
+                        # 📊 KPI CARDS (HTML CUSTOM — 8 CARDS)
                         # ==========================================
                         st.markdown("##### 📊 Key Performance Indicators")
 
-                        # Baris 1: 4 cards
+                        # === HITUNG SEMUA METRIK ===
+                        _tf_pct = _tf * 100
+                        _pct_spd_harian = (_avg_spd / _target_spd_harian * 100) if _target_spd_harian > 0 else 0
+                        _gap_spd_harian = _avg_spd - _target_spd_harian
+                        _selisih_nsb = _target_nsb_bulanan - abs(_total_nsb_act)
+                        _ns_minus = _target_ns - _total_spd
+
+                        # Status OK/Warning
+                        _on_track = _pct_spd >= _tf_pct
+                        _spd_ok = _gap_spd_harian >= 0
+                        _apc_ok = _gap_apc >= 0
+                        _std_ok = _gap_std >= 0
+                        _nsb_ok = _selisih_nsb >= 0
+                        _ns_ok = _ns_minus <= 0
+
+
+                        def _kpi_card(label, value, sub_icon, sub_text, status_color):
+                            """Render KPI card HTML custom."""
+                            return (
+                                f"<div style='background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85)); "
+                                f"border: 1.5px solid #9a7b38; border-left: 5px solid {status_color}; "
+                                f"border-radius: 12px; padding: 14px 16px; "
+                                f"box-shadow: 0 4px 10px rgba(0,0,0,0.3); min-height: 110px;'>"
+
+                                f"<div style='font-family: monospace; font-size: 10px; color: #94a3b8; "
+                                f"letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase;'>{label}</div>"
+
+                                f"<div style='font-family: monospace; font-size: 22px; font-weight: 900; "
+                                f"color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.3); "
+                                f"margin-bottom: 6px; word-break: break-word;'>{value}</div>"
+
+                                f"<div style='font-family: monospace; font-size: 10px; font-weight: 900; "
+                                f"color: {status_color}; letter-spacing: 0.3px;'>"
+                                f"{sub_icon} {sub_text}</div>"
+
+                                f"</div>"
+                            )
+
+
+                        # === BARIS 1 ===
                         col_r1_1, col_r1_2, col_r1_3, col_r1_4 = st.columns(4)
 
                         with col_r1_1:
-                            st.metric(
-                                "📅 Hari Kerja",
-                                f"{_hari_berjalan} / {_jhk}",
-                                delta=f"{_sisa_hari} hari sisa"
+                            st.markdown(
+                                _kpi_card(
+                                    "📅 Hari Kerja",
+                                    f"{_hari_berjalan} / {_jhk}",
+                                    "📆",
+                                    f"{_sisa_hari} hari sisa",
+                                    "#38bdf8"
+                                ),
+                                unsafe_allow_html=True
                             )
 
                         with col_r1_2:
-                            # ACTUAL NET SALES
-                            _tf_pct = _tf * 100
-                            _on_track = _pct_spd >= _tf_pct
-                            _tf_status_icon = "✅" if _on_track else "⚠️"
+                            _tf_icon = "✅" if _on_track else "⚠️"
+                            _tf_color = "#34d399" if _on_track else "#fca5a5"
                             _tf_status_text = "On Track" if _on_track else "Behind"
-                            
-                            st.metric(
-                                "💰 Persentase Net Sales",
-                                f"{_pct_spd:,.2f}%",
-                                delta=f"{_tf_status_icon} {_tf_status_text} | TF: {_tf_pct:.1f}%",
-                                delta_color="normal"
+                            st.markdown(
+                                _kpi_card(
+                                    "💰 Persentase Net Sales",
+                                    f"{_pct_spd:,.2f}%",
+                                    _tf_icon,
+                                    f"{_tf_status_text} | TF: {_tf_pct:.1f}%",
+                                    _tf_color
+                                ),
+                                unsafe_allow_html=True
                             )
 
                         with col_r1_3:
-                            # RATA SPD vs Target SPD
-                            _pct_spd_harian = (_avg_spd / _target_spd_harian * 100) if _target_spd_harian > 0 else 0
-                            _gap_spd_harian = _avg_spd - _target_spd_harian
-                            
-                            # Icon status (bukan arrow)
-                            _spd_status_icon = "✅" if _gap_spd_harian >= 0 else "⚠️"
-                            
-                            st.metric(
-                                "💰 Rata SPD",
-                                f"Rp {_avg_spd:,}",
-                                delta=f"{_spd_status_icon} {_pct_spd_harian:.1f}% | Gap: Rp {_gap_spd_harian:,}",
-                                delta_color="normal"
+                            _spd_icon = "✅" if _spd_ok else "⚠️"
+                            _spd_color = "#34d399" if _spd_ok else "#fca5a5"
+                            _spd_sign = "+" if _gap_spd_harian >= 0 else ""
+                            st.markdown(
+                                _kpi_card(
+                                    "💰 Rata SPD",
+                                    f"Rp {_avg_spd:,}",
+                                    _spd_icon,
+                                    f"{_pct_spd_harian:.2f}% | Gap: {_spd_sign}Rp {_gap_spd_harian:,}",
+                                    _spd_color
+                                ),
+                                unsafe_allow_html=True
                             )
 
                         with col_r1_4:
-                            _apc_status_icon = "✅" if _gap_apc >= 0 else "⚠️"
-                            
-                            st.metric(
-                                "🧾 APC",
-                                f"Rp {_avg_apc:,}",
-                                delta=f"{_apc_status_icon} {_pct_apc:.1f}% | Gap: Rp {_gap_apc:,}",
-                                delta_color="normal"
+                            _apc_icon = "✅" if _apc_ok else "⚠️"
+                            _apc_color = "#34d399" if _apc_ok else "#fca5a5"
+                            _apc_sign = "+" if _gap_apc >= 0 else ""
+                            st.markdown(
+                                _kpi_card(
+                                    "🧾 APC",
+                                    f"Rp {_avg_apc:,}",
+                                    _apc_icon,
+                                    f"{_pct_apc:.2f}% | Gap: {_apc_sign}Rp {_gap_apc:,}",
+                                    _apc_color
+                                ),
+                                unsafe_allow_html=True
                             )
 
-                        # Baris 2: 4 cards
+                        # === BARIS 2 ===
                         col_r2_1, col_r2_2, col_r2_3, col_r2_4 = st.columns(4)
 
                         with col_r2_1:
-                            _std_status_icon = "✅" if _gap_std >= 0 else "⚠️"
-                            
-                            st.metric(
-                                "📄 Rata STD",
-                                f"{_avg_std:,}",
-                                delta=f"{_std_status_icon} {_pct_std:.1f}% | Gap: {_gap_std:,}",
-                                delta_color="normal"
+                            _std_icon = "✅" if _std_ok else "⚠️"
+                            _std_color = "#34d399" if _std_ok else "#fca5a5"
+                            _std_sign = "+" if _gap_std >= 0 else ""
+                            st.markdown(
+                                _kpi_card(
+                                    "📄 Rata STD",
+                                    f"{_avg_std:,}",
+                                    _std_icon,
+                                    f"{_pct_std:.2f}% | Gap: {_std_sign}{_gap_std:,}",
+                                    _std_color
+                                ),
+                                unsafe_allow_html=True
                             )
 
                         with col_r2_2:
-                            st.metric(
-                                "📊 Total NSB",
-                                f"Rp {abs(_total_nsb_act):,}",
-                                delta=f"📈 {_nsb_pct_from_ns:.2f}% dari Net Sales",
-                                delta_color="normal"
+                            st.markdown(
+                                _kpi_card(
+                                    "📊 Total NSB",
+                                    f"Rp {abs(_total_nsb_act):,}",
+                                    "📈",
+                                    f"{_nsb_pct_from_ns:.2f}% dari Net Sales",
+                                    "#38bdf8"
+                                ),
+                                unsafe_allow_html=True
                             )
 
                         with col_r2_3:
-                            _selisih_nsb = _target_nsb_bulanan - abs(_total_nsb_act)
-                            _nsb_status_icon = "✅" if _selisih_nsb >= 0 else "⚠️"
-                            _nsb_status_text = "Aman" if _selisih_nsb >= 0 else "Over Budget"
-                            
-                            st.metric(
-                                "⚖️ Selisih NSB",
-                                f"Rp {_selisih_nsb:,}",
-                                delta=f"{_nsb_status_icon} {_nsb_status_text}",
-                                delta_color="normal"
+                            _nsb_icon = "✅" if _nsb_ok else "⚠️"
+                            _nsb_color = "#34d399" if _nsb_ok else "#fca5a5"
+                            _nsb_status = "Aman" if _nsb_ok else "Over Budget"
+                            st.markdown(
+                                _kpi_card(
+                                    "⚖️ Selisih NSB",
+                                    f"Rp {_selisih_nsb:,}",
+                                    _nsb_icon,
+                                    _nsb_status,
+                                    _nsb_color
+                                ),
+                                unsafe_allow_html=True
                             )
+
                         with col_r2_4:
-                            _ns_minus = _target_ns - _total_spd
-                            _ns_status_icon = "✅" if _ns_minus <= 0 else "⚠️"
+                            _ns_icon = "✅" if _ns_ok else "⚠️"
+                            _ns_color = "#34d399" if _ns_ok else "#fca5a5"
                             _ns_minus_str = f"-Rp {abs(_ns_minus):,}" if _ns_minus > 0 else f"+Rp {abs(_ns_minus):,}"
-                            
-                            st.metric(
-                                "💰 Total Net Sales",
-                                f"Rp {_total_spd:,}",
-                                delta=f"{_ns_status_icon} {_ns_minus_str} vs Target",
-                                delta_color="normal"
+                            st.markdown(
+                                _kpi_card(
+                                    "💰 Total Net Sales",
+                                    f"Rp {_total_spd:,}",
+                                    _ns_icon,
+                                    f"{_ns_minus_str} vs Target",
+                                    _ns_color
+                                ),
+                                unsafe_allow_html=True
                             )
 
                         # ==========================================
