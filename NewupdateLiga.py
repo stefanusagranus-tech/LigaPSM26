@@ -18472,7 +18472,7 @@ elif selected_tab == "📊 Daily Performance":
                             )
 
                         with col_r1_2:
-                        # ACTUAL NET SALES
+                            # ACTUAL NET SALES
                             _tf_pct = _tf * 100
                             _on_track = _pct_spd >= _tf_pct
                             _tf_status_icon = "✅" if _on_track else "⚠️"
@@ -18480,7 +18480,7 @@ elif selected_tab == "📊 Daily Performance":
                             
                             st.metric(
                                 "💰 Persentase Net Sales",
-                                f"{_pct_spd:,}%",
+                                f"{_pct_spd:,.2f}%",
                                 delta=f"{_tf_status_icon} {_tf_status_text} | TF: {_tf_pct:.1f}%",
                                 delta_color="inverse"
                             )
