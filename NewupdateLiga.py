@@ -1498,61 +1498,6 @@ def get_active_period_store():
         print(traceback.format_exc())
         return None
 
-def _kpi_card(label, value, sub_icon, sub_text, status_color, anim_type="pulse"):
-    """
-    Render KPI card HTML custom dengan animasi.
-    
-    anim_type:
-        - "pulse"    → icon berdenyut (default)
-        - "spin"     → icon berputar (untuk jam/TF)
-        - "bounce"   → icon naik-turun (untuk koin)
-        - "shake"    → icon goyang (untuk warning)
-        - "flip"     → icon flip (untuk kalender)
-        - "swing"    → icon miring goyang (untuk timbangan)
-        - "bar"      → animasi bar chart (untuk NSB)
-    """
-    
-    # Map animation type ke CSS
-    _anim_css = {
-        "pulse": "kpi-pulse",
-        "spin": "kpi-spin",
-        "bounce": "kpi-bounce",
-        "shake": "kpi-shake",
-        "flip": "kpi-flip",
-        "swing": "kpi-swing",
-        "bar": "kpi-bar",
-    }
-    _anim_class = _anim_css.get(anim_type, "kpi-pulse")
-    
-    return (
-        f"<div style='background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85)); "
-        f"border: 1.5px solid #9a7b38; border-left: 5px solid {status_color}; "
-        f"border-radius: 12px; padding: 14px 16px; "
-        f"box-shadow: 0 4px 10px rgba(0,0,0,0.3); min-height: 110px; "
-        f'transition: all 0.3s ease; position: relative; overflow: hidden;'
-        f"' onmouseover='this.style.transform=\"translateY(-3px)\"; this.style.boxShadow=\"0 8px 20px rgba(251, 191, 36, 0.3)\";' "
-        f"' onmouseout='this.style.transform=\"translateY(0)\"; this.style.boxShadow=\"0 4px 10px rgba(0,0,0,0.3)\";' "
-        f">"
-
-        # Label + Icon beranimasi
-        f"<div style='display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;'>"
-        f"<div style='font-family: monospace; font-size: 10px; color: #94a3b8; "
-        f"letter-spacing: 1px; text-transform: uppercase;'>{label}</div>"
-        f"<div class='{_anim_class}' style='font-size: 18px;'>{sub_icon}</div>"
-        f"</div>"
-
-        # Value
-        f"<div style='font-family: monospace; font-size: 22px; font-weight: 900; "
-        f"color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.3); "
-        f"margin-bottom: 6px; word-break: break-word;'>{value}</div>"
-
-        # Sub text
-        f"<div style='font-family: monospace; font-size: 10px; font-weight: 900; "
-        f"color: {status_color}; letter-spacing: 0.3px;'>{sub_text}</div>"
-
-        f"</div>"
-    )
-
 def generate_pdf_report(title, sections_data, generated_time_str):
     """
     Generate PDF Report PPS Toko Karang Satria — versi ringkas tanpa progress bar.
@@ -18610,30 +18555,61 @@ elif selected_tab == "📊 Daily Performance":
                         _std_ok = _gap_std >= 0
                         _nsb_ok = _selisih_nsb >= 0
                         _ns_ok = _ns_minus <= 0
-
-
-                        def _kpi_card(label, value, sub_icon, sub_text, status_color):
-                            """Render KPI card HTML custom."""
+                        
+                        def _kpi_card(label, value, sub_icon, sub_text, status_color, anim_type="pulse"):
+                            """
+                            Render KPI card HTML custom dengan animasi.
+                            
+                            anim_type:
+                                - "pulse"    → icon berdenyut (default)
+                                - "spin"     → icon berputar (untuk jam/TF)
+                                - "bounce"   → icon naik-turun (untuk koin)
+                                - "shake"    → icon goyang (untuk warning)
+                                - "flip"     → icon flip (untuk kalender)
+                                - "swing"    → icon miring goyang (untuk timbangan)
+                                - "bar"      → animasi bar chart (untuk NSB)
+                            """
+                            
+                            # Map animation type ke CSS
+                            _anim_css = {
+                                "pulse": "kpi-pulse",
+                                "spin": "kpi-spin",
+                                "bounce": "kpi-bounce",
+                                "shake": "kpi-shake",
+                                "flip": "kpi-flip",
+                                "swing": "kpi-swing",
+                                "bar": "kpi-bar",
+                            }
+                            _anim_class = _anim_css.get(anim_type, "kpi-pulse")
+                            
                             return (
                                 f"<div style='background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85)); "
                                 f"border: 1.5px solid #9a7b38; border-left: 5px solid {status_color}; "
                                 f"border-radius: 12px; padding: 14px 16px; "
-                                f"box-shadow: 0 4px 10px rgba(0,0,0,0.3); min-height: 110px;'>"
+                                f"box-shadow: 0 4px 10px rgba(0,0,0,0.3); min-height: 110px; "
+                                f'transition: all 0.3s ease; position: relative; overflow: hidden;'
+                                f"' onmouseover='this.style.transform=\"translateY(-3px)\"; this.style.boxShadow=\"0 8px 20px rgba(251, 191, 36, 0.3)\";' "
+                                f"' onmouseout='this.style.transform=\"translateY(0)\"; this.style.boxShadow=\"0 4px 10px rgba(0,0,0,0.3)\";' "
+                                f">"
 
+                                # Label + Icon beranimasi
+                                f"<div style='display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;'>"
                                 f"<div style='font-family: monospace; font-size: 10px; color: #94a3b8; "
-                                f"letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase;'>{label}</div>"
+                                f"letter-spacing: 1px; text-transform: uppercase;'>{label}</div>"
+                                f"<div class='{_anim_class}' style='font-size: 18px;'>{sub_icon}</div>"
+                                f"</div>"
 
+                                # Value
                                 f"<div style='font-family: monospace; font-size: 22px; font-weight: 900; "
                                 f"color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.3); "
                                 f"margin-bottom: 6px; word-break: break-word;'>{value}</div>"
 
+                                # Sub text
                                 f"<div style='font-family: monospace; font-size: 10px; font-weight: 900; "
-                                f"color: {status_color}; letter-spacing: 0.3px;'>"
-                                f"{sub_icon} {sub_text}</div>"
+                                f"color: {status_color}; letter-spacing: 0.3px;'>{sub_text}</div>"
 
                                 f"</div>"
                             )
-
 
                         # === BARIS 1 ===
                         col_r1_1, col_r1_2, col_r1_3, col_r1_4 = st.columns(4)
