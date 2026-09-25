@@ -1415,6 +1415,62 @@ def save_periode_store(df_data):
         st.error(f"❌ Gagal simpan periode: {e}")
         return False
 
+def load_daily_performance_cached(force_refresh=False):
+    """
+    Baca sheet SALES_STOREPERFORMANCE dengan cache session_state (10 menit).
+    Kalau read gagal → pakai cache lama (biar gak empty).
+    
+    Args:
+        force_refresh (bool): True = bypass cache, ambil fresh dari sheet
+    """
+    _cache_key = "_cached_daily_perf_df"
+    _cache_time_key = "_cached_daily_perf_time"
+    _now = time.time()
+    _last_fetch = st.session_state.get(_cache_time_key, 0)
+    
+    # Cache valid 10 menit
+    if not force_refresh and (_cache_key in st.session_state) and (_now - _last_fetch < 600):
+        return st.session_state.get(_cache_key, pd.DataFrame())
+    
+    # === FETCH BARU ===
+    try:
+        _df = conn.read(worksheet="SALES_STOREPERFORMANCE", ttl=600)
+        
+        if _df is None:
+            _df = pd.DataFrame()
+        else:
+            _df.columns = _df.columns.astype(str).str.strip().str.lower()
+        
+        # Kalau hasil read kosong TAPI cache lama ada isinya → pakai cache lama
+        if _df.empty:
+            _old_cache = st.session_state.get(_cache_key)
+            if _old_cache is not None and not _old_cache.empty:
+                print("[DEBUG] conn.read() return empty, pakai cache lama")
+                return _old_cache
+        
+        # Simpan ke cache
+        st.session_state[_cache_key] = _df
+        st.session_state[_cache_time_key] = _now
+        
+        return _df
+    
+    except Exception as e:
+        print(f"[load_daily_performance_cached ERROR] {e}")
+        
+        # Fallback: pakai cache lama
+        _old_cache = st.session_state.get(_cache_key)
+        if _old_cache is not None:
+            return _old_cache
+        
+        return pd.DataFrame()
+
+
+def invalidate_daily_perf_cache():
+    """Hapus cache daily performance → paksa read ulang next load."""
+    if "_cached_daily_perf_df" in st.session_state:
+        del st.session_state["_cached_daily_perf_df"]
+    if "_cached_daily_perf_time" in st.session_state:
+        del st.session_state["_cached_daily_perf_time"]
 
 def get_active_period_store(force_refresh=False):
     """
@@ -1517,7 +1573,7 @@ def get_active_period_store(force_refresh=False):
         print(traceback.format_exc())
         # Fallback ke cache lama kalau ada
         return st.session_state.get(_cache_key, None)
-        
+
 def generate_pdf_report(title, sections_data, generated_time_str):
     """
     Generate PDF Report PPS Toko Karang Satria — versi ringkas tanpa progress bar.
@@ -17884,15 +17940,7 @@ elif selected_tab == "📊 Daily Performance":
         # =============================================================
         # 📥 LOAD DATA HARIAN YANG SUDAH ADA
         # =============================================================
-        _existing_daily_df = pd.DataFrame()
-        try:
-            _existing_daily_df = conn.read(worksheet="SALES_STOREPERFORMANCE", ttl=300)
-            if _existing_daily_df is None:
-                _existing_daily_df = pd.DataFrame()
-            else:
-                _existing_daily_df.columns = _existing_daily_df.columns.astype(str).str.strip().str.lower()
-        except Exception:
-            _existing_daily_df = pd.DataFrame()
+        _existing_daily_df = load_daily_performance_cached()
         
         # =============================================================
         # 📝 FORM INPUT
@@ -18081,15 +18129,8 @@ elif selected_tab == "📊 Daily Performance":
                 try:
                     with st.spinner("⏳ Menyimpan data harian..."):
                         # === LOAD EXISTING DULU ===
-                        _existing_df = pd.DataFrame()
-                        try:
-                            _existing_df = conn.read(worksheet="SALES_STOREPERFORMANCE", ttl=0)
-                            if _existing_df is None:
-                                _existing_df = pd.DataFrame()
-                            else:
-                                _existing_df.columns = _existing_df.columns.astype(str).str.strip().str.lower()
-                        except Exception:
-                            _existing_df = pd.DataFrame()
+                        # === LOAD EXISTING (pakai cache biar hemat API) ===
+                        _existing_df = load_daily_performance_cached()
                         
                         # === GENERATE RECORD ID ===
                         _max_id = 0
@@ -18282,15 +18323,7 @@ elif selected_tab == "📊 Daily Performance":
             st.warning("⚠️ Belum ada periode aktif. Set dulu di menu Pengaturan Sales.")
         else:
             # === LOAD DATA HARIAN ===
-            _rekap_df = pd.DataFrame()
-            try:
-                _rekap_df = conn.read(worksheet="SALES_STOREPERFORMANCE", ttl=300)
-                if _rekap_df is None:
-                    _rekap_df = pd.DataFrame()
-                else:
-                    _rekap_df.columns = _rekap_df.columns.astype(str).str.strip().str.lower()
-            except Exception:
-                _rekap_df = pd.DataFrame()
+            _rekap_df = load_daily_performance_cached()
             
             if _rekap_df.empty:
                 st.info("📭 Belum ada data harian yang tersimpan. Input dulu di menu **📝 Input Harian**.")
