@@ -17585,7 +17585,10 @@ elif selected_tab == "📝 Input Data":
 # 📊 DAILY PERFORMANCE TOKO — HALAMAN BARU
 # =============================================================================
 elif selected_tab == "📊 Daily Performance":
-    
+    # Setelah _active_period_rekap = get_active_period_store()
+    st.write("🐛 DEBUG _active_period_rekap:", _active_period_rekap)
+    st.write("🐛 DEBUG _target_ns:", _active_period_rekap.get("target_net_sales", "KOSONG") if _active_period_rekap else "NONE")
+
     # =========================================================================
     # 🎨 CSS BACKGROUND + HEADER
     # =========================================================================
