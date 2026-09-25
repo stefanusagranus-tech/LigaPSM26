@@ -18555,7 +18555,7 @@ elif selected_tab == "📊 Daily Performance":
                         _std_ok = _gap_std >= 0
                         _nsb_ok = _selisih_nsb >= 0
                         _ns_ok = _ns_minus <= 0
-                        
+
                         def _kpi_card(label, value, sub_icon, sub_text, status_color, anim_type="pulse"):
                             """
                             Render KPI card HTML custom dengan animasi.
@@ -18635,7 +18635,7 @@ elif selected_tab == "📊 Daily Performance":
                                 _kpi_card(
                                     "💰 Persentase Net Sales",
                                     f"{_pct_spd:,.2f}%",
-                                    "⏰",  # ← jam
+                                    "⏳",  # ← jam
                                     f"{_tf_status_text} | TF: {_tf_pct:.1f}%",
                                     _tf_color,
                                     anim_type="spin"  # ← jam berputar
@@ -18697,9 +18697,9 @@ elif selected_tab == "📊 Daily Performance":
                         with col_r2_2:
                             st.markdown(
                                 _kpi_card(
-                                    "📊 Total NSB",
+                                    "🛡️ Total NSB",
                                     f"Rp {abs(_total_nsb_act):,}",
-                                    "📊",  # ← chart
+                                    "🛡️",  # ← chart
                                     f"{_nsb_pct_from_ns:.2f}% dari Net Sales",
                                     "#38bdf8",
                                     anim_type="bar"  # ← bar chart naik-turun
@@ -18731,7 +18731,7 @@ elif selected_tab == "📊 Daily Performance":
                                 _kpi_card(
                                     "💰 Total Net Sales",
                                     f"Rp {_total_spd:,}",
-                                    "💎",  # ← diamond
+                                    "🎯",  # ← diamond
                                     f"{_ns_minus_str} vs Target",
                                     _ns_color,
                                     anim_type="bounce"  # ← naik-turun
