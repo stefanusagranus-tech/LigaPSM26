@@ -18479,8 +18479,8 @@ elif selected_tab == "📊 Daily Performance":
                             _tf_status_text = "On Track" if _on_track else "Behind"
                             
                             st.metric(
-                                "💰 Actual Net Sales",
-                                f"Rp {_total_spd:,}",
+                                "💰 Persentase Net Sales",
+                                f"Rp {_pct_spd:,}",
                                 delta=f"{_tf_status_icon} {_tf_status_text} | TF: {_tf_pct:.1f}%",
                                 delta_color="inverse"
                             )
