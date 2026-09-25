@@ -1717,7 +1717,7 @@ def generate_ikt_pdf(data):
             pdf.cell(30, 10, "ALFAMART", ln=0, align="C")
         
         # Judul di kanan
-        _x_judul = 90 if _logo_loaded else 105
+        _x_judul = 75 if _logo_loaded else 90
         _lebar_judul = 210 - _x_judul - 12
         
         pdf.set_xy(_x_judul, 6)
