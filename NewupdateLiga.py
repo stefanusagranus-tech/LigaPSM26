@@ -1497,7 +1497,7 @@ def get_active_period_store():
         import traceback
         print(traceback.format_exc())
         return None
-        
+
 def generate_pdf_report(title, sections_data, generated_time_str):
     """
     Generate PDF Report PPS Toko Karang Satria — versi ringkas tanpa progress bar.
@@ -17807,14 +17807,10 @@ elif selected_tab == "📊 Daily Performance":
     # =========================================================================
     if _dp_subtab == "📝 Input Harian":
         
-        # =============================================================
+        # ============================================================
         # CEK PERIODE AKTIF
         # =============================================================
-        aktif = df[
-            (df["start_dt"] <= today) & 
-            (df["end_dt"] >= today) &
-            (df["status"].astype(str).str.lower().str.strip().isin(["aktif", "active", "on", "yes", "1"]))
-        ]
+        _active_period = get_active_period_store()
         
         if _active_period is None:
             st.error(
