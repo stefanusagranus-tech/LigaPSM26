@@ -18637,13 +18637,14 @@ elif selected_tab == "📊 Daily Performance":
                             # Budget adjust NSB (bisa + atau -)
                             _nsb_adjust_color = "#34d399" if _be_nsb_adjust >= 0 else "#fca5a5"
                             _nsb_adjust_sign = "+" if _be_nsb_adjust >= 0 else ""
+                            _nsb_adjust = _be_nsb_adjust
                             st.markdown(
                                 f"<div style='background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.15)); "
                                 f"border: 1.5px solid #ef4444; border-radius: 10px; padding: 14px 12px; text-align: center;'>"
                                 f"<div style='font-family: monospace; font-size: 10px; color: #fca5a5; "
                                 f"letter-spacing: 1px; margin-bottom: 6px;'>📊 BUDGET NSB/HARI</div>"
                                 f"<div style='font-family: monospace; font-size: 16px; font-weight: 900; "
-                                f"color: {_nsb_adjust_color};'>{_nsb_adjust_sign}Rp {_nsb_adjust:,}</div>"
+                                f"color: {_nsb_adjust_color};'>{_nsb_adjust_sign}Rp {_be_nsb_adjust:,}</div>"
                                 f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-top: 4px;'>max SO/hari</div>"
                                 f"</div>",
                                 unsafe_allow_html=True
