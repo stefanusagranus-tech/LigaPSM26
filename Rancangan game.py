@@ -1,5 +1,6 @@
 import streamlit as st
 import random
+import time
 import streamlit.components.v1 as components
 from streamlit_lottie import st_lottie
 import requests
@@ -13,7 +14,7 @@ URL_MASH   = "https://raw.githubusercontent.com/stefanusagranus-tech/LigaPSM26/m
 URL_GOETIA = "https://raw.githubusercontent.com/stefanusagranus-tech/LigaPSM26/main/assets/goetia.png"
 
 # ============================================================
-# BAGIAN 1: CSS GLOBAL
+# BAGIAN 1: CSS GLOBAL (dengan animasi diperlambat)
 # ============================================================
 st.markdown("""
 <style>
@@ -58,44 +59,51 @@ header[data-testid="stHeader"] { background: transparent; }
     0%,100% { transform: translateY(0); }
     50% { transform: translateY(-8px); }
 }
-[class*="sprite-idle"] { animation: idle-bob 2.5s ease-in-out infinite; }
+[class*="sprite-idle"] { animation: idle-bob 3s ease-in-out infinite; }
 
 @keyframes glow-pulse {
     0%,100% { filter: drop-shadow(0 0 6px #FFD700); }
     50% { filter: drop-shadow(0 0 22px #FFD700); }
 }
 [class*="sprite-np"] {
-    animation: idle-bob 2.5s ease-in-out infinite, glow-pulse 1.2s ease-in-out infinite;
+    animation: idle-bob 3s ease-in-out infinite, glow-pulse 1.8s ease-in-out infinite;
 }
 
+/* ============ SHAKE (diperlambat 0.6s → 1.2s) ============ */
 @keyframes shake {
     0%,100% { transform: translateX(0) rotate(0deg); }
-    20% { transform: translateX(-12px) rotate(-4deg); }
-    40% { transform: translateX(12px) rotate(4deg); }
-    60% { transform: translateX(-8px) rotate(-2deg); }
-    80% { transform: translateX(8px) rotate(2deg); }
+    15% { transform: translateX(-14px) rotate(-5deg); }
+    30% { transform: translateX(14px) rotate(5deg); }
+    45% { transform: translateX(-10px) rotate(-3deg); }
+    60% { transform: translateX(10px) rotate(3deg); }
+    75% { transform: translateX(-6px) rotate(-1deg); }
+    90% { transform: translateX(6px) rotate(1deg); }
 }
-[class*="sprite-hit"] { animation: shake 0.6s ease-out !important; }
+[class*="sprite-hit"] { animation: shake 1.2s ease-out !important; }
 
+/* ============ LUNGE (diperlambat 0.9s → 1.6s) ============ */
 @keyframes lunge-right {
     0% { transform: translateX(0) scale(1); }
-    40% { transform: translateX(60px) scale(1.25); }
-    60% { transform: translateX(70px) scale(1.3); }
+    30% { transform: translateX(50px) scale(1.15); }
+    50% { transform: translateX(70px) scale(1.3); }
+    70% { transform: translateX(50px) scale(1.15); }
     100% { transform: translateX(0) scale(1); }
 }
-[class*="sprite-attack-right"] { animation: lunge-right 0.9s ease-out !important; }
+[class*="sprite-attack-right"] { animation: lunge-right 1.6s ease-out !important; }
 
 @keyframes lunge-left {
     0% { transform: translateX(0) scale(1); }
-    40% { transform: translateX(-60px) scale(1.25); }
-    60% { transform: translateX(-70px) scale(1.3); }
+    30% { transform: translateX(-50px) scale(1.15); }
+    50% { transform: translateX(-70px) scale(1.3); }
+    70% { transform: translateX(-50px) scale(1.15); }
     100% { transform: translateX(0) scale(1); }
 }
-[class*="sprite-attack-left"] { animation: lunge-left 0.9s ease-out !important; }
+[class*="sprite-attack-left"] { animation: lunge-left 1.6s ease-out !important; }
 
+/* ============ SHIELD (diperlambat 1.2s → 1.8s) ============ */
 @keyframes guard-shield {
     0% { opacity: 0; transform: translate(-50%,-50%) scale(0.3); }
-    25% { opacity: 1; transform: translate(-50%,-50%) scale(1.2); }
+    20% { opacity: 1; transform: translate(-50%,-50%) scale(1.2); }
     60% { opacity: 1; transform: translate(-50%,-50%) scale(1); }
     100% { opacity: 0; transform: translate(-50%,-50%) scale(1.6); }
 }
@@ -106,11 +114,12 @@ header[data-testid="stHeader"] { background: transparent; }
     border-radius: 50%;
     border: 5px solid #4da6ff;
     box-shadow: 0 0 40px #4da6ff, inset 0 0 40px rgba(77,166,255,0.6);
-    animation: guard-shield 1.2s ease-out forwards;
+    animation: guard-shield 1.8s ease-out forwards;
     pointer-events: none;
     z-index: 5;
 }
 
+/* ============ BUFF (diperlambat 1.2s → 1.8s) ============ */
 @keyframes buff-aura {
     0% { opacity: 0; transform: translate(-50%,-50%) scale(0.5) rotate(0deg); }
     50% { opacity: 1; transform: translate(-50%,-50%) scale(1.3) rotate(180deg); }
@@ -123,12 +132,12 @@ header[data-testid="stHeader"] { background: transparent; }
     border-radius: 50%;
     background: radial-gradient(circle, rgba(255,215,0,0.6) 0%, rgba(255,215,0,0) 70%);
     border: 3px dashed #FFD700;
-    animation: buff-aura 1.2s ease-out forwards;
+    animation: buff-aura 1.8s ease-out forwards;
     pointer-events: none;
     z-index: 5;
 }
 
-/* ============ SLASH EFFECT ============ */
+/* ============ SLASH (diperlambat 0.6s → 1.2s) ============ */
 @keyframes slash-line {
     0% { opacity: 0; transform: translate(-50%,-50%) rotate(var(--rot, -45deg)) scaleX(0); }
     20% { opacity: 1; transform: translate(-50%,-50%) rotate(var(--rot, -45deg)) scaleX(1); }
@@ -140,16 +149,16 @@ header[data-testid="stHeader"] { background: transparent; }
     width: 120px; height: 5px;
     background: linear-gradient(90deg, transparent, #fff, #FF4B4B, #fff, transparent);
     box-shadow: 0 0 20px #FF4B4B, 0 0 40px #FF4B4B;
-    animation: slash-line 0.6s ease-out forwards;
+    animation: slash-line 1.2s ease-out forwards;
     pointer-events: none;
     z-index: 10;
     border-radius: 3px;
 }
 .slash-mark.line-1 { --rot: -45deg; }
-.slash-mark.line-2 { --rot: -30deg; width: 140px; animation-delay: 0.08s; }
-.slash-mark.line-3 { --rot: -60deg; width: 100px; animation-delay: 0.16s; }
+.slash-mark.line-2 { --rot: -30deg; width: 140px; animation-delay: 0.15s; }
+.slash-mark.line-3 { --rot: -60deg; width: 100px; animation-delay: 0.3s; }
 
-/* ============ EVADE / MISS ============ */
+/* ============ MISS ============ */
 @keyframes miss-fade {
     0% { opacity: 0; transform: translate(-50%,-50%) scale(0.5); }
     30% { opacity: 1; transform: translate(-50%,-50%) scale(1.2); }
@@ -161,13 +170,13 @@ header[data-testid="stHeader"] { background: transparent; }
     font-size: 32px; font-weight: 900;
     color: #4da6ff;
     text-shadow: 0 0 12px #4da6ff, 2px 2px 0 #000;
-    animation: miss-fade 1s ease-out forwards;
+    animation: miss-fade 1.4s ease-out forwards;
     pointer-events: none;
     z-index: 11;
     letter-spacing: 2px;
 }
 
-/* ============ COUNTER ATTACK ============ */
+/* ============ COUNTER ============ */
 @keyframes counter-burst {
     0% { opacity: 0; transform: translate(-50%,-50%) scale(0.3) rotate(0deg); }
     30% { opacity: 1; transform: translate(-50%,-50%) scale(1.3) rotate(180deg); }
@@ -181,14 +190,74 @@ header[data-testid="stHeader"] { background: transparent; }
     border: 4px solid #ff4444;
     box-shadow: 0 0 30px #ff4444, inset 0 0 30px rgba(255,68,68,0.6);
     background: radial-gradient(circle, rgba(255,68,68,0.4) 0%, transparent 70%);
-    animation: counter-burst 0.9s ease-out forwards;
+    animation: counter-burst 1.2s ease-out forwards;
     pointer-events: none;
     z-index: 9;
 }
 
+/* ============ ULTIMATE / NOBLE PHANTASM ============ */
+@keyframes np-flash {
+    0% { opacity: 0; }
+    20% { opacity: 1; }
+    100% { opacity: 0; }
+}
+.np-flash {
+    position: fixed; inset: 0;
+    background: radial-gradient(circle, rgba(255,75,75,0.9) 0%, rgba(255,215,0,0.6) 40%, transparent 80%);
+    animation: np-flash 2s ease-out forwards;
+    pointer-events: none;
+    z-index: 9997;
+}
+
+@keyframes np-slash-big {
+    0% { opacity: 0; transform: translate(-50%,-50%) rotate(-45deg) scaleX(0); }
+    15% { opacity: 1; transform: translate(-50%,-50%) rotate(-45deg) scaleX(1.5); }
+    40% { opacity: 1; transform: translate(-50%,-50%) rotate(-45deg) scaleX(1.8); }
+    100% { opacity: 0; transform: translate(-50%,-50%) rotate(-45deg) scaleX(2); }
+}
+@keyframes np-slash-big-2 {
+    0% { opacity: 0; transform: translate(-50%,-50%) rotate(45deg) scaleX(0); }
+    15% { opacity: 1; transform: translate(-50%,-50%) rotate(45deg) scaleX(1.5); }
+    40% { opacity: 1; transform: translate(-50%,-50%) rotate(45deg) scaleX(1.8); }
+    100% { opacity: 0; transform: translate(-50%,-50%) rotate(45deg) scaleX(2); }
+}
+.np-slash {
+    position: fixed;
+    top: 50%; left: 50%;
+    width: 300px; height: 12px;
+    background: linear-gradient(90deg, transparent, #fff, #FFD700, #FF4B4B, #FFD700, #fff, transparent);
+    box-shadow: 0 0 30px #FFD700, 0 0 60px #FF4B4B, 0 0 100px #FFD700;
+    border-radius: 6px;
+    animation: np-slash-big 2s ease-out forwards;
+    pointer-events: none;
+    z-index: 9998;
+}
+.np-slash.s2 { animation-name: np-slash-big-2; }
+
+@keyframes np-text-zoom {
+    0% { opacity: 0; transform: translate(-50%,-50%) scale(0.3); }
+    20% { opacity: 1; transform: translate(-50%,-50%) scale(1.2); }
+    70% { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%,-50%) scale(1.5); }
+}
+.np-title {
+    position: fixed;
+    top: 45%; left: 50%;
+    font-size: 32px;
+    font-weight: 900;
+    color: #FFD700;
+    text-shadow: 0 0 20px #FF4B4B, 0 0 40px #FFD700, 3px 3px 0 #000;
+    letter-spacing: 4px;
+    text-align: center;
+    animation: np-text-zoom 2.5s ease-out forwards;
+    pointer-events: none;
+    z-index: 9999;
+    white-space: nowrap;
+}
+
 /* ============ HP / NP BAR ============ */
 .bar-wrap { background: #0a0a10; border: 1px solid #333; border-radius: 6px; height: 16px; overflow: hidden; margin: 3px 0; }
-.bar-fill { height: 100%; transition: width 0.6s ease; border-radius: 6px 0 0 6px; }
+.bar-fill { height: 100%; transition: width 0.8s ease; border-radius: 6px 0 0 6px; }
 .hp-high { background: linear-gradient(90deg, #09AB3B, #4ade80); }
 .hp-mid  { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
 .hp-low  { background: linear-gradient(90deg, #dc2626, #ff4b4b); }
@@ -201,7 +270,7 @@ header[data-testid="stHeader"] { background: transparent; }
 .np-fill.ready {
     background: linear-gradient(90deg, #FFD700, #FFF8B0, #FFD700);
     background-size: 200% 100%;
-    animation: np-charge 1.5s linear infinite;
+    animation: np-charge 2s linear infinite;
 }
 .bar-label { font-size: 10px; color: #bbb; text-align: left; margin: 2px 0 4px 0; font-family: monospace; }
 
@@ -215,7 +284,7 @@ header[data-testid="stHeader"] { background: transparent; }
 .round-banner {
     background: linear-gradient(90deg, #FF4B4B, #FFD700, #FF4B4B);
     background-size: 200% 100%;
-    animation: shine 3s linear infinite;
+    animation: shine 4s linear infinite;
     color: #111; text-align: center; font-weight: 800; font-size: 15px;
     padding: 6px; border-radius: 8px; margin: 12px 0; letter-spacing: 2px;
 }
@@ -249,12 +318,26 @@ div[data-testid="stButton"] > button[kind="primary"] {
     text-shadow: 0 1px 0 rgba(255,255,255,0.3);
 }
 
+.btn-np div[data-testid="stButton"] > button {
+    background: linear-gradient(90deg, #FFD700, #FF4B4B, #FFD700) !important;
+    background-size: 200% 100% !important;
+    color: #111 !important;
+    border: none !important;
+    font-size: 16px !important;
+    font-weight: 900 !important;
+    letter-spacing: 2px !important;
+    padding: 16px 0 !important;
+    box-shadow: 0 0 25px rgba(255,215,0,0.8), 0 0 50px rgba(255,75,75,0.5) !important;
+    animation: shine 2s linear infinite !important;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+}
+
 @keyframes card-pulse {
     0%,100% { box-shadow: 0 0 0 rgba(255,215,0,0); }
     50% { box-shadow: 0 0 14px rgba(255,215,0,0.6); }
 }
 .card-pickable div[data-testid="stButton"] > button:not(:disabled) {
-    animation: card-pulse 2s ease-in-out infinite;
+    animation: card-pulse 3s ease-in-out infinite;
 }
 
 @keyframes pop-dmg {
@@ -267,7 +350,7 @@ div[data-testid="stButton"] > button[kind="primary"] {
     position: fixed; top: 35%; left: 50%;
     font-size: 52px; font-weight: 900; color: #FF4B4B;
     text-shadow: 0 0 20px #FF4B4B, 3px 3px 0 #000;
-    animation: pop-dmg 1.1s ease-out forwards;
+    animation: pop-dmg 1.5s ease-out forwards;
     pointer-events: none; z-index: 9999;
 }
 .dmg-pop.heal { color: #4ade80; text-shadow: 0 0 20px #4ade80, 3px 3px 0 #000; }
@@ -413,7 +496,7 @@ def fighter_html(name, emoji, hp, max_hp, np_val, max_np, side,
 # ============================================================
 # BAGIAN 5: STATE INIT
 # ============================================================
-if "fgo_v12" not in st.session_state:
+if "fgo_v14" not in st.session_state:
     st.session_state.servant = {"nama": "Mash", "hp": 150, "max_hp": 150, "np": 0, "max_np": 100, "atk": 22, "emoji": "🛡️", "url": URL_MASH}
     st.session_state.boss = {"nama": "Goetia", "hp": 350, "max_hp": 350, "atk": 20, "emoji": "👹", "url": URL_GOETIA}
     st.session_state.round = 1
@@ -440,9 +523,11 @@ if "fgo_v12" not in st.session_state:
     st.session_state.show_miss_enemy = False
     st.session_state.show_counter_ally = False
     st.session_state.show_counter_enemy = False
+    st.session_state.show_np_effect = False
+    st.session_state.np_title = ""
 
     st.session_state.anim_counter = 0
-    st.session_state.fgo_v12 = True
+    st.session_state.fgo_v14 = True
 
 servant = st.session_state.servant
 boss = st.session_state.boss
@@ -463,7 +548,6 @@ def hitung_prediksi_dmg(combo):
     return total
 
 def reset_efek_animasi():
-    """Reset semua efek animasi sebelum aksi baru."""
     st.session_state.show_shield_ally = False
     st.session_state.show_shield_enemy = False
     st.session_state.show_buff_enemy = False
@@ -485,7 +569,6 @@ def hitung_serangan_player():
     for i, tipe in enumerate(combo):
         mult = 1.0 + (i * 0.25)
 
-        # Evade check: 15% chance boss menghindar
         if random.random() < 0.15:
             ada_yang_miss = True
             st.session_state.battle_log.append(f"💨 Hit {i+1} [{tipe}]: **MISS!** Boss menghindar.")
@@ -524,7 +607,6 @@ def hitung_serangan_player():
         st.session_state.damage_popup = f"-{total_dmg}"
         st.session_state.sound_to_play = "hit"
 
-    # Counter chance: 25% boss balas setelah kena
     if ada_yang_kena and boss["hp"] > 0 and random.random() < 0.25:
         counter_dmg = int(boss["atk"] * random.uniform(0.4, 0.7))
         servant["hp"] = max(0, servant["hp"] - counter_dmg)
@@ -545,7 +627,6 @@ def hitung_serangan_musuh():
     st.session_state.anim_counter += 1
 
     if aksi == "Tebasan Kegelapan":
-        # Evade check: 20% player menghindar
         if random.random() < 0.20:
             st.session_state.show_miss_ally = True
             st.session_state.damage_popup = "MISS!"
@@ -583,6 +664,25 @@ def hitung_serangan_musuh():
         st.session_state.sound_to_play = "hit"
         st.session_state.battle_log.append(f"😈 **{boss['nama']}** *Bertahan* (-{d} HP)")
 
+def gunakan_noble_phantasm():
+    reset_efek_animasi()
+    if servant["np"] < servant["max_np"]:
+        return
+
+    total_dmg = int(servant["atk"] * random.uniform(6.0, 8.5))
+    boss["hp"] = max(0, boss["hp"] - total_dmg)
+    servant["np"] = 0
+
+    st.session_state.anim_counter += 1
+    st.session_state.servant_anim = "sprite-attack-right"
+    st.session_state.boss_anim = "sprite-hit"
+    st.session_state.show_np_effect = True
+    st.session_state.np_title = "NOBLE PHANTASM"
+    st.session_state.damage_popup = f"-{total_dmg}"
+    st.session_state.popup_type = "counter"
+    st.session_state.sound_to_play = "slash"
+    st.session_state.battle_log.append(f"💥 **NOBLE PHANTASM!** {total_dmg} DMG ke {boss['nama']}!")
+
 def reset_ke_select():
     st.session_state.antrean_combo = []
     st.session_state.indeks_terpakai = []
@@ -594,6 +694,8 @@ def reset_ke_select():
     st.session_state.servant_anim = "sprite-idle"
     st.session_state.boss_anim = "sprite-idle"
     reset_efek_animasi()
+    st.session_state.show_np_effect = False
+    st.session_state.np_title = ""
     st.session_state.anim_counter += 1
     st.session_state.round += 1
     # ============================================================
@@ -644,6 +746,14 @@ if st.session_state.damage_popup:
         cls += " counter"
     st.markdown(f"<div class='{cls}'>{st.session_state.damage_popup}</div>", unsafe_allow_html=True)
 
+if st.session_state.get("show_np_effect", False):
+    st.markdown(f"""
+    <div class='np-flash'></div>
+    <div class='np-slash s1'></div>
+    <div class='np-slash s2'></div>
+    <div class='np-title'>{st.session_state.np_title}</div>
+    """, unsafe_allow_html=True)
+
 if st.session_state.sound_to_play:
     if st.session_state.sound_to_play == "hit":
         play_sound_beep(220, 0.15, "hit")
@@ -674,7 +784,7 @@ if st.session_state.game_over:
         st.balloons()
     if st.button("🔄 Main Lagi", use_container_width=True, type="primary"):
         for k in list(st.session_state.keys()):
-            if k.startswith("fgo_v12"):
+            if k.startswith("fgo_v14"):
                 del st.session_state[k]
         st.rerun()
 
@@ -734,6 +844,15 @@ elif st.session_state.phase == "select":
             st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
+
+    if servant["np"] >= servant["max_np"]:
+        st.markdown("<div class='btn-np'>", unsafe_allow_html=True)
+        if st.button("💥 NOBLE PHANTASM — SIAP!", use_container_width=True):
+            gunakan_noble_phantasm()
+            st.session_state.phase = "player_attack"
+            st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
+
     b1, b2 = st.columns([3, 1])
     with b1:
         if st.button("⚔️  SERANG!", use_container_width=True, type="primary", disabled=len(st.session_state.antrean_combo) != 3):
@@ -747,18 +866,23 @@ elif st.session_state.phase == "select":
             st.rerun()
 
 elif st.session_state.phase == "player_attack":
+    # Delay animasi biar selesai dulu sebelum tombol muncul
+    time.sleep(1.6)
     st.info("💥 Seranganmu mengena! Tekan tombol untuk lanjut ke giliran musuh.")
     if st.button("▶️  LANJUT: GILIRAN MUSUH", use_container_width=True, type="primary"):
         st.session_state.servant_anim = "sprite-idle"
         st.session_state.boss_anim = "sprite-idle"
         st.session_state.damage_popup = ""
         st.session_state.popup_type = ""
+        st.session_state.show_np_effect = False
         reset_efek_animasi()
         hitung_serangan_musuh()
         st.session_state.phase = "enemy_attack"
         st.rerun()
 
 elif st.session_state.phase == "enemy_attack":
+    # Delay animasi biar selesai dulu
+    time.sleep(1.6)
     st.warning(f"😈 {boss['nama']} melakukan: **{st.session_state.boss_last_action}**")
     if st.button("▶️  LANJUT", use_container_width=True, type="primary"):
         if boss["hp"] <= 0 or servant["hp"] <= 0:
