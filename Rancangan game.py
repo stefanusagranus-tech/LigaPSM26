@@ -7,7 +7,7 @@ import requests
 st.set_page_config(page_title="FGO Arena JRPG", layout="centered", initial_sidebar_state="collapsed")
 
 # ============================================================
-# GANTI DENGAN URL GAMBAR KAMU (kosongkan kalau belum ada)
+# URL GAMBAR DARI GITHUB RAW
 # ============================================================
 URL_MASH   = "https://raw.githubusercontent.com/stefanusagranus-tech/LigaPSM26/main/assets/mash.png"
 URL_GOETIA = "https://raw.githubusercontent.com/stefanusagranus-tech/LigaPSM26/main/assets/goetia.png"
@@ -20,7 +20,6 @@ st.markdown("""
 header[data-testid="stHeader"] { background: transparent; }
 .block-container { padding-top: 1rem; padding-bottom: 1rem; max-width: 720px; }
 
-/* ============ ARENA ============ */
 .arena-wrap { display: flex; gap: 10px; margin-bottom: 8px; }
 .fighter {
     flex: 1;
@@ -35,7 +34,6 @@ header[data-testid="stHeader"] { background: transparent; }
 .fighter.enemy { border-color: #5a1f1f; box-shadow: 0 0 12px rgba(255,75,75,0.18); }
 .fighter.ally  { border-color: #1f3a5a; box-shadow: 0 0 12px rgba(28,131,225,0.18); }
 
-/* ============ SPRITE WRAP ============ */
 .sprite-wrap {
     display: flex;
     justify-content: center;
@@ -56,16 +54,12 @@ header[data-testid="stHeader"] { background: transparent; }
     filter: drop-shadow(0 0 8px rgba(255,255,255,0.15));
 }
 
-/* ============ LOOPING: IDLE BOB ============ */
 @keyframes idle-bob {
     0%,100% { transform: translateY(0); }
     50% { transform: translateY(-8px); }
 }
-[class*="sprite-idle"] {
-    animation: idle-bob 2.5s ease-in-out infinite;
-}
+[class*="sprite-idle"] { animation: idle-bob 2.5s ease-in-out infinite; }
 
-/* ============ LOOPING: GLOW PULSE (NP penuh) ============ */
 @keyframes glow-pulse {
     0%,100% { filter: drop-shadow(0 0 6px #FFD700); }
     50% { filter: drop-shadow(0 0 22px #FFD700); }
@@ -74,7 +68,6 @@ header[data-testid="stHeader"] { background: transparent; }
     animation: idle-bob 2.5s ease-in-out infinite, glow-pulse 1.2s ease-in-out infinite;
 }
 
-/* ============ ONE-SHOT: SHAKE (kena damage) ============ */
 @keyframes shake {
     0%,100% { transform: translateX(0) rotate(0deg); }
     20% { transform: translateX(-12px) rotate(-4deg); }
@@ -82,33 +75,24 @@ header[data-testid="stHeader"] { background: transparent; }
     60% { transform: translateX(-8px) rotate(-2deg); }
     80% { transform: translateX(8px) rotate(2deg); }
 }
-[class*="sprite-hit"] {
-    animation: shake 0.6s ease-out !important;
-}
+[class*="sprite-hit"] { animation: shake 0.6s ease-out !important; }
 
-/* ============ ONE-SHOT: LUNGE RIGHT (Player attack) ============ */
 @keyframes lunge-right {
     0% { transform: translateX(0) scale(1); }
     40% { transform: translateX(60px) scale(1.25); }
     60% { transform: translateX(70px) scale(1.3); }
     100% { transform: translateX(0) scale(1); }
 }
-[class*="sprite-attack-right"] {
-    animation: lunge-right 0.9s ease-out !important;
-}
+[class*="sprite-attack-right"] { animation: lunge-right 0.9s ease-out !important; }
 
-/* ============ ONE-SHOT: LUNGE LEFT (Enemy attack) ============ */
 @keyframes lunge-left {
     0% { transform: translateX(0) scale(1); }
     40% { transform: translateX(-60px) scale(1.25); }
     60% { transform: translateX(-70px) scale(1.3); }
     100% { transform: translateX(0) scale(1); }
 }
-[class*="sprite-attack-left"] {
-    animation: lunge-left 0.9s ease-out !important;
-}
+[class*="sprite-attack-left"] { animation: lunge-left 0.9s ease-out !important; }
 
-/* ============ ONE-SHOT: SHIELD (bertahan) ============ */
 @keyframes guard-shield {
     0% { opacity: 0; transform: translate(-50%,-50%) scale(0.3); }
     25% { opacity: 1; transform: translate(-50%,-50%) scale(1.2); }
@@ -127,7 +111,6 @@ header[data-testid="stHeader"] { background: transparent; }
     z-index: 5;
 }
 
-/* ============ ONE-SHOT: BUFF AURA (mengaum) ============ */
 @keyframes buff-aura {
     0% { opacity: 0; transform: translate(-50%,-50%) scale(0.5) rotate(0deg); }
     50% { opacity: 1; transform: translate(-50%,-50%) scale(1.3) rotate(180deg); }
@@ -143,6 +126,64 @@ header[data-testid="stHeader"] { background: transparent; }
     animation: buff-aura 1.2s ease-out forwards;
     pointer-events: none;
     z-index: 5;
+}
+
+/* ============ SLASH EFFECT ============ */
+@keyframes slash-line {
+    0% { opacity: 0; transform: translate(-50%,-50%) rotate(var(--rot, -45deg)) scaleX(0); }
+    20% { opacity: 1; transform: translate(-50%,-50%) rotate(var(--rot, -45deg)) scaleX(1); }
+    100% { opacity: 0; transform: translate(-50%,-50%) rotate(var(--rot, -45deg)) scaleX(1.2); }
+}
+.slash-mark {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 120px; height: 5px;
+    background: linear-gradient(90deg, transparent, #fff, #FF4B4B, #fff, transparent);
+    box-shadow: 0 0 20px #FF4B4B, 0 0 40px #FF4B4B;
+    animation: slash-line 0.6s ease-out forwards;
+    pointer-events: none;
+    z-index: 10;
+    border-radius: 3px;
+}
+.slash-mark.line-1 { --rot: -45deg; }
+.slash-mark.line-2 { --rot: -30deg; width: 140px; animation-delay: 0.08s; }
+.slash-mark.line-3 { --rot: -60deg; width: 100px; animation-delay: 0.16s; }
+
+/* ============ EVADE / MISS ============ */
+@keyframes miss-fade {
+    0% { opacity: 0; transform: translate(-50%,-50%) scale(0.5); }
+    30% { opacity: 1; transform: translate(-50%,-50%) scale(1.2); }
+    100% { opacity: 0; transform: translate(-50%,-100%) scale(1); }
+}
+.miss-pop {
+    position: absolute;
+    top: 50%; left: 50%;
+    font-size: 32px; font-weight: 900;
+    color: #4da6ff;
+    text-shadow: 0 0 12px #4da6ff, 2px 2px 0 #000;
+    animation: miss-fade 1s ease-out forwards;
+    pointer-events: none;
+    z-index: 11;
+    letter-spacing: 2px;
+}
+
+/* ============ COUNTER ATTACK ============ */
+@keyframes counter-burst {
+    0% { opacity: 0; transform: translate(-50%,-50%) scale(0.3) rotate(0deg); }
+    30% { opacity: 1; transform: translate(-50%,-50%) scale(1.3) rotate(180deg); }
+    100% { opacity: 0; transform: translate(-50%,-50%) scale(1.8) rotate(360deg); }
+}
+.counter-burst {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 130px; height: 130px;
+    border-radius: 50%;
+    border: 4px solid #ff4444;
+    box-shadow: 0 0 30px #ff4444, inset 0 0 30px rgba(255,68,68,0.6);
+    background: radial-gradient(circle, rgba(255,68,68,0.4) 0%, transparent 70%);
+    animation: counter-burst 0.9s ease-out forwards;
+    pointer-events: none;
+    z-index: 9;
 }
 
 /* ============ HP / NP BAR ============ */
@@ -164,11 +205,9 @@ header[data-testid="stHeader"] { background: transparent; }
 }
 .bar-label { font-size: 10px; color: #bbb; text-align: left; margin: 2px 0 4px 0; font-family: monospace; }
 
-/* ============ BUBBLE ============ */
 .bubble { display: inline-block; background: #ff9800; color: #111; font-weight: 700; font-size: 10px; padding: 3px 8px; border-radius: 10px; margin-top: 4px; }
 .bubble.enemy { background: #ef4444; color: #fff; }
 
-/* ============ ROUND BANNER ============ */
 @keyframes shine {
     0% { background-position: 0% 50%; }
     100% { background-position: 200% 50%; }
@@ -181,28 +220,23 @@ header[data-testid="stHeader"] { background: transparent; }
     padding: 6px; border-radius: 8px; margin: 12px 0; letter-spacing: 2px;
 }
 
-/* ============ SLOT COMBO ============ */
 .slot { border-radius: 8px; height: 34px; text-align: center; line-height: 34px; font-weight: 700; font-size: 12px; }
 .slot-empty { border: 2px dashed #3a3a4a; color: #555; background: rgba(255,255,255,0.02); }
 .slot-buster { border: 2px solid #FF4B4B; background: rgba(255,75,75,0.18); color: #FF4B4B; box-shadow: 0 0 8px rgba(255,75,75,0.3); }
 .slot-arts   { border: 2px solid #1C83E1; background: rgba(28,131,225,0.18); color: #4da6ff; box-shadow: 0 0 8px rgba(28,131,225,0.3); }
 .slot-quick  { border: 2px solid #09AB3B; background: rgba(9,171,59,0.18); color: #22d364; box-shadow: 0 0 8px rgba(9,171,59,0.3); }
 
-/* ============ PREDIKSI ============ */
 .predict { background: linear-gradient(90deg, #262730, #1a1a24); border-left: 4px solid #FFD700; padding: 8px 12px; border-radius: 6px; font-size: 12px; color: #ddd; margin: 6px 0; }
 
-/* ============ FIX MOBILE ============ */
 [data-testid="stHorizontalBlock"] { flex-wrap: nowrap !important; gap: 6px !important; }
 [data-testid="stHorizontalBlock"] > div { min-width: 0 !important; }
 
-/* ============ TOMBOL UMUM ============ */
 div[data-testid="stButton"] > button {
     width: 100%; border-radius: 10px; font-weight: 700; font-size: 12px;
     padding: 10px 0; transition: transform 0.15s ease, box-shadow 0.2s ease;
 }
 div[data-testid="stButton"] > button:hover { transform: translateY(-2px); }
 
-/* Tombol SERANG (primary) */
 div[data-testid="stButton"] > button[kind="primary"] {
     background: linear-gradient(90deg, #FF4B4B, #FFD700) !important;
     color: #111 !important;
@@ -215,7 +249,6 @@ div[data-testid="stButton"] > button[kind="primary"] {
     text-shadow: 0 1px 0 rgba(255,255,255,0.3);
 }
 
-/* ============ LOOPING: KARTU PICKABLE ============ */
 @keyframes card-pulse {
     0%,100% { box-shadow: 0 0 0 rgba(255,215,0,0); }
     50% { box-shadow: 0 0 14px rgba(255,215,0,0.6); }
@@ -224,7 +257,6 @@ div[data-testid="stButton"] > button[kind="primary"] {
     animation: card-pulse 2s ease-in-out infinite;
 }
 
-/* ============ ONE-SHOT: DAMAGE POPUP ============ */
 @keyframes pop-dmg {
     0% { opacity: 0; transform: translate(-50%,-30%) scale(0.4); }
     25% { opacity: 1; transform: translate(-50%,-50%) scale(1.4); }
@@ -240,8 +272,9 @@ div[data-testid="stButton"] > button[kind="primary"] {
 }
 .dmg-pop.heal { color: #4ade80; text-shadow: 0 0 20px #4ade80, 3px 3px 0 #000; }
 .dmg-pop.buff { color: #FFD700; text-shadow: 0 0 20px #FFD700, 3px 3px 0 #000; }
+.dmg-pop.miss { color: #4da6ff; text-shadow: 0 0 20px #4da6ff, 3px 3px 0 #000; }
+.dmg-pop.counter { color: #ff4444; text-shadow: 0 0 20px #ff4444, 3px 3px 0 #000; }
 
-/* Hide audio player dari st.audio kalau dipakai */
 div[data-testid="stAudio"] {
     position: absolute; left: -9999px;
     width: 1px; height: 1px; opacity: 0;
@@ -252,7 +285,7 @@ div[data-testid="stAudio"] {
 st.markdown("<h3 style='text-align:center; margin:0 0 8px 0; letter-spacing:1px;'>🛡️ FGO ARENA</h3>", unsafe_allow_html=True)
 
 # ============================================================
-# BAGIAN 2: SOUND (pakai components.html biar script jalan)
+# BAGIAN 2: SOUND
 # ============================================================
 def play_sound_beep(freq=440, duration=0.1, kind="hit"):
     if kind == "hit":
@@ -288,6 +321,17 @@ def play_sound_beep(freq=440, duration=0.1, kind="hit"):
             osc.connect(gain); gain.connect(ctx.destination);
             osc.start(); osc.stop(ctx.currentTime+{duration});
         }})();</script>"""
+    elif kind == "miss":
+        js = f"""<script>(function(){{
+            const ctx = new (window.AudioContext||window.webkitAudioContext)();
+            const osc = ctx.createOscillator(); const gain = ctx.createGain();
+            osc.type='triangle'; osc.frequency.setValueAtTime({freq*2},ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime({freq*0.5},ctx.currentTime+{duration});
+            gain.gain.setValueAtTime(0.08,ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+{duration});
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.start(); osc.stop(ctx.currentTime+{duration});
+        }})();</script>"""
     else:
         return
     components.html(js, height=0)
@@ -304,8 +348,7 @@ def load_lottie(url):
     except Exception:
         pass
     return None
-
-# ============================================================
+    # ============================================================
 # BAGIAN 4: FUNGSI GAME
 # ============================================================
 def acak_5_kartu():
@@ -324,15 +367,27 @@ def bar_html(label, value, max_value, fill_class, extra_class=""):
         f"style='width:{pct}%;'></div></div>"
     )
 
-def sprite_html(url_img, emoji, anim_class="", counter=0):
+def sprite_html(url_img, emoji, anim_class="", counter=0, show_slash=False, show_miss=False, show_counter=False):
     unique_class = f"{anim_class} anim-{counter}" if anim_class else f"anim-{counter}"
+    overlay = ""
+    if show_slash:
+        overlay += (
+            f"<div class='slash-mark line-1 anim-{counter}'></div>"
+            f"<div class='slash-mark line-2 anim-{counter}'></div>"
+            f"<div class='slash-mark line-3 anim-{counter}'></div>"
+        )
+    if show_miss:
+        overlay += f"<div class='miss-pop anim-{counter}'>MISS!</div>"
+    if show_counter:
+        overlay += f"<div class='counter-burst anim-{counter}'></div>"
     if url_img:
-        return f"<div class='sprite-wrap'><img class='sprite-img {unique_class}' src='{url_img}'></div>"
-    return f"<div class='sprite-wrap'><div class='sprite-emoji {unique_class}'>{emoji}</div></div>"
+        return f"<div class='sprite-wrap'>{overlay}<img class='sprite-img {unique_class}' src='{url_img}'></div>"
+    return f"<div class='sprite-wrap'>{overlay}<div class='sprite-emoji {unique_class}'>{emoji}</div></div>"
 
 def fighter_html(name, emoji, hp, max_hp, np_val, max_np, side,
                  anim_class="", np_ready=False, url_img="",
-                 show_shield=False, show_buff=False, counter=0):
+                 show_shield=False, show_buff=False, show_slash=False,
+                 show_miss=False, show_counter=False, counter=0):
     hp_pct = hp / max_hp
     if anim_class:
         sprite_anim = anim_class
@@ -342,7 +397,7 @@ def fighter_html(name, emoji, hp, max_hp, np_val, max_np, side,
         sprite_anim = "sprite-idle"
 
     html = f"<div class='fighter {side}'>"
-    html += sprite_html(url_img, emoji, sprite_anim, counter)
+    html += sprite_html(url_img, emoji, sprite_anim, counter, show_slash, show_miss, show_counter)
     if show_shield:
         html += f"<div class='shield-overlay anim-{counter}'></div>"
     if show_buff:
@@ -358,7 +413,7 @@ def fighter_html(name, emoji, hp, max_hp, np_val, max_np, side,
 # ============================================================
 # BAGIAN 5: STATE INIT
 # ============================================================
-if "fgo_v11" not in st.session_state:
+if "fgo_v12" not in st.session_state:
     st.session_state.servant = {"nama": "Mash", "hp": 150, "max_hp": 150, "np": 0, "max_np": 100, "atk": 22, "emoji": "🛡️", "url": URL_MASH}
     st.session_state.boss = {"nama": "Goetia", "hp": 350, "max_hp": 350, "atk": 20, "emoji": "👹", "url": URL_GOETIA}
     st.session_state.round = 1
@@ -370,26 +425,27 @@ if "fgo_v11" not in st.session_state:
     st.session_state.game_over = False
     st.session_state.phase = "select"
 
-    # Efek state
     st.session_state.damage_popup = ""
     st.session_state.popup_type = ""
     st.session_state.sound_to_play = ""
 
-    # Animasi state
     st.session_state.servant_anim = "sprite-idle"
     st.session_state.boss_anim = "sprite-idle"
     st.session_state.show_shield_ally = False
     st.session_state.show_shield_enemy = False
     st.session_state.show_buff_enemy = False
+    st.session_state.show_slash_enemy = False
+    st.session_state.show_slash_ally = False
+    st.session_state.show_miss_ally = False
+    st.session_state.show_miss_enemy = False
+    st.session_state.show_counter_ally = False
+    st.session_state.show_counter_enemy = False
 
-    # Counter unik untuk restart animasi CSS
     st.session_state.anim_counter = 0
-
-    st.session_state.fgo_v11 = True
+    st.session_state.fgo_v12 = True
 
 servant = st.session_state.servant
 boss = st.session_state.boss
-
 # ============================================================
 # BAGIAN 6: LOGIKA
 # ============================================================
@@ -406,13 +462,36 @@ def hitung_prediksi_dmg(combo):
             total += int(servant["atk"] * 0.9 * mult)
     return total
 
+def reset_efek_animasi():
+    """Reset semua efek animasi sebelum aksi baru."""
+    st.session_state.show_shield_ally = False
+    st.session_state.show_shield_enemy = False
+    st.session_state.show_buff_enemy = False
+    st.session_state.show_slash_enemy = False
+    st.session_state.show_slash_ally = False
+    st.session_state.show_miss_ally = False
+    st.session_state.show_miss_enemy = False
+    st.session_state.show_counter_ally = False
+    st.session_state.show_counter_enemy = False
+
 def hitung_serangan_player():
+    reset_efek_animasi()
     combo = st.session_state.antrean_combo
     is_chain = len(set(combo)) == 1
     total_dmg = 0
+    ada_yang_kena = False
+    ada_yang_miss = False
 
     for i, tipe in enumerate(combo):
         mult = 1.0 + (i * 0.25)
+
+        # Evade check: 15% chance boss menghindar
+        if random.random() < 0.15:
+            ada_yang_miss = True
+            st.session_state.battle_log.append(f"💨 Hit {i+1} [{tipe}]: **MISS!** Boss menghindar.")
+            continue
+
+        ada_yang_kena = True
         if tipe == "Buster":
             dmg = int(servant["atk"] * (2.2 if is_chain else 1.6) * mult + random.randint(-2, 2))
             boss["hp"] = max(0, boss["hp"] - dmg)
@@ -432,15 +511,30 @@ def hitung_serangan_player():
             total_dmg += dmg
             st.session_state.battle_log.append(f"🟢 Hit {i+1} [Quick]: {dmg} DMG (+12% NP)")
 
-    # Trigger animasi player
     st.session_state.anim_counter += 1
     st.session_state.servant_anim = "sprite-attack-right"
-    st.session_state.boss_anim = "sprite-hit"
-    st.session_state.damage_popup = f"-{total_dmg}"
-    st.session_state.popup_type = ""
-    st.session_state.sound_to_play = "hit"
+
+    if ada_yang_miss:
+        st.session_state.show_miss_enemy = True
+        st.session_state.sound_to_play = "miss"
+        st.session_state.popup_type = "miss"
+    if ada_yang_kena:
+        st.session_state.show_slash_enemy = True
+        st.session_state.boss_anim = "sprite-hit"
+        st.session_state.damage_popup = f"-{total_dmg}"
+        st.session_state.sound_to_play = "hit"
+
+    # Counter chance: 25% boss balas setelah kena
+    if ada_yang_kena and boss["hp"] > 0 and random.random() < 0.25:
+        counter_dmg = int(boss["atk"] * random.uniform(0.4, 0.7))
+        servant["hp"] = max(0, servant["hp"] - counter_dmg)
+        st.session_state.battle_log.append(f"⚡ **{boss['nama']}** melakukan **COUNTER** (-{counter_dmg} HP)!")
+        st.session_state.show_counter_enemy = True
+        st.session_state.show_counter_ally = True
+        st.session_state.servant_anim = "sprite-hit"
 
 def hitung_serangan_musuh():
+    reset_efek_animasi()
     if boss["hp"] <= 0:
         st.session_state.boss_last_action = "Tumbang"
         st.session_state.boss_anim = "sprite-idle"
@@ -451,14 +545,23 @@ def hitung_serangan_musuh():
     st.session_state.anim_counter += 1
 
     if aksi == "Tebasan Kegelapan":
-        d = int(boss["atk"] * random.uniform(0.9, 1.3))
-        servant["hp"] = max(0, servant["hp"] - d)
-        st.session_state.boss_anim = "sprite-attack-left"
-        st.session_state.servant_anim = "sprite-hit"
-        st.session_state.damage_popup = f"-{d}"
-        st.session_state.popup_type = ""
-        st.session_state.sound_to_play = "slash"
-        st.session_state.battle_log.append(f"😈 **{boss['nama']}** *{aksi}* (-{d} HP)")
+        # Evade check: 20% player menghindar
+        if random.random() < 0.20:
+            st.session_state.show_miss_ally = True
+            st.session_state.damage_popup = "MISS!"
+            st.session_state.popup_type = "miss"
+            st.session_state.sound_to_play = "miss"
+            st.session_state.battle_log.append(f"💨 **{boss['nama']}** menyerang, tapi **MISS!**")
+        else:
+            d = int(boss["atk"] * random.uniform(0.9, 1.3))
+            servant["hp"] = max(0, servant["hp"] - d)
+            st.session_state.boss_anim = "sprite-attack-left"
+            st.session_state.servant_anim = "sprite-hit"
+            st.session_state.show_slash_ally = True
+            st.session_state.damage_popup = f"-{d}"
+            st.session_state.popup_type = ""
+            st.session_state.sound_to_play = "slash"
+            st.session_state.battle_log.append(f"😈 **{boss['nama']}** *{aksi}* (-{d} HP)")
 
     elif aksi == "Mengaum (Buff ATK)":
         boss["atk"] += 2
@@ -490,13 +593,10 @@ def reset_ke_select():
     st.session_state.sound_to_play = ""
     st.session_state.servant_anim = "sprite-idle"
     st.session_state.boss_anim = "sprite-idle"
-    st.session_state.show_shield_ally = False
-    st.session_state.show_shield_enemy = False
-    st.session_state.show_buff_enemy = False
+    reset_efek_animasi()
     st.session_state.anim_counter += 1
     st.session_state.round += 1
-
-# ============================================================
+    # ============================================================
 # BAGIAN 7: RENDER ARENA
 # ============================================================
 np_ready = servant["np"] >= servant["max_np"]
@@ -509,6 +609,9 @@ arena_html += fighter_html(
     url_img=boss.get("url", ""),
     show_shield=st.session_state.show_shield_enemy,
     show_buff=st.session_state.show_buff_enemy,
+    show_slash=st.session_state.show_slash_enemy,
+    show_miss=st.session_state.show_miss_enemy,
+    show_counter=st.session_state.show_counter_enemy,
     counter=st.session_state.anim_counter,
 )
 arena_html += fighter_html(
@@ -518,6 +621,9 @@ arena_html += fighter_html(
     np_ready=np_ready,
     url_img=servant.get("url", ""),
     show_shield=st.session_state.show_shield_ally,
+    show_slash=st.session_state.show_slash_ally,
+    show_miss=st.session_state.show_miss_ally,
+    show_counter=st.session_state.show_counter_ally,
     counter=st.session_state.anim_counter,
 )
 arena_html += "</div>"
@@ -532,6 +638,10 @@ if st.session_state.damage_popup:
         cls += " heal"
     elif st.session_state.popup_type == "buff":
         cls += " buff"
+    elif st.session_state.popup_type == "miss":
+        cls += " miss"
+    elif st.session_state.popup_type == "counter":
+        cls += " counter"
     st.markdown(f"<div class='{cls}'>{st.session_state.damage_popup}</div>", unsafe_allow_html=True)
 
 if st.session_state.sound_to_play:
@@ -541,6 +651,8 @@ if st.session_state.sound_to_play:
         play_sound_beep(440, 0.2, "slash")
     elif st.session_state.sound_to_play == "buff":
         play_sound_beep(330, 0.25, "buff")
+    elif st.session_state.sound_to_play == "miss":
+        play_sound_beep(600, 0.2, "miss")
 st.session_state.sound_to_play = ""
 
 # ============================================================
@@ -562,7 +674,7 @@ if st.session_state.game_over:
         st.balloons()
     if st.button("🔄 Main Lagi", use_container_width=True, type="primary"):
         for k in list(st.session_state.keys()):
-            if k.startswith("fgo_v11"):
+            if k.startswith("fgo_v12"):
                 del st.session_state[k]
         st.rerun()
 
@@ -582,7 +694,6 @@ elif st.session_state.phase == "select":
     sisa = max(0, boss["hp"] - pred)
     st.markdown(f"<div class='predict'>📊 Prediksi: <b style='color:#FFD700;'>{pred} DMG</b> &nbsp;·&nbsp; Sisa HP Boss: <b>{sisa}</b></div>", unsafe_allow_html=True)
 
-    # ===== KARTU AKSI 5 SEJAJAR + WARNA DINAMIS =====
     st.markdown("<div style='font-size:12px; color:#aaa; margin:6px 0 4px 0;'>🃏 Pilih Kartu Aksi</div>", unsafe_allow_html=True)
 
     kartu_css = ""
@@ -622,7 +733,6 @@ elif st.session_state.phase == "select":
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
 
-    # ===== TOMBOL SERANG + RESET =====
     st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
     b1, b2 = st.columns([3, 1])
     with b1:
@@ -643,6 +753,7 @@ elif st.session_state.phase == "player_attack":
         st.session_state.boss_anim = "sprite-idle"
         st.session_state.damage_popup = ""
         st.session_state.popup_type = ""
+        reset_efek_animasi()
         hitung_serangan_musuh()
         st.session_state.phase = "enemy_attack"
         st.rerun()
