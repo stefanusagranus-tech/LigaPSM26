@@ -1,16 +1,16 @@
 import streamlit as st
 import random
-import base64
+import streamlit.components.v1 as components
 from streamlit_lottie import st_lottie
 import requests
 
 st.set_page_config(page_title="FGO Arena JRPG", layout="centered", initial_sidebar_state="collapsed")
 
 # ============================================================
-# GANTI INI DENGAN URL GAMBAR KAMU
+# GANTI DENGAN URL GAMBAR KAMU (kosongkan kalau belum ada)
 # ============================================================
-URL_MASH   = ""  # contoh: "https://raw.githubusercontent.com/USER/REPO/main/assets/mash.png"
-URL_GOETIA = ""  # contoh: "https://raw.githubusercontent.com/USER/REPO/main/assets/goetia.png"
+URL_MASH   = ""   # contoh: "https://raw.githubusercontent.com/USER/REPO/main/assets/mash.png"
+URL_GOETIA = ""   # contoh: "https://raw.githubusercontent.com/USER/REPO/main/assets/goetia.png"
 
 # ============================================================
 # BAGIAN 1: CSS GLOBAL
@@ -31,17 +31,16 @@ header[data-testid="stHeader"] { background: transparent; }
     text-align: center;
     position: relative;
     overflow: hidden;
-    transition: transform 0.3s ease;
 }
 .fighter.enemy { border-color: #5a1f1f; box-shadow: 0 0 12px rgba(255,75,75,0.18); }
 .fighter.ally  { border-color: #1f3a5a; box-shadow: 0 0 12px rgba(28,131,225,0.18); }
 
-/* ============ SPRITE (GAMBAR / EMOJI) ============ */
+/* ============ SPRITE WRAP ============ */
 .sprite-wrap {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 110px;
+    height: 120px;
     margin: 6px 0;
     position: relative;
 }
@@ -52,7 +51,7 @@ header[data-testid="stHeader"] { background: transparent; }
     filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
 }
 .sprite-emoji {
-    font-size: 72px;
+    font-size: 76px;
     line-height: 1;
     filter: drop-shadow(0 0 8px rgba(255,255,255,0.15));
 }
@@ -62,7 +61,7 @@ header[data-testid="stHeader"] { background: transparent; }
     0%,100% { transform: translateY(0); }
     50% { transform: translateY(-8px); }
 }
-.sprite-idle {
+[class*="sprite-idle"] {
     animation: idle-bob 2.5s ease-in-out infinite;
 }
 
@@ -71,93 +70,79 @@ header[data-testid="stHeader"] { background: transparent; }
     0%,100% { filter: drop-shadow(0 0 6px #FFD700); }
     50% { filter: drop-shadow(0 0 22px #FFD700); }
 }
-.sprite-np {
+[class*="sprite-np"] {
     animation: idle-bob 2.5s ease-in-out infinite, glow-pulse 1.2s ease-in-out infinite;
 }
 
 /* ============ ONE-SHOT: SHAKE (kena damage) ============ */
 @keyframes shake {
-    0%,100% { transform: translateX(0); }
-    20% { transform: translateX(-10px) rotate(-3deg); }
-    40% { transform: translateX(10px) rotate(3deg); }
+    0%,100% { transform: translateX(0) rotate(0deg); }
+    20% { transform: translateX(-12px) rotate(-4deg); }
+    40% { transform: translateX(12px) rotate(4deg); }
     60% { transform: translateX(-8px) rotate(-2deg); }
     80% { transform: translateX(8px) rotate(2deg); }
 }
-.sprite-hit {
-    animation: shake 0.5s ease !important;
+[class*="sprite-hit"] {
+    animation: shake 0.6s ease-out !important;
 }
 
-/* ============ ONE-SHOT: ATTACK LUNGE ============ */
-/* Player lunge: maju ke kanan lalu kembali */
+/* ============ ONE-SHOT: LUNGE RIGHT (Player attack) ============ */
 @keyframes lunge-right {
     0% { transform: translateX(0) scale(1); }
-    30% { transform: translateX(40px) scale(1.15); }
-    50% { transform: translateX(50px) scale(1.2); }
+    40% { transform: translateX(60px) scale(1.25); }
+    60% { transform: translateX(70px) scale(1.3); }
     100% { transform: translateX(0) scale(1); }
 }
-.sprite-attack-right {
-    animation: lunge-right 0.7s ease-out !important;
+[class*="sprite-attack-right"] {
+    animation: lunge-right 0.9s ease-out !important;
 }
 
-/* Musuh lunge: maju ke kiri lalu kembali */
+/* ============ ONE-SHOT: LUNGE LEFT (Enemy attack) ============ */
 @keyframes lunge-left {
     0% { transform: translateX(0) scale(1); }
-    30% { transform: translateX(-40px) scale(1.15); }
-    50% { transform: translateX(-50px) scale(1.2); }
+    40% { transform: translateX(-60px) scale(1.25); }
+    60% { transform: translateX(-70px) scale(1.3); }
     100% { transform: translateX(0) scale(1); }
 }
-.sprite-attack-left {
-    animation: lunge-left 0.7s ease-out !important;
+[class*="sprite-attack-left"] {
+    animation: lunge-left 0.9s ease-out !important;
 }
 
-/* ============ ONE-SHOT: GUARD / BERTAHAN ============ */
+/* ============ ONE-SHOT: SHIELD (bertahan) ============ */
 @keyframes guard-shield {
     0% { opacity: 0; transform: translate(-50%,-50%) scale(0.3); }
     25% { opacity: 1; transform: translate(-50%,-50%) scale(1.2); }
     60% { opacity: 1; transform: translate(-50%,-50%) scale(1); }
-    100% { opacity: 0; transform: translate(-50%,-50%) scale(1.5); }
+    100% { opacity: 0; transform: translate(-50%,-50%) scale(1.6); }
 }
-.shield-overlay {
-    position: absolute;
-    top: 50%; left: 50%;
-    width: 130px; height: 130px;
-    border-radius: 50%;
-    border: 4px solid #4da6ff;
-    box-shadow: 0 0 30px #4da6ff, inset 0 0 30px rgba(77,166,255,0.5);
-    animation: guard-shield 1s ease-out forwards;
-    pointer-events: none;
-    z-index: 5;
-}
-
-/* ============ ONE-SHOT: BUFF AURA ============ */
-@keyframes buff-aura {
-    0% { opacity: 0; transform: translate(-50%,-50%) scale(0.5) rotate(0deg); }
-    50% { opacity: 1; transform: translate(-50%,-50%) scale(1.2) rotate(180deg); }
-    100% { opacity: 0; transform: translate(-50%,-50%) scale(1.5) rotate(360deg); }
-}
-.buff-overlay {
+[class*="shield-overlay"] {
     position: absolute;
     top: 50%; left: 50%;
     width: 140px; height: 140px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,215,0,0.5) 0%, rgba(255,215,0,0) 70%);
-    border: 2px dashed #FFD700;
-    animation: buff-aura 1s ease-out forwards;
+    border: 5px solid #4da6ff;
+    box-shadow: 0 0 40px #4da6ff, inset 0 0 40px rgba(77,166,255,0.6);
+    animation: guard-shield 1.2s ease-out forwards;
     pointer-events: none;
     z-index: 5;
 }
 
-/* ============ ONE-SHOT: FLASH MERAH ============ */
-@keyframes flash-red {
-    0% { background: rgba(255,75,75,0.7); }
-    100% { background: transparent; }
+/* ============ ONE-SHOT: BUFF AURA (mengaum) ============ */
+@keyframes buff-aura {
+    0% { opacity: 0; transform: translate(-50%,-50%) scale(0.5) rotate(0deg); }
+    50% { opacity: 1; transform: translate(-50%,-50%) scale(1.3) rotate(180deg); }
+    100% { opacity: 0; transform: translate(-50%,-50%) scale(1.8) rotate(360deg); }
 }
-.fighter.hit-flash::after {
-    content: '';
-    position: absolute; inset: 0;
-    border-radius: 12px;
-    animation: flash-red 0.5s ease;
+[class*="buff-overlay"] {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 150px; height: 150px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,215,0,0.6) 0%, rgba(255,215,0,0) 70%);
+    border: 3px dashed #FFD700;
+    animation: buff-aura 1.2s ease-out forwards;
     pointer-events: none;
+    z-index: 5;
 }
 
 /* ============ HP / NP BAR ============ */
@@ -210,7 +195,7 @@ header[data-testid="stHeader"] { background: transparent; }
 [data-testid="stHorizontalBlock"] { flex-wrap: nowrap !important; gap: 6px !important; }
 [data-testid="stHorizontalBlock"] > div { min-width: 0 !important; }
 
-/* ============ TOMBOL ============ */
+/* ============ TOMBOL UMUM ============ */
 div[data-testid="stButton"] > button {
     width: 100%; border-radius: 10px; font-weight: 700; font-size: 12px;
     padding: 10px 0; transition: transform 0.15s ease, box-shadow 0.2s ease;
@@ -255,13 +240,19 @@ div[data-testid="stButton"] > button[kind="primary"] {
 }
 .dmg-pop.heal { color: #4ade80; text-shadow: 0 0 20px #4ade80, 3px 3px 0 #000; }
 .dmg-pop.buff { color: #FFD700; text-shadow: 0 0 20px #FFD700, 3px 3px 0 #000; }
+
+/* Hide audio player dari st.audio kalau dipakai */
+div[data-testid="stAudio"] {
+    position: absolute; left: -9999px;
+    width: 1px; height: 1px; opacity: 0;
+}
 </style>
 """, unsafe_allow_html=True)
 
 st.markdown("<h3 style='text-align:center; margin:0 0 8px 0; letter-spacing:1px;'>🛡️ FGO ARENA</h3>", unsafe_allow_html=True)
 
 # ============================================================
-# BAGIAN 2: SOUND EFFECT
+# BAGIAN 2: SOUND (pakai components.html biar script jalan)
 # ============================================================
 def play_sound_beep(freq=440, duration=0.1, kind="hit"):
     if kind == "hit":
@@ -297,7 +288,9 @@ def play_sound_beep(freq=440, duration=0.1, kind="hit"):
             osc.connect(gain); gain.connect(ctx.destination);
             osc.start(); osc.stop(ctx.currentTime+{duration});
         }})();</script>"""
-    st.markdown(js, unsafe_allow_html=True)
+    else:
+        return
+    components.html(js, height=0)
 
 # ============================================================
 # BAGIAN 3: LOTTIE LOADER
@@ -331,17 +324,16 @@ def bar_html(label, value, max_value, fill_class, extra_class=""):
         f"style='width:{pct}%;'></div></div>"
     )
 
-def sprite_html(url_img, emoji, anim_class=""):
-    """Render gambar kalau ada URL, fallback ke emoji."""
+def sprite_html(url_img, emoji, anim_class="", counter=0):
+    unique_class = f"{anim_class} anim-{counter}" if anim_class else f"anim-{counter}"
     if url_img:
-        return f"<div class='sprite-wrap'><img class='sprite-img {anim_class}' src='{url_img}'></div>"
-    return f"<div class='sprite-wrap'><div class='sprite-emoji {anim_class}'>{emoji}</div></div>"
+        return f"<div class='sprite-wrap'><img class='sprite-img {unique_class}' src='{url_img}'></div>"
+    return f"<div class='sprite-wrap'><div class='sprite-emoji {unique_class}'>{emoji}</div></div>"
 
 def fighter_html(name, emoji, hp, max_hp, np_val, max_np, side,
                  anim_class="", np_ready=False, url_img="",
-                 show_shield=False, show_buff=False):
+                 show_shield=False, show_buff=False, counter=0):
     hp_pct = hp / max_hp
-    # Tentukan animasi: idle default, atau animasi khusus
     if anim_class:
         sprite_anim = anim_class
     elif np_ready and side == "ally":
@@ -350,12 +342,11 @@ def fighter_html(name, emoji, hp, max_hp, np_val, max_np, side,
         sprite_anim = "sprite-idle"
 
     html = f"<div class='fighter {side}'>"
-    html += sprite_html(url_img, emoji, sprite_anim)
-    # Overlay efek (shield / buff)
+    html += sprite_html(url_img, emoji, sprite_anim, counter)
     if show_shield:
-        html += "<div class='shield-overlay'></div>"
+        html += f"<div class='shield-overlay anim-{counter}'></div>"
     if show_buff:
-        html += "<div class='buff-overlay'></div>"
+        html += f"<div class='buff-overlay anim-{counter}'></div>"
     html += f"<div class='fname'>{name}</div>"
     html += bar_html("HP", hp, max_hp, hp_class(hp_pct))
     if side == "ally":
@@ -365,9 +356,9 @@ def fighter_html(name, emoji, hp, max_hp, np_val, max_np, side,
     return html
 
 # ============================================================
-# BAGIAN 5: STATE
+# BAGIAN 5: STATE INIT
 # ============================================================
-if "fgo_v10" not in st.session_state:
+if "fgo_v11" not in st.session_state:
     st.session_state.servant = {"nama": "Mash", "hp": 150, "max_hp": 150, "np": 0, "max_np": 100, "atk": 22, "emoji": "🛡️", "url": URL_MASH}
     st.session_state.boss = {"nama": "Goetia", "hp": 350, "max_hp": 350, "atk": 20, "emoji": "👹", "url": URL_GOETIA}
     st.session_state.round = 1
@@ -383,20 +374,21 @@ if "fgo_v10" not in st.session_state:
     st.session_state.damage_popup = ""
     st.session_state.popup_type = ""
     st.session_state.sound_to_play = ""
-    st.session_state.lottie_effect = ""
 
     # Animasi state
-    st.session_state.servant_anim = "sprite-idle"    # idle / attack-right / hit / guard
-    st.session_state.boss_anim = "sprite-idle"       # idle / attack-left / hit / guard / buff
+    st.session_state.servant_anim = "sprite-idle"
+    st.session_state.boss_anim = "sprite-idle"
     st.session_state.show_shield_ally = False
     st.session_state.show_shield_enemy = False
     st.session_state.show_buff_enemy = False
 
-    st.session_state.fgo_v10 = True
+    # Counter unik untuk restart animasi CSS
+    st.session_state.anim_counter = 0
+
+    st.session_state.fgo_v11 = True
 
 servant = st.session_state.servant
 boss = st.session_state.boss
-
 
 # ============================================================
 # BAGIAN 6: LOGIKA
@@ -440,7 +432,8 @@ def hitung_serangan_player():
             total_dmg += dmg
             st.session_state.battle_log.append(f"🟢 Hit {i+1} [Quick]: {dmg} DMG (+12% NP)")
 
-    # Trigger efek serangan player
+    # Trigger animasi player
+    st.session_state.anim_counter += 1
     st.session_state.servant_anim = "sprite-attack-right"
     st.session_state.boss_anim = "sprite-hit"
     st.session_state.damage_popup = f"-{total_dmg}"
@@ -455,6 +448,7 @@ def hitung_serangan_musuh():
 
     aksi = random.choice(["Tebasan Kegelapan", "Mengaum (Buff ATK)", "Kuda-Kuda Bertahan"])
     st.session_state.boss_last_action = aksi
+    st.session_state.anim_counter += 1
 
     if aksi == "Tebasan Kegelapan":
         d = int(boss["atk"] * random.uniform(0.9, 1.3))
@@ -475,7 +469,7 @@ def hitung_serangan_musuh():
         st.session_state.sound_to_play = "buff"
         st.session_state.battle_log.append(f"😈 **{boss['nama']}** *Mengaum* (+2 ATK)")
 
-    else:  # Kuda-Kuda Bertahan
+    else:
         d = int(boss["atk"] * 0.6)
         servant["hp"] = max(0, servant["hp"] - d)
         st.session_state.boss_anim = "sprite-idle"
@@ -499,6 +493,7 @@ def reset_ke_select():
     st.session_state.show_shield_ally = False
     st.session_state.show_shield_enemy = False
     st.session_state.show_buff_enemy = False
+    st.session_state.anim_counter += 1
     st.session_state.round += 1
 
 # ============================================================
@@ -514,6 +509,7 @@ arena_html += fighter_html(
     url_img=boss.get("url", ""),
     show_shield=st.session_state.show_shield_enemy,
     show_buff=st.session_state.show_buff_enemy,
+    counter=st.session_state.anim_counter,
 )
 arena_html += fighter_html(
     f"🛡️ {servant['nama']}", servant["emoji"],
@@ -522,6 +518,7 @@ arena_html += fighter_html(
     np_ready=np_ready,
     url_img=servant.get("url", ""),
     show_shield=st.session_state.show_shield_ally,
+    counter=st.session_state.anim_counter,
 )
 arena_html += "</div>"
 st.markdown(arena_html, unsafe_allow_html=True)
@@ -537,7 +534,6 @@ if st.session_state.damage_popup:
         cls += " buff"
     st.markdown(f"<div class='{cls}'>{st.session_state.damage_popup}</div>", unsafe_allow_html=True)
 
-# Sound
 if st.session_state.sound_to_play:
     if st.session_state.sound_to_play == "hit":
         play_sound_beep(220, 0.15, "hit")
@@ -566,7 +562,7 @@ if st.session_state.game_over:
         st.balloons()
     if st.button("🔄 Main Lagi", use_container_width=True, type="primary"):
         for k in list(st.session_state.keys()):
-            if k.startswith("fgo_v10"):
+            if k.startswith("fgo_v11"):
                 del st.session_state[k]
         st.rerun()
 
@@ -589,7 +585,6 @@ elif st.session_state.phase == "select":
     # ===== KARTU AKSI 5 SEJAJAR + WARNA DINAMIS =====
     st.markdown("<div style='font-size:12px; color:#aaa; margin:6px 0 4px 0;'>🃏 Pilih Kartu Aksi</div>", unsafe_allow_html=True)
 
-    # Generate CSS dinamis per posisi kartu
     kartu_css = ""
     warna_map = {
         "Buster": ("#FF4B4B", "rgba(255,75,75,0.30)", "rgba(255,75,75,0.08)", "#ff8080", "rgba(255,75,75,0.5)"),
@@ -644,12 +639,10 @@ elif st.session_state.phase == "select":
 elif st.session_state.phase == "player_attack":
     st.info("💥 Seranganmu mengena! Tekan tombol untuk lanjut ke giliran musuh.")
     if st.button("▶️  LANJUT: GILIRAN MUSUH", use_container_width=True, type="primary"):
-        # Reset efek animasi player
         st.session_state.servant_anim = "sprite-idle"
         st.session_state.boss_anim = "sprite-idle"
         st.session_state.damage_popup = ""
         st.session_state.popup_type = ""
-        # Trigger serangan musuh
         hitung_serangan_musuh()
         st.session_state.phase = "enemy_attack"
         st.rerun()
