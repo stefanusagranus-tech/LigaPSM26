@@ -110,7 +110,7 @@ with col_servant:
     st.progress(servant["np"] / servant["max_np"], text=f"NP Gauge: {servant['np']}%")
 
 with col_boss:
-    st.subheader(f"😈 {boss['boss' in boss and boss['nama'] or boss['nama']]}")
+    st.subheader(f"😈 {boss['nama']}")
     st.markdown(f'<div class="{"hit-flash" if st.session_state.flash_target == "boss" else ""}"><img src="{URL_BOSS}" width="160"></div>', unsafe_allow_html=True)
     st.progress(boss["hp"] / boss["max_hp"], text=f"HP: {boss['hp']} / {boss['max_hp']}")
 
