@@ -437,8 +437,10 @@ st.markdown(arena_html, unsafe_allow_html=True)
 # Damage popup
 if st.session_state.damage_popup:
     cls = "dmg-pop"
-    if st.session_state.popup_type == "heal": cls += " heal"
-    elif st.session_state.popup_type == "buff": cls += " buff"
+    if st.session_state.popup_type == "heal":
+        cls += " heal"
+    elif st.session_state.popup_type == "buff":
+        cls += " buff"
     st.markdown(f"<div class='{cls}'>{st.session_state.damage_popup}</div>", unsafe_allow_html=True)
 
 # Lottie overlay (kalau ada)
@@ -462,4 +464,113 @@ if st.session_state.sound_to_play:
         play_sound_beep(220, 0.15, "hit")
     elif st.session_state.sound_to_play == "slash":
         play_sound_beep(440, 0.2, "slash")
-    elif st.session_state.sound_to_play == "buff
+    elif st.session_state.sound_to_play == "buff":
+        play_sound_beep(330, 0.25, "buff")
+
+# Reset sound biar gak ke-play ulang
+st.session_state.sound_to_play = ""
+
+# ============================================================
+# BAGIAN 9: ROUND BANNER & GAME OVER
+# ============================================================
+st.markdown(f"<div class='round-banner'>⚔️ RONDE {st.session_state.round} ⚔️</div>", unsafe_allow_html=True)
+
+if servant["hp"] <= 0 or boss["hp"] <= 0:
+    st.session_state.game_over = True
+
+# ============================================================
+# BAGIAN 10: KONTROL PER PHASE
+# ============================================================
+if st.session_state.game_over:
+    if servant["hp"] <= 0:
+        st.error(f"💀 GAME OVER! Bertahan hingga Ronde {st.session_state.round - 1}.")
+    else:
+        st.success(f"🎉 VICTORY! Menang di Ronde {st.session_state.round - 1}!")
+        st.balloons()
+    if st.button("🔄 Main Lagi", use_container_width=True, type="primary"):
+        for k in list(st.session_state.keys()):
+            if k.startswith("fgo_v9"):
+                del st.session_state[k]
+        st.rerun()
+
+elif st.session_state.phase == "select":
+    st.markdown("<div style='font-size:12px; color:#aaa; margin-bottom:4px;'>📥 Antrean Combo (Maks 3)</div>", unsafe_allow_html=True)
+    slot_classes = {"Buster": "slot-buster", "Arts": "slot-arts", "Quick": "slot-quick"}
+    c1, c2, c3 = st.columns(3)
+    for i, col in enumerate([c1, c2, c3]):
+        with col:
+            if i < len(st.session_state.antrean_combo):
+                t = st.session_state.antrean_combo[i]
+                st.markdown(f"<div class='slot {slot_classes[t]}'>{t}</div>", unsafe_allow_html=True)
+            else:
+                st.markdown("<div class='slot slot-empty'>—</div>", unsafe_allow_html=True)
+
+    pred = hitung_prediksi_dmg(st.session_state.antrean_combo)
+    sisa = max(0, boss["hp"] - pred)
+    st.markdown(f"<div class='predict'>📊 Prediksi: <b style='color:#FFD700;'>{pred} DMG</b> &nbsp;·&nbsp; Sisa HP Boss: <b>{sisa}</b></div>", unsafe_allow_html=True)
+
+    # Kartu aksi 5 sejajar
+    st.markdown("<div style='font-size:12px; color:#aaa; margin:6px 0 4px 0;'>🃏 Pilih Kartu Aksi</div>", unsafe_allow_html=True)
+    cols = st.columns(5)
+    for idx, tipe in enumerate(st.session_state.kartu_tersedia):
+        with cols[idx]:
+            disabled = (idx in st.session_state.indeks_terpakai) or (len(st.session_state.antrean_combo) >= 3)
+            pickable = "card-pickable" if not disabled else ""
+            st.markdown(f"<div class='card-{tipe.lower()} {pickable}'>", unsafe_allow_html=True)
+            if st.button(tipe, key=f"k_{idx}", disabled=disabled, use_container_width=True):
+                st.session_state.antrean_combo.append(tipe)
+                st.session_state.indeks_terpakai.append(idx)
+                st.session_state.sound_to_play = "hit"
+                st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
+
+    # Tombol SERANG + Reset sejajar
+    st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
+    b1, b2 = st.columns([3, 1])
+    with b1:
+        st.markdown("<div class='btn-execute'>", unsafe_allow_html=True)
+        if st.button("⚔️  SERANG!", use_container_width=True, disabled=len(st.session_state.antrean_combo) != 3):
+            hitung_serangan_player()
+            st.session_state.phase = "player_attack"
+            st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
+    with b2:
+        st.markdown("<div class='btn-reset'>", unsafe_allow_html=True)
+        if st.button("↺ Reset", use_container_width=True, disabled=len(st.session_state.antrean_combo) == 0):
+            st.session_state.antrean_combo = []
+            st.session_state.indeks_terpakai = []
+            st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
+
+elif st.session_state.phase == "player_attack":
+    st.info("💥 Seranganmu mengena! Tekan tombol untuk lanjut ke giliran musuh.")
+    if st.button("▶️  LANJUT: GILIRAN MUSUH", use_container_width=True, type="primary"):
+        st.session_state.damage_popup = ""
+        st.session_state.popup_type = ""
+        st.session_state.shake_target = ""
+        st.session_state.lottie_effect = ""
+        hitung_serangan_musuh()
+        st.session_state.phase = "enemy_attack"
+        st.rerun()
+
+elif st.session_state.phase == "enemy_attack":
+    st.warning(f"😈 {boss['nama']} melakukan: **{st.session_state.boss_last_action}**")
+    if st.button("▶️  LANJUT", use_container_width=True, type="primary"):
+        if boss["hp"] <= 0 or servant["hp"] <= 0:
+            st.session_state.phase = "result"
+        else:
+            reset_ke_select()
+        st.rerun()
+
+elif st.session_state.phase == "result":
+    st.success("🎉 Ronde selesai!")
+    if st.button("▶️  RONDE BARU", use_container_width=True, type="primary"):
+        reset_ke_select()
+        st.rerun()
+
+# ============================================================
+# BAGIAN 11: LOG
+# ============================================================
+with st.expander("📜 Log Pertarungan", expanded=False):
+    for log in reversed(st.session_state.battle_log[-10:]):
+        st.markdown(f"<div style='font-size:11px; color:#ccc; padding:3px 0; border-bottom:1px dashed #2a2a35;'>{log}</div>", unsafe_allow_html=True)
