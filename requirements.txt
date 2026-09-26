@@ -10,3 +10,5 @@ streamlit-carousel
 fpdf2
 python-pptx
 matplotlib
+streamlit-lottie
+requests
