@@ -9,8 +9,8 @@ st.set_page_config(page_title="FGO Arena JRPG", layout="centered", initial_sideb
 # ============================================================
 # GANTI DENGAN URL GAMBAR KAMU (kosongkan kalau belum ada)
 # ============================================================
-URL_MASH   = ""   # contoh: "https://raw.githubusercontent.com/USER/REPO/main/assets/mash.png"
-URL_GOETIA = ""   # contoh: "https://raw.githubusercontent.com/USER/REPO/main/assets/goetia.png"
+Goetia : https://raw.githubusercontent.com/stefanusagranus-tech/LigaPSM26/main/assets/goetia.png
+Mash   : https://raw.githubusercontent.com/stefanusagranus-tech/LigaPSM26/main/assets/mash.png
 
 # ============================================================
 # BAGIAN 1: CSS GLOBAL
