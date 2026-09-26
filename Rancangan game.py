@@ -1,116 +1,288 @@
 import streamlit as st
 import random
 
-# 1. Konfigurasi Halaman & Gaya Visual JRPG Modern (Layout ala Game Fighting)
-st.set_page_config(page_title="FGO Arena JRPG", layout="centered")
+st.set_page_config(page_title="FGO Arena JRPG", layout="centered", initial_sidebar_state="collapsed")
 
+# ============================================================
+# CSS GLOBAL
+# ============================================================
 st.markdown("""
 <style>
-    .block-container { padding-top: 0.8rem; padding-bottom: 2rem; max-width: 700px; }
-    
-    /* Arena Fighting Header Style */
-    .fighter-box { background-color: #16161d; border: 2px solid #333; padding: 8px; border-radius: 8px; text-align: center; }
-    .fighter-name { font-weight: bold; font-size: 13px; color: #fff; margin-top: 4px; margin-bottom: 4px; }
-    
-    /* Banner Ronde */
-    .round-banner { background: linear-gradient(90deg, #FF4B4B, #FFD700); color: white; text-align: center; font-weight: bold; font-size: 15px; padding: 4px; border-radius: 4px; margin: 10px 0; }
-    .action-bubble { background-color: #ff9800; color: white; padding: 2px 6px; border-radius: 8px; font-weight: bold; font-size: 10px; display: inline-block; margin-top: 2px; }
-    
-    /* Desain Kartu Toolbar Horizontal (Sejajar 5) */
-    .card-box { border: 2px solid #555; border-radius: 6px; padding: 6px 2px; text-align: center; font-weight: bold; font-size: 12px; margin-bottom: 4px; }
-    .buster-box { border-color: #FF4B4B; background-color: rgba(255,75,75,0.2); color: #FF4B4B; }
-    .arts-box { border-color: #1C83E1; background-color: rgba(28,131,225,0.2); color: #1C83E1; }
-    .quick-box { border-color: #09AB3B; background-color: rgba(9,171,59,0.2); color: #09AB3B; }
-    
-    /* Slot Combo */
-    .slot-empty { border: 1px dashed #aaa; border-radius: 6px; height: 26px; text-align: center; line-height: 26px; color: #aaa; font-size: 11px; background: rgba(255,255,255,0.02); }
-    .slot-filled { border: 1px solid #FFD700; background-color: rgba(255,215,0,0.15); border-radius: 6px; height: 26px; text-align: center; line-height: 26px; font-weight: bold; font-size: 11px; color: #FFD700; }
-    
-    .predict-box { background-color: #262730; border-left: 4px solid #FF4B4B; padding: 6px 10px; border-radius: 4px; margin-bottom: 8px; font-size: 11px; }
+    /* Sembunyikan header Streamlit biar lebih immersive */
+    header[data-testid="stHeader"] { background: transparent; }
+    .block-container { padding-top: 1rem; padding-bottom: 1rem; max-width: 720px; }
+
+    /* -------- ARENA FIGHTER -------- */
+    .arena-wrap {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 8px;
+    }
+    .fighter {
+        flex: 1;
+        background: linear-gradient(180deg, #1a1a24 0%, #0f0f16 100%);
+        border: 2px solid #2e2e3e;
+        border-radius: 12px;
+        padding: 10px 8px;
+        text-align: center;
+        position: relative;
+        box-shadow: 0 0 12px rgba(255,75,75,0.08);
+    }
+    .fighter.enemy { border-color: #5a1f1f; box-shadow: 0 0 12px rgba(255,75,75,0.18); }
+    .fighter.ally  { border-color: #1f3a5a; box-shadow: 0 0 12px rgba(28,131,225,0.18); }
+
+    .sprite { font-size: 64px; line-height: 1; margin: 4px 0 6px 0; filter: drop-shadow(0 0 6px rgba(255,255,255,0.15)); }
+    .fname  { font-weight: 700; font-size: 13px; color: #fff; margin-bottom: 8px; letter-spacing: 0.5px; }
+
+    /* -------- HP / NP BAR CUSTOM -------- */
+    .bar-wrap {
+        background: #0a0a10;
+        border: 1px solid #333;
+        border-radius: 6px;
+        height: 16px;
+        overflow: hidden;
+        margin: 3px 0;
+        position: relative;
+    }
+    .bar-fill {
+        height: 100%;
+        transition: width 0.4s ease;
+        border-radius: 6px 0 0 6px;
+    }
+    .hp-high { background: linear-gradient(90deg, #09AB3B, #4ade80); }
+    .hp-mid  { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .hp-low  { background: linear-gradient(90deg, #dc2626, #ff4b4b); }
+    .np-fill { background: linear-gradient(90deg, #7c3aed, #c084fc); }
+
+    .bar-label {
+        font-size: 10px;
+        color: #bbb;
+        text-align: left;
+        margin: 2px 0 4px 0;
+        font-family: monospace;
+    }
+
+    /* -------- ACTION BUBBLE -------- */
+    .bubble {
+        display: inline-block;
+        background: #ff9800;
+        color: #111;
+        font-weight: 700;
+        font-size: 10px;
+        padding: 3px 8px;
+        border-radius: 10px;
+        margin-top: 4px;
+    }
+    .bubble.enemy { background: #ef4444; color: #fff; }
+
+    /* -------- ROUND BANNER -------- */
+    .round-banner {
+        background: linear-gradient(90deg, #FF4B4B, #FFD700, #FF4B4B);
+        background-size: 200% 100%;
+        animation: shine 3s linear infinite;
+        color: #111;
+        text-align: center;
+        font-weight: 800;
+        font-size: 15px;
+        padding: 6px;
+        border-radius: 8px;
+        margin: 12px 0;
+        letter-spacing: 2px;
+    }
+    @keyframes shine {
+        0% { background-position: 0% 50%; }
+        100% { background-position: 200% 50%; }
+    }
+
+    /* -------- SLOT COMBO -------- */
+    .slot {
+        border-radius: 8px;
+        height: 34px;
+        text-align: center;
+        line-height: 34px;
+        font-weight: 700;
+        font-size: 12px;
+        letter-spacing: 0.5px;
+    }
+    .slot-empty { border: 2px dashed #3a3a4a; color: #555; background: rgba(255,255,255,0.02); }
+    .slot-buster { border: 2px solid #FF4B4B; background: rgba(255,75,75,0.18); color: #FF4B4B; box-shadow: 0 0 8px rgba(255,75,75,0.3); }
+    .slot-arts   { border: 2px solid #1C83E1; background: rgba(28,131,225,0.18); color: #4da6ff; box-shadow: 0 0 8px rgba(28,131,225,0.3); }
+    .slot-quick  { border: 2px solid #09AB3B; background: rgba(9,171,59,0.18); color: #22d364; box-shadow: 0 0 8px rgba(9,171,59,0.3); }
+
+    /* -------- PREDIKSI BOX -------- */
+    .predict {
+        background: linear-gradient(90deg, #262730, #1a1a24);
+        border-left: 4px solid #FFD700;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        color: #ddd;
+        margin: 6px 0;
+    }
+
+    /* -------- TOMBOL KARTU AKSI (override st.button) -------- */
+    div[data-testid="stButton"] > button {
+        width: 100%;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 13px;
+        padding: 10px 0;
+        transition: transform 0.1s ease, box-shadow 0.2s ease;
+    }
+    div[data-testid="stButton"] > button:hover {
+        transform: translateY(-2px);
+    }
+
+    /* Kartu warna: kita pakai wrapper div dengan class khusus */
+    .card-buster div[data-testid="stButton"] > button {
+        border: 2px solid #FF4B4B !important;
+        background: linear-gradient(180deg, rgba(255,75,75,0.25), rgba(255,75,75,0.08)) !important;
+        color: #ff8080 !important;
+    }
+    .card-arts div[data-testid="stButton"] > button {
+        border: 2px solid #1C83E1 !important;
+        background: linear-gradient(180deg, rgba(28,131,225,0.25), rgba(28,131,225,0.08)) !important;
+        color: #66b8ff !important;
+    }
+    .card-quick div[data-testid="stButton"] > button {
+        border: 2px solid #09AB3B !important;
+        background: linear-gradient(180deg, rgba(9,171,59,0.25), rgba(9,171,59,0.08)) !important;
+        color: #3ddc6b !important;
+    }
+    .card-buster div[data-testid="stButton"] > button:disabled,
+    .card-arts div[data-testid="stButton"] > button:disabled,
+    .card-quick div[data-testid="stButton"] > button:disabled {
+        opacity: 0.35;
+    }
+
+    /* Tombol utama SERANG */
+    .btn-execute div[data-testid="stButton"] > button {
+        background: linear-gradient(90deg, #FF4B4B, #FFD700) !important;
+        color: #111 !important;
+        border: none !important;
+        font-size: 15px !important;
+        font-weight: 800 !important;
+        letter-spacing: 1px;
+        padding: 12px 0 !important;
+        box-shadow: 0 0 15px rgba(255,75,75,0.4);
+    }
+    .btn-reset div[data-testid="stButton"] > button {
+        background: transparent !important;
+        color: #aaa !important;
+        border: 1px solid #444 !important;
+        font-size: 11px !important;
+    }
+
+    /* -------- LOG BOX -------- */
+    .log-line {
+        font-size: 11px;
+        color: #ccc;
+        padding: 3px 0;
+        border-bottom: 1px dashed #2a2a35;
+    }
+
+    /* Responsive mobile */
+    @media (max-width: 640px) {
+        .sprite { font-size: 48px; }
+        .fname { font-size: 11px; }
+        div[data-testid="stButton"] > button { font-size: 11px; padding: 8px 0; }
+    }
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h4 style='text-align: center; margin-bottom: 5px;'>🛡️ FGO Arena: 1v1 Battle</h4>", unsafe_allow_html=True)
+st.markdown("<h3 style='text-align:center; margin:0 0 8px 0; letter-spacing:1px;'>🛡️ FGO ARENA</h3>", unsafe_allow_html=True)
 
+# ============================================================
+# FUNGSI
+# ============================================================
 def acak_5_kartu():
     return [random.choice(["Buster", "Arts", "Quick"]) for _ in range(5)]
 
-# 2. Inisialisasi State Game
-if "fgo_v6_initialized" not in st.session_state:
-    st.session_state.servant = {"nama": "Mash (Shielder)", "hp": 150, "max_hp": 150, "np": 0, "max_np": 100, "atk": 22}
-    st.session_state.boss = {"nama": "Goetia", "hp": 350, "max_hp": 350, "atk": 20}
+def hp_class(pct):
+    if pct > 0.5: return "hp-high"
+    if pct > 0.25: return "hp-mid"
+    return "hp-low"
+
+def render_bar(label, value, max_value, fill_class, extra_class=""):
+    pct = max(0, min(100, int(value / max_value * 100)))
+    return f"""
+    <div class='bar-label'>{label} {value}/{max_value}</div>
+    <div class='bar-wrap'>
+        <div class='bar-fill {fill_class} {extra_class}' style='width:{pct}%;'></div>
+    </div>
+    """
+
+# ============================================================
+# STATE
+# ============================================================
+if "fgo_v7_init" not in st.session_state:
+    st.session_state.servant = {"nama": "Mash (Shielder)", "hp": 150, "max_hp": 150, "np": 0, "max_np": 100, "atk": 22, "emoji": "🛡️"}
+    st.session_state.boss = {"nama": "Goetia", "hp": 350, "max_hp": 350, "atk": 20, "emoji": "👹"}
     st.session_state.round = 1
-    st.session_state.boss_last_action = "Bersiap" 
+    st.session_state.boss_last_action = "Bersiap"
     st.session_state.kartu_tersedia = acak_5_kartu()
-    st.session_state.antrean_combo = []  
-    st.session_state.indeks_terpakai = [] 
+    st.session_state.antrean_combo = []
+    st.session_state.indeks_terpakai = []
     st.session_state.battle_log = ["⚔️ Pertandingan dimulai! Susun strategi kombo Anda."]
     st.session_state.game_over = False
-    st.session_state.fgo_v6_initialized = True
+    st.session_state.fgo_v7_init = True
 
 servant = st.session_state.servant
 boss = st.session_state.boss
 
-# URL Sprite Karakter (Placeholder aman / menggunakan emoji visual jika gambar gagal)
-URL_BOSS_SPRITE = "https://static.wikia.nocookie.net/fategrandorder/images/d/d2/Goetia_Sprite.png"
-URL_SERVANT_SPRITE = "https://static.wikia.nocookie.net/fategrandorder/images/a/ad/S001_Sprite_1.png"
-
-# 3. Fungsi Hitung Prediksi Damage
+# ============================================================
+# LOGIKA
+# ============================================================
 def hitung_prediksi_dmg(combo):
-    total_prediksi = 0
+    total = 0
     is_chain = len(combo) == 3 and len(set(combo)) == 1
     for i, tipe in enumerate(combo):
-        urutan_multiplier = 1.0 + (i * 0.25)
+        mult = 1.0 + (i * 0.25)
         if tipe == "Buster":
-            total_prediksi += int(servant["atk"] * (2.2 if is_chain else 1.6) * urutan_multiplier)
+            total += int(servant["atk"] * (2.2 if is_chain else 1.6) * mult)
         elif tipe == "Arts":
-            total_prediksi += int(servant["atk"] * 1.0 * urutan_multiplier)
+            total += int(servant["atk"] * 1.0 * mult)
         elif tipe == "Quick":
-            total_prediksi += int(servant["atk"] * 0.9 * urutan_multiplier)
-    return total_prediksi
+            total += int(servant["atk"] * 0.9 * mult)
+    return total
 
-# 4. Logika Eksekusi Turn & AI
-def eksekusi_seluruh_serangan():
-    log_turn = []
+def eksekusi():
+    log_turn = [f"🔄 **Ronde {st.session_state.round}**"]
     combo = st.session_state.antrean_combo
-    log_turn.append(f"🔄 **Ronde {st.session_state.round} Selesai**")
     is_chain = len(set(combo)) == 1
 
-    # Serangan Player
     for i, tipe in enumerate(combo):
-        urutan_multiplier = 1.0 + (i * 0.25)
+        mult = 1.0 + (i * 0.25)
         if tipe == "Buster":
-            dmg = int(servant["atk"] * (2.2 if is_chain else 1.6) * urutan_multiplier + random.randint(-2, 2))
+            dmg = int(servant["atk"] * (2.2 if is_chain else 1.6) * mult + random.randint(-2, 2))
             boss["hp"] = max(0, boss["hp"] - dmg)
             log_turn.append(f"🔴 Hit {i+1} [Buster]: **{dmg} DMG**")
         elif tipe == "Arts":
-            dmg = int(servant["atk"] * 1.0 * urutan_multiplier)
-            np_gain = 40 if is_chain else 25
+            dmg = int(servant["atk"] * 1.0 * mult)
+            gain = 40 if is_chain else 25
             boss["hp"] = max(0, boss["hp"] - dmg)
-            servant["np"] = min(servant["max_np"], servant["np"] + np_gain)
-            log_turn.append(f"🔵 Hit {i+1} [Arts]: {dmg} DMG (+{np_gain}% NP)")
+            servant["np"] = min(servant["max_np"], servant["np"] + gain)
+            log_turn.append(f"🔵 Hit {i+1} [Arts]: {dmg} DMG (+{gain}% NP)")
         elif tipe == "Quick":
-            dmg = int(servant["atk"] * 0.9 * urutan_multiplier)
+            dmg = int(servant["atk"] * 0.9 * mult)
             servant["np"] = min(servant["max_np"], servant["np"] + 12)
             boss["hp"] = max(0, boss["hp"] - dmg)
             log_turn.append(f"🟢 Hit {i+1} [Quick]: {dmg} DMG (+12% NP)")
 
-    # Perilaku & Serangan Musuh (AI)
     if boss["hp"] > 0:
-        aksi_pilihan_ai = random.choice(["Tebasan Kegelapan", "Mengaum (Buff ATK)", "Kuda-Kuda Bertahan"])
-        st.session_state.boss_last_action = aksi_pilihan_ai
-        
-        if aksi_pilihan_ai == "Tebasan Kegelapan":
-            dmg_boss = int(boss["atk"] * random.uniform(0.9, 1.3))
-            servant["hp"] = max(0, servant["hp"] - dmg_boss)
-            log_turn.append(f"😈 **{boss['nama']}** memakai *{aksi_pilihan_ai}* (-{dmg_boss} HP)")
-        elif aksi_pilihan_ai == "Mengaum (Buff ATK)":
+        aksi = random.choice(["Tebasan Kegelapan", "Mengaum (Buff ATK)", "Kuda-Kuda Bertahan"])
+        st.session_state.boss_last_action = aksi
+        if aksi == "Tebasan Kegelapan":
+            d = int(boss["atk"] * random.uniform(0.9, 1.3))
+            servant["hp"] = max(0, servant["hp"] - d)
+            log_turn.append(f"😈 **{boss['nama']}** *{aksi}* (-{d} HP)")
+        elif aksi == "Mengaum (Buff ATK)":
             boss["atk"] += 2
-            log_turn.append(f"😈 **{boss['nama']}** *Mengaum* (+2 ATK Boss)!")
-        elif aksi_pilihan_ai == "Kuda-Kuda Bertahan":
-            dmg_boss = int(boss["atk"] * 0.6)
-            servant["hp"] = max(0, servant["hp"] - dmg_boss)
-            log_turn.append(f"😈 **{boss['nama']}** *Bertahan* & menyerang balik (-{dmg_boss} HP).")
+            log_turn.append(f"😈 **{boss['nama']}** *Mengaum* (+2 ATK)")
+        else:
+            d = int(boss["atk"] * 0.6)
+            servant["hp"] = max(0, servant["hp"] - d)
+            log_turn.append(f"😈 **{boss['nama']}** *Bertahan* (-{d} HP)")
     else:
         st.session_state.boss_last_action = "Tumbang"
 
@@ -120,104 +292,104 @@ def eksekusi_seluruh_serangan():
     st.session_state.indeks_terpakai = []
     st.session_state.kartu_tersedia = acak_5_kartu()
 
-# 5. TAMPILAN ARENA FIGHT (Kiri: Boss, Kanan: Player / Tekken Style)
-col_boss_arena, col_servant_arena = st.columns(2)
+# ============================================================
+# RENDER ARENA
+# ============================================================
+hp_pct_boss = boss["hp"] / boss["max_hp"]
+hp_pct_serv = servant["hp"] / servant["max_hp"]
 
-with col_boss_arena:
-    st.markdown("<div class='fighter-box'>", unsafe_allow_html=True)
-    try:
-        st.image(URL_BOSS_SPRITE, width=80)
-    except:
-        st.markdown("👾")
-    st.markdown(f"<p class='fighter-name'>😈 {boss['nama']}</p>", unsafe_allow_html=True)
-    st.progress(boss["hp"] / boss["max_hp"], text=f"HP: {boss['hp']}/{boss['max_hp']}")
-    st.markdown(f"<span class='action-bubble'>Aksi: {st.session_state.boss_last_action}</span>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+st.markdown(f"""
+<div class='arena-wrap'>
+    <div class='fighter enemy'>
+        <div class='sprite'>{boss['emoji']}</div>
+        <div class='fname'>😈 {boss['nama']}</div>
+        {render_bar("HP", boss['hp'], boss['max_hp'], hp_class(hp_pct_boss))}
+        <div class='bubble enemy'>Aksi: {st.session_state.boss_last_action}</div>
+    </div>
+    <div class='fighter ally'>
+        <div class='sprite'>{servant['emoji']}</div>
+        <div class='fname'>🛡️ {servant['nama']}</div>
+        {render_bar("HP", servant['hp'], servant['max_hp'], hp_class(hp_pct_serv))}
+        {render_bar("NP", servant['np'], servant['max_np'], 'np-fill')}
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
-with col_servant_arena:
-    st.markdown("<div class='fighter-box'>", unsafe_allow_html=True)
-    try:
-        st.image(URL_SERVANT_SPRITE, width=80)
-    except:
-        st.markdown("🛡️")
-    st.markdown(f"<p class='fighter-name'>🛡️ {servant['nama']}</p>", unsafe_allow_html=True)
-    st.progress(servant["hp"] / servant["max_hp"], text=f"HP: {servant['hp']}/{servant['max_hp']}")
-    st.progress(servant["np"] / servant["max_np"], text=f"NP: {servant['np']}%")
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# 6. BANNER RONDE DI TENGAH
+# ============================================================
+# RONDE & GAME OVER
+# ============================================================
 st.markdown(f"<div class='round-banner'>⚔️ RONDE {st.session_state.round} ⚔️</div>", unsafe_allow_html=True)
 
-# Cek Status Akhir Game
 if servant["hp"] <= 0 or boss["hp"] <= 0:
     st.session_state.game_over = True
 
-# 7. PANEL KONTROL KARTU & COMBO
-if not st.session_state.game_over:
-    # Kalkulator / Prediksi Damage & Antrean Combo
-    st.write("📥 **Antrean Combo (Maks 3):**")
-    col_s1, col_s2, col_s3 = st.columns(3)
-    slots = [col_s1, col_s2, col_s3]
-    for i in range(3):
-        with slots[i]:
+if st.session_state.game_over:
+    if servant["hp"] <= 0:
+        st.error(f"💀 GAME OVER! Bertahan hingga Ronde {st.session_state.round - 1}.")
+    else:
+        st.success(f"🎉 VICTORY! Menang di Ronde {st.session_state.round - 1}!")
+        st.balloons()
+    if st.button("🔄 Main Lagi", use_container_width=True, type="primary"):
+        for k in list(st.session_state.keys()):
+            if k.startswith("fgo_v7"):
+                del st.session_state[k]
+        st.rerun()
+else:
+    # -------- SLOT COMBO --------
+    st.markdown("<div style='font-size:12px; color:#aaa; margin-bottom:4px;'>📥 Antrean Combo (Maks 3)</div>", unsafe_allow_html=True)
+    slot_classes = {"Buster": "slot-buster", "Arts": "slot-arts", "Quick": "slot-quick"}
+    c1, c2, c3 = st.columns(3)
+    for i, col in enumerate([c1, c2, c3]):
+        with col:
             if i < len(st.session_state.antrean_combo):
-                k_nama = st.session_state.antrean_combo[i]
-                st.markdown(f'<div class="slot-filled">{k_nama}</div>', unsafe_allow_html=True)
+                t = st.session_state.antrean_combo[i]
+                st.markdown(f"<div class='slot {slot_classes[t]}'>{t}</div>", unsafe_allow_html=True)
             else:
-                st.markdown('<div class="slot-empty">-</div>', unsafe_allow_html=True)
+                st.markdown("<div class='slot slot-empty'>—</div>", unsafe_allow_html=True)
 
-    prediksi_dmg = hitung_prediksi_dmg(st.session_state.antrean_combo)
-    sisa_hp_boss_prediksi = max(0, boss["hp"] - prediksi_dmg)
+    # -------- PREDIKSI --------
+    pred = hitung_prediksi_dmg(st.session_state.antrean_combo)
+    sisa = max(0, boss["hp"] - pred)
     st.markdown(f"""
-    <div class="predict-box">
-        📊 <b>Kalkulasi Prediksi:</b> <span style='color:#FF4B4B;'>{prediksi_dmg} DMG</span> (Estimasi Sisa HP Boss: {sisa_hp_boss_prediksi})
+    <div class='predict'>
+        📊 Prediksi: <b style='color:#FFD700;'>{pred} DMG</b> &nbsp;·&nbsp; Sisa HP Boss: <b>{sisa}</b>
     </div>
     """, unsafe_allow_html=True)
 
-    # Tombol Reset Combo
-    if st.button("🔄 Reset Pilihan Kartu", use_container_width=True, disabled=(len(st.session_state.antrean_combo) == 0)):
-        st.session_state.antrean_combo = []
-        st.session_state.indeks_terpakai = []
-        st.rerun()
-
-    # Toolbar Pilihan Kartu Sejajar 5 (Horizontal)
-    st.write("🃏 **Pilih Kartu Aksi (Toolbar):**")
-    cols_dek = st.columns(5)
+    # -------- KARTU AKSI --------
+    st.markdown("<div style='font-size:12px; color:#aaa; margin:6px 0 4px 0;'>🃏 Pilih Kartu Aksi</div>", unsafe_allow_html=True)
+    cols = st.columns(5)
     for idx, tipe in enumerate(st.session_state.kartu_tersedia):
-        with cols_dek[idx]:
-            warna_css = tipe.lower()
-            st.markdown(f'<div class="card-box {warna_css}-box">{tipe}</div>', unsafe_allow_html=True)
-            sudah_diklik = idx in st.session_state.indeks_terpakai
-            slot_penuh = len(st.session_state.antrean_combo) >= 3
-            if st.button(f"Pilih", key=f"btn_{idx}", disabled=(sudah_diklik or slot_penuh), use_container_width=True):
+        with cols[idx]:
+            wrap_class = f"card-{tipe.lower()}"
+            st.markdown(f"<div class='{wrap_class}'>", unsafe_allow_html=True)
+            disabled = (idx in st.session_state.indeks_terpakai) or (len(st.session_state.antrean_combo) >= 3)
+            if st.button(tipe, key=f"k_{idx}", disabled=disabled, use_container_width=True):
                 st.session_state.antrean_combo.append(tipe)
                 st.session_state.indeks_terpakai.append(idx)
                 st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
 
-    # Tombol Eksekusi Serangan Utama
-    st.write("")
-    siap_serang = len(st.session_state.antrean_combo) == 3
-    if st.button("⚔️ MULAI SERANG! (Execute)", use_container_width=True, type="primary", disabled=not siap_serang):
-        eksekusi_seluruh_serangan()
-        st.rerun()
+    # -------- TOMBOL AKSI --------
+    st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
+    b1, b2 = st.columns([3, 1])
+    with b1:
+        st.markdown("<div class='btn-execute'>", unsafe_allow_html=True)
+        if st.button("⚔️  SERANG!", use_container_width=True, disabled=len(st.session_state.antrean_combo) != 3):
+            eksekusi()
+            st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
+    with b2:
+        st.markdown("<div class='btn-reset'>", unsafe_allow_html=True)
+        if st.button("↺ Reset", use_container_width=True, disabled=len(st.session_state.antrean_combo) == 0):
+            st.session_state.antrean_combo = []
+            st.session_state.indeks_terpakai = []
+            st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
 
-# JIKA GAME OVER
-else:
-    if servant["hp"] <= 0:
-        st.error(f"💀 GAME OVER! Anda bertahan hingga Ronde {st.session_state.round - 1}.")
-    else:
-        st.success(f"🎉 VICTORY! Anda menang di Ronde {st.session_state.round - 1}!")
-        st.balloons()
-        
-    if st.button("🔄 Main Lagi", use_container_width=True, type="primary"):
-        del st.session_state.fgo_v6_initialized
-        st.rerun()
-
-st.markdown("---")
-
-# 8. PANEL HISTORI / LOG PERTARUNGAN
-st.write("📜 **Log Pertarungan:**")
-with st.container(border=True):
-    for log in st.session_state.battle_log[-3:]:
-        st.markdown(f"<span style='font-size: 11px;'>{log}</span>", unsafe_allow_html=True)
-        
+# ============================================================
+# LOG
+# ============================================================
+with st.expander("📜 Log Pertarungan", expanded=False):
+    for log in reversed(st.session_state.battle_log[-8:]):
+        st.markdown(f"<div class='log-line'>{log}</div>", unsafe_allow_html=True)
