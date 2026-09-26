@@ -1,193 +1,189 @@
 import streamlit as st
 import random
-import time
 
-# 1. Konfigurasi Halaman & Gaya Tampilan (JRPG Retro Style)
-st.set_page_config(page_title="Streamlit 1v1 JRPG Battle", layout="centered")
+# 1. Konfigurasi Halaman & Gaya Visual FGO Combo
+st.set_page_config(page_title="FGO Combo Prototype", layout="centered")
 
-# CSS Kustom untuk membuat efek berkedip (flash) saat menyerang dan merubah tampilan log
 st.markdown("""
 <style>
-    .battle-log-text { font-family: 'Courier New', Courier, monospace; font-size: 14px; }
-    @keyframes flash {
-        0% { opacity: 1; }
-        50% { opacity: 0; }
-        100% { opacity: 1; }
+    .card-box { 
+        border: 2px solid #555; border-radius: 8px; padding: 10px; text-align: center; font-weight: bold; font-size: 14px;
     }
-    .hit-flash { animation: flash 0.2s ease-in-out 2; }
+    .buster-box { border-color: #FF4B4B; background-color: rgba(255,75,75,0.1); color: #FF4B4B; }
+    .arts-box { border-color: #1C83E1; background-color: rgba(28,131,225,0.1); color: #1C83E1; }
+    .quick-box { border-color: #09AB3B; background-color: rgba(9,171,59,0.1); color: #09AB3B; }
+    
+    .slot-empty { border: 2px dashed #aaa; border-radius: 8px; height: 40px; text-align: center; line-height: 40px; color: #aaa; }
+    .slot-filled { border: 2px solid #FFD700; background-color: rgba(255,215,0,0.1); border-radius: 8px; height: 40px; text-align: center; line-height: 40px; font-weight: bold; }
+    
+    @keyframes flash { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+    .hit-flash { animation: flash 0.15s ease-in-out 2; }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("⚔️ JRPG Project: Arena Takdir (VS Computer)")
+st.title("🛡️ FGO Project: Combo Chain System")
 
-# URL Karakter Sementara (Pixel Art Retro)
-URL_HERO = "https://itch.zone" # Contoh sprite Ksatria
-URL_DEMON = "https://itch.zone" # Contoh sprite Raja Iblis
+URL_SERVANT = "https://itch.zone"
+URL_BOSS = "https://itch.zone"
 
-# 2. Inisialisasi State Game
-if "game_initialized" not in st.session_state:
-    st.session_state.player = {
-        "nama": "Pahlawan (Anda)", "hp": 100, "max_hp": 100,
-        "mp": 30, "max_mp": 30, "atk": 16, "def": 5,
-        "buff_atk": 0, "is_defending": False
-    }
-    st.session_state.enemy = {
-        "nama": "Raja Iblis (AI)", "hp": 130, "max_hp": 130,
-        "atk": 14, "def": 4, "is_defending": False
-    }
-    st.session_state.battle_log = ["⚔️ Pertarungan dimulai! Pilih aksi Anda di menu bawah."]
+# 2. Fungsi Pembantu
+def acak_5_kartu():
+    return [random.choice(["Buster", "Arts", "Quick"]) for _ in range(5)]
+
+# 3. Inisialisasi State Game
+if "combo_game_initialized" not in st.session_state:
+    st.session_state.servant = {"nama": "Mash / Saber", "hp": 150, "max_hp": 150, "np": 0, "max_np": 100, "atk": 22}
+    st.session_state.boss = {"nama": "Goetia (AI Boss)", "hp": 350, "max_hp": 350, "atk": 20}
+    st.session_state.kartu_tersedia = acak_5_kartu()
+    st.session_state.antrean_combo = []  # Menyimpan combo yang sedang disusun (Maks 3)
+    st.session_state.indeks_terpakai = [] # Menyimpan indeks kartu yang sudah diklik agar tidak bisa diklik lagi
+    st.session_state.battle_log = ["⚔️ Susun 3 kartu combo Anda, lalu tekan tombol Serang!"]
     st.session_state.game_over = False
-    st.session_state.flash_target = None # Untuk mendeteksi siapa yang terkena efek serang/flash
-    st.session_state.game_initialized = True
+    st.session_state.flash_target = None
+    st.session_state.combo_game_initialized = True
 
-player = st.session_state.player
-enemy = st.session_state.enemy
+servant = st.session_state.servant
+boss = st.session_state.boss
 
-# 3. Logika Otomatis / Giliran AI (VS Computer)
-def eksekusi_giliran_musuh():
-    if enemy["hp"] <= 0:
-        return
+# 4. Logika Eksekusi Combo Berurutan (Sequential Turn Execution)
+def eksekusi_seluruh_serangan():
+    log_turn = []
+    combo = st.session_state.antrean_combo
     
-    # AI Memilih aksi secara cerdas (75% Serang, 25% Bertahan)
-    pilihan_ai = random.choice(["serang", "serang", "serang", "bertahan"])
+    log_turn.append("🎬 --- **FASE SERANGAN ANDA DIMULAI** ---")
+    st.session_state.flash_target = "boss"
     
-    if pilihan_ai == "serang":
-        # Efek visual serang ke Pemain
-        st.session_state.flash_target = "player"
-        
-        # Hitung kalkulasi damage
-        damage_base = enemy["atk"] - (player["def"] * 2.5 if player["is_defending"] else player["def"])
-        damage = max(4, int(damage_base + random.randint(-2, 2)))
-        player["hp"] = max(0, player["hp"] - damage)
-        
-        log = f"💥 **{enemy['nama']}** melancarkan tebasan kegelapan sebesar **{damage} DMG** ke Anda!"
-        if player["is_defending"]:
-            log += " *(Berhasil diredam oleh shield Anda)*"
-        st.session_state.battle_log.append(log)
-        
-    elif pilihan_ai == "bertahan":
-        enemy["is_defending"] = True
-        st.session_state.battle_log.append(f"🛡️ **{enemy['nama']}** mengambil kuda-kuda bertahan! DEF meningkat.")
+    # Cek Chain Bonus
+    is_chain = len(set(combo)) == 1
+    if is_chain:
+        log_turn.append(f"🔥 **{combo[0]} Chain Sukses!** Semua kartu mendapatkan bonus efisiensi!")
 
-    # Reset pertahanan pemain di akhir putaran giliran musuh
-    player["is_defending"] = False
-
-# 4. TAMPILAN KARAKTER & STATUS (Desain Layout Grafis JRPG)
-col_player, col_enemy = st.columns(2)
-
-with col_player:
-    st.subheader(f"🧑‍🎤 {player['nama']}")
-    # Terapkan efek flash jika player diserang
-    if st.session_state.flash_target == "player":
-        st.markdown(f'<div class="hit-flash"><img src="{URL_HERO}" width="180"></div>', unsafe_allow_html=True)
-    else:
-        st.image(URL_HERO, width=180)
+    # Jalankan combo kartu secara berurutan (1 demi 1)
+    for i, tipe in enumerate(combo):
+        urutan_multiplier = 1.0 + (i * 0.25) # Kartu ke-2 dan ke-3 jauh lebih kuat
         
-    # Bar Status Mekanik
-    st.progress(player["hp"] / player["max_hp"], text=f"HP: {player['hp']} / {player['max_hp']}")
-    st.progress(player["mp"] / player["max_mp"], text=f"MP: {player['mp']} / {player['max_mp']}")
-    
-    # Notifikasi Efek Status
-    if player["buff_atk"] > 0:
-        st.info(f"✨ Buff ATK aktif ({player['buff_atk']} giliran lagi)")
-    if player["is_defending"]:
-        st.warning("🛡️ Sedang bersiap bertahan")
+        if tipe == "Buster":
+            mult = 2.2 if is_chain else 1.6
+            dmg = int(servant["atk"] * mult * urutan_multiplier + random.randint(-2, 2))
+            boss["hp"] = max(0, boss["hp"] - dmg)
+            log_turn.append(f"💥 *Serangan {i+1}* -> **[Buster]** menghantam musuh sebesar **{dmg} DMG**!")
+            
+        elif tipe == "Arts":
+            mult = 1.0
+            dmg = int(servant["atk"] * mult * urutan_multiplier)
+            np_gain = 40 if is_chain else 25
+            boss["hp"] = max(0, boss["hp"] - dmg)
+            servant["np"] = min(servant["max_np"], servant["np"] + np_gain)
+            log_turn.append(f"🔮 *Serangan {i+1}* -> **[Arts]** memberikan {dmg} DMG & mengisi **+{np_gain}% NP Gauge**!")
+            
+        elif tipe == "Quick":
+            mult = 0.9
+            dmg = int(servant["atk"] * mult * urutan_multiplier)
+            np_gain = 12
+            boss["hp"] = max(0, boss["hp"] - dmg)
+            servant["np"] = min(servant["max_np"], servant["np"] + np_gain)
+            log_turn.append(f"⚡ *Serangan {i+1}* -> **[Quick]** tebasan cepat {dmg} DMG & menambah **+{np_gain}% NP Gauge**!")
 
-with col_enemy:
-    st.subheader(f"😈 {enemy['nama']}")
-    # Terapkan efek flash jika enemy diserang
-    if st.session_state.flash_target == "enemy":
-        st.markdown(f'<div class="hit-flash"><img src="{URL_DEMON}" width="180"></div>', unsafe_allow_html=True)
-    else:
-        st.image(URL_DEMON, width=180)
+    # --- FASE SERANGAN MUSUH (Hanya jika musuh masih hidup) ---
+    if boss["hp"] > 0:
+        log_turn.append("🎬 --- **FASE BALASAN MUSUH DIMULAI** ---")
+        st.session_state.flash_target = "servant"
         
-    # Bar Status Mekanik Musuh
-    st.progress(enemy["hp"] / enemy["max_hp"], text=f"HP: {enemy['hp']} / {enemy['max_hp']}")
-    st.write("") # Penyeimbang bar MP pemain
-    
-    if enemy["is_defending"]:
-        st.warning("🛡️ Sedang bersiap bertahan")
+        # Musuh juga melakukan serangan berantai (2x serangan berturut-turut dalam 1 turn)
+        for j in range(2):
+            dmg_boss = int(boss["atk"] * random.uniform(0.8, 1.2))
+            servant["hp"] = max(0, servant["hp"] - dmg_boss)
+            log_turn.append(f"😈 **{boss['nama']}** melancarkan serangan ke-{j+1} sebesar **{dmg_boss} DMG**!")
+            
+    # Reset State untuk Turn Baru
+    st.session_state.battle_log.extend(log_turn)
+    st.session_state.antrean_combo = []
+    st.session_state.indeks_terpakai = []
+    st.session_state.kartu_tersedia = acak_5_kartu()
 
-# Reset target efek flash agar tidak berkedip selamanya saat halaman dimuat ulang
+# 5. TAMPILAN GRAFIS ARENA
+col_servant, col_boss = st.columns(2)
+with col_servant:
+    st.subheader(f"🧑‍🚀 {servant['nama']}")
+    st.markdown(f'<div class="{"hit-flash" if st.session_state.flash_target == "servant" else ""}"><img src="{URL_SERVANT}" width="160"></div>', unsafe_allow_html=True)
+    st.progress(servant["hp"] / servant["max_hp"], text=f"HP: {servant['hp']} / {servant['max_hp']}")
+    st.progress(servant["np"] / servant["max_np"], text=f"NP Gauge: {servant['np']}%")
+
+with col_boss:
+    st.subheader(f"😈 {boss['boss' in boss and boss['nama'] or boss['nama']]}")
+    st.markdown(f'<div class="{"hit-flash" if st.session_state.flash_target == "boss" else ""}"><img src="{URL_BOSS}" width="160"></div>', unsafe_allow_html=True)
+    st.progress(boss["hp"] / boss["max_hp"], text=f"HP: {boss['hp']} / {boss['max_hp']}")
+
 st.session_state.flash_target = None
+st.markdown("---")
+
+# 6. SLOT PANEL COMBO (Melihat kartu yang sudah Anda pilih untuk turn ini)
+st.write("📥 **Rangkaian Combo Turn Ini:**")
+col_slot1, col_slot2, col_slot3 = st.columns(3)
+slots = [col_slot1, col_slot2, col_slot3]
+
+for i in range(3):
+    with slots[i]:
+        if i < len(st.session_state.antrean_combo):
+            kartu_nama = st.session_state.antrean_combo[i]
+            warna_css = kartu_nama.lower()
+            st.markdown(f'<div class="slot-filled {warna_css}-box">Slot {i+1}: {kartu_nama}</div>', unsafe_allow_html=True)
+        else:
+            st.markdown('<div class="slot-empty">Kosong</div>', unsafe_allow_html=True)
 
 st.markdown("---")
 
-# 5. AREA LOG PERTANDINGAN (Papan Teks Aksi JRPG)
-st.write("📜 **Log Aksi Pertarungan:**")
+# 7. LOG UTAS PERTEMPURAN
+st.write("📜 **Ulasan Aksi JRPG:**")
 with st.container(border=True):
-    # Menampilkan 4 baris log pertarungan terakhir
-    for log in st.session_state.battle_log[-4:]:
-        st.markdown(f'<p class="battle-log-text">{log}</p>', unsafe_allow_html=True)
+    # Menampilkan 6 baris log terakhir agar rangkaian kombonya terlihat penuh
+    for log in st.session_state.battle_log[-6:]:
+        st.markdown(log)
 
 st.markdown("---")
 
-# 6. MENU PERINTAH (Sistem Giliran Pemain)
-st.write("🎮 **Menu Perintah Anda:**")
-
-# Validasi Akhir Game (Menang / Kalah)
-if player["hp"] <= 0:
-    st.error("💀 GAME OVER! Anda dikalahkan oleh Raja Iblis. Dunia jatuh ke dalam kegelapan...")
+# Cek Status Akhir Game
+if servant["hp"] <= 0:
+    st.error("💀 Servant Anda kalah!")
     st.session_state.game_over = True
-elif enemy["hp"] <= 0:
-    st.success("🎉 VICTORY! Anda berhasil menumbangkan Raja Iblis dan menyelamatkan kerajaan!")
+elif boss["hp"] <= 0:
+    st.success("🎉 Selamat! Boss berhasil dikalahkan dengan kombo mematikan!")
     st.session_state.game_over = True
 
-# Tampilkan tombol menu aksi jika pertarungan masih berlangsung
+# 8. DEK TANGAN & KONTROL PEMILIHAN KARTU
 if not st.session_state.game_over:
-    btn_serang, btn_bertahan, btn_buff, btn_selesai = st.columns(4)
+    st.write("🃏 **Pilih Kartu untuk Mengisi Slot Combo (Maksimal 3):**")
     
-    with btn_serang:
-        if st.button("⚔️ Serang", use_container_width=True, type="primary"):
-            # Reset status pertahanan musuh dari giliran sebelumnya
-            enemy["is_defending"] = False
-            st.session_state.flash_target = "enemy"
+    # Render 5 Kartu sebagai Tombol Klik
+    cols_dek = st.columns(5)
+    for idx, tipe in enumerate(st.session_state.kartu_tersedia):
+        with cols_dek[idx]:
+            warna_css = tipe.lower()
+            st.markdown(f'<div class="card-box {warna_css}-box">{tipe}</div>', unsafe_allow_html=True)
             
-            # Hitung kalkulasi serangan pahlawan
-            total_atk = player["atk"] + (6 if player["buff_atk"] > 0 else 0)
-            damage_base = total_atk - (enemy["def"] * 2 if enemy["is_defending"] else enemy["def"])
-            damage = max(5, int(damage_base + random.randint(-3, 3)))
-            enemy["hp"] = max(0, enemy["hp"] - damage)
+            # Nonaktifkan tombol jika slot penuh ATAU kartu ini sudah diklik
+            sudah_diklik = idx in st.session_state.indeks_terpakai
+            slot_penuh = len(st.session_state.antrean_combo) >= 3
             
-            st.session_state.battle_log.append(f"⚔️ **Anda** menebas {enemy['nama']} senilai **{damage} DMG**!")
-            
-            # Update durasi buff
-            if player["buff_atk"] > 0:
-                player["buff_atk"] -= 1
-            
-            # Giliran Komputer membalas
-            eksekusi_giliran_musuh()
-            st.rerun()
+            if st.button(f"Pilih #{idx+1}", key=f"btn_{idx}", disabled=(sudah_diklik or slot_penuh), use_container_width=True):
+                st.session_state.antrean_combo.append(tipe)
+                st.session_state.indeks_terpakai.append(idx)
+                st.rerun()
 
-    with btn_bertahan:
-        if st.button("🛡️ Bertahan", use_container_width=True):
-            player["is_defending"] = True
-            st.session_state.battle_log.append("🛡️ Anda memasang posisi bertahan! DMG musuh berikutnya dikurangi drastis.")
+    # Tombol Aksi Kontrol Utama
+    btn_clear, btn_action = st.columns(2)
+    with btn_clear:
+        if st.button("🔄 Reset Pilihan Combo", use_container_width=True, disabled=(len(st.session_state.antrean_combo) == 0)):
+            st.session_state.antrean_combo = []
+            st.session_state.indeks_terpakai = []
+            st.rerun()
             
-            if player["buff_atk"] > 0:
-                player["buff_atk"] -= 1
-                
-            eksekusi_giliran_musuh()
+    with btn_action:
+        siap_serang = len(st.session_state.antrean_combo) == 3
+        if st.button("⚔️ MULAI SERANG! (Execute Combo)", use_container_width=True, type="primary", disabled=not siap_serang):
+            eksekusi_seluruh_serangan()
             st.rerun()
-
-    with btn_buff:
-        bisa_cast = player["mp"] >= 10
-        if st.button("✨ Buff (10 MP)", use_container_width=True, disabled=not bisa_cast):
-            player["mp"] -= 10
-            player["buff_atk"] = 3
-            st.session_state.battle_log.append("✨ Anda mengucapkan mantra! Daya serang meningkat **(+6 ATK)** selama 3 giliran.")
-            
-            eksekusi_giliran_musuh()
-            st.rerun()
-
-    with btn_selesai:
-        if st.button("🏳️ Selesai", use_container_width=True):
-            st.session_state.battle_log.append("🏳️ Anda memutuskan melarikan diri dari pertarungan...")
-            player["hp"] = 0
-            st.rerun()
-
-# Tombol Reset ketika Game Selesai
 else:
-    if st.button("🔄 Tantang Lagi (Reset Pertandingan)", use_container_width=True):
-        del st.session_state.game_initialized
+    if st.button("🔄 Ulangi Pertandingan", use_container_width=True, type="primary"):
+        del st.session_state.combo_game_initialized
         st.rerun()
