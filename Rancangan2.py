@@ -128,37 +128,37 @@ header[data-testid="stHeader"] { background: transparent; }
 }
 
 /* ============ ANIMASI ============ */
-/* Warrior mirror (hadap kiri), Wizard tidak (hadap kanan) */
 
-/* IDLE */
+/* IDLE — Warrior mirror (hadap kiri) */
 @keyframes idle-bob-mirror {
     0%,100% { transform: translateY(0) scaleX(-1) scale(1.3); }
     50% { transform: translateY(-6px) scaleX(-1) scale(1.3); }
 }
 .anim-idle-mirror { animation: idle-bob-mirror 2s ease-in-out infinite; }
 
+/* IDLE — Wizard (hadap kanan) */
 @keyframes idle-bob {
     0%,100% { transform: translateY(0) scale(1.3); }
     50% { transform: translateY(-6px) scale(1.3); }
 }
 .anim-idle { animation: idle-bob 2s ease-in-out infinite; }
 
-/* RUN — Warrior lari dari kanan ke kiri (mirror) */
-@keyframes run-left-mirror {
-    0% { transform: translateX(40px) scaleX(-1) scale(1.3); }
-    100% { transform: translateX(-40px) scaleX(-1) scale(1.3); }
+/* RUN — Warrior masuk dari kanan ke tengah (mirror) */
+@keyframes run-enter-mirror {
+    0% { transform: translateX(200px) scaleX(-1) scale(1.3); }
+    100% { transform: translateX(0) scaleX(-1) scale(1.3); }
 }
-.anim-run-left-mirror {
-    animation: run-left-mirror 0.8s ease-in-out infinite alternate;
+.anim-run-enter-mirror {
+    animation: run-enter-mirror 2s ease-out forwards;
 }
 
-/* RUN — Wizard lari dari kiri ke kanan */
-@keyframes run-right {
-    0% { transform: translateX(-40px) scale(1.3); }
-    100% { transform: translateX(40px) scale(1.3); }
+/* RUN — Wizard masuk dari kiri ke tengah (kalau perlu) */
+@keyframes run-enter {
+    0% { transform: translateX(-200px) scale(1.3); }
+    100% { transform: translateX(0) scale(1.3); }
 }
-.anim-run-right {
-    animation: run-right 0.8s ease-in-out infinite alternate;
+.anim-run-enter {
+    animation: run-enter 2s ease-out forwards;
 }
 
 /* ATTACK — Warrior lunge ke kiri (mirror) */
@@ -179,22 +179,23 @@ header[data-testid="stHeader"] { background: transparent; }
 }
 .anim-attack-right { animation: lunge-right 1s ease-out !important; }
 
-/* HIT */
+/* HIT — Warrior mundur ke KANAN (menjauh dari Wizard) + mirror */
 @keyframes shake-mirror {
     0%,100% { transform: translateX(0) scaleX(-1) scale(1.3); }
-    20% { transform: translateX(10px) scaleX(-1) scale(1.3); }
-    40% { transform: translateX(-10px) scaleX(-1) scale(1.3); }
-    60% { transform: translateX(8px) scaleX(-1) scale(1.3); }
-    80% { transform: translateX(-8px) scaleX(-1) scale(1.3); }
+    20% { transform: translateX(15px) scaleX(-1) scale(1.3); }
+    40% { transform: translateX(-5px) scaleX(-1) scale(1.3); }
+    60% { transform: translateX(12px) scaleX(-1) scale(1.3); }
+    80% { transform: translateX(-5px) scaleX(-1) scale(1.3); }
 }
 .anim-hit-mirror { animation: shake-mirror 0.8s ease-out !important; }
 
+/* HIT — Wizard mundur ke KIRI (menjauh dari Warrior) */
 @keyframes shake {
     0%,100% { transform: translateX(0) scale(1.3); }
-    20% { transform: translateX(-10px) scale(1.3); }
-    40% { transform: translateX(10px) scale(1.3); }
-    60% { transform: translateX(-8px) scale(1.3); }
-    80% { transform: translateX(8px) scale(1.3); }
+    20% { transform: translateX(-15px) scale(1.3); }
+    40% { transform: translateX(5px) scale(1.3); }
+    60% { transform: translateX(-12px) scale(1.3); }
+    80% { transform: translateX(5px) scale(1.3); }
 }
 .anim-hit { animation: shake 0.8s ease-out !important; }
 
@@ -230,7 +231,6 @@ header[data-testid="stHeader"] { background: transparent; }
     z-index: 5;
 }
 
-/* Partikel ungu naik */
 @keyframes particle-up {
     0% { opacity: 0; transform: translateY(0) scale(0.5); }
     30% { opacity: 1; transform: translateY(-30px) scale(1); }
@@ -250,24 +250,6 @@ header[data-testid="stHeader"] { background: transparent; }
 .mp-1 { left: 30%; animation-delay: 0.1s; }
 .mp-2 { left: 50%; animation-delay: 0.2s; }
 .mp-3 { left: 70%; animation-delay: 0.3s; }
-
-/* Bola sihir terbang dari Wizard ke Warrior */
-@keyframes orb-fly {
-    0% { opacity: 0; transform: translate(0, 0) scale(0.5); }
-    20% { opacity: 1; transform: translate(0, 0) scale(1.2); }
-    100% { opacity: 0; transform: translate(200px, -30px) scale(0.8); }
-}
-.magic-orb {
-    position: absolute;
-    top: 50%; right: 20px;
-    width: 30px; height: 30px;
-    border-radius: 50%;
-    background: radial-gradient(circle, #fff, #c084fc 40%, #7c3aed 70%);
-    box-shadow: 0 0 20px #c084fc, 0 0 40px #7c3aed;
-    animation: orb-fly 1.2s ease-out forwards;
-    pointer-events: none;
-    z-index: 7;
-}
 
 /* ============ SLASH ============ */
 @keyframes slash-line {
@@ -413,14 +395,13 @@ def top_panel_html(data, hp, max_hp, side):
     )
 
 def sprite_html(data, anim_state, side, show_slash=False, show_shield=False,
-                show_miss=False, show_cast=False, show_orb=False):
-    """Render sprite dengan animasi."""
-    if anim_state == "attack":
+                show_miss=False, show_cast=False):
+    if anim_state == "run_enter":
+        gif_url = data["run"]
+        anim_class = "anim-run-enter-mirror" if side == "ally" else "anim-run-enter"
+    elif anim_state == "attack":
         gif_url = data["attack"]
         anim_class = "anim-attack-left-mirror" if side == "ally" else "anim-attack-right"
-    elif anim_state == "run":
-        gif_url = data["run"]
-        anim_class = "anim-run-left-mirror" if side == "ally" else "anim-run-right"
     elif anim_state == "hit":
         gif_url = data["hit"]
         anim_class = "anim-hit-mirror" if side == "ally" else "anim-hit"
@@ -449,8 +430,6 @@ def sprite_html(data, anim_state, side, show_slash=False, show_shield=False,
             "<div class='magic-particle mp-2'></div>"
             "<div class='magic-particle mp-3'></div>"
         )
-    if show_orb:
-        overlay += "<div class='magic-orb'></div>"
 
     return (
         f"<div class='sprite-wrap'>{overlay}"
@@ -459,23 +438,19 @@ def sprite_html(data, anim_state, side, show_slash=False, show_shield=False,
     )
 
 def fighter_html(data, hp, max_hp, side, anim_state="idle",
-                 show_slash=False, show_shield=False, show_miss=False,
-                 show_cast=False, show_orb=False):
+                 show_slash=False, show_shield=False, show_miss=False, show_cast=False):
     html = f"<div class='fighter {side}'>"
-    html += sprite_html(data, anim_state, side, show_slash, show_shield,
-                        show_miss, show_cast, show_orb)
+    html += sprite_html(data, anim_state, side, show_slash, show_shield, show_miss, show_cast)
     html += "</div>"
     return html
 
 # ============================================================
 # STATE
 # ============================================================
-if "ancient_v3" not in st.session_state:
+if "ancient_v4" not in st.session_state:
     st.session_state.player = {"hp": 150, "max_hp": 150, "atk": 22}
     st.session_state.enemy  = {"hp": 180, "max_hp": 180, "atk": 18}
     st.session_state.round = 1
-    # phase: ready | intro | select | player_run | player_attack | player_return
-    #        enemy_cast | enemy_attack | next_round | gameover
     st.session_state.phase = "ready"
     st.session_state.log = ["⚔️ Bersiap untuk bertarung..."]
     st.session_state.player_anim = "idle"
@@ -486,12 +461,10 @@ if "ancient_v3" not in st.session_state:
     st.session_state.show_miss_enemy = False
     st.session_state.show_miss_player = False
     st.session_state.show_cast_enemy = False
-    st.session_state.show_orb_enemy = False
     st.session_state.damage_popup = ""
     st.session_state.popup_type = ""
     st.session_state.player_defend = False
-    st.session_state.last_player_action = ""
-    st.session_state.ancient_v3 = True
+    st.session_state.ancient_v4 = True
 
 player = st.session_state.player
 enemy = st.session_state.enemy
@@ -509,49 +482,38 @@ def reset_efek():
     st.session_state.show_miss_enemy = False
     st.session_state.show_miss_player = False
     st.session_state.show_cast_enemy = False
-    st.session_state.show_orb_enemy = False
 
-def pilih_aksi_skill1():
+def eksekusi_player(action):
+    """Player attack (Skill 1 / Skill 2)."""
     reset_efek()
-    st.session_state.last_player_action = "skill1"
-
-def pilih_aksi_skill2():
-    reset_efek()
-    st.session_state.last_player_action = "skill2"
-
-def pilih_aksi_defend():
-    reset_efek()
-    st.session_state.last_player_action = "defend"
-
-def eksekusi_skill1():
-    if random.random() < 0.20:
-        st.session_state.show_miss_enemy = True
-        st.session_state.damage_popup = "MISS!"
-        st.session_state.popup_type = "miss"
-        log("⚔️ Warrior [Skill 1]: MISS! Wizard menghindar.")
-        return
-    dmg = int(player["atk"] * random.uniform(0.9, 1.2))
-    enemy["hp"] = max(0, enemy["hp"] - dmg)
+    if action == "skill1":
+        if random.random() < 0.20:
+            st.session_state.show_miss_enemy = True
+            st.session_state.damage_popup = "MISS!"
+            st.session_state.popup_type = "miss"
+            log("⚔️ Warrior [Skill 1]: MISS! Wizard menghindar.")
+            return
+        dmg = int(player["atk"] * random.uniform(0.9, 1.2))
+        enemy["hp"] = max(0, enemy["hp"] - dmg)
+        st.session_state.damage_popup = f"-{dmg}"
+        st.session_state.popup_type = ""
+        log(f"⚔️ Warrior [Skill 1]: {dmg} DMG ke Evil Wizard")
+    else:  # skill2
+        if random.random() < 0.15:
+            st.session_state.show_miss_enemy = True
+            st.session_state.damage_popup = "MISS!"
+            st.session_state.popup_type = "miss"
+            log("🔥 Warrior [Skill 2]: MISS! Wizard menghindar.")
+            return
+        dmg = int(player["atk"] * random.uniform(1.3, 1.7))
+        enemy["hp"] = max(0, enemy["hp"] - dmg)
+        st.session_state.damage_popup = f"-{dmg}!"
+        st.session_state.popup_type = ""
+        log(f"🔥 Warrior [Skill 2]: {dmg} DMG (damage besar!)")
     st.session_state.show_slash_enemy = True
-    st.session_state.damage_popup = f"-{dmg}"
-    st.session_state.popup_type = ""
-    log(f"⚔️ Warrior [Skill 1]: {dmg} DMG ke Evil Wizard")
-
-def eksekusi_skill2():
-    if random.random() < 0.15:
-        st.session_state.show_miss_enemy = True
-        st.session_state.damage_popup = "MISS!"
-        st.session_state.popup_type = "miss"
-        log("🔥 Warrior [Skill 2]: MISS! Wizard menghindar.")
-        return
-    dmg = int(player["atk"] * random.uniform(1.3, 1.7))
-    enemy["hp"] = max(0, enemy["hp"] - dmg)
-    st.session_state.show_slash_enemy = True
-    st.session_state.damage_popup = f"-{dmg}!"
-    st.session_state.popup_type = ""
-    log(f"🔥 Warrior [Skill 2]: {dmg} DMG (damage besar!)")
 
 def eksekusi_defend():
+    reset_efek()
     st.session_state.player_defend = True
     st.session_state.show_shield_player = True
     st.session_state.damage_popup = "DEFEND"
@@ -559,15 +521,13 @@ def eksekusi_defend():
     log("🛡️ Warrior [Defend]: damage dikurangi 60%")
 
 def eksekusi_musuh():
-    """Musuh cast sihir (tanpa lari) lalu attack."""
+    """Musuh cast sihir."""
     reset_efek()
     st.session_state.show_cast_enemy = True
-    aksi = random.choice(["skill1", "skill1", "skill2", "defend"])
-    st.session_state.last_enemy_action = aksi
 
 def eksekusi_musuh_attack():
-    """Terapkan damage musuh."""
-    aksi = st.session_state.get("last_enemy_action", "skill1")
+    """Terapkan damage musuh ke player."""
+    aksi = random.choice(["skill1", "skill1", "skill2", "defend"])
     if aksi == "skill1":
         if random.random() < 0.20 and not st.session_state.player_defend:
             st.session_state.show_miss_player = True
@@ -584,7 +544,6 @@ def eksekusi_musuh_attack():
         else:
             log(f"⚔️ Evil Wizard: {dmg} DMG")
         player["hp"] = max(0, player["hp"] - dmg)
-        st.session_state.show_slash_player = True
         st.session_state.damage_popup = f"-{dmg}"
         st.session_state.popup_type = "magic"
     elif aksi == "skill2":
@@ -603,7 +562,6 @@ def eksekusi_musuh_attack():
         else:
             log(f"🔥 Evil Wizard [Skill 2]: {dmg} DMG (damage besar!)")
         player["hp"] = max(0, player["hp"] - dmg)
-        st.session_state.show_slash_player = True
         st.session_state.damage_popup = f"-{dmg}!"
         st.session_state.popup_type = "magic"
     else:
@@ -617,197 +575,170 @@ def reset_ronde():
     st.session_state.enemy_anim = "idle"
     st.session_state.damage_popup = ""
     st.session_state.popup_type = ""
-    st.session_state.last_player_action = ""
     st.session_state.round += 1
     st.session_state.phase = "select"
+    # ============================================================
+# RENDER FUNGSI (dipanggil tiap phase)
 # ============================================================
-# CEK DEATH
-# ============================================================
-if player["hp"] <= 0:
-    st.session_state.player_anim = "death"
-if enemy["hp"] <= 0:
-    st.session_state.enemy_anim = "death"
+def render_arena():
+    if player["hp"] <= 0:
+        st.session_state.player_anim = "death"
+    if enemy["hp"] <= 0:
+        st.session_state.enemy_anim = "death"
+
+    top_html = "<div class='top-panel'>"
+    top_html += top_panel_html(ENEMY, enemy["hp"], enemy["max_hp"], "enemy")
+    top_html += top_panel_html(PLAYER, player["hp"], player["max_hp"], "ally")
+    top_html += "</div>"
+    st.markdown(top_html, unsafe_allow_html=True)
+
+    arena_html = "<div class='arena-wrap'>"
+    arena_html += fighter_html(
+        ENEMY, enemy["hp"], enemy["max_hp"], "enemy",
+        anim_state=st.session_state.enemy_anim,
+        show_slash=st.session_state.show_slash_enemy,
+        show_miss=st.session_state.show_miss_enemy,
+        show_cast=st.session_state.show_cast_enemy,
+    )
+    arena_html += fighter_html(
+        PLAYER, player["hp"], player["max_hp"], "ally",
+        anim_state=st.session_state.player_anim,
+        show_slash=st.session_state.show_slash_player,
+        show_shield=st.session_state.show_shield_player,
+        show_miss=st.session_state.show_miss_player,
+    )
+    arena_html += "</div>"
+    st.markdown(arena_html, unsafe_allow_html=True)
+
+    if st.session_state.damage_popup:
+        cls = "dmg-pop"
+        if st.session_state.popup_type == "defend": cls += " defend"
+        elif st.session_state.popup_type == "miss": cls += " miss"
+        elif st.session_state.popup_type == "magic": cls += " magic"
+        st.markdown(f"<div class='{cls}'>{st.session_state.damage_popup}</div>", unsafe_allow_html=True)
+
+    st.markdown(f"<div class='round-banner'>◆ RONDE {st.session_state.round} ◆</div>", unsafe_allow_html=True)
 
 # ============================================================
-# TOP PANEL
+# KONTROL PER PHASE
 # ============================================================
-top_html = "<div class='top-panel'>"
-top_html += top_panel_html(ENEMY, enemy["hp"], enemy["max_hp"], "enemy")
-top_html += top_panel_html(PLAYER, player["hp"], player["max_hp"], "ally")
-top_html += "</div>"
-st.markdown(top_html, unsafe_allow_html=True)
-
-# ============================================================
-# ARENA
-# ============================================================
-arena_html = "<div class='arena-wrap'>"
-arena_html += fighter_html(
-    ENEMY, enemy["hp"], enemy["max_hp"], "enemy",
-    anim_state=st.session_state.enemy_anim,
-    show_slash=st.session_state.show_slash_enemy,
-    show_miss=st.session_state.show_miss_enemy,
-    show_cast=st.session_state.show_cast_enemy,
-    show_orb=st.session_state.show_orb_enemy,
-)
-arena_html += fighter_html(
-    PLAYER, player["hp"], player["max_hp"], "ally",
-    anim_state=st.session_state.player_anim,
-    show_slash=st.session_state.show_slash_player,
-    show_shield=st.session_state.show_shield_player,
-    show_miss=st.session_state.show_miss_player,
-)
-arena_html += "</div>"
-st.markdown(arena_html, unsafe_allow_html=True)
-
-# Damage popup
-if st.session_state.damage_popup:
-    cls = "dmg-pop"
-    if st.session_state.popup_type == "defend": cls += " defend"
-    elif st.session_state.popup_type == "miss": cls += " miss"
-    elif st.session_state.popup_type == "magic": cls += " magic"
-    st.markdown(f"<div class='{cls}'>{st.session_state.damage_popup}</div>", unsafe_allow_html=True)
-
-# Round banner
-st.markdown(f"<div class='round-banner'>◆ RONDE {st.session_state.round} ◆</div>", unsafe_allow_html=True)
-
-# ============================================================
-# KONTROL
-# ============================================================
-if player["hp"] <= 0:
+if player["hp"] <= 0 and st.session_state.phase != "ready":
+    render_arena()
     st.error(f"💀 GAME OVER! Warrior tumbang di Ronde {st.session_state.round}.")
     if st.button("🔄 Main Lagi", use_container_width=True, type="primary"):
         for k in list(st.session_state.keys()):
-            if k.startswith("ancient_v3"):
+            if k.startswith("ancient_v4"):
                 del st.session_state[k]
         st.rerun()
 
-elif enemy["hp"] <= 0:
+elif enemy["hp"] <= 0 and st.session_state.phase != "ready":
+    render_arena()
     st.success(f"🎉 VICTORY! Evil Wizard tumbang di Ronde {st.session_state.round}!")
     st.balloons()
     if st.button("🔄 Main Lagi", use_container_width=True, type="primary"):
         for k in list(st.session_state.keys()):
-            if k.startswith("ancient_v3"):
+            if k.startswith("ancient_v4"):
                 del st.session_state[k]
         st.rerun()
 
-# ---------- PHASE: READY ----------
 elif st.session_state.phase == "ready":
-    st.markdown("<div style='text-align:center; color:#FFD700; font-size:14px; margin-bottom:10px;'>⚔️ Siapkah kamu?</div>", unsafe_allow_html=True)
+    render_arena()
+    st.markdown("<div style='text-align:center; color:#FFD700; font-size:14px; margin:10px 0;'>⚔️ Siapkah kamu?</div>", unsafe_allow_html=True)
     if st.button("▶️  MULAI PERTARUNGAN", use_container_width=True, type="primary"):
         st.session_state.log = ["⚔️ Pertarungan dimulai!"]
-        st.session_state.player_anim = "run"
+        st.session_state.player_anim = "run_enter"
         st.session_state.enemy_anim = "idle"
         st.session_state.phase = "intro"
         st.rerun()
 
-# ---------- PHASE: INTRO (Warrior run masuk) ----------
 elif st.session_state.phase == "intro":
-    st.info("⚔️ Warrior berlari ke arena...")
-    time.sleep(1.5)
+    render_arena()
+    st.info("🏃 Warrior berlari ke arena...")
+    # Animasi CSS jalan sendiri, tunggu 2 detik
+    time.sleep(2)
     st.session_state.player_anim = "idle"
     st.session_state.enemy_anim = "idle"
     st.session_state.phase = "select"
     st.rerun()
 
-# ---------- PHASE: SELECT (pilih aksi) ----------
 elif st.session_state.phase == "select":
+    render_arena()
     st.markdown("<div style='font-size:11px; color:#aaa; margin-bottom:4px; text-align:center;'>Pilih Aksi</div>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3)
     with c1:
         if st.button("⚔️ Skill 1", use_container_width=True):
-            pilih_aksi_skill1()
-            st.session_state.phase = "player_run"
+            st.session_state._pending_action = "skill1"
+            st.session_state.phase = "player_attack"
             st.rerun()
     with c2:
         if st.button("🔥 Skill 2", use_container_width=True):
-            pilih_aksi_skill2()
-            st.session_state.phase = "player_run"
+            st.session_state._pending_action = "skill2"
+            st.session_state.phase = "player_attack"
             st.rerun()
     with c3:
         if st.button("🛡️ Defend", use_container_width=True):
-            pilih_aksi_defend()
-            st.session_state.phase = "player_action_direct"
+            st.session_state._pending_action = "defend"
+            st.session_state.phase = "player_attack"
             st.rerun()
 
-# ---------- PHASE: PLAYER RUN (Warrior lari ke kiri) ----------
-elif st.session_state.phase == "player_run":
-    st.info("🏃 Warrior berlari mendekati musuh...")
-    st.session_state.player_anim = "run"
-    time.sleep(1.2)
-    st.session_state.player_anim = "idle"
-    st.session_state.phase = "player_attack"
-    st.rerun()
-
-# ---------- PHASE: PLAYER ATTACK ----------
 elif st.session_state.phase == "player_attack":
-    action = st.session_state.last_player_action
-    if action == "skill1":
-        eksekusi_skill1()
-    elif action == "skill2":
-        eksekusi_skill2()
-    st.session_state.player_anim = "attack"
-    st.session_state.enemy_anim = "hit"
-    time.sleep(1.5)
-    st.session_state.player_anim = "run"  # mulai balik
-    st.session_state.phase = "player_return"
-    st.rerun()
+    # Set animasi SEBELUM render
+    action = st.session_state.get("_pending_action", "skill1")
+    if action == "defend":
+        st.session_state.player_anim = "idle"
+        eksekusi_defend()
+    else:
+        st.session_state.player_anim = "attack"
+        st.session_state.enemy_anim = "hit"
+        eksekusi_player(action)
 
-# ---------- PHASE: PLAYER RETURN (Warrior balik ke kanan) ----------
-elif st.session_state.phase == "player_return":
-    st.info("🏃 Warrior mundur ke posisi semula...")
-    st.session_state.player_anim = "run"
-    time.sleep(1.2)
+    # Render dengan animasi
+    render_arena()
+
+    # Tunggu animasi
+    time.sleep(1.5)
+
+    # Setelah selesai, ganti ke idle
     st.session_state.player_anim = "idle"
+    st.session_state.enemy_anim = "idle"
     st.session_state.phase = "next_to_enemy"
     st.rerun()
 
-# ---------- PHASE: DEFEND DIRECT (tanpa lari) ----------
-elif st.session_state.phase == "player_action_direct":
-    eksekusi_defend()
-    time.sleep(1.5)
-    st.session_state.phase = "next_to_enemy"
-    st.rerun()
-
-# ---------- PHASE: NEXT TO ENEMY ----------
 elif st.session_state.phase == "next_to_enemy":
+    render_arena()
     if st.button("▶️  GILIRAN MUSUH", use_container_width=True, type="primary"):
         reset_efek()
         st.session_state.damage_popup = ""
         st.session_state.popup_type = ""
-        # Musuh cast
-        eksekusi_musuh()
-        st.session_state.enemy_anim = "idle"
+        eksekusi_musuh()  # set cast effect
         st.session_state.phase = "enemy_cast"
         st.rerun()
 
-# ---------- PHASE: ENEMY CAST (Wizard cast sihir) ----------
 elif st.session_state.phase == "enemy_cast":
-    st.info("🔮 Evil Wizard merapal sihir...")
     st.session_state.show_cast_enemy = True
+    render_arena()
+    st.info("🔮 Evil Wizard merapal sihir...")
     time.sleep(1.5)
-    # Sihir terbang
-    st.session_state.show_orb_enemy = True
     st.session_state.phase = "enemy_attack"
     st.rerun()
 
-# ---------- PHASE: ENEMY ATTACK ----------
 elif st.session_state.phase == "enemy_attack":
     st.session_state.enemy_anim = "attack"
-    eksekusi_musuh_attack()
     st.session_state.player_anim = "hit"
+    eksekusi_musuh_attack()
+    render_arena()
     time.sleep(1.5)
     st.session_state.enemy_anim = "idle"
+    st.session_state.player_anim = "idle"
     st.session_state.phase = "next_round"
     st.rerun()
 
-# ---------- PHASE: NEXT ROUND ----------
 elif st.session_state.phase == "next_round":
+    render_arena()
     if st.button("▶️  RONDE BARU", use_container_width=True, type="primary"):
         reset_efek()
         st.session_state.damage_popup = ""
         st.session_state.popup_type = ""
-        st.session_state.player_anim = "idle"
-        st.session_state.enemy_anim = "idle"
         reset_ronde()
         st.rerun()
 
