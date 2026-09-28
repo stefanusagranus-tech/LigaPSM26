@@ -59,70 +59,82 @@ if uploaded_file is not None:
         selected_bill = st.text_input("Masukkan Nomor Bill (`bill_no`):")
 
       if selected_bill:
-        # Bersihkan string bill_no dari input user
         str_bill = str(selected_bill).strip()
 
-        # Buat berbagai variasi format untuk dicari di log_receipt_prn
-        # (Misal: '149', '0149', '  149', dll)
+        # Variasi format digit untuk mencocokkan log_receipt_prn
         variations = [
             str_bill,
-            str_bill.zfill(4),  # Menjadi '0149' jika panjangnya kurang dari 4
-            str_bill.zfill(
-                len(str_bill) + 1
-            ),  # Tambah 1 nol di depan jika perlu
-            str(int(str_bill))
-            if str_bill.isdigit()
-            else str_bill,  # Versi integer jika tersimpan sebagai angka
+            str_bill.zfill(4),
+            str_bill.zfill(len(str_bill) + 1),
+            str(int(str_bill)) if str_bill.isdigit() else str_bill,
         ]
-        # Hilangkan duplikat
         variations = list(set(variations))
 
-        # Query data dari tx_trans (biasanya menggunakan format asli)
         query_trans = (
             f"SELECT * FROM tx_trans WHERE bill_no = '{selected_bill}'"
         )
         df_trans = pd.read_sql(query_trans, conn)
 
-        # Query data dari log_receipt_prn dengan mencobakan berbagai variasi format digit
         df_receipt = pd.DataFrame()
         for v in variations:
           query_receipt = f"SELECT * FROM log_receipt_prn WHERE bill_no = '{v}'"
           df_temp = pd.read_sql(query_receipt, conn)
           if not df_temp.empty:
             df_receipt = df_temp
-            break  # Berhenti jika data ditemukan
+            break
 
-        # Tampilkan Tab Menu
         tab1, tab2 = st.tabs(["🧾 Preview Struk", "🛒 Detail tx_trans"])
 
         with tab1:
-          st.write(
-              f"### Cetak Struk untuk Bill: `{selected_bill}` (Mencari variasi"
-              f" format: {variations})"
-          )
+          st.write(f"### Cetak Struk untuk Bill: `{selected_bill}`")
           if not df_receipt.empty:
-            # Ambil baris pertama dari hasil query receipt
             row = df_receipt.iloc[0]
 
-            # Kumpulkan bagian-bagian teks struk dari kolom database
-            parts_to_print = [
-                row.get("header", ""),
-                row.get("body1", ""),
-                row.get("body2", ""),
-                row.get("body3", ""),
-                row.get("addtl1", ""),
-                row.get("addtl3", ""),
-                row.get("footer", ""),
+            # Ambil semua kolom yang berpotensi berisi teks struk
+            # Terkadang teks dipisah antar kolom, kita gabungkan dengan baris baru (\n)
+            columns_to_check = [
+                "header",
+                "body1",
+                "body2",
+                "body3",
+                "addtl1",
+                "addtl2",
+                "addtl3",
+                "footer",
             ]
+            parts_to_print = []
 
-            # Gabungkan teks yang tidak kosong
-            full_receipt_text = "\n".join(
-                [str(p) for p in parts_to_print if pd.notna(p) and str(p) != ""]
-            )
+            for col in columns_to_check:
+              if col in row and pd.notna(row[col]) and str(row[col]).strip() != "":
+                content = str(row[col])
+                # Jika di dalam teks kolom terdapat karakter pemisah atau ingin dipaksa turun baris
+                parts_to_print.append(content)
 
-            # Tampilkan dalam wadah teks struk
-            st.code(full_receipt_text, language="text")
+            # Gabungkan seluruh bagian dengan baris baru
+            full_receipt_text = "\n".join(parts_to_print)
 
+            # Format HTML/CSS kustom agar struk tercetak rapi memanjang ke bawah layaknya kertas struk thermal
+            receipt_html = f"""
+                        <div style="
+                            background-color: #fcfcfc;
+                            color: #111111;
+                            padding: 20px;
+                            border-radius: 8px;
+                            border: 1px solid #cccccc;
+                            font-family: 'Courier New', Courier, monospace;
+                            white-space: pre-wrap;
+                            word-wrap: break-word;
+                            font-size: 14px;
+                            line-height: 1.4;
+                            max-width: 400px;
+                            box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+                        ">{full_receipt_text}</div>
+                        """
+
+            # Tampilkan menggunakan markdown dengan unsafe_allow_html=True
+            st.markdown(receipt_html, unsafe_allow_html=True)
+
+            st.write("")  # Spasi
             # Tombol Download Struk
             st.download_button(
                 label="📥 Download Struk (TXT)",
@@ -133,7 +145,7 @@ if uploaded_file is not None:
           else:
             st.warning(
                 f"Tidak ditemukan data struk di `log_receipt_prn` untuk bill"
-                f" `{selected_bill}` (Dicoba dengan format: {variations})."
+                f" `{selected_bill}`."
             )
 
         with tab2:
