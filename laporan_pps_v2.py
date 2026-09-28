@@ -1,10 +1,14 @@
 """
-Generator Laporan WhatsApp PPS v2
-==================================
+Generator Laporan WhatsApp PPS v2.1
+====================================
 Format: Per-shift dengan 5 program
-Target dinamis (best estimate)
+Target dinamis (best estimate) + fallback flat
+Summary bold
 
-Version: 2.0
+Version: 2.1
+Changelog:
+- Fix: target dinamis fallback ke flat kalau sisa target <= 0
+- Fix: summary bold semua angka
 """
 
 import pandas as pd
@@ -23,7 +27,7 @@ def _fmt_pct(actual, target):
 
 
 def _fmt_int(v):
-    """Format integer."""
+    """Format integer dengan koma."""
     try:
         return f"{int(v):,}"
     except Exception:
@@ -31,15 +35,15 @@ def _fmt_int(v):
 
 
 # =========================================================
-# HELPER: AMBIL PERIODE
+# HELPER: AMBIL PERIODE BY KODE PREFIX
 # =========================================================
 def _get_periode_by_kode(periods_df, kode_prefix, tanggal):
     """
-    Cari periode yang aktif berdasarkan kode prefix & tanggal.
+    Cari periode aktif berdasarkan kode prefix & tanggal.
     
     Args:
         periods_df: DataFrame periode
-        kode_prefix: 'P' untuk PSM, 'PWPS' untuk PWP, 'SGS' untuk SG, 'SGR' untuk Sueger
+        kode_prefix: 'P' PSM, 'PWPS' PWP, 'SGS' SG, 'SGR' Sueger
         tanggal: date
     
     Returns:
@@ -88,87 +92,117 @@ def _get_periode_by_kode(periods_df, kode_prefix, tanggal):
 # =========================================================
 # HELPER: TARGET PSM
 # =========================================================
-def _hitung_target_psm_harian(sales_item_df, period_id, jhk):
-    """
-    Target PSM harian = SUM(target_qty) / JHK
-    """
+def _hitung_target_psm_bulan(sales_item_df, period_id):
+    """Hitung SUM(target_qty) untuk periode PSM."""
     try:
         if sales_item_df is None or sales_item_df.empty:
-            return 0, 0
+            return 0
         
         df = sales_item_df.copy()
         df.columns = df.columns.astype(str).str.strip().str.lower()
         
-        # Filter periode
         df = df[df["period_id"].astype(str).str.strip() == str(period_id).strip()]
         
-        if df.empty:
-            return 0, 0
-        
-        # Sum target_qty
-        if "target_qty" not in df.columns:
-            return 0, 0
+        if df.empty or "target_qty" not in df.columns:
+            return 0
         
         df["target_qty"] = pd.to_numeric(df["target_qty"], errors="coerce").fillna(0)
-        total_target = int(df["target_qty"].sum())
-        
-        # Target harian
-        target_harian = int(total_target / jhk) if jhk > 0 else 0
-        
-        return total_target, target_harian
+        return int(df["target_qty"].sum())
     except Exception as e:
-        print(f"[_hitung_target_psm_harian ERROR] {e}")
-        return 0, 0
+        print(f"[_hitung_target_psm_bulan ERROR] {e}")
+        return 0
 
 
 # =========================================================
 # HELPER: TARGET PPS (PWP / SG)
 # =========================================================
-def _hitung_target_pps_harian(periods_pps_df, kode_prefix, tanggal):
-    """
-    Target PPS harian = target_total / JHK
-    """
+def _get_target_pps_bulan(periods_pps_df, period_id):
+    """Ambil target_total dari periods_pps_df by period_id."""
     try:
         if periods_pps_df is None or periods_pps_df.empty:
-            return 0, 0, None
+            return 0
         
         df = periods_pps_df.copy()
         df.columns = df.columns.astype(str).str.strip().str.lower()
         
-        # Filter by prefix
-        df = df[df["period_id"].astype(str).str.upper().str.startswith(kode_prefix.upper(), na=False)]
+        df = df[df["period_id"].astype(str).str.strip() == str(period_id).strip()]
         
-        if df.empty:
-            return 0, 0, None
+        if df.empty or "target_total" not in df.columns:
+            return 0
         
-        # Parse tanggal
-        df["start_dt"] = pd.to_datetime(df["start_date"], errors="coerce").dt.date
-        df["end_dt"] = pd.to_datetime(df["end_date"], errors="coerce").dt.date
-        
-        # Filter yang aktif
-        df = df[(df["start_dt"] <= tanggal) & (df["end_dt"] >= tanggal)]
-        
-        if df.empty:
-            return 0, 0, None
-        
-        row = df.iloc[0]
-        start = row["start_dt"]
-        end = row["end_dt"]
-        jhk = (end - start).days + 1
-        
-        target_total = int(pd.to_numeric(row.get("target_total", 0), errors="coerce") or 0)
-        target_harian = int(target_total / jhk) if jhk > 0 else 0
-        
-        return target_total, target_harian, {
-            "period_id": str(row["period_id"]),
-            "jhk": jhk,
-            "start_date": start,
-            "end_date": end,
-            "label": str(row.get("period_name", row["period_id"])),
-        }
+        return int(pd.to_numeric(df["target_total"].iloc[0], errors="coerce") or 0)
     except Exception as e:
-        print(f"[_hitung_target_pps_harian ERROR] {e}")
-        return 0, 0, None
+        print(f"[_get_target_pps_bulan ERROR] {e}")
+        return 0
+
+
+# =========================================================
+# HELPER: AKTUAL KUMULATIF
+# =========================================================
+def _get_aktual_kumulatif(df_source, periode, kolom_qty, tanggal, filter_cols=None):
+    """
+    Hitung aktual kumulatif dari awal periode sampai tanggal.
+    
+    Args:
+        df_source: DataFrame source
+        periode: dict {start_date, end_date}
+        kolom_qty: nama kolom qty
+        tanggal: date (batas akhir)
+        filter_cols: dict {kolom: value} untuk filter tambahan
+    """
+    if df_source is None or df_source.empty or periode is None:
+        return 0
+    
+    try:
+        _df = df_source.copy()
+        _df.columns = _df.columns.astype(str).str.strip().str.lower()
+        _df["_tgl"] = pd.to_datetime(_df["updated_at"], errors="coerce").dt.date
+        
+        _df = _df[
+            (_df["_tgl"] >= periode["start_date"]) &
+            (_df["_tgl"] <= tanggal)
+        ]
+        
+        if filter_cols:
+            for _col, _val in filter_cols.items():
+                if _col in _df.columns:
+                    _df = _df[_df[_col].astype(str) == str(_val)]
+        
+        if kolom_qty in _df.columns:
+            return int(pd.to_numeric(_df[kolom_qty], errors="coerce").fillna(0).sum())
+    except Exception as e:
+        print(f"[_get_aktual_kumulatif ERROR] {e}")
+    
+    return 0
+
+
+# =========================================================
+# HELPER: TARGET DINAMIS (BEST ESTIMATE + FALLBACK FLAT)
+# =========================================================
+def _hitung_target_dinamis(total_target, aktual_kumulatif, jhk, hari_ke):
+    """
+    Target dinamis dengan fallback ke target flat.
+    
+    Logika:
+    - sisa_target > 0  → Target = sisa_target / sisa_hari  (DINAMIS)
+    - sisa_target <= 0 → Target = total_target / jhk        (FLAT)
+    
+    Ini mencegah target minus ketika aktual sudah over/pas.
+    """
+    sisa_target = total_target - aktual_kumulatif
+    sisa_hari = jhk - hari_ke
+    
+    if sisa_hari <= 0:
+        return 0
+    
+    # Kalau sisa target <= 0 (over/pas) → fallback ke target flat
+    if sisa_target <= 0:
+        return int(total_target / jhk) if jhk > 0 else 0
+    
+    # Kalau belum achieved → target dinamis
+    return int(sisa_target / sisa_hari)
+
+
 # =========================================================
 # HELPER: TARGET PER SHIFT (40/40/20)
 # =========================================================
@@ -179,24 +213,6 @@ def _target_per_shift(target_harian):
         "Shift 2": int(target_harian * 0.40),
         "Shift 3": int(target_harian * 0.20),
     }
-
-
-# =========================================================
-# HELPER: TARGET DINAMIS BESOK (BEST ESTIMATE)
-# =========================================================
-def _hitung_target_besok(total_target_bulan, aktual_kumulatif, hari_ke, jhk):
-    """
-    Target besok = (sisa_target) / (sisa_hari)
-    """
-    sisa_target = total_target_bulan - aktual_kumulatif
-    sisa_hari = jhk - hari_ke
-    
-    if sisa_hari <= 0 or sisa_target <= 0:
-        return 0
-    
-    return int(sisa_target / sisa_hari)
-
-
 # =========================================================
 # GENERATOR UTAMA
 # =========================================================
@@ -210,10 +226,10 @@ def generate_laporan_pps_v2(
     person_df=None,
 ):
     """
-    Generate laporan WhatsApp PPS v2.
+    Generate laporan WhatsApp PPS v2.1.
     
     Returns:
-        str: Text laporan
+        str: Text laporan siap copy
     """
     
     # =========================================================
@@ -221,20 +237,20 @@ def generate_laporan_pps_v2(
     # =========================================================
     tanggal_str = tanggal.strftime("%d-%m-%Y")
     
-    # Periode PSM
+    # Periode PSM (P01, S01, S04)
     psm_periode = _get_periode_by_kode(periods_df, "P", tanggal)
     if not psm_periode:
         psm_periode = _get_periode_by_kode(periods_df, "S", tanggal)
     
-    # Periode PWP
+    # Periode PWP (PWPS)
     pwp_periode = _get_periode_by_kode(periods_pps_df, "PWPS", tanggal)
     if not pwp_periode:
         pwp_periode = _get_periode_by_kode(periods_pps_df, "PWP", tanggal)
     
-    # Periode SG
+    # Periode SG (SGS)
     sg_periode = _get_periode_by_kode(periods_pps_df, "SGS", tanggal)
     
-    # Periode Sueger
+    # Periode Sueger (SGR)
     sgr_periode = _get_periode_by_kode(periods_pps_df, "SGR", tanggal)
     
     # Label periode (pakai PSM)
@@ -246,41 +262,61 @@ def generate_laporan_pps_v2(
     sisa_hari = max(0, jhk - hari_ke)
     
     # =========================================================
-    # 2. HITUNG TARGET
+    # 2. HITUNG TARGET DINAMIS
     # =========================================================
-    # Target PSM
+    
+    # --- PSM ---
     psm_target_bulan = 0
     psm_target_harian = 0
     if psm_periode:
-        psm_target_bulan, psm_target_harian = _hitung_target_psm_harian(
-            sales_item_df, psm_periode["period_id"], psm_periode["jhk"]
+        psm_target_bulan = _hitung_target_psm_bulan(
+            sales_item_df, psm_periode["period_id"]
+        )
+        psm_hari_ke = (tanggal - psm_periode["start_date"]).days + 1
+        aktual_psm_kum = _get_aktual_kumulatif(
+            sales_personil_df,
+            psm_periode,
+            "actual_qty",
+            tanggal,
+            filter_cols={"period_id": psm_periode["period_id"]},
+        )
+        psm_target_harian = _hitung_target_dinamis(
+            psm_target_bulan, aktual_psm_kum, psm_periode["jhk"], psm_hari_ke
         )
     
-    # Target PWP
+    # --- PWP ---
     pwp_target_bulan = 0
     pwp_target_harian = 0
     pwp_jhk = jhk
     if pwp_periode:
-        pwp_target_bulan = int(pd.to_numeric(
-            periods_pps_df[
-                periods_pps_df["period_id"].astype(str) == pwp_periode["period_id"]
-            ]["target_total"].iloc[0], errors="coerce"
-        ) or 0) if not periods_pps_df.empty else 0
-        pwp_target_harian = int(pwp_target_bulan / pwp_periode["jhk"]) if pwp_periode["jhk"] > 0 else 0
+        pwp_target_bulan = _get_target_pps_bulan(
+            periods_pps_df, pwp_periode["period_id"]
+        )
         pwp_jhk = pwp_periode["jhk"]
+        pwp_hari_ke = (tanggal - pwp_periode["start_date"]).days + 1
+        aktual_pwp_kum = _get_aktual_kumulatif(
+            sales_pps_df, pwp_periode, "qty_pwp", tanggal
+        )
+        pwp_target_harian = _hitung_target_dinamis(
+            pwp_target_bulan, aktual_pwp_kum, pwp_jhk, pwp_hari_ke
+        )
     
-    # Target SG
+    # --- SG ---
     sg_target_bulan = 0
     sg_target_harian = 0
     if sg_periode:
-        sg_target_bulan = int(pd.to_numeric(
-            periods_pps_df[
-                periods_pps_df["period_id"].astype(str) == sg_periode["period_id"]
-            ]["target_total"].iloc[0], errors="coerce"
-        ) or 0) if not periods_pps_df.empty else 0
-        sg_target_harian = int(sg_target_bulan / sg_periode["jhk"]) if sg_periode["jhk"] > 0 else 0
+        sg_target_bulan = _get_target_pps_bulan(
+            periods_pps_df, sg_periode["period_id"]
+        )
+        sg_hari_ke = (tanggal - sg_periode["start_date"]).days + 1
+        aktual_sg_kum = _get_aktual_kumulatif(
+            sales_pps_df, sg_periode, "qty_sg", tanggal
+        )
+        sg_target_harian = _hitung_target_dinamis(
+            sg_target_bulan, aktual_sg_kum, sg_periode["jhk"], sg_hari_ke
+        )
     
-    # Target per shift
+    # --- Target per shift (40/40/20) ---
     target_psm_shift = _target_per_shift(psm_target_harian)
     target_pwp_shift = _target_per_shift(pwp_target_harian)
     target_sg_shift = _target_per_shift(sg_target_harian)
@@ -323,7 +359,10 @@ def generate_laporan_pps_v2(
     # =========================================================
     # 5. REPORT PSM
     # =========================================================
-    total_psm_today = int(psm_today["actual_qty"].sum()) if not psm_today.empty and "actual_qty" in psm_today.columns else 0
+    total_psm_today = 0
+    if not psm_today.empty and "actual_qty" in psm_today.columns:
+        total_psm_today = int(pd.to_numeric(psm_today["actual_qty"], errors="coerce").fillna(0).sum())
+    
     ach_psm = _fmt_pct(total_psm_today, psm_target_harian)
     
     text += (
@@ -334,6 +373,7 @@ def generate_laporan_pps_v2(
     )
     
     if not psm_today.empty and "item_name" in psm_today.columns:
+        psm_today["actual_qty"] = pd.to_numeric(psm_today["actual_qty"], errors="coerce").fillna(0)
         item_grouped = (
             psm_today.groupby("item_name")["actual_qty"]
             .sum()
@@ -373,7 +413,6 @@ def generate_laporan_pps_v2(
             if shift_df.empty:
                 continue
             
-            # Header shift
             staff_names = ", ".join(sorted(set(shift_df["staff_name"].dropna().astype(str))))
             kasir_names = " & ".join(sorted(set(shift_df["kasir_name"].dropna().astype(str))))
             
@@ -382,7 +421,6 @@ def generate_laporan_pps_v2(
                 f"   (Staf: {staff_names} | Kasir: {kasir_names})\n"
             )
             
-            # Hitung
             syarat_pwp = int(shift_df["syarat_pwp"].sum()) if "syarat_pwp" in shift_df.columns else 0
             redeem_pwp = int(shift_df["redeem_pwp"].sum()) if "redeem_pwp" in shift_df.columns else 0
             qty_pwp = int(shift_df["qty_pwp"].sum()) if "qty_pwp" in shift_df.columns else 0
@@ -412,51 +450,63 @@ def generate_laporan_pps_v2(
     text += f"\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
     
     # =========================================================
-    # 7. SUMMARY
+    # 7. SUMMARY (BOLD)
     # =========================================================
     text += f"📊 *SUMMARY PENJUALAN TANGGAL {tanggal_str}*\n\n"
     
     # PWP
-    total_syarat_pwp = int(pps_today["syarat_pwp"].sum()) if not pps_today.empty and "syarat_pwp" in pps_today.columns else 0
-    total_redeem_pwp = int(pps_today["redeem_pwp"].sum()) if not pps_today.empty and "redeem_pwp" in pps_today.columns else 0
-    total_qty_pwp = int(pps_today["qty_pwp"].sum()) if not pps_today.empty and "qty_pwp" in pps_today.columns else 0
+    total_syarat_pwp = 0
+    total_redeem_pwp = 0
+    total_qty_pwp = 0
+    if not pps_today.empty:
+        total_syarat_pwp = int(pps_today["syarat_pwp"].sum()) if "syarat_pwp" in pps_today.columns else 0
+        total_redeem_pwp = int(pps_today["redeem_pwp"].sum()) if "redeem_pwp" in pps_today.columns else 0
+        total_qty_pwp = int(pps_today["qty_pwp"].sum()) if "qty_pwp" in pps_today.columns else 0
+    
     total_ach_pwp = _fmt_pct(total_redeem_pwp, total_syarat_pwp)
     total_ach_pwp_qty = _fmt_pct(total_qty_pwp, pwp_target_harian)
     
     text += (
         f"   ⚡ *PWP*\n"
-        f"      • Syarat/Redeem: {total_syarat_pwp}/{total_redeem_pwp} ({total_ach_pwp})\n"
-        f"      • PWP Qty: 🎯 {pwp_target_harian} / 📦 *{total_qty_pwp}* ({total_ach_pwp_qty})\n"
+        f"      • *Syarat/Redeem: {total_syarat_pwp}/{total_redeem_pwp} ({total_ach_pwp})*\n"
+        f"      • *PWP Qty: 🎯 {pwp_target_harian} / 📦 {total_qty_pwp} ({total_ach_pwp_qty})*\n"
         f"   \n"
     )
     
     # SG
-    total_qty_sg = int(pps_today["qty_sg"].sum()) if not pps_today.empty and "qty_sg" in pps_today.columns else 0
+    total_qty_sg = 0
+    if not pps_today.empty and "qty_sg" in pps_today.columns:
+        total_qty_sg = int(pps_today["qty_sg"].sum())
     total_ach_sg = _fmt_pct(total_qty_sg, sg_target_harian)
     
     text += (
         f"   🎁 *SG*\n"
-        f"      • SG Qty: 🎯 {sg_target_harian} / 📦 *{total_qty_sg}* ({total_ach_sg})\n"
+        f"      • *SG Qty: 🎯 {sg_target_harian} / 📦 {total_qty_sg} ({total_ach_sg})*\n"
         f"   \n"
     )
     
     # Sueger
-    total_syarat_sgr = int(pps_today["syarat_sueger"].sum()) if not pps_today.empty and "syarat_sueger" in pps_today.columns else 0
-    total_redeem_sgr = int(pps_today["redeem_sueger"].sum()) if not pps_today.empty and "redeem_sueger" in pps_today.columns else 0
+    total_syarat_sgr = 0
+    total_redeem_sgr = 0
+    if not pps_today.empty:
+        total_syarat_sgr = int(pps_today["syarat_sueger"].sum()) if "syarat_sueger" in pps_today.columns else 0
+        total_redeem_sgr = int(pps_today["redeem_sueger"].sum()) if "redeem_sueger" in pps_today.columns else 0
     total_ach_sgr = _fmt_pct(total_redeem_sgr, total_syarat_sgr)
     
     text += (
         f"   💧 *Sueger*\n"
-        f"      • Syarat/Redeem: {total_syarat_sgr}/{total_redeem_sgr} ({total_ach_sgr})\n"
+        f"      • *Syarat/Redeem: {total_syarat_sgr}/{total_redeem_sgr} ({total_ach_sgr})*\n"
         f"   \n"
     )
     
     # Ceban
-    total_ceban = int(pps_today["cemilan_ceban"].sum()) if not pps_today.empty and "cemilan_ceban" in pps_today.columns else 0
+    total_ceban = 0
+    if not pps_today.empty and "cemilan_ceban" in pps_today.columns:
+        total_ceban = int(pps_today["cemilan_ceban"].sum())
     
     text += (
         f"   🥤 *Ceban*\n"
-        f"      • Ceban Qty: *{total_ceban}*\n"
+        f"      • *Ceban Qty: {total_ceban}*\n"
     )
     
     text += f"\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
@@ -464,57 +514,40 @@ def generate_laporan_pps_v2(
     # =========================================================
     # 8. UPDATE TARGET BESOK (CONDITIONAL)
     # =========================================================
-    shift_1_ada = "Shift 1" in (pps_today["shift_personil"].unique().tolist() if not pps_today.empty else [])
-    shift_2_ada = "Shift 2" in (pps_today["shift_personil"].unique().tolist() if not pps_today.empty else [])
-    shift_3_ada = "Shift 3" in (pps_today["shift_personil"].unique().tolist() if not pps_today.empty else [])
-    tiga_shift_lengkap = shift_1_ada and shift_2_ada and shift_3_ada
+    if not pps_today.empty:
+        shift_1_ada = "Shift 1" in pps_today["shift_personil"].unique().tolist()
+        shift_2_ada = "Shift 2" in pps_today["shift_personil"].unique().tolist()
+        shift_3_ada = "Shift 3" in pps_today["shift_personil"].unique().tolist()
+        tiga_shift_lengkap = shift_1_ada and shift_2_ada and shift_3_ada
+    else:
+        shift_1_ada = shift_2_ada = shift_3_ada = False
+        tiga_shift_lengkap = False
     
     if tiga_shift_lengkap:
-        # Hitung aktual kumulatif
-        aktual_psm_kumulatif = 0
-        aktual_pwp_kumulatif = 0
-        aktual_sg_kumulatif = 0
+        # Hitung aktual kumulatif sampai hari ini (udah include data hari ini)
+        aktual_psm_kum = _get_aktual_kumulatif(
+            sales_personil_df, psm_periode, "actual_qty", tanggal,
+            filter_cols={"period_id": psm_periode["period_id"]} if psm_periode else None
+        ) if psm_periode else 0
         
-        if psm_periode and not sales_personil_df.empty:
-            df_psm = sales_personil_df.copy()
-            df_psm.columns = df_psm.columns.astype(str).str.strip().str.lower()
-            df_psm["_tgl"] = pd.to_datetime(df_psm["updated_at"], errors="coerce").dt.date
-            df_psm = df_psm[
-                (df_psm["_tgl"] >= psm_periode["start_date"]) &
-                (df_psm["_tgl"] <= tanggal) &
-                (df_psm["period_id"].astype(str) == psm_periode["period_id"])
-            ]
-            aktual_psm_kumulatif = int(df_psm["actual_qty"].sum()) if not df_psm.empty else 0
+        aktual_pwp_kum = _get_aktual_kumulatif(
+            sales_pps_df, pwp_periode, "qty_pwp", tanggal
+        ) if pwp_periode else 0
         
-        if pwp_periode and not sales_pps_df.empty:
-            df_pwp = sales_pps_df.copy()
-            df_pwp.columns = df_pwp.columns.astype(str).str.strip().str.lower()
-            df_pwp["_tgl"] = pd.to_datetime(df_pwp["updated_at"], errors="coerce").dt.date
-            df_pwp = df_pwp[
-                (df_pwp["_tgl"] >= pwp_periode["start_date"]) &
-                (df_pwp["_tgl"] <= tanggal)
-            ]
-            aktual_pwp_kumulatif = int(df_pwp["qty_pwp"].sum()) if not df_pwp.empty else 0
+        aktual_sg_kum = _get_aktual_kumulatif(
+            sales_pps_df, sg_periode, "qty_sg", tanggal
+        ) if sg_periode else 0
         
-        if sg_periode and not sales_pps_df.empty:
-            df_sg = sales_pps_df.copy()
-            df_sg.columns = df_sg.columns.astype(str).str.strip().str.lower()
-            df_sg["_tgl"] = pd.to_datetime(df_sg["updated_at"], errors="coerce").dt.date
-            df_sg = df_sg[
-                (df_sg["_tgl"] >= sg_periode["start_date"]) &
-                (df_sg["_tgl"] <= tanggal)
-            ]
-            aktual_sg_kumulatif = int(df_sg["qty_sg"].sum()) if not df_sg.empty else 0
-        
-        # Hitung target besok
-        target_psm_besok = _hitung_target_besok(
-            psm_target_bulan, aktual_psm_kumulatif, hari_ke, jhk
+        # Target besok (dinamis dengan fallback)
+        besok_hari_ke = hari_ke + 1
+        target_psm_besok = _hitung_target_dinamis(
+            psm_target_bulan, aktual_psm_kum, jhk, besok_hari_ke
         )
-        target_pwp_besok = _hitung_target_besok(
-            pwp_target_bulan, aktual_pwp_kumulatif, hari_ke, pwp_jhk
+        target_pwp_besok = _hitung_target_dinamis(
+            pwp_target_bulan, aktual_pwp_kum, pwp_jhk, besok_hari_ke if pwp_periode else hari_ke + 1
         )
-        target_sg_besok = _hitung_target_besok(
-            sg_target_bulan, aktual_sg_kumulatif, hari_ke, sg_periode["jhk"] if sg_periode else jhk
+        target_sg_besok = _hitung_target_dinamis(
+            sg_target_bulan, aktual_sg_kum, sg_periode["jhk"] if sg_periode else jhk, besok_hari_ke
         )
         
         besok = tanggal + timedelta(days=1)
