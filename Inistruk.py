@@ -4,6 +4,7 @@ import sqlite3
 import pandas as pd
 import streamlit as st
 import html
+import re
 
 st.set_page_config(
     page_title="Cetak Struk & Data Penjualan", page_icon="🧾", layout="wide"
@@ -20,6 +21,81 @@ uploaded_file = st.file_uploader(
 )
 extract_path = "temp_db_folder"
 
+# ============================================================
+# FUNGSI UNTUK MERAPIKAN STRUK
+# ============================================================
+def format_struk(raw_text: str, width: int = 42) -> str:
+    """
+    Mengubah teks mentah dari database menjadi struk rapi
+    dengan lebar tetap (default 42 karakter).
+    """
+    if not raw_text:
+        return ""
+
+    # 1. Normalisasi: ganti '|' jadi newline, hapus spasi berlebih
+    text = raw_text.replace("|", "\n")
+
+    # 2. Pecah per baris, bersihkan
+    lines = [line.rstrip() for line in text.split("\n")]
+
+    # 3. Buang baris kosong beruntun
+    cleaned = []
+    prev_empty = False
+    for line in lines:
+        if line.strip() == "":
+            if not prev_empty:
+                cleaned.append("")
+            prev_empty = True
+        else:
+            cleaned.append(line)
+            prev_empty = False
+
+    # 4. Deteksi garis pemisah (=== atau ---)
+    result = []
+    for line in cleaned:
+        stripped = line.strip()
+
+        # Garis pemisah penuh
+        if re.fullmatch(r"[=\-]{5,}", stripped):
+            result.append("=" * width if "=" in stripped else "-" * width)
+            continue
+
+        # Header toko (baris pertama yang mengandung nama toko)
+        # Biarkan apa adanya, tapi di-center kalau pendek
+        result.append(line)
+
+    return "\n".join(result)
+
+
+def render_struk_html(text: str, width: int = 42) -> str:
+    """Render teks struk ke HTML dengan font monospace & fixed width."""
+    escaped = html.escape(text)
+    return f"""
+    <div style="
+        background-color: #ffffff;
+        color: #000000;
+        padding: 20px;
+        border-radius: 6px;
+        border: 2px solid #dddddd;
+        box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
+        overflow-x: auto;
+        max-width: 100%;
+    ">
+        <pre style="
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+            line-height: 1.25;
+            white-space: pre;
+            color: #000000;
+        ">{escaped}</pre>
+    </div>
+    """
+
+
+# ============================================================
+# PROSES UPLOAD & BACA DATABASE
+# ============================================================
 if uploaded_file is not None:
     if os.path.exists(extract_path):
         shutil.rmtree(extract_path)
@@ -43,7 +119,6 @@ if uploaded_file is not None:
         try:
             conn = sqlite3.connect(db_file_path)
 
-            # 1. Ambil daftar bill_no dari tabel tx_trans
             df_bills = pd.read_sql(
                 "SELECT DISTINCT bill_no FROM tx_trans ORDER BY bill_no DESC", conn
             )
@@ -62,7 +137,6 @@ if uploaded_file is not None:
             if selected_bill:
                 str_bill = str(selected_bill).strip()
 
-                # Variasi format digit untuk mencocokkan log_receipt_prn
                 variations = [
                     str_bill,
                     str_bill.zfill(4),
@@ -91,7 +165,6 @@ if uploaded_file is not None:
                     if not df_receipt.empty:
                         row = df_receipt.iloc[0]
 
-                        # Kolom database struk
                         columns_to_check = [
                             "header",
                             "body1",
@@ -106,49 +179,15 @@ if uploaded_file is not None:
 
                         for col in columns_to_check:
                             if col in row and pd.notna(row[col]) and str(row[col]).strip() != "":
-                                content = str(row[col])
-                                # Perbaiki: buang karakter '|' yang tidak perlu di akhir baris,
-                                # dan pastikan tidak ada spasi berlebih
-                                content = content.replace("|\n", "\n").replace("| \n", "\n")
-                                parts_to_print.append(content)
+                                parts_to_print.append(str(row[col]))
 
-                        # Gabungkan seluruh bagian dengan baris baru
-                        full_receipt_text = "\n".join(parts_to_print)
+                        raw_text = "\n".join(parts_to_print)
+                        full_receipt_text = format_struk(raw_text, width=42)
 
-                        # ---- PERBAIKAN TAMPILAN ----
-                        # Kita escape HTML dulu, lalu render dalam <pre> agar spacing tetap
-                        # dan tidak wrap. Container dibungkus dengan overflow-x: auto
-                        # supaya di HP bisa di-scroll horizontal.
-                        escaped_text = html.escape(full_receipt_text)
-
-                        receipt_html = f"""
-                        <div style="
-                            background-color: #ffffff;
-                            color: #000000;
-                            padding: 15px 20px;
-                            border-radius: 6px;
-                            border: 2px solid #dddddd;
-                            font-family: 'Courier New', Courier, monospace;
-                            font-size: 13px;
-                            line-height: 1.2;
-                            overflow-x: auto;
-                            max-width: 100%;
-                            box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
-                        ">
-                            <pre style="
-                                margin: 0;
-                                white-space: pre;
-                                font-family: 'Courier New', Courier, monospace;
-                                font-size: 13px;
-                                line-height: 1.2;
-                            ">{escaped_text}</pre>
-                        </div>
-                        """
-
+                        receipt_html = render_struk_html(full_receipt_text)
                         st.markdown(receipt_html, unsafe_allow_html=True)
 
-                        st.write("")  # Spasi
-                        # Tombol Download Struk
+                        st.write("")
                         st.download_button(
                             label="📥 Download Struk (TXT)",
                             data=full_receipt_text,
@@ -162,7 +201,7 @@ if uploaded_file is not None:
                         )
 
                 with tab2:
-                    st.write(f"### Tabel tx_trans (Detail Item)")
+                    st.write("### Tabel tx_trans (Detail Item)")
                     if not df_trans.empty:
                         st.dataframe(df_trans, use_container_width=True)
                     else:
