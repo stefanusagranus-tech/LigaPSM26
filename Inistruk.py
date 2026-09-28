@@ -42,7 +42,7 @@ if uploaded_file is not None:
     try:
       conn = sqlite3.connect(db_file_path)
 
-      # 1. Ambil daftar bill_no dari tabel tx_trans secara dinamis
+      # 1. Ambil daftar bill_no dari tabel tx_trans
       df_bills = pd.read_sql(
           "SELECT DISTINCT bill_no FROM tx_trans ORDER BY bill_no DESC", conn
       )
@@ -59,29 +59,52 @@ if uploaded_file is not None:
         selected_bill = st.text_input("Masukkan Nomor Bill (`bill_no`):")
 
       if selected_bill:
-        # Query data dari tx_trans
+        # Bersihkan string bill_no dari input user
+        str_bill = str(selected_bill).strip()
+
+        # Buat berbagai variasi format untuk dicari di log_receipt_prn
+        # (Misal: '149', '0149', '  149', dll)
+        variations = [
+            str_bill,
+            str_bill.zfill(4),  # Menjadi '0149' jika panjangnya kurang dari 4
+            str_bill.zfill(
+                len(str_bill) + 1
+            ),  # Tambah 1 nol di depan jika perlu
+            str(int(str_bill))
+            if str_bill.isdigit()
+            else str_bill,  # Versi integer jika tersimpan sebagai angka
+        ]
+        # Hilangkan duplikat
+        variations = list(set(variations))
+
+        # Query data dari tx_trans (biasanya menggunakan format asli)
         query_trans = (
             f"SELECT * FROM tx_trans WHERE bill_no = '{selected_bill}'"
         )
         df_trans = pd.read_sql(query_trans, conn)
 
-        # Query data dari log_receipt_prn (sesuai nama tabel di database Anda)
-        query_receipt = (
-            f"SELECT * FROM log_receipt_prn WHERE bill_no = '{selected_bill}'"
-        )
-        df_receipt = pd.read_sql(query_receipt, conn)
+        # Query data dari log_receipt_prn dengan mencobakan berbagai variasi format digit
+        df_receipt = pd.DataFrame()
+        for v in variations:
+          query_receipt = f"SELECT * FROM log_receipt_prn WHERE bill_no = '{v}'"
+          df_temp = pd.read_sql(query_receipt, conn)
+          if not df_temp.empty:
+            df_receipt = df_temp
+            break  # Berhenti jika data ditemukan
 
         # Tampilkan Tab Menu
         tab1, tab2 = st.tabs(["🧾 Preview Struk", "🛒 Detail tx_trans"])
 
         with tab1:
-          st.write(f"### Cetak Struk untuk Bill: {selected_bill}")
+          st.write(
+              f"### Cetak Struk untuk Bill: `{selected_bill}` (Mencari variasi"
+              f" format: {variations})"
+          )
           if not df_receipt.empty:
             # Ambil baris pertama dari hasil query receipt
             row = df_receipt.iloc[0]
 
-            # Kumpulkan bagian-bagian teks struk dari kolom database Anda
-            # (header, body1, body2, body3, addtl1, addtl3, footer, dll)
+            # Kumpulkan bagian-bagian teks struk dari kolom database
             parts_to_print = [
                 row.get("header", ""),
                 row.get("body1", ""),
@@ -97,10 +120,10 @@ if uploaded_file is not None:
                 [str(p) for p in parts_to_print if pd.notna(p) and str(p) != ""]
             )
 
-            # Tampilkan dalam wadah berlatar belakang mirip kertas struk
+            # Tampilkan dalam wadah teks struk
             st.code(full_receipt_text, language="text")
 
-            # Tombol Simulasi Cetak / Unduh (Opsional)
+            # Tombol Download Struk
             st.download_button(
                 label="📥 Download Struk (TXT)",
                 data=full_receipt_text,
@@ -110,7 +133,7 @@ if uploaded_file is not None:
           else:
             st.warning(
                 f"Tidak ditemukan data struk di `log_receipt_prn` untuk bill"
-                f" {selected_bill}"
+                f" `{selected_bill}` (Dicoba dengan format: {variations})."
             )
 
         with tab2:
