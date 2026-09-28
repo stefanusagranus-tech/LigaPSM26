@@ -1,17 +1,10 @@
 """
 Migrasi Google Sheets → Supabase
-=================================
-Script migrasi lengkap dengan konversi tipe data otomatis + anti-NaN.
-
-Version: 1.3
-- Fix: NaN not JSON compliant (pakai _clean_for_json recursive)
-- Fix: JSON validation sebelum kirim ke Supabase
-- Fix: Skip sheet yang gagal, lanjut ke sheet berikutnya
-
-Usage:
-    1. Pastikan secrets punya [connections.gsheets] dan [supabase]
-    2. Set main file ke migrasi_sheets_to_supabase.py
-    3. Pilih sheet → klik Migrasi
+Version: 1.4
+- Fix: Filter record_id/period_id kosong
+- Fix: Drop duplikat record_id
+- Fix: Konversi tanggal fleksibel (DD/MM/YYYY → YYYY-MM-DD)
+- Fix: Default mode Upsert
 """
 
 import streamlit as st
@@ -26,9 +19,6 @@ from streamlit_gsheets import GSheetsConnection
 from supabase_connector import init_supabase_admin, sb_count
 
 
-# =========================================================
-# SETUP
-# =========================================================
 st.set_page_config(page_title="Migrasi Sheets → Supabase", layout="wide")
 
 
@@ -213,13 +203,10 @@ MIGRATION_MAP = {
         "float_cols": [],
     },
 }
-
-
 # =========================================================
 # HELPER: KONVERSI TIPE DATA
 # =========================================================
 def _to_bool(v):
-    """Konversi berbagai format ke boolean."""
     if v is None:
         return True
     try:
@@ -236,7 +223,6 @@ def _to_bool(v):
 
 
 def _to_int(v):
-    """Konversi ke integer."""
     if v is None:
         return 0
     try:
@@ -254,7 +240,6 @@ def _to_int(v):
 
 
 def _to_float(v):
-    """Konversi ke float."""
     if v is None:
         return 0.0
     try:
@@ -272,7 +257,6 @@ def _to_float(v):
 
 
 def _to_str(v):
-    """Konversi ke string, NaN → None."""
     if v is None:
         return None
     try:
@@ -287,7 +271,7 @@ def _to_str(v):
 
 
 def _to_date_str(v):
-    """Konversi ke format tanggal YYYY-MM-DD."""
+    """Konversi ke format tanggal YYYY-MM-DD. Handle berbagai format."""
     if v is None:
         return None
     try:
@@ -295,8 +279,35 @@ def _to_date_str(v):
             return None
     except (TypeError, ValueError):
         pass
+    
+    if isinstance(v, (pd.Timestamp, datetime)):
+        return v.strftime("%Y-%m-%d")
+    
+    s = str(v).strip()
+    if not s or s.lower() in ["nan", "none", "null", "nat"]:
+        return None
+    
+    # Coba berbagai format
+    formats = [
+        "%Y-%m-%d",           # 2026-09-25
+        "%d/%m/%Y",           # 25/09/2026
+        "%d-%m-%Y",           # 25-09-2026
+        "%Y/%m/%d",           # 2026/09/25
+        "%d/%m/%Y %H:%M:%S",  # 25/09/2026 07:52:22
+        "%Y-%m-%d %H:%M:%S",  # 2026-09-25 07:52:22
+        "%d-%m-%Y %H:%M:%S",  # 25-09-2026 07:52:22
+    ]
+    
+    for fmt in formats:
+        try:
+            dt = datetime.strptime(s, fmt)
+            return dt.strftime("%Y-%m-%d")
+        except ValueError:
+            continue
+    
+    # Fallback: pandas
     try:
-        dt = pd.to_datetime(v, errors="coerce")
+        dt = pd.to_datetime(s, errors="coerce", dayfirst=True)
         if pd.isna(dt):
             return None
         return dt.strftime("%Y-%m-%d")
@@ -305,69 +316,44 @@ def _to_date_str(v):
 
 
 def _clean_for_json(obj):
-    """
-    Recursive clean untuk JSON serialization.
-    Handle: NaN, Inf, numpy types, pandas NA, Timestamp.
-    """
-    # None
+    """Recursive clean untuk JSON serialization."""
     if obj is None:
         return None
-    
-    # Python float — handle NaN & Inf
     if isinstance(obj, float):
         if math.isnan(obj) or math.isinf(obj):
             return None
         return obj
-    
-    # Numpy float
     if isinstance(obj, np.floating):
         v = float(obj)
         if math.isnan(v) or math.isinf(v):
             return None
         return v
-    
-    # Numpy integer
     if isinstance(obj, np.integer):
         return int(obj)
-    
-    # Numpy bool
     if isinstance(obj, np.bool_):
         return bool(obj)
-    
-    # Pandas Timestamp
     if isinstance(obj, pd.Timestamp):
         return obj.strftime("%Y-%m-%d")
-    
-    # Pandas NA / NaT
     try:
         if pd.isna(obj):
             return None
     except (TypeError, ValueError):
         pass
-    
-    # String "nan" / "None" / "NaT" / ""
     if isinstance(obj, str):
         s = obj.strip()
         if s.lower() in ["nan", "none", "null", "nat", ""]:
             return None
         return s
-    
-    # Default: return as-is
     return obj
 
 
-# =========================================================
-# CLEAN DATAFRAME
-# =========================================================
 def clean_dataframe(df: pd.DataFrame, config: dict) -> pd.DataFrame:
-    """
-    Bersihkan DataFrame sesuai config.
-    """
-    # 1. Rename kolom sesuai mapping
+    """Bersihkan DataFrame sesuai config + filter data invalid."""
+    # 1. Rename kolom
     rename_map = {k: v for k, v in config["columns"].items() if k in df.columns}
     df_renamed = df.rename(columns=rename_map)
     
-    # 2. Ambil kolom yang ada di target
+    # 2. Ambil kolom target
     target_cols = list(config["columns"].values())
     available_cols = [c for c in target_cols if c in df_renamed.columns]
     df_final = df_renamed[available_cols].copy()
@@ -390,6 +376,34 @@ def clean_dataframe(df: pd.DataFrame, config: dict) -> pd.DataFrame:
         elif df_final[col].dtype == "object":
             df_final[col] = df_final[col].apply(_to_str)
     
+    # 4. FILTER DATA INVALID
+    # Buang record_id kosong
+    if "record_id" in df_final.columns:
+        before = len(df_final)
+        df_final = df_final[
+            df_final["record_id"].notna() & 
+            (df_final["record_id"].astype(str).str.strip() != "")
+        ]
+        if len(df_final) < before:
+            print(f"[FILTER] Drop {before - len(df_final)} baris tanpa record_id")
+    
+    # Buang period_id kosong
+    if "period_id" in df_final.columns:
+        before = len(df_final)
+        df_final = df_final[
+            df_final["period_id"].notna() & 
+            (df_final["period_id"].astype(str).str.strip() != "")
+        ]
+        if len(df_final) < before:
+            print(f"[FILTER] Drop {before - len(df_final)} baris tanpa period_id")
+    
+    # Buang duplikat record_id
+    if "record_id" in df_final.columns:
+        before = len(df_final)
+        df_final = df_final.drop_duplicates(subset=["record_id"], keep="first")
+        if len(df_final) < before:
+            print(f"[FILTER] Drop {before - len(df_final)} baris duplikat record_id")
+    
     return df_final
 
 
@@ -398,12 +412,9 @@ def clean_dataframe(df: pd.DataFrame, config: dict) -> pd.DataFrame:
 # =========================================================
 st.title("🔄 Migrasi Google Sheets → Supabase")
 st.caption(f"Waktu: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
-
 st.warning("⚠️ **PENTING:** Backup Google Sheets dulu sebelum migrasi!")
 
-# =========================================================
-# CEK KONEKSI
-# =========================================================
+# Cek koneksi
 try:
     conn = st.connection("gsheets", type=GSheetsConnection)
     sb = init_supabase_admin()
@@ -417,11 +428,8 @@ except Exception as e:
 
 st.markdown("---")
 
-# =========================================================
-# PILIH SHEET
-# =========================================================
+# Pilih sheet
 st.markdown("### 📋 Pilih Sheet yang Mau Di-migrasi")
-
 sheet_list = list(MIGRATION_MAP.keys())
 selected_sheets = st.multiselect(
     "Pilih 1 atau lebih sheet:",
@@ -434,9 +442,7 @@ if not selected_sheets:
     st.info("👆 Pilih minimal 1 sheet untuk migrasi")
     st.stop()
 
-# =========================================================
-# PREVIEW DATA
-# =========================================================
+# Preview
 st.markdown("---")
 st.markdown("### 👁️ Preview Data")
 
@@ -474,20 +480,20 @@ for sheet_name in selected_sheets:
             with st.expander("🧹 Preview setelah cleaning"):
                 df_clean = clean_dataframe(df, config)
                 st.dataframe(df_clean.head(5), use_container_width=True)
-                st.caption(f"Kolom final: {list(df_clean.columns)}")
+                st.caption(f"Baris setelah cleaning: {len(df_clean)} (dari {len(df)})")
         
         except Exception as e:
             st.error(f"❌ Gagal baca sheet: {e}")
             preview_data[sheet_name] = pd.DataFrame()
-# =========================================================
-# MIGRASI
-# =========================================================
+
+# Migrasi
 st.markdown("---")
 st.markdown("### 🚀 Jalankan Migrasi")
 
 mode = st.radio(
     "Mode migrasi:",
     ["Upsert (update kalau duplikat)", "Insert (kalau ada duplikat akan error)"],
+    index=0,  # Default: Upsert
     key="migration_mode"
 )
 
@@ -506,12 +512,9 @@ if st.button("🚀 MULAI MIGRASI", type="primary", use_container_width=True):
         
         with st.spinner(f"⏳ Migrasi {sheet_name}..."):
             try:
-                # 1. Cleaning
                 df_final = clean_dataframe(df, config)
                 
-                # =========================================================
-                # 2. CONVERT KE LIST OF DICT — ANTI-NAN SUPER KUAT
-                # =========================================================
+                # Convert ke list of dict — anti NaN
                 records = []
                 for _, row in df_final.iterrows():
                     row_dict = {}
@@ -530,16 +533,13 @@ if st.button("🚀 MULAI MIGRASI", type="primary", use_container_width=True):
                     }
                     continue
                 
-                # =========================================================
-                # 3. Batch processing
-                # =========================================================
+                # Batch processing
                 batch_size = 500
                 total_ok = 0
                 errors = []
                 
                 progress_bar = st.progress(0)
                 status_text = st.empty()
-                
                 total_batches = (len(records) + batch_size - 1) // batch_size
                 
                 for i in range(0, len(records), batch_size):
@@ -582,15 +582,13 @@ if st.button("🚀 MULAI MIGRASI", type="primary", use_container_width=True):
                     "error": str(e)[:200],
                 }
     
-    # Tampilkan hasil
+    # Hasil
     st.markdown("---")
     st.markdown("### 📊 Hasil Migrasi")
     
     for sheet_name, res in overall_result.items():
         if res["status"] == "success":
-            st.success(
-                f"✅ **{sheet_name}**: {res['inserted']}/{res['total']} baris berhasil"
-            )
+            st.success(f"✅ **{sheet_name}**: {res['inserted']}/{res['total']} baris berhasil")
             if res.get("errors"):
                 with st.expander(f"⚠️ {len(res['errors'])} warning"):
                     for e in res["errors"]:
@@ -608,9 +606,7 @@ if st.button("🚀 MULAI MIGRASI", type="primary", use_container_width=True):
     st.caption("Refresh halaman untuk cek migrasi berikutnya")
 
 
-# =========================================================
-# FOOTER: STATUS TABEL
-# =========================================================
+# Footer: Status
 st.markdown("---")
 st.markdown("### 📊 Status Tabel Supabase")
 
