@@ -4,10 +4,6 @@ Supabase Connector untuk LigaPSM v2
 Fungsi baca/tulis ke Supabase + backup ke Sheets Audit.
 
 Version: 2.0
-- Fungsi dasar (sb_read, sb_insert, sb_upsert, dll)
-- Fungsi Daily Performance
-- Fungsi Log Activity
-- Fungsi Backup ke Audit
 """
 
 import streamlit as st
@@ -17,6 +13,11 @@ import math
 import time
 from datetime import datetime, date, timedelta
 from zoneinfo import ZoneInfo
+
+try:
+    from streamlit_gsheets import GSheetsConnection
+except ImportError:
+    GSheetsConnection = None
 
 
 # =========================================================
@@ -31,20 +32,20 @@ def init_supabase():
         key = st.secrets["supabase"]["anon_key"]
         return create_client(url, key)
     except Exception as e:
-        st.error(f"❌ Gagal init Supabase: {e}")
+        print(f"[INIT_SUPABASE ERROR] {e}")
         return None
 
 
 @st.cache_resource
 def init_supabase_admin():
-    """Inisialisasi Supabase dengan service_role (untuk admin)."""
+    """Inisialisasi Supabase dengan service_role."""
     try:
         from supabase import create_client
         url = st.secrets["supabase"]["url"]
         key = st.secrets["supabase"]["service_role_key"]
         return create_client(url, key)
     except Exception as e:
-        st.error(f"❌ Gagal init Supabase admin: {e}")
+        print(f"[INIT_SUPABASE_ADMIN ERROR] {e}")
         return None
 
 
@@ -152,7 +153,6 @@ def sb_read(table, filters=None, limit=10000, order_by=None, order_desc=True):
 
         df = pd.DataFrame(result.data)
 
-        # Konversi kolom timestamp
         for col in df.columns:
             if col in ["created_at", "updated_at"]:
                 try:
@@ -267,15 +267,12 @@ def sb_delete(table, filters):
 
     except Exception as e:
         return False, _handle_error(e, f"delete from {table}"), 0
-
-
-# =========================================================
+    # =========================================================
 # DAILY PERFORMANCE — FUNGSI KHUSUS
 # =========================================================
 def load_periode_store_supabase():
     """
     Baca periode store dari Supabase.
-    Return DataFrame dengan kolom standar.
     """
     try:
         df = sb_read("periode_store", order_by="start_date", order_desc=True)
@@ -287,7 +284,6 @@ def load_periode_store_supabase():
                 "target_gm_pct", "nsb_percentage", "status"
             ])
 
-        # Konversi kolom numeric
         for col in ["target_net_sales", "target_std", "target_apc"]:
             if col in df.columns:
                 df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).astype(int)
@@ -296,7 +292,6 @@ def load_periode_store_supabase():
             if col in df.columns:
                 df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
-        # Konversi tanggal
         for col in ["start_date", "end_date"]:
             if col in df.columns:
                 df[col + "_dt"] = pd.to_datetime(df[col], errors="coerce")
@@ -331,7 +326,6 @@ def get_active_period_store_supabase(force_refresh=False):
 
         today = pd.Timestamp.now().date()
 
-        # Filter aktif
         aktif = df[
             (df["start_date_dt"].dt.date <= today) &
             (df["end_date_dt"].dt.date >= today) &
@@ -408,12 +402,10 @@ def load_daily_performance_supabase(force_refresh=False):
             st.session_state[cache_time_key] = now
             return df
 
-        # Konversi kolom numeric
         for col in ["spd", "std", "apc", "nsb_target", "nsb_actual"]:
             if col in df.columns:
                 df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
-        # Konversi tanggal
         if "tanggal" in df.columns:
             df["tanggal"] = pd.to_datetime(df["tanggal"], errors="coerce")
 
@@ -429,26 +421,21 @@ def load_daily_performance_supabase(force_refresh=False):
 def save_daily_performance_supabase(record_dict):
     """
     Simpan/update 1 record data harian ke Supabase.
-    Return: (success, message)
     """
     try:
-        # Validasi record
         if not record_dict:
             return False, "❌ Record kosong"
 
         if "tanggal" not in record_dict or "record_id" not in record_dict:
             return False, "❌ Kolom 'tanggal' dan 'record_id' wajib ada"
 
-        # Clean data
         cleaned = {}
         for k, v in record_dict.items():
             cleaned[k] = _clean_for_supabase(v)
 
-        # Upsert by record_id
         ok, msg, count = sb_upsert("sales_store", [cleaned], on_conflict="record_id")
 
         if ok:
-            # Invalidate cache
             if "_cached_daily_perf_sb" in st.session_state:
                 del st.session_state["_cached_daily_perf_sb"]
             if "_cached_daily_perf_sb_time" in st.session_state:
@@ -467,12 +454,10 @@ def generate_daily_record_id_supabase():
         if sb is None:
             return f"SP{int(time.time()) % 100000:05d}"
 
-        # Ambil record_id terakhir
         result = sb.table("sales_store").select("record_id").order("record_id", desc=True).limit(1).execute()
 
         if result.data and len(result.data) > 0:
             last_id = str(result.data[0]["record_id"])
-            # Extract number
             import re
             match = re.search(r"(\d+)", last_id)
             if match:
@@ -486,13 +471,25 @@ def generate_daily_record_id_supabase():
         return f"SP{int(time.time()) % 100000:05d}"
 
 
-# =========================================================
+def invalidate_daily_perf_cache():
+    """Hapus cache daily performance."""
+    if "_cached_daily_perf_sb" in st.session_state:
+        del st.session_state["_cached_daily_perf_sb"]
+    if "_cached_daily_perf_sb_time" in st.session_state:
+        del st.session_state["_cached_daily_perf_sb_time"]
+
+
+def invalidate_periode_cache():
+    """Hapus cache periode store."""
+    if "_cached_active_period_sb" in st.session_state:
+        del st.session_state["_cached_active_period_sb"]
+    if "_cached_active_period_sb_time" in st.session_state:
+        del st.session_state["_cached_active_period_sb_time"]
+        # =========================================================
 # LOG ACTIVITY (Supabase)
 # =========================================================
 def log_activity_supabase(action, detail="", username=None, role=None, session_id=None):
-    """
-    Log aktivitas user ke Supabase.
-    """
+    """Log aktivitas user ke Supabase."""
     try:
         action_upper = str(action).upper()
 
@@ -517,7 +514,6 @@ def log_activity_supabase(action, detail="", username=None, role=None, session_i
             "session_id": str(session_id) if session_id else "-",
         }
 
-        # Insert ke activity_log
         sb = init_supabase()
         if sb is None:
             return False, "Supabase not initialized"
@@ -535,117 +531,20 @@ def log_activity_supabase(action, detail="", username=None, role=None, session_i
 
 
 # =========================================================
-# BACKUP KE SHEETS AUDIT
-# =========================================================
-def backup_daily_to_audit(spreadsheet_id):
-    """
-    Backup data dari Supabase ke Sheets Audit.
-    Dipakai saat ganti hari (otomatis).
-    """
-    try:
-        import gspread
-        from google.oauth2.service_account import Credentials
-
-        # Init Google Sheets
-        scopes = [
-            "https://www.googleapis.com/auth/spreadsheets",
-            "https://www.googleapis.com/auth/drive",
-        ]
-
-        # Cek apakah pakai service account atau OAuth
-        if "gcp_service_account" in st.secrets:
-            creds = Credentials.from_service_account_info(
-                dict(st.secrets["gcp_service_account"]),
-                scopes=scopes,
-            )
-            gc = gspread.authorize(creds)
-        else:
-            st.warning("⚠️ Service account not found in secrets")
-            return {"success": 0, "failed": 1, "error": "No credentials"}
-
-        # Buka spreadsheet
-        sh = gc.open_by_key(spreadsheet_id)
-
-        # Mapping: nama tabel Supabase → nama sheet di Audit
-        tables_to_backup = {
-            "sales_store": "_BACKUP_SALES_STORE",
-            "sales_item": "_BACKUP_SALES_ITEM",
-            "sales_personil": "_BACKUP_SALES_PERSONIL",
-            "sales_pps": "_BACKUP_SALES_PPS",
-            "periode_psm": "_BACKUP_PERIODE_PSM",
-            "periode_pps": "_BACKUP_PERIODE_PPS",
-            "periode_store": "_BACKUP_PERIODE_STORE",
-            "master_item": "_BACKUP_MASTER_ITEM",
-            "master_personil": "_BACKUP_MASTER_PERSONIL",
-        }
-
-        success_count = 0
-        failed_count = 0
-        total_rows = 0
-
-        for table_name, sheet_name in tables_to_backup.items():
-            try:
-                # Baca dari Supabase
-                df = sb_read(table_name, limit=100000)
-
-                if df.empty:
-                    continue
-
-                # Convert ke list of list
-                headers = list(df.columns)
-                rows = df.values.tolist()
-
-                # Convert values
-                clean_rows = []
-                for row in rows:
-                    clean_row = [_clean_for_supabase(v) for v in row]
-                    clean_rows.append(clean_row)
-
-                                # Tulis ke sheet
-                try:
-                    worksheet = sh.worksheet(sheet_name)
-                    worksheet.clear()
-                except gspread.WorksheetNotFound:
-                    worksheet = sh.add_worksheet(title=sheet_name, rows=1000, cols=20)
-
-                worksheet.update([headers] + clean_rows)
-
-                success_count += 1
-                total_rows += len(clean_rows)
-                time.sleep(0.5)
-
-            except Exception as e:
-                print(f"[BACKUP {table_name}] {e}")
-                failed_count += 1
-
-        return {
-            "success": success_count,
-            "failed": failed_count,
-            "total": total_rows,
-        }
-
-    except Exception as e:
-        print(f"[BACKUP ERROR] {e}")
-        return {"success": 0, "failed": 1, "error": str(e)[:150]}
-
-
-# =========================================================
-# BACKUP VIA GSHEETS CONNECTION (Alternatif — pakai st.connection)
+# BACKUP VIA GSHEETS CONNECTION
 # =========================================================
 def backup_via_gsheets_connection(tables_to_backup=None):
     """
     Backup dari Supabase → Sheets Audit.
-    Pakai `st.connection("gsheets")` yang udah ada.
-    
-    Args:
-        tables_to_backup (dict): Mapping {tabel_supabase: sheet_name_audit}
-                                 Kalau None → pakai default
-    
-    Returns:
-        dict: {success, failed, total, details}
     """
     try:
-        # Default mapping
+        if GSheetsConnection is None:
+            return {
+                "success": [],
+                "failed": ["GSheetsConnection not available"],
+                "total": 0,
+            }
+
         if tables_to_backup is None:
             tables_to_backup = {
                 "sales_store": "_BACKUP_SALES_STORE",
@@ -659,7 +558,6 @@ def backup_via_gsheets_connection(tables_to_backup=None):
                 "master_personil": "_BACKUP_MASTER_PERSONIL",
             }
 
-        # Pakai koneksi gsheets yang udah ada
         conn = st.connection("gsheets_audit", type=GSheetsConnection)
 
         success_list = []
@@ -668,19 +566,16 @@ def backup_via_gsheets_connection(tables_to_backup=None):
 
         for table_name, sheet_name in tables_to_backup.items():
             try:
-                # 1. Baca dari Supabase
                 df = sb_read(table_name, limit=100000)
 
                 if df.empty:
                     print(f"[BACKUP SKIP] {table_name} kosong")
                     continue
 
-                # 2. Clean data
                 clean_df = df.copy()
                 for col in clean_df.columns:
                     clean_df[col] = clean_df[col].apply(_clean_for_supabase)
 
-                # 3. Tulis ke Sheets Audit (update)
                 conn.update(worksheet=sheet_name, data=clean_df)
                 time.sleep(0.5)
 
@@ -707,14 +602,8 @@ def backup_via_gsheets_connection(tables_to_backup=None):
         }
 
 
-# =========================================================
-# CHECK & AUTO BACKUP (Ganti Hari)
-# =========================================================
 def check_and_auto_backup():
-    """
-    Cek apakah sudah ganti hari.
-    Kalau iya → auto backup Supabase → Sheets Audit.
-    """
+    """Cek ganti hari → auto backup Supabase → Sheets Audit."""
     try:
         today = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%Y-%m-%d")
         last_backup_date = st.session_state.get("last_backup_date", None)
@@ -726,7 +615,6 @@ def check_and_auto_backup():
         if last_backup_date != today:
             print(f"[AUTO BACKUP] Ganti hari: {last_backup_date} → {today}")
 
-            # Jalankan backup
             result = backup_via_gsheets_connection()
 
             if result["success"]:
@@ -741,7 +629,6 @@ def check_and_auto_backup():
                 for f in result["failed"]:
                     print(f"  - {f}")
 
-            # Update tanggal
             st.session_state["last_backup_date"] = today
 
     except Exception as e:
@@ -752,24 +639,18 @@ def check_and_auto_backup():
 # LOGIN HELPER
 # =========================================================
 def login_check_supabase(username, password):
-    """
-    Cek login dari Supabase (master_personil).
-    Return: (success, user_data)
-    """
+    """Cek login dari Supabase (master_personil)."""
     try:
         if not username or not password:
             return False, None
 
-        # Baca dari Supabase
         df = sb_read("master_personil", limit=100)
 
         if df.empty:
             return False, None
 
-        # Normalisasi kolom
         df.columns = df.columns.astype(str).str.strip().str.lower()
 
-        # Cari user
         username_clean = str(username).strip().lower()
         password_clean = str(password).strip()
 
@@ -783,7 +664,6 @@ def login_check_supabase(username, password):
 
         row = match.iloc[0]
 
-        # Cek active
         if "active" in df.columns:
             is_active = row.get("active", True)
             if isinstance(is_active, str):
@@ -806,9 +686,6 @@ def login_check_supabase(username, password):
         return False, None
 
 
-# =========================================================
-# GET USER INFO
-# =========================================================
 def get_user_info(username):
     """Ambil info user dari Supabase."""
     try:
@@ -836,3 +713,72 @@ def get_user_info(username):
     except Exception as e:
         print(f"[GET_USER_INFO] {e}")
         return None
+
+
+# =========================================================
+# TEST CONNECTION
+# =========================================================
+def test_connection():
+    """Test koneksi Supabase & return status."""
+    result = {
+        "client_ok": False,
+        "tables": {},
+        "errors": [],
+    }
+
+    try:
+        sb = init_supabase()
+        if sb is None:
+            result["errors"].append("Client gagal init")
+            return result
+
+        result["client_ok"] = True
+
+        tables = [
+            "master_personil", "master_item", "periode_psm", "periode_pps",
+            "sales_item", "sales_personil", "sales_pps",
+            "periode_store", "sales_store", "activity_log"
+        ]
+
+        for t in tables:
+            try:
+                count = sb_count(t)
+                result["tables"][t] = count
+            except Exception as e:
+                result["tables"][t] = f"❌ {str(e)[:50]}"
+
+        return result
+
+    except Exception as e:
+        result["errors"].append(str(e))
+        return result
+
+
+# =========================================================
+# TEST DAILY PERFORMANCE
+# =========================================================
+def test_daily_performance():
+    """Test khusus daily performance."""
+    result = {
+        "periode_ok": False,
+        "daily_ok": False,
+        "periode_count": 0,
+        "daily_count": 0,
+        "errors": [],
+    }
+
+    try:
+        periode_df = load_periode_store_supabase()
+        result["periode_count"] = len(periode_df)
+        result["periode_ok"] = True
+    except Exception as e:
+        result["errors"].append(f"Periode: {str(e)[:100]}")
+
+    try:
+        daily_df = load_daily_performance_supabase()
+        result["daily_count"] = len(daily_df)
+        result["daily_ok"] = True
+    except Exception as e:
+        result["errors"].append(f"Daily: {str(e)[:100]}")
+
+    return result
