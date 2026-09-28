@@ -6,6 +6,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 import html
 import re
+import io
 
 st.set_page_config(
     page_title="Cetak Struk & Data Penjualan", page_icon="🧾", layout="wide"
@@ -23,66 +24,50 @@ uploaded_file = st.file_uploader(
 extract_path = "temp_db_folder"
 
 # ============================================================
-# KONFIGURASI LEBAR STRUK
+# KONFIGURASI
 # ============================================================
-STRUK_WIDTH = 42  # karakter per baris (printer thermal 80mm biasanya 42-48)
+STRUK_WIDTH = 42  # karakter per baris (thermal 80mm)
 
 
 # ============================================================
-# FUNGSI FORMAT STRUK (FIXED-WIDTH 42 KARAKTER)
+# FORMAT STRUK
 # ============================================================
 def format_struk(raw_text: str, width: int = STRUK_WIDTH) -> str:
-    """
-    Mengubah teks mentah dari database menjadi struk rapi
-    dengan lebar tetap (fixed-width) seperti printer thermal.
-    """
+    """Ubah teks mentah jadi fixed-width 42 karakter."""
     if not raw_text:
         return ""
 
-    # 1. Normalisasi karakter '|' jadi newline (kalau dipakai sebagai pemisah)
     text = raw_text.replace("|", "\n")
-
-    # 2. Normalisasi newline
     text = text.replace("\r\n", "\n").replace("\r", "\n")
 
-    # 3. Pecah per baris
     lines = text.split("\n")
-
     result = []
-    for line in lines:
-        # Bersihkan trailing whitespace
-        line = line.rstrip()
 
-        # Deteksi garis pemisah
+    for line in lines:
+        line = line.rstrip()
         stripped = line.strip()
+
+        # Garis pemisah
         if re.fullmatch(r"[=\-]{5,}", stripped):
-            if "=" in stripped:
-                result.append("=" * width)
-            else:
-                result.append("-" * width)
+            result.append("=" * width if "=" in stripped else "-" * width)
             continue
 
-        # Baris kosong
         if stripped == "":
             result.append("")
             continue
 
-        # Kalau baris terlalu panjang, potong (hindari wrap di preview)
+        # Kalau panjang, potong (hindari wrap)
         if len(line) > width:
-            # Coba deteksi format item: nama ... qty harga total
-            # Contoh: "AQUA AIR 600ML    2   3,800   7,600"
             m = re.match(
                 r"^(.*?)\s{2,}(\d+)\s+([\d.,]+)\s+([\d.,]+)\s*$", line
             )
             if m:
                 nama, qty, harga, total = m.groups()
-                # Susun ulang: nama kiri, qty+harga+total kanan
                 kanan = f"{qty:>3} {harga:>8} {total:>9}"
                 nama_max = width - len(kanan) - 1
                 nama = nama[:nama_max]
                 result.append(f"{nama:<{nama_max}} {kanan}")
             else:
-                # Kalau tidak match, potong jadi beberapa baris
                 while len(line) > width:
                     result.append(line[:width])
                     line = line[width:]
@@ -91,10 +76,11 @@ def format_struk(raw_text: str, width: int = STRUK_WIDTH) -> str:
         else:
             result.append(line)
 
-    # 4. Buang baris kosong beruntun
+    # Buang baris kosong beruntun, dan hapus baris kosong
+    # tepat setelah baris pemisah "===" di awal (header)
     cleaned = []
     prev_empty = False
-    for line in result:
+    for i, line in enumerate(result):
         if line.strip() == "":
             if not prev_empty:
                 cleaned.append("")
@@ -103,27 +89,33 @@ def format_struk(raw_text: str, width: int = STRUK_WIDTH) -> str:
             cleaned.append(line)
             prev_empty = False
 
-    return "\n".join(cleaned)
+    # Hapus baris kosong yang berada tepat setelah "===" pertama
+    # (biar header rapat dengan Bon seperti struk asli)
+    final = []
+    skip_next_empty = False
+    for i, line in enumerate(cleaned):
+        if skip_next_empty and line.strip() == "":
+            skip_next_empty = False
+            continue
+        skip_next_empty = False
+        if re.fullmatch(r"=+", line.strip()) and i < 5:
+            # Ini garis pemisah header
+            final.append(line)
+            skip_next_empty = True
+            continue
+        final.append(line)
 
-
-def center_text(text: str, width: int = STRUK_WIDTH) -> str:
-    """Center text dalam lebar tertentu."""
-    return text.center(width)
+    return "\n".join(final)
 
 
 # ============================================================
-# FUNGSI RENDER HTML STRUK (FIXED-WIDTH, NO WRAP)
+# RENDER HTML STRUK
 # ============================================================
 def render_struk_html(text: str, width: int = STRUK_WIDTH) -> str:
-    """
-    Render teks struk ke HTML dengan font monospace & fixed width,
-    meniru tampilan printer thermal 80mm.
-    """
+    """Render struk ke HTML fixed-width, mirip printer thermal."""
     escaped = html.escape(text)
-
-    # Hitung lebar pixel: font 13px monospace ≈ 7.8px per karakter
     char_width_px = 7.8
-    container_width_px = int(width * char_width_px) + 40  # + padding
+    container_width_px = int(width * char_width_px) + 40
 
     return f"""
     <!DOCTYPE html>
@@ -140,12 +132,12 @@ def render_struk_html(text: str, width: int = STRUK_WIDTH) -> str:
         .struk-outer {{
             display: flex;
             justify-content: center;
-            padding: 10px 0;
+            padding: 8px 0;
         }}
         .struk-container {{
             background-color: #ffffff;
             color: #000000;
-            padding: 20px;
+            padding: 18px 22px;
             border-radius: 6px;
             border: 1px solid #dddddd;
             box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
@@ -157,11 +149,10 @@ def render_struk_html(text: str, width: int = STRUK_WIDTH) -> str:
             margin: 0;
             font-family: 'Courier New', Courier, monospace;
             font-size: 13px;
-            line-height: 1.3;
+            line-height: 1.15;
             white-space: pre;
             color: #000000;
             background: transparent;
-            letter-spacing: 0px;
         }}
     </style>
     </head>
@@ -171,6 +162,87 @@ def render_struk_html(text: str, width: int = STRUK_WIDTH) -> str:
                 <pre>{escaped}</pre>
             </div>
         </div>
+    </body>
+    </html>
+    """
+
+
+# ============================================================
+# GENERATE PDF (pakai fpdf2)
+# ============================================================
+def generate_pdf(text: str) -> bytes:
+    """Buat PDF dari teks struk pakai fpdf2."""
+    from fpdf import FPDF
+
+    pdf = FPDF(unit="mm", format=(80, 297))  # lebar 80mm, tinggi bebas
+    pdf.add_page()
+    pdf.set_auto_page_break(auto=True, margin=5)
+
+    # Font monospace
+    pdf.set_font("Courier", size=9)
+
+    for line in text.split("\n"):
+        # FPDF tidak bisa handle karakter non-latin, sanitasi
+        safe_line = line.encode("latin-1", "replace").decode("latin-1")
+        pdf.cell(0, 3.6, safe_line, ln=1)
+
+    # Output bytes
+    return bytes(pdf.output())
+
+
+# ============================================================
+# TOMBOL PRINT (pakai HTML/JS di components.html)
+# ============================================================
+def render_print_button(receipt_text: str) -> str:
+    """Render tombol print yang buka dialog print browser."""
+    escaped = html.escape(receipt_text)
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <style>
+        body {{ margin: 0; padding: 0; background: transparent; }}
+        .print-btn {{
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            font-family: sans-serif;
+        }}
+        .print-btn:hover {{ background-color: #0055aa; }}
+        @media print {{
+            body * {{ visibility: hidden; }}
+            .print-area, .print-area * {{ visibility: visible; }}
+            .print-area {{
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 80mm;
+            }}
+        }}
+    </style>
+    </head>
+    <body>
+        <button class="print-btn" onclick="printStruk()">🖨️ Cetak / Print</button>
+        <div id="print-area" style="display:none;">
+            <pre style="font-family:'Courier New',monospace;font-size:10px;line-height:1.2;white-space:pre;">{escaped}</pre>
+        </div>
+        <script>
+            function printStruk() {{
+                var w = window.open('', '', 'width=400,height=600');
+                w.document.write('<html><head><title>Cetak Struk</title>');
+                w.document.write('<style>body{{font-family:Courier New,monospace;font-size:11px;white-space:pre;}}@page{{size:80mm auto;margin:0;}}</style>');
+                w.document.write('</head><body>');
+                w.document.write(document.getElementById('print-area').innerHTML);
+                w.document.write('</body></html>');
+                w.document.close();
+                w.focus();
+                setTimeout(function(){{ w.print(); }}, 300);
+            }}
+        </script>
     </body>
     </html>
     """
@@ -266,23 +338,51 @@ if uploaded_file is not None:
                                 parts_to_print.append(str(row[col]))
 
                         raw_text = "\n".join(parts_to_print)
-
-                        # Format jadi fixed-width 42 karakter
                         full_receipt_text = format_struk(raw_text, width=STRUK_WIDTH)
 
-                        # Render pakai components.html (ANTI-MARKDOWN)
+                        # ---- PREVIEW ----
                         receipt_html = render_struk_html(full_receipt_text)
-                        components.html(receipt_html, height=800, scrolling=True)
+                        components.html(receipt_html, height=650, scrolling=True)
 
                         st.write("")
-                        st.download_button(
-                            label="📥 Download Struk (TXT)",
-                            data=full_receipt_text,
-                            file_name=f"struk_bill_{selected_bill}.txt",
-                            mime="text/plain",
-                        )
 
-                        # DEBUG: lihat teks mentah
+                        # ---- TOMBOL AKSI ----
+                        col1, col2, col3 = st.columns(3)
+
+                        with col1:
+                            # Tombol Download TXT
+                            st.download_button(
+                                label="📥 TXT",
+                                data=full_receipt_text,
+                                file_name=f"struk_bill_{selected_bill}.txt",
+                                mime="text/plain",
+                                use_container_width=True,
+                            )
+
+                        with col2:
+                            # Tombol Download PDF
+                            try:
+                                pdf_bytes = generate_pdf(full_receipt_text)
+                                st.download_button(
+                                    label="📄 PDF",
+                                    data=pdf_bytes,
+                                    file_name=f"struk_bill_{selected_bill}.pdf",
+                                    mime="application/pdf",
+                                    use_container_width=True,
+                                )
+                            except ImportError:
+                                st.info("Install `fpdf2` untuk PDF")
+                            except Exception as e:
+                                st.warning(f"PDF error: {e}")
+
+                        with col3:
+                            # Tombol Print (buka tab baru)
+                            print_html = render_print_button(full_receipt_text)
+                            with st.popover("🖨️ Cetak", use_container_width=True):
+                                st.write("Klik tombol di bawah untuk print:")
+                                components.html(print_html, height=80)
+
+                        # DEBUG
                         with st.expander("🔍 Lihat Teks Mentah (Debug)"):
                             st.code(raw_text, language=None)
                             st.write("**Setelah diformat:**")
@@ -297,6 +397,19 @@ if uploaded_file is not None:
                     st.write("### Tabel tx_trans (Detail Item)")
                     if not df_trans.empty:
                         st.dataframe(df_trans, use_container_width=True)
+                    else:
+                        st.warning(f"Tidak ada data di `tx_trans` untuk bill {selected_bill}")
+
+            conn.close()
+
+        except Exception as e:
+            st.error(f"Terjadi kesalahan saat membaca database: {e}")
+
+    else:
+        st.error("File database (.db/.sqlite) tidak ditemukan di dalam ZIP.")
+
+if os.path.exists(extract_path) and uploaded_file is None:
+    shutil.rmtree(extract_path, ignore_errors=True)_width=True)
                     else:
                         st.warning(f"Tidak ada data di `tx_trans` untuk bill {selected_bill}")
 
