@@ -10,8 +10,8 @@ st.set_page_config(
 
 st.title("🧾 Aplikasi Cek Struk & Penjualan dari Database")
 st.write(
-    "Upload file `.zip` database Anda, lalu pilih atau cari nomor bill untuk"
-    " melihat detail penjualan dan struk."
+    "Upload file `.zip` database Anda, lalu pilih tabel dan data yang ingin"
+    " ditampilkan."
 )
 
 uploaded_file = st.file_uploader(
@@ -37,105 +37,62 @@ if uploaded_file is not None:
         break
 
   if db_file_path:
-    st.success(f"Database ditemukan!")
+    st.success("Database berhasil dibaca!")
 
     try:
       conn = sqlite3.connect(db_file_path)
-
-      # Ambil daftar nama tabel yang ada di database
       cursor = conn.cursor()
-      cursor.execute(
-          "SELECT name FROM sqlite_master WHERE type='table';"
-      )
+
+      # Ambil daftar seluruh tabel yang ada di dalam database SQLite ini
+      cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
       tables = [row[0] for row in cursor.fetchall()]
 
-      st.markdown("---")
-      st.subheader("Pilih Berdasarkan Bill Number")
+      st.info(f"Tabel yang ditemukan di database: {', '.join(tables)}")
 
-      # Cek apakah tabel 'tx_trans' ada untuk mengambil daftar bill_no
-      if "tx_trans" in tables:
-        # Ambil daftar bill_no unik dari ts_trans agar user bisa melihatnya
-        df_bills = pd.read_sql(
-            "SELECT DISTINCT bill_no FROM tx_trans ORDER BY bill_no DESC", conn
-        )
-        list_bills = df_bills["bill_no"].tolist()
+      if tables:
+        st.markdown("---")
+        st.subheader("Eksplorasi Data Berdasarkan Tabel")
 
-        # Widget Selectbox / Pilihan Bill No
-        selected_bill = st.selectbox(
-            "Pilih atau Cari Nomor Bill (`bill_no`):", options=list_bills
-        )
-      else:
-        selected_bill = st.text_input(
-            "Masukkan Nomor Bill (`bill_no`):", placeholder="Contoh: 149"
-        )
+        # Pilih tabel yang ingin dilihat
+        selected_table = st.selectbox("Pilih Tabel:", options=tables)
 
-      if selected_bill:
-        # Konversi ke string atau integer sesuai format database
-        # Query aman untuk tx_trans dan log_recipt_print
-        query_trans = (
-            f"SELECT * FROM ts_trans WHERE bill_no = '{selected_bill}'"
-        )
-        query_receipt = (
-            f"SELECT * FROM log_recipt_print WHERE bill_no = '{selected_bill}'"
-        )
+        if selected_table:
+          # Ambil sampel data atau seluruh data dari tabel yang dipilih
+          df_table = pd.read_sql(f"SELECT * FROM {selected_table}", conn)
 
-        df_trans = pd.read_sql(query_trans, conn)
-        df_receipt = pd.read_sql(query_receipt, conn)
-
-        # Cek struktur kolom pada tx_tsale terlebih dahulu agar tidak error
-        df_tsale_sample = pd.read_sql(
-            "SELECT * FROM tx_tsale LIMIT 1", conn
-        )
-        col_names = df_tsale_sample.columns.tolist()
-
-        # Cari kolom yang mirip dengan bill_no di tabel tx_tsale
-        match_col = None
-        for col in col_names:
-          if "bill" in col.lower():
-            match_col = col
-            break
-
-        if match_col:
-          query_sale = (
-              f"SELECT * FROM tx_tsale WHERE {match_col} = '{selected_bill}'"
-          )
-          df_sale = pd.read_sql(query_sale, conn)
-        else:
-          df_sale = pd.DataFrame()
-
-        # Tampilkan Hasil Tab
-        tab1, tab2, tab3 = st.tabs(
-            ["🛒 Data ts_trans", "📊 Data tx_tsale", "🧾 Struk (log_recipt_print)"]
-        )
-
-        with tab1:
           st.write(
-              f"### Tabel ts_trans (Detail Item untuk Bill:"
-              f" {selected_bill})"
+              f"Menampilkan isi tabel: **{selected_table}** (Total baris:"
+              f" {len(df_table)})"
           )
-          if not df_trans.empty:
-            st.dataframe(df_trans, use_container_width=True)
-          else:
-            st.warning(f"Tidak ada data di `ts_trans` untuk bill {selected_bill}")
 
-        with tab2:
-          st.write(f"### Tabel tx_tsale")
-          if match_col:
-            st.info(f"Menggunakan kolom pencocokan: `{match_col}`")
-          if not df_sale.empty:
-            st.dataframe(df_sale, use_container_width=True)
-          else:
-            st.warning(f"Tidak ada data di `tx_tsale` untuk bill {selected_bill}")
+          # Tampilkan kolom pencarian jika ada kolom yang mirip dengan 'bill'
+          columns = df_table.columns.tolist()
+          bill_cols = [
+              col
+              for col in columns
+              if "bill" in col.lower() or "id" in col.lower()
+          ]
 
-        with tab3:
-          st.write(f"### Preview Struk (`log_recipt_print`)")
-          if not df_receipt.empty:
-            for idx, row in df_receipt.iterrows():
-              st.code(row.to_string(), language="text")
-          else:
-            st.warning(
-                f"Tidak ada data `log_recipt_print` untuk bill {selected_bill}"
+          if bill_cols:
+            filter_col = st.selectbox(
+                "Filter berdasarkan kolom:", options=bill_cols
             )
+            unique_vals = df_table[filter_col].dropna().unique().tolist()
+            selected_val = st.selectbox(
+                f"Pilih nilai dari {filter_col}:", options=unique_vals
+            )
+
+            # Filter dataframe berdasarkan pilihan
+            df_filtered = df_table[df_table[filter_col] == selected_val]
+            st.dataframe(df_filtered, use_container_width=True)
+
+            # Jika ini adalah tabel log receipt/print, tampilkan struknya
+            if "receipt" in selected_table.lower() or "print" in selected_table.lower():
+              st.subheader("Preview Struk:")
+              for idx, row in df_filtered.iterrows():
+                st.code(row.to_string(), language="text")
+          else:
+            st.dataframe(df_table, use_container_width=True)
 
       conn.close()
 
