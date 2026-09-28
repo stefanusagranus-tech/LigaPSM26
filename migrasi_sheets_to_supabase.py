@@ -3,25 +3,21 @@ Migrasi Google Sheets → Supabase
 =================================
 Script migrasi lengkap dengan konversi tipe data otomatis.
 
-Features:
-- Konversi boolean (1.0 → true, 0.0 → false)
-- Konversi tanggal (string → DATE)
-- Konversi numerik (string "1.0" → int 1)
-- Batch processing (500 rows per batch)
-- Error handling per-batch
-- Mode Insert / Upsert
+Version: 1.2
+- Fix: NaN not JSON compliant
+- Fix: numpy types → Python native
+- Fix: boolean, date, int, float conversion
 
 Usage:
     1. Pastikan secrets punya [connections.gsheets] dan [supabase]
     2. Set main file ke migrasi_sheets_to_supabase.py
     3. Pilih sheet → klik Migrasi
-
-Author: LigaPSM Team
-Version: 1.1
 """
 
 import streamlit as st
 import pandas as pd
+import numpy as np
+import math
 import time
 from datetime import datetime
 
@@ -54,6 +50,7 @@ MIGRATION_MAP = {
         "bool_cols": ["active"],
         "date_cols": [],
         "int_cols": [],
+        "float_cols": [],
     },
     "PERIODE": {
         "table": "periode_psm",
@@ -68,6 +65,7 @@ MIGRATION_MAP = {
         "bool_cols": [],
         "date_cols": ["start_date", "end_date"],
         "int_cols": [],
+        "float_cols": [],
     },
     "MASTER_ITEM": {
         "table": "master_item",
@@ -83,6 +81,7 @@ MIGRATION_MAP = {
         "bool_cols": ["active"],
         "date_cols": [],
         "int_cols": [],
+        "float_cols": [],
     },
     "PERIODE_PPS": {
         "table": "periode_pps",
@@ -103,6 +102,7 @@ MIGRATION_MAP = {
         "bool_cols": [],
         "date_cols": ["start_date", "end_date"],
         "int_cols": ["target_total", "target_personil", "syarat_total", "redeem_total", "actual_qty"],
+        "float_cols": [],
     },
     "PERIODE_STOREPERFORMANCE": {
         "table": "periode_store",
@@ -143,6 +143,7 @@ MIGRATION_MAP = {
         "bool_cols": [],
         "date_cols": ["updated_at"],
         "int_cols": ["target_qty", "target_kasir", "actual_qty"],
+        "float_cols": [],
     },
     "SALES_PERSONIL": {
         "table": "sales_personil",
@@ -162,6 +163,7 @@ MIGRATION_MAP = {
         "bool_cols": [],
         "date_cols": ["updated_at"],
         "int_cols": ["actual_qty"],
+        "float_cols": [],
     },
     "SALES_PPS": {
         "table": "sales_pps",
@@ -186,6 +188,7 @@ MIGRATION_MAP = {
         "bool_cols": [],
         "date_cols": ["updated_at"],
         "int_cols": ["syarat_pwp", "redeem_pwp", "qty_pwp", "qty_sg", "syarat_sueger", "redeem_sueger", "cemilan_ceban"],
+        "float_cols": [],
     },
     "SALES_STOREPERFORMANCE": {
         "table": "sales_store",
@@ -206,6 +209,7 @@ MIGRATION_MAP = {
         "bool_cols": [],
         "date_cols": ["tanggal"],
         "int_cols": ["spd", "std", "apc", "nsb_target", "nsb_actual"],
+        "float_cols": [],
     },
 }
 
@@ -213,35 +217,34 @@ MIGRATION_MAP = {
 # =========================================================
 # HELPER: KONVERSI TIPE DATA
 # =========================================================
-def _to_bool(v) -> bool:
+def _to_bool(v):
     """Konversi berbagai format ke boolean."""
-    if pd.isna(v):
+    if v is None or (isinstance(v, float) and math.isnan(v)):
         return True  # default
     s = str(v).strip().lower()
     if s in ["1", "1.0", "true", "t", "yes", "y", "aktif", "active"]:
         return True
     elif s in ["0", "0.0", "false", "f", "no", "n", "non-aktif", "nonaktif", "inactive"]:
         return False
-    else:
-        return True  # default
+    return True  # default
 
 
 def _to_int(v):
     """Konversi ke integer."""
-    if pd.isna(v):
+    if v is None or (isinstance(v, float) and math.isnan(v)):
         return 0
     try:
         s = str(v).strip()
         if s == "" or s.lower() in ["nan", "none", "null"]:
             return 0
-        return int(float(s))  # handle "1.0" → 1
+        return int(float(s))
     except (ValueError, TypeError):
         return 0
 
 
 def _to_float(v):
     """Konversi ke float."""
-    if pd.isna(v):
+    if v is None or (isinstance(v, float) and math.isnan(v)):
         return 0.0
     try:
         s = str(v).strip()
@@ -254,7 +257,9 @@ def _to_float(v):
 
 def _to_str(v):
     """Konversi ke string, NaN → None."""
-    if pd.isna(v):
+    if v is None:
+        return None
+    if isinstance(v, float) and math.isnan(v):
         return None
     s = str(v).strip()
     if s.lower() in ["nan", "none", "null", ""]:
@@ -264,7 +269,9 @@ def _to_str(v):
 
 def _to_date_str(v):
     """Konversi ke format tanggal YYYY-MM-DD."""
-    if pd.isna(v):
+    if v is None:
+        return None
+    if isinstance(v, float) and math.isnan(v):
         return None
     try:
         dt = pd.to_datetime(v, errors="coerce")
@@ -275,13 +282,59 @@ def _to_date_str(v):
         return None
 
 
+def _to_native(v):
+    """
+    Convert numpy/pandas types ke Python native.
+    Critical untuk JSON serialization.
+    """
+    if v is None:
+        return None
+    
+    # Handle NaN & Inf
+    try:
+        if isinstance(v, (float, np.floating)):
+            if math.isnan(v) or math.isinf(v):
+                return None
+            return float(v)
+    except (TypeError, ValueError):
+        pass
+    
+    # Handle pandas NA
+    try:
+        if pd.isna(v):
+            return None
+    except (TypeError, ValueError):
+        pass
+    
+    # Numpy integers
+    if isinstance(v, np.integer):
+        return int(v)
+    
+    # Numpy floats
+    if isinstance(v, np.floating):
+        if math.isnan(v) or math.isinf(v):
+            return None
+        return float(v)
+    
+    # Numpy bool
+    if isinstance(v, np.bool_):
+        return bool(v)
+    
+    # Python native
+    return v
+
+
+# =========================================================
+# CLEAN DATAFRAME
+# =========================================================
 def clean_dataframe(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     """
     Bersihkan DataFrame sesuai config.
     
     - Rename kolom
     - Konversi tipe data
-    - Handle NaN
+    - Handle NaN → None (CRITICAL untuk JSON compliance)
+    - Convert numpy types → Python native
     """
     # 1. Rename kolom sesuai mapping
     rename_map = {k: v for k, v in config["columns"].items() if k in df.columns}
@@ -318,10 +371,10 @@ def clean_dataframe(df: pd.DataFrame, config: dict) -> pd.DataFrame:
         # Object/string — auto-detect
         elif df_final[col].dtype == "object":
             df_final[col] = df_final[col].apply(_to_str)
-        
-        # Numeric — handle NaN
-        elif df_final[col].dtype in ["int64", "float64"]:
-            df_final[col] = df_final[col].where(pd.notna(df_final[col]), None)
+    
+    # 4. Convert semua ke Python native (fix NaN)
+    for col in df_final.columns:
+        df_final[col] = df_final[col].apply(_to_native)
     
     return df_final
 
@@ -410,7 +463,6 @@ for sheet_name in selected_sheets:
                 df_clean = clean_dataframe(df, config)
                 st.dataframe(df_clean.head(5), use_container_width=True)
                 st.caption(f"Kolom final: {list(df_clean.columns)}")
-                st.caption(f"Dtypes: {dict(df_clean.dtypes)}")
         
         except Exception as e:
             st.error(f"❌ Gagal baca sheet: {e}")
@@ -447,7 +499,7 @@ if st.button("🚀 MULAI MIGRASI", type="primary", use_container_width=True):
                 df_final = clean_dataframe(df, config)
                 
                 # 2. Convert ke list of dict
-                records = df_final.where(pd.notna(df_final), None).to_dict("records")
+                records = df_final.to_dict("records")
                 
                 # 3. Batch processing
                 batch_size = 500
@@ -457,10 +509,11 @@ if st.button("🚀 MULAI MIGRASI", type="primary", use_container_width=True):
                 progress_bar = st.progress(0)
                 status_text = st.empty()
                 
+                total_batches = (len(records) + batch_size - 1) // batch_size
+                
                 for i in range(0, len(records), batch_size):
                     batch = records[i:i + batch_size]
                     batch_num = i // batch_size + 1
-                    total_batches = (len(records) + batch_size - 1) // batch_size
                     
                     status_text.text(f"📦 Batch {batch_num}/{total_batches} ({len(batch)} records)")
                     
@@ -478,7 +531,7 @@ if st.button("🚀 MULAI MIGRASI", type="primary", use_container_width=True):
                             errors.append(f"Batch {batch_num}: no data returned")
                     
                     except Exception as e_batch:
-                        errors.append(f"Batch {batch_num}: {str(e_batch)[:150]}")
+                        errors.append(f"Batch {batch_num}: {str(e_batch)[:200]}")
                     
                     progress_bar.progress(batch_num / total_batches)
                     time.sleep(0.3)
