@@ -409,17 +409,4 @@ if uploaded_file is not None:
         st.error("File database (.db/.sqlite) tidak ditemukan di dalam ZIP.")
 
 if os.path.exists(extract_path) and uploaded_file is None:
-    shutil.rmtree(extract_path, ignore_errors=True)_width=True)
-                    else:
-                        st.warning(f"Tidak ada data di `tx_trans` untuk bill {selected_bill}")
-
-            conn.close()
-
-        except Exception as e:
-            st.error(f"Terjadi kesalahan saat membaca database: {e}")
-
-    else:
-        st.error("File database (.db/.sqlite) tidak ditemukan di dalam ZIP.")
-
-if os.path.exists(extract_path) and uploaded_file is None:
     shutil.rmtree(extract_path, ignore_errors=True)
