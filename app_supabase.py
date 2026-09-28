@@ -1,46 +1,18 @@
 import streamlit as st
-from supabase_connector import test_connection
+from supabase_connector import test_connection, load_periode_store_supabase, load_daily_performance_supabase
 
-st.set_page_config(page_title="LigaPSM Supabase", layout="wide")
-st.title("🔌 Test Supabase Connector")
-st.caption(f"Test time: {__import__('datetime').datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
+st.title("🧪 Test v2 — Supabase Connector")
 
-try:
-    result = test_connection()
-    
-    if result["client_ok"]:
-        st.success("✅ Supabase Client OK")
-    else:
-        st.error("❌ Supabase Client GAGAL init")
-        st.json(result["errors"])
-        st.stop()
-    
-    st.markdown("### 📊 Jumlah Baris per Tabel")
-    
-    # Tampilkan sebagai table
-    import pandas as pd
-    tables_data = []
-    for table_name, count in result["tables"].items():
-        tables_data.append({
-            "Tabel": table_name,
-            "Jumlah Baris": count,
-        })
-    
-    df = pd.DataFrame(tables_data)
-    st.dataframe(df, use_container_width=True, hide_index=True)
-    
-    # Ringkasan
-    st.markdown("---")
-    total_errors = sum(1 for v in result["tables"].values() if isinstance(v, str) and v.startswith("❌"))
-    if total_errors == 0:
-        st.success(f"✅ Semua {len(result['tables'])} tabel bisa diakses!")
-    else:
-        st.warning(f"⚠️ {total_errors} tabel bermasalah")
-    
-    if result["errors"]:
-        with st.expander("⚠️ Error detail"):
-            st.json(result["errors"])
+# Test 1: Connection
+result = test_connection()
+st.json(result)
 
-except Exception as e:
-    st.error(f"❌ Error: {e}")
-    st.exception(e)
+# Test 2: Periode Store
+st.markdown("### 📊 Periode Store")
+df_periode = load_periode_store_supabase()
+st.dataframe(df_periode)
+
+# Test 3: Daily Performance
+st.markdown("### 📊 Daily Performance")
+df_daily = load_daily_performance_supabase()
+st.dataframe(df_daily)
