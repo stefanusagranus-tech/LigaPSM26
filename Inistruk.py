@@ -5,15 +5,12 @@ import zipfile
 import pandas as pd
 import streamlit as st
 
-# ============================================================
-# KONFIGURASI
-# ============================================================
 st.set_page_config(
     page_title="Dashboard Penjualan POS", page_icon="📊", layout="wide"
 )
 
 st.title("📊 Dashboard Penjualan & Kinerja Kasir POS")
-st.markdown("Dashboard ini terhubung langsung dengan database SQLite POS toko Anda.")
+st.markdown("Dashboard ini terhubung langsung dengan database SQLite sistem POS toko Anda.")
 
 # ============================================================
 # KONFIGURASI KOLOM
@@ -30,16 +27,13 @@ KOLOM = {
     "diskon": "discount",
     "promo_disc": "promo_disc",
     "member": "member",
-    "store_id": "store_id",
     "voucher": "voucher",
-    "change_pay": "change_pay",
-    "total_item": "total_item",
-    "total_value": "total_value",
-    "cust_id": "cust_id",
     "charity": "charity",
     "cash_out": "cash_out",
     "wallet": "wallet",
     "ol_payment": "ol_payment",
+    "total_item": "total_item",
+    "total_value": "total_value",
     "ppn": "ppn",
     "ppn_value": "ppn_value",
 }
@@ -47,39 +41,16 @@ KOLOM = {
 TABEL_TRANSAKSI = "tx_tsale"
 TABEL_DETAIL = "tx_trans"
 TABEL_KASIR = "log_sales_cashier"
+TABEL_RECEIPT = "log_receipt_prn"
+TABEL_PROMO_HEAD = "log_promo_result_head"
+TABEL_PROMO_PLU = "log_promo_result_plu"
+TABEL_SYARAT_PLU = "log_promo_syarat_plu"
 
 # ============================================================
 # PARAMETER SYARAT PROMO (NOMINAL)
 # ============================================================
 SYARAT_SUGER_MIN = 20_000   # struk > Rp 20.000
 SYARAT_PWP_MIN = 20_000     # struk >= Rp 20.000
-
-# ============================================================
-# DAFTAR PLU UNTUK PSM (58 PLU)
-# ============================================================
-PLU_PSM = {
-    435191, 429397, 434880, 401632, 401633, 434281, 221623, 4504,
-    4557, 118380, 118379, 440439, 461159, 5867, 5868, 401180,
-    401181, 120076, 120077, 466031, 433323, 437941, 434243,
-    434244, 432389, 444497, 451870, 451873, 451874, 124226,
-    400443, 424005, 434414, 465935, 454047, 454048, 407263,
-    418146, 413446, 440529, 450856, 425653, 452793, 119887,
-    119895, 119898, 119899, 415150, 415376, 122157, 144353,
-    428675, 428676, 431566, 428817, 428818, 453458, 453459,
-}
-
-# ============================================================
-# DAFTAR PLU UNTUK SG / SERBA GRATIS (40 PLU)
-# ============================================================
-PLU_SG = {
-    444755, 444756, 448657, 461599, 441179, 110859, 213741,
-    452835, 453045, 453044, 428690, 197589, 415156, 454096,
-    125431, 125432, 113852, 200213, 408055, 113850, 460878,
-    426512, 459336, 460329, 453125, 453252, 453126, 452313,
-    439558, 439557, 444036, 451060, 421455, 442078, 414495,
-    437950, 437951, 990150,
-}
-
 
 # ============================================================
 # FUNGSI BACA DATABASE
@@ -96,6 +67,9 @@ def load_data(db_path):
     df_sale = pd.DataFrame()
     df_detail = pd.DataFrame()
     df_kasir = pd.DataFrame()
+    df_promo_head = pd.DataFrame()
+    df_promo_plu = pd.DataFrame()
+    df_syarat_plu = pd.DataFrame()
 
     if TABEL_TRANSAKSI in tables:
         try:
@@ -115,8 +89,26 @@ def load_data(db_path):
         except Exception as e:
             st.warning(f"Gagal baca `{TABEL_KASIR}`: {e}")
 
+    if TABEL_PROMO_HEAD in tables:
+        try:
+            df_promo_head = pd.read_sql(f"SELECT * FROM `{TABEL_PROMO_HEAD}`", conn)
+        except Exception as e:
+            st.warning(f"Gagal baca `{TABEL_PROMO_HEAD}`: {e}")
+
+    if TABEL_PROMO_PLU in tables:
+        try:
+            df_promo_plu = pd.read_sql(f"SELECT * FROM `{TABEL_PROMO_PLU}`", conn)
+        except Exception as e:
+            st.warning(f"Gagal baca `{TABEL_PROMO_PLU}`: {e}")
+
+    if TABEL_SYARAT_PLU in tables:
+        try:
+            df_syarat_plu = pd.read_sql(f"SELECT * FROM `{TABEL_SYARAT_PLU}`", conn)
+        except Exception as e:
+            st.warning(f"Gagal baca `{TABEL_SYARAT_PLU}`: {e}")
+
     conn.close()
-    return df_sale, df_detail, df_kasir, tables
+    return df_sale, df_detail, df_kasir, df_promo_head, df_promo_plu, df_syarat_plu, tables
 
 
 # ============================================================
@@ -141,27 +133,20 @@ def hitung_cash_clerk(df: pd.DataFrame) -> float:
 
 
 # ============================================================
-# FUNGSI AMBIL FAKTUR YANG PUNYA PLU TERTENTU
+# FUNGSI AMBIL FAKTUR BERDASARKAN JUKLAK
 # ============================================================
-def get_faktur_by_plu(df_detail: pd.DataFrame, plu_list: set) -> set:
+def get_faktur_by_juklak(df_promo_head: pd.DataFrame, keyword: str) -> set:
     """
-    Return set of bill_no yang punya minimal 1 item dengan PLU
-    dalam daftar plu_list.
+    Return set of faktur yang punya no_juklak mengandung keyword.
+    Contoh keyword: 'SPRM' untuk PSM, 'GNTG' untuk SG.
     """
-    if df_detail.empty or "plu" not in df_detail.columns:
+    if df_promo_head.empty or "no_juklak" not in df_promo_head.columns:
         return set()
 
-    plu_series = pd.to_numeric(df_detail["plu"], errors="coerce")
-    mask = plu_series.isin(plu_list)
-
-    if "bill_no" in df_detail.columns:
-        bill_col = "bill_no"
-    elif "faktur" in df_detail.columns:
-        bill_col = "faktur"
-    else:
-        return set()
-
-    return set(df_detail.loc[mask, bill_col].astype(str).unique())
+    mask = df_promo_head["no_juklak"].astype(str).str.contains(keyword, case=False, na=False)
+    if "faktur" in df_promo_head.columns:
+        return set(df_promo_head.loc[mask, "faktur"].astype(str).unique())
+    return set()
 
 
 # ============================================================
@@ -201,7 +186,8 @@ else:
 # ============================================================
 if db_file and os.path.exists(db_file):
     try:
-        df_sale, df_detail, df_kasir, all_tables = load_data(db_file)
+        (df_sale, df_detail, df_kasir, df_promo_head,
+         df_promo_plu, df_syarat_plu, all_tables) = load_data(db_file)
 
         with st.sidebar.expander("🔍 Daftar Tabel"):
             st.write(all_tables)
@@ -249,10 +235,12 @@ if db_file and os.path.exists(db_file):
             df_filtered = df_sale.copy()
 
         # ============================================================
-        # HITUNG FAKTUR PSM & SG DARI tx_trans
+        # HITUNG PSM, SG, DLL DARI log_promo_result_head
         # ============================================================
-        faktur_psm_set = get_faktur_by_plu(df_detail, PLU_PSM)
-        faktur_sg_set = get_faktur_by_plu(df_detail, PLU_SG)
+        faktur_psm_set = get_faktur_by_juklak(df_promo_head, "SPRM")
+        faktur_sg_set = get_faktur_by_juklak(df_promo_head, "GNTG")
+        faktur_sua_set = get_faktur_by_juklak(df_promo_head, "SUA")
+        faktur_h2h_set = get_faktur_by_juklak(df_promo_head, "H2H")
 
         # ============================================================
         # TAMBAH KOLOM PROMO
@@ -267,6 +255,8 @@ if db_file and os.path.exists(db_file):
         df_filtered["is_pwp"] = total_col >= SYARAT_PWP_MIN
         df_filtered["is_psm"] = df_filtered["faktur"].astype(str).isin(faktur_psm_set)
         df_filtered["is_sg"] = df_filtered["faktur"].astype(str).isin(faktur_sg_set)
+        df_filtered["is_sua"] = df_filtered["faktur"].astype(str).isin(faktur_sua_set)
+        df_filtered["is_h2h"] = df_filtered["faktur"].astype(str).isin(faktur_h2h_set)
 
         # ============================================================
         # KPI UTAMA
@@ -283,6 +273,8 @@ if db_file and os.path.exists(db_file):
         n_struk_pwp = df_filtered[df_filtered["is_pwp"]]["faktur"].nunique()
         n_struk_psm = df_filtered[df_filtered["is_psm"]]["faktur"].nunique()
         n_struk_sg = df_filtered[df_filtered["is_sg"]]["faktur"].nunique()
+        n_struk_sua = df_filtered[df_filtered["is_sua"]]["faktur"].nunique()
+        n_struk_h2h = df_filtered[df_filtered["is_h2h"]]["faktur"].nunique()
 
         c1, c2, c3, c4 = st.columns(4)
         c1.metric("💰 Total Omzet", f"Rp {total_omzet:,.0f}")
@@ -297,6 +289,10 @@ if db_file and os.path.exists(db_file):
         s3.metric("🎁 Struk PWP", f"{n_struk_pwp:,}")
         s4.metric("📦 Struk PSM", f"{n_struk_psm:,}")
         s5.metric("🏷️ Struk SG", f"{n_struk_sg:,}")
+
+        s6, s7 = st.columns(2)
+        s6.metric("🎯 Struk SUA", f"{n_struk_sua:,}")
+        s7.metric("🏠 Struk H2H", f"{n_struk_h2h:,}")
 
         st.markdown("---")
 
@@ -347,6 +343,8 @@ if db_file and os.path.exists(db_file):
                 "Struk_PWP": ("is_pwp", "sum"),
                 "Struk_PSM": ("is_psm", "sum"),
                 "Struk_SG": ("is_sg", "sum"),
+                "Struk_SUA": ("is_sua", "sum"),
+                "Struk_H2H": ("is_h2h", "sum"),
             }
             for c in ["cash", "card", "voucher", "wallet", "ol_payment",
                       "cash_out", "charity", "discount"]:
@@ -361,6 +359,7 @@ if db_file and os.path.exists(db_file):
                 .sort_values("Total_Omzet", ascending=False)
             )
 
+            # Cash Clerk per kasir
             cash_per_kasir = []
             for kasir in rekap_kasir["Kasir"]:
                 df_k = df_filtered[df_filtered["user_id"] == kasir]
@@ -382,31 +381,32 @@ if db_file and os.path.exists(db_file):
         st.markdown("---")
 
         # ============================================================
-        # DEBUG PLU
+        # DEBUG PROMO
         # ============================================================
-        with st.expander("🔍 Debug PLU (PSM & SG)"):
-            st.write(f"**Total PLU PSM:** {len(PLU_PSM)}")
-            st.write(f"**Total PLU SG:** {len(PLU_SG)}")
-            st.write(f"**Faktur dengan PLU PSM:** {len(faktur_psm_set)}")
-            st.write(f"**Faktur dengan PLU SG:** {len(faktur_sg_set)}")
+        with st.expander("🔍 Debug Promo (Juklak)"):
+            st.write("**Tabel `log_promo_result_head`:**")
+            if not df_promo_head.empty:
+                st.write(f"Total baris: {len(df_promo_head)}")
+                if "no_juklak" in df_promo_head.columns:
+                    juklak_list = df_promo_head["no_juklak"].astype(str).unique()
+                    st.write(f"**Jumlah juklak unik:** {len(juklak_list)}")
+                    st.write("**Daftar juklak unik:**")
+                    st.code("\n".join(juklak_list))
 
-            if not df_detail.empty and "plu" in df_detail.columns:
-                plu_di_db = set(
-                    pd.to_numeric(df_detail["plu"], errors="coerce").dropna().astype(int)
-                )
-                st.write(f"**PLU di database:** {len(plu_di_db)}")
+                    # Ekstrak kategori juklak
+                    kategori = set()
+                    for j in juklak_list:
+                        for k in ["SPRM", "GNTG", "SUA", "H2H", "CRM"]:
+                            if k in j.upper():
+                                kategori.add(k)
+                    st.write(f"**Kategori terdeteksi:** {sorted(kategori)}")
+            else:
+                st.warning("Tabel `log_promo_result_head` kosong.")
 
-                psm_match = plu_di_db & PLU_PSM
-                sg_match = plu_di_db & PLU_SG
-                st.write(f"**PLU PSM yang cocok di DB:** {len(psm_match)}")
-                st.write(f"**PLU SG yang cocok di DB:** {len(sg_match)}")
-
-                psm_tidak = PLU_PSM - plu_di_db
-                sg_tidak = PLU_SG - plu_di_db
-                if psm_tidak:
-                    st.write(f"**PLU PSM tidak ada di DB ({len(psm_tidak)}):**", list(psm_tidak)[:10])
-                if sg_tidak:
-                    st.write(f"**PLU SG tidak ada di DB ({len(sg_tidak)}):**", list(sg_tidak)[:10])
+            st.write(f"**Faktur PSM (SPRM):** {len(faktur_psm_set)}")
+            st.write(f"**Faktur SG (GNTG):** {len(faktur_sg_set)}")
+            st.write(f"**Faktur SUA:** {len(faktur_sua_set)}")
+            st.write(f"**Faktur H2H:** {len(faktur_h2h_set)}")
 
         # ============================================================
         # DEBUG UMUM
