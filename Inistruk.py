@@ -10,8 +10,8 @@ st.set_page_config(
 
 st.title("🧾 Aplikasi Cek Struk & Penjualan dari Database")
 st.write(
-    "Upload file `.zip` database Anda, lalu pilih tabel dan data yang ingin"
-    " ditampilkan."
+    "Upload file `.zip` database Anda, lalu pilih nomor bill untuk melihat"
+    " detail transaksi dan cetak struk."
 )
 
 uploaded_file = st.file_uploader(
@@ -41,58 +41,84 @@ if uploaded_file is not None:
 
     try:
       conn = sqlite3.connect(db_file_path)
-      cursor = conn.cursor()
 
-      # Ambil daftar seluruh tabel yang ada di dalam database SQLite ini
-      cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-      tables = [row[0] for row in cursor.fetchall()]
+      # 1. Ambil daftar bill_no dari tabel tx_trans secara dinamis
+      df_bills = pd.read_sql(
+          "SELECT DISTINCT bill_no FROM tx_trans ORDER BY bill_no DESC", conn
+      )
+      list_bills = df_bills["bill_no"].tolist()
 
-      st.info(f"Tabel yang ditemukan di database: {', '.join(tables)}")
+      st.markdown("---")
+      st.subheader("Pilih Berdasarkan Bill Number")
 
-      if tables:
-        st.markdown("---")
-        st.subheader("Eksplorasi Data Berdasarkan Tabel")
+      if list_bills:
+        selected_bill = st.selectbox(
+            "Pilih Nomor Bill (`bill_no`):", options=list_bills
+        )
+      else:
+        selected_bill = st.text_input("Masukkan Nomor Bill (`bill_no`):")
 
-        # Pilih tabel yang ingin dilihat
-        selected_table = st.selectbox("Pilih Tabel:", options=tables)
+      if selected_bill:
+        # Query data dari tx_trans
+        query_trans = (
+            f"SELECT * FROM tx_trans WHERE bill_no = '{selected_bill}'"
+        )
+        df_trans = pd.read_sql(query_trans, conn)
 
-        if selected_table:
-          # Ambil sampel data atau seluruh data dari tabel yang dipilih
-          df_table = pd.read_sql(f"SELECT * FROM {selected_table}", conn)
+        # Query data dari log_receipt_prn (sesuai nama tabel di database Anda)
+        query_receipt = (
+            f"SELECT * FROM log_receipt_prn WHERE bill_no = '{selected_bill}'"
+        )
+        df_receipt = pd.read_sql(query_receipt, conn)
 
-          st.write(
-              f"Menampilkan isi tabel: **{selected_table}** (Total baris:"
-              f" {len(df_table)})"
-          )
+        # Tampilkan Tab Menu
+        tab1, tab2 = st.tabs(["🧾 Preview Struk", "🛒 Detail tx_trans"])
 
-          # Tampilkan kolom pencarian jika ada kolom yang mirip dengan 'bill'
-          columns = df_table.columns.tolist()
-          bill_cols = [
-              col
-              for col in columns
-              if "bill" in col.lower() or "id" in col.lower()
-          ]
+        with tab1:
+          st.write(f"### Cetak Struk untuk Bill: {selected_bill}")
+          if not df_receipt.empty:
+            # Ambil baris pertama dari hasil query receipt
+            row = df_receipt.iloc[0]
 
-          if bill_cols:
-            filter_col = st.selectbox(
-                "Filter berdasarkan kolom:", options=bill_cols
+            # Kumpulkan bagian-bagian teks struk dari kolom database Anda
+            # (header, body1, body2, body3, addtl1, addtl3, footer, dll)
+            parts_to_print = [
+                row.get("header", ""),
+                row.get("body1", ""),
+                row.get("body2", ""),
+                row.get("body3", ""),
+                row.get("addtl1", ""),
+                row.get("addtl3", ""),
+                row.get("footer", ""),
+            ]
+
+            # Gabungkan teks yang tidak kosong
+            full_receipt_text = "\n".join(
+                [str(p) for p in parts_to_print if pd.notna(p) and str(p) != ""]
             )
-            unique_vals = df_table[filter_col].dropna().unique().tolist()
-            selected_val = st.selectbox(
-                f"Pilih nilai dari {filter_col}:", options=unique_vals
+
+            # Tampilkan dalam wadah berlatar belakang mirip kertas struk
+            st.code(full_receipt_text, language="text")
+
+            # Tombol Simulasi Cetak / Unduh (Opsional)
+            st.download_button(
+                label="📥 Download Struk (TXT)",
+                data=full_receipt_text,
+                file_name=f"struk_bill_{selected_bill}.txt",
+                mime="text/plain",
             )
-
-            # Filter dataframe berdasarkan pilihan
-            df_filtered = df_table[df_table[filter_col] == selected_val]
-            st.dataframe(df_filtered, use_container_width=True)
-
-            # Jika ini adalah tabel log receipt/print, tampilkan struknya
-            if "receipt" in selected_table.lower() or "print" in selected_table.lower():
-              st.subheader("Preview Struk:")
-              for idx, row in df_filtered.iterrows():
-                st.code(row.to_string(), language="text")
           else:
-            st.dataframe(df_table, use_container_width=True)
+            st.warning(
+                f"Tidak ditemukan data struk di `log_receipt_prn` untuk bill"
+                f" {selected_bill}"
+            )
+
+        with tab2:
+          st.write(f"### Tabel tx_trans (Detail Item)")
+          if not df_trans.empty:
+            st.dataframe(df_trans, use_container_width=True)
+          else:
+            st.warning(f"Tidak ada data di `tx_trans` untuk bill {selected_bill}")
 
       conn.close()
 
@@ -100,11 +126,7 @@ if uploaded_file is not None:
       st.error(f"Terjadi kesalahan saat membaca database: {e}")
 
   else:
-    st.error(
-        "File database dengan format `.db` atau `.sqlite` tidak ditemukan di"
-        " dalam folder ZIP."
-    )
+    st.error("File database (.db/.sqlite) tidak ditemukan di dalam ZIP.")
 
 if os.path.exists(extract_path) and uploaded_file is None:
   shutil.rmtree(extract_path, ignore_errors=True)
-    
