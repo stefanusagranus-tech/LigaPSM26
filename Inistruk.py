@@ -68,6 +68,65 @@ def load_data(db_path):
 
 
 # ============================================================
+# AUTO-DETECT FORMAT PLU
+# ============================================================
+def normalize_plu(series, mode="asli"):
+    """
+    Normalisasi PLU dari database ke format asli (tanpa tambahan digit).
+    mode:
+      - 'asli': apa adanya
+      - 'buang_1': buang 1 digit terakhir
+      - 'buang_2': buang 2 digit terakhir
+      - 'div_10': bagi 10
+      - 'div_100': bagi 100
+    """
+    s = pd.to_numeric(series, errors="coerce")
+    if mode == "asli":
+        return s
+    if mode == "buang_1":
+        return pd.to_numeric(
+            s.astype(str).str.replace(r"\.0$", "", regex=True).str[:-1],
+            errors="coerce"
+        )
+    if mode == "buang_2":
+        return pd.to_numeric(
+            s.astype(str).str.replace(r"\.0$", "", regex=True).str[:-2],
+            errors="coerce"
+        )
+    if mode == "div_10":
+        return s / 10
+    if mode == "div_100":
+        return s / 100
+    return s
+
+
+def detect_best_plu_mode(df_detail, plu_psm_set):
+    """
+    Coba berbagai mode normalisasi PLU, pilih yang paling banyak match.
+    Return: (mode, jumlah_match, df_hasil)
+    """
+    modes = ["asli", "buang_1", "buang_2", "div_10", "div_100"]
+    best_mode = "asli"
+    best_count = 0
+    best_df = pd.DataFrame()
+
+    for mode in modes:
+        df_temp = df_detail.copy()
+        df_temp["plu_norm"] = normalize_plu(df_temp["plu"], mode)
+        df_temp["plu_norm_int"] = df_temp["plu_norm"].round().astype("Int64")
+
+        mask = df_temp["plu_norm_int"].isin(plu_psm_set)
+        count = mask.sum()
+
+        if count > best_count:
+            best_count = count
+            best_mode = mode
+            best_df = df_temp[mask].copy()
+
+    return best_mode, best_count, best_df
+
+
+# ============================================================
 # FORMAT STRUK
 # ============================================================
 def format_struk(raw_text, width=STRUK_WIDTH):
@@ -432,14 +491,58 @@ if db_file and os.path.exists(db_file):
                 key="psm_tgl",
             )
 
-        # ---- Filter PLU PSM ----
-        df_detail["plu_num"] = pd.to_numeric(df_detail["plu"], errors="coerce")
-        df_psm_detail = df_detail[df_detail["plu_num"].isin(PLU_PSM)].copy()
+        # ============================================================
+        # AUTO-DETECT FORMAT PLU & FILTER
+        # ============================================================
+        with st.spinner("Mendeteksi format PLU di database..."):
+            best_mode, best_count, df_psm_detail = detect_best_plu_mode(
+                df_detail, PLU_PSM
+            )
 
-        st.info("Ditemukan " + str(len(df_psm_detail)) + " baris item dengan PLU PSM.")
+        st.info(
+            "Mode PLU terbaik: **" + best_mode + "** — "
+            "ditemukan **" + str(best_count) + "** baris item dengan PLU PSM."
+        )
 
-        if df_psm_detail.empty:
-            st.warning("Tidak ada item dengan PLU PSM di database.")
+        # Debug: tampilkan mode yang dicoba
+        with st.expander("🔍 Debug: Cek Format PLU (semua mode)", expanded=(best_count == 0)):
+            st.write("**PLU di database (20 contoh):**")
+            plu_sample = (
+                pd.to_numeric(df_detail["plu"], errors="coerce")
+                .dropna().astype(int).unique()
+            )
+            st.write(sorted(list(plu_sample))[:20])
+            st.write("**Total PLU unik di database:**", len(plu_sample))
+
+            st.write("**PLU PSM (20 contoh):**")
+            st.write(sorted(list(PLU_PSM))[:20])
+            st.write("**Total PLU PSM:**", len(PLU_PSM))
+
+            st.write("---")
+            st.write("**Hasil coba semua mode normalisasi:**")
+            modes = ["asli", "buang_1", "buang_2", "div_10", "div_100"]
+            hasil = []
+            for mode in modes:
+                df_temp = df_detail.copy()
+                df_temp["plu_norm"] = normalize_plu(df_temp["plu"], mode)
+                df_temp["plu_norm_int"] = df_temp["plu_norm"].round().astype("Int64")
+                cnt = df_temp["plu_norm_int"].isin(PLU_PSM).sum()
+                # Cek match dengan contoh
+                sample_norm = (
+                    df_temp["plu_norm_int"].dropna().unique()[:5]
+                )
+                hasil.append({
+                    "mode": mode,
+                    "jumlah_match": cnt,
+                    "contoh_plu_norm": list(sample_norm),
+                })
+            st.dataframe(pd.DataFrame(hasil), use_container_width=True)
+
+        if best_count == 0:
+            st.warning(
+                "Tidak ada PLU PSM yang match di database dengan semua mode. "
+                "Cek debug di atas untuk lihat format PLU asli."
+            )
             st.stop()
 
         # ---- Konversi numerik ----
@@ -459,7 +562,7 @@ if db_file and os.path.exists(db_file):
 
         # ---- Agregasi per PLU ----
         agg_rows = []
-        for plu, grp in df_psm_detail.groupby("plu_num"):
+        for plu, grp in df_psm_detail.groupby("plu_norm_int"):
             plu_int = int(plu)
             qty = grp["qty"].sum()
             sales = (grp["price"] * grp["qty"]).sum()
@@ -467,7 +570,12 @@ if db_file and os.path.exists(db_file):
                 set(grp["bill_str"].unique()),
                 key=lambda x: int(x) if x.isdigit() else 0
             )
-            nama = plu_name_dict.get(plu_int, plu_name_dict.get(plu, "-"))
+            # Coba cari nama pakai plu_norm_int atau plu asli
+            nama = plu_name_dict.get(plu_int, "-")
+            if nama == "-":
+                plu_asli = grp["plu"].iloc[0]
+                nama = plu_name_dict.get(plu_asli, "-")
+
             agg_rows.append({
                 "PLU": plu_int,
                 "Nama_Item": nama,
@@ -632,16 +740,11 @@ if db_file and os.path.exists(db_file):
 
         # ---- Debug ----
         with st.expander("🔍 Debug"):
+            st.write("Mode PLU terbaik: **" + best_mode + "**")
             st.write("Total PLU di daftar PSM: " + str(len(PLU_PSM)))
-            st.write("PLU PSM yang ditemukan: " + str(df_psm_detail["plu_num"].nunique()))
+            st.write("PLU PSM yang ditemukan: " + str(df_psm_detail["plu_norm_int"].nunique()))
             st.write("Total baris detail PSM: " + str(len(df_psm_detail)))
             st.write("PLU berhasil di-mapping nama: " + str(len(plu_name_dict)))
-
-            plu_di_db = set(df_detail["plu_num"].dropna().astype(int).unique())
-            plu_tidak_ada = PLU_PSM - plu_di_db
-            plu_match = PLU_PSM & plu_di_db
-            st.write("PLU PSM yang match: " + str(len(plu_match)))
-            st.write("PLU PSM tidak ada: " + str(len(plu_tidak_ada)))
 
             if not df_receipt.empty and "bill_no" in df_receipt.columns:
                 bill_receipt = set(
