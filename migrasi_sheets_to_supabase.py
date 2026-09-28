@@ -1,12 +1,12 @@
 """
 Migrasi Google Sheets → Supabase
 =================================
-Script migrasi lengkap dengan konversi tipe data otomatis.
+Script migrasi lengkap dengan konversi tipe data otomatis + anti-NaN.
 
-Version: 1.2
-- Fix: NaN not JSON compliant
-- Fix: numpy types → Python native
-- Fix: boolean, date, int, float conversion
+Version: 1.3
+- Fix: NaN not JSON compliant (pakai _clean_for_json recursive)
+- Fix: JSON validation sebelum kirim ke Supabase
+- Fix: Skip sheet yang gagal, lanjut ke sheet berikutnya
 
 Usage:
     1. Pastikan secrets punya [connections.gsheets] dan [supabase]
@@ -18,6 +18,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import math
+import json
 import time
 from datetime import datetime
 
@@ -219,20 +220,30 @@ MIGRATION_MAP = {
 # =========================================================
 def _to_bool(v):
     """Konversi berbagai format ke boolean."""
-    if v is None or (isinstance(v, float) and math.isnan(v)):
-        return True  # default
+    if v is None:
+        return True
+    try:
+        if isinstance(v, float) and math.isnan(v):
+            return True
+    except (TypeError, ValueError):
+        pass
     s = str(v).strip().lower()
     if s in ["1", "1.0", "true", "t", "yes", "y", "aktif", "active"]:
         return True
     elif s in ["0", "0.0", "false", "f", "no", "n", "non-aktif", "nonaktif", "inactive"]:
         return False
-    return True  # default
+    return True
 
 
 def _to_int(v):
     """Konversi ke integer."""
-    if v is None or (isinstance(v, float) and math.isnan(v)):
+    if v is None:
         return 0
+    try:
+        if isinstance(v, float) and math.isnan(v):
+            return 0
+    except (TypeError, ValueError):
+        pass
     try:
         s = str(v).strip()
         if s == "" or s.lower() in ["nan", "none", "null"]:
@@ -244,8 +255,13 @@ def _to_int(v):
 
 def _to_float(v):
     """Konversi ke float."""
-    if v is None or (isinstance(v, float) and math.isnan(v)):
+    if v is None:
         return 0.0
+    try:
+        if isinstance(v, float) and math.isnan(v):
+            return 0.0
+    except (TypeError, ValueError):
+        pass
     try:
         s = str(v).strip()
         if s == "" or s.lower() in ["nan", "none", "null"]:
@@ -259,8 +275,11 @@ def _to_str(v):
     """Konversi ke string, NaN → None."""
     if v is None:
         return None
-    if isinstance(v, float) and math.isnan(v):
-        return None
+    try:
+        if isinstance(v, float) and math.isnan(v):
+            return None
+    except (TypeError, ValueError):
+        pass
     s = str(v).strip()
     if s.lower() in ["nan", "none", "null", ""]:
         return None
@@ -271,8 +290,11 @@ def _to_date_str(v):
     """Konversi ke format tanggal YYYY-MM-DD."""
     if v is None:
         return None
-    if isinstance(v, float) and math.isnan(v):
-        return None
+    try:
+        if isinstance(v, float) and math.isnan(v):
+            return None
+    except (TypeError, ValueError):
+        pass
     try:
         dt = pd.to_datetime(v, errors="coerce")
         if pd.isna(dt):
@@ -282,46 +304,56 @@ def _to_date_str(v):
         return None
 
 
-def _to_native(v):
+def _clean_for_json(obj):
     """
-    Convert numpy/pandas types ke Python native.
-    Critical untuk JSON serialization.
+    Recursive clean untuk JSON serialization.
+    Handle: NaN, Inf, numpy types, pandas NA, Timestamp.
     """
-    if v is None:
+    # None
+    if obj is None:
         return None
     
-    # Handle NaN & Inf
-    try:
-        if isinstance(v, (float, np.floating)):
-            if math.isnan(v) or math.isinf(v):
-                return None
-            return float(v)
-    except (TypeError, ValueError):
-        pass
-    
-    # Handle pandas NA
-    try:
-        if pd.isna(v):
+    # Python float — handle NaN & Inf
+    if isinstance(obj, float):
+        if math.isnan(obj) or math.isinf(obj):
             return None
-    except (TypeError, ValueError):
-        pass
+        return obj
     
-    # Numpy integers
-    if isinstance(v, np.integer):
-        return int(v)
-    
-    # Numpy floats
-    if isinstance(v, np.floating):
+    # Numpy float
+    if isinstance(obj, np.floating):
+        v = float(obj)
         if math.isnan(v) or math.isinf(v):
             return None
-        return float(v)
+        return v
+    
+    # Numpy integer
+    if isinstance(obj, np.integer):
+        return int(obj)
     
     # Numpy bool
-    if isinstance(v, np.bool_):
-        return bool(v)
+    if isinstance(obj, np.bool_):
+        return bool(obj)
     
-    # Python native
-    return v
+    # Pandas Timestamp
+    if isinstance(obj, pd.Timestamp):
+        return obj.strftime("%Y-%m-%d")
+    
+    # Pandas NA / NaT
+    try:
+        if pd.isna(obj):
+            return None
+    except (TypeError, ValueError):
+        pass
+    
+    # String "nan" / "None" / "NaT" / ""
+    if isinstance(obj, str):
+        s = obj.strip()
+        if s.lower() in ["nan", "none", "null", "nat", ""]:
+            return None
+        return s
+    
+    # Default: return as-is
+    return obj
 
 
 # =========================================================
@@ -330,11 +362,6 @@ def _to_native(v):
 def clean_dataframe(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     """
     Bersihkan DataFrame sesuai config.
-    
-    - Rename kolom
-    - Konversi tipe data
-    - Handle NaN → None (CRITICAL untuk JSON compliance)
-    - Convert numpy types → Python native
     """
     # 1. Rename kolom sesuai mapping
     rename_map = {k: v for k, v in config["columns"].items() if k in df.columns}
@@ -352,29 +379,16 @@ def clean_dataframe(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     float_cols = config.get("float_cols", [])
     
     for col in df_final.columns:
-        # Boolean
         if col in bool_cols:
             df_final[col] = df_final[col].apply(_to_bool)
-        
-        # Date
         elif col in date_cols:
             df_final[col] = df_final[col].apply(_to_date_str)
-        
-        # Integer
         elif col in int_cols:
             df_final[col] = df_final[col].apply(_to_int)
-        
-        # Float
         elif col in float_cols:
             df_final[col] = df_final[col].apply(_to_float)
-        
-        # Object/string — auto-detect
         elif df_final[col].dtype == "object":
             df_final[col] = df_final[col].apply(_to_str)
-    
-    # 4. Convert semua ke Python native (fix NaN)
-    for col in df_final.columns:
-        df_final[col] = df_final[col].apply(_to_native)
     
     return df_final
 
@@ -453,12 +467,10 @@ for sheet_name in selected_sheets:
             st.markdown("**Preview (5 baris pertama):**")
             st.dataframe(df.head(5), use_container_width=True)
             
-            # Cek kolom required
             missing = [c for c in config["required"] if c not in df.columns]
             if missing:
                 st.error(f"❌ Kolom wajib tidak ada: {missing}")
             
-            # Preview setelah cleaning
             with st.expander("🧹 Preview setelah cleaning"):
                 df_clean = clean_dataframe(df, config)
                 st.dataframe(df_clean.head(5), use_container_width=True)
@@ -467,7 +479,6 @@ for sheet_name in selected_sheets:
         except Exception as e:
             st.error(f"❌ Gagal baca sheet: {e}")
             preview_data[sheet_name] = pd.DataFrame()
-
 # =========================================================
 # MIGRASI
 # =========================================================
@@ -498,10 +509,30 @@ if st.button("🚀 MULAI MIGRASI", type="primary", use_container_width=True):
                 # 1. Cleaning
                 df_final = clean_dataframe(df, config)
                 
-                # 2. Convert ke list of dict
-                records = df_final.to_dict("records")
+                # =========================================================
+                # 2. CONVERT KE LIST OF DICT — ANTI-NAN SUPER KUAT
+                # =========================================================
+                records = []
+                for _, row in df_final.iterrows():
+                    row_dict = {}
+                    for col in df_final.columns:
+                        row_dict[col] = _clean_for_json(row[col])
+                    records.append(row_dict)
                 
+                # Validasi JSON
+                try:
+                    json.dumps(records)
+                except (ValueError, TypeError) as e_json:
+                    st.error(f"❌ Masih ada NaN/Inf di {sheet_name}: {e_json}")
+                    overall_result[sheet_name] = {
+                        "status": "failed",
+                        "error": f"JSON validation failed: {str(e_json)[:150]}",
+                    }
+                    continue
+                
+                # =========================================================
                 # 3. Batch processing
+                # =========================================================
                 batch_size = 500
                 total_ok = 0
                 errors = []
