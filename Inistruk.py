@@ -90,8 +90,7 @@ if uploaded_file is not None:
           if not df_receipt.empty:
             row = df_receipt.iloc[0]
 
-            # Ambil semua kolom yang berpotensi berisi teks struk
-            # Terkadang teks dipisah antar kolom, kita gabungkan dengan baris baru (\n)
+            # Kolom database struk
             columns_to_check = [
                 "header",
                 "body1",
@@ -107,27 +106,28 @@ if uploaded_file is not None:
             for col in columns_to_check:
               if col in row and pd.notna(row[col]) and str(row[col]).strip() != "":
                 content = str(row[col])
-                # Jika di dalam teks kolom terdapat karakter pemisah atau ingin dipaksa turun baris
                 parts_to_print.append(content)
 
             # Gabungkan seluruh bagian dengan baris baru
             full_receipt_text = "\n".join(parts_to_print)
 
-            # Format HTML/CSS kustom agar struk tercetak rapi memanjang ke bawah layaknya kertas struk thermal
+            # Styling HTML yang disesuaikan agar proporsional di HP maupun Laptop
+            # Menggunakan white-space pre dan lebar maksimum yang pas untuk teks kasir (sekitar 480px)
             receipt_html = f"""
                         <div style="
-                            background-color: #fcfcfc;
-                            color: #111111;
-                            padding: 20px;
-                            border-radius: 8px;
-                            border: 1px solid #cccccc;
+                            background-color: #ffffff;
+                            color: #000000;
+                            padding: 15px 20px;
+                            border-radius: 6px;
+                            border: 2px solid #dddddd;
                             font-family: 'Courier New', Courier, monospace;
-                            white-space: pre-wrap;
-                            word-wrap: break-word;
-                            font-size: 14px;
-                            line-height: 1.4;
-                            max-width: 400px;
-                            box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+                            white-space: pre;
+                            overflow-x: auto;
+                            font-size: 13px;
+                            line-height: 1.2;
+                            max-width: 100%;
+                            width: fit-content;
+                            box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
                         ">{full_receipt_text}</div>
                         """
 
