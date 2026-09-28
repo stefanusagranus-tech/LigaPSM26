@@ -1,18 +1,14 @@
 import streamlit as st
-from supabase_connector import test_connection, load_periode_store_supabase, load_daily_performance_supabase
+from supabase_connector import test_connection, test_daily_performance
 
 st.title("🧪 Test v2 — Supabase Connector")
 
 # Test 1: Connection
+st.markdown("### 1️⃣ Test Connection")
 result = test_connection()
 st.json(result)
 
-# Test 2: Periode Store
-st.markdown("### 📊 Periode Store")
-df_periode = load_periode_store_supabase()
-st.dataframe(df_periode)
-
-# Test 3: Daily Performance
-st.markdown("### 📊 Daily Performance")
-df_daily = load_daily_performance_supabase()
-st.dataframe(df_daily)
+# Test 2: Daily Performance
+st.markdown("### 2️⃣ Test Daily Performance")
+result_dp = test_daily_performance()
+st.json(result_dp)
