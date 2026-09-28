@@ -10,31 +10,25 @@ st.set_page_config(
 
 st.title("🧾 Aplikasi Cek Struk & Penjualan dari Database")
 st.write(
-    "Upload file `.zip` yang berisi database Anda (misal: SQLite `.db` atau file data), lalu masukkan nomor bill (`bill_no`) untuk melihat detail penjualan dan struk."
+    "Upload file `.zip` database Anda, lalu pilih atau cari nomor bill untuk"
+    " melihat detail penjualan dan struk."
 )
 
-# 1. Widget Upload ZIP
 uploaded_file = st.file_uploader(
     "Upload File ZIP Database", type=["zip"], key="zip_uploader"
 )
-
 extract_path = "temp_db_folder"
 
 if uploaded_file is not None:
-  # Bersihkan folder temp lama jika ada
   if os.path.exists(extract_path):
     shutil.rmtree(extract_path)
   os.makedirs(extract_path, exist_ok=True)
 
-  # Ekstrak ZIP
   import zipfile
 
   with zipfile.ZipFile(uploaded_file, "r") as zip_ref:
     zip_ref.extractall(extract_path)
 
-  st.success("File ZIP berhasil di-upload dan diekstrak!")
-
-  # Cari file database (.db / .sqlite) di dalam folder hasil ekstraksi
   db_file_path = None
   for root, dirs, files in os.walk(extract_path):
     for file in files:
@@ -43,62 +37,104 @@ if uploaded_file is not None:
         break
 
   if db_file_path:
-    st.info(f"Database ditemukan: `{os.path.basename(db_file_path)}`")
+    st.success(f"Database ditemukan!")
 
     try:
-      # Koneksi ke database SQLite
       conn = sqlite3.connect(db_file_path)
 
-      # 2. Input Bill Number dari User
-      st.markdown("---")
-      st.subheader("Cari Berdasarkan Bill Number")
-      bill_no_input = st.text_input(
-          "Masukkan Nomor Bill (`bill_no`):", placeholder="Contoh: BILL-001"
+      # Ambil daftar nama tabel yang ada di database
+      cursor = conn.cursor()
+      cursor.execute(
+          "SELECT name FROM sqlite_master WHERE type='table';"
       )
+      tables = [row[0] for row in cursor.fetchall()]
 
-      if bill_no_input:
-        # Query untuk mengambil data dari tx_tsale dan ts_trans
-        # (Sesuaikan nama kolom jika berbeda di database Anda)
-        query_sale = f"SELECT * FROM tx_tsale WHERE bill_no = '{bill_no_input}'"
-        query_trans = (
-            f"SELECT * FROM ts_trans WHERE bill_no = '{bill_no_input}'"
+      st.markdown("---")
+      st.subheader("Pilih Berdasarkan Bill Number")
+
+      # Cek apakah tabel 'tx_trans' ada untuk mengambil daftar bill_no
+      if "tx_trans" in tables:
+        # Ambil daftar bill_no unik dari ts_trans agar user bisa melihatnya
+        df_bills = pd.read_sql(
+            "SELECT DISTINCT bill_no FROM tx_trans ORDER BY bill_no DESC", conn
         )
-        query_receipt = f"SELECT * FROM log_recipt_print WHERE bill_no = '{bill_no_input}'"
+        list_bills = df_bills["bill_no"].tolist()
 
-        df_sale = pd.read_sql(query_sale, conn)
+        # Widget Selectbox / Pilihan Bill No
+        selected_bill = st.selectbox(
+            "Pilih atau Cari Nomor Bill (`bill_no`):", options=list_bills
+        )
+      else:
+        selected_bill = st.text_input(
+            "Masukkan Nomor Bill (`bill_no`):", placeholder="Contoh: 149"
+        )
+
+      if selected_bill:
+        # Konversi ke string atau integer sesuai format database
+        # Query aman untuk tx_trans dan log_recipt_print
+        query_trans = (
+            f"SELECT * FROM ts_trans WHERE bill_no = '{selected_bill}'"
+        )
+        query_receipt = (
+            f"SELECT * FROM log_recipt_print WHERE bill_no = '{selected_bill}'"
+        )
+
         df_trans = pd.read_sql(query_trans, conn)
         df_receipt = pd.read_sql(query_receipt, conn)
 
-        # Tampilkan Hasil Data Penjualan
+        # Cek struktur kolom pada tx_tsale terlebih dahulu agar tidak error
+        df_tsale_sample = pd.read_sql(
+            "SELECT * FROM tx_tsale LIMIT 1", conn
+        )
+        col_names = df_tsale_sample.columns.tolist()
+
+        # Cari kolom yang mirip dengan bill_no di tabel tx_tsale
+        match_col = None
+        for col in col_names:
+          if "bill" in col.lower():
+            match_col = col
+            break
+
+        if match_col:
+          query_sale = (
+              f"SELECT * FROM tx_tsale WHERE {match_col} = '{selected_bill}'"
+          )
+          df_sale = pd.read_sql(query_sale, conn)
+        else:
+          df_sale = pd.DataFrame()
+
+        # Tampilkan Hasil Tab
         tab1, tab2, tab3 = st.tabs(
-            ["📊 Data tx_tsale", "🛒 Data ts_trans", "🧾 Struk (log_recipt_print)"]
+            ["🛒 Data ts_trans", "📊 Data tx_tsale", "🧾 Struk (log_recipt_print)"]
         )
 
         with tab1:
-          st.write("### Tabel tx_tsale")
-          if not df_sale.empty:
-            st.dataframe(df_sale, use_container_width=True)
-          else:
-            st.warning(f"Tidak ada data `tx_tsale` untuk bill: {bill_no_input}")
-
-        with tab2:
-          st.write("### Tabel ts_trans (Detail Item)")
+          st.write(
+              f"### Tabel ts_trans (Detail Item untuk Bill:"
+              f" {selected_bill})"
+          )
           if not df_trans.empty:
             st.dataframe(df_trans, use_container_width=True)
           else:
-            st.warning(f"Tidak ada data `ts_trans` untuk bill: {bill_no_input}")
+            st.warning(f"Tidak ada data di `ts_trans` untuk bill {selected_bill}")
+
+        with tab2:
+          st.write(f"### Tabel tx_tsale")
+          if match_col:
+            st.info(f"Menggunakan kolom pencocokan: `{match_col}`")
+          if not df_sale.empty:
+            st.dataframe(df_sale, use_container_width=True)
+          else:
+            st.warning(f"Tidak ada data di `tx_tsale` untuk bill {selected_bill}")
 
         with tab3:
-          st.write("### Preview Struk (`log_recipt_print`)")
+          st.write(f"### Preview Struk (`log_recipt_print`)")
           if not df_receipt.empty:
-            # Asumsi log_recipt_print menyimpan teks mentah atau format ESC/POS/Text
             for idx, row in df_receipt.iterrows():
-              # Jika kolom teks struk bernama 'receipt_text' atau 'content' (ubah sesuai database Anda)
-              # Di sini kita ambil kolom teks pertama yang ditemukan atau tampilkan seluruh baris
               st.code(row.to_string(), language="text")
           else:
             st.warning(
-                f"Tidak ada data `log_recipt_print` untuk bill: {bill_no_input}"
+                f"Tidak ada data `log_recipt_print` untuk bill {selected_bill}"
             )
 
       conn.close()
@@ -109,9 +145,9 @@ if uploaded_file is not None:
   else:
     st.error(
         "File database dengan format `.db` atau `.sqlite` tidak ditemukan di"
-        " dalam folder ZIP yang di-upload."
+        " dalam folder ZIP."
     )
 
-# Bersihkan direktori temporary saat aplikasi ditutup/di-refresh (opsional)
 if os.path.exists(extract_path) and uploaded_file is None:
   shutil.rmtree(extract_path, ignore_errors=True)
+    
