@@ -12,3 +12,4 @@ python-pptx
 matplotlib
 streamlit-lottie
 requests
+supabase
