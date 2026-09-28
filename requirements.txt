@@ -13,3 +13,4 @@ matplotlib
 streamlit-lottie
 requests
 supabase
+streamlit_gsheets
