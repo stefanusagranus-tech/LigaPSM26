@@ -1,12 +1,15 @@
+import sys
 import os
-import shutil
-import sqlite3
-import zipfile
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
-import html
-import re
+from utils.common import (
+    setup_upload, load_tables, format_struk,
+    render_struk_html, generate_pdf, render_print_button,
+    get_struk_text, build_plu_name_dict,
+)
 
 st.set_page_config(
     page_title="PSM per PLU",
@@ -31,441 +34,20 @@ PLU_PSM = {
     428675, 428676, 431566, 428817, 428818, 453458, 453459,
 }
 
-TABEL_TRANSAKSI = "tx_tsale"
-TABEL_DETAIL = "tx_trans"
-TABEL_RECEIPT = "log_receipt_prn"
-
-STRUK_WIDTH = 42
-
-
 # ============================================================
-# BACA DATABASE
+# UPLOAD
 # ============================================================
-def get_table_names(conn):
-    q = "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
-    return pd.read_sql(q, conn)["name"].tolist()
-
-
-def load_data(db_path):
-    conn = sqlite3.connect(db_path)
-    tables = get_table_names(conn)
-    dfs = {}
-    mapping = {
-        "sale": TABEL_TRANSAKSI,
-        "detail": TABEL_DETAIL,
-        "receipt": TABEL_RECEIPT,
-    }
-    for key, tbl in mapping.items():
-        if tbl in tables:
-            try:
-                dfs[key] = pd.read_sql("SELECT * FROM `" + tbl + "`", conn)
-            except Exception as e:
-                st.warning("Gagal baca tabel " + tbl + ": " + str(e))
-        else:
-            dfs[key] = pd.DataFrame()
-    conn.close()
-    return dfs, tables
-
-
-# ============================================================
-# AUTO-DETECT FORMAT PLU
-# ============================================================
-def normalize_plu(series, mode="asli"):
-    """
-    Normalisasi PLU dari database ke format asli (tanpa tambahan digit).
-    mode:
-      - 'asli': apa adanya
-      - 'buang_1': buang 1 digit terakhir
-      - 'buang_2': buang 2 digit terakhir
-      - 'div_10': bagi 10
-      - 'div_100': bagi 100
-    """
-    s = pd.to_numeric(series, errors="coerce")
-    if mode == "asli":
-        return s
-    if mode == "buang_1":
-        return pd.to_numeric(
-            s.astype(str).str.replace(r"\.0$", "", regex=True).str[:-1],
-            errors="coerce"
-        )
-    if mode == "buang_2":
-        return pd.to_numeric(
-            s.astype(str).str.replace(r"\.0$", "", regex=True).str[:-2],
-            errors="coerce"
-        )
-    if mode == "div_10":
-        return s / 10
-    if mode == "div_100":
-        return s / 100
-    return s
-
-
-def detect_best_plu_mode(df_detail, plu_psm_set):
-    """
-    Coba berbagai mode normalisasi PLU, pilih yang paling banyak match.
-    Return: (mode, jumlah_match, df_hasil)
-    """
-    modes = ["asli", "buang_1", "buang_2", "div_10", "div_100"]
-    best_mode = "asli"
-    best_count = 0
-    best_df = pd.DataFrame()
-
-    for mode in modes:
-        df_temp = df_detail.copy()
-        df_temp["plu_norm"] = normalize_plu(df_temp["plu"], mode)
-        df_temp["plu_norm_int"] = df_temp["plu_norm"].round().astype("Int64")
-
-        mask = df_temp["plu_norm_int"].isin(plu_psm_set)
-        count = mask.sum()
-
-        if count > best_count:
-            best_count = count
-            best_mode = mode
-            best_df = df_temp[mask].copy()
-
-    return best_mode, best_count, best_df
-
-
-# ============================================================
-# FORMAT STRUK
-# ============================================================
-def format_struk(raw_text, width=STRUK_WIDTH):
-    if not raw_text:
-        return ""
-    text = raw_text.replace("|", "\n")
-    text = text.replace("\r\n", "\n").replace("\r", "\n")
-    lines = text.split("\n")
-    result = []
-
-    for line in lines:
-        line = line.rstrip()
-        stripped = line.strip()
-        if re.fullmatch(r"[=\-]{5,}", stripped):
-            if "=" in stripped:
-                result.append("=" * width)
-            else:
-                result.append("-" * width)
-            continue
-        if stripped == "":
-            result.append("")
-            continue
-        if len(line) > width:
-            m = re.match(
-                r"^(.*?)\s{2,}(\d+)\s+([\d.,]+)\s+([\d.,]+)\s*$", line
-            )
-            if m:
-                nama, qty, harga, total = m.groups()
-                kanan = f"{qty:>3} {harga:>8} {total:>9}"
-                nama_max = width - len(kanan) - 1
-                nama = nama[:nama_max]
-                result.append(f"{nama:<{nama_max}} {kanan}")
-            else:
-                while len(line) > width:
-                    result.append(line[:width])
-                    line = line[width:]
-                if line:
-                    result.append(line)
-        else:
-            result.append(line)
-
-    cleaned = []
-    prev_empty = False
-    for line in result:
-        if line.strip() == "":
-            if not prev_empty:
-                cleaned.append("")
-            prev_empty = True
-        else:
-            cleaned.append(line)
-            prev_empty = False
-
-    final = []
-    skip_next_empty = False
-    for i, line in enumerate(cleaned):
-        if skip_next_empty and line.strip() == "":
-            skip_next_empty = False
-            continue
-        skip_next_empty = False
-        if re.fullmatch(r"=+", line.strip()) and i < 5:
-            final.append(line)
-            skip_next_empty = True
-            continue
-        final.append(line)
-
-    return "\n".join(final)
-
-
-# ============================================================
-# RENDER HTML STRUK
-# ============================================================
-def render_struk_html(text, width=STRUK_WIDTH):
-    escaped = html.escape(text)
-    char_width_px = 7.8
-    container_width_px = int(width * char_width_px) + 40
-
-    return f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-    <meta charset="utf-8">
-    <style>
-        body {{
-            margin: 0; padding: 0; background: transparent;
-            font-family: 'Courier New', Courier, monospace;
-        }}
-        .struk-outer {{
-            display: flex; justify-content: center; padding: 8px 0;
-        }}
-        .struk-container {{
-            background-color: #ffffff; color: #000000;
-            padding: 18px 22px; border-radius: 6px;
-            border: 1px solid #dddddd;
-            box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
-            width: {container_width_px}px; max-width: 100%;
-            overflow-x: auto;
-        }}
-        .struk-container pre {{
-            margin: 0;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 13px; line-height: 1.15;
-            white-space: pre;
-            color: #000000; background: transparent;
-        }}
-    </style>
-    </head>
-    <body>
-        <div class="struk-outer">
-            <div class="struk-container">
-                <pre>{escaped}</pre>
-            </div>
-        </div>
-    </body>
-    </html>
-    """
-
-
-# ============================================================
-# GENERATE PDF
-# ============================================================
-def generate_pdf(text):
-    from fpdf import FPDF
-    pdf = FPDF(unit="mm", format=(80, 297))
-    pdf.add_page()
-    pdf.set_auto_page_break(auto=True, margin=5)
-    pdf.set_font("Courier", size=9)
-    for line in text.split("\n"):
-        safe_line = line.encode("latin-1", "replace").decode("latin-1")
-        pdf.cell(0, 3.6, safe_line, ln=1)
-    return bytes(pdf.output())
-
-
-# ============================================================
-# TOMBOL PRINT
-# ============================================================
-def render_print_button(receipt_text):
-    escaped = html.escape(receipt_text)
-    return f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-    <style>
-        body {{ margin: 0; padding: 0; background: transparent; }}
-        .print-btn {{
-            background-color: #0066cc; color: white; border: none;
-            padding: 8px 16px; border-radius: 6px;
-            font-size: 14px; cursor: pointer; font-family: sans-serif;
-        }}
-        .print-btn:hover {{ background-color: #0055aa; }}
-    </style>
-    </head>
-    <body>
-        <button class="print-btn" onclick="printStruk()">🖨️ Cetak / Print</button>
-        <div id="print-area" style="display:none;">
-            <pre style="font-family:'Courier New',monospace;font-size:10px;line-height:1.2;white-space:pre;">{escaped}</pre>
-        </div>
-        <script>
-            function printStruk() {{
-                var w = window.open('', '', 'width=400,height=600');
-                w.document.write('<html><head><title>Cetak Struk</title>');
-                w.document.write('<style>body{{font-family:Courier New,monospace;font-size:11px;white-space:pre;}}@page{{size:80mm auto;margin:0;}}</style>');
-                w.document.write('</head><body>');
-                w.document.write(document.getElementById('print-area').innerHTML);
-                w.document.write('</body></html>');
-                w.document.close();
-                w.focus();
-                setTimeout(function(){{ w.print(); }}, 300);
-            }}
-        </script>
-    </body>
-    </html>
-    """
-
-
-# ============================================================
-# AMBIL STRUK
-# ============================================================
-def get_struk_text(df_receipt, bill_no):
-    if df_receipt.empty or "bill_no" not in df_receipt.columns:
-        return None
-    cols = ["header", "body1", "body2", "body3",
-            "addtl1", "addtl2", "addtl3", "footer"]
-    bill_str = str(bill_no).strip()
-    bill_zfill = bill_str.zfill(4)
-    candidates = [bill_str, bill_zfill, bill_str.lstrip("0")]
-    row = None
-    for c in candidates:
-        match = df_receipt[df_receipt["bill_no"].astype(str).str.strip() == c]
-        if not match.empty:
-            row = match.iloc[0]
-            break
-    if row is None:
-        match = df_receipt[
-            df_receipt["bill_no"].astype(str).str.strip().str.zfill(4) == bill_zfill
-        ]
-        if not match.empty:
-            row = match.iloc[0]
-    if row is None:
-        return None
-    parts = []
-    for c in cols:
-        if c in row and pd.notna(row[c]) and str(row[c]).strip():
-            parts.append(str(row[c]))
-    raw_text = "\n".join(parts)
-    return format_struk(raw_text, width=STRUK_WIDTH), raw_text
-
-
-# ============================================================
-# PARSE NAMA ITEM
-# ============================================================
-def parse_struk_items(body1):
-    if not body1 or not isinstance(body1, str):
-        return []
-    items = []
-    text = body1.replace("|", "\n")
-    lines = text.split("\n")
-    skip_keywords = [
-        "Bon", "Kasir", "===", "---", "Total", "Disc",
-        "Tunai", "Kembalian", "PPN", "Tgl", "MEMBER",
-        "STAR", "Potensi", "A-POIN", "Voucher", "EXTRA",
-        "STRUK", "ALFAGIFT", "QRIS", "Card", "Jenis",
-        "Nomor", "Alamat", "Penerima", "Pengirim",
-    ]
-    for line in lines:
-        line = line.strip()
-        if not line:
-            continue
-        if any(kw in line for kw in skip_keywords):
-            continue
-        m = re.match(
-            r"^(.+?)\s+(\d+(?:\.\d+)?)\s+([\d,]+)\s+([\d,]+)\s*$", line
-        )
-        if m:
-            nama = m.group(1).strip()
-            try:
-                qty = float(m.group(2))
-                harga = float(m.group(3).replace(",", ""))
-                total = float(m.group(4).replace(",", ""))
-                if harga > 0 and len(nama) >= 3:
-                    items.append({
-                        "nama": nama, "qty": qty,
-                        "harga": harga, "total": total,
-                    })
-            except ValueError:
-                continue
-    return items
-
-
-def build_plu_name_dict(df_receipt, df_detail):
-    if df_receipt.empty or df_detail.empty:
-        return {}
-    plu_names = {}
-    bill_to_body = {}
-    for _, r in df_receipt.iterrows():
-        bill = str(r["bill_no"]).strip().zfill(4)
-        bill_to_body[bill] = str(r.get("body1", ""))
-    df_detail = df_detail.copy()
-    df_detail["_bill_z"] = df_detail["bill_no"].astype(str).str.strip().str.zfill(4)
-    bill_to_items = {}
-    for bill, grp in df_detail.groupby("_bill_z"):
-        items = []
-        for _, r in grp.iterrows():
-            try:
-                items.append({
-                    "plu": r["plu"],
-                    "qty": float(r["qty"]) if pd.notna(r["qty"]) else 0,
-                    "price": float(r["price"]) if pd.notna(r["price"]) else 0,
-                })
-            except Exception:
-                continue
-        bill_to_items[bill] = items
-    for bill, body in bill_to_body.items():
-        struk_items = parse_struk_items(body)
-        tx_items = bill_to_items.get(bill, [])
-        for s in struk_items:
-            for t in tx_items:
-                if (abs(t["qty"] - s["qty"]) < 0.01
-                        and abs(t["price"] - s["harga"]) < 1):
-                    plu = t["plu"]
-                    if plu not in plu_names:
-                        plu_names[plu] = {}
-                    plu_names[plu][s["nama"]] = plu_names[plu].get(s["nama"], 0) + 1
-    result = {}
-    for plu, names in plu_names.items():
-        best = max(names.items(), key=lambda x: x[1])[0]
-        result[plu] = best
-    return result
-# ============================================================
-# SIDEBAR UPLOAD
-# ============================================================
-st.sidebar.header("Sumber Data")
-upload_mode = st.sidebar.radio(
-    "Sumber database:",
-    ["Upload ZIP", "Path Lokal"],
-    key="psm_upload",
-)
-
-db_file = None
-extract_path = "temp_psm_db"
-
-if upload_mode == "Upload ZIP":
-    uploaded = st.sidebar.file_uploader(
-        "Upload ZIP database", type=["zip"], key="psm_zip"
-    )
-    if uploaded is not None:
-        if os.path.exists(extract_path):
-            shutil.rmtree(extract_path)
-        os.makedirs(extract_path, exist_ok=True)
-        with zipfile.ZipFile(uploaded, "r") as z:
-            z.extractall(extract_path)
-        for root, _, files in os.walk(extract_path):
-            for f in files:
-                if f.endswith((".db", ".sqlite", ".sqlite3")):
-                    db_file = os.path.join(root, f)
-                    break
-            if db_file:
-                break
-        if db_file:
-            st.sidebar.success("Database: " + os.path.basename(db_file))
-        else:
-            st.sidebar.error("Tidak ada file .db di dalam ZIP.")
-else:
-    db_file = st.sidebar.text_input(
-        "Path database:", value="pos_database.db", key="psm_path"
-    )
-
+db_file = setup_upload()
 
 # ============================================================
 # MAIN
 # ============================================================
 if db_file and os.path.exists(db_file):
     try:
-        dfs, all_tables = load_data(db_file)
-        df_sale = dfs["sale"]
-        df_detail = dfs["detail"]
-        df_receipt = dfs["receipt"]
-
-        with st.sidebar.expander("Daftar Tabel"):
-            st.write(all_tables)
+        dfs = load_tables(db_file, ["tx_tsale", "tx_trans", "log_receipt_prn"])
+        df_sale = dfs["tx_tsale"]
+        df_detail = dfs["tx_trans"]
+        df_receipt = dfs["log_receipt_prn"]
 
         if df_sale.empty:
             st.error("Tabel tx_tsale kosong.")
@@ -475,74 +57,14 @@ if db_file and os.path.exists(db_file):
             st.error("Tabel tx_trans kosong.")
             st.stop()
 
-        # ---- Filter tanggal ----
-        st.sidebar.header("Filter Tanggal")
-        df_sale["date_tx"] = pd.to_datetime(df_sale["date_tx"], errors="coerce")
+        # ---- Filter PLU PSM ----
+        df_detail["plu_num"] = pd.to_numeric(df_detail["plu"], errors="coerce")
+        df_psm_detail = df_detail[df_detail["plu_num"].isin(PLU_PSM)].copy()
 
-        tgl_range = ()
-        if df_sale["date_tx"].notna().any():
-            min_d = df_sale["date_tx"].min().date()
-            max_d = df_sale["date_tx"].max().date()
-            tgl_range = st.sidebar.date_input(
-                "Rentang Tanggal",
-                value=(min_d, max_d),
-                min_value=min_d,
-                max_value=max_d,
-                key="psm_tgl",
-            )
+        st.info("Ditemukan " + str(len(df_psm_detail)) + " baris item dengan PLU PSM.")
 
-        # ============================================================
-        # AUTO-DETECT FORMAT PLU & FILTER
-        # ============================================================
-        with st.spinner("Mendeteksi format PLU di database..."):
-            best_mode, best_count, df_psm_detail = detect_best_plu_mode(
-                df_detail, PLU_PSM
-            )
-
-        st.info(
-            "Mode PLU terbaik: **" + best_mode + "** — "
-            "ditemukan **" + str(best_count) + "** baris item dengan PLU PSM."
-        )
-
-        # Debug: tampilkan mode yang dicoba
-        with st.expander("🔍 Debug: Cek Format PLU (semua mode)", expanded=(best_count == 0)):
-            st.write("**PLU di database (20 contoh):**")
-            plu_sample = (
-                pd.to_numeric(df_detail["plu"], errors="coerce")
-                .dropna().astype(int).unique()
-            )
-            st.write(sorted(list(plu_sample))[:20])
-            st.write("**Total PLU unik di database:**", len(plu_sample))
-
-            st.write("**PLU PSM (20 contoh):**")
-            st.write(sorted(list(PLU_PSM))[:20])
-            st.write("**Total PLU PSM:**", len(PLU_PSM))
-
-            st.write("---")
-            st.write("**Hasil coba semua mode normalisasi:**")
-            modes = ["asli", "buang_1", "buang_2", "div_10", "div_100"]
-            hasil = []
-            for mode in modes:
-                df_temp = df_detail.copy()
-                df_temp["plu_norm"] = normalize_plu(df_temp["plu"], mode)
-                df_temp["plu_norm_int"] = df_temp["plu_norm"].round().astype("Int64")
-                cnt = df_temp["plu_norm_int"].isin(PLU_PSM).sum()
-                # Cek match dengan contoh
-                sample_norm = (
-                    df_temp["plu_norm_int"].dropna().unique()[:5]
-                )
-                hasil.append({
-                    "mode": mode,
-                    "jumlah_match": cnt,
-                    "contoh_plu_norm": list(sample_norm),
-                })
-            st.dataframe(pd.DataFrame(hasil), use_container_width=True)
-
-        if best_count == 0:
-            st.warning(
-                "Tidak ada PLU PSM yang match di database dengan semua mode. "
-                "Cek debug di atas untuk lihat format PLU asli."
-            )
+        if df_psm_detail.empty:
+            st.warning("Tidak ada item dengan PLU PSM di database.")
             st.stop()
 
         # ---- Konversi numerik ----
@@ -562,7 +84,7 @@ if db_file and os.path.exists(db_file):
 
         # ---- Agregasi per PLU ----
         agg_rows = []
-        for plu, grp in df_psm_detail.groupby("plu_norm_int"):
+        for plu, grp in df_psm_detail.groupby("plu_num"):
             plu_int = int(plu)
             qty = grp["qty"].sum()
             sales = (grp["price"] * grp["qty"]).sum()
@@ -570,12 +92,7 @@ if db_file and os.path.exists(db_file):
                 set(grp["bill_str"].unique()),
                 key=lambda x: int(x) if x.isdigit() else 0
             )
-            # Coba cari nama pakai plu_norm_int atau plu asli
             nama = plu_name_dict.get(plu_int, "-")
-            if nama == "-":
-                plu_asli = grp["plu"].iloc[0]
-                nama = plu_name_dict.get(plu_asli, "-")
-
             agg_rows.append({
                 "PLU": plu_int,
                 "Nama_Item": nama,
@@ -600,22 +117,6 @@ if db_file and os.path.exists(db_file):
         c4.metric("Total Sales Item", "Rp " + format(df_agg["Sales_Item"].sum(), ",.0f"))
 
         st.markdown("---")
-
-        # ---- Filter & Urutkan ----
-        with st.expander("Filter & Urutkan", expanded=False):
-            col_a, col_b = st.columns(2)
-            with col_a:
-                sort_by = st.selectbox(
-                    "Urutkan berdasarkan:",
-                    ["Sales_Item", "Qty", "Jumlah_Bon", "PLU"],
-                    index=0,
-                )
-            with col_b:
-                sort_order = st.radio(
-                    "Urutan:", ["Descending", "Ascending"], horizontal=True
-                )
-            ascending = (sort_order == "Ascending")
-            df_agg = df_agg.sort_values(sort_by, ascending=ascending).reset_index(drop=True)
 
         # ---- Tampilkan per PLU ----
         for idx, row in df_agg.iterrows():
@@ -647,19 +148,18 @@ if db_file and os.path.exists(db_file):
                     chunk = list_bon[i:i + cols_per_row]
                     cols = st.columns(len(chunk))
                     for col, bon in zip(cols, chunk):
-                        btn_key = "btn_" + str(plu) + "_" + str(bon)
+                        btn_key = "psm_btn_" + str(plu) + "_" + str(bon)
                         if col.button(
                             "Bon " + str(bon),
                             key=btn_key,
                             use_container_width=True,
                         ):
-                            st.session_state["selected_bon_psm"] = {
+                            st.session_state["psm_selected_bon"] = {
                                 "plu": int(plu),
                                 "bon": bon,
                             }
 
-                # ---- Tampilkan struk kalau dipilih ----
-                sel = st.session_state.get("selected_bon_psm")
+                sel = st.session_state.get("psm_selected_bon")
                 if (sel
                         and sel["plu"] == int(plu)
                         and sel["bon"] in list_bon):
@@ -672,13 +172,11 @@ if db_file and os.path.exists(db_file):
                     if struk_result and struk_result[0]:
                         full_receipt_text, raw_text = struk_result
 
-                        # ---- PREVIEW STRUK ----
                         receipt_html = render_struk_html(full_receipt_text)
                         components.html(receipt_html, height=650, scrolling=True)
 
                         st.write("")
 
-                        # ---- TOMBOL AKSI ----
                         col1, col2, col3 = st.columns(3)
 
                         with col1:
@@ -688,7 +186,7 @@ if db_file and os.path.exists(db_file):
                                 file_name="struk_bon_" + str(sel["bon"]) + ".txt",
                                 mime="text/plain",
                                 use_container_width=True,
-                                key="txt_" + str(plu) + "_" + str(sel["bon"]),
+                                key="psm_txt_" + str(plu) + "_" + str(sel["bon"]),
                             )
 
                         with col2:
@@ -700,7 +198,7 @@ if db_file and os.path.exists(db_file):
                                     file_name="struk_bon_" + str(sel["bon"]) + ".pdf",
                                     mime="application/pdf",
                                     use_container_width=True,
-                                    key="pdf_" + str(plu) + "_" + str(sel["bon"]),
+                                    key="psm_pdf_" + str(plu) + "_" + str(sel["bon"]),
                                 )
                             except ImportError:
                                 st.info("Install `fpdf2` untuk PDF")
@@ -713,7 +211,6 @@ if db_file and os.path.exists(db_file):
                                 st.write("Klik tombol di bawah untuk print:")
                                 components.html(print_html, height=80)
 
-                        # ---- DEBUG ----
                         with st.expander("🔍 Lihat Teks Mentah (Debug)"):
                             st.code(raw_text, language=None)
                             st.write("**Setelah diformat:**")
@@ -721,12 +218,11 @@ if db_file and os.path.exists(db_file):
 
                     else:
                         st.warning(
-                            "Struk bon " + str(sel["bon"]) + " tidak ditemukan di log_receipt_prn."
+                            "Struk bon " + str(sel["bon"]) + " tidak ditemukan."
                         )
 
         st.markdown("---")
 
-        # ---- Download CSV ----
         df_export = df_agg.copy()
         df_export["List_Bon"] = df_export["List_Bon"].apply(
             lambda x: ", ".join(str(b) for b in x)
@@ -737,24 +233,6 @@ if db_file and os.path.exists(db_file):
             file_name="psm_per_plu.csv",
             mime="text/csv",
         )
-
-        # ---- Debug ----
-        with st.expander("🔍 Debug"):
-            st.write("Mode PLU terbaik: **" + best_mode + "**")
-            st.write("Total PLU di daftar PSM: " + str(len(PLU_PSM)))
-            st.write("PLU PSM yang ditemukan: " + str(df_psm_detail["plu_norm_int"].nunique()))
-            st.write("Total baris detail PSM: " + str(len(df_psm_detail)))
-            st.write("PLU berhasil di-mapping nama: " + str(len(plu_name_dict)))
-
-            if not df_receipt.empty and "bill_no" in df_receipt.columns:
-                bill_receipt = set(
-                    df_receipt["bill_no"].astype(str).str.strip().str.zfill(4)
-                )
-                bill_psm = set(df_psm_detail["bill_str"].str.zfill(4))
-                irisan = bill_psm & bill_receipt
-                st.write("Bill PSM: " + str(len(bill_psm)))
-                st.write("Bill di log_receipt_prn: " + str(len(bill_receipt)))
-                st.write("Irisan (bisa dicetak): " + str(len(irisan)))
 
     except Exception as e:
         st.error("Error: " + str(e))
