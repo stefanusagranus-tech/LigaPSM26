@@ -21193,112 +21193,307 @@ elif selected_tab == "⚙️ Master Data":
         
         st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
-        # SUB-TAB 1.1: TAMBAH ITEM
+        # SUB-TAB 1.1: TAMBAH ITEM (VERSI BARU - MULTI INPUT)
         if selected_psm_sub == "➕ Tambah Item & Target":
             st.markdown(
                 "<h4 style='color: #00ff88;'>➕ Tambah Produk & Target Per Periode</h4>",
                 unsafe_allow_html=True,
             )
-            with st.form("form_add_new_item"):
-                col_add1, col_add2 = st.columns(2)
-                with col_add1:
-                    add_period_name = st.selectbox(
-                        "Pilih Periode Alokasi Target",
-                        list(periods_dict.keys()),
-                        key="add_item_period",
-                    )
-                    add_period_id = periods_dict[add_period_name]
-                    
-                    new_item_id = (
-                        st.text_input(
-                            "ID Item (PLU / Barcode)", placeholder="Contoh: 100234"
-                        )
-                        .strip()
-                        .upper()
-                    )
-                    new_item_name = st.text_input(
-                        "Nama Produk / Item", placeholder="Contoh: MINYAK GORENG 2L"
-                    ).strip()
-                    
-                    new_category = st.text_input("Kategori Produk", placeholder="Contoh: FOOD / NON-FOOD").strip()
-
-                with col_add2:
-                    new_target_toko = st.number_input(
-                        "Target Toko (Total Pcs)", min_value=0, step=1, value=90
-                    )
-
-                    new_target_otomatis = int(math.ceil(new_target_toko / 3)) if new_target_toko > 0 else 0
-                    st.markdown(f"📦 **Target Otomatis (Target Toko / 3):** `{new_target_otomatis} Pcs`")
-                    new_target_kasir = new_target_otomatis
-
-                btn_submit_add_item = st.form_submit_button(
-                    "💾 Simpan Produk & Target Baru", use_container_width=True
+        
+            # =========================================================
+            # 1. FILTER BULAN
+            # =========================================================
+            _add_bulan_list = [
+                "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                "Juli", "Agustus", "September", "Oktober", "November", "Desember",
+            ]
+            _add_bulan_pilih = st.selectbox(
+                "🗓️ Pilih Bulan Periode",
+                _add_bulan_list,
+                index=waktu_wib.month - 1,
+                key="add_item_bulan_v2",
+            )
+            _add_bulan_int = _add_bulan_list.index(_add_bulan_pilih) + 1
+            _add_tahun_int = waktu_wib.year
+        
+            # =========================================================
+            # 2. FILTER PERIODE BERDASARKAN BULAN
+            # =========================================================
+            _add_periods_filtered = {}
+            _p_df_add = st.session_state.get("periods_df", pd.DataFrame()).copy()
+        
+            if not _p_df_add.empty and all(
+                c in _p_df_add.columns
+                for c in ["period_id", "period_name", "start_date", "end_date"]
+            ):
+                _p_df_add.columns = _p_df_add.columns.astype(str).str.strip().str.lower()
+                for _, _row in _p_df_add.iterrows():
+                    try:
+                        _pid = str(_row["period_id"]).strip()
+                        _pname = str(_row["period_name"]).strip()
+                        _start = pd.to_datetime(_row["start_date"], errors="coerce")
+                        _end = pd.to_datetime(_row["end_date"], errors="coerce")
+        
+                        if pd.isna(_start) or pd.isna(_end):
+                            continue
+        
+                        # Filter by bulan
+                        if _start.month != _add_bulan_int or _start.year != _add_tahun_int:
+                            continue
+        
+                        # Label
+                        if _start.month == _end.month:
+                            _label = f"{_start.day} - {_end.day} {_start.strftime('%B %Y')}"
+                        else:
+                            _label = f"{_start.strftime('%d %b')} - {_end.strftime('%d %b %Y')}"
+        
+                        if _pname and _pname.lower() not in ["nan", "-", ""]:
+                            _label += f" | {_pname}"
+        
+                        _add_periods_filtered[_label] = _pid
+                    except Exception:
+                        continue
+        
+            if not _add_periods_filtered:
+                st.warning(
+                    f"⚠️ Tidak ada periode di bulan **{_add_bulan_pilih}**. "
+                    f"Silakan buat periode terlebih dahulu di menu Pengaturan Periode."
                 )
-
-                if btn_submit_add_item:
-                    if not new_item_id or not new_item_name:
-                        st.error("⚠️ ID Item dan Nama Produk wajib diisi!")
+            else:
+                add_period_label = st.selectbox(
+                    "📆 Pilih Periode Alokasi Target",
+                    list(_add_periods_filtered.keys()),
+                    key="add_item_period_label_v2",
+                )
+                add_period_id = _add_periods_filtered[add_period_label]
+        
+                # =========================================================
+                # 3. GENERATE ID ITEM OTOMATIS
+                # =========================================================
+                _last_id_num = 0
+                _all_items = st.session_state.get("items_df", pd.DataFrame()).copy()
+                if not _all_items.empty and "item_id" in _all_items.columns:
+                    _nums = (
+                        _all_items["item_id"]
+                        .astype(str)
+                        .str.extract(r"(\d+)")[0]
+                        .dropna()
+                    )
+                    if not _nums.empty:
+                        _last_id_num = int(_nums.astype(int).max())
+        
+                _next_id_num = _last_id_num + 1
+                _new_item_id_auto = f"ITM{_next_id_num:03d}"
+        
+                st.info(
+                    f"🆔 ID Item Otomatis mulai dari: **{_new_item_id_auto}** "
+                    f"(akan bertambah otomatis untuk item berikutnya)"
+                )
+        
+                # =========================================================
+                # 4. FORM MULTI-INPUT ITEM
+                # =========================================================
+                # Inisialisasi state baris jika belum ada
+                if "item_rows" not in st.session_state:
+                    st.session_state.item_rows = [{"nama": "", "target": 90}]
+        
+                with st.form("form_add_multi_items_v2", clear_on_submit=False):
+                    st.markdown("##### 📦 Daftar Item yang Akan Ditambahkan")
+                    st.caption(
+                        "💡 ID Item digenerate otomatis. Target Kasir = Target Toko ÷ 3. "
+                        "Kategori tidak diperlukan."
+                    )
+        
+                    # Container untuk baris item
+                    _rows_to_remove = []
+        
+                    for i, row in enumerate(st.session_state.item_rows):
+                        col1, col2, col3 = st.columns([3, 1.2, 0.5])
+                        with col1:
+                            row["nama"] = st.text_input(
+                                f"Nama Produk #{i+1}",
+                                value=row.get("nama", ""),
+                                placeholder="Contoh: MINYAK GORENG 2L",
+                                key=f"item_name_v2_{i}",
+                            ).strip()
+                        with col2:
+                            row["target"] = st.number_input(
+                                f"Target Toko #{i+1}",
+                                min_value=0,
+                                step=1,
+                                value=int(row.get("target", 90)),
+                                key=f"item_target_v2_{i}",
+                            )
+                        with col3:
+                            st.markdown("<br>", unsafe_allow_html=True)
+                            # Tombol hapus — hanya pakai form_submit_button kalau di dalam form
+                            # Karena di dalam form, kita tampung di list untuk dihapus setelah form submit
+                            if len(st.session_state.item_rows) > 1:
+                                if st.form_submit_button("❌", key=f"del_row_v2_{i}"):
+                                    _rows_to_remove.append(i)
+        
+                    # Handle penghapusan baris (dilakukan SETELAH form submit)
+                    if _rows_to_remove:
+                        for _idx in sorted(_rows_to_remove, reverse=True):
+                            if 0 <= _idx < len(st.session_state.item_rows):
+                                st.session_state.item_rows.pop(_idx)
+                        st.rerun()
+        
+                    st.markdown("---")
+        
+                    # Tombol tambah baris
+                    col_btn1, col_btn2 = st.columns(2)
+                    with col_btn1:
+                        if st.form_submit_button("➕ Tambah Baris Item", use_container_width=True):
+                            st.session_state.item_rows.append({"nama": "", "target": 90})
+                            st.rerun()
+                    with col_btn2:
+                        btn_submit_add_items = st.form_submit_button(
+                            "💾 Simpan Semua Produk & Target Baru",
+                            use_container_width=True,
+                            type="primary",
+                        )
+        
+                # =========================================================
+                # 5. PROSES SIMPAN MULTI-ITEM
+                # =========================================================
+                if btn_submit_add_items:
+                    # Validasi: minimal 1 item dengan nama & target
+                    _valid_items = [
+                        r for r in st.session_state.item_rows
+                        if r.get("nama", "").strip() and int(r.get("target", 0)) > 0
+                    ]
+        
+                    if not _valid_items:
+                        st.error("⚠️ Minimal isi 1 Nama Produk dengan Target > 0!")
                     else:
                         try:
+                            # --- Siapkan dataframe MASTER_ITEM ---
                             if "items_df" not in st.session_state or st.session_state.items_df is None:
-                                st.session_state.items_df = pd.DataFrame(columns=["period_id", "item_id", "item_name", "active", "category"])
-                            
+                                st.session_state.items_df = pd.DataFrame(
+                                    columns=["period_id", "item_id", "item_name", "active", "category"]
+                                )
+        
                             m_items = st.session_state.items_df.copy()
-                            
                             for col in ["period_id", "item_id", "item_name", "active", "category"]:
                                 if col not in m_items.columns:
                                     m_items[col] = ""
-
-                            mask_master = (m_items["period_id"].astype(str) == str(add_period_id)) & (m_items["item_id"].astype(str) == str(new_item_id))
-                            
-                            if not mask_master.any():
-                                new_m_row = pd.DataFrame([{
-                                    "period_id": str(add_period_id),
-                                    "item_id": str(new_item_id),
-                                    "item_name": str(new_item_name),
-                                    "active": "TRUE",
-                                    "category": str(new_category)
-                                }])
-                                st.session_state.items_df = pd.concat([m_items, new_m_row], ignore_index=True)
-                                save_master_table("MASTER_ITEM", st.session_state.items_df)
-
+        
+                            # --- Siapkan dataframe SALES_ITEM ---
                             if "sales_item_df" not in st.session_state or st.session_state.sales_item_df is None:
-                                st.session_state.sales_item_df = pd.DataFrame(columns=[
-                                    "period_id", "item_id", "item_name", "target_qty", "target_kasir", "actual_qty"
-                                ])
-
+                                st.session_state.sales_item_df = pd.DataFrame(
+                                    columns=[
+                                        "period_id", "item_id", "item_name",
+                                        "target_qty", "target_kasir",
+                                        "actual_qty", "updated_at",
+                                    ]
+                                )
                             s_items = st.session_state.sales_item_df.copy()
-                            mask_sales = (
-                                (s_items["period_id"].astype(str) == str(add_period_id)) & 
-                                (s_items["item_id"].astype(str) == str(new_item_id))
-                            )
-
-                            if mask_sales.any():
-                                s_items.loc[mask_sales, "item_name"] = str(new_item_name)
-                                s_items.loc[mask_sales, "target_qty"] = int(new_target_toko)
-                                s_items.loc[mask_sales, "target_kasir"] = int(new_target_kasir)
-                            else:
-                                new_si_row = pd.DataFrame([{
-                                    "period_id": str(add_period_id),
-                                    "item_id": str(new_item_id),
-                                    "item_name": str(new_item_name),
-                                    "target_qty": int(new_target_toko),
-                                    "target_kasir": int(new_target_kasir),
-                                    "actual_qty": 0,
-                                }])
-                                s_items = pd.concat([s_items, new_si_row], ignore_index=True)
-
+        
+                            _added_count = 0
+                            _current_id_num = _next_id_num
+        
+                            for item in _valid_items:
+                                # Generate ID Item
+                                _new_id = f"ITM{_current_id_num:03d}"
+                                _current_id_num += 1
+        
+                                # Hitung target kasir (pembulatan ke atas)
+                                _target_kasir_auto = (
+                                    int(math.ceil(item["target"] / 3))
+                                    if item["target"] > 0 else 0
+                                )
+        
+                                # --- INSERT KE MASTER_ITEM ---
+                                mask_master = (
+                                    (m_items["period_id"].astype(str) == str(add_period_id))
+                                    & (m_items["item_id"].astype(str) == str(_new_id))
+                                )
+                                if not mask_master.any():
+                                    new_m_row = pd.DataFrame([{
+                                        "period_id": str(add_period_id),
+                                        "item_id": str(_new_id),
+                                        "item_name": str(item["nama"]),
+                                        "active": "TRUE",
+                                        "category": "",
+                                    }])
+                                    m_items = pd.concat([m_items, new_m_row], ignore_index=True)
+        
+                                # --- INSERT KE SALES_ITEM ---
+                                mask_sales = (
+                                    (s_items["period_id"].astype(str) == str(add_period_id))
+                                    & (s_items["item_id"].astype(str) == str(_new_id))
+                                )
+                                if mask_sales.any():
+                                    s_items.loc[mask_sales, "item_name"] = str(item["nama"])
+                                    s_items.loc[mask_sales, "target_qty"] = int(item["target"])
+                                    s_items.loc[mask_sales, "target_kasir"] = int(_target_kasir_auto)
+                                    s_items.loc[mask_sales, "updated_at"] = str(waktu_wib.date())
+                                else:
+                                    new_si_row = pd.DataFrame([{
+                                        "period_id": str(add_period_id),
+                                        "item_id": str(_new_id),
+                                        "item_name": str(item["nama"]),
+                                        "target_qty": int(item["target"]),
+                                        "target_kasir": int(_target_kasir_auto),
+                                        "actual_qty": 0,
+                                        "updated_at": str(waktu_wib.date()),
+                                    }])
+                                    s_items = pd.concat([s_items, new_si_row], ignore_index=True)
+        
+                                _added_count += 1
+        
+                            # --- SIMPAN KE SESSION STATE ---
+                            st.session_state.items_df = m_items
                             st.session_state.sales_item_df = s_items
-                            
-                            save_database(
-                                st.session_state.sales_item_df,
-                                st.session_state.sales_person_df,
-                                st.session_state.sales_pps_df,
-                                st.session_state.sales_store_df,
+        
+                            # --- SIMPAN KE GOOGLE SHEETS ---
+                            with st.spinner("⏳ Menyimpan ke MASTER_ITEM & SALES_ITEM..."):
+                                # 1. Simpan MASTER_ITEM
+                                save_master_table("MASTER_ITEM", st.session_state.items_df)
+        
+                                # 2. Simpan SALES_ITEM (via save_database)
+                                save_database(
+                                    st.session_state.sales_item_df,
+                                    st.session_state.sales_person_df,
+                                    st.session_state.sales_pps_df,
+                                    st.session_state.sales_store_df,
+                                )
+        
+                                # 3. Clear cache agar data langsung fresh
+                                st.cache_data.clear()
+        
+                            # --- LOG AKTIVITAS ---
+                            try:
+                                log_activity(
+                                    "SAVE_MASTER",
+                                    f"Tambah {_added_count} item di {add_period_label}"
+                                )
+                            except Exception:
+                                pass
+        
+                            # --- RESET FORM ---
+                            st.session_state.item_rows = [{"nama": "", "target": 90}]
+        
+                            # --- DIALOG SUKSES ---
+                            show_success_dialog(
+                                title_msg=f"<b>{_added_count} item baru</b> berhasil ditambahkan!",
+                                subtitle=f"Tersimpan di MASTER_ITEM & SALES_ITEM",
+                                icon="📦",
+                                theme="green",
+                                detail_dict={
+                                    "📅 Periode": add_period_label,
+                                    "📦 Jumlah Item": f"{_added_count} item",
+                                    "🆔 ID Terakhir": f"ITM{_current_id_num - 1:03d}",
+                                    "🎯 Target Kasir": "Otomatis (Target Toko ÷ 3)",
+                                    "📋 Sheet": "MASTER_ITEM + SALES_ITEM",
+                                },
                             )
-
+        
                         except Exception as e:
                             st.error(f"❌ Gagal menambahkan produk: {e}")
+                            import traceback
+                            st.code(traceback.format_exc())
 
         # SUB-TAB 1.2: PENGATURAN ITEM
         elif selected_psm_sub == "⚙️ Pengaturan & Edit Item":
