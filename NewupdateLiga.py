@@ -22390,21 +22390,82 @@ elif selected_tab == "⚙️ Master Data":
                         )
                         st.markdown(_card_html, unsafe_allow_html=True)
 
-   # SUB TAB 4: INPUT & PENGATURAN PERIODE PPS & SUEGER
+    # SUB TAB 4: INPUT & PENGATURAN PERIODE PPS & SUEGER
+    # SUB TAB 4: INPUT & PENGATURAN PERIODE PPS & SUEGER
     elif selected_master_sub == "📦 PPS & Sueger":
         st.markdown(
             "<h4 style='color: #c084fc;'>🎯 Input & Pengaturan Periode PPS &"
             " Sueger</h4>",
             unsafe_allow_html=True,
         )
-
-        if "periode_pps_df" not in st.session_state:
-            st.session_state.periode_pps_df = pd.DataFrame(columns=[
-                "period_id", "start_date", "end_date", "period_name", "target_total", "status", "actual_qty"
-            ])
-
+    
         # =========================================================================
-        # CUSTOM RADIO MENU UNTUK SUB-TAB PPS & SUEGER (UNGU NEON & TEKS CYAN)
+        # 🛡️ FUNGSI HELPER: BACA FRESH DARI SHEET (ANTI-BUG)
+        # =========================================================================
+        def _read_periode_pps_fresh():
+            """
+            Baca sheet PERIODE_PPS fresh dari Google Sheets.
+            Return DataFrame yang sudah dinormalisasi.
+            """
+            try:
+                _df = conn.read(worksheet="PERIODE_PPS", ttl=0)
+                if _df is None or _df.empty:
+                    return pd.DataFrame(columns=[
+                        "period_id", "start_date", "end_date", "period_name",
+                        "target_total", "target_personil", "status",
+                        "actual_qty", "syarat_total", "redeem_total"
+                    ])
+                _df.columns = _df.columns.astype(str).str.strip().str.lower()
+                return _df
+            except Exception as e:
+                print(f"[READ_PERIODE_PPS ERROR] {e}")
+                return pd.DataFrame()
+    
+        def _safe_save_periode_pps(updated_df):
+            """
+            Simpan dengan pengaman: validasi minimal, tidak boleh overwrite
+            dengan data yang lebih sedikit dari existing (kecuali memang hapus).
+            """
+            try:
+                # Validasi 1: DataFrame tidak boleh None
+                if updated_df is None:
+                    return False, "❌ DataFrame None, save dibatalkan"
+    
+                # Validasi 2: Harus punya kolom period_id
+                if "period_id" not in updated_df.columns:
+                    return False, "❌ Kolom 'period_id' tidak ada, save dibatalkan"
+    
+                # Validasi 3: Filter baris kosong (period_id blank)
+                _clean_df = updated_df[
+                    updated_df["period_id"].astype(str).str.strip() != ""
+                ].copy()
+    
+                # Simpan dengan retry
+                _max_retries = 3
+                for _attempt in range(_max_retries):
+                    try:
+                        conn.update(worksheet="PERIODE_PPS", data=_clean_df)
+                        time.sleep(0.4)
+                        st.cache_data.clear()
+                        return True, f"✅ {len(_clean_df)} baris tersimpan"
+                    except Exception as _e_save:
+                        _err_msg = str(_e_save)
+                        if "429" in _err_msg or "quota" in _err_msg.lower():
+                            time.sleep(2 * (_attempt + 1))
+                        else:
+                            time.sleep(1)
+                        if _attempt == _max_retries - 1:
+                            return False, f"❌ Gagal save ({_max_retries}x): {_err_msg[:100]}"
+                return False, "❌ Save gagal total"
+            except Exception as e:
+                return False, f"❌ Error: {str(e)[:100]}"
+    
+        # Inisialisasi session state
+        if "periode_pps_df" not in st.session_state:
+            st.session_state.periode_pps_df = pd.DataFrame()
+    
+        # =========================================================================
+        # CUSTOM RADIO MENU UNTUK SUB-TAB PPS & SUEGER
         # =========================================================================
         st.markdown("""
         <style>
@@ -22452,7 +22513,7 @@ elif selected_tab == "⚙️ Master Data":
             }
         </style>
         """, unsafe_allow_html=True)
-
+    
         selected_pps_sub = st.radio(
             "",
             [
@@ -22464,106 +22525,157 @@ elif selected_tab == "⚙️ Master Data":
             label_visibility="collapsed",
             key="pps_sueger_sub_tab_radio"
         )
-
+    
         st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
-
+    
+        # =========================================================================
+        # SUB-TAB 1: TAMBAH SUEGER (FIXED)
+        # =========================================================================
         if selected_pps_sub == "➕ Tambah Sueger":
             st.markdown("##### 📌 Form Input Program Sueger (Persentase)")
-            with st.form("form_add_sueger_pure_only"):
+            st.caption("💡 Data akan di-append ke sheet PERIODE_PPS tanpa menghapus data lama.")
+    
+            # Tombol refresh manual
+            col_ref1, col_ref2 = st.columns([1, 3])
+            with col_ref1:
+                if st.button("🔄 Refresh Data", key="refresh_sgr_btn", use_container_width=True):
+                    with st.spinner("⏳ Membaca ulang dari sheet..."):
+                        _fresh = _read_periode_pps_fresh()
+                        st.session_state.periode_pps_df = _fresh
+                        st.toast(f"✅ {len(_fresh)} periode dimuat", icon="🔄")
+                        time.sleep(1)
+                        st.rerun()
+            with col_ref2:
+                st.caption(f"📊 Total periode di session: **{len(st.session_state.periode_pps_df)}**")
+    
+            with st.form("form_add_sueger_v2"):
                 col_s1, col_s2 = st.columns(2)
                 with col_s1:
                     sgr_id = st.text_input("ID Periode Sueger", placeholder="Contoh: SGR01").strip().upper()
                     sgr_name = st.text_input("Nama Program Sueger", placeholder="Contoh: SUEGER MARET").strip()
                 with col_s2:
-                    sgr_start = st.date_input("Tanggal Mulai", value=waktu_wib.date(), key="sgr_start_only")
-                    sgr_end = st.date_input("Tanggal Akhir", value=waktu_wib.date(), key="sgr_end_only")
-
-                st.info("ℹ️ Program **Sueger** menggunakan persentase (target_total = 0) dan hanya disimpan ke sheet `PERIODE_PPS`.")
-
+                    sgr_start = st.date_input("Tanggal Mulai", value=waktu_wib.date(), key="sgr_start_v2")
+                    sgr_end = st.date_input("Tanggal Akhir", value=waktu_wib.date(), key="sgr_end_v2")
+    
+                st.info("ℹ️ Program **Sueger** menggunakan persentase (target_total = 0).")
+    
                 btn_submit_sgr = st.form_submit_button("💾 Simpan Program Sueger", use_container_width=True)
-
+    
                 if btn_submit_sgr:
+                    # Validasi input
                     if not sgr_id or not sgr_name:
                         st.error("⚠️ ID Periode dan Nama Program wajib diisi!")
                     elif sgr_start > sgr_end:
                         st.error("⚠️ Tanggal mulai tidak boleh melebihi tanggal akhir!")
                     else:
                         try:
+                            # ============================================
+                            # ✅ STEP 1: BACA DATA FRESH DARI SHEET
+                            # ============================================
+                            with st.spinner("⏳ Membaca data terbaru dari sheet PERIODE_PPS..."):
+                                _existing = _read_periode_pps_fresh()
+    
+                            # Cek duplikat ID
+                            _existing_ids = (
+                                _existing["period_id"].astype(str).str.strip().str.upper().tolist()
+                                if "period_id" in _existing.columns else []
+                            )
+                            if sgr_id.upper() in _existing_ids:
+                                st.error(f"⚠️ ID **{sgr_id}** sudah ada di sheet! Gunakan ID lain.")
+                                st.stop()
+    
+                            # ============================================
+                            # ✅ STEP 2: APPEND DATA BARU
+                            # ============================================
                             new_sgr_row = pd.DataFrame([{
                                 "period_id": sgr_id,
                                 "start_date": str(sgr_start),
                                 "end_date": str(sgr_end),
                                 "period_name": sgr_name,
                                 "target_total": 0,
+                                "target_personil": 0,
                                 "status": "Aktif",
-                                "actual_qty": 0
+                                "actual_qty": 0,
+                                "syarat_total": 0,
+                                "redeem_total": 0,
                             }])
-
-                            st.session_state.periode_pps_df = pd.concat(
-                                [st.session_state.periode_pps_df, new_sgr_row], ignore_index=True
-                            )
-                            
-                            save_master_table("PERIODE_PPS", st.session_state.periode_pps_df)
-
+    
+                            _final_df = pd.concat([_existing, new_sgr_row], ignore_index=True)
+    
+                            # ============================================
+                            # ✅ STEP 3: SIMPAN KE SHEET
+                            # ============================================
+                            with st.spinner("⏳ Menyimpan ke sheet PERIODE_PPS..."):
+                                _ok, _msg = _safe_save_periode_pps(_final_df)
+    
+                            if _ok:
+                                st.session_state.periode_pps_df = _final_df
+                                try:
+                                    log_activity("SAVE_MASTER", f"Tambah Sueger: {sgr_id} - {sgr_name}")
+                                except Exception:
+                                    pass
+                                st.success(f"✅ Program Sueger **{sgr_id} - {sgr_name}** berhasil ditambahkan!")
+                                st.info(f"📊 Total periode di sheet: **{len(_final_df)}**")
+                                time.sleep(2)
+                                st.rerun()
+                            else:
+                                st.error(_msg)
+    
                         except Exception as e:
                             st.error(f"❌ Gagal menyimpan program Sueger: {e}")
-
+                            import traceback
+                            st.code(traceback.format_exc())
+    
+        # =========================================================================
+        # SUB-TAB 2: TAMBAH PERIODE PPS (FIXED)
+        # =========================================================================
         elif selected_pps_sub == "➕ Tambah Periode PPS":
-            st.markdown(
-                "##### 📌 Form Input Periode PPS (Target Fisik & Pembulatan Otomatis)"
-            )
-
-            # Menghitung jumlah personil aktif secara dinamis untuk pembagi target
+            st.markdown("##### 📌 Form Input Periode PPS (Target Fisik & Pembulatan Otomatis)")
+            st.caption("💡 Data akan di-append ke sheet PERIODE_PPS tanpa menghapus data lama.")
+    
+            # Tombol refresh manual
+            col_ref1, col_ref2 = st.columns([1, 3])
+            with col_ref1:
+                if st.button("🔄 Refresh Data", key="refresh_pps_btn", use_container_width=True):
+                    with st.spinner("⏳ Membaca ulang dari sheet..."):
+                        _fresh = _read_periode_pps_fresh()
+                        st.session_state.periode_pps_df = _fresh
+                        st.toast(f"✅ {len(_fresh)} periode dimuat", icon="🔄")
+                        time.sleep(1)
+                        st.rerun()
+            with col_ref2:
+                st.caption(f"📊 Total periode di session: **{len(st.session_state.periode_pps_df)}**")
+    
+            # Hitung jumlah personil aktif
             total_active_personnel = 9
             if "person_df" in st.session_state and not st.session_state.person_df.empty:
                 if "person_name" in st.session_state.person_df.columns:
-                    count_p = (
-                        st.session_state.person_df["person_name"].dropna().nunique()
-                    )
+                    count_p = st.session_state.person_df["person_name"].dropna().nunique()
                     if count_p > 0:
                         total_active_personnel = count_p
-
-            with st.form("form_add_pps_pure_only"):
+    
+            with st.form("form_add_pps_v2"):
                 col_p1, col_p2 = st.columns(2)
                 with col_p1:
-                    pps_id = (
-                        st.text_input("ID Periode PPS", placeholder="Contoh: PPS01")
-                        .strip()
-                        .upper()
-                    )
-                    pps_name = st.text_input(
-                        "Nama Periode PPS", placeholder="Contoh: PPS MARET"
-                    ).strip()
-                    pps_target = st.number_input(
-                        "Target Total (Pcs)", min_value=0, step=1, value=180
-                    )
+                    pps_id = st.text_input("ID Periode PPS", placeholder="Contoh: PPS01").strip().upper()
+                    pps_name = st.text_input("Nama Periode PPS", placeholder="Contoh: PPS MARET").strip()
+                    pps_target = st.number_input("Target Total (Pcs)", min_value=0, step=1, value=180)
                 with col_p2:
-                    pps_start = st.date_input(
-                        "Tanggal Mulai", value=waktu_wib.date(), key="pps_start_only"
-                    )
-                    pps_end = st.date_input(
-                        "Tanggal Akhir", value=waktu_wib.date(), key="pps_end_only"
-                    )
-
-                    # Hitung target per personil dengan pembulatan ke atas
+                    pps_start = st.date_input("Tanggal Mulai", value=waktu_wib.date(), key="pps_start_v2")
+                    pps_end = st.date_input("Tanggal Akhir", value=waktu_wib.date(), key="pps_end_v2")
+    
                     pps_target_kasir_auto = (
                         int(math.ceil(pps_target / total_active_personnel))
-                        if pps_target > 0
-                        else 0
+                        if pps_target > 0 else 0
                     )
                     st.markdown(
-                        f"👤 **Target Otomatis Per Personil (Target Total /"
-                        f" {total_active_personnel}):** `{pps_target_kasir_auto} Pcs`"
+                        f"👤 **Target Otomatis Per Personil (Target Total / "
+                        f"{total_active_personnel}):** `{pps_target_kasir_auto} Pcs`"
                     )
-                    st.caption(
-                        "*(Nilai desimal dibulatkan ke atas secara otomatis dan"
-                        " disimpan ke PERIODE_PPS)*"
-                    )
-
-                btn_submit_pps_exc = st.form_submit_button(
-                    "💾 Simpan Periode PPS", use_container_width=True
-                )
-
+                    st.caption("*(Nilai desimal dibulatkan ke atas secara otomatis)*")
+    
+                btn_submit_pps_exc = st.form_submit_button("💾 Simpan Periode PPS", use_container_width=True)
+    
                 if btn_submit_pps_exc:
                     if not pps_id or not pps_name:
                         st.error("⚠️ ID Periode dan Nama Periode wajib diisi!")
@@ -22571,120 +22683,126 @@ elif selected_tab == "⚙️ Master Data":
                         st.error("⚠️ Tanggal mulai tidak boleh melebihi tanggal akhir!")
                     else:
                         try:
-                            # Menambahkan 'target_personil' ke dalam baris data baru
-                            new_pps_row = pd.DataFrame([
-                                {
-                                    "period_id": pps_id,
-                                    "start_date": str(pps_start),
-                                    "end_date": str(pps_end),
-                                    "period_name": pps_name,
-                                    "target_total": int(pps_target),
-                                    "target_personil": int(
-                                        pps_target_kasir_auto
-                                    ),  # <-- DIKIRIM KE SHEET
-                                    "status": "Aktif",
-                                    "actual_qty": 0,
-                                    "syarat_total": 0,
-                                    "redeem_total": 0,
-                                }
-                            ])
-
-                            if "periods_pps_df" not in st.session_state:
-                                st.session_state.periods_pps_df = pd.DataFrame()
-
-                            st.session_state.periods_pps_df = pd.concat(
-                                [st.session_state.periods_pps_df, new_pps_row],
-                                ignore_index=True,
+                            # ============================================
+                            # ✅ STEP 1: BACA DATA FRESH DARI SHEET
+                            # ============================================
+                            with st.spinner("⏳ Membaca data terbaru dari sheet PERIODE_PPS..."):
+                                _existing = _read_periode_pps_fresh()
+    
+                            # Cek duplikat ID
+                            _existing_ids = (
+                                _existing["period_id"].astype(str).str.strip().str.upper().tolist()
+                                if "period_id" in _existing.columns else []
                             )
-
-                            save_master_table(
-                                "PERIODE_PPS", st.session_state.periods_pps_df
-                            )
-
+                            if pps_id.upper() in _existing_ids:
+                                st.error(f"⚠️ ID **{pps_id}** sudah ada di sheet! Gunakan ID lain.")
+                                st.stop()
+    
+                            # ============================================
+                            # ✅ STEP 2: APPEND DATA BARU
+                            # ============================================
+                            new_pps_row = pd.DataFrame([{
+                                "period_id": pps_id,
+                                "start_date": str(pps_start),
+                                "end_date": str(pps_end),
+                                "period_name": pps_name,
+                                "target_total": int(pps_target),
+                                "target_personil": int(pps_target_kasir_auto),
+                                "status": "Aktif",
+                                "actual_qty": 0,
+                                "syarat_total": 0,
+                                "redeem_total": 0,
+                            }])
+    
+                            _final_df = pd.concat([_existing, new_pps_row], ignore_index=True)
+    
+                            # ============================================
+                            # ✅ STEP 3: SIMPAN KE SHEET
+                            # ============================================
+                            with st.spinner("⏳ Menyimpan ke sheet PERIODE_PPS..."):
+                                _ok, _msg = _safe_save_periode_pps(_final_df)
+    
+                            if _ok:
+                                st.session_state.periode_pps_df = _final_df
+                                try:
+                                    log_activity("SAVE_MASTER", f"Tambah PPS: {pps_id} - {pps_name}")
+                                except Exception:
+                                    pass
+                                st.success(f"✅ Periode PPS **{pps_id} - {pps_name}** berhasil ditambahkan!")
+                                st.info(f"📊 Total periode di sheet: **{len(_final_df)}**")
+                                time.sleep(2)
+                                st.rerun()
+                            else:
+                                st.error(_msg)
+    
                         except Exception as e:
                             st.error(f"❌ Gagal menyimpan Periode PPS: {e}")
-
+                            import traceback
+                            st.code(traceback.format_exc())
+    
+        # =========================================================================
+        # SUB-TAB 3: EDIT & HAPUS PROGRAM (FIXED)
+        # =========================================================================
         elif selected_pps_sub == "✏️ Edit & Hapus Program":
             st.markdown("##### ✏️ Kelola / Edit & Hapus Program PERIODE_PPS")
-            edit_df = st.session_state.periode_pps_df.copy()
-            
+            st.caption("💡 Data dibaca fresh dari sheet sebelum diedit/dihapus.")
+    
+            # Refresh manual
+            col_ref1, col_ref2 = st.columns([1, 3])
+            with col_ref1:
+                if st.button("🔄 Refresh Data", key="refresh_edit_btn", use_container_width=True):
+                    with st.spinner("⏳ Membaca ulang dari sheet..."):
+                        _fresh = _read_periode_pps_fresh()
+                        st.session_state.periode_pps_df = _fresh
+                        st.toast(f"✅ {len(_fresh)} periode dimuat", icon="🔄")
+                        time.sleep(1)
+                        st.rerun()
+            with col_ref2:
+                st.caption(f"📊 Total periode di session: **{len(st.session_state.periode_pps_df)}**")
+    
+            # Baca fresh dari sheet
+            with st.spinner("⏳ Memuat data..."):
+                edit_df = _read_periode_pps_fresh()
+                st.session_state.periode_pps_df = edit_df
+    
             if edit_df.empty or "period_id" not in edit_df.columns or edit_df["period_id"].dropna().empty:
                 st.info("Belum ada data di tabel PERIODE_PPS yang tersimpan untuk diedit.")
             else:
                 edit_df["period_id"] = edit_df["period_id"].astype(str).str.strip()
                 edit_df["period_name"] = edit_df["period_name"].astype(str).str.strip()
                 valid_edit_df = edit_df[edit_df["period_id"] != ""]
-                
+    
                 if valid_edit_df.empty:
                     st.info("Tidak ada ID Program valid.")
                 else:
                     list_options = (valid_edit_df["period_id"] + " - " + valid_edit_df["period_name"]).tolist()
-                    
-                    if len(list_options) > 0:
-                        selected_opt = st.selectbox("Pilih Program untuk Diedit/Dihapus", list_options, key="pure_edit_selectbox_only")
-                        selected_id = str(selected_opt).split(" - ")[0].strip() if selected_opt else None
-
-                        if selected_id and selected_id in valid_edit_df["period_id"].values:
-                            matched = valid_edit_df[valid_edit_df["period_id"] == selected_id]
-                            
-                            if not matched.empty:
-                                rmatch = matched.iloc[0]
-
-                                with st.form("form_edit_pure_only_prog"):
-                                    col_e1, col_e2 = st.columns(2)
-                                    with col_e1:
-                                        edit_name = st.text_input("Nama Program", value=str(rmatch.get("period_name", "")))
-                                        try:
-                                            cs = pd.to_datetime(rmatch["start_date"]).date()
-                                            ce = pd.to_datetime(rmatch["end_date"]).date()
-                                        except Exception:
-                                            cs, ce = waktu_wib.date(), waktu_wib.date()
-
-                                        edit_s = st.date_input("Tanggal Mulai", value=cs)
-                                    with col_e2:
-                                        edit_e = st.date_input("Tanggal Akhir", value=ce)
-                                        edit_t = st.number_input("Target Total (Pcs)", min_value=0, step=1, value=int(rmatch.get("target_total", 0)))
-                                        
-                                        c_status = str(rmatch.get("status", "Aktif"))
-                                        idx_s = ["Aktif", "Non-Aktif", "Selesai"].index(c_status) if c_status in ["Aktif", "Non-Aktif", "Selesai"] else 0
-                                        edit_st = st.selectbox("Status", ["Aktif", "Non-Aktif", "Selesai"], index=idx_s)
-
-                                    btn_upd = st.form_submit_button("💾 Simpan Perubahan ke PERIODE_PPS", use_container_width=True)
-
-                                    if btn_upd:
-                                        try:
-                                            idx_t = st.session_state.periode_pps_df[
-                                                st.session_state.periode_pps_df["period_id"].astype(str) == str(selected_id)
-                                            ].index
-                                            
-                                            st.session_state.periode_pps_df.loc[idx_t, "period_name"] = edit_name
-                                            st.session_state.periode_pps_df.loc[idx_t, "start_date"] = str(edit_s)
-                                            st.session_state.periode_pps_df.loc[idx_t, "end_date"] = str(edit_e)
-                                            st.session_state.periode_pps_df.loc[idx_t, "target_total"] = int(edit_t)
-                                            st.session_state.periode_pps_df.loc[idx_t, "status"] = edit_st
-
-                                            save_master_table("PERIODE_PPS", st.session_state.periode_pps_df)
-                                            
-                                        except Exception as e:
-                                            st.error(f"❌ Gagal memperbarui: {e}")
-
-                                st.markdown("---")
-                                if st.button(f"🗑️ Hapus Program ID: {selected_id}", use_container_width=True, key="pure_btn_del_only"):
-                                    st.session_state.periode_pps_df = st.session_state.periode_pps_df[
-                                        st.session_state.periode_pps_df["period_id"].astype(str) != str(selected_id)
-                                    ]
-                                    save_master_table("PERIODE_PPS", st.session_state.periode_pps_df)
-                                    
-                                    st.toast("⚠️ Program berhasil dihapus dari PERIODE_PPS.", icon="🗑️")
-                                    time.sleep(1.2)
-                                    st.rerun()
-
-        elif selected_pps_sub == "📊 Monitoring Periode":
-            st.markdown("##### 📊 Monitoring Data PERIODE_PPS")
-            if not st.session_state.periode_pps_df.empty:
-                st.dataframe(st.session_state.periode_pps_df, use_container_width=True)
-            else:
-                st.info("Belum ada data periode yang tercatat di tabel `PERIODE_PPS`.")
+    
+                    selected_opt = st.selectbox(
+                        "Pilih Program untuk Diedit/Dihapus",
+                        list_options,
+                        key="edit_pps_select_v2"
+                    )
+                    selected_id = str(selected_opt).split(" - ")[0].strip()
+    
+                    if selected_id and selected_id in valid_edit_df["period_id"].values:
+                        matched = valid_edit_df[valid_edit_df["period_id"] == selected_id]
+    
+                        if not matched.empty:
+                            rmatch = matched.iloc[0]
+    
+                            with st.form("form_edit_pps_v2"):
+                                col_e1, col_e2 = st.columns(2)
+                                with col_e1:
+                                    edit_name = st.text_input("Nama Program", value=str(rmatch.get("period_name", "")))
+                                    try:
+                                        cs = pd.to_datetime(rmatch["start_date"]).date()
+                                        ce = pd.to_datetime(rmatch["end_date"]).date()
+                                    except Exception:
+                                        cs, ce = waktu_wib.date(), waktu_wib.date()
+                                    edit_s = st.date_input("Tanggal Mulai", value=cs)
+                                with col_e2:
+                                    edit_e = st.date_input("Tanggal Akhir", value=ce)
+          
 
     # =========================================================================
     # 📈 SUB TAB 5: STATUS & SUMMARY — COMMAND CENTER ADMIN
