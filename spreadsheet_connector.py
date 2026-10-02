@@ -1,13 +1,7 @@
 """
-spreadsheet_connector.py (VERSI FINAL v3)
+spreadsheet_connector.py (VERSI FINAL v4)
 ==========================================
-Konektor multi-spreadsheet untuk LigaPSM + Debug Panel.
-
-FIX v3:
-- Support format ID baru (PWP-2610-01) & lama (PWP01)
-- Fix duplikat fungsi
-- Fix hardcode periode PSM/SG
-- Tambah timedelta import
+Konektor multi-spreadsheet untuk LigaPSM.
 """
 import gspread
 import streamlit as st
@@ -21,7 +15,7 @@ from google.oauth2.service_account import Credentials
 
 
 # =========================================================================
-# 🔒 LOCK GLOBAL — ANTI RACE CONDITION
+# 🔒 LOCK GLOBAL
 # =========================================================================
 _AUDIT_LOCK = threading.Lock()
 _LAPORAN_LOCK = threading.Lock()
@@ -32,7 +26,6 @@ _LAPORAN_LOCK = threading.Lock()
 # =========================================================================
 @st.cache_resource(show_spinner=False)
 def _get_client():
-    """Bikin koneksi gspread sekali seumur app (hemat quota)."""
     try:
         _creds_dict = dict(st.secrets["gcp_service_account"])
         _creds = Credentials.from_service_account_info(
@@ -50,7 +43,6 @@ def _get_client():
 
 @st.cache_resource(show_spinner=False)
 def get_ws_audit(sheet_name):
-    """Buka worksheet di Spreadsheet Audit (Log & Backup)."""
     try:
         client = _get_client()
         if client is None:
@@ -59,8 +51,7 @@ def get_ws_audit(sheet_name):
         try:
             return sh.worksheet(sheet_name)
         except gspread.WorksheetNotFound:
-            ws = sh.add_worksheet(title=sheet_name, rows=1000, cols=10)
-            return ws
+            return sh.add_worksheet(title=sheet_name, rows=1000, cols=10)
     except Exception as e:
         print(f"[GET_WS_AUDIT ERROR] {sheet_name}: {e}")
         return None
@@ -68,7 +59,6 @@ def get_ws_audit(sheet_name):
 
 @st.cache_resource(show_spinner=False)
 def get_ws_laporan(sheet_name):
-    """Buka worksheet di Spreadsheet Laporan. Auto-create kalau belum ada."""
     try:
         client = _get_client()
         if client is None:
@@ -77,37 +67,32 @@ def get_ws_laporan(sheet_name):
         try:
             return sh.worksheet(sheet_name)
         except gspread.WorksheetNotFound:
-            ws = sh.add_worksheet(title=sheet_name, rows=1000, cols=40)
-            return ws
+            return sh.add_worksheet(title=sheet_name, rows=1000, cols=40)
     except Exception as e:
         print(f"[GET_WS_LAPORAN ERROR] {sheet_name}: {e}")
         return None
 
 
 # =========================================================================
-# 📝 LOG ACTIVITY — APPEND-ONLY
+# 📝 LOG ACTIVITY
 # =========================================================================
 _HEADER_ACTIVITY = ["timestamp", "username", "role", "action", "detail", "session_id"]
 
 
 def append_logs_to_sheet(logs_list):
-    """Append list of dict log ke sheet ACTIVITY_LOG."""
     if not logs_list:
         return 0, "Queue kosong"
-
     try:
         with _AUDIT_LOCK:
             ws = get_ws_audit("ACTIVITY_LOG")
             if ws is None:
                 return 0, "❌ Gagal akses sheet ACTIVITY_LOG"
-
             try:
                 _first = ws.row_values(1)
                 if not _first or _first[0].lower() != "timestamp":
                     ws.insert_row(_HEADER_ACTIVITY, index=1)
             except Exception:
                 pass
-
             _rows = []
             for log in logs_list:
                 _rows.append([
@@ -118,11 +103,8 @@ def append_logs_to_sheet(logs_list):
                     str(log.get("detail", ""))[:200],
                     str(log.get("session_id", "")),
                 ])
-
             ws.append_rows(_rows, value_input_option="USER_ENTERED")
-
         return len(_rows), f"✅ {len(_rows)} log tersimpan"
-
     except gspread.exceptions.APIError as e:
         _err = str(e)
         if "429" in _err or "RESOURCE_EXHAUSTED" in _err:
@@ -134,29 +116,23 @@ def append_logs_to_sheet(logs_list):
 
 @st.cache_data(ttl=300, show_spinner=False)
 def read_activity_log(_cache_buster=0):
-    """Baca ACTIVITY_LOG dengan cache 5 menit."""
     try:
         ws = get_ws_audit("ACTIVITY_LOG")
         if ws is None:
             return pd.DataFrame(columns=_HEADER_ACTIVITY)
-
         all_values = ws.get_all_values()
         if len(all_values) < 2:
             return pd.DataFrame(columns=_HEADER_ACTIVITY)
-
-        header = all_values[0]
-        rows = all_values[1:]
-        return pd.DataFrame(rows, columns=header)
+        return pd.DataFrame(all_values[1:], columns=all_values[0])
     except Exception as e:
         print(f"[READ_ACTIVITY ERROR] {e}")
         return pd.DataFrame(columns=_HEADER_ACTIVITY)
 
 
 # =========================================================================
-# 💾 BACKUP KE SPREADSHEET AUDIT
+# 💾 BACKUP
 # =========================================================================
 def _safe_stringify(value):
-    """Konversi value apapun jadi string aman untuk Google Sheets."""
     try:
         if value is None:
             return ""
@@ -179,9 +155,7 @@ def _safe_stringify(value):
 
 
 def backup_to_audit_sheet(state_getter):
-    """Backup 9 sheet ke Spreadsheet Audit (tab _BACKUP_*)."""
     _result = {"success": [], "failed": [], "total": 0}
-
     _backup_map = [
         ("_BACKUP_SALES_ITEM", "sales_item_df"),
         ("_BACKUP_SALES_PERSON", "sales_person_df"),
@@ -193,7 +167,6 @@ def backup_to_audit_sheet(state_getter):
         ("_BACKUP_PERIODE_STOREPERFORMANCE", "periods_store_df"),
         ("_BACKUP_SALES_STOREPERFORMANCE", "sales_store_df"),
     ]
-
     try:
         with _AUDIT_LOCK:
             for _sheet_name, _state_key in _backup_map:
@@ -202,24 +175,20 @@ def backup_to_audit_sheet(state_getter):
                     if _df is None or _df.empty:
                         _result["failed"].append(f"⚠️ {_sheet_name}: data kosong")
                         continue
-
                     _df_clean = _df.copy()
                     _df_clean.columns = _df_clean.columns.astype(str)
                     _df_clean = _df_clean.map(_safe_stringify)
                     _df_clean = _df_clean.reset_index(drop=True)
-
                     ws = get_ws_audit(_sheet_name)
                     if ws is None:
                         _result["failed"].append(f"❌ {_sheet_name}: worksheet gagal")
                         continue
-
                     ws.clear()
                     header = _df_clean.columns.tolist()
                     ws.append_row(header, value_input_option="USER_ENTERED")
                     data_rows = _df_clean.values.tolist()
                     if data_rows:
                         ws.append_rows(data_rows, value_input_option="USER_ENTERED")
-
                     _result["success"].append(_sheet_name)
                     _result["total"] += len(_df_clean)
                     time.sleep(0.5)
@@ -232,12 +201,12 @@ def backup_to_audit_sheet(state_getter):
                     continue
     except Exception as e:
         _result["failed"].append(f"❌ Lock error: {str(e)[:80]}")
-
     return _result
-
+    
+    
 
 # =========================================================================
-# 📝 ISI LAPORAN PSM — VERSI FIX v3 (DINAMIS BY BULAN)
+# 📝 ISI LAPORAN PSM — DINAMIS BY BULAN
 # =========================================================================
 def isi_laporan_psm(bulan_int, tahun_int, sheet_name):
     """
@@ -408,6 +377,7 @@ def isi_laporan_psm(bulan_int, tahun_int, sheet_name):
         print(f"[ISI_LAPORAN_PSM ERROR] {traceback.format_exc()}")
         return False, f"❌ Gagal: {str(e)[:150]}", 0
 
+
 # =========================================================================
 # 🛠️ HELPER: ISI LAPORAN PPS (PWP / SUEGER) — KOLOM SELANG-SELING 3
 # =========================================================================
@@ -417,11 +387,6 @@ def _isi_laporan_pps_generic(bulan_int, tahun_int, sheet_name,
     """
     Helper generic untuk isi laporan PWP & Sueger.
     Struktur kolom selang-seling 3 (syarat, redeem, %) per tanggal.
-    
-    Args:
-        prefix: "PWP" atau "SGR"
-        kolom_syarat: "syarat_pwp" atau "syarat_sueger"
-        kolom_redeem: "qty_pwp" atau "redeem_sueger"
     """
     try:
         _pps = st.session_state.get("sales_pps_df", pd.DataFrame()).copy()
@@ -438,7 +403,6 @@ def _isi_laporan_pps_generic(bulan_int, tahun_int, sheet_name,
         _pps["_dt"] = pd.to_datetime(_pps["updated_at"], errors="coerce")
         _pps = _pps.dropna(subset=["_dt"])
         
-        # Personil by NIK ascending
         if "active" in _pers.columns:
             _pers = _pers[pd.to_numeric(_pers["active"], errors="coerce") == 1]
         
@@ -479,7 +443,6 @@ def _isi_laporan_pps_generic(bulan_int, tahun_int, sheet_name,
         
         _w1_start_idx = _index_from_col("D")
         _w1_tanggal = list(range(1, 16))
-        
         _w2_start_idx = _index_from_col("AZ")
         _w2_tanggal = list(range(16, 31))
         
@@ -492,7 +455,6 @@ def _isi_laporan_pps_generic(bulan_int, tahun_int, sheet_name,
                 "syarat": _col_from_index(_syr_idx),
                 "redemp": _col_from_index(_red_idx),
             })
-        
         for i, tgl in enumerate(_w2_tanggal):
             _syr_idx = _w2_start_idx + i * 3
             _red_idx = _syr_idx + 1
@@ -503,28 +465,22 @@ def _isi_laporan_pps_generic(bulan_int, tahun_int, sheet_name,
             })
         
         _updates = []
-        
         for _row_offset, _person in enumerate(_pers_list):
             _row_idx = 3 + _row_offset
-            
             for _cm in _col_map:
                 _tgl = _cm["tanggal"]
-                
                 _mask = (
                     (_pps["kasir_name"].astype(str).str.strip().str.upper() == _person) &
                     (_pps["_dt"].dt.day == _tgl) &
                     (_pps["_dt"].dt.month == bulan_int) &
                     (_pps["_dt"].dt.year == tahun_int)
                 )
-                
                 _syarat = 0
                 if _mask.any() and kolom_syarat in _pps.columns:
                     _syarat = int(pd.to_numeric(_pps.loc[_mask, kolom_syarat], errors="coerce").fillna(0).sum())
-                
                 _redeem = 0
                 if _mask.any() and kolom_redeem in _pps.columns:
                     _redeem = int(pd.to_numeric(_pps.loc[_mask, kolom_redeem], errors="coerce").fillna(0).sum())
-                
                 _updates.append({
                     "range": f"{_cm['syarat']}{_row_idx}",
                     "values": [[_syarat if _syarat > 0 else ""]],
@@ -551,7 +507,6 @@ def _isi_laporan_pps_generic(bulan_int, tahun_int, sheet_name,
             for _row_idx in range(3, 3 + len(_pers_list)):
                 _ranges_to_format.append(f"D{_row_idx}:AU{_row_idx}")
                 _ranges_to_format.append(f"AZ{_row_idx}:CO{_row_idx}")
-            
             for _r in _ranges_to_format:
                 try:
                     format_cell_range(ws, _r, _fmt)
@@ -566,7 +521,7 @@ def _isi_laporan_pps_generic(bulan_int, tahun_int, sheet_name,
         import traceback
         print(f"[ISI_LAPORAN_{prefix} ERROR] {traceback.format_exc()}")
         return False, f"❌ Gagal: {str(e)[:150]}", 0
-
+    
 
 # =========================================================================
 # 📝 ISI LAPORAN PWP — WRAPPER
@@ -603,7 +558,7 @@ def isi_laporan_sueger(bulan_int, tahun_int, sheet_name):
 
 
 # =========================================================================
-# 📝 ISI LAPORAN SG — VERSI FIX v3 (DINAMIS BY BULAN)
+# 📝 ISI LAPORAN SG — DINAMIS BY BULAN
 # =========================================================================
 def isi_laporan_sg(bulan_int, tahun_int, sheet_name):
     """
@@ -761,6 +716,7 @@ def isi_laporan_sg(bulan_int, tahun_int, sheet_name):
         import traceback
         print(f"[ISI_LAPORAN_SG ERROR] {traceback.format_exc()}")
         return False, f"❌ Gagal: {str(e)[:150]}", 0
+    
 
 # =========================================================================
 # 📊 TULIS LAPORAN BULANAN KE SPREADSHEET LAPORAN
@@ -799,7 +755,7 @@ def write_laporan_bulanan(sheet_name, rows_matrix):
 
 
 # =========================================================================
-# 📊 GENERATOR LAPORAN BULANAN — MULTI PROGRAM (PSM, PWP, SG, SUEGER)
+# 🛠️ HELPER: AMBIL PERIODE & HITUNG TARGET
 # =========================================================================
 from datetime import timedelta as _td
 
@@ -878,6 +834,9 @@ def _format_angka(val, desimal=2):
     return str(val)
 
 
+# =========================================================================
+# 🏗️ BANGUN MATRIX: SHEET PSM
+# =========================================================================
 def _bangun_sheet_psm(sales_person_df, periode_df, sales_item_df, person_df, bulan_int, tahun_int):
     """Bangun matrix laporan PSM (per hari, breakdown WEEK)."""
     import calendar
@@ -1017,6 +976,9 @@ def _bangun_sheet_psm(sales_person_df, periode_df, sales_item_df, person_df, bul
     return _sheet_name, _rows
 
 
+# =========================================================================
+# 🏗️ BANGUN MATRIX: SHEET PPS (PWP / SG / SUEGER)
+# =========================================================================
 def _bangun_sheet_pps(sales_pps_df, periode_pps_df, person_df, bulan_int, tahun_int,
                      prefix, sheet_suffix, kolom_a, kolom_b, label_a, label_b):
     """Bangun matrix laporan PPS (PWP, SG, Sueger)."""
@@ -1163,8 +1125,9 @@ def _bangun_sheet_pps(sales_pps_df, periode_pps_df, person_df, bulan_int, tahun_
     return _sheet_name, _rows
 
 
-# ==== PUBLIC FUNCTIONS ====
-
+# =========================================================================
+# 📊 GENERATE LAPORAN PSM (PUBLIC)
+# =========================================================================
 def generate_laporan_psm(bulan_int, tahun_int):
     """Generate laporan PSM bulanan."""
     try:
@@ -1187,8 +1150,11 @@ def generate_laporan_psm(bulan_int, tahun_int):
         import traceback
         print(f"[GEN_PSM ERROR] {traceback.format_exc()}")
         return False, f"❌ Gagal: {str(e)[:150]}", 0
+    
 
-
+# =========================================================================
+# 📊 GENERATE LAPORAN PWP (PUBLIC)
+# =========================================================================
 def generate_laporan_pwp(bulan_int, tahun_int):
     """Generate laporan PWP bulanan."""
     try:
@@ -1217,6 +1183,9 @@ def generate_laporan_pwp(bulan_int, tahun_int):
         return False, f"❌ Gagal: {str(e)[:150]}", 0
 
 
+# =========================================================================
+# 📊 GENERATE LAPORAN SG (PUBLIC)
+# =========================================================================
 def generate_laporan_sg(bulan_int, tahun_int):
     """Generate laporan SG bulanan."""
     try:
@@ -1245,18 +1214,11 @@ def generate_laporan_sg(bulan_int, tahun_int):
         return False, f"❌ Gagal: {str(e)[:150]}", 0
 
 
-
+# =========================================================================
+# 📊 GENERATE LAPORAN SUEGER (PUBLIC)
+# =========================================================================
 def generate_laporan_sueger(bulan_int, tahun_int):
-    """
-    Generate laporan Sueger bulanan (sheet: [BULAN] [TAHUN]_SUEGER).
-    
-    Args:
-        bulan_int: 1-12
-        tahun_int: contoh 2026
-    
-    Returns:
-        (success: bool, message: str, jumlah_baris: int)
-    """
+    """Generate laporan Sueger bulanan."""
     try:
         _pps = st.session_state.get("sales_pps_df", pd.DataFrame())
         _per_pps = st.session_state.get("periods_pps_df", pd.DataFrame())
@@ -1277,25 +1239,17 @@ def generate_laporan_sueger(bulan_int, tahun_int):
             return False, _msg, 0
         
         return True, f"✅ Laporan Sueger {_sheet_name} tersimpan ({len(_rows)} baris)", len(_rows) - 2
-    
     except Exception as e:
         import traceback
         print(f"[GEN_SUEGER ERROR] {traceback.format_exc()}")
         return False, f"❌ Gagal: {str(e)[:150]}", 0
 
 
+# =========================================================================
+# 📊 GENERATE SEMUA LAPORAN (PUBLIC)
+# =========================================================================
 def generate_semua_laporan(bulan_int, tahun_int):
-    """
-    Generate 4 laporan sekaligus: PSM, PWP, SG, Sueger.
-    
-    Return:
-        dict {
-            "success": [list of dict {nama, pesan, baris}],
-            "failed": [list of dict {nama, error}],
-            "total_sheet": int,
-            "total_baris": int,
-        }
-    """
+    """Generate 4 laporan sekaligus: PSM, PWP, SG, Sueger."""
     _result = {
         "success": [],
         "failed": [],
@@ -1337,114 +1291,362 @@ def generate_semua_laporan(bulan_int, tahun_int):
     return _result
 
 
+
 # =========================================================================
-# 📅 PERIODE SALES — BACA/TULIS KE PERIODE_STOREPERFORMANCE
+# 🧪 DEBUG PANEL
 # =========================================================================
-_PERIODE_SALES_HEADER = [
-    "period_id", "period_name", "start_date", "end_date",
-    "target_net_sales", "target_std", "target_apc",
-    "nsb_percentage", "target_gm_pct", "status",
-]
+def render_debug_panel():
+    """Tampilkan panel debug di sidebar."""
+    with st.sidebar:
+        st.markdown("---")
+        st.markdown("### 🧪 Debug Panel")
+        st.caption("Test koneksi & fungsi connector")
+
+        if st.button("🔌 TEST SEMUA", key="btn_debug_test_all", use_container_width=True):
+            _test_all()
+
+        st.markdown("---")
+        st.markdown("### 📊 Cek Quota API")
+
+        if st.button("📊 Hitung API Call Hari Ini", key="btn_cek_quota", use_container_width=True):
+            try:
+                ws = get_ws_audit("ACTIVITY_LOG")
+                if ws is None:
+                    st.sidebar.error("Gagal akses ACTIVITY_LOG")
+                else:
+                    all_values = ws.get_all_values()
+                    _today_str = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y")
+                    _today_count = sum(1 for row in all_values[1:] if len(row) > 0 and row[0].startswith(_today_str))
+                    ws_hb = get_ws_audit("ACTIVITY_HEARTBEAT")
+                    _hb_count = 0
+                    if ws_hb is not None:
+                        _hb_values = ws_hb.get_all_values()
+                        _hb_count = max(0, len(_hb_values) - 1)
+                    st.sidebar.success(f"📊 Log hari ini: **{_today_count}** baris")
+                    st.sidebar.info(f"👥 User aktif: **{_hb_count}**")
+                    st.sidebar.caption(f"📅 Tanggal: {_today_str}")
+                    _est_read = _today_count * 2 + _hb_count * 20
+                    _est_write = _today_count + _hb_count * 20
+                    st.sidebar.markdown("---")
+                    st.sidebar.markdown("**📈 Estimasi API Call:**")
+                    st.sidebar.write(f"• Read: ~**{_est_read}**")
+                    st.sidebar.write(f"• Write: ~**{_est_write}**")
+                    st.sidebar.caption("💡 Limit: 300 read + 300 write per menit")
+            except Exception as e:
+                st.sidebar.error(f"❌ Error: {str(e)[:100]}")
 
 
-def load_periode_sales():
-    """Baca sheet PERIODE_STOREPERFORMANCE dari Spreadsheet Data."""
+def _test_all():
+    """Test koneksi 3 spreadsheet."""
     try:
-        client = _get_client()
-        if client is None:
-            return pd.DataFrame()
-        
-        _id_data = st.secrets.get("spreadsheet_id", "")
-        if not _id_data:
-            print("[LOAD_PERIODE_SALES] ⚠️ spreadsheet_id belum di-set")
-            return pd.DataFrame()
-        
-        sh = client.open_by_key(_id_data)
-        
+        from google.oauth2.service_account import Credentials
+        _creds_dict = dict(st.secrets["gcp_service_account"])
+        _creds = Credentials.from_service_account_info(
+            _creds_dict,
+            scopes=[
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive",
+            ],
+        )
+        _client = gspread.authorize(_creds)
+        st.sidebar.success("✅ Credentials OK")
+        st.sidebar.caption(f"👤 `{_creds_dict.get('client_email', '?')[:30]}...`")
         try:
-            ws = sh.worksheet("PERIODE_STOREPERFORMANCE")
-        except gspread.WorksheetNotFound:
-            ws = sh.add_worksheet(title="PERIODE_STOREPERFORMANCE", rows=1000, cols=12)
-            ws.append_row(_PERIODE_SALES_HEADER, value_input_option="USER_ENTERED")
-            return pd.DataFrame(columns=_PERIODE_SALES_HEADER)
-        
-        all_values = ws.get_all_values()
-        if len(all_values) < 2:
-            return pd.DataFrame(columns=all_values[0] if all_values else _PERIODE_SALES_HEADER)
-        
-        df = pd.DataFrame(all_values[1:], columns=all_values[0])
-        df.columns = df.columns.astype(str).str.strip().str.lower()
-        
-        for _col in ["target_net_sales", "target_std", "target_apc", "nsb_percentage", "target_gm_pct"]:
-            if _col in df.columns:
-                df[_col] = pd.to_numeric(df[_col], errors="coerce").fillna(0)
-        
-        if "period_id" in df.columns:
-            df = df[df["period_id"].astype(str).str.strip() != ""].reset_index(drop=True)
-        
-        return df
-    
+            _id = st.secrets.get("spreadsheet_id", "")
+            _sh = _client.open_by_key(_id)
+            st.sidebar.success(f"✅ Data: `{_sh.title[:25]}`")
+            with st.sidebar.expander(f"📋 {len(_sh.worksheets())} sheet"):
+                for ws in _sh.worksheets():
+                    st.write(f"• {ws.title}")
+        except Exception as e:
+            st.sidebar.error(f"❌ Data: {str(e)[:60]}")
+        try:
+            _id = st.secrets.get("spreadsheet_id_audit", "")
+            if not _id:
+                st.sidebar.warning("⚠️ `spreadsheet_id_audit` belum di-set")
+            else:
+                _sh = _client.open_by_key(_id)
+                st.sidebar.success(f"✅ Audit: `{_sh.title[:25]}`")
+                _names = [ws.title for ws in _sh.worksheets()]
+                with st.sidebar.expander(f"📋 {len(_names)} sheet"):
+                    for s in _names:
+                        st.write(f"• {s}")
+                _wajib = ["ACTIVITY_LOG", "ACTIVITY_HEARTBEAT"]
+                _missing = [s for s in _wajib if s not in _names]
+                if _missing:
+                    st.sidebar.warning(f"⚠️ Kurang: {_missing}")
+                else:
+                    st.sidebar.info("✅ ACTIVITY_LOG & ACTIVITY_HEARTBEAT ada")
+        except Exception as e:
+            st.sidebar.error(f"❌ Audit: {str(e)[:60]}")
+        try:
+            _id = st.secrets.get("spreadsheet_id_laporan", "")
+            if not _id:
+                st.sidebar.warning("⚠️ `spreadsheet_id_laporan` belum di-set")
+            else:
+                _sh = _client.open_by_key(_id)
+                st.sidebar.success(f"✅ Laporan: `{_sh.title[:25]}`")
+                _names = [ws.title for ws in _sh.worksheets()]
+                with st.sidebar.expander(f"📋 {len(_names)} sheet"):
+                    for s in _names:
+                        st.write(f"• {s}")
+        except Exception as e:
+            st.sidebar.error(f"❌ Laporan: {str(e)[:60]}")
+        st.sidebar.balloons()
+        st.sidebar.success("🎉 TEST SELESAI")
     except Exception as e:
-        print(f"[LOAD_PERIODE_SALES ERROR] {e}")
-        return pd.DataFrame()
+        st.sidebar.error(f"❌ Error: {str(e)[:80]}")
 
 
-def save_periode_sales(df_data):
-    """Simpan DataFrame ke sheet PERIODE_STOREPERFORMANCE."""
+def _test_append_log():
+    """Test tulis 1 baris ke ACTIVITY_LOG."""
     try:
-        client = _get_client()
-        if client is None:
-            return False, "❌ Client gagal"
-        
-        _id_data = st.secrets.get("spreadsheet_id", "")
-        if not _id_data:
-            return False, "❌ spreadsheet_id belum di-set"
-        
-        sh = client.open_by_key(_id_data)
-        
-        try:
-            ws = sh.worksheet("PERIODE_STOREPERFORMANCE")
-        except gspread.WorksheetNotFound:
-            ws = sh.add_worksheet(title="PERIODE_STOREPERFORMANCE", rows=1000, cols=12)
-        
-        ws.clear()
-        ws.append_row(_PERIODE_SALES_HEADER, value_input_option="USER_ENTERED")
-        
-        if df_data.empty:
-            return True, "✅ Sheet dikosongkan (header tetap ada)"
-        
-        _df_save = df_data.copy()
-        for _col in _PERIODE_SALES_HEADER:
-            if _col not in _df_save.columns:
-                _df_save[_col] = ""
-        _df_save = _df_save[_PERIODE_SALES_HEADER]
-        
-        _rows = []
-        for _, _row in _df_save.iterrows():
-            _row_clean = [_safe_stringify(v) for v in _row.values]
-            _rows.append(_row_clean)
-        
-        if _rows:
-            ws.append_rows(_rows, value_input_option="USER_ENTERED")
-        
-        return True, f"✅ {len(_rows)} baris tersimpan"
-    
+        _now_str = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
+        _test_log = [{
+            "timestamp": _now_str,
+            "username": "DEBUG_TEST",
+            "role": "system",
+            "action": "TEST",
+            "detail": "Test append dari Debug Panel",
+            "session_id": "debug-001",
+        }]
+        count, msg = append_logs_to_sheet(_test_log)
+        if count > 0:
+            st.sidebar.success(f"✅ {msg}")
+            st.sidebar.info("👉 Cek LIGAPSM_AUDIT → ACTIVITY_LOG")
+        else:
+            st.sidebar.error(msg)
     except Exception as e:
+        st.sidebar.error(f"❌ {str(e)[:80]}")
+
+
+def _test_backup_one():
+    """Test backup 1 sheet saja."""
+    try:
+        def _getter(key):
+            return st.session_state.get(key, pd.DataFrame())
+        _result = backup_to_audit_sheet(_getter)
+        if _result["success"]:
+            st.sidebar.success(f"✅ Backup OK: {len(_result['success'])} sheet")
+            with st.sidebar.expander("Detail"):
+                st.write(f"Total baris: {_result['total']}")
+                st.write(f"Success: {_result['success']}")
+                if _result["failed"]:
+                    st.write(f"Failed: {_result['failed']}")
+        else:
+            st.sidebar.warning("⚠️ Tidak ada yang berhasil di-backup")
+            with st.sidebar.expander("Detail"):
+                st.write(_result["failed"])
+    except Exception as e:
+        st.sidebar.error(f"❌ {str(e)[:80]}")
+
+
+def _test_laporan():
+    """Test tulis laporan dummy."""
+    try:
+        _rows = [
+            ["", "Toko", "C383/KARANG SATRIA"] + [str(i) for i in range(1, 32)],
+            ["No", "NIK", "Nama Personil", "ACTUAL"] + [""] * 30,
+            [1, "13127006", "REZA PURNAMA"] + [0] * 31,
+            [2, "16016359", "SUBEKTI PANDU"] + [0] * 31,
+            ["Total", "", ""] + [0] * 31,
+        ]
+        _sheet = f"TEST {datetime.now().strftime('%H%M%S')}"
+        ok, msg = write_laporan_bulanan(_sheet, _rows)
+        if ok:
+            st.sidebar.success(f"✅ {msg}")
+            st.sidebar.info("👉 Cek LIGAPSM-LAPORAN")
+        else:
+            st.sidebar.error(msg)
+    except Exception as e:
+        st.sidebar.error(f"❌ {str(e)[:80]}")
+
+
+def _test_read_log():
+    """Test baca ACTIVITY_LOG."""
+    try:
+        df = read_activity_log()
+        if df.empty:
+            st.sidebar.warning("📭 Log kosong atau belum ada")
+        else:
+            st.sidebar.success(f"✅ {len(df)} baris log")
+            with st.sidebar.expander("Preview 5 baris"):
+                st.dataframe(df.head(5), use_container_width=True)
+    except Exception as e:
+        st.sidebar.error(f"❌ {str(e)[:80]}")
+    
+
+
+# =========================================================================
+# 💓 HEARTBEAT
+# =========================================================================
+_HEARTBEAT_HEADER = ["username", "session_id", "role", "last_heartbeat", "status"]
+
+
+def write_heartbeat_to_sheet(username, session_id, role, status="ONLINE"):
+    """Update/tambah baris heartbeat user."""
+    try:
+        with _AUDIT_LOCK:
+            ws = get_ws_audit("ACTIVITY_HEARTBEAT")
+            if ws is None:
+                return False, "❌ Gagal akses ACTIVITY_HEARTBEAT"
+
+            try:
+                first_row = ws.row_values(1)
+                if not first_row or first_row[0].lower() != "username":
+                    ws.insert_row(_HEARTBEAT_HEADER, index=1)
+            except Exception:
+                pass
+
+            now_str = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%d/%m/%Y %H:%M:%S")
+            all_values = ws.get_all_values()
+            if len(all_values) < 1:
+                ws.append_row([username, session_id, role, now_str, status],
+                              value_input_option="USER_ENTERED")
+                return True, f"✅ Heartbeat ditambahkan: {username}"
+
+            header = all_values[0]
+            col_username = 0
+            for idx, h in enumerate(header):
+                if h.lower().strip() == "username":
+                    col_username = idx
+                    break
+
+            row_to_update = None
+            for row_idx, row in enumerate(all_values[1:], start=2):
+                if len(row) > col_username and row[col_username].strip().lower() == username.strip().lower():
+                    row_to_update = row_idx
+                    break
+
+            if row_to_update:
+                ws.update(f"A{row_to_update}:E{row_to_update}",
+                          [[username, session_id, role, now_str, status]],
+                          value_input_option="USER_ENTERED")
+                return True, f"✅ Heartbeat diupdate: {username}"
+            else:
+                ws.append_row([username, session_id, role, now_str, status],
+                              value_input_option="USER_ENTERED")
+                return True, f"✅ Heartbeat ditambahkan: {username}"
+
+    except Exception as e:
+        print(f"[WRITE_HEARTBEAT ERROR] {e}")
         return False, f"❌ Gagal: {str(e)[:150]}"
 
 
-def generate_next_period_id(df_existing):
-    """Generate ID periode berikutnya (SLS001, SLS002, ...)."""
-    if df_existing is None or df_existing.empty:
-        return "SLS001"
-    
-    if "period_id" not in df_existing.columns:
-        return "SLS001"
-    
-    _max_num = 0
-    for _pid in df_existing["period_id"].astype(str):
-        _match = re.search(r'SLS(\d+)', _pid.upper())
-        if _match:
-            _max_num = max(_max_num, int(_match.group(1)))
-    
-    return f"SLS{_max_num + 1:03d}"
+def remove_heartbeat_from_sheet(username):
+    """Hapus baris heartbeat user."""
+    try:
+        with _AUDIT_LOCK:
+            ws = get_ws_audit("ACTIVITY_HEARTBEAT")
+            if ws is None:
+                return False, "❌ Gagal akses ACTIVITY_HEARTBEAT"
+
+            all_values = ws.get_all_values()
+            if len(all_values) < 2:
+                return False, "⚠️ Sheet kosong / user tidak ada"
+
+            header = all_values[0]
+            col_username = 0
+            for idx, h in enumerate(header):
+                if h.lower().strip() == "username":
+                    col_username = idx
+                    break
+
+            for row_idx, row in enumerate(all_values[1:], start=2):
+                if len(row) > col_username and row[col_username].strip().lower() == username.strip().lower():
+                    ws.delete_rows(row_idx)
+                    return True, f"✅ Heartbeat dihapus: {username}"
+
+            return False, f"ℹ️ User {username} tidak ada di heartbeat"
+
+    except Exception as e:
+        print(f"[REMOVE_HEARTBEAT ERROR] {e}")
+        return False, f"❌ Gagal: {str(e)[:150]}"
+
+
+def get_stale_heartbeats(threshold_minutes=15):
+    """Ambil daftar user yang heartbeat-nya sudah lama."""
+    try:
+        if threshold_minutes is None or threshold_minutes < 0.5:
+            threshold_minutes = 15
+            print(f"[WARN] Threshold tidak valid, dipaksa 15 menit")
+
+        ws = get_ws_audit("ACTIVITY_HEARTBEAT")
+        if ws is None:
+            return []
+
+        all_values = ws.get_all_values()
+        if len(all_values) < 2:
+            return []
+
+        header = all_values[0]
+        col_idx = {}
+        for idx, h in enumerate(header):
+            col_idx[h.lower().strip()] = idx
+
+        for _req in ["username", "session_id", "last_heartbeat"]:
+            if _req not in col_idx:
+                print(f"[ERROR] Header '{_req}' tidak ada. Header: {header}")
+                return []
+
+        now = datetime.now(ZoneInfo("Asia/Jakarta"))
+        stale_users = []
+
+        for row in all_values[1:]:
+            if len(row) < 4:
+                continue
+
+            try:
+                _username = row[col_idx["username"]].strip()
+                _session = row[col_idx["session_id"]].strip()
+                _role = row[col_idx.get("role", 2)].strip() if "role" in col_idx else "-"
+                _last_hb_str = row[col_idx["last_heartbeat"]].strip()
+
+                if not _username or not _last_hb_str:
+                    continue
+
+                if _username.upper() in ["DEBUG_TEST", "DEBUG_HEARTBEAT", "SYSTEM"]:
+                    continue
+
+                _last_hb = datetime.strptime(
+                    _last_hb_str, "%d/%m/%Y %H:%M:%S"
+                ).replace(tzinfo=ZoneInfo("Asia/Jakarta"))
+                _selisih_menit = (now - _last_hb).total_seconds() / 60
+
+                if _selisih_menit > threshold_minutes:
+                    stale_users.append({
+                        "username": _username,
+                        "session_id": _session,
+                        "role": _role,
+                        "last_heartbeat": _last_hb_str,
+                        "selisih_menit": round(_selisih_menit, 1),
+                    })
+            except Exception as e_row:
+                print(f"[SKIP ROW] {e_row}")
+                continue
+
+        stale_users.sort(key=lambda x: x["selisih_menit"], reverse=True)
+        return stale_users
+
+    except Exception as e:
+        print(f"[GET_STALE_HEARTBEAT ERROR] {e}")
+        return []
+
+
+def clear_all_heartbeat():
+    """Hapus semua baris heartbeat."""
+    try:
+        with _AUDIT_LOCK:
+            ws = get_ws_audit("ACTIVITY_HEARTBEAT")
+            if ws is None:
+                return False, "❌ Gagal akses sheet"
+
+            all_values = ws.get_all_values()
+            if len(all_values) <= 1:
+                return True, "Sheet sudah kosong"
+
+            ws.delete_rows(2, len(all_values))
+            return True, f"✅ {len(all_values) - 1} baris heartbeat dihapus"
+
+    except Exception as e:
+        return False, f"❌ Gagal: {str(e)[:150]}"
