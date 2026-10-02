@@ -273,9 +273,8 @@ def generate_laporan_pps_v2(
     if not psm_periode:
         psm_periode = _get_periode_by_kode(periods_df, "S", tanggal)
     
-    # Periode PWP (PWPS)
-    if not pwp_periode:
-        pwp_periode = _get_periode_by_kode(periods_pps_df, "PWP", tanggal)
+    # Periode PWP (PWP)
+    pwp_periode = _get_periode_by_kode(periods_pps_df, "PWP", tanggal)
     
     # Periode SG (SGS)
     sg_periode = _get_periode_by_kode(periods_pps_df, "SGS", tanggal)
