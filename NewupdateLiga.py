@@ -17887,28 +17887,28 @@ elif selected_tab == "📊 Daily Performance":
                         _today = waktu_wib.date()
                 
                         if _p_start:
-                        # ✅ FIX: Hitung hari berjalan dari TANGGAL DATA TERAKHIR (bukan tanggal hari ini)
-                        if not _ringkasan_df.empty and "_tgl" in _ringkasan_df.columns:
-                            _last_input_date = _ringkasan_df["_tgl"].max()
-                            # Convert ke date kalau masih Timestamp
-                            if hasattr(_last_input_date, "date"):
-                                _last_input_date = _last_input_date.date()
+                            # ✅ FIX: Hitung hari berjalan dari TANGGAL DATA TERAKHIR (bukan tanggal hari ini)
+                            if not _ringkasan_df.empty and "_tgl" in _ringkasan_df.columns:
+                                _last_input_date = _ringkasan_df["_tgl"].max()
+                                # Convert ke date kalau masih Timestamp
+                                if hasattr(_last_input_date, "date"):
+                                    _last_input_date = _last_input_date.date()
+                                
+                                _hari_berjalan = (_last_input_date - _p_start).days + 1
+                            else:
+                                # Fallback: kalau gak ada data, pakai tanggal hari ini
+                                _hari_berjalan = (_today - _p_start).days + 1
                             
-                            _hari_berjalan = (_last_input_date - _p_start).days + 1
+                            # Clamp: minimal 1, maksimal JHK
+                            if _hari_berjalan < 1:
+                                _hari_berjalan = 1
+                            if _hari_berjalan > _jhk:
+                                _hari_berjalan = _jhk
                         else:
-                            # Fallback: kalau gak ada data, pakai tanggal hari ini
-                            _hari_berjalan = (_today - _p_start).days + 1
+                            _hari_berjalan = len(_ringkasan_df) if not _ringkasan_df.empty else 0
                         
-                        # Clamp: minimal 1, maksimal JHK
-                        if _hari_berjalan < 1:
-                            _hari_berjalan = 1
-                        if _hari_berjalan > _jhk:
-                            _hari_berjalan = _jhk
-                    else:
-                        _hari_berjalan = len(_ringkasan_df) if not _ringkasan_df.empty else 0
-                    
-                    _sisa_hari = max(_jhk - _hari_berjalan, 1)
-                    _tf = _hari_berjalan / _jhk if _jhk > 0 else 0
+                        _sisa_hari = max(_jhk - _hari_berjalan, 1)
+                        _tf = _hari_berjalan / _jhk if _jhk > 0 else 0
                                     
                         # Actual
                         _total_spd = int(_ringkasan_df["spd"].sum())
