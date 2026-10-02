@@ -40,7 +40,7 @@ from spreadsheet_connector import (
     
     # Laporan (versi lama)
     write_laporan_bulanan,
-    generate_laporan_bulanan,
+    generate_laporan_bulanan_psm,
     
     # Laporan (versi baru — multi program)
     generate_laporan_psm,
