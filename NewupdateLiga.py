@@ -18223,8 +18223,7 @@ elif selected_tab == "📊 Daily Performance":
                         # ==========================================
                         st.markdown("---")
                         st.markdown("##### 🎯 Target Best Estimate")
-                        st.caption(_be_status)
-                
+                        
                         # Hitung BE
                         _is_achieved = _total_spd >= _target_ns
                         if _is_achieved:
@@ -18232,6 +18231,7 @@ elif selected_tab == "📊 Daily Performance":
                             _be_std = int(_target_std_total / _jhk) if _jhk > 0 else 0
                             _be_apc = _target_apc
                             _be_nsb_budget = int(_be_spd * 0.0015)
+                            _be_status = "✅ ACHIEVED"
                         else:
                             _sisa_target_ns = max(_target_ns - _total_spd, 0)
                             _be_spd = int(_sisa_target_ns / _sisa_hari) if _sisa_hari > 0 else 0
@@ -18239,10 +18239,14 @@ elif selected_tab == "📊 Daily Performance":
                             _be_std = int(_sisa_target_std / _sisa_hari) if _sisa_hari > 0 else 0
                             _be_apc = int(_be_spd / _be_std) if _be_std > 0 else 0
                             _be_nsb_budget = int(_be_spd * 0.0015)
-                
+                            _be_status = "📈 BEST ESTIMATE"
+                        
                         _nsb_gap_total = _target_nsb_bulanan - abs(_total_nsb_act)
                         _be_nsb_adjust = int(_nsb_gap_total / _sisa_hari) if _sisa_hari > 0 else 0
-                
+                        
+                        # ⬇️ PINDAHKAN KE SINI — setelah _be_status dihitung
+                        st.caption(_be_status)
+                        
                         # CSS Best Estimate Card
                         st.markdown("""
                         <style>
@@ -18307,9 +18311,9 @@ elif selected_tab == "📊 Daily Performance":
                             }
                         </style>
                         """, unsafe_allow_html=True)
-                
+                        
                         _be_html = "<div class='be-grid-v3'>"
-                
+                        
                         # SPD Target
                         _be_html += (
                             "<div class='be-card-v3' style='background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(14, 165, 233, 0.15)); border: 1.5px solid #38bdf8;'>"
@@ -18318,7 +18322,7 @@ elif selected_tab == "📊 Daily Performance":
                             "<div class='be-sub-v3'>per hari</div>"
                             "</div>"
                         )
-                
+                        
                         # STD Target
                         _be_html += (
                             "<div class='be-card-v3' style='background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(14, 165, 233, 0.15)); border: 1.5px solid #38bdf8;'>"
@@ -18327,7 +18331,7 @@ elif selected_tab == "📊 Daily Performance":
                             "<div class='be-sub-v3'>struk/hari</div>"
                             "</div>"
                         )
-                
+                        
                         # APC Target
                         _be_html += (
                             "<div class='be-card-v3' style='background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(124, 58, 237, 0.15)); border: 1.5px solid #a855f7;'>"
@@ -18336,7 +18340,7 @@ elif selected_tab == "📊 Daily Performance":
                             "<div class='be-sub-v3'>per struk</div>"
                             "</div>"
                         )
-                
+                        
                         # NSB Budget
                         _nsb_adjust_color = "#34d399" if _be_nsb_adjust >= 0 else "#fca5a5"
                         _nsb_sign = "+" if _be_nsb_adjust >= 0 else ""
@@ -18347,10 +18351,9 @@ elif selected_tab == "📊 Daily Performance":
                             "<div class='be-sub-v3'>max SO/hari</div>"
                             "</div>"
                         )
-                
+                        
                         _be_html += "</div>"
                         st.markdown(_be_html, unsafe_allow_html=True)
-    
 
                     # ==========================================
                     # 📈 CHART SPD/STD/APC (HIDDEN — MUNCUL SAAT DI-CLICK)
