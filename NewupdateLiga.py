@@ -17833,739 +17833,524 @@ elif selected_tab == "📊 Daily Performance":
                     unsafe_allow_html=True
                 )
                 
+
                 # ==========================================
-                # 📊 VIEW 1: RINGKASAN (v2)
-                # ==========================================
-                if st.session_state["rekap_view"] == "ringkasan":
-
-                    # === FILTER TANGGAL ===
-                    st.markdown("###### 🔍 Filter Tanggal")
-
-                    _col_ft1, _col_ft2 = st.columns(2)
-
-                    with _col_ft1:
-                        _min_date_r = _rekap_df["_tgl"].min().date()
-                        _max_date_r = _rekap_df["_tgl"].max().date()
-
-                        _date_range_r = st.date_input(
-                            "📅 Rentang Tanggal",
-                            value=(_min_date_r, _max_date_r),
-                            min_value=_min_date_r,
-                            max_value=_max_date_r,
-                            key="rekap_ringkasan_date_range"
-                        )
-
-                    with _col_ft2:
-                        _chart_type_filter = st.selectbox(
-                            "📈 Pilih Chart",
-                            ["Semua (SPD/STD/APC)", "SPD", "STD", "APC"],
-                            key="rekap_ringkasan_chart_filter"
-                        )
-
-                    # === APPLY FILTER ===
-                    _ringkasan_df = _rekap_df.copy()
-                    if isinstance(_date_range_r, tuple) and len(_date_range_r) == 2:
-                        _start_r, _end_r = _date_range_r
-                        _ringkasan_df = _ringkasan_df[
-                            (_ringkasan_df["_tgl"].dt.date >= _start_r) &
-                            (_ringkasan_df["_tgl"].dt.date <= _end_r)
-                        ]
-
-                    _ringkasan_df = _ringkasan_df.sort_values("_tgl", ascending=True).reset_index(drop=True)
-
-                    if _ringkasan_df.empty:
-                        st.warning("📭 Tidak ada data di rentang tanggal ini.")
+    # 📊 VIEW 1: RINGKASAN (v3 — MOBILE-FRIENDLY)
+    # ==========================================
+    if st.session_state["rekap_view"] == "ringkasan":
+    
+        # === FILTER TANGGAL ===
+        st.markdown("###### 🔍 Filter Tanggal")
+    
+        _col_ft1, _col_ft2 = st.columns(2)
+    
+        with _col_ft1:
+            _min_date_r = _rekap_df["_tgl"].min().date()
+            _max_date_r = _rekap_df["_tgl"].max().date()
+            _date_range_r = st.date_input(
+                "📅 Rentang Tanggal",
+                value=(_min_date_r, _max_date_r),
+                min_value=_min_date_r,
+                max_value=_max_date_r,
+                key="rekap_ringkasan_date_range_v3"
+            )
+    
+        with _col_ft2:
+            _chart_type_filter = st.selectbox(
+                "📈 Pilih Chart",
+                ["Semua (SPD/STD/APC)", "SPD", "STD", "APC"],
+                key="rekap_ringkasan_chart_filter_v3"
+            )
+    
+        # === APPLY FILTER ===
+        _ringkasan_df = _rekap_df.copy()
+        if isinstance(_date_range_r, tuple) and len(_date_range_r) == 2:
+            _start_r, _end_r = _date_range_r
+            _ringkasan_df = _ringkasan_df[
+                (_ringkasan_df["_tgl"].dt.date >= _start_r) &
+                (_ringkasan_df["_tgl"].dt.date <= _end_r)
+            ]
+    
+        _ringkasan_df = _ringkasan_df.sort_values("_tgl", ascending=True).reset_index(drop=True)
+    
+        if _ringkasan_df.empty:
+            st.warning("📭 Tidak ada data di rentang tanggal ini.")
+        else:
+            # ==========================================
+            # 📊 HITUNG SEMUA METRIK
+            # ==========================================
+            _jhk = _active_period_rekap.get("jhk", 30)
+            _target_ns = _active_period_rekap.get("target_net_sales", 0)
+            _target_std_total = _active_period_rekap.get("target_std", 0)
+            _target_apc = _active_period_rekap.get("target_apc", 0)
+            _p_start = _active_period_rekap.get("start_date", None)
+    
+            _today = waktu_wib.date()
+    
+            if _p_start:
+                _hari_berjalan = min((_today - _p_start).days + 1, _jhk)
+                if _hari_berjalan < 1:
+                    _hari_berjalan = 1
+            else:
+                _hari_berjalan = len(_ringkasan_df)
+    
+            _sisa_hari = max(_jhk - _hari_berjalan, 1)
+            _tf = _hari_berjalan / _jhk if _jhk > 0 else 0
+    
+            # Actual
+            _total_spd = int(_ringkasan_df["spd"].sum())
+            _total_std = int(_ringkasan_df["std"].sum())
+            _total_nsb_act = int(_ringkasan_df["nsb_actual"].sum())
+    
+            _avg_spd = int(_ringkasan_df["spd"].mean())
+            _avg_std = int(_ringkasan_df["std"].mean())
+            _avg_apc = int(_ringkasan_df["apc"].mean())
+    
+            # Target
+            _target_spd_harian = int(_target_ns / _jhk) if _jhk > 0 else 0
+            _target_nsb_bulanan = int(_total_spd * 0.0015)
+    
+            # % Achieve
+            _pct_spd = (_total_spd / _target_ns * 100) if _target_ns > 0 else 0
+            _pct_std = (_total_std / _target_std_total * 100) if _target_std_total > 0 else 0
+            _pct_apc = (_avg_apc / _target_apc * 100) if _target_apc > 0 else 0
+            _pct_spd_harian = (_avg_spd / _target_spd_harian * 100) if _target_spd_harian > 0 else 0
+    
+            # Gap
+            _gap_spd = _total_spd - _target_ns
+            _gap_std = _total_std - _target_std_total
+            _gap_apc = _avg_apc - _target_apc
+            _gap_spd_harian = _avg_spd - _target_spd_harian
+    
+            # Status
+            _on_track = _pct_spd >= (_tf * 100)
+            _spd_ok = _gap_spd_harian >= 0
+            _apc_ok = _gap_apc >= 0
+            _std_ok = _gap_std >= 0
+            _selisih_nsb = _target_nsb_bulanan - abs(_total_nsb_act)
+            _nsb_ok = _selisih_nsb >= 0
+            _ns_minus = _target_ns - _total_spd
+            _ns_ok = _ns_minus <= 0
+    
+            _be_spd_display = int(max(_target_ns - _total_spd, 0) / _sisa_hari) if _sisa_hari > 0 else 0
+            _tf_vs_sales = "⚠️ BEHIND" if (_tf * 100) > _pct_spd else "✅ ON TRACK"
+            _tf_vs_sales_color = "#fca5a5" if (_tf * 100) > _pct_spd else "#34d399"
+    
+            # ==========================================
+            # 📊 KPI CARDS — MOBILE FRIENDLY (CSS GRID)
+            # ==========================================
+            st.markdown("##### 📊 Key Performance Indicators")
+    
+            # Helper format angka biar gak kepotong
+            def _fmt_short(v):
+                """Format angka jadi lebih pendek: 16,195,070 → 16.2M"""
+                try:
+                    _v = float(v)
+                    if abs(_v) >= 1_000_000_000:
+                        return f"{_v/1_000_000_000:.1f}M"
+                    elif abs(_v) >= 1_000_000:
+                        return f"{_v/1_000_000:.1f}Jt"
+                    elif abs(_v) >= 1_000:
+                        return f"{_v/1_000:.0f}K"
                     else:
-                        # ==========================================
-                        # 📊 HITUNG SEMUA METRIK
-                        # ==========================================
-                        _jhk = _active_period_rekap.get("jhk", 30)
-                        _target_ns = _active_period_rekap.get("target_net_sales", 0)
-                        _target_std_total = _active_period_rekap.get("target_std", 0)
-                        _target_apc = _active_period_rekap.get("target_apc", 0)
-                        _p_start = _active_period_rekap.get("start_date", None)
-                        _p_end = _active_period_rekap.get("end_date", None)
-
-                        _today = waktu_wib.date()
-
-                        # Hari berjalan (dari start_date ke hari ini, max jhk)
-                        if _p_start:
-                            _hari_berjalan = min((_today - _p_start).days + 1, _jhk)
-                            if _hari_berjalan < 1:
-                                _hari_berjalan = 1
-                        else:
-                            _hari_berjalan = len(_ringkasan_df)
-
-                        _sisa_hari = max(_jhk - _hari_berjalan, 1)
-
-                        # TF
-                        _tf = _hari_berjalan / _jhk if _jhk > 0 else 0
-
-                        # Actual
-                        _total_spd = int(_ringkasan_df["spd"].sum())
-                        _total_std = int(_ringkasan_df["std"].sum())
-                        _total_nsb_act = int(_ringkasan_df["nsb_actual"].sum())
-
-                        _avg_spd = int(_ringkasan_df["spd"].mean())
-                        _avg_std = int(_ringkasan_df["std"].mean())
-                        _avg_apc = int(_ringkasan_df["apc"].mean())
-
-                        # Target (untuk comparison)
-                        _target_spd_harian = int(_target_ns / _jhk) if _jhk > 0 else 0
-                        _target_nsb_bulanan = int(_total_spd * 0.0015)  # NS Aktual × 0.15%
-                        _budget_nsb_harian_awal = int(_target_spd_harian * 0.0015)
-
-                        # % Achieve
-                        _pct_spd = (_total_spd / _target_ns * 100) if _target_ns > 0 else 0
-                        _pct_std = (_total_std / _target_std_total * 100) if _target_std_total > 0 else 0
-                        _pct_apc = (_avg_apc / _target_apc * 100) if _target_apc > 0 else 0
-
-                        # Gap
-                        _gap_spd = _total_spd - _target_ns
-                        _gap_std = _total_std - _target_std_total
-                        _gap_apc = _avg_apc - _target_apc
-
-                        # Best Estimate (kalau belum achieved)
-                        _is_achieved = _total_spd >= _target_ns
-
-                        if _is_achieved:
-                            # Tampilkan target DEFAULT
-                            _be_spd = _target_spd_harian
-                            _be_std = int(_target_std_total / _jhk) if _jhk > 0 else 0
-                            _be_apc = _target_apc
-                            _be_nsb_budget = int(_be_spd * 0.0015)
-                            _be_status = "✅ ACHIEVED"
-                        else:
-                            # Best estimate
-                            _sisa_target_ns = max(_target_ns - _total_spd, 0)
-                            _be_spd = int(_sisa_target_ns / _sisa_hari) if _sisa_hari > 0 else 0
-
-                            _sisa_target_std = max(_target_std_total - _total_std, 0)
-                            _be_std = int(_sisa_target_std / _sisa_hari) if _sisa_hari > 0 else 0
-
-                            # APC best estimate = BE SPD / BE STD
-                            _be_apc = int(_be_spd / _be_std) if _be_std > 0 else 0
-
-                            # Budget NSB harian based on Best Estimate
-                            _be_nsb_budget = int(_be_spd * 0.0015)
-                            _be_status = "📈 BEST ESTIMATE"
-
-                        # Budget Adjust NSB/Hari
-                        # = ((Net Sales Aktual × 0.15%) - NSB Aktual) / Sisa Hari
-                        # Karena NSB Aktual biasanya minus, rumusnya:
-                        _nsb_gap_total = _target_nsb_bulanan - abs(_total_nsb_act)  # sisa budget
-                        _be_nsb_adjust = int(_nsb_gap_total / _sisa_hari) if _sisa_hari > 0 else 0
-
-                        # % NSB dari Net Sales
-                        _nsb_pct_from_ns = (abs(_total_nsb_act) / _total_spd * 100) if _total_spd > 0 else 0
-
-                        # ==========================================
-                        # 📊 KPI CARDS (HTML CUSTOM — 8 CARDS)
-                        # ==========================================
-                        st.markdown("##### 📊 Key Performance Indicators")
-
-                        # === CSS ANIMASI KPI ===
-                        st.markdown(
-                            """
-                            <style>
-                                /* === PULSE (default) === */
-                                @keyframes kpiPulse {
-                                    0%, 100% { transform: scale(1); opacity: 1; }
-                                    50% { transform: scale(1.15); opacity: 0.85; }
-                                }
-                                .kpi-pulse {
-                                    animation: kpiPulse 2s infinite ease-in-out;
-                                    display: inline-block;
-                                }
-                                
-                                /* === SPIN (jam/TF) === */
-                                @keyframes kpiSpin {
-                                    0% { transform: rotate(0deg); }
-                                    100% { transform: rotate(360deg); }
-                                }
-                                .kpi-spin {
-                                    animation: kpiSpin 4s infinite linear;
-                                    display: inline-block;
-                                }
-                                
-                                /* === BOUNCE (koin) === */
-                                @keyframes kpiBounce {
-                                    0%, 100% { transform: translateY(0); }
-                                    50% { transform: translateY(-6px); }
-                                }
-                                .kpi-bounce {
-                                    animation: kpiBounce 1.5s infinite ease-in-out;
-                                    display: inline-block;
-                                }
-                                
-                                /* === SHAKE (warning) === */
-                                @keyframes kpiShake {
-                                    0%, 100% { transform: rotate(0deg); }
-                                    25% { transform: rotate(-12deg); }
-                                    75% { transform: rotate(12deg); }
-                                }
-                                .kpi-shake {
-                                    animation: kpiShake 1.2s infinite ease-in-out;
-                                    display: inline-block;
-                                }
-                                
-                                /* === FLIP (kalender) === */
-                                @keyframes kpiFlip {
-                                    0%, 100% { transform: rotateY(0deg); }
-                                    50% { transform: rotateY(180deg); }
-                                }
-                                .kpi-flip {
-                                    animation: kpiFlip 3s infinite ease-in-out;
-                                    display: inline-block;
-                                }
-                                
-                                /* === SWING (timbangan) === */
-                                @keyframes kpiSwing {
-                                    0%, 100% { transform: rotate(-8deg); }
-                                    50% { transform: rotate(8deg); }
-                                }
-                                .kpi-swing {
-                                    animation: kpiSwing 2.5s infinite ease-in-out;
-                                    display: inline-block;
-                                    transform-origin: top center;
-                                }
-                                
-                                /* === BAR (chart NSB) === */
-                                @keyframes kpiBar {
-                                    0%, 100% { transform: scaleY(1); }
-                                    50% { transform: scaleY(1.4); }
-                                }
-                                .kpi-bar {
-                                    animation: kpiBar 1.8s infinite ease-in-out;
-                                    display: inline-block;
-                                    transform-origin: bottom center;
-                                }
-                            </style>
-                            """,
-                            unsafe_allow_html=True
-                        )
-                        # === HITUNG SEMUA METRIK ===
-                        _tf_pct = _tf * 100
-                        _pct_spd_harian = (_avg_spd / _target_spd_harian * 100) if _target_spd_harian > 0 else 0
-                        _gap_spd_harian = _avg_spd - _target_spd_harian
-                        _selisih_nsb = _target_nsb_bulanan - abs(_total_nsb_act)
-                        _ns_minus = _target_ns - _total_spd
-
-                        # Status OK/Warning
-                        _on_track = _pct_spd >= _tf_pct
-                        _spd_ok = _gap_spd_harian >= 0
-                        _apc_ok = _gap_apc >= 0
-                        _std_ok = _gap_std >= 0
-                        _nsb_ok = _selisih_nsb >= 0
-                        _ns_ok = _ns_minus <= 0
-
-                        def _kpi_card(label, value, sub_icon, sub_text, status_color, anim_type="pulse"):
-                            """
-                            Render KPI card HTML custom dengan animasi.
-                            
-                            anim_type:
-                                - "pulse"    → icon berdenyut (default)
-                                - "spin"     → icon berputar (untuk jam/TF)
-                                - "bounce"   → icon naik-turun (untuk koin)
-                                - "shake"    → icon goyang (untuk warning)
-                                - "flip"     → icon flip (untuk kalender)
-                                - "swing"    → icon miring goyang (untuk timbangan)
-                                - "bar"      → animasi bar chart (untuk NSB)
-                            """
-                            
-                            # Map animation type ke CSS
-                            _anim_css = {
-                                "pulse": "kpi-pulse",
-                                "spin": "kpi-spin",
-                                "bounce": "kpi-bounce",
-                                "shake": "kpi-shake",
-                                "flip": "kpi-flip",
-                                "swing": "kpi-swing",
-                                "bar": "kpi-bar",
-                            }
-                            _anim_class = _anim_css.get(anim_type, "kpi-pulse")
-                            
-                            return (
-                                f"<div style='background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85)); "
-                                f"border: 1.5px solid #9a7b38; border-left: 5px solid {status_color}; "
-                                f"border-radius: 12px; padding: 14px 16px; "
-                                f"box-shadow: 0 4px 10px rgba(0,0,0,0.3); min-height: 110px; "
-                                f'transition: all 0.3s ease; position: relative; overflow: hidden;'
-                                f"' onmouseover='this.style.transform=\"translateY(-3px)\"; this.style.boxShadow=\"0 8px 20px rgba(251, 191, 36, 0.3)\";' "
-                                f"' onmouseout='this.style.transform=\"translateY(0)\"; this.style.boxShadow=\"0 4px 10px rgba(0,0,0,0.3)\";' "
-                                f">"
-
-                                # Label + Icon beranimasi
-                                f"<div style='display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;'>"
-                                f"<div style='font-family: monospace; font-size: 10px; color: #94a3b8; "
-                                f"letter-spacing: 1px; text-transform: uppercase;'>{label}</div>"
-                                f"<div class='{_anim_class}' style='font-size: 18px;'>{sub_icon}</div>"
-                                f"</div>"
-
-                                # Value
-                                f"<div style='font-family: monospace; font-size: 22px; font-weight: 900; "
-                                f"color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.3); "
-                                f"margin-bottom: 6px; word-break: break-word;'>{value}</div>"
-
-                                # Sub text
-                                f"<div style='font-family: monospace; font-size: 10px; font-weight: 900; "
-                                f"color: {status_color}; letter-spacing: 0.3px;'>{sub_text}</div>"
-
-                                f"</div>"
-                            )
-
-                        # === BARIS 1 ===
-                        col_r1_1, col_r1_2, col_r1_3, col_r1_4 = st.columns(4)
-
-                        with col_r1_1:
-                            st.markdown(
-                                _kpi_card(
-                                    "📅 Hari Kerja",
-                                    f"{_hari_berjalan} / {_jhk}",
-                                    "📅",  # ← icon
-                                    f"{_sisa_hari} hari sisa",
-                                    "#38bdf8",
-                                    anim_type="flip"  # ← kalender flip
-                                ),
-                                unsafe_allow_html=True
-                            )
-
-                        with col_r1_2:
-                            _tf_icon = "✅" if _on_track else "⚠️"
-                            _tf_color = "#34d399" if _on_track else "#fca5a5"
-                            _tf_status_text = "On Track" if _on_track else "Behind"
-                            st.markdown(
-                                _kpi_card(
-                                    "💰 Persentase Net Sales",
-                                    f"{_pct_spd:,.2f}%",
-                                    "⏳",  # ← jam
-                                    f"{_tf_status_text} | TF: {_tf_pct:.1f}%",
-                                    _tf_color,
-                                    anim_type="spin"  # ← jam berputar
-                                ),
-                                unsafe_allow_html=True
-                            )
-
-                        with col_r1_3:
-                            _spd_icon = "✅" if _spd_ok else "⚠️"
-                            _spd_color = "#34d399" if _spd_ok else "#fca5a5"
-                            _spd_sign = "+" if _gap_spd_harian >= 0 else ""
-                            st.markdown(
-                                _kpi_card(
-                                    "💰 Rata SPD",
-                                    f"Rp {_avg_spd:,}",
-                                    "💰",  # ← koin
-                                    f"{_pct_spd_harian:.2f}% | Gap: {_spd_sign}Rp {_gap_spd_harian:,}",
-                                    _spd_color,
-                                    anim_type="bounce"  # ← koin naik-turun
-                                ),
-                                unsafe_allow_html=True
-                            )
-
-                        with col_r1_4:
-                            _apc_icon = "✅" if _apc_ok else "⚠️"
-                            _apc_color = "#34d399" if _apc_ok else "#fca5a5"
-                            _apc_sign = "+" if _gap_apc >= 0 else ""
-                            st.markdown(
-                                _kpi_card(
-                                    "🧾 APC",
-                                    f"Rp {_avg_apc:,}",
-                                    "🧾",  # ← struk
-                                    f"{_pct_apc:.2f}% | Gap: {_apc_sign}Rp {_gap_apc:,}",
-                                    _apc_color,
-                                    anim_type="pulse"  # ← pulse
-                                ),
-                                unsafe_allow_html=True
-                            )
-
-                        # === BARIS 2 ===
-                        col_r2_1, col_r2_2, col_r2_3, col_r2_4 = st.columns(4)
-
-                        with col_r2_1:
-                            _std_icon = "✅" if _std_ok else "⚠️"
-                            _std_color = "#34d399" if _std_ok else "#fca5a5"
-                            _std_sign = "+" if _gap_std >= 0 else ""
-                            st.markdown(
-                                _kpi_card(
-                                    "📄 Rata STD",
-                                    f"{_avg_std:,}",
-                                    "📄",  # ← struk
-                                    f"{_pct_std:.2f}% | Gap: {_std_sign}{_gap_std:,}",
-                                    _std_color,
-                                    anim_type="swing"  # ← goyang
-                                ),
-                                unsafe_allow_html=True
-                            )
-
-                        with col_r2_2:
-                            st.markdown(
-                                _kpi_card(
-                                    "🛡️ Total NSB",
-                                    f"Rp {abs(_total_nsb_act):,}",
-                                    "🛡️",  # ← chart
-                                    f"{_nsb_pct_from_ns:.2f}% dari Net Sales",
-                                    "#38bdf8",
-                                    anim_type="bar"  # ← bar chart naik-turun
-                                ),
-                                unsafe_allow_html=True
-                            )
-
-                        with col_r2_3:
-                            _nsb_icon = "✅" if _nsb_ok else "⚠️"
-                            _nsb_color = "#34d399" if _nsb_ok else "#fca5a5"
-                            _nsb_status = "Aman" if _nsb_ok else "Over Budget"
-                            st.markdown(
-                                _kpi_card(
-                                    "⚖️ Selisih NSB",
-                                    f"Rp {_selisih_nsb:,}",
-                                    "⚖️",  # ← timbangan
-                                    _nsb_status,
-                                    _nsb_color,
-                                    anim_type="swing"  # ← timbangan goyang
-                                ),
-                                unsafe_allow_html=True
-                            )
-
-                        with col_r2_4:
-                            _ns_icon = "✅" if _ns_ok else "⚠️"
-                            _ns_color = "#34d399" if _ns_ok else "#fca5a5"
-                            _ns_minus_str = f"-Rp {abs(_ns_minus):,}" if _ns_minus > 0 else f"+Rp {abs(_ns_minus):,}"
-                            st.markdown(
-                                _kpi_card(
-                                    "💰 Total Net Sales",
-                                    f"Rp {_total_spd:,}",
-                                    "🎯",  # ← diamond
-                                    f"{_ns_minus_str} vs Target",
-                                    _ns_color,
-                                    anim_type="bounce"  # ← naik-turun
-                                ),
-                                unsafe_allow_html=True
-                            )
-
-                        # ==========================================
-                        # 📊 INFO CARD: TOTAL NET SALES (Keterangan)
-                        # ==========================================
-                        st.markdown("---")
-
-                        _sisa_target_ns = max(_target_ns - _total_spd, 0)
-                        _be_spd_display = int(_sisa_target_ns / _sisa_hari) if _sisa_hari > 0 else 0
-                        _tf_vs_sales = "⚠️ BEHIND" if (_tf * 100) > _pct_spd else "✅ ON TRACK"
-                        _tf_vs_sales_color = "#fca5a5" if (_tf * 100) > _pct_spd else "#34d399"
-
-                        st.markdown(
-                            f"<div style='background: linear-gradient(135deg, rgba(251, 191, 36, 0.08), "
-                            f"rgba(180, 83, 9, 0.15)); border: 2px solid #b45309; border-radius: 12px; "
-                            f"padding: 16px 20px; margin-top: 16px;'>"
-
-                            f"<div style='font-family: monospace; font-size: 12px; color: #fbbf24; "
-                            f"font-weight: 900; letter-spacing: 1.5px; text-align: center; "
-                            f"margin-bottom: 14px; padding-bottom: 10px; "
-                            f"border-bottom: 1px dashed rgba(180, 83, 9, 0.3);'>"
-                            f"💰 SUMMARY NET SALES</div>"
-
-                            f"<div style='display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-around;'>"
-
-                            f"<div style='text-align: center; min-width: 130px;'>"
-                            f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-bottom: 4px;'>📉 MINUS</div>"
-                            f"<div style='font-family: monospace; font-size: 13px; font-weight: 900; color: #fca5a5;'>"
-                            f"Rp {_ns_minus:,}</div></div>"
-
-                            f"<div style='text-align: center; min-width: 130px;'>"
-                            f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-bottom: 4px;'>🎯 TARGET BARU</div>"
-                            f"<div style='font-family: monospace; font-size: 13px; font-weight: 900; color: #fbbf24;'>"
-                            f"Rp {_be_spd_display:,}/hari</div></div>"
-
-                            f"<div style='text-align: center; min-width: 130px;'>"
-                            f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-bottom: 4px;'>📊 % SALES</div>"
-                            f"<div style='font-family: monospace; font-size: 13px; font-weight: 900; color: #38bdf8;'>"
-                            f"{_pct_spd:.1f}%</div></div>"
-
-                            f"<div style='text-align: center; min-width: 130px;'>"
-                            f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-bottom: 4px;'>⏱️ TF</div>"
-                            f"<div style='font-family: monospace; font-size: 13px; font-weight: 900; color: #a855f7;'>"
-                            f"{_tf*100:.1f}%</div></div>"
-
-                            f"<div style='text-align: center; min-width: 130px;'>"
-                            f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-bottom: 4px;'>🎯 STATUS</div>"
-                            f"<div style='font-family: monospace; font-size: 13px; font-weight: 900; color: {_tf_vs_sales_color};'>"
-                            f"{_tf_vs_sales}</div></div>"
-
-                            f"</div>"
-                            f"</div>",
-                            unsafe_allow_html=True
-                        )
-
-                        # ==========================================
-                        # 🎯 BEST ESTIMATE CARDS
-                        # ==========================================
-                        st.markdown("---")
-                        st.markdown("##### 🎯 Target Best Estimate")
-                        st.caption(_be_status)
-
-                        col_be1, col_be2, col_be3, col_be4 = st.columns(4)
-
-                        with col_be1:
-                            st.markdown(
-                                f"<div style='background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(14, 165, 233, 0.15)); "
-                                f"border: 1.5px solid #38bdf8; border-radius: 10px; padding: 14px 12px; text-align: center;'>"
-                                f"<div style='font-family: monospace; font-size: 10px; color: #38bdf8; "
-                                f"letter-spacing: 1px; margin-bottom: 6px;'>💰 SPD TARGET</div>"
-                                f"<div style='font-family: monospace; font-size: 16px; font-weight: 900; "
-                                f"color: #fbbf24;'>Rp {_be_spd:,}</div>"
-                                f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-top: 4px;'>per hari</div>"
-                                f"</div>",
-                                unsafe_allow_html=True
-                            )
-
-                        with col_be2:
-                            st.markdown(
-                                f"<div style='background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(14, 165, 233, 0.15)); "
-                                f"border: 1.5px solid #38bdf8; border-radius: 10px; padding: 14px 12px; text-align: center;'>"
-                                f"<div style='font-family: monospace; font-size: 10px; color: #38bdf8; "
-                                f"letter-spacing: 1px; margin-bottom: 6px;'>📄 STD TARGET</div>"
-                                f"<div style='font-family: monospace; font-size: 16px; font-weight: 900; "
-                                f"color: #38bdf8;'>{_be_std:,}</div>"
-                                f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-top: 4px;'>struk/hari</div>"
-                                f"</div>",
-                                unsafe_allow_html=True
-                            )
-
-                        with col_be3:
-                            st.markdown(
-                                f"<div style='background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(124, 58, 237, 0.15)); "
-                                f"border: 1.5px solid #a855f7; border-radius: 10px; padding: 14px 12px; text-align: center;'>"
-                                f"<div style='font-family: monospace; font-size: 10px; color: #a855f7; "
-                                f"letter-spacing: 1px; margin-bottom: 6px;'>🧾 APC TARGET</div>"
-                                f"<div style='font-family: monospace; font-size: 16px; font-weight: 900; "
-                                f"color: #a855f7;'>Rp {_be_apc:,}</div>"
-                                f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-top: 4px;'>per struk</div>"
-                                f"</div>",
-                                unsafe_allow_html=True
-                            )
-
-                        with col_be4:
-                            # Budget adjust NSB (bisa + atau -)
-                            _nsb_adjust_color = "#34d399" if _be_nsb_adjust >= 0 else "#fca5a5"
-                            _nsb_adjust_sign = "+" if _be_nsb_adjust >= 0 else ""
-                            _nsb_adjust = _be_nsb_adjust
-                            st.markdown(
-                                f"<div style='background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.15)); "
-                                f"border: 1.5px solid #ef4444; border-radius: 10px; padding: 14px 12px; text-align: center;'>"
-                                f"<div style='font-family: monospace; font-size: 10px; color: #fca5a5; "
-                                f"letter-spacing: 1px; margin-bottom: 6px;'>📊 BUDGET NSB/HARI</div>"
-                                f"<div style='font-family: monospace; font-size: 16px; font-weight: 900; "
-                                f"color: {_nsb_adjust_color};'>{_nsb_adjust_sign}Rp {_be_nsb_adjust:,}</div>"
-                                f"<div style='font-family: monospace; font-size: 9px; color: #94a3b8; margin-top: 4px;'>max SO/hari</div>"
-                                f"</div>",
-                                unsafe_allow_html=True
-                            )
-
-                        # ==========================================
-                        # 📈 CHART SPD/STD/APC (SINGLE-LINE + ANNOTATION)
-                        # ==========================================
-                        st.markdown("---")
-                        st.markdown(f"##### 📈 Trend {_chart_type_filter}")
-
-                        try:
-                            import plotly.graph_objects as go
-
-                            # Tentukan metrics
-                            if _chart_type_filter == "SPD":
-                                _metrics_to_show = [("spd", "#fbbf24", "SPD", "Rp")]
-                            elif _chart_type_filter == "STD":
-                                _metrics_to_show = [("std", "#38bdf8", "STD", "")]
-                            elif _chart_type_filter == "APC":
-                                _metrics_to_show = [("apc", "#a855f7", "APC", "Rp")]
-                            else:
-                                # Semua → subplot 3 chart
-                                _metrics_to_show = [
-                                    ("spd", "#fbbf24", "SPD", "Rp"),
-                                    ("std", "#38bdf8", "STD", ""),
-                                    ("apc", "#a855f7", "APC", "Rp"),
-                                ]
-
-                            if len(_metrics_to_show) == 1:
-                                # Single chart
-                                _metric_key, _color, _label, _unit = _metrics_to_show[0]
-                                _y_vals = _ringkasan_df[_metric_key].tolist()
-                                _x_vals = _ringkasan_df["_tgl"].tolist()
-
-                                # Cari peak & valley
-                                _peak_idx = int(np.argmax(_y_vals))
-                                _valley_idx = int(np.argmin(_y_vals))
-
-                                _fig = go.Figure()
-
-                                # Line
-                                _fig.add_trace(go.Scatter(
-                                    x=_x_vals,
-                                    y=_y_vals,
-                                    mode="lines+markers",
-                                    line=dict(color=_color, width=3),
-                                    marker=dict(size=8, color=_color,
-                                                line=dict(color="#78350f", width=1.5)),
-                                    fill="tozeroy",
-                                    fillcolor=f"rgba{tuple(int(_color.lstrip('#')[i:i+2], 16) for i in (0, 2, 4)) + (0.15,)}",
-                                    name=_label,
-                                    hovertemplate=f"<b>%{{x|%d/%m/%Y}}</b><br>{_label}: {_unit} %{{y:,}}<extra></extra>",
-                                ))
-
-                                # Annotation peak
-                                _fig.add_annotation(
-                                    x=_x_vals[_peak_idx],
-                                    y=_y_vals[_peak_idx],
-                                    text=f"🔼 Peak: {_unit} {_y_vals[_peak_idx]:,}",
-                                    showarrow=True,
-                                    arrowhead=2,
-                                    arrowcolor="#34d399",
-                                    bgcolor="rgba(16, 185, 129, 0.9)",
-                                    bordercolor="#34d399",
-                                    font=dict(color="#ffffff", size=10, family="monospace"),
-                                    ax=0, ay=-30,
-                                )
-
-                                # Annotation valley (kalau beda dari peak)
-                                if _valley_idx != _peak_idx:
-                                    _fig.add_annotation(
-                                        x=_x_vals[_valley_idx],
-                                        y=_y_vals[_valley_idx],
-                                        text=f"🔽 Turun: {_unit} {_y_vals[_valley_idx]:,}",
-                                        showarrow=True,
-                                        arrowhead=2,
-                                        arrowcolor="#fca5a5",
-                                        bgcolor="rgba(239, 68, 68, 0.9)",
-                                        bordercolor="#ef4444",
-                                        font=dict(color="#ffffff", size=10, family="monospace"),
-                                        ax=0, ay=30,
-                                    )
-
-                                _fig.update_layout(
-                                    height=320,
-                                    margin=dict(l=10, r=10, t=20, b=20),
-                                    plot_bgcolor="rgba(15, 23, 42, 0.4)",
-                                    paper_bgcolor="rgba(0,0,0,0)",
-                                    font=dict(color="#fbbf24", family="monospace", size=10),
-                                    xaxis=dict(gridcolor="rgba(251, 191, 36, 0.1)", title="Tanggal"),
-                                    yaxis=dict(gridcolor="rgba(251, 191, 36, 0.1)", title=f"{_label} ({_unit})" if _unit else _label),
-                                    showlegend=False,
-                                )
-                                st.plotly_chart(_fig, use_container_width=True, key=f"chart_{_metric_key}_ringkasan")
-                            else:
-                                # Subplot 3 chart (SPD, STD, APC)
-                                from plotly.subplots import make_subplots
-
-                                _fig = make_subplots(
-                                    rows=3, cols=1,
-                                    shared_xaxes=True,
-                                    vertical_spacing=0.08,
-                                    subplot_titles=("💰 SPD", "📄 STD", "🧾 APC"),
-                                )
-
-                                for _i, (_metric_key, _color, _label, _unit) in enumerate(_metrics_to_show, start=1):
-                                    _y_vals = _ringkasan_df[_metric_key].tolist()
-                                    _x_vals = _ringkasan_df["_tgl"].tolist()
-                                    _peak_idx = int(np.argmax(_y_vals))
-
-                                    _fig.add_trace(
-                                        go.Scatter(
-                                            x=_x_vals,
-                                            y=_y_vals,
-                                            mode="lines+markers",
-                                            line=dict(color=_color, width=2.5),
-                                            marker=dict(size=6, color=_color),
-                                            name=_label,
-                                            hovertemplate=f"<b>%{{x|%d/%m}}</b><br>{_label}: {_unit} %{{y:,}}<extra></extra>",
-                                        ),
-                                        row=_i, col=1
-                                    )
-
-                                    # Annotation peak
-                                    _fig.add_annotation(
-                                        x=_x_vals[_peak_idx],
-                                        y=_y_vals[_peak_idx],
-                                        text=f"🔼 {_unit} {_y_vals[_peak_idx]:,}",
-                                        showarrow=True,
-                                        arrowhead=2,
-                                        arrowcolor=_color,
-                                        bgcolor=f"rgba{tuple(int(_color.lstrip('#')[i:i+2], 16) for i in (0, 2, 4)) + (0.9,)}",
-                                        font=dict(color="#ffffff", size=9, family="monospace"),
-                                        ax=0, ay=-20,
-                                        row=_i, col=1
-                                    )
-
-                                _fig.update_layout(
-                                    height=700,
-                                    margin=dict(l=10, r=10, t=40, b=20),
-                                    plot_bgcolor="rgba(15, 23, 42, 0.4)",
-                                    paper_bgcolor="rgba(0,0,0,0)",
-                                    font=dict(color="#fbbf24", family="monospace", size=10),
-                                    showlegend=False,
-                                )
-                                _fig.update_xaxes(gridcolor="rgba(251, 191, 36, 0.1)")
-                                _fig.update_yaxes(gridcolor="rgba(251, 191, 36, 0.1)")
-
-                                st.plotly_chart(_fig, use_container_width=True, key="chart_all_ringkasan")
-                        except Exception as _e_chart:
-                            st.warning(f"⚠️ Chart gagal render: {str(_e_chart)[:100]}")
-
-                        # ==========================================
-                        # 📉 CHART NSB (Monitor Naik/Turun)
-                        # ==========================================
-                        st.markdown("---")
-                        st.markdown("##### 📉 Trend NSB (Monitoring)")
-
-                        try:
-                            import plotly.graph_objects as go
-
-                            _nsb_vals = _ringkasan_df["nsb_actual"].tolist()
-                            _nsb_x = _ringkasan_df["_tgl"].tolist()
-
-                            # Budget line (dari average budget harian)
-                            _avg_budget_daily = int(_target_nsb_bulanan / _jhk) if _jhk > 0 else 0
-
-                            _fig_nsb = go.Figure()
-
-                            # Bar NSB
-                            _colors_nsb = ["#ef4444" if abs(v) > abs(_avg_budget_daily) else "#10b981" for v in _nsb_vals]
-
-                            _fig_nsb.add_trace(go.Bar(
-                                x=_nsb_x,
-                                y=_nsb_vals,
-                                marker=dict(color=_colors_nsb, line=dict(color="#78350f", width=1)),
-                                name="NSB Aktual",
-                                hovertemplate="<b>%{x|%d/%m}</b><br>NSB: Rp %{y:,}<extra></extra>",
-                            ))
-
-                            # Budget line (horizontal)
-                            _fig_nsb.add_hline(
-                                y=-_avg_budget_daily,
-                                line_dash="dash",
-                                line_color="#fbbf24",
-                                line_width=2,
-                                annotation_text=f"🎯 Budget: -Rp {_avg_budget_daily:,}",
-                                annotation_position="top right",
-                                annotation_font=dict(color="#fbbf24", size=10, family="monospace"),
-                            )
-
-                            _fig_nsb.update_layout(
-                                height=320,
-                                margin=dict(l=10, r=10, t=30, b=20),
-                                plot_bgcolor="rgba(15, 23, 42, 0.4)",
-                                paper_bgcolor="rgba(0,0,0,0)",
-                                font=dict(color="#fbbf24", family="monospace", size=10),
-                                xaxis=dict(gridcolor="rgba(251, 191, 36, 0.1)", title="Tanggal"),
-                                yaxis=dict(gridcolor="rgba(251, 191, 36, 0.1)", title="NSB (Rp)"),
-                                showlegend=False,
-                            )
-                            st.plotly_chart(_fig_nsb, use_container_width=True, key="chart_nsb_ringkasan")
-
-                            st.caption(
-                                "🟢 Aman (dalam budget) | 🔴 Over budget | "
-                                "🎯 Garis kuning = budget harian (rata-rata)"
-                            )
-                        except Exception as _e_nsb:
-                            st.warning(f"⚠️ Chart NSB gagal render: {str(_e_nsb)[:100]}")
-                
+                        return f"{int(_v):,}"
+                except Exception:
+                    return str(v)
+    
+            def _kpi_card(label, value, sub_icon, sub_text, status_color):
+                """KPI card mobile-friendly dengan word-wrap & font responsif"""
+                return (
+                    f"<div class='kpi-card-v3' style='border-left-color: {status_color};'>"
+    
+                    f"<div class='kpi-label-v3'>"
+                    f"<span>{label}</span>"
+                    f"<span class='kpi-icon-v3'>{sub_icon}</span>"
+                    f"</div>"
+    
+                    f"<div class='kpi-value-v3'>{value}</div>"
+    
+                    f"<div class='kpi-sub-v3' style='color: {status_color};'>{sub_text}</div>"
+    
+                    f"</div>"
+                )
+    
+            # CSS untuk KPI Card
+            st.markdown("""
+            <style>
+                .kpi-grid-v3 {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 10px;
+                    margin-top: 10px;
+                }
+                @media (min-width: 640px) {
+                    .kpi-grid-v3 {
+                        grid-template-columns: repeat(4, 1fr);
+                        gap: 12px;
+                    }
+                }
+                .kpi-card-v3 {
+                    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85));
+                    border: 1.5px solid #9a7b38;
+                    border-left: 4px solid #fbbf24;
+                    border-radius: 10px;
+                    padding: 10px 12px;
+                    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+                    min-height: 100px;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: space-between;
+                    word-wrap: break-word;
+                    overflow-wrap: break-word;
+                    box-sizing: border-box;
+                }
+                .kpi-label-v3 {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    font-family: monospace;
+                    font-size: 9px;
+                    color: #94a3b8;
+                    letter-spacing: 0.5px;
+                    text-transform: uppercase;
+                    margin-bottom: 4px;
+                    gap: 4px;
+                    line-height: 1.2;
+                    word-break: break-word;
+                }
+                .kpi-icon-v3 {
+                    font-size: 14px;
+                    flex-shrink: 0;
+                }
+                .kpi-value-v3 {
+                    font-family: monospace;
+                    font-size: 16px;
+                    font-weight: 900;
+                    color: #fbbf24;
+                    text-shadow: 0 0 8px rgba(251, 191, 36, 0.3);
+                    margin: 4px 0;
+                    word-wrap: break-word;
+                    overflow-wrap: break-word;
+                    line-height: 1.2;
+                    letter-spacing: -0.3px;
+                }
+                .kpi-sub-v3 {
+                    font-family: monospace;
+                    font-size: 9px;
+                    font-weight: 900;
+                    letter-spacing: 0.2px;
+                    line-height: 1.3;
+                    word-wrap: break-word;
+                }
+                @media (max-width: 480px) {
+                    .kpi-card-v3 {
+                        padding: 8px 10px;
+                        min-height: 90px;
+                    }
+                    .kpi-value-v3 {
+                        font-size: 14px;
+                    }
+                    .kpi-label-v3 {
+                        font-size: 8px;
+                    }
+                    .kpi-sub-v3 {
+                        font-size: 8px;
+                    }
+                }
+            </style>
+            """, unsafe_allow_html=True)
+    
+            # Build semua KPI dalam satu grid HTML
+            _kpi_html = "<div class='kpi-grid-v3'>"
+    
+            # 1. Hari Kerja
+            _kpi_html += _kpi_card(
+                "📅 Hari Kerja",
+                f"{_hari_berjalan} / {_jhk}",
+                "🕐",
+                f"{_sisa_hari} hari sisa",
+                "#38bdf8"
+            )
+    
+            # 2. Persentase NS
+            _tf_icon = "✅" if _on_track else "⚠️"
+            _tf_color = "#34d399" if _on_track else "#fca5a5"
+            _tf_status_text = "On Track" if _on_track else "Behind"
+            _kpi_html += _kpi_card(
+                "💰 % Net Sales",
+                f"{_pct_spd:.2f}%",
+                "⏳",
+                f"{_tf_status_text} | TF: {_tf*100:.1f}%",
+                _tf_color
+            )
+    
+            # 3. Rata SPD
+            _spd_icon = "✅" if _spd_ok else "⚠️"
+            _spd_color = "#34d399" if _spd_ok else "#fca5a5"
+            _spd_sign = "+" if _gap_spd_harian >= 0 else ""
+            _kpi_html += _kpi_card(
+                "💰 Rata SPD",
+                f"Rp {_fmt_short(_avg_spd)}",
+                "💰",
+                f"{_pct_spd_harian:.1f}% | Gap: {_spd_sign}{_fmt_short(_gap_spd_harian)}",
+                _spd_color
+            )
+    
+            # 4. APC
+            _apc_icon = "✅" if _apc_ok else "⚠️"
+            _apc_color = "#34d399" if _apc_ok else "#fca5a5"
+            _apc_sign = "+" if _gap_apc >= 0 else ""
+            _kpi_html += _kpi_card(
+                "🧾 APC",
+                f"Rp {_fmt_short(_avg_apc)}",
+                "🧾",
+                f"{_pct_apc:.1f}% | Gap: {_apc_sign}{_fmt_short(_gap_apc)}",
+                _apc_color
+            )
+    
+            # 5. Rata STD
+            _std_icon = "✅" if _std_ok else "⚠️"
+            _std_color = "#34d399" if _std_ok else "#fca5a5"
+            _std_sign = "+" if _gap_std >= 0 else ""
+            _kpi_html += _kpi_card(
+                "📄 Rata STD",
+                f"{_avg_std:,}",
+                "📄",
+                f"{_pct_std:.1f}% | Gap: {_std_sign}{_gap_std:,}",
+                _std_color
+            )
+    
+            # 6. Total NSB
+            _nsb_pct = (abs(_total_nsb_act) / _total_spd * 100) if _total_spd > 0 else 0
+            _kpi_html += _kpi_card(
+                "🛡️ Total NSB",
+                f"Rp {_fmt_short(abs(_total_nsb_act))}",
+                "🛡️",
+                f"{_nsb_pct:.2f}% dari NS",
+                "#38bdf8"
+            )
+    
+            # 7. Selisih NSB
+            _nsb_icon = "✅" if _nsb_ok else "⚠️"
+            _nsb_color = "#34d399" if _nsb_ok else "#fca5a5"
+            _nsb_status = "Aman" if _nsb_ok else "Over"
+            _kpi_html += _kpi_card(
+                "⚖️ Selisih NSB",
+                f"Rp {_fmt_short(_selisih_nsb)}",
+                "⚖️",
+                _nsb_status,
+                _nsb_color
+            )
+    
+            # 8. Total Net Sales
+            _ns_icon = "✅" if _ns_ok else "⚠️"
+            _ns_color = "#34d399" if _ns_ok else "#fca5a5"
+            _ns_minus_str = (
+                f"-Rp {_fmt_short(abs(_ns_minus))}" if _ns_minus > 0
+                else f"+Rp {_fmt_short(abs(_ns_minus))}"
+            )
+            _kpi_html += _kpi_card(
+                "💰 Total NS",
+                f"Rp {_fmt_short(_total_spd)}",
+                "🎯",
+                f"{_ns_minus_str} vs Target",
+                _ns_color
+            )
+    
+            _kpi_html += "</div>"
+            st.markdown(_kpi_html, unsafe_allow_html=True)
+    
+            # ==========================================
+            # 📊 SUMMARY NET SALES
+            # ==========================================
+            st.markdown("---")
+    
+            st.markdown(f"""
+            <div style='
+                background: linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(180, 83, 9, 0.15));
+                border: 2px solid #b45309; border-radius: 12px;
+                padding: 14px 16px; margin-top: 16px;
+            '>
+                <div style='
+                    font-family: monospace; font-size: 11px; color: #fbbf24;
+                    font-weight: 900; letter-spacing: 1.5px; text-align: center;
+                    margin-bottom: 12px; padding-bottom: 10px;
+                    border-bottom: 1px dashed rgba(180, 83, 9, 0.3);
+                '>💰 SUMMARY NET SALES</div>
+    
+                <div style='
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 10px;
+                '>
+                    <div style='text-align: center;'>
+                        <div style='font-family: monospace; font-size: 8px; color: #94a3b8; margin-bottom: 3px;'>📉 MINUS</div>
+                        <div style='font-family: monospace; font-size: 12px; font-weight: 900; color: #fca5a5; word-wrap: break-word;'>
+                            Rp {_fmt_short(_ns_minus)}
+                        </div>
+                    </div>
+                    <div style='text-align: center;'>
+                        <div style='font-family: monospace; font-size: 8px; color: #94a3b8; margin-bottom: 3px;'>🎯 TARGET BARU</div>
+                        <div style='font-family: monospace; font-size: 12px; font-weight: 900; color: #fbbf24; word-wrap: break-word;'>
+                            Rp {_fmt_short(_be_spd_display)}/hari
+                        </div>
+                    </div>
+                    <div style='text-align: center;'>
+                        <div style='font-family: monospace; font-size: 8px; color: #94a3b8; margin-bottom: 3px;'>📊 % SALES</div>
+                        <div style='font-family: monospace; font-size: 12px; font-weight: 900; color: #38bdf8;'>
+                            {_pct_spd:.1f}%
+                        </div>
+                    </div>
+                    <div style='text-align: center;'>
+                        <div style='font-family: monospace; font-size: 8px; color: #94a3b8; margin-bottom: 3px;'>⏱️ TF</div>
+                        <div style='font-family: monospace; font-size: 12px; font-weight: 900; color: #a855f7;'>
+                            {_tf*100:.1f}%
+                        </div>
+                    </div>
+                </div>
+    
+                <div style='
+                    margin-top: 10px; padding-top: 10px;
+                    border-top: 1px dashed rgba(180, 83, 9, 0.3);
+                    text-align: center;
+                    font-family: monospace; font-size: 11px; font-weight: 900;
+                    color: {_tf_vs_sales_color};
+                '>STATUS: {_tf_vs_sales}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        # ==========================================
+        # 🎯 BEST ESTIMATE CARDS (MOBILE FRIENDLY)
+        # ==========================================
+        st.markdown("---")
+        st.markdown("##### 🎯 Target Best Estimate")
+        st.caption(_be_status)
+
+        # Hitung BE
+        _is_achieved = _total_spd >= _target_ns
+        if _is_achieved:
+            _be_spd = _target_spd_harian
+            _be_std = int(_target_std_total / _jhk) if _jhk > 0 else 0
+            _be_apc = _target_apc
+            _be_nsb_budget = int(_be_spd * 0.0015)
+        else:
+            _sisa_target_ns = max(_target_ns - _total_spd, 0)
+            _be_spd = int(_sisa_target_ns / _sisa_hari) if _sisa_hari > 0 else 0
+            _sisa_target_std = max(_target_std_total - _total_std, 0)
+            _be_std = int(_sisa_target_std / _sisa_hari) if _sisa_hari > 0 else 0
+            _be_apc = int(_be_spd / _be_std) if _be_std > 0 else 0
+            _be_nsb_budget = int(_be_spd * 0.0015)
+
+        _nsb_gap_total = _target_nsb_bulanan - abs(_total_nsb_act)
+        _be_nsb_adjust = int(_nsb_gap_total / _sisa_hari) if _sisa_hari > 0 else 0
+
+        # CSS Best Estimate Card
+        st.markdown("""
+        <style>
+            .be-grid-v3 {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+                margin-top: 10px;
+            }
+            @media (min-width: 640px) {
+                .be-grid-v3 {
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: 12px;
+                }
+            }
+            .be-card-v3 {
+                border-radius: 10px;
+                padding: 10px 12px;
+                text-align: center;
+                min-height: 90px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                box-sizing: border-box;
+            }
+            .be-title-v3 {
+                font-family: monospace;
+                font-size: 9px;
+                letter-spacing: 0.5px;
+                margin-bottom: 6px;
+                word-wrap: break-word;
+                line-height: 1.2;
+            }
+            .be-value-v3 {
+                font-family: monospace;
+                font-size: 15px;
+                font-weight: 900;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                line-height: 1.2;
+                letter-spacing: -0.3px;
+            }
+            .be-sub-v3 {
+                font-family: monospace;
+                font-size: 8px;
+                color: #94a3b8;
+                margin-top: 4px;
+            }
+            @media (max-width: 480px) {
+                .be-card-v3 {
+                    padding: 8px 10px;
+                    min-height: 80px;
+                }
+                .be-value-v3 {
+                    font-size: 13px;
+                }
+                .be-title-v3 {
+                    font-size: 8px;
+                }
+            }
+        </style>
+        """, unsafe_allow_html=True)
+
+        _be_html = "<div class='be-grid-v3'>"
+
+        # SPD Target
+        _be_html += (
+            "<div class='be-card-v3' style='background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(14, 165, 233, 0.15)); border: 1.5px solid #38bdf8;'>"
+            "<div class='be-title-v3' style='color: #38bdf8;'>💰 SPD TARGET</div>"
+            f"<div class='be-value-v3' style='color: #fbbf24;'>Rp {_fmt_short(_be_spd)}</div>"
+            "<div class='be-sub-v3'>per hari</div>"
+            "</div>"
+        )
+
+        # STD Target
+        _be_html += (
+            "<div class='be-card-v3' style='background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(14, 165, 233, 0.15)); border: 1.5px solid #38bdf8;'>"
+            "<div class='be-title-v3' style='color: #38bdf8;'>📄 STD TARGET</div>"
+            f"<div class='be-value-v3' style='color: #38bdf8;'>{_be_std:,}</div>"
+            "<div class='be-sub-v3'>struk/hari</div>"
+            "</div>"
+        )
+
+        # APC Target
+        _be_html += (
+            "<div class='be-card-v3' style='background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(124, 58, 237, 0.15)); border: 1.5px solid #a855f7;'>"
+            "<div class='be-title-v3' style='color: #a855f7;'>🧾 APC TARGET</div>"
+            f"<div class='be-value-v3' style='color: #a855f7;'>Rp {_fmt_short(_be_apc)}</div>"
+            "<div class='be-sub-v3'>per struk</div>"
+            "</div>"
+        )
+
+        # NSB Budget
+        _nsb_adjust_color = "#34d399" if _be_nsb_adjust >= 0 else "#fca5a5"
+        _nsb_sign = "+" if _be_nsb_adjust >= 0 else ""
+        _be_html += (
+            "<div class='be-card-v3' style='background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.15)); border: 1.5px solid #ef4444;'>"
+            "<div class='be-title-v3' style='color: #fca5a5;'>📊 NSB/HARI</div>"
+            f"<div class='be-value-v3' style='color: {_nsb_adjust_color};'>{_nsb_sign}Rp {_fmt_short(_be_nsb_adjust)}</div>"
+            "<div class='be-sub-v3'>max SO/hari</div>"
+            "</div>"
+        )
+
+        _be_html += "</div>"
+        st.markdown(_be_html, unsafe_allow_html=True)
                 # ==========================================
                 # ==========================================
                 # 📋 VIEW 2: TABEL REKAP (LEADERBOARD STYLE)

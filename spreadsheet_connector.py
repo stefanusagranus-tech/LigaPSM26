@@ -290,25 +290,26 @@ def backup_to_audit_sheet(state_getter):
     return _result
 
 # =========================================================================
-# 📊 GENERATOR LAPORAN BULANAN PSM
+# 📝 ISI LAPORAN PSM — VERSI FIX v2 (DINAMIS BY BULAN)
 # =========================================================================
-def generate_laporan_bulanan_psm(bulan_int, tahun_int, nama_bulan_str):
+def isi_laporan_psm(bulan_int, tahun_int, sheet_name):
     """
-    Generate laporan bulanan PSM ke Spreadsheet Laporan.
-    Format: Toko, NIK, Nama Personil, kolom tanggal 1-31.
+    Isi kolom TARGET TOKO & ACTUAL di sheet PSM yang sudah ada format + rumus.
     
-    Args:
-        bulan_int (int): 1-12
-        tahun_int (int): contoh 2026
-        nama_bulan_str (str): contoh "SEPTEMBER"
+    FIX v2:
+    - Filter periode PSM dinamis by bulan & tahun (bukan hardcode S01-S04)
+    - Support format ID lama (P01, S01) & baru (PSM-2610-01)
+    - Ambil W1-W4 dari periode yang match bulan (sort by start_date)
+    - Urutkan personil berdasarkan NIK ascending
+    - Set alignment center untuk cell yang diisi
     
-    Returns: (success: bool, message: str, total_personil: int)
+    Return: (success, message, jumlah_update)
     """
     try:
-        import pandas as pd
-        
-        # === 1. Ambil data dari session state ===
+        # === 1. Ambil data ===
         _sp = st.session_state.get("sales_person_df", pd.DataFrame()).copy()
+        _si = st.session_state.get("sales_item_df", pd.DataFrame()).copy()
+        _per = st.session_state.get("periods_df", pd.DataFrame()).copy()
         _pers = st.session_state.get("person_df", pd.DataFrame()).copy()
         
         if _sp.empty or _pers.empty:
@@ -316,93 +317,192 @@ def generate_laporan_bulanan_psm(bulan_int, tahun_int, nama_bulan_str):
         
         # Normalisasi kolom
         _sp.columns = _sp.columns.astype(str).str.strip().str.lower()
+        _si.columns = _si.columns.astype(str).str.strip().str.lower()
+        _per.columns = _per.columns.astype(str).str.strip().str.lower()
         _pers.columns = _pers.columns.astype(str).str.strip().str.lower()
         
-        # === 2. Filter bulan ===
-        if "updated_at" not in _sp.columns:
-            return False, "❌ Kolom 'updated_at' tidak ada di sales_person", 0
+        # === 2. FILTER PERIODE PSM BERDASARKAN BULAN (DINAMIS) ===
+        _psm_bulan_ini = pd.DataFrame()
         
-        _sp["_dt"] = pd.to_datetime(_sp["updated_at"], errors="coerce")
-        _sp = _sp.dropna(subset=["_dt"])
-        _sp = _sp[(_sp["_dt"].dt.month == bulan_int) & (_sp["_dt"].dt.year == tahun_int)]
+        if not _per.empty and "period_id" in _per.columns and "start_date" in _per.columns:
+            _per["_start_dt"] = pd.to_datetime(_per["start_date"], errors="coerce")
+            _per = _per.dropna(subset=["_start_dt"])
+            
+            # Exclude prefix PPS/Sueger/SG/Ceban
+            _per_psm_only = _per[
+                ~_per["period_id"].astype(str).str.upper().str.contains(
+                    "PWP|SGR|SGS|CBN|PPS", na=False, regex=True
+                )
+            ]
+            
+            # Filter bulan & tahun
+            _psm_bulan_ini = _per_psm_only[
+                (_per_psm_only["_start_dt"].dt.month == bulan_int) &
+                (_per_psm_only["_start_dt"].dt.year == tahun_int)
+            ].sort_values("_start_dt", ascending=True).reset_index(drop=True)
         
-        if _sp.empty:
-            return False, f"❌ Tidak ada data PSM untuk {nama_bulan_str} {tahun_int}", 0
+        if _psm_bulan_ini.empty:
+            return False, f"❌ Tidak ada periode PSM untuk bulan {bulan_int}/{tahun_int}", 0
         
-        # === 3. Pivot (personil × tanggal) ===
-        _sp["_tgl"] = _sp["_dt"].dt.day
-        _sp["qty"] = pd.to_numeric(_sp.get("actual_qty", 0), errors="coerce").fillna(0)
-        _sp["person_clean"] = _sp["person_name"].astype(str).str.strip().str.upper()
+        # === 3. Ambil target per periode dari SALES_ITEM ===
+        _target_map = {}
+        if not _si.empty and "target_qty" in _si.columns and "period_id" in _si.columns:
+            _si["target_qty"] = pd.to_numeric(_si["target_qty"], errors="coerce").fillna(0)
+            _si["_pid_clean"] = _si["period_id"].astype(str).str.strip()
+            _grp = _si.groupby("_pid_clean")["target_qty"].sum()
+            _target_map = _grp.to_dict()
         
-        _pivot = _sp.pivot_table(
-            index="person_clean",
-            columns="_tgl",
-            values="qty",
-            aggfunc="sum",
-            fill_value=0
-        )
+        # === 4. Ambil personil aktif — URUT NIK ASCENDING ===
+        if "active" in _pers.columns:
+            _pers = _pers[pd.to_numeric(_pers["active"], errors="coerce") == 1]
         
-        # === 4. Ambil personil aktif ===
-        _pers_active = _pers.copy()
-        if "active" in _pers_active.columns:
-            _pers_active = _pers_active[pd.to_numeric(_pers_active["active"], errors="coerce") == 1]
+        _nik_col = None
+        for _c in ["nik", "person_id"]:
+            if _c in _pers.columns:
+                _nik_col = _c
+                break
         
-        _pers_active["person_clean"] = _pers_active["person_name"].astype(str).str.strip().str.upper()
-        _pers_active = _pers_active.sort_values("person_clean").drop_duplicates(subset=["person_clean"])
+        if _nik_col:
+            _pers["_nik_sort"] = pd.to_numeric(_pers[_nik_col], errors="coerce").fillna(99999999)
+            _pers = _pers.sort_values("_nik_sort", ascending=True)
         
-        if _pers_active.empty:
+        _pers["person_clean"] = _pers["person_name"].astype(str).str.strip().str.upper()
+        _pers = _pers.drop_duplicates(subset=["person_clean"])
+        _pers_list = _pers["person_clean"].tolist()
+        
+        if not _pers_list:
             return False, "❌ Tidak ada personil aktif", 0
         
-        # === 5. Bangun matrix ===
-        _rows_output = []
+        # === 5. Parse tanggal di sales_person ===
+        if "updated_at" not in _sp.columns:
+            return False, "❌ Kolom updated_at tidak ada", 0
+        _sp["_dt"] = pd.to_datetime(_sp["updated_at"], errors="coerce")
+        _sp = _sp.dropna(subset=["_dt"])
         
-        # Baris 1: Toko + tanggal 1-31
-        _row1 = ["", "Toko", "C383/KARANG SATRIA"] + [str(d) for d in range(1, 32)]
-        _rows_output.append(_row1)
+        # === 6. Buka worksheet ===
+        ws = get_ws_laporan(sheet_name)
+        if ws is None:
+            return False, f"❌ Sheet {sheet_name} tidak ditemukan", 0
         
-        # Baris 2: Header kolom
-        _row2 = ["No", "NIK", "Nama Personil", "ACTUAL"] + [""] * 30
-        _rows_output.append(_row2)
+        # === 7. Konfigurasi kolom per WEEK (DINAMIS) ===
+        # Mapping kolom target: W1=D, W2=Q, W3=AE, W4=AS
+        # Mapping kolom actual: W1=G-M, W2=T-AA, W3=AH-AO, W4=AV-BC
+        _week_cols = [
+            {"col_target": "D",  "col_act_start": "G",  "col_act_end": "M"},
+            {"col_target": "Q",  "col_act_start": "T",  "col_act_end": "AA"},
+            {"col_target": "AE", "col_act_start": "AH", "col_act_end": "AO"},
+            {"col_target": "AS", "col_act_start": "AV", "col_act_end": "BC"},
+        ]
         
-        # === 6. Data personil ===
-        _total_per_tgl = {d: 0 for d in range(1, 32)}
-        
-        for _idx, (_, _p_row) in enumerate(_pers_active.iterrows(), start=1):
-            _nama = str(_p_row.get("person_name", "")).strip().upper()
+        _week_config = []
+        for _i, _periode in enumerate(_psm_bulan_ini.iterrows()):
+            if _i >= len(_week_cols):
+                break
             
-            # NIK / person_id
-            _nik = str(_p_row.get("person_id", _p_row.get("nik", ""))).replace(".0", "").strip()
-            if not _nik or _nik == "nan":
-                _nik = "-"
-            
-            _row_data = [_idx, _nik, _nama]
-            
-            if _nama in _pivot.index:
-                for _d in range(1, 32):
-                    _val = int(_pivot.loc[_nama, _d]) if _d in _pivot.columns else 0
-                    _row_data.append(_val)
-                    _total_per_tgl[_d] += _val
+            _pid = str(_periode[1].get("period_id", "")).strip()
+            _start = _periode[1]["_start_dt"].date()
+            _end = pd.to_datetime(_periode[1].get("end_date"), errors="coerce")
+            if pd.notna(_end):
+                _end = _end.date()
+                _jhk = (_end - _start).days + 1
+                _tanggal = [_start + timedelta(days=d) for d in range(_jhk)]
             else:
-                _row_data.extend([0] * 31)
+                _tanggal = []
             
-            _rows_output.append(_row_data)
+            _cols = _week_cols[_i]
+            _week_config.append({
+                "period_id": _pid,
+                "tanggal": _tanggal,
+                "col_target": _cols["col_target"],
+                "col_actual_start": _cols["col_act_start"],
+                "col_actual_end": _cols["col_act_end"],
+            })
         
-        # Baris Total
-        _total_row = ["Total", "", ""] + [str(_total_per_tgl[_d]) for _d in range(1, 32)]
-        _rows_output.append(_total_row)
+        # === 8. Bangun batch update ===
+        _updates = []
+        _target_ranges = []
         
-        # === 7. Tulis ke Spreadsheet Laporan ===
-        _sheet_name = f"{nama_bulan_str.upper()} {tahun_int}"
-        _ok, _msg = write_laporan_bulanan(_sheet_name, _rows_output)
+        # TARGET: 1 nilai sama untuk semua personil
+        for _w in _week_config:
+            _target_val = int(_target_map.get(_w["period_id"], 0))
+            if _target_val > 0:
+                _target_values = [[_target_val] for _ in range(len(_pers_list))]
+                _range = f"{_w['col_target']}3:{_w['col_target']}{2 + len(_pers_list)}"
+                _updates.append({
+                    "range": _range,
+                    "values": _target_values,
+                })
+                _target_ranges.append(_range)
         
-        if not _ok:
-            return False, _msg, 0
+        # ACTUAL: per personil per tanggal
+        _actual_ranges = []
+        for _row_offset, _person in enumerate(_pers_list):
+            _row_idx = 3 + _row_offset
+            
+            for _w in _week_config:
+                _actual_values = []
+                
+                for _tgl in _w["tanggal"]:
+                    _mask = (
+                        (_sp["person_name"].astype(str).str.upper() == _person) &
+                        (_sp["_dt"].dt.date == _tgl)
+                    )
+                    
+                    if _mask.any():
+                        _qty = int(pd.to_numeric(_sp.loc[_mask, "actual_qty"], errors="coerce").fillna(0).sum())
+                    else:
+                        _qty = 0
+                    
+                    _actual_values.append(_qty if _qty > 0 else "")
+                
+                _actual_range = f"{_w['col_actual_start']}{_row_idx}:{_w['col_actual_end']}{_row_idx}"
+                _updates.append({
+                    "range": _actual_range,
+                    "values": [_actual_values],
+                })
+                _actual_ranges.append(_actual_range)
         
-        return True, f"✅ Laporan {_sheet_name} tersimpan ({len(_rows_output)} baris)", len(_pers_active)
+        # === 9. Batch update VALUE ===
+        if _updates:
+            ws.batch_update(_updates, value_input_option="USER_ENTERED")
+        
+        # === 10. Set FORMAT: Center Alignment ===
+        try:
+            from gspread_formatting import (
+                CellFormat, TextFormat, HorizontalAlignment,
+                format_cell_range,
+            )
+            
+            _fmt = CellFormat(
+                horizontalAlignment=HorizontalAlignment.CENTER,
+                verticalAlignment="MIDDLE",
+                textFormat=TextFormat(
+                    fontFamily="Calibri",
+                    fontSize=10,
+                    bold=True,
+                ),
+            )
+            
+            for _range in _target_ranges + _actual_ranges:
+                try:
+                    format_cell_range(ws, _range, _fmt)
+                except Exception as _e_fmt:
+                    print(f"[FORMAT WARN] {_range}: {_e_fmt}")
+                    continue
+        
+        except ImportError:
+            print("[FORMAT WARN] gspread_formatting tidak terinstall, skip format")
+        except Exception as _e_fmt_all:
+            print(f"[FORMAT WARN] Gagal set format: {_e_fmt_all}")
+        
+        _info = f"W1-W{len(_week_config)}: {', '.join([w['period_id'] for w in _week_config])}"
+        return True, f"✅ {len(_updates)} range di-update + format ({len(_pers_list)} personil). {_info}", len(_updates)
     
     except Exception as e:
+        import traceback
+        print(f"[ISI_LAPORAN_PSM ERROR] {traceback.format_exc()}")
         return False, f"❌ Gagal: {str(e)[:150]}", 0
-
+        
 # =========================================================================
 # 📊 TULIS LAPORAN BULANAN KE SPREADSHEET LAPORAN
 # =========================================================================
@@ -1659,18 +1759,23 @@ def isi_laporan_psm(bulan_int, tahun_int, sheet_name):
         return False, f"❌ Gagal: {str(e)[:150]}", 0
 
 # =========================================================================
-# 📝 ISI LAPORAN PWP — HANYA SYARAT & REDEEM (Rumus Excel Dibiarkan)
+# 🛠️ HELPER: ISI LAPORAN PPS (PWP / SUEGER) — KOLOM SELANG-SELING 3
 # =========================================================================
-def isi_laporan_pwp(bulan_int, tahun_int, sheet_name):
+def _isi_laporan_pps_generic(bulan_int, tahun_int, sheet_name, 
+                              prefix, kolom_syarat, kolom_redeem, 
+                              label_syarat="Syarat", label_redeem="Redeem"):
     """
-    Isi kolom Struk Syarat & Struk Redemp di sheet PWP.
+    Helper generic untuk isi laporan PWP & Sueger (struktur kolom sama).
     
     Struktur:
-    - W1 (tgl 1-15): Kolom D, G, J, M, ... (syarat) & E, H, K, N, ... (redemp)
-    - W2 (tgl 16-30): Kolom AX, BA, BD, ... (syarat) & AY, BB, BE, ... (redemp)
+    - W1 (tgl 1-15): Kolom D, G, J, ... (syarat) & E, H, K, ... (redeem)
+    - W2 (tgl 16-30): Kolom AZ, BC, BF, ... (syarat) & BA, BD, BG, ... (redeem)
     
-    Rumus % Redempt dibiarkan.
-    Urutkan personil berdasarkan NIK ascending.
+    Args:
+        prefix: "PWP" atau "SGR"
+        kolom_syarat: "syarat_pwp" atau "syarat_sueger"
+        kolom_redeem: "qty_pwp" atau "redeem_sueger"
+        label_syarat, label_redeem: untuk info
     """
     try:
         # === 1. Ambil data ===
@@ -1680,17 +1785,17 @@ def isi_laporan_pwp(bulan_int, tahun_int, sheet_name):
         if _pps.empty or _pers.empty:
             return False, "❌ Data PPS atau person_df kosong", 0
         
-        # Normalisasi kolom
+        # Normalisasi
         _pps.columns = _pps.columns.astype(str).str.strip().str.lower()
         _pers.columns = _pers.columns.astype(str).str.strip().str.lower()
         
-        # === 2. Parse tanggal di sales_pps ===
+        # === 2. Parse tanggal ===
         if "updated_at" not in _pps.columns:
             return False, "❌ Kolom updated_at tidak ada", 0
         _pps["_dt"] = pd.to_datetime(_pps["updated_at"], errors="coerce")
         _pps = _pps.dropna(subset=["_dt"])
         
-        # === 3. Ambil daftar personil aktif — URUT NIK ASCENDING ===
+        # === 3. Ambil personil aktif — URUT NIK ASCENDING ===
         if "active" in _pers.columns:
             _pers = _pers[pd.to_numeric(_pers["active"], errors="coerce") == 1]
         
@@ -1716,40 +1821,28 @@ def isi_laporan_pwp(bulan_int, tahun_int, sheet_name):
         if ws is None:
             return False, f"❌ Sheet {sheet_name} tidak ditemukan", 0
         
-        # === 5. Konfigurasi kolom per tanggal ===
-        # Struktur: tiap tanggal = 3 kolom (syarat, redemp, %rumus)
-        # Kita cuma isi kolom 1 (syarat) & 2 (redemp)
-        
-        # Generate mapping kolom untuk W1 (tgl 1-15)
-        # Start dari kolom D (index 3) dengan step 3
+        # === 5. Helper kolom ===
         def _col_from_index(idx):
-            """Konversi index 0-based ke huruf Excel."""
             result = ""
-            idx_1 = idx + 1  # 1-based
+            idx_1 = idx + 1
             while idx_1 > 0:
                 idx_1, rem = divmod(idx_1 - 1, 26)
                 result = chr(65 + rem) + result
             return result
         
         def _index_from_col(col):
-            """Konversi huruf kolom ke index 0-based."""
             result = 0
             for c in col:
                 result = result * 26 + (ord(c.upper()) - 64)
             return result - 1
         
-        # W1: mulai dari kolom D (index 3), tgl 1-15 (15 hari)
-        # Syarat tgl 1 = D, Redemp tgl 1 = E, % tgl 1 = F
-        # Syarat tgl 2 = G, Redemp tgl 2 = H, % tgl 2 = I
-        # Step: +3
-        _w1_start_idx = _index_from_col("D")  # index 3
-        _w1_tanggal = list(range(1, 15))       # 1-15
+        # === 6. Config kolom per tanggal ===
+        _w1_start_idx = _index_from_col("D")   # = 3
+        _w1_tanggal = list(range(1, 16))        # 1-15
         
-        # W2: mulai dari kolom AZ (index 51), tgl 16-30
-        _w2_start_idx = _index_from_col("AZ")  # index 51
-        _w2_tanggal = list(range(16, 31))      # 16-30
+        _w2_start_idx = _index_from_col("AZ")  # = 51
+        _w2_tanggal = list(range(16, 31))       # 16-30
         
-        # Bangun list mapping: [(tgl, col_syarat, col_redemp)]
         _col_map = []
         
         for i, tgl in enumerate(_w1_tanggal):
@@ -1770,9 +1863,8 @@ def isi_laporan_pwp(bulan_int, tahun_int, sheet_name):
                 "redemp": _col_from_index(_red_idx),
             })
         
-        # === 6. Bangun batch update ===
+        # === 7. Bangun batch update ===
         _updates = []
-        _formatted_ranges = []
         
         for _row_offset, _person in enumerate(_pers_list):
             _row_idx = 3 + _row_offset
@@ -1782,43 +1874,39 @@ def isi_laporan_pwp(bulan_int, tahun_int, sheet_name):
                 
                 # Filter data
                 _mask = (
-                    (_pps["kasir_name"].astype(str).str.upper() == _person) &
+                    (_pps["kasir_name"].astype(str).str.strip().str.upper() == _person) &
                     (_pps["_dt"].dt.day == _tgl) &
                     (_pps["_dt"].dt.month == bulan_int) &
                     (_pps["_dt"].dt.year == tahun_int)
                 )
                 
                 # Nilai syarat
-                if _mask.any() and "syarat_pwp" in _pps.columns:
-                    _syarat = int(pd.to_numeric(_pps.loc[_mask, "syarat_pwp"], errors="coerce").fillna(0).sum())
-                else:
-                    _syarat = 0
+                _syarat = 0
+                if _mask.any() and kolom_syarat in _pps.columns:
+                    _syarat = int(pd.to_numeric(_pps.loc[_mask, kolom_syarat], errors="coerce").fillna(0).sum())
                 
-                # Nilai redemp (qty_pwp)
-                if _mask.any() and "qty_pwp" in _pps.columns:
-                    _redemp = int(pd.to_numeric(_pps.loc[_mask, "qty_pwp"], errors="coerce").fillna(0).sum())
-                else:
-                    _redemp = 0
+                # Nilai redeem
+                _redeem = 0
+                if _mask.any() and kolom_redeem in _pps.columns:
+                    _redeem = int(pd.to_numeric(_pps.loc[_mask, kolom_redeem], errors="coerce").fillna(0).sum())
                 
                 # Update syarat
                 _updates.append({
                     "range": f"{_cm['syarat']}{_row_idx}",
                     "values": [[_syarat if _syarat > 0 else ""]],
                 })
-                _formatted_ranges.append(f"{_cm['syarat']}{_row_idx}")
                 
-                # Update redemp
+                # Update redeem
                 _updates.append({
                     "range": f"{_cm['redemp']}{_row_idx}",
-                    "values": [[_redemp if _redemp > 0 else ""]],
+                    "values": [[_redeem if _redeem > 0 else ""]],
                 })
-                _formatted_ranges.append(f"{_cm['redemp']}{_row_idx}")
         
-        # === 7. Batch update value ===
+        # === 8. Batch update value ===
         if _updates:
             ws.batch_update(_updates, value_input_option="USER_ENTERED")
         
-        # === 8. Set format center ===
+        # === 9. Set format center ===
         try:
             from gspread_formatting import (
                 CellFormat, TextFormat, HorizontalAlignment,
@@ -1833,13 +1921,10 @@ def isi_laporan_pwp(bulan_int, tahun_int, sheet_name):
                     bold=True,
                 ),
             )
-            # Format per cell (banyak), pakai batch
-            # Optimasi: format range besar per baris
+            
             _ranges_to_format = []
             for _row_idx in range(3, 3 + len(_pers_list)):
-                # Format range W1 (kolom D sampai AU) per baris
                 _ranges_to_format.append(f"D{_row_idx}:AU{_row_idx}")
-                # Format range W2 (kolom AZ sampai CO) per baris
                 _ranges_to_format.append(f"AZ{_row_idx}:CO{_row_idx}")
             
             for _r in _ranges_to_format:
@@ -1853,27 +1938,69 @@ def isi_laporan_pwp(bulan_int, tahun_int, sheet_name):
         except Exception as _e:
             print(f"[FORMAT WARN] {_e}")
         
-        return True, f"✅ {len(_updates)} cell di-update + format ({len(_pers_list)} personil)", len(_updates)
+        return True, f"✅ {len(_updates)} cell di-update ({len(_pers_list)} personil)", len(_updates)
     
     except Exception as e:
         import traceback
-        print(f"[ISI_LAPORAN_PWP ERROR] {traceback.format_exc()}")
+        print(f"[ISI_LAPORAN_{prefix} ERROR] {traceback.format_exc()}")
         return False, f"❌ Gagal: {str(e)[:150]}", 0
 
+
 # =========================================================================
-# 📝 ISI LAPORAN SG — SERBA GRATIS (2 WEEK: 1-15 & 16-31)
-# Target dari PERIODE_PPS (SGS01 & SGS02), Actual dari SALES_PPS.qty_sg
+# 📝 ISI LAPORAN PWP — VERSI FIX v2
+# =========================================================================
+def isi_laporan_pwp(bulan_int, tahun_int, sheet_name):
+    """
+    Isi kolom Struk Syarat & Struk Redemp di sheet PWP.
+    Wrapper untuk _isi_laporan_pps_generic.
+    """
+    return _isi_laporan_pps_generic(
+        bulan_int=bulan_int,
+        tahun_int=tahun_int,
+        sheet_name=sheet_name,
+        prefix="PWP",
+        kolom_syarat="syarat_pwp",
+        kolom_redeem="qty_pwp",
+        label_syarat="Syarat",
+        label_redeem="Qty",
+    )
+
+
+# =========================================================================
+# 📝 ISI LAPORAN SUEGER — VERSI FIX v2
+# =========================================================================
+def isi_laporan_sueger(bulan_int, tahun_int, sheet_name):
+    """
+    Isi kolom Struk Syarat & Struk Redemp di sheet Sueger.
+    Wrapper untuk _isi_laporan_pps_generic.
+    """
+    return _isi_laporan_pps_generic(
+        bulan_int=bulan_int,
+        tahun_int=tahun_int,
+        sheet_name=sheet_name,
+        prefix="SGR",
+        kolom_syarat="syarat_sueger",
+        kolom_redeem="redeem_sueger",
+        label_syarat="Syarat",
+        label_redeem="Redeem",
+    )
+
+# =========================================================================
+# 📝 ISI LAPORAN SG — VERSI FIX v2 (DINAMIS BY BULAN)
 # =========================================================================
 def isi_laporan_sg(bulan_int, tahun_int, sheet_name):
     """
     Isi kolom TARGET TOKO & ACTUAL di sheet SG.
     
-    Struktur (2 WEEK):
-    - W1 (tgl 1-15): Target D, Actual G-U (15 hari)
-    - W2 (tgl 16-31): Target Y, Actual AB-AQ (16 hari)
+    FIX v2:
+    - Target dinamis by bulan (bukan hardcode SGS01/SGS02)
+    - Support format ID lama (SGS01) & baru (SGS-2610-01)
+    - Sort periode by start_date
+    - W1 = periode ke-1, W2 = periode ke-2
     
-    Target dari PERIODE_PPS: SGS01 (W1), SGS02 (W2)
-    Actual dari SALES_PPS.qty_sg (per kasir per tanggal)
+    Struktur:
+    - W1 (tgl 1-15): Target D, Actual G-U
+    - W2 (tgl 16-31): Target Y, Actual AB-AQ
     """
     try:
         # === 1. Ambil data ===
@@ -1889,24 +2016,38 @@ def isi_laporan_sg(bulan_int, tahun_int, sheet_name):
         _per_pps.columns = _per_pps.columns.astype(str).str.strip().str.lower()
         _pers.columns = _pers.columns.astype(str).str.strip().str.lower()
         
-        # === 2. Ambil target dari PERIODE_PPS (SGS01 & SGS02) ===
-        _target_sgs01 = 0
-        _target_sgs02 = 0
+        # === 2. FILTER PERIODE SGS BERDASARKAN BULAN (DINAMIS) ===
+        _sgs_bulan_ini = pd.DataFrame()
         
-        if not _per_pps.empty and "period_id" in _per_pps.columns:
-            _per_pps["_pid_clean"] = _per_pps["period_id"].astype(str).str.upper().str.strip()
+        if not _per_pps.empty and "period_id" in _per_pps.columns and "start_date" in _per_pps.columns:
+            _per_pps["_start_dt"] = pd.to_datetime(_per_pps["start_date"], errors="coerce")
+            _per_pps["_end_dt"] = pd.to_datetime(_per_pps["end_date"], errors="coerce")
+            _per_pps = _per_pps.dropna(subset=["_start_dt", "_end_dt"])
             
-            # SGS01 (W1)
-            _sgs01 = _per_pps[_per_pps["_pid_clean"].str.startswith("SGS01", na=False)]
-            if not _sgs01.empty and "target_total" in _sgs01.columns:
-                _target_sgs01 = int(pd.to_numeric(_sgs01.iloc[0]["target_total"], errors="coerce") or 0)
-            
-            # SGS02 (W2)
-            _sgs02 = _per_pps[_per_pps["_pid_clean"].str.startswith("SGS02", na=False)]
-            if not _sgs02.empty and "target_total" in _sgs02.columns:
-                _target_sgs02 = int(pd.to_numeric(_sgs02.iloc[0]["target_total"], errors="coerce") or 0)
+            # Filter: prefix SGS + bulan & tahun
+            _sgs_bulan_ini = _per_pps[
+                _per_pps["period_id"].astype(str).str.upper().str.startswith("SGS", na=False) &
+                (_per_pps["_start_dt"].dt.month == bulan_int) &
+                (_per_pps["_start_dt"].dt.year == tahun_int)
+            ].sort_values("_start_dt", ascending=True).reset_index(drop=True)
         
-        # === 3. Ambil personil by NIK ascending ===
+        if _sgs_bulan_ini.empty:
+            return False, f"❌ Tidak ada periode SGS untuk bulan {bulan_int}/{tahun_int}", 0
+        
+        # === 3. AMBIL TARGET W1 & W2 DINAMIS ===
+        _target_sgs_w1 = 0
+        _target_sgs_w2 = 0
+        
+        if len(_sgs_bulan_ini) >= 1:
+            _target_sgs_w1 = int(pd.to_numeric(_sgs_bulan_ini.iloc[0].get("target_total", 0), errors="coerce") or 0)
+        
+        if len(_sgs_bulan_ini) >= 2:
+            _target_sgs_w2 = int(pd.to_numeric(_sgs_bulan_ini.iloc[1].get("target_total", 0), errors="coerce") or 0)
+        
+        _id_w1 = str(_sgs_bulan_ini.iloc[0]["period_id"]) if len(_sgs_bulan_ini) >= 1 else "-"
+        _id_w2 = str(_sgs_bulan_ini.iloc[1]["period_id"]) if len(_sgs_bulan_ini) >= 2 else "-"
+        
+        # === 4. Ambil personil by NIK ascending ===
         if "active" in _pers.columns:
             _pers = _pers[pd.to_numeric(_pers["active"], errors="coerce") == 1]
         
@@ -1927,22 +2068,22 @@ def isi_laporan_sg(bulan_int, tahun_int, sheet_name):
         if not _pers_list:
             return False, "❌ Tidak ada personil aktif", 0
         
-        # === 4. Parse tanggal sales_pps ===
+        # === 5. Parse tanggal sales_pps ===
         if "updated_at" not in _pps.columns:
             return False, "❌ Kolom updated_at tidak ada", 0
         _pps["_dt"] = pd.to_datetime(_pps["updated_at"], errors="coerce")
         _pps = _pps.dropna(subset=["_dt"])
         
-        # === 5. Buka worksheet ===
+        # === 6. Buka worksheet ===
         ws = get_ws_laporan(sheet_name)
         if ws is None:
             return False, f"❌ Sheet {sheet_name} tidak ditemukan", 0
         
-        # === 6. Config WEEK ===
+        # === 7. Config WEEK ===
         _week_config = [
             {
                 "name": "W1",
-                "target": _target_sgs01,
+                "target": _target_sgs_w1,
                 "tanggal": list(range(1, 16)),   # 1-15
                 "col_target": "D",
                 "col_actual_start": "G",
@@ -1950,7 +2091,7 @@ def isi_laporan_sg(bulan_int, tahun_int, sheet_name):
             },
             {
                 "name": "W2",
-                "target": _target_sgs02,
+                "target": _target_sgs_w2,
                 "tanggal": list(range(16, 32)),  # 16-31
                 "col_target": "Y",
                 "col_actual_start": "AB",
@@ -1958,7 +2099,7 @@ def isi_laporan_sg(bulan_int, tahun_int, sheet_name):
             },
         ]
         
-        # === 7. Bangun batch update ===
+        # === 8. Bangun batch update ===
         _updates = []
         _target_ranges = []
         _actual_ranges = []
@@ -2004,11 +2145,11 @@ def isi_laporan_sg(bulan_int, tahun_int, sheet_name):
                 })
                 _actual_ranges.append(_actual_range)
         
-        # === 8. Batch update ===
+        # === 9. Batch update ===
         if _updates:
             ws.batch_update(_updates, value_input_option="USER_ENTERED")
         
-        # === 9. Format center ===
+        # === 10. Format center ===
         try:
             from gspread_formatting import (
                 CellFormat, TextFormat, HorizontalAlignment,
@@ -2033,7 +2174,7 @@ def isi_laporan_sg(bulan_int, tahun_int, sheet_name):
         except Exception as _e:
             print(f"[FORMAT WARN] {_e}")
         
-        _info = f"Target W1={_target_sgs01}, W2={_target_sgs02}"
+        _info = f"W1 ({_id_w1}) = {_target_sgs_w1} | W2 ({_id_w2}) = {_target_sgs_w2}"
         return True, f"✅ {len(_updates)} range di-update ({len(_pers_list)} personil). {_info}", len(_updates)
     
     except Exception as e:
