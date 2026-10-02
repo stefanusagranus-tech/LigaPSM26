@@ -19030,25 +19030,20 @@ elif selected_tab == "📊 Daily Performance":
                             _total_spd_f = int(_filtered_rekap["spd"].sum())
                             _total_nsb_tgt = -int(_filtered_rekap["spd"].sum() * 0.0015)
                             _total_nsb_act = int(_filtered_rekap["nsb_actual"].sum())
-                            _total_selisih_nsb = abs(_total_nsb_tg) - abs(_total_nsb_act)
+                            _total_selisih_nsb = abs(_total_nsb_tgt) - abs(_total_nsb_act)
                             
                             _selisih_color = "#34d399" if _total_selisih_nsb >= 0 else "#fca5a5"
                             _selisih_icon = "✅" if _total_selisih_nsb >= 0 else "⚠️"
                             
                             # Helper format short
+                            # Helper format full number (tanpa K/Jt/M) — format Indonesia
                             def _fnum_footer(v):
                                 try:
                                     _v = float(v)
-                                    if abs(_v) >= 1_000_000_000:
-                                        return f"{_v/1_000_000_000:.2f}M"
-                                    elif abs(_v) >= 1_000_000:
-                                        return f"{_v/1_000_000:.2f}Jt"
-                                    elif abs(_v) >= 1_000:
-                                        return f"{_v/1_000:.0f}K"
-                                    return f"{int(_v):,}"
+                                    return f"{int(round(_v)):,}".replace(",", ".")
                                 except Exception:
                                     return str(v)
-                            
+                                    
                             # Footer 1: Rata-rata
                             st.markdown(
                                 f"<div class='tbl-footer-box-v3'>"
