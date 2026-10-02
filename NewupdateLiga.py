@@ -17835,107 +17835,107 @@ elif selected_tab == "📊 Daily Performance":
                 
 
                 # ==========================================
-    # 📊 VIEW 1: RINGKASAN (v3 — MOBILE-FRIENDLY)
-    # ==========================================
-    if st.session_state["rekap_view"] == "ringkasan":
-    
-        # === FILTER TANGGAL ===
-        st.markdown("###### 🔍 Filter Tanggal")
-    
-        _col_ft1, _col_ft2 = st.columns(2)
-    
-        with _col_ft1:
-            _min_date_r = _rekap_df["_tgl"].min().date()
-            _max_date_r = _rekap_df["_tgl"].max().date()
-            _date_range_r = st.date_input(
-                "📅 Rentang Tanggal",
-                value=(_min_date_r, _max_date_r),
-                min_value=_min_date_r,
-                max_value=_max_date_r,
-                key="rekap_ringkasan_date_range_v3"
-            )
-    
-        with _col_ft2:
-            _chart_type_filter = st.selectbox(
-                "📈 Pilih Chart",
-                ["Semua (SPD/STD/APC)", "SPD", "STD", "APC"],
-                key="rekap_ringkasan_chart_filter_v3"
-            )
-    
-        # === APPLY FILTER ===
-        _ringkasan_df = _rekap_df.copy()
-        if isinstance(_date_range_r, tuple) and len(_date_range_r) == 2:
-            _start_r, _end_r = _date_range_r
-            _ringkasan_df = _ringkasan_df[
-                (_ringkasan_df["_tgl"].dt.date >= _start_r) &
-                (_ringkasan_df["_tgl"].dt.date <= _end_r)
-            ]
-    
-        _ringkasan_df = _ringkasan_df.sort_values("_tgl", ascending=True).reset_index(drop=True)
-    
-        if _ringkasan_df.empty:
-            st.warning("📭 Tidak ada data di rentang tanggal ini.")
-        else:
-            # ==========================================
-            # 📊 HITUNG SEMUA METRIK
-            # ==========================================
-            _jhk = _active_period_rekap.get("jhk", 30)
-            _target_ns = _active_period_rekap.get("target_net_sales", 0)
-            _target_std_total = _active_period_rekap.get("target_std", 0)
-            _target_apc = _active_period_rekap.get("target_apc", 0)
-            _p_start = _active_period_rekap.get("start_date", None)
-    
-            _today = waktu_wib.date()
-    
-            if _p_start:
-                _hari_berjalan = min((_today - _p_start).days + 1, _jhk)
-                if _hari_berjalan < 1:
-                    _hari_berjalan = 1
-            else:
-                _hari_berjalan = len(_ringkasan_df)
-    
-            _sisa_hari = max(_jhk - _hari_berjalan, 1)
-            _tf = _hari_berjalan / _jhk if _jhk > 0 else 0
-    
-            # Actual
-            _total_spd = int(_ringkasan_df["spd"].sum())
-            _total_std = int(_ringkasan_df["std"].sum())
-            _total_nsb_act = int(_ringkasan_df["nsb_actual"].sum())
-    
-            _avg_spd = int(_ringkasan_df["spd"].mean())
-            _avg_std = int(_ringkasan_df["std"].mean())
-            _avg_apc = int(_ringkasan_df["apc"].mean())
-    
-            # Target
-            _target_spd_harian = int(_target_ns / _jhk) if _jhk > 0 else 0
-            _target_nsb_bulanan = int(_total_spd * 0.0015)
-    
-            # % Achieve
-            _pct_spd = (_total_spd / _target_ns * 100) if _target_ns > 0 else 0
-            _pct_std = (_total_std / _target_std_total * 100) if _target_std_total > 0 else 0
-            _pct_apc = (_avg_apc / _target_apc * 100) if _target_apc > 0 else 0
-            _pct_spd_harian = (_avg_spd / _target_spd_harian * 100) if _target_spd_harian > 0 else 0
-    
-            # Gap
-            _gap_spd = _total_spd - _target_ns
-            _gap_std = _total_std - _target_std_total
-            _gap_apc = _avg_apc - _target_apc
-            _gap_spd_harian = _avg_spd - _target_spd_harian
-    
-            # Status
-            _on_track = _pct_spd >= (_tf * 100)
-            _spd_ok = _gap_spd_harian >= 0
-            _apc_ok = _gap_apc >= 0
-            _std_ok = _gap_std >= 0
-            _selisih_nsb = _target_nsb_bulanan - abs(_total_nsb_act)
-            _nsb_ok = _selisih_nsb >= 0
-            _ns_minus = _target_ns - _total_spd
-            _ns_ok = _ns_minus <= 0
-    
-            _be_spd_display = int(max(_target_ns - _total_spd, 0) / _sisa_hari) if _sisa_hari > 0 else 0
-            _tf_vs_sales = "⚠️ BEHIND" if (_tf * 100) > _pct_spd else "✅ ON TRACK"
-            _tf_vs_sales_color = "#fca5a5" if (_tf * 100) > _pct_spd else "#34d399"
-    
+                # 📊 VIEW 1: RINGKASAN (v3 — MOBILE-FRIENDLY)
+                # ==========================================
+                if st.session_state["rekap_view"] == "ringkasan":
+                
+                    # === FILTER TANGGAL ===
+                    st.markdown("###### 🔍 Filter Tanggal")
+                
+                    _col_ft1, _col_ft2 = st.columns(2)
+                
+                    with _col_ft1:
+                        _min_date_r = _rekap_df["_tgl"].min().date()
+                        _max_date_r = _rekap_df["_tgl"].max().date()
+                        _date_range_r = st.date_input(
+                            "📅 Rentang Tanggal",
+                            value=(_min_date_r, _max_date_r),
+                            min_value=_min_date_r,
+                            max_value=_max_date_r,
+                            key="rekap_ringkasan_date_range_v3"
+                        )
+                
+                    with _col_ft2:
+                        _chart_type_filter = st.selectbox(
+                            "📈 Pilih Chart",
+                            ["Semua (SPD/STD/APC)", "SPD", "STD", "APC"],
+                            key="rekap_ringkasan_chart_filter_v3"
+                        )
+                
+                    # === APPLY FILTER ===
+                    _ringkasan_df = _rekap_df.copy()
+                    if isinstance(_date_range_r, tuple) and len(_date_range_r) == 2:
+                        _start_r, _end_r = _date_range_r
+                        _ringkasan_df = _ringkasan_df[
+                            (_ringkasan_df["_tgl"].dt.date >= _start_r) &
+                            (_ringkasan_df["_tgl"].dt.date <= _end_r)
+                        ]
+                
+                    _ringkasan_df = _ringkasan_df.sort_values("_tgl", ascending=True).reset_index(drop=True)
+                
+                    if _ringkasan_df.empty:
+                        st.warning("📭 Tidak ada data di rentang tanggal ini.")
+                    else:
+                        # ==========================================
+                        # 📊 HITUNG SEMUA METRIK
+                        # ==========================================
+                        _jhk = _active_period_rekap.get("jhk", 30)
+                        _target_ns = _active_period_rekap.get("target_net_sales", 0)
+                        _target_std_total = _active_period_rekap.get("target_std", 0)
+                        _target_apc = _active_period_rekap.get("target_apc", 0)
+                        _p_start = _active_period_rekap.get("start_date", None)
+                
+                        _today = waktu_wib.date()
+                
+                        if _p_start:
+                            _hari_berjalan = min((_today - _p_start).days + 1, _jhk)
+                            if _hari_berjalan < 1:
+                                _hari_berjalan = 1
+                        else:
+                            _hari_berjalan = len(_ringkasan_df)
+                
+                        _sisa_hari = max(_jhk - _hari_berjalan, 1)
+                        _tf = _hari_berjalan / _jhk if _jhk > 0 else 0
+                
+                        # Actual
+                        _total_spd = int(_ringkasan_df["spd"].sum())
+                        _total_std = int(_ringkasan_df["std"].sum())
+                        _total_nsb_act = int(_ringkasan_df["nsb_actual"].sum())
+                
+                        _avg_spd = int(_ringkasan_df["spd"].mean())
+                        _avg_std = int(_ringkasan_df["std"].mean())
+                        _avg_apc = int(_ringkasan_df["apc"].mean())
+                
+                        # Target
+                        _target_spd_harian = int(_target_ns / _jhk) if _jhk > 0 else 0
+                        _target_nsb_bulanan = int(_total_spd * 0.0015)
+                
+                        # % Achieve
+                        _pct_spd = (_total_spd / _target_ns * 100) if _target_ns > 0 else 0
+                        _pct_std = (_total_std / _target_std_total * 100) if _target_std_total > 0 else 0
+                        _pct_apc = (_avg_apc / _target_apc * 100) if _target_apc > 0 else 0
+                        _pct_spd_harian = (_avg_spd / _target_spd_harian * 100) if _target_spd_harian > 0 else 0
+                
+                        # Gap
+                        _gap_spd = _total_spd - _target_ns
+                        _gap_std = _total_std - _target_std_total
+                        _gap_apc = _avg_apc - _target_apc
+                        _gap_spd_harian = _avg_spd - _target_spd_harian
+                
+                        # Status
+                        _on_track = _pct_spd >= (_tf * 100)
+                        _spd_ok = _gap_spd_harian >= 0
+                        _apc_ok = _gap_apc >= 0
+                        _std_ok = _gap_std >= 0
+                        _selisih_nsb = _target_nsb_bulanan - abs(_total_nsb_act)
+                        _nsb_ok = _selisih_nsb >= 0
+                        _ns_minus = _target_ns - _total_spd
+                        _ns_ok = _ns_minus <= 0
+                
+                        _be_spd_display = int(max(_target_ns - _total_spd, 0) / _sisa_hari) if _sisa_hari > 0 else 0
+                        _tf_vs_sales = "⚠️ BEHIND" if (_tf * 100) > _pct_spd else "✅ ON TRACK"
+                        _tf_vs_sales_color = "#fca5a5" if (_tf * 100) > _pct_spd else "#34d399"
+                
             # ==========================================
             # 📊 KPI CARDS — MOBILE FRIENDLY (CSS GRID)
             # ==========================================

@@ -37,13 +37,22 @@ def _fmt_int(v):
 # =========================================================
 # HELPER: AMBIL PERIODE BY KODE PREFIX
 # =========================================================
+# =========================================================
+# HELPER: AMBIL PERIODE BY KODE PREFIX (VERSI FIX v2)
+# =========================================================
 def _get_periode_by_kode(periods_df, kode_prefix, tanggal):
     """
     Cari periode aktif berdasarkan kode prefix & tanggal.
     
+    FIX v2:
+    - Support format ID lama (PWP01, SGS02) & baru (PWP-2610-01, SGS-2610-01)
+    - Kalau ada beberapa match, ambil yang start_date paling dekat dengan tanggal
+    - Fallback: kalau tidak ada yang aktif di tanggal, ambil yang start_date <= tanggal
+    - Filter bulan & tahun dari tanggal
+    
     Args:
         periods_df: DataFrame periode
-        kode_prefix: 'P' PSM, 'PWPS' PWP, 'SGS' SG, 'SGR' Sueger
+        kode_prefix: 'P' PSM, 'PWP' PWP, 'SGS' SG, 'SGR' Sueger
         tanggal: date
     
     Returns:
@@ -56,8 +65,14 @@ def _get_periode_by_kode(periods_df, kode_prefix, tanggal):
         df = periods_df.copy()
         df.columns = df.columns.astype(str).str.strip().str.lower()
         
+        # Cek kolom wajib
+        if "period_id" not in df.columns or "start_date" not in df.columns:
+            return None
+        
         # Filter by prefix kode
-        df = df[df["period_id"].astype(str).str.upper().str.startswith(kode_prefix.upper(), na=False)]
+        df = df[
+            df["period_id"].astype(str).str.upper().str.startswith(kode_prefix.upper(), na=False)
+        ]
         
         if df.empty:
             return None
@@ -65,14 +80,31 @@ def _get_periode_by_kode(periods_df, kode_prefix, tanggal):
         # Parse tanggal
         df["start_dt"] = pd.to_datetime(df["start_date"], errors="coerce").dt.date
         df["end_dt"] = pd.to_datetime(df["end_date"], errors="coerce").dt.date
-        
-        # Filter yang aktif di tanggal
-        df = df[(df["start_dt"] <= tanggal) & (df["end_dt"] >= tanggal)]
+        df = df.dropna(subset=["start_dt", "end_dt"])
         
         if df.empty:
             return None
         
-        row = df.iloc[0]
+        # === PRIORITAS 1: Yang aktif di tanggal (start <= tanggal <= end) ===
+        df_aktif = df[(df["start_dt"] <= tanggal) & (df["end_dt"] >= tanggal)]
+        
+        if not df_aktif.empty:
+            # Kalau ada beberapa, ambil yang start_date paling dekat
+            df_aktif = df_aktif.sort_values("start_dt", ascending=False)
+            row = df_aktif.iloc[0]
+        else:
+            # === PRIORITAS 2: Yang start_date <= tanggal (biar gak kosong) ===
+            df_sebelum = df[df["start_dt"] <= tanggal].sort_values("start_dt", ascending=False)
+            if not df_sebelum.empty:
+                row = df_sebelum.iloc[0]
+            else:
+                # === PRIORITAS 3: Ambil yang start_date paling dekat ke depan ===
+                df_depan = df[df["start_dt"] > tanggal].sort_values("start_dt", ascending=True)
+                if not df_depan.empty:
+                    row = df_depan.iloc[0]
+                else:
+                    return None
+        
         start = row["start_dt"]
         end = row["end_dt"]
         jhk = (end - start).days + 1
@@ -87,8 +119,7 @@ def _get_periode_by_kode(periods_df, kode_prefix, tanggal):
     except Exception as e:
         print(f"[_get_periode_by_kode ERROR] {e}")
         return None
-
-
+        
 # =========================================================
 # HELPER: TARGET PSM
 # =========================================================
@@ -243,7 +274,6 @@ def generate_laporan_pps_v2(
         psm_periode = _get_periode_by_kode(periods_df, "S", tanggal)
     
     # Periode PWP (PWPS)
-    pwp_periode = _get_periode_by_kode(periods_pps_df, "PWPS", tanggal)
     if not pwp_periode:
         pwp_periode = _get_periode_by_kode(periods_pps_df, "PWP", tanggal)
     
