@@ -18163,60 +18163,94 @@ elif selected_tab == "📊 Daily Performance":
                         # 📊 SUMMARY NET SALES
                         # ==========================================
                         st.markdown("---")
-                
-                        st.markdown(f"""
-                        <div style='
-                            background: linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(180, 83, 9, 0.15));
-                            border: 2px solid #b45309; border-radius: 12px;
-                            padding: 14px 16px; margin-top: 16px;
-                        '>
-                            <div style='
-                                font-family: monospace; font-size: 11px; color: #fbbf24;
-                                font-weight: 900; letter-spacing: 1.5px; text-align: center;
-                                margin-bottom: 12px; padding-bottom: 10px;
-                                border-bottom: 1px dashed rgba(180, 83, 9, 0.3);
-                            '>💰 SUMMARY NET SALES</div>
-                
-                            <div style='
+                        
+                        # CSS TERPISAH (tanpa f-string)
+                        st.markdown("""
+                        <style>
+                            .summary-ns-grid {
                                 display: grid;
                                 grid-template-columns: repeat(2, 1fr);
                                 gap: 10px;
-                            '>
-                                <div style='text-align: center;'>
-                                    <div style='font-family: monospace; font-size: 8px; color: #94a3b8; margin-bottom: 3px;'>📉 MINUS</div>
-                                    <div style='font-family: monospace; font-size: 12px; font-weight: 900; color: #fca5a5; word-wrap: break-word;'>
-                                        Rp {_fmt_short(_ns_minus)}
-                                    </div>
-                                </div>
-                                <div style='text-align: center;'>
-                                    <div style='font-family: monospace; font-size: 8px; color: #94a3b8; margin-bottom: 3px;'>🎯 TARGET BARU</div>
-                                    <div style='font-family: monospace; font-size: 12px; font-weight: 900; color: #fbbf24; word-wrap: break-word;'>
-                                        Rp {_fmt_short(_be_spd_display)}/hari
-                                    </div>
-                                </div>
-                                <div style='text-align: center;'>
-                                    <div style='font-family: monospace; font-size: 8px; color: #94a3b8; margin-bottom: 3px;'>📊 % SALES</div>
-                                    <div style='font-family: monospace; font-size: 12px; font-weight: 900; color: #38bdf8;'>
-                                        {_pct_spd:.1f}%
-                                    </div>
-                                </div>
-                                <div style='text-align: center;'>
-                                    <div style='font-family: monospace; font-size: 8px; color: #94a3b8; margin-bottom: 3px;'>⏱️ TF</div>
-                                    <div style='font-family: monospace; font-size: 12px; font-weight: 900; color: #a855f7;'>
-                                        {_tf*100:.1f}%
-                                    </div>
-                                </div>
-                            </div>
-                
-                            <div style='
-                                margin-top: 10px; padding-top: 10px;
+                            }
+                            .summary-ns-item {
+                                text-align: center;
+                            }
+                            .summary-ns-label {
+                                font-family: monospace;
+                                font-size: 8px;
+                                color: #94a3b8;
+                                margin-bottom: 3px;
+                            }
+                            .summary-ns-value {
+                                font-family: monospace;
+                                font-size: 12px;
+                                font-weight: 900;
+                                word-wrap: break-word;
+                            }
+                            .summary-ns-box {
+                                background: linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(180, 83, 9, 0.15));
+                                border: 2px solid #b45309;
+                                border-radius: 12px;
+                                padding: 14px 16px;
+                                margin-top: 16px;
+                            }
+                            .summary-ns-title {
+                                font-family: monospace;
+                                font-size: 11px;
+                                color: #fbbf24;
+                                font-weight: 900;
+                                letter-spacing: 1.5px;
+                                text-align: center;
+                                margin-bottom: 12px;
+                                padding-bottom: 10px;
+                                border-bottom: 1px dashed rgba(180, 83, 9, 0.3);
+                            }
+                            .summary-ns-status {
+                                margin-top: 10px;
+                                padding-top: 10px;
                                 border-top: 1px dashed rgba(180, 83, 9, 0.3);
                                 text-align: center;
-                                font-family: monospace; font-size: 11px; font-weight: 900;
-                                color: {_tf_vs_sales_color};
-                            '>STATUS: {_tf_vs_sales}</div>
-                        </div>
+                                font-family: monospace;
+                                font-size: 11px;
+                                font-weight: 900;
+                            }
+                        </style>
                         """, unsafe_allow_html=True)
+                        
+                        # HTML (f-string bersih)
+                        _ns_minus_str = f"-Rp {_fmt_short(abs(_ns_minus))}" if _ns_minus > 0 else f"+Rp {_fmt_short(abs(_ns_minus))}"
+                        st.markdown(
+                            f"<div class='summary-ns-box'>"
+                            f"<div class='summary-ns-title'>💰 SUMMARY NET SALES</div>"
+                            f"<div class='summary-ns-grid'>"
+                        
+                            f"<div class='summary-ns-item'>"
+                            f"<div class='summary-ns-label'>📉 MINUS</div>"
+                            f"<div class='summary-ns-value' style='color: #fca5a5;'>Rp {_fmt_short(_ns_minus)}</div>"
+                            f"</div>"
+                        
+                            f"<div class='summary-ns-item'>"
+                            f"<div class='summary-ns-label'>🎯 TARGET BARU</div>"
+                            f"<div class='summary-ns-value' style='color: #fbbf24;'>Rp {_fmt_short(_be_spd_display)}/hari</div>"
+                            f"</div>"
+                        
+                            f"<div class='summary-ns-item'>"
+                            f"<div class='summary-ns-label'>📊 % SALES</div>"
+                            f"<div class='summary-ns-value' style='color: #38bdf8;'>{_pct_spd:.1f}%</div>"
+                            f"</div>"
+                        
+                            f"<div class='summary-ns-item'>"
+                            f"<div class='summary-ns-label'>⏱️ TF</div>"
+                            f"<div class='summary-ns-value' style='color: #a855f7;'>{_tf*100:.1f}%</div>"
+                            f"</div>"
+                        
+                            f"</div>"  # close grid
+                            f"<div class='summary-ns-status' style='color: {_tf_vs_sales_color};'>"
+                            f"STATUS: {_tf_vs_sales}"
+                            f"</div>"
+                            f"</div>",
+                            unsafe_allow_html=True
+                        )
                 
                         # ==========================================
                         # 🎯 BEST ESTIMATE CARDS (MOBILE FRIENDLY)
@@ -19070,121 +19104,7 @@ elif selected_tab == "📊 Daily Performance":
                             
                             st.caption(f"💡 Scroll horizontal untuk lihat semua kolom. **{len(_filtered_rekap)}** baris data.")
 
-                            # ==========================================
-                            # 📊 FOOTER: RATA-RATA & TOTAL
-                            # ==========================================
-                            _avg_spd = int(_filtered_rekap["spd"].mean()) if not _filtered_rekap.empty else 0
-                            _avg_std = int(_filtered_rekap["std"].mean()) if not _filtered_rekap.empty else 0
-                            _avg_apc = int(_filtered_rekap["apc"].mean()) if not _filtered_rekap.empty else 0
-                            _total_spd_f = int(_filtered_rekap["spd"].sum())
-                            _total_nsb_tgt = int(_filtered_rekap["spd"].sum() * 0.0015)
-                            _total_nsb_act = int(_filtered_rekap["nsb_actual"].sum())
-                            _total_selisih_nsb = _total_nsb_tgt - _total_nsb_act
 
-                            _selisih_color = "#34d399" if _total_selisih_nsb >= 0 else "#fca5a5"
-                            _selisih_icon = "✅" if _total_selisih_nsb >= 0 else "⚠️"
-
-                            _footer_html = (
-                                f"<div style='overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 4px;'>"
-                                f"<table style='width: 100%; border-collapse: separate; border-spacing: 0; "
-                                f"font-family: monospace; min-width: 900px; margin-top: 12px;'>"
-
-                                f"<tbody>"
-
-                                # Row 1: RATA-RATA (List Text)
-                                f"<tr style='background: linear-gradient(90deg, rgba(168, 85, 247, 0.12), rgba(124, 58, 237, 0.18)); "
-                                f"border-left: 4px solid #a855f7;'>"
-
-                                f"<td colspan='10' style='padding: 16px 20px; border-radius: 8px; "
-                                f"font-family: monospace;'>"
-
-                                # Judul
-                                f"<div style='font-size: 11px; font-weight: 900; color: #c084fc; "
-                                f"letter-spacing: 1.5px; text-transform: uppercase; "
-                                f"margin-bottom: 10px; padding-bottom: 6px; "
-                                f"border-bottom: 1px dashed rgba(168, 85, 247, 0.3);'>"
-                                f"⚖️ Rata-Rata ({len(_filtered_rekap)} Hari)</div>"
-
-                                # List Rata-Rata
-                                f"<div style='display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-around;'>"
-
-                                # Rata SPD
-                                f"<div style='text-align: center; min-width: 120px;'>"
-                                f"<div style='font-size: 9px; color: #94a3b8; letter-spacing: 0.5px; margin-bottom: 3px;'>💰 RATA SPD</div>"
-                                f"<div style='font-size: 14px; font-weight: 900; color: #fbbf24; "
-                                f"text-shadow: 0 0 8px rgba(251, 191, 36, 0.4);'>Rp {_avg_spd:,}</div>"
-                                f"</div>"
-
-                                # Rata STD
-                                f"<div style='text-align: center; min-width: 120px;'>"
-                                f"<div style='font-size: 9px; color: #94a3b8; letter-spacing: 0.5px; margin-bottom: 3px;'>📄 RATA STD</div>"
-                                f"<div style='font-size: 14px; font-weight: 900; color: #38bdf8; "
-                                f"text-shadow: 0 0 8px rgba(56, 189, 248, 0.4);'>{_avg_std:,} struk</div>"
-                                f"</div>"
-
-                                # Rata APC
-                                f"<div style='text-align: center; min-width: 120px;'>"
-                                f"<div style='font-size: 9px; color: #94a3b8; letter-spacing: 0.5px; margin-bottom: 3px;'>🧾 RATA APC</div>"
-                                f"<div style='font-size: 14px; font-weight: 900; color: #a855f7; "
-                                f"text-shadow: 0 0 8px rgba(168, 85, 247, 0.4);'>Rp {_avg_apc:,}</div>"
-                                f"</div>"
-
-                                f"</div>"  # close flex container
-
-                                f"</td>"
-
-                                f"</tr>"
-
-                                # Row 2: TOTAL NET SALES
-                                f"<tr style='background: linear-gradient(90deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.22)); "
-                                f"border-left: 4px solid #fbbf24;'>"
-
-                                f"<td colspan='2' style='padding: 14px; border-radius: 8px 0 0 8px; "
-                                f"font-family: monospace; font-size: 12px; font-weight: 900; color: #fcd34d; "
-                                f"letter-spacing: 1px; text-transform: uppercase;'>"
-                                f"💰 TOTAL NET SALES</td>"
-
-                                f"<td colspan='8' style='padding: 14px; text-align: right; "
-                                f"border-radius: 0 8px 8px 0; "
-                                f"font-family: monospace; font-size: 18px; font-weight: 900; color: #fbbf24; "
-                                f"text-shadow: 0 0 15px rgba(251, 191, 36, 0.6); white-space: nowrap;'>"
-                                f"Rp {_total_spd_f:,}</td>"
-
-                                f"</tr>"
-
-                                f"<tr style='height: 6px;'><td colspan='10' style='border: none;'></td></tr>"
-
-                                # Row 3: TOTAL NSB
-                                f"<tr style='background: linear-gradient(90deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.15)); "
-                                f"border-left: 4px solid {_selisih_color};'>"
-
-                                f"<td colspan='2' style='padding: 12px 14px; border-radius: 8px 0 0 8px; "
-                                f"font-family: monospace; font-size: 11px; font-weight: 900; color: #fca5a5; "
-                                f"letter-spacing: 1px; text-transform: uppercase;'>"
-                                f"📊 TOTAL NSB</td>"
-
-                                f"<td colspan='4' style='padding: 12px 10px; text-align: right; "
-                                f"font-family: monospace; font-size: 11px; font-weight: 700; color: #94a3b8; "
-                                f"white-space: nowrap;'>"
-                                f"Target: <b style='color: #cbd5e1;'>Rp {_total_nsb_tgt:,}</b> &nbsp;|&nbsp; "
-                                f"Aktual: <b style='color: #e2e8f0;'>Rp {_total_nsb_act:,}</b></td>"
-
-                                f"<td colspan='4' style='padding: 12px 14px; text-align: right; "
-                                f"border-radius: 0 8px 8px 0; font-family: monospace; font-size: 13px; "
-                                f"font-weight: 900; color: {_selisih_color}; white-space: nowrap;'>"
-                                f"{_selisih_icon} Selisih: Rp {_total_selisih_nsb:,}</td>"
-
-                                f"</tr>"
-
-                                f"</tbody>"
-                                f"</table>"
-                                f"</div>"
-                            )
-
-                            st.markdown(_footer_html, unsafe_allow_html=True)
-
-                            st.caption(f"💡 Scroll horizontal untuk lihat semua kolom. **{len(_filtered_rekap)}** baris data.")
-    
     # =========================================================================
     # 📈 SUB-TAB 3: SIMULASI IKT (Insentif Kinerja Toko)
     # =========================================================================
