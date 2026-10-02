@@ -17833,7 +17833,6 @@ elif selected_tab == "📊 Daily Performance":
                     unsafe_allow_html=True
                 )
                 
-
                 # ==========================================
                 # 📊 VIEW 1: RINGKASAN (v3 — MOBILE-FRIENDLY)
                 # ==========================================
@@ -17936,422 +17935,633 @@ elif selected_tab == "📊 Daily Performance":
                         _tf_vs_sales = "⚠️ BEHIND" if (_tf * 100) > _pct_spd else "✅ ON TRACK"
                         _tf_vs_sales_color = "#fca5a5" if (_tf * 100) > _pct_spd else "#34d399"
                 
-            # ==========================================
-            # 📊 KPI CARDS — MOBILE FRIENDLY (CSS GRID)
-            # ==========================================
-            st.markdown("##### 📊 Key Performance Indicators")
-    
-            # Helper format angka biar gak kepotong
-            def _fmt_short(v):
-                """Format angka jadi lebih pendek: 16,195,070 → 16.2M"""
-                try:
-                    _v = float(v)
-                    if abs(_v) >= 1_000_000_000:
-                        return f"{_v/1_000_000_000:.1f}M"
-                    elif abs(_v) >= 1_000_000:
-                        return f"{_v/1_000_000:.1f}Jt"
-                    elif abs(_v) >= 1_000:
-                        return f"{_v/1_000:.0f}K"
-                    else:
-                        return f"{int(_v):,}"
-                except Exception:
-                    return str(v)
-    
-            def _kpi_card(label, value, sub_icon, sub_text, status_color):
-                """KPI card mobile-friendly dengan word-wrap & font responsif"""
-                return (
-                    f"<div class='kpi-card-v3' style='border-left-color: {status_color};'>"
-    
-                    f"<div class='kpi-label-v3'>"
-                    f"<span>{label}</span>"
-                    f"<span class='kpi-icon-v3'>{sub_icon}</span>"
-                    f"</div>"
-    
-                    f"<div class='kpi-value-v3'>{value}</div>"
-    
-                    f"<div class='kpi-sub-v3' style='color: {status_color};'>{sub_text}</div>"
-    
-                    f"</div>"
-                )
-    
-            # CSS untuk KPI Card
-            st.markdown("""
-            <style>
-                .kpi-grid-v3 {
-                    display: grid;
-                    grid-template-columns: repeat(2, 1fr);
-                    gap: 10px;
-                    margin-top: 10px;
-                }
-                @media (min-width: 640px) {
-                    .kpi-grid-v3 {
-                        grid-template-columns: repeat(4, 1fr);
-                        gap: 12px;
-                    }
-                }
-                .kpi-card-v3 {
-                    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85));
-                    border: 1.5px solid #9a7b38;
-                    border-left: 4px solid #fbbf24;
-                    border-radius: 10px;
-                    padding: 10px 12px;
-                    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
-                    min-height: 100px;
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: space-between;
-                    word-wrap: break-word;
-                    overflow-wrap: break-word;
-                    box-sizing: border-box;
-                }
-                .kpi-label-v3 {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    font-family: monospace;
-                    font-size: 9px;
-                    color: #94a3b8;
-                    letter-spacing: 0.5px;
-                    text-transform: uppercase;
-                    margin-bottom: 4px;
-                    gap: 4px;
-                    line-height: 1.2;
-                    word-break: break-word;
-                }
-                .kpi-icon-v3 {
-                    font-size: 14px;
-                    flex-shrink: 0;
-                }
-                .kpi-value-v3 {
-                    font-family: monospace;
-                    font-size: 16px;
-                    font-weight: 900;
-                    color: #fbbf24;
-                    text-shadow: 0 0 8px rgba(251, 191, 36, 0.3);
-                    margin: 4px 0;
-                    word-wrap: break-word;
-                    overflow-wrap: break-word;
-                    line-height: 1.2;
-                    letter-spacing: -0.3px;
-                }
-                .kpi-sub-v3 {
-                    font-family: monospace;
-                    font-size: 9px;
-                    font-weight: 900;
-                    letter-spacing: 0.2px;
-                    line-height: 1.3;
-                    word-wrap: break-word;
-                }
-                @media (max-width: 480px) {
-                    .kpi-card-v3 {
-                        padding: 8px 10px;
-                        min-height: 90px;
-                    }
-                    .kpi-value-v3 {
-                        font-size: 14px;
-                    }
-                    .kpi-label-v3 {
-                        font-size: 8px;
-                    }
-                    .kpi-sub-v3 {
-                        font-size: 8px;
-                    }
-                }
-            </style>
-            """, unsafe_allow_html=True)
-    
-            # Build semua KPI dalam satu grid HTML
-            _kpi_html = "<div class='kpi-grid-v3'>"
-    
-            # 1. Hari Kerja
-            _kpi_html += _kpi_card(
-                "📅 Hari Kerja",
-                f"{_hari_berjalan} / {_jhk}",
-                "🕐",
-                f"{_sisa_hari} hari sisa",
-                "#38bdf8"
-            )
-    
-            # 2. Persentase NS
-            _tf_icon = "✅" if _on_track else "⚠️"
-            _tf_color = "#34d399" if _on_track else "#fca5a5"
-            _tf_status_text = "On Track" if _on_track else "Behind"
-            _kpi_html += _kpi_card(
-                "💰 % Net Sales",
-                f"{_pct_spd:.2f}%",
-                "⏳",
-                f"{_tf_status_text} | TF: {_tf*100:.1f}%",
-                _tf_color
-            )
-    
-            # 3. Rata SPD
-            _spd_icon = "✅" if _spd_ok else "⚠️"
-            _spd_color = "#34d399" if _spd_ok else "#fca5a5"
-            _spd_sign = "+" if _gap_spd_harian >= 0 else ""
-            _kpi_html += _kpi_card(
-                "💰 Rata SPD",
-                f"Rp {_fmt_short(_avg_spd)}",
-                "💰",
-                f"{_pct_spd_harian:.1f}% | Gap: {_spd_sign}{_fmt_short(_gap_spd_harian)}",
-                _spd_color
-            )
-    
-            # 4. APC
-            _apc_icon = "✅" if _apc_ok else "⚠️"
-            _apc_color = "#34d399" if _apc_ok else "#fca5a5"
-            _apc_sign = "+" if _gap_apc >= 0 else ""
-            _kpi_html += _kpi_card(
-                "🧾 APC",
-                f"Rp {_fmt_short(_avg_apc)}",
-                "🧾",
-                f"{_pct_apc:.1f}% | Gap: {_apc_sign}{_fmt_short(_gap_apc)}",
-                _apc_color
-            )
-    
-            # 5. Rata STD
-            _std_icon = "✅" if _std_ok else "⚠️"
-            _std_color = "#34d399" if _std_ok else "#fca5a5"
-            _std_sign = "+" if _gap_std >= 0 else ""
-            _kpi_html += _kpi_card(
-                "📄 Rata STD",
-                f"{_avg_std:,}",
-                "📄",
-                f"{_pct_std:.1f}% | Gap: {_std_sign}{_gap_std:,}",
-                _std_color
-            )
-    
-            # 6. Total NSB
-            _nsb_pct = (abs(_total_nsb_act) / _total_spd * 100) if _total_spd > 0 else 0
-            _kpi_html += _kpi_card(
-                "🛡️ Total NSB",
-                f"Rp {_fmt_short(abs(_total_nsb_act))}",
-                "🛡️",
-                f"{_nsb_pct:.2f}% dari NS",
-                "#38bdf8"
-            )
-    
-            # 7. Selisih NSB
-            _nsb_icon = "✅" if _nsb_ok else "⚠️"
-            _nsb_color = "#34d399" if _nsb_ok else "#fca5a5"
-            _nsb_status = "Aman" if _nsb_ok else "Over"
-            _kpi_html += _kpi_card(
-                "⚖️ Selisih NSB",
-                f"Rp {_fmt_short(_selisih_nsb)}",
-                "⚖️",
-                _nsb_status,
-                _nsb_color
-            )
-    
-            # 8. Total Net Sales
-            _ns_icon = "✅" if _ns_ok else "⚠️"
-            _ns_color = "#34d399" if _ns_ok else "#fca5a5"
-            _ns_minus_str = (
-                f"-Rp {_fmt_short(abs(_ns_minus))}" if _ns_minus > 0
-                else f"+Rp {_fmt_short(abs(_ns_minus))}"
-            )
-            _kpi_html += _kpi_card(
-                "💰 Total NS",
-                f"Rp {_fmt_short(_total_spd)}",
-                "🎯",
-                f"{_ns_minus_str} vs Target",
-                _ns_color
-            )
-    
-            _kpi_html += "</div>"
-            st.markdown(_kpi_html, unsafe_allow_html=True)
-    
-            # ==========================================
-            # 📊 SUMMARY NET SALES
-            # ==========================================
-            st.markdown("---")
-    
-            st.markdown(f"""
-            <div style='
-                background: linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(180, 83, 9, 0.15));
-                border: 2px solid #b45309; border-radius: 12px;
-                padding: 14px 16px; margin-top: 16px;
-            '>
-                <div style='
-                    font-family: monospace; font-size: 11px; color: #fbbf24;
-                    font-weight: 900; letter-spacing: 1.5px; text-align: center;
-                    margin-bottom: 12px; padding-bottom: 10px;
-                    border-bottom: 1px dashed rgba(180, 83, 9, 0.3);
-                '>💰 SUMMARY NET SALES</div>
-    
-                <div style='
-                    display: grid;
-                    grid-template-columns: repeat(2, 1fr);
-                    gap: 10px;
-                '>
-                    <div style='text-align: center;'>
-                        <div style='font-family: monospace; font-size: 8px; color: #94a3b8; margin-bottom: 3px;'>📉 MINUS</div>
-                        <div style='font-family: monospace; font-size: 12px; font-weight: 900; color: #fca5a5; word-wrap: break-word;'>
-                            Rp {_fmt_short(_ns_minus)}
+                        # ==========================================
+                        # 📊 KPI CARDS — MOBILE FRIENDLY (CSS GRID)
+                        # ==========================================
+                        st.markdown("##### 📊 Key Performance Indicators")
+                
+                        # Helper format angka biar gak kepotong
+                        def _fmt_short(v):
+                            """Format angka jadi lebih pendek: 16,195,070 → 16.2M"""
+                            try:
+                                _v = float(v)
+                                if abs(_v) >= 1_000_000_000:
+                                    return f"{_v/1_000_000_000:.1f}M"
+                                elif abs(_v) >= 1_000_000:
+                                    return f"{_v/1_000_000:.1f}Jt"
+                                elif abs(_v) >= 1_000:
+                                    return f"{_v/1_000:.0f}K"
+                                else:
+                                    return f"{int(_v):,}"
+                            except Exception:
+                                return str(v)
+                
+                        def _kpi_card(label, value, sub_icon, sub_text, status_color):
+                            """KPI card mobile-friendly dengan word-wrap & font responsif"""
+                            return (
+                                f"<div class='kpi-card-v3' style='border-left-color: {status_color};'>"
+                
+                                f"<div class='kpi-label-v3'>"
+                                f"<span>{label}</span>"
+                                f"<span class='kpi-icon-v3'>{sub_icon}</span>"
+                                f"</div>"
+                
+                                f"<div class='kpi-value-v3'>{value}</div>"
+                
+                                f"<div class='kpi-sub-v3' style='color: {status_color};'>{sub_text}</div>"
+                
+                                f"</div>"
+                            )
+                
+                        # CSS untuk KPI Card
+                        st.markdown("""
+                        <style>
+                            .kpi-grid-v3 {
+                                display: grid;
+                                grid-template-columns: repeat(2, 1fr);
+                                gap: 10px;
+                                margin-top: 10px;
+                            }
+                            @media (min-width: 640px) {
+                                .kpi-grid-v3 {
+                                    grid-template-columns: repeat(4, 1fr);
+                                    gap: 12px;
+                                }
+                            }
+                            .kpi-card-v3 {
+                                background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85));
+                                border: 1.5px solid #9a7b38;
+                                border-left: 4px solid #fbbf24;
+                                border-radius: 10px;
+                                padding: 10px 12px;
+                                box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+                                min-height: 100px;
+                                display: flex;
+                                flex-direction: column;
+                                justify-content: space-between;
+                                word-wrap: break-word;
+                                overflow-wrap: break-word;
+                                box-sizing: border-box;
+                            }
+                            .kpi-label-v3 {
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                                font-family: monospace;
+                                font-size: 9px;
+                                color: #94a3b8;
+                                letter-spacing: 0.5px;
+                                text-transform: uppercase;
+                                margin-bottom: 4px;
+                                gap: 4px;
+                                line-height: 1.2;
+                                word-break: break-word;
+                            }
+                            .kpi-icon-v3 {
+                                font-size: 14px;
+                                flex-shrink: 0;
+                            }
+                            .kpi-value-v3 {
+                                font-family: monospace;
+                                font-size: 16px;
+                                font-weight: 900;
+                                color: #fbbf24;
+                                text-shadow: 0 0 8px rgba(251, 191, 36, 0.3);
+                                margin: 4px 0;
+                                word-wrap: break-word;
+                                overflow-wrap: break-word;
+                                line-height: 1.2;
+                                letter-spacing: -0.3px;
+                            }
+                            .kpi-sub-v3 {
+                                font-family: monospace;
+                                font-size: 9px;
+                                font-weight: 900;
+                                letter-spacing: 0.2px;
+                                line-height: 1.3;
+                                word-wrap: break-word;
+                            }
+                            @media (max-width: 480px) {
+                                .kpi-card-v3 {
+                                    padding: 8px 10px;
+                                    min-height: 90px;
+                                }
+                                .kpi-value-v3 {
+                                    font-size: 14px;
+                                }
+                                .kpi-label-v3 {
+                                    font-size: 8px;
+                                }
+                                .kpi-sub-v3 {
+                                    font-size: 8px;
+                                }
+                            }
+                        </style>
+                        """, unsafe_allow_html=True)
+                
+                        # Build semua KPI dalam satu grid HTML
+                        _kpi_html = "<div class='kpi-grid-v3'>"
+                
+                        # 1. Hari Kerja
+                        _kpi_html += _kpi_card(
+                            "📅 Hari Kerja",
+                            f"{_hari_berjalan} / {_jhk}",
+                            "🕐",
+                            f"{_sisa_hari} hari sisa",
+                            "#38bdf8"
+                        )
+                
+                        # 2. Persentase NS
+                        _tf_icon = "✅" if _on_track else "⚠️"
+                        _tf_color = "#34d399" if _on_track else "#fca5a5"
+                        _tf_status_text = "On Track" if _on_track else "Behind"
+                        _kpi_html += _kpi_card(
+                            "💰 % Net Sales",
+                            f"{_pct_spd:.2f}%",
+                            "⏳",
+                            f"{_tf_status_text} | TF: {_tf*100:.1f}%",
+                            _tf_color
+                        )
+                
+                        # 3. Rata SPD
+                        _spd_icon = "✅" if _spd_ok else "⚠️"
+                        _spd_color = "#34d399" if _spd_ok else "#fca5a5"
+                        _spd_sign = "+" if _gap_spd_harian >= 0 else ""
+                        _kpi_html += _kpi_card(
+                            "💰 Rata SPD",
+                            f"Rp {_fmt_short(_avg_spd)}",
+                            "💰",
+                            f"{_pct_spd_harian:.1f}% | Gap: {_spd_sign}{_fmt_short(_gap_spd_harian)}",
+                            _spd_color
+                        )
+                
+                        # 4. APC
+                        _apc_icon = "✅" if _apc_ok else "⚠️"
+                        _apc_color = "#34d399" if _apc_ok else "#fca5a5"
+                        _apc_sign = "+" if _gap_apc >= 0 else ""
+                        _kpi_html += _kpi_card(
+                            "🧾 APC",
+                            f"Rp {_fmt_short(_avg_apc)}",
+                            "🧾",
+                            f"{_pct_apc:.1f}% | Gap: {_apc_sign}{_fmt_short(_gap_apc)}",
+                            _apc_color
+                        )
+                
+                        # 5. Rata STD
+                        _std_icon = "✅" if _std_ok else "⚠️"
+                        _std_color = "#34d399" if _std_ok else "#fca5a5"
+                        _std_sign = "+" if _gap_std >= 0 else ""
+                        _kpi_html += _kpi_card(
+                            "📄 Rata STD",
+                            f"{_avg_std:,}",
+                            "📄",
+                            f"{_pct_std:.1f}% | Gap: {_std_sign}{_gap_std:,}",
+                            _std_color
+                        )
+                
+                        # 6. Total NSB
+                        _nsb_pct = (abs(_total_nsb_act) / _total_spd * 100) if _total_spd > 0 else 0
+                        _kpi_html += _kpi_card(
+                            "🛡️ Total NSB",
+                            f"Rp {_fmt_short(abs(_total_nsb_act))}",
+                            "🛡️",
+                            f"{_nsb_pct:.2f}% dari NS",
+                            "#38bdf8"
+                        )
+                
+                        # 7. Selisih NSB
+                        _nsb_icon = "✅" if _nsb_ok else "⚠️"
+                        _nsb_color = "#34d399" if _nsb_ok else "#fca5a5"
+                        _nsb_status = "Aman" if _nsb_ok else "Over"
+                        _kpi_html += _kpi_card(
+                            "⚖️ Selisih NSB",
+                            f"Rp {_fmt_short(_selisih_nsb)}",
+                            "⚖️",
+                            _nsb_status,
+                            _nsb_color
+                        )
+                
+                        # 8. Total Net Sales
+                        _ns_icon = "✅" if _ns_ok else "⚠️"
+                        _ns_color = "#34d399" if _ns_ok else "#fca5a5"
+                        _ns_minus_str = (
+                            f"-Rp {_fmt_short(abs(_ns_minus))}" if _ns_minus > 0
+                            else f"+Rp {_fmt_short(abs(_ns_minus))}"
+                        )
+                        _kpi_html += _kpi_card(
+                            "💰 Total NS",
+                            f"Rp {_fmt_short(_total_spd)}",
+                            "🎯",
+                            f"{_ns_minus_str} vs Target",
+                            _ns_color
+                        )
+                
+                        _kpi_html += "</div>"
+                        st.markdown(_kpi_html, unsafe_allow_html=True)
+                
+                        # ==========================================
+                        # 📊 SUMMARY NET SALES
+                        # ==========================================
+                        st.markdown("---")
+                
+                        st.markdown(f"""
+                        <div style='
+                            background: linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(180, 83, 9, 0.15));
+                            border: 2px solid #b45309; border-radius: 12px;
+                            padding: 14px 16px; margin-top: 16px;
+                        '>
+                            <div style='
+                                font-family: monospace; font-size: 11px; color: #fbbf24;
+                                font-weight: 900; letter-spacing: 1.5px; text-align: center;
+                                margin-bottom: 12px; padding-bottom: 10px;
+                                border-bottom: 1px dashed rgba(180, 83, 9, 0.3);
+                            '>💰 SUMMARY NET SALES</div>
+                
+                            <div style='
+                                display: grid;
+                                grid-template-columns: repeat(2, 1fr);
+                                gap: 10px;
+                            '>
+                                <div style='text-align: center;'>
+                                    <div style='font-family: monospace; font-size: 8px; color: #94a3b8; margin-bottom: 3px;'>📉 MINUS</div>
+                                    <div style='font-family: monospace; font-size: 12px; font-weight: 900; color: #fca5a5; word-wrap: break-word;'>
+                                        Rp {_fmt_short(_ns_minus)}
+                                    </div>
+                                </div>
+                                <div style='text-align: center;'>
+                                    <div style='font-family: monospace; font-size: 8px; color: #94a3b8; margin-bottom: 3px;'>🎯 TARGET BARU</div>
+                                    <div style='font-family: monospace; font-size: 12px; font-weight: 900; color: #fbbf24; word-wrap: break-word;'>
+                                        Rp {_fmt_short(_be_spd_display)}/hari
+                                    </div>
+                                </div>
+                                <div style='text-align: center;'>
+                                    <div style='font-family: monospace; font-size: 8px; color: #94a3b8; margin-bottom: 3px;'>📊 % SALES</div>
+                                    <div style='font-family: monospace; font-size: 12px; font-weight: 900; color: #38bdf8;'>
+                                        {_pct_spd:.1f}%
+                                    </div>
+                                </div>
+                                <div style='text-align: center;'>
+                                    <div style='font-family: monospace; font-size: 8px; color: #94a3b8; margin-bottom: 3px;'>⏱️ TF</div>
+                                    <div style='font-family: monospace; font-size: 12px; font-weight: 900; color: #a855f7;'>
+                                        {_tf*100:.1f}%
+                                    </div>
+                                </div>
+                            </div>
+                
+                            <div style='
+                                margin-top: 10px; padding-top: 10px;
+                                border-top: 1px dashed rgba(180, 83, 9, 0.3);
+                                text-align: center;
+                                font-family: monospace; font-size: 11px; font-weight: 900;
+                                color: {_tf_vs_sales_color};
+                            '>STATUS: {_tf_vs_sales}</div>
                         </div>
-                    </div>
-                    <div style='text-align: center;'>
-                        <div style='font-family: monospace; font-size: 8px; color: #94a3b8; margin-bottom: 3px;'>🎯 TARGET BARU</div>
-                        <div style='font-family: monospace; font-size: 12px; font-weight: 900; color: #fbbf24; word-wrap: break-word;'>
-                            Rp {_fmt_short(_be_spd_display)}/hari
-                        </div>
-                    </div>
-                    <div style='text-align: center;'>
-                        <div style='font-family: monospace; font-size: 8px; color: #94a3b8; margin-bottom: 3px;'>📊 % SALES</div>
-                        <div style='font-family: monospace; font-size: 12px; font-weight: 900; color: #38bdf8;'>
-                            {_pct_spd:.1f}%
-                        </div>
-                    </div>
-                    <div style='text-align: center;'>
-                        <div style='font-family: monospace; font-size: 8px; color: #94a3b8; margin-bottom: 3px;'>⏱️ TF</div>
-                        <div style='font-family: monospace; font-size: 12px; font-weight: 900; color: #a855f7;'>
-                            {_tf*100:.1f}%
-                        </div>
-                    </div>
-                </div>
+                        """, unsafe_allow_html=True)
+                
+                        # ==========================================
+                        # 🎯 BEST ESTIMATE CARDS (MOBILE FRIENDLY)
+                        # ==========================================
+                        st.markdown("---")
+                        st.markdown("##### 🎯 Target Best Estimate")
+                        st.caption(_be_status)
+                
+                        # Hitung BE
+                        _is_achieved = _total_spd >= _target_ns
+                        if _is_achieved:
+                            _be_spd = _target_spd_harian
+                            _be_std = int(_target_std_total / _jhk) if _jhk > 0 else 0
+                            _be_apc = _target_apc
+                            _be_nsb_budget = int(_be_spd * 0.0015)
+                        else:
+                            _sisa_target_ns = max(_target_ns - _total_spd, 0)
+                            _be_spd = int(_sisa_target_ns / _sisa_hari) if _sisa_hari > 0 else 0
+                            _sisa_target_std = max(_target_std_total - _total_std, 0)
+                            _be_std = int(_sisa_target_std / _sisa_hari) if _sisa_hari > 0 else 0
+                            _be_apc = int(_be_spd / _be_std) if _be_std > 0 else 0
+                            _be_nsb_budget = int(_be_spd * 0.0015)
+                
+                        _nsb_gap_total = _target_nsb_bulanan - abs(_total_nsb_act)
+                        _be_nsb_adjust = int(_nsb_gap_total / _sisa_hari) if _sisa_hari > 0 else 0
+                
+                        # CSS Best Estimate Card
+                        st.markdown("""
+                        <style>
+                            .be-grid-v3 {
+                                display: grid;
+                                grid-template-columns: repeat(2, 1fr);
+                                gap: 10px;
+                                margin-top: 10px;
+                            }
+                            @media (min-width: 640px) {
+                                .be-grid-v3 {
+                                    grid-template-columns: repeat(4, 1fr);
+                                    gap: 12px;
+                                }
+                            }
+                            .be-card-v3 {
+                                border-radius: 10px;
+                                padding: 10px 12px;
+                                text-align: center;
+                                min-height: 90px;
+                                display: flex;
+                                flex-direction: column;
+                                justify-content: center;
+                                word-wrap: break-word;
+                                overflow-wrap: break-word;
+                                box-sizing: border-box;
+                            }
+                            .be-title-v3 {
+                                font-family: monospace;
+                                font-size: 9px;
+                                letter-spacing: 0.5px;
+                                margin-bottom: 6px;
+                                word-wrap: break-word;
+                                line-height: 1.2;
+                            }
+                            .be-value-v3 {
+                                font-family: monospace;
+                                font-size: 15px;
+                                font-weight: 900;
+                                word-wrap: break-word;
+                                overflow-wrap: break-word;
+                                line-height: 1.2;
+                                letter-spacing: -0.3px;
+                            }
+                            .be-sub-v3 {
+                                font-family: monospace;
+                                font-size: 8px;
+                                color: #94a3b8;
+                                margin-top: 4px;
+                            }
+                            @media (max-width: 480px) {
+                                .be-card-v3 {
+                                    padding: 8px 10px;
+                                    min-height: 80px;
+                                }
+                                .be-value-v3 {
+                                    font-size: 13px;
+                                }
+                                .be-title-v3 {
+                                    font-size: 8px;
+                                }
+                            }
+                        </style>
+                        """, unsafe_allow_html=True)
+                
+                        _be_html = "<div class='be-grid-v3'>"
+                
+                        # SPD Target
+                        _be_html += (
+                            "<div class='be-card-v3' style='background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(14, 165, 233, 0.15)); border: 1.5px solid #38bdf8;'>"
+                            "<div class='be-title-v3' style='color: #38bdf8;'>💰 SPD TARGET</div>"
+                            f"<div class='be-value-v3' style='color: #fbbf24;'>Rp {_fmt_short(_be_spd)}</div>"
+                            "<div class='be-sub-v3'>per hari</div>"
+                            "</div>"
+                        )
+                
+                        # STD Target
+                        _be_html += (
+                            "<div class='be-card-v3' style='background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(14, 165, 233, 0.15)); border: 1.5px solid #38bdf8;'>"
+                            "<div class='be-title-v3' style='color: #38bdf8;'>📄 STD TARGET</div>"
+                            f"<div class='be-value-v3' style='color: #38bdf8;'>{_be_std:,}</div>"
+                            "<div class='be-sub-v3'>struk/hari</div>"
+                            "</div>"
+                        )
+                
+                        # APC Target
+                        _be_html += (
+                            "<div class='be-card-v3' style='background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(124, 58, 237, 0.15)); border: 1.5px solid #a855f7;'>"
+                            "<div class='be-title-v3' style='color: #a855f7;'>🧾 APC TARGET</div>"
+                            f"<div class='be-value-v3' style='color: #a855f7;'>Rp {_fmt_short(_be_apc)}</div>"
+                            "<div class='be-sub-v3'>per struk</div>"
+                            "</div>"
+                        )
+                
+                        # NSB Budget
+                        _nsb_adjust_color = "#34d399" if _be_nsb_adjust >= 0 else "#fca5a5"
+                        _nsb_sign = "+" if _be_nsb_adjust >= 0 else ""
+                        _be_html += (
+                            "<div class='be-card-v3' style='background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.15)); border: 1.5px solid #ef4444;'>"
+                            "<div class='be-title-v3' style='color: #fca5a5;'>📊 NSB/HARI</div>"
+                            f"<div class='be-value-v3' style='color: {_nsb_adjust_color};'>{_nsb_sign}Rp {_fmt_short(_be_nsb_adjust)}</div>"
+                            "<div class='be-sub-v3'>max SO/hari</div>"
+                            "</div>"
+                        )
+                
+                        _be_html += "</div>"
+                        st.markdown(_be_html, unsafe_allow_html=True)
     
-                <div style='
-                    margin-top: 10px; padding-top: 10px;
-                    border-top: 1px dashed rgba(180, 83, 9, 0.3);
-                    text-align: center;
-                    font-family: monospace; font-size: 11px; font-weight: 900;
-                    color: {_tf_vs_sales_color};
-                '>STATUS: {_tf_vs_sales}</div>
-            </div>
-            """, unsafe_allow_html=True)
 
-        # ==========================================
-        # 🎯 BEST ESTIMATE CARDS (MOBILE FRIENDLY)
-        # ==========================================
-        st.markdown("---")
-        st.markdown("##### 🎯 Target Best Estimate")
-        st.caption(_be_status)
-
-        # Hitung BE
-        _is_achieved = _total_spd >= _target_ns
-        if _is_achieved:
-            _be_spd = _target_spd_harian
-            _be_std = int(_target_std_total / _jhk) if _jhk > 0 else 0
-            _be_apc = _target_apc
-            _be_nsb_budget = int(_be_spd * 0.0015)
-        else:
-            _sisa_target_ns = max(_target_ns - _total_spd, 0)
-            _be_spd = int(_sisa_target_ns / _sisa_hari) if _sisa_hari > 0 else 0
-            _sisa_target_std = max(_target_std_total - _total_std, 0)
-            _be_std = int(_sisa_target_std / _sisa_hari) if _sisa_hari > 0 else 0
-            _be_apc = int(_be_spd / _be_std) if _be_std > 0 else 0
-            _be_nsb_budget = int(_be_spd * 0.0015)
-
-        _nsb_gap_total = _target_nsb_bulanan - abs(_total_nsb_act)
-        _be_nsb_adjust = int(_nsb_gap_total / _sisa_hari) if _sisa_hari > 0 else 0
-
-        # CSS Best Estimate Card
-        st.markdown("""
-        <style>
-            .be-grid-v3 {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 10px;
-                margin-top: 10px;
-            }
-            @media (min-width: 640px) {
-                .be-grid-v3 {
-                    grid-template-columns: repeat(4, 1fr);
-                    gap: 12px;
-                }
-            }
-            .be-card-v3 {
-                border-radius: 10px;
-                padding: 10px 12px;
-                text-align: center;
-                min-height: 90px;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                word-wrap: break-word;
-                overflow-wrap: break-word;
-                box-sizing: border-box;
-            }
-            .be-title-v3 {
-                font-family: monospace;
-                font-size: 9px;
-                letter-spacing: 0.5px;
-                margin-bottom: 6px;
-                word-wrap: break-word;
-                line-height: 1.2;
-            }
-            .be-value-v3 {
-                font-family: monospace;
-                font-size: 15px;
-                font-weight: 900;
-                word-wrap: break-word;
-                overflow-wrap: break-word;
-                line-height: 1.2;
-                letter-spacing: -0.3px;
-            }
-            .be-sub-v3 {
-                font-family: monospace;
-                font-size: 8px;
-                color: #94a3b8;
-                margin-top: 4px;
-            }
-            @media (max-width: 480px) {
-                .be-card-v3 {
-                    padding: 8px 10px;
-                    min-height: 80px;
-                }
-                .be-value-v3 {
-                    font-size: 13px;
-                }
-                .be-title-v3 {
-                    font-size: 8px;
-                }
-            }
-        </style>
-        """, unsafe_allow_html=True)
-
-        _be_html = "<div class='be-grid-v3'>"
-
-        # SPD Target
-        _be_html += (
-            "<div class='be-card-v3' style='background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(14, 165, 233, 0.15)); border: 1.5px solid #38bdf8;'>"
-            "<div class='be-title-v3' style='color: #38bdf8;'>💰 SPD TARGET</div>"
-            f"<div class='be-value-v3' style='color: #fbbf24;'>Rp {_fmt_short(_be_spd)}</div>"
-            "<div class='be-sub-v3'>per hari</div>"
-            "</div>"
-        )
-
-        # STD Target
-        _be_html += (
-            "<div class='be-card-v3' style='background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(14, 165, 233, 0.15)); border: 1.5px solid #38bdf8;'>"
-            "<div class='be-title-v3' style='color: #38bdf8;'>📄 STD TARGET</div>"
-            f"<div class='be-value-v3' style='color: #38bdf8;'>{_be_std:,}</div>"
-            "<div class='be-sub-v3'>struk/hari</div>"
-            "</div>"
-        )
-
-        # APC Target
-        _be_html += (
-            "<div class='be-card-v3' style='background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(124, 58, 237, 0.15)); border: 1.5px solid #a855f7;'>"
-            "<div class='be-title-v3' style='color: #a855f7;'>🧾 APC TARGET</div>"
-            f"<div class='be-value-v3' style='color: #a855f7;'>Rp {_fmt_short(_be_apc)}</div>"
-            "<div class='be-sub-v3'>per struk</div>"
-            "</div>"
-        )
-
-        # NSB Budget
-        _nsb_adjust_color = "#34d399" if _be_nsb_adjust >= 0 else "#fca5a5"
-        _nsb_sign = "+" if _be_nsb_adjust >= 0 else ""
-        _be_html += (
-            "<div class='be-card-v3' style='background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.15)); border: 1.5px solid #ef4444;'>"
-            "<div class='be-title-v3' style='color: #fca5a5;'>📊 NSB/HARI</div>"
-            f"<div class='be-value-v3' style='color: {_nsb_adjust_color};'>{_nsb_sign}Rp {_fmt_short(_be_nsb_adjust)}</div>"
-            "<div class='be-sub-v3'>max SO/hari</div>"
-            "</div>"
-        )
-
-        _be_html += "</div>"
-        st.markdown(_be_html, unsafe_allow_html=True)
-                # ==========================================
+                    # ==========================================
+                    # 📈 CHART SPD/STD/APC (HIDDEN — MUNCUL SAAT DI-CLICK)
+                    # ==========================================
+                    st.markdown("---")
+                    st.markdown("##### 📈 Trend Chart")
+                    
+                    # State untuk toggle chart
+                    if "show_chart_trend" not in st.session_state:
+                        st.session_state["show_chart_trend"] = False
+                    
+                    col_chart_btn1, col_chart_btn2 = st.columns(2)
+                    
+                    with col_chart_btn1:
+                        if not st.session_state["show_chart_trend"]:
+                            if st.button("📊 TAMPILKAN CHART TREND", use_container_width=True, type="primary", key="btn_show_chart_trend"):
+                                st.session_state["show_chart_trend"] = True
+                                st.rerun()
+                        else:
+                            if st.button("🙈 SEMBUNYIKAN CHART TREND", use_container_width=True, key="btn_hide_chart_trend"):
+                                st.session_state["show_chart_trend"] = False
+                                st.rerun()
+                    
+                    with col_chart_btn2:
+                        st.caption("💡 Chart di-hide biar halaman lebih ringan & mudah di-scroll")
+                    
+                    if st.session_state["show_chart_trend"]:
+                        with st.spinner("⏳ Membuat chart..."):
+                            try:
+                                import plotly.graph_objects as go
+                    
+                                if _chart_type_filter == "SPD":
+                                    _metrics_to_show = [("spd", "#fbbf24", "SPD", "Rp")]
+                                elif _chart_type_filter == "STD":
+                                    _metrics_to_show = [("std", "#38bdf8", "STD", "")]
+                                elif _chart_type_filter == "APC":
+                                    _metrics_to_show = [("apc", "#a855f7", "APC", "Rp")]
+                                else:
+                                    _metrics_to_show = [
+                                        ("spd", "#fbbf24", "SPD", "Rp"),
+                                        ("std", "#38bdf8", "STD", ""),
+                                        ("apc", "#a855f7", "APC", "Rp"),
+                                    ]
+                    
+                                if len(_metrics_to_show) == 1:
+                                    _metric_key, _color, _label, _unit = _metrics_to_show[0]
+                                    _y_vals = _ringkasan_df[_metric_key].tolist()
+                                    _x_vals = _ringkasan_df["_tgl"].tolist()
+                    
+                                    _peak_idx = int(np.argmax(_y_vals))
+                                    _valley_idx = int(np.argmin(_y_vals))
+                    
+                                    _fig = go.Figure()
+                                    _fig.add_trace(go.Scatter(
+                                        x=_x_vals, y=_y_vals,
+                                        mode="lines+markers",
+                                        line=dict(color=_color, width=3),
+                                        marker=dict(size=8, color=_color, line=dict(color="#78350f", width=1.5)),
+                                        fill="tozeroy",
+                                        fillcolor=f"rgba{tuple(int(_color.lstrip('#')[i:i+2], 16) for i in (0, 2, 4)) + (0.15,)}",
+                                        name=_label,
+                                        hovertemplate=f"<b>%{{x|%d/%m/%Y}}</b><br>{_label}: {_unit} %{{y:,}}<extra></extra>",
+                                    ))
+                    
+                                    _fig.add_annotation(
+                                        x=_x_vals[_peak_idx], y=_y_vals[_peak_idx],
+                                        text=f"🔼 {_unit} {_y_vals[_peak_idx]:,}",
+                                        showarrow=True, arrowhead=2, arrowcolor="#34d399",
+                                        bgcolor="rgba(16, 185, 129, 0.9)", bordercolor="#34d399",
+                                        font=dict(color="#ffffff", size=10, family="monospace"),
+                                        ax=0, ay=-30,
+                                    )
+                    
+                                    if _valley_idx != _peak_idx:
+                                        _fig.add_annotation(
+                                            x=_x_vals[_valley_idx], y=_y_vals[_valley_idx],
+                                            text=f"🔽 {_unit} {_y_vals[_valley_idx]:,}",
+                                            showarrow=True, arrowhead=2, arrowcolor="#fca5a5",
+                                            bgcolor="rgba(239, 68, 68, 0.9)", bordercolor="#ef4444",
+                                            font=dict(color="#ffffff", size=10, family="monospace"),
+                                            ax=0, ay=30,
+                                        )
+                    
+                                    _fig.update_layout(
+                                        height=320,
+                                        margin=dict(l=10, r=10, t=20, b=20),
+                                        plot_bgcolor="rgba(15, 23, 42, 0.4)",
+                                        paper_bgcolor="rgba(0,0,0,0)",
+                                        font=dict(color="#fbbf24", family="monospace", size=10),
+                                        xaxis=dict(gridcolor="rgba(251, 191, 36, 0.1)", title="Tanggal"),
+                                        yaxis=dict(gridcolor="rgba(251, 191, 36, 0.1)", title=f"{_label} ({_unit})" if _unit else _label),
+                                        showlegend=False,
+                                    )
+                                    st.plotly_chart(_fig, use_container_width=True, key=f"chart_{_metric_key}_ringkasan_v3")
+                                else:
+                                    from plotly.subplots import make_subplots
+                                    _fig = make_subplots(
+                                        rows=3, cols=1, shared_xaxes=True,
+                                        vertical_spacing=0.08,
+                                        subplot_titles=("💰 SPD", "📄 STD", "🧾 APC"),
+                                    )
+                    
+                                    for _i, (_metric_key, _color, _label, _unit) in enumerate(_metrics_to_show, start=1):
+                                        _y_vals = _ringkasan_df[_metric_key].tolist()
+                                        _x_vals = _ringkasan_df["_tgl"].tolist()
+                                        _peak_idx = int(np.argmax(_y_vals))
+                    
+                                        _fig.add_trace(
+                                            go.Scatter(
+                                                x=_x_vals, y=_y_vals,
+                                                mode="lines+markers",
+                                                line=dict(color=_color, width=2.5),
+                                                marker=dict(size=6, color=_color),
+                                                name=_label,
+                                                hovertemplate=f"<b>%{{x|%d/%m}}</b><br>{_label}: {_unit} %{{y:,}}<extra></extra>",
+                                            ),
+                                            row=_i, col=1
+                                        )
+                    
+                                        _fig.add_annotation(
+                                            x=_x_vals[_peak_idx], y=_y_vals[_peak_idx],
+                                            text=f"🔼 {_unit} {_y_vals[_peak_idx]:,}",
+                                            showarrow=True, arrowhead=2, arrowcolor=_color,
+                                            bgcolor=f"rgba{tuple(int(_color.lstrip('#')[i:i+2], 16) for i in (0, 2, 4)) + (0.9,)}",
+                                            font=dict(color="#ffffff", size=9, family="monospace"),
+                                            ax=0, ay=-20,
+                                            row=_i, col=1
+                                        )
+                    
+                                    _fig.update_layout(
+                                        height=700,
+                                        margin=dict(l=10, r=10, t=40, b=20),
+                                        plot_bgcolor="rgba(15, 23, 42, 0.4)",
+                                        paper_bgcolor="rgba(0,0,0,0)",
+                                        font=dict(color="#fbbf24", family="monospace", size=10),
+                                        showlegend=False,
+                                    )
+                                    _fig.update_xaxes(gridcolor="rgba(251, 191, 36, 0.1)")
+                                    _fig.update_yaxes(gridcolor="rgba(251, 191, 36, 0.1)")
+                    
+                                    st.plotly_chart(_fig, use_container_width=True, key="chart_all_ringkasan_v3")
+                            except Exception as _e_chart:
+                                st.warning(f"⚠️ Chart gagal render: {str(_e_chart)[:100]}")
+                    
+                    # ==========================================
+                    # 📉 CHART NSB (HIDDEN — MUNCUL SAAT DI-CLICK)
+                    # ==========================================
+                    st.markdown("---")
+                    st.markdown("##### 📉 Trend NSB")
+                    
+                    if "show_chart_nsb" not in st.session_state:
+                        st.session_state["show_chart_nsb"] = False
+                    
+                    col_nsb_btn1, col_nsb_btn2 = st.columns(2)
+                    
+                    with col_nsb_btn1:
+                        if not st.session_state["show_chart_nsb"]:
+                            if st.button("📊 TAMPILKAN CHART NSB", use_container_width=True, type="primary", key="btn_show_chart_nsb"):
+                                st.session_state["show_chart_nsb"] = True
+                                st.rerun()
+                        else:
+                            if st.button("🙈 SEMBUNYIKAN CHART NSB", use_container_width=True, key="btn_hide_chart_nsb"):
+                                st.session_state["show_chart_nsb"] = False
+                                st.rerun()
+                    
+                    if st.session_state["show_chart_nsb"]:
+                        with st.spinner("⏳ Membuat chart NSB..."):
+                            try:
+                                import plotly.graph_objects as go
+                    
+                                _nsb_vals = _ringkasan_df["nsb_actual"].tolist()
+                                _nsb_x = _ringkasan_df["_tgl"].tolist()
+                                _avg_budget_daily = int(_target_nsb_bulanan / _jhk) if _jhk > 0 else 0
+                    
+                                _fig_nsb = go.Figure()
+                    
+                                _colors_nsb = [
+                                    "#ef4444" if abs(v) > abs(_avg_budget_daily) else "#10b981"
+                                    for v in _nsb_vals
+                                ]
+                    
+                                _fig_nsb.add_trace(go.Bar(
+                                    x=_nsb_x, y=_nsb_vals,
+                                    marker=dict(color=_colors_nsb, line=dict(color="#78350f", width=1)),
+                                    name="NSB Aktual",
+                                    hovertemplate="<b>%{x|%d/%m}</b><br>NSB: Rp %{y:,}<extra></extra>",
+                                ))
+                    
+                                _fig_nsb.add_hline(
+                                    y=-_avg_budget_daily,
+                                    line_dash="dash", line_color="#fbbf24", line_width=2,
+                                    annotation_text=f"🎯 Budget: -Rp {_avg_budget_daily:,}",
+                                    annotation_position="top right",
+                                    annotation_font=dict(color="#fbbf24", size=10, family="monospace"),
+                                )
+                    
+                                _fig_nsb.update_layout(
+                                    height=320,
+                                    margin=dict(l=10, r=10, t=30, b=20),
+                                    plot_bgcolor="rgba(15, 23, 42, 0.4)",
+                                    paper_bgcolor="rgba(0,0,0,0)",
+                                    font=dict(color="#fbbf24", family="monospace", size=10),
+                                    xaxis=dict(gridcolor="rgba(251, 191, 36, 0.1)", title="Tanggal"),
+                                    yaxis=dict(gridcolor="rgba(251, 191, 36, 0.1)", title="NSB (Rp)"),
+                                    showlegend=False,
+                                )
+                                st.plotly_chart(_fig_nsb, use_container_width=True, key="chart_nsb_ringkasan_v3")
+                    
+                                st.caption("🟢 Aman | 🔴 Over | 🎯 Garis kuning = budget harian")
+                            except Exception as _e_nsb:
+                                st.warning(f"⚠️ Chart NSB gagal render: {str(_e_nsb)[:100]}")
                 # ==========================================
                 # 📋 VIEW 2: TABEL REKAP (LEADERBOARD STYLE)
                 # ==========================================
@@ -18595,20 +18805,20 @@ elif selected_tab == "📊 Daily Performance":
                         elif st.session_state["rekap_table_view"] == "table":
 
                             # === BUILD ROWS HTML ===
+                            # === BUILD ROWS HTML (MOBILE FRIENDLY) ===
                             _table_rows_html = ""
-
+                            
                             for _idx, _row in _filtered_rekap.iterrows():
-                                _tgl_str = _row["_tgl"].strftime("%d/%m/%Y")
+                                _tgl_str = _row["_tgl"].strftime("%d/%m/%y")
                                 _spd_val = int(_row["spd"])
                                 _std_val = int(_row["std"])
                                 _apc_val = int(_row["apc"])
-                                _nsb_tgt = int(_row["nsb_target"])
                                 _nsb_act = int(_row["nsb_actual"])
                                 _status = _row["_status"]
                                 _growth_spd = _row["_growth_spd"]
                                 _growth_std = _row["_growth_std"]
                                 _growth_apc = _row["_growth_apc"]
-
+                            
                                 if "AMAN" in _status:
                                     _st_color = "#34d399"
                                     _st_icon = "🟢"
@@ -18625,140 +18835,237 @@ elif selected_tab == "📊 Daily Performance":
                                     _st_color = "#94a3b8"
                                     _st_icon = "⚪"
                                     _row_accent = "#64748b"
-
+                            
                                 def _growth_html(g):
                                     if g is None or pd.isna(g):
-                                        return "<span style='color:#475569; font-size:10px;'>—</span>"
+                                        return "<span style='color:#475569;'>—</span>"
                                     if g > 0:
-                                        return f"<span style='color:#34d399; font-size:10px; font-weight:900;'>🔼 {g}%</span>"
+                                        return f"<span style='color:#34d399; font-weight:900;'>🔼{g}%</span>"
                                     elif g < 0:
-                                        return f"<span style='color:#fca5a5; font-size:10px; font-weight:900;'>🔽 {g}%</span>"
+                                        return f"<span style='color:#fca5a5; font-weight:900;'>🔽{g}%</span>"
                                     else:
-                                        return "<span style='color:#94a3b8; font-size:10px; font-weight:900;'>➖ 0%</span>"
-
+                                        return "<span style='color:#94a3b8; font-weight:900;'>➖0%</span>"
+                            
                                 _g_spd = _growth_html(_growth_spd)
                                 _g_std = _growth_html(_growth_std)
                                 _g_apc = _growth_html(_growth_apc)
-
+                            
+                                # Format angka biar gak kepotong
+                                def _fnum(v):
+                                    try:
+                                        _v = float(v)
+                                        if abs(_v) >= 1_000_000:
+                                            return f"{_v/1_000_000:.2f}Jt"
+                                        elif abs(_v) >= 1_000:
+                                            return f"{_v/1_000:.0f}K"
+                                        return f"{int(_v):,}"
+                                    except Exception:
+                                        return str(v)
+                            
                                 _row_bg = "rgba(15, 23, 42, 0.85)" if _idx % 2 == 0 else "rgba(30, 41, 59, 0.7)"
-
+                            
                                 _table_rows_html += (
-                                    f"<tr style='background: {_row_bg}; "
-                                    f"border-left: 4px solid {_row_accent};'>"
-
-                                    f"<td style='padding: 12px 14px; border-radius: 8px 0 0 8px; "
-                                    f"font-family: monospace; font-size: 12px; font-weight: 900; color: #fbbf24; "
-                                    f"white-space: nowrap;'>📅 {_tgl_str}</td>"
-
-                                    f"<td style='padding: 12px 10px; text-align: right; "
-                                    f"font-family: monospace; font-size: 12px; font-weight: 900; color: #fbbf24; "
-                                    f"white-space: nowrap;'>Rp {_spd_val:,}</td>"
-
-                                    f"<td style='padding: 12px 10px; text-align: center; "
-                                    f"white-space: nowrap;'>{_g_spd}</td>"
-
-                                    f"<td style='padding: 12px 10px; text-align: right; "
-                                    f"font-family: monospace; font-size: 12px; font-weight: 700; color: #38bdf8; "
-                                    f"white-space: nowrap;'>{_std_val:,}</td>"
-
-                                    f"<td style='padding: 12px 10px; text-align: center; "
-                                    f"white-space: nowrap;'>{_g_std}</td>"
-
-                                    f"<td style='padding: 12px 10px; text-align: right; "
-                                    f"font-family: monospace; font-size: 12px; font-weight: 700; color: #a855f7; "
-                                    f"white-space: nowrap;'>Rp {_apc_val:,}</td>"
-
-                                    f"<td style='padding: 12px 10px; text-align: center; "
-                                    f"white-space: nowrap;'>{_g_apc}</td>"
-
-                                    f"<td style='padding: 12px 10px; text-align: right; "
-                                    f"font-family: monospace; font-size: 11px; color: #94a3b8; "
-                                    f"white-space: nowrap;'>Rp {_nsb_tgt:,}</td>"
-
-                                    f"<td style='padding: 12px 10px; text-align: right; "
-                                    f"font-family: monospace; font-size: 12px; font-weight: 700; color: #e2e8f0; "
-                                    f"white-space: nowrap;'>Rp {_nsb_act:,}</td>"
-
-                                    f"<td style='padding: 12px 14px; text-align: center; "
-                                    f"border-radius: 0 8px 8px 0; white-space: nowrap;'>"
-                                    f"<span style='background: {_row_accent}22; border: 1.5px solid {_st_color}; "
-                                    f"color: {_st_color}; padding: 4px 10px; border-radius: 12px; "
-                                    f"font-family: monospace; font-size: 10px; font-weight: 900; "
-                                    f"display: inline-block;'>{_st_icon} {_status[2:]}</span>"
+                                    f"<tr style='background: {_row_bg}; border-left: 3px solid {_row_accent};'>"
+                            
+                                    f"<td class='tbl-td-v3' style='text-align: left; color: #fbbf24; font-weight: 900;'>"
+                                    f"📅 {_tgl_str}</td>"
+                            
+                                    f"<td class='tbl-td-v3' style='text-align: right; color: #fbbf24; font-weight: 900;'>"
+                                    f"Rp {_fnum(_spd_val)}</td>"
+                            
+                                    f"<td class='tbl-td-v3' style='text-align: center;'>{_g_spd}</td>"
+                            
+                                    f"<td class='tbl-td-v3' style='text-align: right; color: #38bdf8; font-weight: 700;'>"
+                                    f"{_std_val:,}</td>"
+                            
+                                    f"<td class='tbl-td-v3' style='text-align: center;'>{_g_std}</td>"
+                            
+                                    f"<td class='tbl-td-v3' style='text-align: right; color: #a855f7; font-weight: 700;'>"
+                                    f"Rp {_fnum(_apc_val)}</td>"
+                            
+                                    f"<td class='tbl-td-v3' style='text-align: center;'>{_g_apc}</td>"
+                            
+                                    f"<td class='tbl-td-v3' style='text-align: right; color: #e2e8f0; font-weight: 700;'>"
+                                    f"Rp {_fnum(_nsb_act)}</td>"
+                            
+                                    f"<td class='tbl-td-v3' style='text-align: center;'>"
+                                    f"<span style='background: {_row_accent}22; border: 1px solid {_st_color}; "
+                                    f"color: {_st_color}; padding: 2px 6px; border-radius: 10px; "
+                                    f"font-size: 8px; font-weight: 900; white-space: nowrap;'>"
+                                    f"{_st_icon} {_status[2:]}</span>"
                                     f"</td>"
-
+                            
                                     f"</tr>"
-                                    f"<tr style='height: 6px;'><td colspan='10' style='border: none;'></td></tr>"
                                 )
-
-                            # === BUILD TABEL LENGKAP ===
+                            
+                            # === BUILD TABEL LENGKAP (MOBILE FRIENDLY) ===
                             _leaderboard_html = (
                                 f"<div style='overflow-x: auto; -webkit-overflow-scrolling: touch; "
-                                f"padding: 4px; margin-top: 10px;'>"
-
-                                f"<table style='width: 100%; border-collapse: separate; "
-                                f"border-spacing: 0; font-family: monospace; min-width: 900px;'>"
-
-                                # HEADER
-                                f"<thead>"
-                                f"<tr style='background: linear-gradient(90deg, #1e3a5f 0%, #b45309 50%, #1e3a5f 100%); "
-                                f"box-shadow: 0 4px 12px rgba(180, 83, 9, 0.4);'>"
-
-                                f"<th style='padding: 14px 14px; text-align: left; font-family: monospace; "
-                                f"font-size: 11px; font-weight: 900; color: #f7e7b4; letter-spacing: 1px; "
-                                f"text-transform: uppercase; border-radius: 8px 0 0 8px; "
-                                f"border-bottom: 2px solid #fbbf24;'>📅 Tanggal</th>"
-
-                                f"<th style='padding: 14px 10px; text-align: right; font-family: monospace; "
-                                f"font-size: 11px; font-weight: 900; color: #f7e7b4; letter-spacing: 1px; "
-                                f"text-transform: uppercase; border-bottom: 2px solid #fbbf24;'>💰 SPD</th>"
-
-                                f"<th style='padding: 14px 10px; text-align: center; font-family: monospace; "
-                                f"font-size: 11px; font-weight: 900; color: #f7e7b4; letter-spacing: 1px; "
-                                f"text-transform: uppercase; border-bottom: 2px solid #fbbf24;'>📈 Growth</th>"
-
-                                f"<th style='padding: 14px 10px; text-align: right; font-family: monospace; "
-                                f"font-size: 11px; font-weight: 900; color: #f7e7b4; letter-spacing: 1px; "
-                                f"text-transform: uppercase; border-bottom: 2px solid #fbbf24;'>📄 STD</th>"
-
-                                f"<th style='padding: 14px 10px; text-align: center; font-family: monospace; "
-                                f"font-size: 11px; font-weight: 900; color: #f7e7b4; letter-spacing: 1px; "
-                                f"text-transform: uppercase; border-bottom: 2px solid #fbbf24;'>📈 Growth</th>"
-
-                                f"<th style='padding: 14px 10px; text-align: right; font-family: monospace; "
-                                f"font-size: 11px; font-weight: 900; color: #f7e7b4; letter-spacing: 1px; "
-                                f"text-transform: uppercase; border-bottom: 2px solid #fbbf24;'>🧾 APC</th>"
-
-                                f"<th style='padding: 14px 10px; text-align: center; font-family: monospace; "
-                                f"font-size: 11px; font-weight: 900; color: #f7e7b4; letter-spacing: 1px; "
-                                f"text-transform: uppercase; border-bottom: 2px solid #fbbf24;'>📈 Growth</th>"
-
-                                f"<th style='padding: 14px 10px; text-align: right; font-family: monospace; "
-                                f"font-size: 11px; font-weight: 900; color: #f7e7b4; letter-spacing: 1px; "
-                                f"text-transform: uppercase; border-bottom: 2px solid #fbbf24;'>🎯 NSB Tgt</th>"
-
-                                f"<th style='padding: 14px 10px; text-align: right; font-family: monospace; "
-                                f"font-size: 11px; font-weight: 900; color: #f7e7b4; letter-spacing: 1px; "
-                                f"text-transform: uppercase; border-bottom: 2px solid #fbbf24;'>📊 NSB Akt</th>"
-
-                                f"<th style='padding: 14px 14px; text-align: center; font-family: monospace; "
-                                f"font-size: 11px; font-weight: 900; color: #f7e7b4; letter-spacing: 1px; "
-                                f"text-transform: uppercase; border-radius: 0 8px 8px 0; "
-                                f"border-bottom: 2px solid #fbbf24;'>🏆 Status</th>"
-
-                                f"</tr>"
-                                f"</thead>"
-
-                                # BODY
-                                f"<tbody style='background: transparent;'>"
-                                f"{_table_rows_html}"
-                                f"</tbody>"
-
+                                f"padding: 4px; margin-top: 10px; border-radius: 10px; "
+                                f"background: rgba(15, 23, 42, 0.4);'>"
+                            
+                                f"<style>"
+                                f".tbl-v3 {{"
+                                f"    width: 100%; border-collapse: separate; border-spacing: 0;"
+                                f"    font-family: monospace; min-width: 700px;"
+                                f"}}"
+                                f".tbl-v3 th {{"
+                                f"    padding: 10px 8px; text-align: center; font-family: monospace;"
+                                f"    font-size: 9px; font-weight: 900; color: #f7e7b4;"
+                                f"    letter-spacing: 0.5px; text-transform: uppercase;"
+                                f"    background: linear-gradient(90deg, #1e3a5f 0%, #b45309 50%, #1e3a5f 100%);"
+                                f"    white-space: nowrap;"
+                                f"}}"
+                                f".tbl-v3 th:first-child {{ border-radius: 8px 0 0 0; }}"
+                                f".tbl-v3 th:last-child {{ border-radius: 0 8px 0 0; }}"
+                                f".tbl-td-v3 {{"
+                                f"    padding: 8px 6px; font-family: monospace; font-size: 10px;"
+                                f"    white-space: nowrap;"
+                                f"}}"
+                                f"@media (max-width: 480px) {{"
+                                f"    .tbl-td-v3 {{ font-size: 9px; padding: 6px 4px; }}"
+                                f"    .tbl-v3 th {{ font-size: 8px; padding: 8px 6px; }}"
+                                f"}}"
+                                f".tbl-footer-box-v3 {{"
+                                f"    background: linear-gradient(135deg, rgba(168, 85, 247, 0.12), rgba(124, 58, 237, 0.18));"
+                                f"    border-left: 4px solid #a855f7; border-radius: 8px;"
+                                f"    padding: 12px 14px; margin-top: 12px; font-family: monospace;"
+                                f"}}"
+                                f".tbl-footer-box-v3 .title {{"
+                                f"    font-size: 10px; font-weight: 900; color: #c084fc;"
+                                f"    letter-spacing: 1px; text-transform: uppercase;"
+                                f"    margin-bottom: 8px; padding-bottom: 6px;"
+                                f"    border-bottom: 1px dashed rgba(168, 85, 247, 0.3);"
+                                f"}}"
+                                f".tbl-footer-box-v3 .grid {{"
+                                f"    display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));"
+                                f"    gap: 10px;"
+                                f"}}"
+                                f".tbl-footer-box-v3 .item {{ text-align: center; }}"
+                                f".tbl-footer-box-v3 .label {{"
+                                f"    font-size: 8px; color: #94a3b8; margin-bottom: 3px;"
+                                f"    letter-spacing: 0.3px;"
+                                f"}}"
+                                f".tbl-footer-box-v3 .value {{"
+                                f"    font-size: 12px; font-weight: 900; word-wrap: break-word;"
+                                f"}}"
+                                f"</style>"
+                            
+                                f"<table class='tbl-v3'>"
+                                f"<thead><tr>"
+                                f"<th style='text-align: left;'>📅 Tgl</th>"
+                                f"<th style='text-align: right;'>💰 SPD</th>"
+                                f"<th>📈</th>"
+                                f"<th style='text-align: right;'>📄 STD</th>"
+                                f"<th>📈</th>"
+                                f"<th style='text-align: right;'>🧾 APC</th>"
+                                f"<th>📈</th>"
+                                f"<th style='text-align: right;'>📊 NSB</th>"
+                                f"<th>🏆</th>"
+                                f"</tr></thead>"
+                                f"<tbody>{_table_rows_html}</tbody>"
                                 f"</table>"
                                 f"</div>"
                             )
-
+                            
                             st.markdown(_leaderboard_html, unsafe_allow_html=True)
+                            
+                            # ==========================================
+                            # 📊 FOOTER: RATA-RATA & TOTAL (FIX MOBILE)
+                            # ==========================================
+                            _avg_spd = int(_filtered_rekap["spd"].mean()) if not _filtered_rekap.empty else 0
+                            _avg_std = int(_filtered_rekap["std"].mean()) if not _filtered_rekap.empty else 0
+                            _avg_apc = int(_filtered_rekap["apc"].mean()) if not _filtered_rekap.empty else 0
+                            _total_spd_f = int(_filtered_rekap["spd"].sum())
+                            _total_nsb_tgt = int(_filtered_rekap["spd"].sum() * 0.0015)
+                            _total_nsb_act = int(_filtered_rekap["nsb_actual"].sum())
+                            _total_selisih_nsb = _total_nsb_tgt - _total_nsb_act
+                            
+                            _selisih_color = "#34d399" if _total_selisih_nsb >= 0 else "#fca5a5"
+                            _selisih_icon = "✅" if _total_selisih_nsb >= 0 else "⚠️"
+                            
+                            # Helper format short
+                            def _fnum_footer(v):
+                                try:
+                                    _v = float(v)
+                                    if abs(_v) >= 1_000_000_000:
+                                        return f"{_v/1_000_000_000:.2f}M"
+                                    elif abs(_v) >= 1_000_000:
+                                        return f"{_v/1_000_000:.2f}Jt"
+                                    elif abs(_v) >= 1_000:
+                                        return f"{_v/1_000:.0f}K"
+                                    return f"{int(_v):,}"
+                                except Exception:
+                                    return str(v)
+                            
+                            # Footer 1: Rata-rata
+                            st.markdown(
+                                f"<div class='tbl-footer-box-v3'>"
+                                f"<div class='title'>⚖️ RATA-RATA ({len(_filtered_rekap)} HARI)</div>"
+                                f"<div class='grid'>"
+                                f"<div class='item'>"
+                                f"<div class='label'>💰 RATA SPD</div>"
+                                f"<div class='value' style='color: #fbbf24;'>Rp {_fnum_footer(_avg_spd)}</div>"
+                                f"</div>"
+                                f"<div class='item'>"
+                                f"<div class='label'>📄 RATA STD</div>"
+                                f"<div class='value' style='color: #38bdf8;'>{_avg_std:,} struk</div>"
+                                f"</div>"
+                                f"<div class='item'>"
+                                f"<div class='label'>🧾 RATA APC</div>"
+                                f"<div class='value' style='color: #a855f7;'>Rp {_fnum_footer(_avg_apc)}</div>"
+                                f"</div>"
+                                f"</div>"
+                                f"</div>",
+                                unsafe_allow_html=True
+                            )
+                            
+                            # Footer 2: Total Net Sales
+                            st.markdown(
+                                f"<div style='background: linear-gradient(90deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.22)); "
+                                f"border-left: 4px solid #fbbf24; border-radius: 8px; padding: 12px 14px; "
+                                f"margin-top: 8px; font-family: monospace;'>"
+                                f"<div style='display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;'>"
+                                f"<div style='font-size: 11px; font-weight: 900; color: #fcd34d; letter-spacing: 1px; "
+                                f"text-transform: uppercase;'>💰 TOTAL NET SALES</div>"
+                                f"<div style='font-size: 14px; font-weight: 900; color: #fbbf24; "
+                                f"text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);'>Rp {_fnum_footer(_total_spd_f)}</div>"
+                                f"</div>"
+                                f"</div>",
+                                unsafe_allow_html=True
+                            )
+                            
+                            # Footer 3: Total NSB
+                            st.markdown(
+                                f"<div style='background: linear-gradient(90deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.15)); "
+                                f"border-left: 4px solid {_selisih_color}; border-radius: 8px; padding: 12px 14px; "
+                                f"margin-top: 8px; font-family: monospace;'>"
+                            
+                                f"<div style='font-size: 11px; font-weight: 900; color: #fca5a5; letter-spacing: 1px; "
+                                f"text-transform: uppercase; margin-bottom: 8px; padding-bottom: 6px; "
+                                f"border-bottom: 1px dashed rgba(239, 68, 68, 0.3);'>📊 TOTAL NSB</div>"
+                            
+                                f"<div style='display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;'>"
+                                f"<div>"
+                                f"<div style='font-size: 8px; color: #94a3b8; margin-bottom: 2px;'>🎯 TARGET</div>"
+                                f"<div style='font-size: 11px; font-weight: 900; color: #cbd5e1;'>Rp {_fnum_footer(_total_nsb_tgt)}</div>"
+                                f"</div>"
+                                f"<div>"
+                                f"<div style='font-size: 8px; color: #94a3b8; margin-bottom: 2px;'>📊 AKTUAL</div>"
+                                f"<div style='font-size: 11px; font-weight: 900; color: #e2e8f0;'>Rp {_fnum_footer(_total_nsb_act)}</div>"
+                                f"</div>"
+                                f"</div>"
+                            
+                                f"<div style='margin-top: 8px; padding-top: 8px; "
+                                f"border-top: 1px dashed rgba(239, 68, 68, 0.3); "
+                                f"text-align: center; font-size: 12px; font-weight: 900; color: {_selisih_color};'>"
+                                f"{_selisih_icon} Selisih: Rp {_fnum_footer(_total_selisih_nsb)}</div>"
+                            
+                                f"</div>",
+                                unsafe_allow_html=True
+                            )
+                            
+                            st.caption(f"💡 Scroll horizontal untuk lihat semua kolom. **{len(_filtered_rekap)}** baris data.")
 
                             # ==========================================
                             # 📊 FOOTER: RATA-RATA & TOTAL
