@@ -19173,14 +19173,32 @@ elif selected_tab == "📊 Daily Performance":
                     _ikt_today = waktu_wib.date()
                     
                     # Hari berjalan
-                    if _ikt_p_start:
+                    # === HITUNG HARI BERJALAN DARI INPUT PERTAMA (VERSI BARU) ===
+                    _ikt_first_input_date = None
+                    if not _ikt_df.empty:
+                        _ikt_df_with_data = _ikt_df[_ikt_df["spd"] > 0].copy()
+                        if not _ikt_df_with_data.empty:
+                            _ikt_first_input_date = _ikt_df_with_data["_tgl"].min().date()
+                    
+                    # Tentukan hari berjalan
+                    if _ikt_first_input_date:
+                        _ikt_hari_berjalan = (_ikt_today - _ikt_first_input_date).days + 1
+                        if _ikt_hari_berjalan < 1:
+                            _ikt_hari_berjalan = 1
+                    elif _ikt_p_start:
                         _ikt_hari_berjalan = min((_ikt_today - _ikt_p_start).days + 1, _ikt_jhk)
                         if _ikt_hari_berjalan < 1:
                             _ikt_hari_berjalan = 1
                     else:
                         _ikt_hari_berjalan = len(_ikt_df)
                     
-                    _ikt_sisa_hari = max(_ikt_jhk - _ikt_hari_berjalan, 1)
+                    # === JHK EFEKTIF = dari tanggal input pertama sampai akhir bulan ===
+                    if _ikt_first_input_date:
+                        _ikt_jhk_efektif = 31 - (_ikt_first_input_date.day - 1)
+                    else:
+                        _ikt_jhk_efektif = _ikt_jhk
+                    
+                    _ikt_sisa_hari = max(_ikt_jhk_efektif - _ikt_hari_berjalan, 1)
                     
                     # Actual
                     _ikt_total_ns = int(_ikt_df["spd"].sum())
@@ -19190,8 +19208,8 @@ elif selected_tab == "📊 Daily Performance":
                     _ikt_avg_apc = int(_ikt_df["apc"].mean())
                     
                     # Target harian
-                    _ikt_target_spd_harian = int(_ikt_target_ns / _ikt_jhk) if _ikt_jhk > 0 else 0
-                    _ikt_target_std_harian = int(_ikt_target_std_total / _ikt_jhk) if _ikt_jhk > 0 else 0
+                    _ikt_target_spd_harian = int(_ikt_target_ns / _ikt_jhk_efektif) if _ikt_jhk_efektif > 0 else 0
+                    _ikt_target_std_harian = int(_ikt_target_std_total / _ikt_jhk_efektif) if _ikt_jhk_efektif > 0 else 0
                     
                     # GM Rupiah
                     _ikt_target_gm_rupiah = int(_ikt_target_ns * (_ikt_target_gm / 100))
