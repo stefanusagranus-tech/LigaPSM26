@@ -1650,3 +1650,206 @@ def clear_all_heartbeat():
 
     except Exception as e:
         return False, f"❌ Gagal: {str(e)[:150]}"
+
+
+# =========================================================================
+# 📅 PERIODE SALES
+# =========================================================================
+_PERIODE_SALES_HEADER = [
+    "period_id", "period_name", "start_date", "end_date",
+    "target_net_sales", "target_std", "target_apc",
+    "nsb_percentage", "target_gm_pct", "status",
+]
+
+
+def load_periode_sales():
+    """Baca sheet PERIODE_STOREPERFORMANCE dari Spreadsheet Data."""
+    try:
+        client = _get_client()
+        if client is None:
+            return pd.DataFrame()
+
+        _id_data = st.secrets.get("spreadsheet_id", "")
+        if not _id_data:
+            print("[LOAD_PERIODE_SALES] ⚠️ spreadsheet_id belum di-set")
+            return pd.DataFrame()
+
+        sh = client.open_by_key(_id_data)
+
+        try:
+            ws = sh.worksheet("PERIODE_STOREPERFORMANCE")
+        except gspread.WorksheetNotFound:
+            ws = sh.add_worksheet(title="PERIODE_STOREPERFORMANCE", rows=1000, cols=12)
+            ws.append_row(_PERIODE_SALES_HEADER, value_input_option="USER_ENTERED")
+            return pd.DataFrame(columns=_PERIODE_SALES_HEADER)
+
+        all_values = ws.get_all_values()
+        if len(all_values) < 2:
+            return pd.DataFrame(columns=all_values[0] if all_values else _PERIODE_SALES_HEADER)
+
+        df = pd.DataFrame(all_values[1:], columns=all_values[0])
+        df.columns = df.columns.astype(str).str.strip().str.lower()
+
+        for _col in ["target_net_sales", "target_std", "target_apc", "nsb_percentage", "target_gm_pct"]:
+            if _col in df.columns:
+                df[_col] = pd.to_numeric(df[_col], errors="coerce").fillna(0)
+
+        if "period_id" in df.columns:
+            df = df[df["period_id"].astype(str).str.strip() != ""].reset_index(drop=True)
+
+        return df
+
+    except Exception as e:
+        print(f"[LOAD_PERIODE_SALES ERROR] {e}")
+        return pd.DataFrame()
+
+
+def save_periode_sales(df_data):
+    """Simpan DataFrame ke sheet PERIODE_STOREPERFORMANCE."""
+    try:
+        client = _get_client()
+        if client is None:
+            return False, "❌ Client gagal"
+
+        _id_data = st.secrets.get("spreadsheet_id", "")
+        if not _id_data:
+            return False, "❌ spreadsheet_id belum di-set"
+
+        sh = client.open_by_key(_id_data)
+
+        try:
+            ws = sh.worksheet("PERIODE_STOREPERFORMANCE")
+        except gspread.WorksheetNotFound:
+            ws = sh.add_worksheet(title="PERIODE_STOREPERFORMANCE", rows=1000, cols=12)
+
+        ws.clear()
+        ws.append_row(_PERIODE_SALES_HEADER, value_input_option="USER_ENTERED")
+
+        if df_data.empty:
+            return True, "✅ Sheet dikosongkan (header tetap ada)"
+
+        _df_save = df_data.copy()
+        for _col in _PERIODE_SALES_HEADER:
+            if _col not in _df_save.columns:
+                _df_save[_col] = ""
+        _df_save = _df_save[_PERIODE_SALES_HEADER]
+
+        _rows = []
+        for _, _row in _df_save.iterrows():
+            _row_clean = [_safe_stringify(v) for v in _row.values]
+            _rows.append(_row_clean)
+
+        if _rows:
+            ws.append_rows(_rows, value_input_option="USER_ENTERED")
+
+        return True, f"✅ {len(_rows)} baris tersimpan"
+
+    except Exception as e:
+        return False, f"❌ Gagal: {str(e)[:150]}"
+
+
+def generate_next_period_id(df_existing):
+    """Generate ID periode berikutnya (SLS001, SLS002, ...)."""
+    if df_existing is None or df_existing.empty:
+        return "SLS001"
+
+    if "period_id" not in df_existing.columns:
+        return "SLS001"
+
+    _max_num = 0
+    for _pid in df_existing["period_id"].astype(str):
+        _match = re.search(r'SLS(\d+)', _pid.upper())
+        if _match:
+            _max_num = max(_max_num, int(_match.group(1)))
+
+    return f"SLS{_max_num + 1:03d}"
+
+
+# =========================================================================
+# 📊 GENERATE LAPORAN BULANAN PSM (LEGACY)
+# =========================================================================
+def generate_laporan_bulanan_psm(bulan_int, tahun_int, nama_bulan_str):
+    """Generate laporan bulanan PSM ke Spreadsheet Laporan (legacy)."""
+    try:
+        _sp = st.session_state.get("sales_person_df", pd.DataFrame()).copy()
+        _pers = st.session_state.get("person_df", pd.DataFrame()).copy()
+
+        if _sp.empty or _pers.empty:
+            return False, "❌ Data sales_person atau person_df kosong", 0
+
+        _sp.columns = _sp.columns.astype(str).str.strip().str.lower()
+        _pers.columns = _pers.columns.astype(str).str.strip().str.lower()
+
+        if "updated_at" not in _sp.columns:
+            return False, "❌ Kolom 'updated_at' tidak ada", 0
+
+        _sp["_dt"] = pd.to_datetime(_sp["updated_at"], errors="coerce")
+        _sp = _sp.dropna(subset=["_dt"])
+        _sp = _sp[(_sp["_dt"].dt.month == bulan_int) & (_sp["_dt"].dt.year == tahun_int)]
+
+        if _sp.empty:
+            return False, f"❌ Tidak ada data PSM untuk {nama_bulan_str} {tahun_int}", 0
+
+        _sp["_tgl"] = _sp["_dt"].dt.day
+        _sp["qty"] = pd.to_numeric(_sp.get("actual_qty", 0), errors="coerce").fillna(0)
+        _sp["person_clean"] = _sp["person_name"].astype(str).str.strip().str.upper()
+
+        _pivot = _sp.pivot_table(
+            index="person_clean",
+            columns="_tgl",
+            values="qty",
+            aggfunc="sum",
+            fill_value=0
+        )
+
+        _pers_active = _pers.copy()
+        if "active" in _pers_active.columns:
+            _pers_active = _pers_active[pd.to_numeric(_pers_active["active"], errors="coerce") == 1]
+
+        _pers_active["person_clean"] = _pers_active["person_name"].astype(str).str.strip().str.upper()
+        _pers_active = _pers_active.sort_values("person_clean").drop_duplicates(subset=["person_clean"])
+
+        if _pers_active.empty:
+            return False, "❌ Tidak ada personil aktif", 0
+
+        _rows_output = []
+
+        _row1 = ["", "Toko", "C383/KARANG SATRIA"] + [str(d) for d in range(1, 32)]
+        _rows_output.append(_row1)
+
+        _row2 = ["No", "NIK", "Nama Personil", "ACTUAL"] + [""] * 30
+        _rows_output.append(_row2)
+
+        _total_per_tgl = {d: 0 for d in range(1, 32)}
+
+        for _idx, (_, _p_row) in enumerate(_pers_active.iterrows(), start=1):
+            _nama = str(_p_row.get("person_name", "")).strip().upper()
+            _nik = str(_p_row.get("person_id", _p_row.get("nik", ""))).replace(".0", "").strip()
+            if not _nik or _nik == "nan":
+                _nik = "-"
+
+            _row_data = [_idx, _nik, _nama]
+
+            if _nama in _pivot.index:
+                for _d in range(1, 32):
+                    _val = int(_pivot.loc[_nama, _d]) if _d in _pivot.columns else 0
+                    _row_data.append(_val)
+                    _total_per_tgl[_d] += _val
+            else:
+                _row_data.extend([0] * 31)
+
+            _rows_output.append(_row_data)
+
+        _total_row = ["Total", "", ""] + [str(_total_per_tgl[_d]) for _d in range(1, 32)]
+        _rows_output.append(_total_row)
+
+        _sheet_name = f"{nama_bulan_str.upper()} {tahun_int}"
+        _ok, _msg = write_laporan_bulanan(_sheet_name, _rows_output)
+
+        if not _ok:
+            return False, _msg, 0
+
+        return True, f"✅ Laporan {_sheet_name} tersimpan ({len(_rows_output)} baris)", len(_pers_active)
+
+    except Exception as e:
+        return False, f"❌ Gagal: {str(e)[:150]}", 0
