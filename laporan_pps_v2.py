@@ -44,19 +44,9 @@ def _get_periode_by_kode(periods_df, kode_prefix, tanggal):
     """
     Cari periode aktif berdasarkan kode prefix & tanggal.
     
-    FIX v2:
-    - Support format ID lama (PWP01, SGS02) & baru (PWP-2610-01, SGS-2610-01)
-    - Kalau ada beberapa match, ambil yang start_date paling dekat dengan tanggal
-    - Fallback: kalau tidak ada yang aktif di tanggal, ambil yang start_date <= tanggal
-    - Filter bulan & tahun dari tanggal
-    
-    Args:
-        periods_df: DataFrame periode
-        kode_prefix: 'P' PSM, 'PWP' PWP, 'SGS' SG, 'SGR' Sueger
-        tanggal: date
-    
-    Returns:
-        dict atau None: {period_id, start_date, end_date, jhk, label}
+    FIX v3:
+    - Tambah filter bulan & tahun dari tanggal
+    - Prioritas: aktif di tanggal → start_date <= tanggal (bulan sama)
     """
     try:
         if periods_df is None or periods_df.empty:
@@ -65,7 +55,6 @@ def _get_periode_by_kode(periods_df, kode_prefix, tanggal):
         df = periods_df.copy()
         df.columns = df.columns.astype(str).str.strip().str.lower()
         
-        # Cek kolom wajib
         if "period_id" not in df.columns or "start_date" not in df.columns:
             return None
         
@@ -85,20 +74,28 @@ def _get_periode_by_kode(periods_df, kode_prefix, tanggal):
         if df.empty:
             return None
         
-        # === PRIORITAS 1: Yang aktif di tanggal (start <= tanggal <= end) ===
+        # === ✅ FIX: FILTER BULAN & TAHUN ===
+        df = df[
+            (df["start_dt"].apply(lambda d: d.month) == tanggal.month) &
+            (df["start_dt"].apply(lambda d: d.year) == tanggal.year)
+        ]
+        
+        if df.empty:
+            return None
+        
+        # === PRIORITAS 1: Yang aktif di tanggal ===
         df_aktif = df[(df["start_dt"] <= tanggal) & (df["end_dt"] >= tanggal)]
         
         if not df_aktif.empty:
-            # Kalau ada beberapa, ambil yang start_date paling dekat
             df_aktif = df_aktif.sort_values("start_dt", ascending=False)
             row = df_aktif.iloc[0]
         else:
-            # === PRIORITAS 2: Yang start_date <= tanggal (biar gak kosong) ===
+            # === PRIORITAS 2: Yang start_date <= tanggal (bulan sama) ===
             df_sebelum = df[df["start_dt"] <= tanggal].sort_values("start_dt", ascending=False)
             if not df_sebelum.empty:
                 row = df_sebelum.iloc[0]
             else:
-                # === PRIORITAS 3: Ambil yang start_date paling dekat ke depan ===
+                # === PRIORITAS 3: Yang start_date paling dekat ke depan ===
                 df_depan = df[df["start_dt"] > tanggal].sort_values("start_dt", ascending=True)
                 if not df_depan.empty:
                     row = df_depan.iloc[0]
